@@ -4,6 +4,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -60,6 +61,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -116,6 +118,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -172,6 +175,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -228,6 +232,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -284,6 +289,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -340,6 +346,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -396,6 +403,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -452,6 +460,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -508,6 +517,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -564,6 +574,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -617,6 +628,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -673,6 +685,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -729,6 +742,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Daylight',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -782,6 +796,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Illuminance',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -835,6 +850,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Illuminance east',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -888,6 +904,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Illuminance south',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -941,6 +958,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Illuminance west',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -994,6 +1012,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Wind speed',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),

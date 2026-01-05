@@ -4,6 +4,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Carbon dioxide',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -57,6 +58,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Humidity',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -110,6 +112,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Illuminance',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -163,6 +166,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'NOx index',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -214,6 +218,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'PM1',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -267,6 +272,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'PM10',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -320,6 +326,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'PM2.5',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -373,6 +380,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'PM4',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -426,6 +434,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Pressure',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -482,6 +491,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Signal strength',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -535,6 +545,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -591,6 +602,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'VOC index',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -642,6 +654,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Acceleration total',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -694,6 +707,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Acceleration X',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -746,6 +760,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Acceleration Y',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -798,6 +813,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Acceleration Z',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -850,6 +866,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Humidity',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -903,6 +920,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Movement counter',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -954,6 +972,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Pressure',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1010,6 +1029,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Signal strength',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1063,6 +1083,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1119,6 +1140,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Voltage',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1175,6 +1197,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Carbon dioxide',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1228,6 +1251,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Humidity',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1281,6 +1305,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Illuminance',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1334,6 +1359,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'NOx index',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1385,6 +1411,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'PM2.5',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1438,6 +1465,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Pressure',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1494,6 +1522,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Signal strength',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1547,6 +1576,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1603,6 +1633,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'VOC index',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),

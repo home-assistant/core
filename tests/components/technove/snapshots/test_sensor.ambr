@@ -4,6 +4,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Current',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -60,6 +61,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Input voltage',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -116,6 +118,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Last session energy usage',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -172,6 +175,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Max station current',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -228,6 +232,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Output voltage',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -284,6 +289,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Signal strength',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -337,6 +343,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Status',
     'capabilities': dict({
       'options': list([
         'unplugged',
@@ -401,6 +408,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Total energy usage',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -457,6 +465,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Wi-Fi network name',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,

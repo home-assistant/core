@@ -4,6 +4,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Hydrological alert',
     'capabilities': dict({
       'options': list([
         'no_alert',
@@ -71,6 +72,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Water flow',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -128,6 +130,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Water level',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -185,6 +188,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Water temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),

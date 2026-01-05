@@ -4,6 +4,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Duration auto shut-off',
     'capabilities': dict({
       'event_types': list([
         'duration_threshold',
@@ -60,6 +61,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Volume auto shut-off',
     'capabilities': dict({
       'event_types': list([
         'volume_threshold',

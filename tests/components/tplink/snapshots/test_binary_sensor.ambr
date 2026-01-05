@@ -4,6 +4,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Battery',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -39,6 +40,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Cloud connection',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -88,6 +90,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Door',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -137,6 +140,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Humidity warning',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -172,6 +176,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Moisture',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -221,6 +226,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Motion',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -270,6 +276,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Overheated',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -319,6 +326,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Overloaded',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -368,6 +376,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Temperature warning',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,

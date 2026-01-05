@@ -4,6 +4,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Notification',
     'capabilities': dict({
       'event_types': list([
         'water_is_full',

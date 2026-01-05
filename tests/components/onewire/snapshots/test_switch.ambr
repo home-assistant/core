@@ -4,6 +4,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Programmed input-output',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -53,6 +54,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Latch A',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -102,6 +104,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Latch B',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -151,6 +154,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Programmed input-output A',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -200,6 +204,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Programmed input-output B',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -249,6 +254,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Current A/D control',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -298,6 +304,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Latch 0',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -347,6 +354,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Latch 1',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -396,6 +404,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Latch 2',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -445,6 +454,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Latch 3',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -494,6 +504,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Latch 4',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -543,6 +554,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Latch 5',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -592,6 +604,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Latch 6',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -641,6 +654,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Latch 7',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -690,6 +704,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Programmed input-output 0',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -739,6 +754,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Programmed input-output 1',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -788,6 +804,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Programmed input-output 2',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -837,6 +854,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Programmed input-output 3',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -886,6 +904,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Programmed input-output 4',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -935,6 +954,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Programmed input-output 5',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -984,6 +1004,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Programmed input-output 6',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1033,6 +1054,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Programmed input-output 7',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1082,6 +1104,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Programmed input-output A',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1131,6 +1154,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Programmed input-output B',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1180,6 +1204,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Current A/D control',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1229,6 +1254,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Leaf sensor 0',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1278,6 +1304,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Leaf sensor 1',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1327,6 +1354,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Leaf sensor 2',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1376,6 +1404,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Leaf sensor 3',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1425,6 +1454,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Moisture sensor 0',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1474,6 +1504,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Moisture sensor 1',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1523,6 +1554,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Moisture sensor 2',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1572,6 +1604,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Moisture sensor 3',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1621,6 +1654,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Hub branch 0',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1670,6 +1704,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Hub branch 1',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1719,6 +1754,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Hub branch 2',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1768,6 +1804,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Hub branch 3',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,

@@ -21,6 +21,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Segment 1 intensity',
     'capabilities': dict({
       'max': 255,
       'min': 0,
@@ -113,6 +114,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Segment 1 speed',
     'capabilities': dict({
       'max': 255,
       'min': 0,
@@ -188,6 +190,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Intensity',
     'capabilities': dict({
       'max': 255,
       'min': 0,
@@ -245,6 +248,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Segment 1 intensity',
     'capabilities': dict({
       'max': 255,
       'min': 0,
@@ -302,6 +306,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Segment 1 speed',
     'capabilities': dict({
       'max': 255,
       'min': 0,
@@ -359,6 +364,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Speed',
     'capabilities': dict({
       'max': 255,
       'min': 0,

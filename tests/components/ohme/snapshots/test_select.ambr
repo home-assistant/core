@@ -4,6 +4,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Charge mode',
     'capabilities': dict({
       'options': list([
         'smart_charge',
@@ -63,6 +64,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Vehicle',
     'capabilities': dict({
       'options': list([
         'Nissan Leaf',

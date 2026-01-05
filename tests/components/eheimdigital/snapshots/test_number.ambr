@@ -4,6 +4,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'System LED brightness',
     'capabilities': dict({
       'max': 100,
       'min': 0,
@@ -62,6 +63,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Day speed',
     'capabilities': dict({
       'max': 100.0,
       'min': 0.0,
@@ -120,6 +122,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Manual speed',
     'capabilities': dict({
       'max': 100.0,
       'min': 0.0,
@@ -178,6 +181,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Night speed',
     'capabilities': dict({
       'max': 100.0,
       'min': 0.0,
@@ -236,6 +240,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'System LED brightness',
     'capabilities': dict({
       'max': 100,
       'min': 0,
@@ -294,6 +299,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Night temperature offset',
     'capabilities': dict({
       'max': 5,
       'min': -5,
@@ -352,6 +358,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'System LED brightness',
     'capabilities': dict({
       'max': 100,
       'min': 0,
@@ -410,6 +417,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Temperature offset',
     'capabilities': dict({
       'max': 3,
       'min': -3,

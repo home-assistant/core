@@ -4,6 +4,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Disk available',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -63,6 +64,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Disk size',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -122,6 +124,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Disk usage',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -174,6 +177,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Disk used',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -233,6 +237,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Disk used by photos',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -292,6 +297,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Disk used by videos',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -351,6 +357,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Photos count',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -403,6 +410,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Videos count',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),

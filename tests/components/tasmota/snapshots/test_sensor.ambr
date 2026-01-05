@@ -20,6 +20,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'DHT11 Temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -106,6 +107,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'TX23 Speed Act',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -154,6 +156,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'TX23 Dir Card',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -259,6 +262,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'ENERGY TotalTariff 0',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -411,6 +415,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'ENERGY TotalTariff 1',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -467,6 +472,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'ENERGY ExportTariff 0',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -523,6 +529,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'ENERGY ExportTariff 1',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -611,6 +618,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'DS18B20 Temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -664,6 +672,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'DS18B20 Id',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -773,6 +782,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'ENERGY Total',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -861,6 +871,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'ENERGY Total 0',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -917,6 +928,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'ENERGY Total 1',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -1037,6 +1049,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'ENERGY Total Phase1',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -1093,6 +1106,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'ENERGY Total Phase2',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -1213,6 +1227,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'ANALOG Temperature1',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1301,6 +1316,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'ANALOG Temperature2',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1357,6 +1373,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'ANALOG Illuminance3',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1474,6 +1491,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'ANALOG CTEnergy1 Energy',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -1626,6 +1644,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'ANALOG CTEnergy1 Power',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1682,6 +1701,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'ANALOG CTEnergy1 Voltage',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1738,6 +1758,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'ANALOG CTEnergy1 Current',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1823,6 +1844,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'SENSOR1 Unknown',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1953,6 +1975,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'SENSOR2 Unknown',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2002,6 +2025,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'SENSOR3 Unknown',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2053,6 +2077,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'SENSOR4 Unknown',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),

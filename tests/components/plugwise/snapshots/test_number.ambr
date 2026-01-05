@@ -4,6 +4,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Temperature offset',
     'capabilities': dict({
       'max': 2.0,
       'min': -2.0,
@@ -63,6 +64,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Temperature offset',
     'capabilities': dict({
       'max': 2.0,
       'min': -2.0,
@@ -122,6 +124,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Temperature offset',
     'capabilities': dict({
       'max': 2.0,
       'min': -2.0,
@@ -181,6 +184,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Temperature offset',
     'capabilities': dict({
       'max': 2.0,
       'min': -2.0,
@@ -240,6 +244,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Temperature offset',
     'capabilities': dict({
       'max': 2.0,
       'min': -2.0,
@@ -299,6 +304,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Temperature offset',
     'capabilities': dict({
       'max': 2.0,
       'min': -2.0,
@@ -358,6 +364,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Temperature offset',
     'capabilities': dict({
       'max': 2.0,
       'min': -2.0,
@@ -417,6 +424,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Temperature offset',
     'capabilities': dict({
       'max': 2.0,
       'min': -2.0,
@@ -476,6 +484,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Temperature offset',
     'capabilities': dict({
       'max': 2.0,
       'min': -2.0,
@@ -535,6 +544,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Temperature offset',
     'capabilities': dict({
       'max': 2.0,
       'min': -2.0,
@@ -594,6 +604,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Domestic hot water setpoint',
     'capabilities': dict({
       'max': 60.0,
       'min': 35.0,
@@ -653,6 +664,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Maximum boiler temperature setpoint',
     'capabilities': dict({
       'max': 100.0,
       'min': 0.0,

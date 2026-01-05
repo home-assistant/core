@@ -4,6 +4,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'hot_water_plus_level',
     'capabilities': dict({
       'options': list([
         'off',

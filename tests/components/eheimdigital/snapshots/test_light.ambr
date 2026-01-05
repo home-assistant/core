@@ -4,6 +4,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Channel 1',
     'capabilities': dict({
       'effect_list': list([
         'daycl_mode',
@@ -69,6 +70,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Channel 0',
     'capabilities': dict({
       'effect_list': list([
         'daycl_mode',
@@ -134,6 +136,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Channel 1',
     'capabilities': dict({
       'effect_list': list([
         'daycl_mode',
@@ -199,6 +202,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Channel 0',
     'capabilities': dict({
       'effect_list': list([
         'daycl_mode',
@@ -264,6 +268,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Channel 1',
     'capabilities': dict({
       'effect_list': list([
         'daycl_mode',

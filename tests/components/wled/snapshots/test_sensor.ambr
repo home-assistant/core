@@ -4,6 +4,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Estimated current',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -60,6 +61,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Free memory',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -116,6 +118,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'IP',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -164,6 +167,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'LED count',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -212,6 +216,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Max current',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -265,6 +270,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Uptime',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -314,6 +320,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Wi-Fi BSSID',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -362,6 +369,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Wi-Fi channel',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -410,6 +418,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Wi-Fi RSSI',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -463,6 +472,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Wi-Fi signal',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),

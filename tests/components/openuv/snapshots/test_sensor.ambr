@@ -4,6 +4,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Current ozone level',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -56,6 +57,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Current UV index',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -108,6 +110,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Current UV level',
     'capabilities': dict({
       'options': list([
         'extreme',
@@ -172,6 +175,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Max UV index',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -225,6 +229,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Skin type 1 safe exposure time',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -277,6 +282,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Skin type 2 safe exposure time',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -329,6 +335,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Skin type 3 safe exposure time',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -381,6 +388,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Skin type 4 safe exposure time',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -433,6 +441,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Skin type 5 safe exposure time',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -485,6 +494,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Skin type 6 safe exposure time',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),

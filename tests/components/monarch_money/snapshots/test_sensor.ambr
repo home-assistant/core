@@ -4,6 +4,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Expense year to date',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -57,6 +58,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Income year to date',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -110,6 +112,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Savings rate',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -162,6 +165,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Savings year to date',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -215,6 +219,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Balance',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -269,6 +274,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Data age',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -319,6 +325,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Balance',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -374,6 +381,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Data age',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -424,6 +432,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Balance',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -479,6 +488,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Data age',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -529,6 +539,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Balance',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -584,6 +595,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Data age',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -634,6 +646,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Balance',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -689,6 +702,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Data age',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -739,6 +753,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Balance',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -794,6 +809,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Data age',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -844,6 +860,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Balance',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -899,6 +916,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Data age',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -949,6 +967,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Data age',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -999,6 +1018,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Value',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -1054,6 +1074,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Balance',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -1109,6 +1130,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Data age',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,

@@ -4,6 +4,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Energy price',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -58,6 +59,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Power demand',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -114,6 +116,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Signal strength',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -167,6 +170,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Total energy delivered',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -223,6 +227,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Total energy received',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),

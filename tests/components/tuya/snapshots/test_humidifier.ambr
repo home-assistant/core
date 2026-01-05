@@ -4,6 +4,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': None,
     'capabilities': dict({
       'max_humidity': 100,
       'min_humidity': 0,
@@ -60,6 +61,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': None,
     'capabilities': dict({
       'max_humidity': 80,
       'min_humidity': 25,
@@ -115,6 +117,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': None,
     'capabilities': dict({
       'max_humidity': 70,
       'min_humidity': 35,
@@ -172,6 +175,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': None,
     'capabilities': dict({
       'max_humidity': 80,
       'min_humidity': 30,
@@ -229,6 +233,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': None,
     'capabilities': dict({
       'max_humidity': 100,
       'min_humidity': 0,
@@ -284,6 +289,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': None,
     'capabilities': dict({
       'max_humidity': 80,
       'min_humidity': 25,

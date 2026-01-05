@@ -4,6 +4,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Animation speed',
     'capabilities': dict({
       'options': list([
         'off',
@@ -65,6 +66,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Boot logo duration',
     'capabilities': dict({
       'options': list([
         'off',
@@ -132,6 +134,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Button locking mode',
     'capabilities': dict({
       'options': list([
         'off',
@@ -191,6 +194,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Display orientation mode',
     'capabilities': dict({
       'options': list([
         'right_handed',
@@ -250,6 +254,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Power Delivery 3.1 EPR',
     'capabilities': dict({
       'options': list([
         'off',
@@ -309,6 +314,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Power source',
     'capabilities': dict({
       'options': list([
         'no_battery',
@@ -372,6 +378,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Scrolling speed',
     'capabilities': dict({
       'options': list([
         'slow',
@@ -429,6 +436,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Soldering tip type',
     'capabilities': dict({
       'options': list([
         'auto',
@@ -490,6 +498,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Start-up behavior',
     'capabilities': dict({
       'options': list([
         'disabled',
@@ -551,6 +560,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Temperature display unit',
     'capabilities': dict({
       'options': list([
         'celsius',

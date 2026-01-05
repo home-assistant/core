@@ -4,6 +4,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Battery',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -57,6 +58,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Battery autonomy',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -113,6 +115,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Battery available energy',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -169,6 +172,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Battery temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -225,6 +229,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Charge state',
     'capabilities': dict({
       'options': list([
         'not_in_charge',
@@ -295,6 +300,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Charging power',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -351,6 +357,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Charging remaining time',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -407,6 +414,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'HVAC SoC threshold',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -456,6 +464,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Last battery activity',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -505,6 +514,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Last HVAC activity',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -554,6 +564,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Mileage',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -610,6 +621,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Outside temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -666,6 +678,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Plug state',
     'capabilities': dict({
       'options': list([
         'unplugged',
@@ -730,6 +743,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Battery',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -783,6 +797,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Battery autonomy',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -839,6 +854,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Battery available energy',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -895,6 +911,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Battery temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -951,6 +968,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Charge state',
     'capabilities': dict({
       'options': list([
         'not_in_charge',
@@ -1021,6 +1039,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Charging power',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1077,6 +1096,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Charging remaining time',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1133,6 +1153,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'HVAC SoC threshold',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1182,6 +1203,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Last battery activity',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1231,6 +1253,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Last HVAC activity',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1280,6 +1303,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Mileage',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -1336,6 +1360,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Outside temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1392,6 +1417,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Plug state',
     'capabilities': dict({
       'options': list([
         'unplugged',
@@ -1456,6 +1482,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Fuel autonomy',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1512,6 +1539,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Fuel quantity',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -1568,6 +1596,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'HVAC SoC threshold',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1617,6 +1646,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Last HVAC activity',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1666,6 +1696,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Last location activity',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1715,6 +1746,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Mileage',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -1771,6 +1803,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Outside temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1827,6 +1860,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Admissible charging power',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1883,6 +1917,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Battery',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1936,6 +1971,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Battery autonomy',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1992,6 +2028,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Battery available energy',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -2048,6 +2085,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Battery temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2104,6 +2142,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Charge state',
     'capabilities': dict({
       'options': list([
         'not_in_charge',
@@ -2174,6 +2213,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Charging remaining time',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2230,6 +2270,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Fuel autonomy',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2286,6 +2327,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Fuel quantity',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -2342,6 +2384,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'HVAC SoC threshold',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2391,6 +2434,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Last battery activity',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2440,6 +2484,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Last HVAC activity',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2489,6 +2534,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Last location activity',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2538,6 +2584,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Mileage',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -2594,6 +2641,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Outside temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2650,6 +2698,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Plug state',
     'capabilities': dict({
       'options': list([
         'unplugged',
@@ -2714,6 +2763,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Admissible charging power',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2770,6 +2820,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Battery',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2823,6 +2874,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Battery autonomy',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2879,6 +2931,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Battery available energy',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -2935,6 +2988,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Battery temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2991,6 +3045,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Charge state',
     'capabilities': dict({
       'options': list([
         'not_in_charge',
@@ -3061,6 +3116,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Charging remaining time',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -3117,6 +3173,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'HVAC SoC threshold',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -3166,6 +3223,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Last battery activity',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -3215,6 +3273,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Last HVAC activity',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -3264,6 +3323,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Last location activity',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -3313,6 +3373,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Mileage',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -3369,6 +3430,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Outside temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -3425,6 +3487,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Plug state',
     'capabilities': dict({
       'options': list([
         'unplugged',
@@ -3489,6 +3552,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Battery',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -3542,6 +3606,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Battery autonomy',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -3598,6 +3663,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Battery available energy',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -3654,6 +3720,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Battery temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -3710,6 +3777,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Charge state',
     'capabilities': dict({
       'options': list([
         'not_in_charge',
@@ -3780,6 +3848,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Charging power',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -3836,6 +3905,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Charging remaining time',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -3892,6 +3962,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'HVAC SoC threshold',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -3941,6 +4012,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Last battery activity',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -3990,6 +4062,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Last HVAC activity',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -4039,6 +4112,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Mileage',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -4095,6 +4169,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Outside temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -4151,6 +4226,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Plug state',
     'capabilities': dict({
       'options': list([
         'unplugged',
@@ -4215,6 +4291,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Admissible charging power',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -4271,6 +4348,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Battery',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -4324,6 +4402,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Battery autonomy',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -4380,6 +4459,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Battery available energy',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -4436,6 +4516,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Battery temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -4492,6 +4573,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Charge state',
     'capabilities': dict({
       'options': list([
         'not_in_charge',
@@ -4562,6 +4644,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Charging remaining time',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -4618,6 +4701,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Front left tyre pressure',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -4674,6 +4758,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Front right tyre pressure',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -4730,6 +4815,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'HVAC SoC threshold',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -4779,6 +4865,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Last battery activity',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -4828,6 +4915,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Last HVAC activity',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -4877,6 +4965,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Last location activity',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -4926,6 +5015,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Mileage',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -4982,6 +5072,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Outside temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -5038,6 +5129,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Plug state',
     'capabilities': dict({
       'options': list([
         'unplugged',
@@ -5102,6 +5194,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Rear left tyre pressure',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -5158,6 +5251,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Rear right tyre pressure',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),

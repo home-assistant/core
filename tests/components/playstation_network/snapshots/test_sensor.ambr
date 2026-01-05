@@ -4,6 +4,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Bronze trophies',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -53,6 +54,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Gold trophies',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -102,6 +104,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Last online',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -151,6 +154,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Next level',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -200,6 +204,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Now playing',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -248,6 +253,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Online ID',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -296,6 +302,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Online status',
     'capabilities': dict({
       'options': list([
         'offline',
@@ -358,6 +365,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Platinum trophies',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -407,6 +415,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Silver trophies',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -456,6 +465,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Trophy level',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -504,6 +514,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Bronze trophies',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -553,6 +564,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Gold trophies',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -602,6 +614,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Last online',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -651,6 +664,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Next level',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -700,6 +714,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Now playing',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -748,6 +763,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Online ID',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -797,6 +813,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Online status',
     'capabilities': dict({
       'options': list([
         'offline',
@@ -859,6 +876,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Platinum trophies',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -908,6 +926,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Silver trophies',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -957,6 +976,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Trophy level',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,

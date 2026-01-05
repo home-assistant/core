@@ -4,6 +4,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'LED',
     'capabilities': dict({
       'supported_color_modes': list([
         <ColorMode.RGB: 'rgb'>,

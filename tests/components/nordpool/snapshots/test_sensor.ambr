@@ -4,6 +4,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Currency',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -52,6 +53,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Current price',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -107,6 +109,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Daily average',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -162,6 +165,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Exchange rate',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -213,6 +217,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Highest price',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -267,6 +272,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Last updated',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -316,6 +322,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Lowest price',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -370,6 +377,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Next price',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -422,6 +430,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Off-peak 1 average',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -477,6 +486,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Off-peak 1 highest price',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -532,6 +542,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Off-peak 1 lowest price',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -587,6 +598,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Off-peak 1 time from',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -636,6 +648,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Off-peak 1 time until',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -685,6 +698,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Off-peak 2 average',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -740,6 +754,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Off-peak 2 highest price',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -795,6 +810,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Off-peak 2 lowest price',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -850,6 +866,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Off-peak 2 time from',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -899,6 +916,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Off-peak 2 time until',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -948,6 +966,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Peak average',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1003,6 +1022,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Peak highest price',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1058,6 +1078,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Peak lowest price',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1113,6 +1134,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Peak time from',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1162,6 +1184,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Peak time until',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1211,6 +1234,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Previous price',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1263,6 +1287,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Currency',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1311,6 +1336,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Current price',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1366,6 +1392,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Daily average',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1421,6 +1448,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Exchange rate',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1472,6 +1500,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Highest price',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1526,6 +1555,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Last updated',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1575,6 +1605,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Lowest price',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1629,6 +1660,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Next price',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1681,6 +1713,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Off-peak 1 average',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1736,6 +1769,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Off-peak 1 highest price',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1791,6 +1825,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Off-peak 1 lowest price',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1846,6 +1881,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Off-peak 1 time from',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1895,6 +1931,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Off-peak 1 time until',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1944,6 +1981,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Off-peak 2 average',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1999,6 +2037,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Off-peak 2 highest price',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2054,6 +2093,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Off-peak 2 lowest price',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2109,6 +2149,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Off-peak 2 time from',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2158,6 +2199,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Off-peak 2 time until',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2207,6 +2249,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Peak average',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2262,6 +2305,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Peak highest price',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2317,6 +2361,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Peak lowest price',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2372,6 +2417,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Peak time from',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2421,6 +2467,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Peak time until',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2470,6 +2517,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Previous price',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,

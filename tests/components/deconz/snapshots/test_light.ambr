@@ -4,6 +4,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Dimmable light',
     'capabilities': dict({
       'supported_color_modes': list([
         <ColorMode.BRIGHTNESS: 'brightness'>,
@@ -63,6 +64,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': None,
     'capabilities': dict({
       'effect_list': list([
         'colorloop',
@@ -155,6 +157,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'RGB light',
     'capabilities': dict({
       'effect_list': list([
         'colorloop',
@@ -234,6 +237,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Tunable white light',
     'capabilities': dict({
       'max_color_temp_kelvin': 6451,
       'max_mireds': 454,
@@ -316,6 +320,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Dimmable light',
     'capabilities': dict({
       'supported_color_modes': list([
         <ColorMode.BRIGHTNESS: 'brightness'>,
@@ -375,6 +380,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': None,
     'capabilities': dict({
       'effect_list': list([
         'colorloop',
@@ -467,6 +473,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'RGB light',
     'capabilities': dict({
       'effect_list': list([
         'colorloop',
@@ -546,6 +553,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Tunable white light',
     'capabilities': dict({
       'max_color_temp_kelvin': 6451,
       'max_mireds': 454,
@@ -628,6 +636,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Dimmable light',
     'capabilities': dict({
       'supported_color_modes': list([
         <ColorMode.BRIGHTNESS: 'brightness'>,
@@ -687,6 +696,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': None,
     'capabilities': dict({
       'effect_list': list([
         'colorloop',
@@ -779,6 +789,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'RGB light',
     'capabilities': dict({
       'effect_list': list([
         'colorloop',
@@ -858,6 +869,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Tunable white light',
     'capabilities': dict({
       'max_color_temp_kelvin': 6451,
       'max_mireds': 454,
@@ -940,6 +952,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Hue Go',
     'capabilities': dict({
       'effect_list': list([
         'colorloop',
@@ -1033,6 +1046,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Hue Ensis',
     'capabilities': dict({
       'effect_list': list([
         'colorloop',
@@ -1126,6 +1140,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'LIDL xmas light',
     'capabilities': dict({
       'effect_list': list([
         'carnival',
@@ -1235,6 +1250,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Hue White Ambiance',
     'capabilities': dict({
       'max_color_temp_kelvin': 6535,
       'max_mireds': 454,
@@ -1317,6 +1333,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Hue Filament',
     'capabilities': dict({
       'supported_color_modes': list([
         <ColorMode.BRIGHTNESS: 'brightness'>,
@@ -1376,6 +1393,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Simple Light',
     'capabilities': dict({
       'supported_color_modes': list([
         <ColorMode.ONOFF: 'onoff'>,
@@ -1434,6 +1452,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Gradient light',
     'capabilities': dict({
       'effect_list': list([
         <LightEffect.NONE: 'none'>,

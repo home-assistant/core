@@ -4,6 +4,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Advanced mode',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -52,6 +53,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Border switch',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -100,6 +102,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Child lock',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -148,6 +151,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Cross map border warning',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -196,6 +200,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Move up warning',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -244,6 +249,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Safe protect',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -292,6 +298,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'True detect',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -340,6 +347,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Advanced mode',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -388,6 +396,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Carpet auto-boost suction',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -436,6 +445,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Continuous cleaning',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -484,6 +494,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Continuous cleaning',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -519,6 +530,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Carpet auto-boost suction',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -554,6 +566,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'True detect',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -589,6 +602,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Child lock',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -624,6 +638,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Border spin',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,

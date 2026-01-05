@@ -17,6 +17,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Admin',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -97,6 +98,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Created',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -181,6 +183,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Days until expiration',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -261,6 +264,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Expires',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -341,6 +345,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Last updated',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -420,6 +425,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Owner',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -499,6 +505,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Registrant',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -578,6 +585,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Registrar',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -657,6 +665,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Reseller',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -762,6 +771,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Status',
     'capabilities': dict({
       'options': list([
         'add_period',
@@ -868,6 +878,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Last updated',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,

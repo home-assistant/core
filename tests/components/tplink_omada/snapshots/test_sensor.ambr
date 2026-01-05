@@ -4,6 +4,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'CPU usage',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -56,6 +57,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Device status',
     'capabilities': dict({
       'options': list([
         'disconnected',
@@ -124,6 +126,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Memory usage',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -176,6 +179,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'CPU usage',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -228,6 +232,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Device status',
     'capabilities': dict({
       'options': list([
         'disconnected',
@@ -296,6 +301,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Memory usage',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),

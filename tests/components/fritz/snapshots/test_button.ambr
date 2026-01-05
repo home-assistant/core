@@ -4,6 +4,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Cleanup',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -52,6 +53,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Firmware update',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -101,6 +103,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Reconnect',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -150,6 +153,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Restart',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -199,6 +203,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'printer Wake on LAN',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,

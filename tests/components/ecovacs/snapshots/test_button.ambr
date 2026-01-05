@@ -4,6 +4,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Reset blade lifespan',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -52,6 +53,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Reset lens brush lifespan',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -100,6 +102,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Empty dustbin',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -148,6 +151,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Relocate',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -196,6 +200,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Reset filter lifespan',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -244,6 +249,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Reset main brush lifespan',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -292,6 +298,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Reset round mop lifespan',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -340,6 +347,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Reset side brush lifespan',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -388,6 +396,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Reset unit care lifespan',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -436,6 +445,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Relocate',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -484,6 +494,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Reset filter lifespan',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -532,6 +543,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Reset main brush lifespan',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -580,6 +592,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Reset side brush lifespan',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,

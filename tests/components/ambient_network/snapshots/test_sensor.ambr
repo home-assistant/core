@@ -4,6 +4,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Absolute pressure',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -65,6 +66,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Daily rain',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -126,6 +128,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Dew point',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -184,6 +187,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Feels like',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -242,6 +246,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Hourly rain',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -303,6 +308,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Humidity',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -361,6 +367,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Irradiance',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -419,6 +426,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Last rain',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -470,6 +478,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Max daily gust',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -531,6 +540,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Monthly rain',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -592,6 +602,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Relative pressure',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -653,6 +664,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -711,6 +723,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'UV index',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -768,6 +781,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Weekly rain',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -829,6 +843,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Wind direction',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT_ANGLE: 'measurement_angle'>,
     }),
@@ -887,6 +902,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Wind gust',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -948,6 +964,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Wind speed',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1009,6 +1026,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Absolute pressure',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1070,6 +1088,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Daily rain',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -1131,6 +1150,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Dew point',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1189,6 +1209,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Feels like',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1247,6 +1268,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Hourly rain',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1308,6 +1330,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Humidity',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1366,6 +1389,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Irradiance',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1424,6 +1448,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Last rain',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1475,6 +1500,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Max daily gust',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1536,6 +1562,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Monthly rain',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -1597,6 +1624,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Relative pressure',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1658,6 +1686,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1716,6 +1745,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'UV index',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1773,6 +1803,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Weekly rain',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -1834,6 +1865,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Wind direction',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT_ANGLE: 'measurement_angle'>,
     }),
@@ -1892,6 +1924,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Wind gust',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1953,6 +1986,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Wind speed',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2014,6 +2048,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Absolute pressure',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2074,6 +2109,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Daily rain',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -2134,6 +2170,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Dew point',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2191,6 +2228,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Feels like',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2248,6 +2286,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Hourly rain',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2308,6 +2347,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Humidity',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2365,6 +2405,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Irradiance',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2422,6 +2463,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Max daily gust',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2482,6 +2524,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Monthly rain',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -2542,6 +2585,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Relative pressure',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2602,6 +2646,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2659,6 +2704,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'UV index',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2715,6 +2761,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Weekly rain',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -2775,6 +2822,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Wind direction',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT_ANGLE: 'measurement_angle'>,
     }),
@@ -2832,6 +2880,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Wind gust',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2892,6 +2941,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Wind speed',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),

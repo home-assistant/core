@@ -22,6 +22,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Brew by weight dose mode',
     'capabilities': dict({
       'options': list([
         'continuous',
@@ -81,6 +82,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Prebrew/-infusion mode',
     'capabilities': dict({
       'options': list([
         'disabled',
@@ -140,6 +142,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Prebrew/-infusion mode',
     'capabilities': dict({
       'options': list([
         'disabled',
@@ -199,6 +202,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Prebrew/-infusion mode',
     'capabilities': dict({
       'options': list([
         'disabled',
@@ -257,6 +261,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Smart standby mode',
     'capabilities': dict({
       'options': list([
         'power_on',
@@ -315,6 +320,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Steam level',
     'capabilities': dict({
       'options': list([
         '1',

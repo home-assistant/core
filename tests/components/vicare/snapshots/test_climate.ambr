@@ -4,6 +4,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Heating',
     'capabilities': dict({
       'hvac_modes': list([
       ]),
@@ -89,6 +90,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Heating',
     'capabilities': dict({
       'hvac_modes': list([
       ]),

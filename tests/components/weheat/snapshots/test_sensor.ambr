@@ -4,6 +4,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': None,
     'capabilities': dict({
       'options': list([
         'standby',
@@ -76,6 +77,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Central heating inlet temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -132,6 +134,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Central heating pump flow',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -188,6 +191,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Compressor speed',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -240,6 +244,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Compressor usage',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -292,6 +297,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'COP',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -346,6 +352,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Current room temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -402,6 +409,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'DHW bottom temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -458,6 +466,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'DHW pump flow',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -514,6 +523,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'DHW top temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -570,6 +580,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Electricity used',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -626,6 +637,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Input power',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -682,6 +694,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Output power',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -738,6 +751,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Outside temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -794,6 +808,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Room temperature setpoint',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -850,6 +865,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Total energy output',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -906,6 +922,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Water inlet temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -962,6 +979,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Water outlet temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1018,6 +1036,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Water target temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),

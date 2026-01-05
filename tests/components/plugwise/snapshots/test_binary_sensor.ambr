@@ -4,6 +4,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Plugwise notification',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -61,6 +62,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Battery',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -110,6 +112,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Battery',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -159,6 +162,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Heating',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -207,6 +211,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Battery',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -256,6 +261,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Battery',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -305,6 +311,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Battery',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -354,6 +361,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Battery',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -403,6 +411,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Battery',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -452,6 +461,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Battery',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -501,6 +511,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Compressor state',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -549,6 +560,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Cooling',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -597,6 +609,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Cooling enabled',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -645,6 +658,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'DHW state',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -693,6 +707,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Flame state',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -741,6 +756,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Heating',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -789,6 +805,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Secondary boiler state',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -837,6 +854,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Plugwise notification',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -893,6 +911,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Plugwise notification',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,

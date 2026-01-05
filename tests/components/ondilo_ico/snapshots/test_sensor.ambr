@@ -4,6 +4,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Battery',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -57,6 +58,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Oxydo reduction potential',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -109,6 +111,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'pH',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -161,6 +164,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'RSSI',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -213,6 +217,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Salt',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -265,6 +270,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'TDS',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -317,6 +323,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -373,6 +380,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Battery',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -426,6 +434,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Oxydo reduction potential',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -478,6 +487,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'pH',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -530,6 +540,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'RSSI',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -582,6 +593,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Salt',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -634,6 +646,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'TDS',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -686,6 +699,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),

@@ -4,6 +4,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Clients',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -55,6 +56,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'State',
     'capabilities': dict({
       'options': list([
         'disconnected',
@@ -133,6 +135,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Temperature',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -186,6 +189,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Uptime',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -235,6 +239,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'AC Power Budget',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -291,6 +296,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'AC Power Consumption',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -347,6 +353,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Clients',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -398,6 +405,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'CPU utilization',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -450,6 +458,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Memory utilization',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -502,6 +511,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Outlet 2 Outlet Power',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -558,6 +568,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'State',
     'capabilities': dict({
       'options': list([
         'disconnected',
@@ -636,6 +647,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Uptime',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -685,6 +697,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Clients',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -736,6 +749,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Cloudflare WAN2 latency',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -792,6 +806,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Cloudflare WAN latency',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -848,6 +863,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Google WAN2 latency',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -904,6 +920,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Google WAN latency',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -960,6 +977,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Microsoft WAN2 latency',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1016,6 +1034,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Microsoft WAN latency',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1072,6 +1091,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Port 1 PoE Power',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1128,6 +1148,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Port 1 RX',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1187,6 +1208,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Port 1 TX',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1246,6 +1268,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Port 2 PoE Power',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1302,6 +1325,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Port 2 RX',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1361,6 +1385,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Port 2 TX',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1420,6 +1445,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Port 3 RX',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1479,6 +1505,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Port 3 TX',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1538,6 +1565,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Port 4 PoE Power',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1594,6 +1622,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Port 4 RX',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1653,6 +1682,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Port 4 TX',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1712,6 +1742,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'State',
     'capabilities': dict({
       'options': list([
         'disconnected',
@@ -1790,6 +1821,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Uptime',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1839,6 +1871,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1890,6 +1923,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Link speed',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1946,6 +1980,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'RX',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2002,6 +2037,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'TX',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2058,6 +2094,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Uptime',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2107,6 +2144,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'RX',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2163,6 +2201,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'TX',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2219,6 +2258,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Uptime',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,

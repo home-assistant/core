@@ -4,6 +4,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Max output',
     'capabilities': dict({
       'max': 1000,
       'min': 0,

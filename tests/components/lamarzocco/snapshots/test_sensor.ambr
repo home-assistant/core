@@ -4,6 +4,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Brewing start time',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -53,6 +54,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Coffee boiler ready time',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -102,6 +104,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Last cleaning time',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -151,6 +154,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Steam boiler ready time',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -200,6 +204,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Total coffees made',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -252,6 +257,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Total flushes done',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),

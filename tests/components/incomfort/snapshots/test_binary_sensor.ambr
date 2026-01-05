@@ -4,6 +4,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Burner',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -53,6 +54,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Fault',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -103,6 +105,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Hot water tap',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -152,6 +155,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Pump',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -201,6 +205,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Burner',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -250,6 +255,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Fault',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -300,6 +306,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Hot water tap',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -349,6 +356,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Pump',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -398,6 +406,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Burner',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -447,6 +456,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Fault',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -497,6 +507,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Hot water tap',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -546,6 +557,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Pump',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -595,6 +607,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Burner',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -644,6 +657,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Fault',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -694,6 +708,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Hot water tap',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -743,6 +758,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Pump',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -792,6 +808,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Burner',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -841,6 +858,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Fault',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -891,6 +909,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Hot water tap',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -940,6 +959,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Pump',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,

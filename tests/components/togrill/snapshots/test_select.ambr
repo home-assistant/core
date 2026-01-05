@@ -4,6 +4,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Grill type',
     'capabilities': dict({
       'options': list([
         'none',
@@ -89,6 +90,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Taste',
     'capabilities': dict({
       'options': list([
         'none',
@@ -154,6 +156,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Grill type',
     'capabilities': dict({
       'options': list([
         'none',
@@ -239,6 +242,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Taste',
     'capabilities': dict({
       'options': list([
         'none',
@@ -304,6 +308,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Grill type',
     'capabilities': dict({
       'options': list([
         'none',
@@ -389,6 +394,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Taste',
     'capabilities': dict({
       'options': list([
         'none',
@@ -454,6 +460,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Grill type',
     'capabilities': dict({
       'options': list([
         'none',
@@ -539,6 +546,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Taste',
     'capabilities': dict({
       'options': list([
         'none',
@@ -604,6 +612,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Grill type',
     'capabilities': dict({
       'options': list([
         'none',
@@ -689,6 +698,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Taste',
     'capabilities': dict({
       'options': list([
         'none',
@@ -754,6 +764,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Grill type',
     'capabilities': dict({
       'options': list([
         'none',
@@ -839,6 +850,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Taste',
     'capabilities': dict({
       'options': list([
         'none',

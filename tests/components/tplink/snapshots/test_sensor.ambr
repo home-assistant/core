@@ -39,6 +39,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Alarm source',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -74,6 +75,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Auto-off at',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -123,6 +125,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Battery',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -176,6 +179,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Charging contacts remaining',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -214,6 +218,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Charging contacts used',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -252,6 +257,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Cleaning area',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -311,6 +317,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Cleaning progress',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -348,6 +355,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Cleaning time',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -404,6 +412,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Current',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -460,6 +469,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Current consumption',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -516,6 +526,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Device time',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -551,6 +562,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Error',
     'capabilities': dict({
       'options': list([
         'ok',
@@ -629,6 +641,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Filter remaining',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -667,6 +680,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Filter used',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -705,6 +719,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Humidity',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -758,6 +773,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Last clean start',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -793,6 +809,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Last cleaned area',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -831,6 +848,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Last cleaned time',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -871,6 +889,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Last water leak alert',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -920,6 +939,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Main brush remaining',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -958,6 +978,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Main brush used',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -996,6 +1017,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'On since',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1031,6 +1053,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Report interval',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1066,6 +1089,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Sensor remaining',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1104,6 +1128,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Sensor used',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1142,6 +1167,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Side brush remaining',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1180,6 +1206,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Side brush used',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1218,6 +1245,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Signal level',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1269,6 +1297,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Signal strength',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1306,6 +1335,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'SSID',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1341,6 +1371,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1378,6 +1409,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': "This month's consumption",
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -1434,6 +1466,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': "Today's consumption",
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -1490,6 +1523,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Total cleaning area',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -1530,6 +1564,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Total cleaning count',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -1567,6 +1602,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Total cleaning time',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -1607,6 +1643,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Total consumption',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -1663,6 +1700,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Voltage',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),

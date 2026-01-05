@@ -38,6 +38,7 @@
       'aliases': set({
       }),
       'area_id': None,
+      'calculated_object_id': None,
       'capabilities': dict({
         'preset_modes': list([
           'auto',
@@ -137,6 +138,7 @@
       'aliases': set({
       }),
       'area_id': None,
+      'calculated_object_id': None,
       'capabilities': dict({
         'preset_modes': list([
           'sleep',
@@ -236,6 +238,7 @@
       'aliases': set({
       }),
       'area_id': None,
+      'calculated_object_id': None,
       'capabilities': dict({
         'preset_modes': list([
           'auto',
@@ -337,6 +340,7 @@
       'aliases': set({
       }),
       'area_id': None,
+      'calculated_object_id': None,
       'capabilities': dict({
         'preset_modes': list([
           'auto',
@@ -660,6 +664,7 @@
       'aliases': set({
       }),
       'area_id': None,
+      'calculated_object_id': None,
       'capabilities': dict({
         'preset_modes': list([
           'advanced_sleep',

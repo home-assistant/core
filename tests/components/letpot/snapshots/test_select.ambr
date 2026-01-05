@@ -4,6 +4,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Light brightness',
     'capabilities': dict({
       'options': list([
         'low',
@@ -61,6 +62,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Light mode',
     'capabilities': dict({
       'options': list([
         'flower',
@@ -118,6 +120,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Light mode',
     'capabilities': dict({
       'options': list([
         'flower',
@@ -175,6 +178,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Temperature unit on display',
     'capabilities': dict({
       'options': list([
         'fahrenheit',

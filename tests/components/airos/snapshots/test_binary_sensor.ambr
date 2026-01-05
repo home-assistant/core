@@ -4,6 +4,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'DHCP client',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -53,6 +54,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'DHCP server',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -102,6 +104,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'DHCPv6 server',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -151,6 +154,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Port forwarding',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -199,6 +203,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'PPPoE link',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,

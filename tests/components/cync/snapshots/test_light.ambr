@@ -4,6 +4,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': None,
     'capabilities': dict({
       'max_color_temp_kelvin': 7000,
       'max_mireds': 500,
@@ -87,6 +88,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': None,
     'capabilities': dict({
       'max_color_temp_kelvin': 7000,
       'max_mireds': 500,
@@ -170,6 +172,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': None,
     'capabilities': dict({
       'max_color_temp_kelvin': 7000,
       'max_mireds': 500,

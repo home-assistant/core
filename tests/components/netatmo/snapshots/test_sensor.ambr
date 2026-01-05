@@ -4,6 +4,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Atmospheric pressure',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -66,6 +67,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Carbon dioxide',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -122,6 +124,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Health index',
     'capabilities': dict({
       'options': list([
         'healthy',
@@ -189,6 +192,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Humidity',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -245,6 +249,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Noise',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -304,6 +309,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Pressure trend',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -355,6 +361,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Reachability',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -406,6 +413,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -465,6 +473,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Temperature trend',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -516,6 +525,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Wi-Fi strength',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -567,6 +577,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Atmospheric pressure',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -627,6 +638,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Carbon dioxide',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -681,6 +693,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Health index',
     'capabilities': dict({
       'options': list([
         'healthy',
@@ -746,6 +759,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Humidity',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -800,6 +814,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Noise',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -857,6 +872,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Pressure trend',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -906,6 +922,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Reachability',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -957,6 +974,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1014,6 +1032,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Temperature trend',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1063,6 +1082,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Wi-Fi strength',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1114,6 +1134,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Battery',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1163,11 +1184,12 @@
     'state': '90',
   })
 # ---
-# name: test_entity[sensor.cold_water_none-entry]
+# name: test_entity[sensor.cold_water-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1176,7 +1198,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.cold_water_none',
+    'entity_id': 'sensor.cold_water',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1198,25 +1220,26 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_entity[sensor.cold_water_none-state]
+# name: test_entity[sensor.cold_water-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by Netatmo',
       'friendly_name': 'Cold water None',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.cold_water_none',
+    'entity_id': 'sensor.cold_water',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'True',
   })
 # ---
-# name: test_entity[sensor.consumption_meter_none-entry]
+# name: test_entity[sensor.consumption_meter-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1225,7 +1248,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.consumption_meter_none',
+    'entity_id': 'sensor.consumption_meter',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1247,14 +1270,14 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_entity[sensor.consumption_meter_none-state]
+# name: test_entity[sensor.consumption_meter-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by Netatmo',
       'friendly_name': 'Consumption meter None',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.consumption_meter_none',
+    'entity_id': 'sensor.consumption_meter',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -1266,6 +1289,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Power',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1323,6 +1347,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Humidity',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1372,11 +1397,12 @@
     'state': '67',
   })
 # ---
-# name: test_entity[sensor.ecocompteur_none-entry]
+# name: test_entity[sensor.ecocompteur-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1385,7 +1411,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.ecocompteur_none',
+    'entity_id': 'sensor.ecocompteur',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1407,25 +1433,26 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_entity[sensor.ecocompteur_none-state]
+# name: test_entity[sensor.ecocompteur-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by Netatmo',
       'friendly_name': 'Écocompteur None',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.ecocompteur_none',
+    'entity_id': 'sensor.ecocompteur',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unavailable',
   })
 # ---
-# name: test_entity[sensor.gas_none-entry]
+# name: test_entity[sensor.gas-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1434,7 +1461,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.gas_none',
+    'entity_id': 'sensor.gas',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1456,14 +1483,14 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_entity[sensor.gas_none-state]
+# name: test_entity[sensor.gas-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by Netatmo',
       'friendly_name': 'Gas None',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.gas_none',
+    'entity_id': 'sensor.gas',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -1475,6 +1502,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Atmospheric pressure',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1537,6 +1565,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Gust angle',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT_ANGLE: 'measurement_angle'>,
     }),
@@ -1593,6 +1622,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Gust strength',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1652,6 +1682,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Humidity',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1708,6 +1739,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Precipitation',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1767,6 +1799,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Precipitation last hour',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -1826,6 +1859,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Precipitation today',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -1885,6 +1919,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1944,6 +1979,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Wind direction',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT_ANGLE: 'measurement_angle'>,
     }),
@@ -2000,6 +2036,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Wind speed',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2059,6 +2096,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Atmospheric pressure',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2121,6 +2159,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Gust angle',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT_ANGLE: 'measurement_angle'>,
     }),
@@ -2177,6 +2216,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Gust strength',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2236,6 +2276,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Humidity',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2292,6 +2333,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Precipitation',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2351,6 +2393,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Precipitation last hour',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -2410,6 +2453,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Precipitation today',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -2469,6 +2513,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2528,6 +2573,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Wind direction',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT_ANGLE: 'measurement_angle'>,
     }),
@@ -2584,6 +2630,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Wind speed',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2643,6 +2690,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Atmospheric pressure',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2705,6 +2753,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Gust angle',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT_ANGLE: 'measurement_angle'>,
     }),
@@ -2761,6 +2810,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Gust strength',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2820,6 +2870,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Humidity',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2876,6 +2927,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Precipitation',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2935,6 +2987,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Precipitation last hour',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -2994,6 +3047,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Precipitation today',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -3053,6 +3107,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -3112,6 +3167,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Wind direction',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT_ANGLE: 'measurement_angle'>,
     }),
@@ -3168,6 +3224,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Wind speed',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -3222,11 +3279,12 @@
     'state': '15',
   })
 # ---
-# name: test_entity[sensor.hot_water_none-entry]
+# name: test_entity[sensor.hot_water-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -3235,7 +3293,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.hot_water_none',
+    'entity_id': 'sensor.hot_water',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -3257,14 +3315,14 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_entity[sensor.hot_water_none-state]
+# name: test_entity[sensor.hot_water-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by Netatmo',
       'friendly_name': 'Hot water None',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.hot_water_none',
+    'entity_id': 'sensor.hot_water',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -3276,6 +3334,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Atmospheric pressure',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -3338,6 +3397,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Carbon dioxide',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -3394,6 +3454,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Health index',
     'capabilities': dict({
       'options': list([
         'healthy',
@@ -3461,6 +3522,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Humidity',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -3517,6 +3579,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Noise',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -3576,6 +3639,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Pressure trend',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -3627,6 +3691,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Reachability',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -3678,6 +3743,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -3737,6 +3803,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Temperature trend',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -3788,6 +3855,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Wi-Fi strength',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -3834,11 +3902,12 @@
     'state': 'Full',
   })
 # ---
-# name: test_entity[sensor.line_1_none-entry]
+# name: test_entity[sensor.line_1-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -3847,7 +3916,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.line_1_none',
+    'entity_id': 'sensor.line_1',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -3869,25 +3938,26 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_entity[sensor.line_1_none-state]
+# name: test_entity[sensor.line_1-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by Netatmo',
       'friendly_name': 'Line 1 None',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.line_1_none',
+    'entity_id': 'sensor.line_1',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'True',
   })
 # ---
-# name: test_entity[sensor.line_2_none-entry]
+# name: test_entity[sensor.line_2-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -3896,7 +3966,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.line_2_none',
+    'entity_id': 'sensor.line_2',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -3918,25 +3988,26 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_entity[sensor.line_2_none-state]
+# name: test_entity[sensor.line_2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by Netatmo',
       'friendly_name': 'Line 2 None',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.line_2_none',
+    'entity_id': 'sensor.line_2',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'True',
   })
 # ---
-# name: test_entity[sensor.line_3_none-entry]
+# name: test_entity[sensor.line_3-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -3945,7 +4016,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.line_3_none',
+    'entity_id': 'sensor.line_3',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -3967,25 +4038,26 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_entity[sensor.line_3_none-state]
+# name: test_entity[sensor.line_3-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by Netatmo',
       'friendly_name': 'Line 3 None',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.line_3_none',
+    'entity_id': 'sensor.line_3',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'True',
   })
 # ---
-# name: test_entity[sensor.line_4_none-entry]
+# name: test_entity[sensor.line_4-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -3994,7 +4066,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.line_4_none',
+    'entity_id': 'sensor.line_4',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -4016,25 +4088,26 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_entity[sensor.line_4_none-state]
+# name: test_entity[sensor.line_4-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by Netatmo',
       'friendly_name': 'Line 4 None',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.line_4_none',
+    'entity_id': 'sensor.line_4',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'True',
   })
 # ---
-# name: test_entity[sensor.line_5_none-entry]
+# name: test_entity[sensor.line_5-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -4043,7 +4116,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.line_5_none',
+    'entity_id': 'sensor.line_5',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -4065,14 +4138,14 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_entity[sensor.line_5_none-state]
+# name: test_entity[sensor.line_5-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by Netatmo',
       'friendly_name': 'Line 5 None',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.line_5_none',
+    'entity_id': 'sensor.line_5',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -4084,6 +4157,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Atmospheric pressure',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -4146,6 +4220,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Battery',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -4200,6 +4275,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Carbon dioxide',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -4256,6 +4332,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Health index',
     'capabilities': dict({
       'options': list([
         'healthy',
@@ -4323,6 +4400,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Humidity',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -4379,6 +4457,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Noise',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -4438,6 +4517,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Pressure trend',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -4489,6 +4569,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Reachability',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -4540,6 +4621,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -4599,6 +4681,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Temperature trend',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -4650,6 +4733,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Wi-Fi strength',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -4701,6 +4785,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Atmospheric pressure',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -4763,6 +4848,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Carbon dioxide',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -4819,6 +4905,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Health index',
     'capabilities': dict({
       'options': list([
         'healthy',
@@ -4886,6 +4973,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Humidity',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -4942,6 +5030,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Noise',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -5001,6 +5090,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Pressure trend',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -5052,6 +5142,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Reachability',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -5103,6 +5194,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -5162,6 +5254,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Temperature trend',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -5213,6 +5306,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Wi-Fi strength',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -5259,11 +5353,12 @@
     'state': 'High',
   })
 # ---
-# name: test_entity[sensor.prise_none-entry]
+# name: test_entity[sensor.prise-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -5272,7 +5367,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.prise_none',
+    'entity_id': 'sensor.prise',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -5294,14 +5389,14 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_entity[sensor.prise_none-state]
+# name: test_entity[sensor.prise-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by Netatmo',
       'friendly_name': 'Prise None',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.prise_none',
+    'entity_id': 'sensor.prise',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -5313,6 +5408,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Power',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -5365,11 +5461,12 @@
     'state': '0',
   })
 # ---
-# name: test_entity[sensor.total_none-entry]
+# name: test_entity[sensor.total-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -5378,7 +5475,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.total_none',
+    'entity_id': 'sensor.total',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -5400,14 +5497,14 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_entity[sensor.total_none-state]
+# name: test_entity[sensor.total-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by Netatmo',
       'friendly_name': 'Total None',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.total_none',
+    'entity_id': 'sensor.total',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -5419,6 +5516,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Battery',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -5473,6 +5571,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Battery',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -5527,6 +5626,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Atmospheric pressure',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -5589,6 +5689,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Battery',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -5643,6 +5744,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Carbon dioxide',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -5697,6 +5799,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Humidity',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -5751,6 +5854,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Reachability',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -5800,6 +5904,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'RF strength',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -5849,6 +5954,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -5906,6 +6012,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Temperature trend',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -5955,6 +6062,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Battery',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -6009,6 +6117,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Carbon dioxide',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -6063,6 +6172,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Humidity',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -6117,6 +6227,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Reachability',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -6166,6 +6277,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'RF strength',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -6215,6 +6327,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -6272,6 +6385,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Temperature trend',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -6321,6 +6435,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Carbon dioxide',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -6377,6 +6492,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Battery',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -6431,6 +6547,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Gust angle',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT_ANGLE: 'measurement_angle'>,
     }),
@@ -6485,6 +6602,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Gust direction',
     'capabilities': dict({
       'options': list([
         'n',
@@ -6556,6 +6674,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Gust strength',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -6613,6 +6732,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Reachability',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -6662,6 +6782,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'RF strength',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -6711,6 +6832,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Wind angle',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT_ANGLE: 'measurement_angle'>,
     }),
@@ -6765,6 +6887,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Wind direction',
     'capabilities': dict({
       'options': list([
         'n',
@@ -6836,6 +6959,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Wind speed',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -6893,6 +7017,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Humidity',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -6949,6 +7074,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Noise',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -7008,6 +7134,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Battery',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -7062,6 +7189,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Humidity',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -7116,6 +7244,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Reachability',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -7165,6 +7294,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'RF strength',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -7214,6 +7344,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -7271,6 +7402,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Temperature trend',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -7320,6 +7452,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Pressure trend',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -7371,6 +7504,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Battery',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -7425,6 +7559,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Precipitation',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -7482,6 +7617,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Precipitation last hour',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -7539,6 +7675,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Precipitation today',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -7596,6 +7733,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Reachability',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -7645,6 +7783,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'RF strength',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -7694,6 +7833,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Reachability',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -7745,6 +7885,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -7804,6 +7945,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Temperature trend',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -7855,6 +7997,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Wi-Fi strength',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,

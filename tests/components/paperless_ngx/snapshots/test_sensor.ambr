@@ -4,6 +4,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Available storage',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -60,6 +61,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Correspondents',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -112,6 +114,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Document types',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -164,6 +167,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Documents in inbox',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -216,6 +220,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Status Celery',
     'capabilities': dict({
       'options': list([
         'ok',
@@ -276,6 +281,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Status classifier',
     'capabilities': dict({
       'options': list([
         'ok',
@@ -336,6 +342,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Status database',
     'capabilities': dict({
       'options': list([
         'ok',
@@ -396,6 +403,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Status index',
     'capabilities': dict({
       'options': list([
         'ok',
@@ -456,6 +464,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Status Redis',
     'capabilities': dict({
       'options': list([
         'ok',
@@ -516,6 +525,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Status sanity',
     'capabilities': dict({
       'options': list([
         'ok',
@@ -576,6 +586,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Tags',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -628,6 +639,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Total characters',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -680,6 +692,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Total documents',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -732,6 +745,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Total storage',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),

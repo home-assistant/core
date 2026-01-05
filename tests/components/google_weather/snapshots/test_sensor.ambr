@@ -4,6 +4,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Apparent temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -60,6 +61,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Atmospheric pressure',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -116,6 +118,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Cloud coverage',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -168,6 +171,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Dew point',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -224,6 +228,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Heat index temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -280,6 +285,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Humidity',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -333,6 +339,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Precipitation intensity',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -389,6 +396,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Precipitation probability',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -441,6 +449,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -497,6 +506,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Thunderstorm probability',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -549,6 +559,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'UV index',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -601,6 +612,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Visibility',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -657,6 +669,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Weather condition',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -705,6 +718,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Wind chill temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -761,6 +775,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Wind direction',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT_ANGLE: 'measurement_angle'>,
     }),
@@ -814,6 +829,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Wind gust speed',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -870,6 +886,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Wind speed',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),

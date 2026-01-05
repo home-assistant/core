@@ -4,6 +4,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'MQTT up since',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -53,6 +54,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Power supply mode',
     'capabilities': dict({
       'options': list([
         'battery',
@@ -113,6 +115,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Signal strength',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -166,6 +169,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Up since',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -215,6 +219,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Volume flow rate',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -271,6 +276,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Water meter duration',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -327,6 +333,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Water meter volume',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -383,6 +390,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Water pressure',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -439,6 +447,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Water temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -495,6 +504,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Wi-Fi up since',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,

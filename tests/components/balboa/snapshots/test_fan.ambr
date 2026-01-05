@@ -4,6 +4,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Pump 1',
     'capabilities': dict({
       'preset_modes': None,
     }),

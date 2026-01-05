@@ -18,6 +18,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Socket 0',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -67,6 +68,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Socket 1',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -116,6 +118,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Socket 2',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -165,6 +168,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Socket 3',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,

@@ -4,6 +4,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Ambient temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -60,6 +61,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Cook state',
     'capabilities': dict({
       'options': list([
         'not_started',
@@ -132,6 +134,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Cooking',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -180,6 +183,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Internal temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -236,6 +240,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Peak temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -292,6 +297,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Target temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -348,6 +354,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Time elapsed',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -397,6 +404,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Time remaining',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,

@@ -4,6 +4,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Heating',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -59,6 +60,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Heating cost',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -115,6 +117,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Heating energy',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -171,6 +174,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Hot water',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -227,6 +231,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Hot water cost',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -283,6 +288,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Hot water energy',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -339,6 +345,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Water',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -395,6 +402,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Water cost',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -451,6 +459,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Heating',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -506,6 +515,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Heating cost',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -562,6 +572,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Heating energy',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -618,6 +629,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Hot water',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -674,6 +686,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Hot water cost',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -730,6 +743,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Hot water energy',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -786,6 +800,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Water',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -842,6 +857,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Water cost',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),

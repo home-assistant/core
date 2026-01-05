@@ -4,6 +4,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'AI-Driven threat detection',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -52,6 +53,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Allow affiliate & tracking links',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -100,6 +102,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Anonymized EDNS client subnet',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -148,6 +151,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Block 9GAG',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -196,6 +200,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Block Amazon',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -244,6 +249,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Block BeReal',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -292,6 +298,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Block Blizzard',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -340,6 +347,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Block bypass methods',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -388,6 +396,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Block ChatGPT',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -436,6 +445,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Block child sexual abuse material',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -484,6 +494,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Block Dailymotion',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -532,6 +543,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Block dating',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -580,6 +592,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Block Discord',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -628,6 +641,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Block disguised third-party trackers',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -676,6 +690,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Block Disney Plus',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -724,6 +739,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Block dynamic DNS hostnames',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -772,6 +788,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Block eBay',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -820,6 +837,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Block Facebook',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -868,6 +886,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Block Fortnite',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -916,6 +935,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Block gambling',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -964,6 +984,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Block Google Chat',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1012,6 +1033,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Block HBO Max',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1060,6 +1082,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Block Hulu',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1108,6 +1131,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Block Imgur',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1156,6 +1180,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Block Instagram',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1204,6 +1229,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Block League of Legends',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1252,6 +1278,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Block Mastodon',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1300,6 +1327,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Block Messenger',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1348,6 +1376,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Block Minecraft',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1396,6 +1425,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Block Netflix',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1444,6 +1474,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Block newly registered domains',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1492,6 +1523,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Block online gaming',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1540,6 +1572,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Block page',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1588,6 +1621,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Block parked domains',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1636,6 +1670,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Block Pinterest',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1684,6 +1719,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Block piracy',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1732,6 +1768,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Block PlayStation Network',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1780,6 +1817,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Block porn',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1828,6 +1866,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Block Prime Video',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1876,6 +1915,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Block Reddit',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1924,6 +1964,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Block Roblox',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1972,6 +2013,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Block Signal',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2020,6 +2062,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Block Skype',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2068,6 +2111,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Block Snapchat',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2116,6 +2160,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Block social networks',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2164,6 +2209,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Block Spotify',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2212,6 +2258,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Block Steam',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2260,6 +2307,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Block Telegram',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2308,6 +2356,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Block TikTok',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2356,6 +2405,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Block Tinder',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2404,6 +2454,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Block Tumblr',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2452,6 +2503,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Block Twitch',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2500,6 +2552,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Block video streaming',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2548,6 +2601,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Block Vimeo',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2596,6 +2650,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Block VK',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2644,6 +2699,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Block WhatsApp',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2692,6 +2748,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Block X (formerly Twitter)',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2740,6 +2797,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Block Xbox Network',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2788,6 +2846,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Block YouTube',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2836,6 +2895,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Block Zoom',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2884,6 +2944,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Bypass age verification',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2932,6 +2993,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Cache boost',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2980,6 +3042,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'CNAME flattening',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -3028,6 +3091,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Cryptojacking protection',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -3076,6 +3140,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'DNS rebinding protection',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -3124,6 +3189,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Domain generation algorithms protection',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -3172,6 +3238,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Force SafeSearch',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -3220,6 +3287,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Force YouTube restricted mode',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -3268,6 +3336,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Google safe browsing',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -3316,6 +3385,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'IDN homograph attacks protection',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -3364,6 +3434,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Logs',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -3412,6 +3483,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Threat intelligence feeds',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -3460,6 +3532,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Typosquatting protection',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -3508,6 +3581,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Web3',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,

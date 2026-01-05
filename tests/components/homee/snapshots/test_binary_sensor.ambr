@@ -4,6 +4,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Blackout',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -53,6 +54,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Battery',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -102,6 +104,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Blackout',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -151,6 +154,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Carbon dioxide',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -200,6 +204,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Carbon monoxide',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -249,6 +254,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Flood',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -298,6 +304,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'High temperature',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -347,6 +354,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Leak',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -396,6 +404,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Load',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -444,6 +453,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Lock',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -493,6 +503,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Low temperature',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -542,6 +553,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Malfunction',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -591,6 +603,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Maximum level',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -640,6 +653,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Minimum level',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -689,6 +703,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Motion',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -738,6 +753,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Motor blocked',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -787,6 +803,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Opening',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -836,6 +853,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Overcurrent',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -885,6 +903,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Overload',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -934,6 +953,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Plug',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -983,6 +1003,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Power',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1032,6 +1053,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Presence',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1081,6 +1103,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Rain',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1130,6 +1153,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Replace filter',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1179,6 +1203,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Smoke',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1228,6 +1253,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Storage',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1277,6 +1303,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Surge',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1326,6 +1353,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Tamper',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1375,6 +1403,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Voltage drop',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1424,6 +1453,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Water',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1473,6 +1503,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Battery',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1522,6 +1553,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Blackout',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1571,6 +1603,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Carbon dioxide',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1620,6 +1653,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Carbon monoxide',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1669,6 +1703,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Flood',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1718,6 +1753,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'High temperature',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1767,6 +1803,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Leak',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1816,6 +1853,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Load',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1864,6 +1902,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Lock',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1913,6 +1952,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Low temperature',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1962,6 +2002,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Malfunction',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2011,6 +2052,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Maximum level',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2060,6 +2102,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Minimum level',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2109,6 +2152,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Motion',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2158,6 +2202,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Motor blocked',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2207,6 +2252,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Opening',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2256,6 +2302,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Overcurrent',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2305,6 +2352,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Overload',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2354,6 +2402,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Plug',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2403,6 +2452,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Power',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2452,6 +2502,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Presence',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2501,6 +2552,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Rain',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2550,6 +2602,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Replace filter',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2599,6 +2652,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Smoke',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2648,6 +2702,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Storage',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2697,6 +2752,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Surge',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2746,6 +2802,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Tamper',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2795,6 +2852,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Voltage drop',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2844,6 +2902,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Water',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,

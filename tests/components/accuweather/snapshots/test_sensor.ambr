@@ -4,6 +4,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Air quality day 0',
     'capabilities': dict({
       'options': list([
         'good',
@@ -69,6 +70,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Air quality day 1',
     'capabilities': dict({
       'options': list([
         'good',
@@ -134,6 +136,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Air quality day 2',
     'capabilities': dict({
       'options': list([
         'good',
@@ -199,6 +202,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Air quality day 3',
     'capabilities': dict({
       'options': list([
         'good',
@@ -264,6 +268,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Air quality day 4',
     'capabilities': dict({
       'options': list([
         'good',
@@ -329,6 +334,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Apparent temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -386,6 +392,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Cloud ceiling',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -443,6 +450,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Cloud cover',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -496,6 +504,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Cloud cover day 0',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -546,6 +555,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Cloud cover day 1',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -596,6 +606,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Cloud cover day 2',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -646,6 +657,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Cloud cover day 3',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -696,6 +708,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Cloud cover day 4',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -746,6 +759,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Cloud cover night 0',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -796,6 +810,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Cloud cover night 1',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -846,6 +861,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Cloud cover night 2',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -896,6 +912,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Cloud cover night 3',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -946,6 +963,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Cloud cover night 4',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -996,6 +1014,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Condition day 0',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1045,6 +1064,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Condition day 1',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1094,6 +1114,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Condition day 2',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1143,6 +1164,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Condition day 3',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1192,6 +1214,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Condition day 4',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1241,6 +1264,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Condition night 0',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1290,6 +1314,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Condition night 1',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1339,6 +1364,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Condition night 2',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1388,6 +1414,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Condition night 3',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1437,6 +1464,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Condition night 4',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1486,6 +1514,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Dew point',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1543,6 +1572,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Grass pollen day 0',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1594,6 +1624,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Grass pollen day 1',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1645,6 +1676,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Grass pollen day 2',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1696,6 +1728,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Grass pollen day 3',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1747,6 +1780,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Grass pollen day 4',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1798,6 +1832,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Hours of sun day 0',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1848,6 +1883,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Hours of sun day 1',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1898,6 +1934,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Hours of sun day 2',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1948,6 +1985,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Hours of sun day 3',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1998,6 +2036,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Hours of sun day 4',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2048,6 +2087,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Humidity',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2102,6 +2142,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Mold pollen day 0',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2153,6 +2194,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Mold pollen day 1',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2204,6 +2246,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Mold pollen day 2',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2255,6 +2298,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Mold pollen day 3',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2306,6 +2350,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Mold pollen day 4',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2357,6 +2402,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Precipitation',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2415,6 +2461,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Pressure',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2472,6 +2519,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Pressure tendency',
     'capabilities': dict({
       'options': list([
         'falling',
@@ -2533,6 +2581,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Ragweed pollen day 0',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2584,6 +2633,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Ragweed pollen day 1',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2635,6 +2685,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Ragweed pollen day 2',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2686,6 +2737,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Ragweed pollen day 3',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2737,6 +2789,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Ragweed pollen day 4',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2788,6 +2841,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'RealFeel temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2845,6 +2899,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'RealFeel temperature max day 0',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2899,6 +2954,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'RealFeel temperature max day 1',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2953,6 +3009,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'RealFeel temperature max day 2',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -3007,6 +3064,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'RealFeel temperature max day 3',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -3061,6 +3119,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'RealFeel temperature max day 4',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -3115,6 +3174,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'RealFeel temperature min day 0',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -3169,6 +3229,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'RealFeel temperature min day 1',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -3223,6 +3284,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'RealFeel temperature min day 2',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -3277,6 +3339,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'RealFeel temperature min day 3',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -3331,6 +3394,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'RealFeel temperature min day 4',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -3385,6 +3449,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'RealFeel temperature shade',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -3442,6 +3507,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'RealFeel temperature shade max day 0',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -3496,6 +3562,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'RealFeel temperature shade max day 1',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -3550,6 +3617,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'RealFeel temperature shade max day 2',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -3604,6 +3672,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'RealFeel temperature shade max day 3',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -3658,6 +3727,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'RealFeel temperature shade max day 4',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -3712,6 +3782,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'RealFeel temperature shade min day 0',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -3766,6 +3837,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'RealFeel temperature shade min day 1',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -3820,6 +3892,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'RealFeel temperature shade min day 2',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -3874,6 +3947,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'RealFeel temperature shade min day 3',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -3928,6 +4002,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'RealFeel temperature shade min day 4',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -3982,6 +4057,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Solar irradiance day 0',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -4036,6 +4112,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Solar irradiance day 1',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -4090,6 +4167,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Solar irradiance day 2',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -4144,6 +4222,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Solar irradiance day 3',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -4198,6 +4277,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Solar irradiance day 4',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -4252,6 +4332,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Solar irradiance night 0',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -4306,6 +4387,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Solar irradiance night 1',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -4360,6 +4442,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Solar irradiance night 2',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -4414,6 +4497,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Solar irradiance night 3',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -4468,6 +4552,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Solar irradiance night 4',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -4522,6 +4607,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -4579,6 +4665,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Thunderstorm probability day 0',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -4629,6 +4716,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Thunderstorm probability day 1',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -4679,6 +4767,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Thunderstorm probability day 2',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -4729,6 +4818,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Thunderstorm probability day 3',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -4779,6 +4869,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Thunderstorm probability day 4',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -4829,6 +4920,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Thunderstorm probability night 0',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -4879,6 +4971,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Thunderstorm probability night 1',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -4929,6 +5022,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Thunderstorm probability night 2',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -4979,6 +5073,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Thunderstorm probability night 3',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -5029,6 +5124,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Thunderstorm probability night 4',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -5079,6 +5175,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Tree pollen day 0',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -5130,6 +5227,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Tree pollen day 1',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -5181,6 +5279,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Tree pollen day 2',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -5232,6 +5331,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Tree pollen day 3',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -5283,6 +5383,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Tree pollen day 4',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -5334,6 +5435,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'UV index',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -5388,6 +5490,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'UV index day 0',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -5439,6 +5542,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'UV index day 1',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -5490,6 +5594,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'UV index day 2',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -5541,6 +5646,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'UV index day 3',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -5592,6 +5698,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'UV index day 4',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -5643,6 +5750,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Wet bulb temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -5700,6 +5808,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Wind chill temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -5757,6 +5866,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Wind gust speed',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -5814,6 +5924,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Wind gust speed day 0',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -5869,6 +5980,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Wind gust speed day 1',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -5924,6 +6036,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Wind gust speed day 2',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -5979,6 +6092,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Wind gust speed day 3',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -6034,6 +6148,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Wind gust speed day 4',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -6089,6 +6204,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Wind gust speed night 0',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -6144,6 +6260,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Wind gust speed night 1',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -6199,6 +6316,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Wind gust speed night 2',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -6254,6 +6372,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Wind gust speed night 3',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -6309,6 +6428,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Wind gust speed night 4',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -6364,6 +6484,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Wind speed',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -6421,6 +6542,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Wind speed day 0',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -6476,6 +6598,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Wind speed day 1',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -6531,6 +6654,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Wind speed day 2',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -6586,6 +6710,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Wind speed day 3',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -6641,6 +6766,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Wind speed day 4',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -6696,6 +6822,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Wind speed night 0',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -6751,6 +6878,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Wind speed night 1',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -6806,6 +6934,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Wind speed night 2',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -6861,6 +6990,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Wind speed night 3',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -6916,6 +7046,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Wind speed night 4',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,

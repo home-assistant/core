@@ -4,6 +4,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Charging time',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -57,6 +58,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Current',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -113,6 +115,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Energy',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -166,6 +169,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Installation current',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -219,6 +223,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Lifetime energy',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -275,6 +280,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Limit reason',
     'capabilities': dict({
       'options': list([
         'no_limit',
@@ -351,6 +357,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Power',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -410,6 +417,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'State',
     'capabilities': dict({
       'options': list([
         'available',
@@ -482,6 +490,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -538,6 +547,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Voltage',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,

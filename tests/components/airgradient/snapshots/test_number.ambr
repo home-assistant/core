@@ -4,6 +4,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Display brightness',
     'capabilities': dict({
       'max': 100,
       'min': 0,
@@ -62,6 +63,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'LED bar brightness',
     'capabilities': dict({
       'max': 100,
       'min': 0,

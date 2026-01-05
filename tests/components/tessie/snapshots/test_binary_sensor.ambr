@@ -4,6 +4,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Backup capable',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -52,6 +53,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Grid services active',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -100,6 +102,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Grid services enabled',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -148,6 +151,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Storm watch active',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -196,6 +200,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Auto seat climate left',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -244,6 +249,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Auto seat climate right',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -292,6 +298,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Auto steering wheel heater',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -340,6 +347,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Battery heater',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -389,6 +397,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Cabin overheat protection',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -438,6 +447,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Cabin overheat protection actively cooling',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -487,6 +497,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Charge cable',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -536,6 +547,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Charging',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -585,6 +597,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Dashcam',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -634,6 +647,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Front driver door',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -683,6 +697,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Front driver window',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -732,6 +747,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Front passenger door',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -781,6 +797,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Front passenger window',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -830,6 +847,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Preconditioning enabled',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -878,6 +896,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Rear driver door',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -927,6 +946,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Rear driver window',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -976,6 +996,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Rear passenger door',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1025,6 +1046,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Rear passenger window',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1074,6 +1096,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Scheduled charging pending',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1122,6 +1145,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Status',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1171,6 +1195,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Tire pressure warning front left',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1220,6 +1245,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Tire pressure warning front right',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1269,6 +1295,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Tire pressure warning rear left',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1318,6 +1345,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Tire pressure warning rear right',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1367,6 +1395,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Trip charging',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1415,6 +1444,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'User present',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,

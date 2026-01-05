@@ -4,6 +4,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Battery',
     'capabilities': dict({
       'options': list([
         'low',
@@ -64,6 +65,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Active calories burnt today',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -120,6 +122,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Active time today',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -180,6 +183,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Average heart rate',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -232,6 +236,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Average respiratory rate',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -284,6 +289,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Body temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -340,6 +346,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Bone mass',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -396,6 +403,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Breathing disturbances intensity',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -447,6 +455,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Calories burnt last workout',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -499,6 +508,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Deep sleep',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -558,6 +568,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Diastolic blood pressure',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -614,6 +625,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Distance travelled last workout',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -667,6 +679,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Distance travelled today',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -724,6 +737,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Electrodermal activity feet',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -773,6 +787,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Electrodermal activity left foot',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -822,6 +837,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Electrodermal activity right foot',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -871,6 +887,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Elevation change last workout',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -924,6 +941,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Elevation change today',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -981,6 +999,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Extracellular water',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1037,6 +1056,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Fat free mass',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1093,6 +1113,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Fat free mass in left arm',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1149,6 +1170,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Fat free mass in left leg',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1205,6 +1227,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Fat free mass in right arm',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1261,6 +1284,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Fat free mass in right leg',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1317,6 +1341,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Fat free mass in torso',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1373,6 +1398,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Fat mass',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1429,6 +1455,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Fat mass in left arm',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1485,6 +1512,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Fat mass in left leg',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1541,6 +1569,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Fat mass in right arm',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1597,6 +1626,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Fat mass in right leg',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1653,6 +1683,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Fat mass in torso',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1709,6 +1740,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Fat ratio',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1764,6 +1796,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Heart pulse',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1816,6 +1849,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Height',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1872,6 +1906,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Hydration',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1928,6 +1963,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Intense activity today',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -1988,6 +2024,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Intracellular water',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2044,6 +2081,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Last workout duration',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2100,6 +2138,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Last workout intensity',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2148,6 +2187,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Last workout type',
     'capabilities': dict({
       'options': list([
         'walk',
@@ -2300,6 +2340,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Light sleep',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2359,6 +2400,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Maximum heart rate',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2411,6 +2453,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Maximum respiratory rate',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2463,6 +2506,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Minimum heart rate',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2515,6 +2559,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Minimum respiratory rate',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2567,6 +2612,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Moderate activity today',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -2627,6 +2673,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Muscle mass',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2683,6 +2730,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Muscle mass in left arm',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2739,6 +2787,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Muscle mass in left leg',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2795,6 +2844,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Muscle mass in right arm',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2851,6 +2901,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Muscle mass in right leg',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2907,6 +2958,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Muscle mass in torso',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2963,6 +3015,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Pause during last workout',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -3019,6 +3072,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Pulse wave velocity',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -3075,6 +3129,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'REM sleep',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -3134,6 +3189,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Skin temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -3190,6 +3246,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Sleep goal',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -3249,6 +3306,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Sleep score',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -3301,6 +3359,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Snoring',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -3360,6 +3419,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Snoring episode count',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -3411,6 +3471,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Soft activity today',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -3471,6 +3532,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'SpO2',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -3523,6 +3585,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Step goal',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -3575,6 +3638,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Steps today',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -3628,6 +3692,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Systolic blood pressure',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -3684,6 +3749,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -3740,6 +3806,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Time to sleep',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -3799,6 +3866,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Time to wakeup',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -3858,6 +3926,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Total calories burnt today',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -3914,6 +3983,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Vascular age',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -3962,6 +4032,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Visceral fat index',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -4010,6 +4081,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'VO2 max',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -4062,6 +4134,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Wakeup count',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -4114,6 +4187,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Wakeup time',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -4173,6 +4247,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Weight',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -4229,6 +4304,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Weight goal',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),

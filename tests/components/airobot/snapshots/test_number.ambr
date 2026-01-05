@@ -4,6 +4,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Hysteresis band',
     'capabilities': dict({
       'max': 0.5,
       'min': 0.0,

@@ -4,6 +4,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Device volume',
     'capabilities': dict({
       'max': 100,
       'min': 0,
@@ -61,6 +62,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Speak volume',
     'capabilities': dict({
       'max': 100,
       'min': 0,

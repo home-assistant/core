@@ -4,6 +4,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Allocate all stat points',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -52,6 +53,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Blessing',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -101,6 +103,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Buy a health potion',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -150,6 +153,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Healing light',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -199,6 +203,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Protective aura',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -248,6 +253,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Revive from death',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -296,6 +302,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Searing brightness',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -345,6 +352,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Start my day',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -393,6 +401,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Allocate all stat points',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -441,6 +450,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Buy a health potion',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -490,6 +500,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Revive from death',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -538,6 +549,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Start my day',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -586,6 +598,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Stealth',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -635,6 +648,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Tools of the trade',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -684,6 +698,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Allocate all stat points',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -732,6 +747,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Buy a health potion',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -781,6 +797,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Defensive stance',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -830,6 +847,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Intimidating gaze',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -879,6 +897,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Revive from death',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -927,6 +946,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Start my day',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -975,6 +995,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Valorous presence',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1024,6 +1045,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Allocate all stat points',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1072,6 +1094,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Buy a health potion',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1121,6 +1144,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Chilling frost',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1170,6 +1194,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Earthquake',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1219,6 +1244,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Ethereal surge',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1268,6 +1294,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Revive from death',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1316,6 +1343,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Start my day',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,

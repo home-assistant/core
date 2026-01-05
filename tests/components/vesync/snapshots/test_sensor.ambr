@@ -38,6 +38,7 @@
       'aliases': set({
       }),
       'area_id': None,
+      'calculated_object_id': 'Air quality',
       'capabilities': None,
       'config_entry_id': <ANY>,
       'config_subentry_id': <ANY>,
@@ -71,6 +72,7 @@
       'aliases': set({
       }),
       'area_id': None,
+      'calculated_object_id': 'Filter lifetime',
       'capabilities': dict({
         'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       }),
@@ -171,6 +173,7 @@
       'aliases': set({
       }),
       'area_id': None,
+      'calculated_object_id': 'Filter lifetime',
       'capabilities': dict({
         'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       }),
@@ -258,6 +261,7 @@
       'aliases': set({
       }),
       'area_id': None,
+      'calculated_object_id': 'Air quality',
       'capabilities': None,
       'config_entry_id': <ANY>,
       'config_subentry_id': <ANY>,
@@ -291,6 +295,7 @@
       'aliases': set({
       }),
       'area_id': None,
+      'calculated_object_id': 'PM2.5',
       'capabilities': dict({
         'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       }),
@@ -326,6 +331,7 @@
       'aliases': set({
       }),
       'area_id': None,
+      'calculated_object_id': 'Filter lifetime',
       'capabilities': dict({
         'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       }),
@@ -442,6 +448,7 @@
       'aliases': set({
       }),
       'area_id': None,
+      'calculated_object_id': 'Air quality',
       'capabilities': None,
       'config_entry_id': <ANY>,
       'config_subentry_id': <ANY>,
@@ -475,6 +482,7 @@
       'aliases': set({
       }),
       'area_id': None,
+      'calculated_object_id': 'PM2.5',
       'capabilities': dict({
         'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       }),
@@ -510,6 +518,7 @@
       'aliases': set({
       }),
       'area_id': None,
+      'calculated_object_id': 'Filter lifetime',
       'capabilities': dict({
         'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       }),
@@ -700,6 +709,7 @@
       'aliases': set({
       }),
       'area_id': None,
+      'calculated_object_id': 'Humidity',
       'capabilities': dict({
         'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       }),
@@ -788,6 +798,7 @@
       'aliases': set({
       }),
       'area_id': None,
+      'calculated_object_id': 'Humidity',
       'capabilities': dict({
         'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       }),
@@ -823,6 +834,7 @@
       'aliases': set({
       }),
       'area_id': None,
+      'calculated_object_id': 'Temperature',
       'capabilities': dict({
         'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       }),
@@ -861,6 +873,7 @@
       'aliases': set({
       }),
       'area_id': None,
+      'calculated_object_id': 'Filter lifetime',
       'capabilities': dict({
         'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       }),
@@ -980,6 +993,7 @@
       'aliases': set({
       }),
       'area_id': None,
+      'calculated_object_id': 'Humidity',
       'capabilities': dict({
         'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       }),
@@ -1068,6 +1082,7 @@
       'aliases': set({
       }),
       'area_id': None,
+      'calculated_object_id': 'Energy use today',
       'capabilities': dict({
         'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       }),
@@ -1106,6 +1121,7 @@
       'aliases': set({
       }),
       'area_id': None,
+      'calculated_object_id': 'Energy use weekly',
       'capabilities': dict({
         'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       }),
@@ -1144,6 +1160,7 @@
       'aliases': set({
       }),
       'area_id': None,
+      'calculated_object_id': 'Energy use monthly',
       'capabilities': dict({
         'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       }),
@@ -1182,6 +1199,7 @@
       'aliases': set({
       }),
       'area_id': None,
+      'calculated_object_id': 'Energy use yearly',
       'capabilities': dict({
         'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       }),
@@ -1220,6 +1238,7 @@
       'aliases': set({
       }),
       'area_id': None,
+      'calculated_object_id': 'Current voltage',
       'capabilities': dict({
         'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       }),
@@ -1258,6 +1277,7 @@
       'aliases': set({
       }),
       'area_id': None,
+      'calculated_object_id': 'Current power',
       'capabilities': dict({
         'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       }),

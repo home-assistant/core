@@ -4,6 +4,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Calibrate',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -52,6 +53,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Restart',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -101,6 +103,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Button',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -149,6 +152,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Turn off the screen',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -197,6 +201,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Turn on the screen',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -245,6 +250,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Button',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,

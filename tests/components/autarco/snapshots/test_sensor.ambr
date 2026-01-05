@@ -4,6 +4,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Charged month',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -60,6 +61,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Charged today',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -116,6 +118,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Charged total',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -172,6 +175,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Discharged month',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -228,6 +232,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Discharged today',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -284,6 +289,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Discharged total',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -340,6 +346,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Flow now',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -396,6 +403,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'State of charge',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -449,6 +457,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Energy AC output total',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -505,6 +514,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Power AC output',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -561,6 +571,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Energy AC output total',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -617,6 +628,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Power AC output',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -673,6 +685,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Energy production month',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -729,6 +742,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Energy production today',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -785,6 +799,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Energy production total',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -841,6 +856,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Power production',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),

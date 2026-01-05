@@ -4,6 +4,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'CLIP Flur',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -53,6 +54,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'CLIP light level sensor',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -106,6 +108,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Light level sensor',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -162,6 +165,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Light level sensor Temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -218,6 +222,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'BOSCH Air quality sensor',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -266,6 +271,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'BOSCH Air quality sensor PPB',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -318,6 +324,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'BOSCH Air quality sensor',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -366,6 +373,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'BOSCH Air quality sensor PPB',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -418,6 +426,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'FSM_STATE Motion stair',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -467,6 +476,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Mi temperature 1',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -524,6 +534,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Mi temperature 1 Battery',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -578,6 +589,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Soil Sensor',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -634,6 +646,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Soil Sensor Battery',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -688,6 +701,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Motion sensor 4',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -744,6 +758,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Motion sensor 4 Battery',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -800,6 +815,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'STARKVIND AirPurifier PM25',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -853,6 +869,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Power 16',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -912,6 +929,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Mi temperature 1',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -969,6 +987,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Mi temperature 1 Battery',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1023,6 +1042,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Mi temperature 1',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1080,6 +1100,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Mi temperature 1 Battery',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1134,6 +1155,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'eTRV Séjour',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1183,6 +1205,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'eTRV Séjour Battery',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1237,6 +1260,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Alarm 10 Battery',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1292,6 +1316,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Alarm 10 Temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1348,6 +1373,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'AirQuality 1 CH2O',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1401,6 +1427,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'AirQuality 1 CO2',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1454,6 +1481,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'AirQuality 1 PM25',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1507,6 +1535,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'AirQuality 1 PPB',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1559,6 +1588,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Dimmer switch 3 Battery',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1614,6 +1644,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'IKEA Starkvind Filter time',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1670,6 +1701,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'AirQuality 1 CH2O',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1723,6 +1755,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'AirQuality 1 CO2',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1776,6 +1809,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'AirQuality 1 PM25',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1829,6 +1863,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'AirQuality 1 PPB',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1881,6 +1916,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'AirQuality 1 CH2O',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1934,6 +1970,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'AirQuality 1 CO2',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1987,6 +2024,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'AirQuality 1 PM25',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2040,6 +2078,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'AirQuality 1 PPB',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2092,6 +2131,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'FYRTUR block-out roller blind Battery',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2146,6 +2186,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'CarbonDioxide 35',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2199,6 +2240,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Consumption 15',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -2257,6 +2299,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Daylight',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2308,6 +2351,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Formaldehyde 34',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),

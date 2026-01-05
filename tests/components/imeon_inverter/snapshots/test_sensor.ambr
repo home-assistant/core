@@ -4,6 +4,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Air temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -60,6 +61,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Battery consumed',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -116,6 +118,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Battery power',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -172,6 +175,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Battery state of charge',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -225,6 +229,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Battery status',
     'capabilities': dict({
       'options': list([
         'charging',
@@ -285,6 +290,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Battery stored',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -341,6 +347,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Building consumption',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -397,6 +404,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Charging current limit',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -453,6 +461,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Component temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -509,6 +518,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Forecast remaining energy consumption for today',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -562,6 +572,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Forecast remaining energy production for today',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -615,6 +626,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Grid consumption',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -671,6 +683,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Grid current L1',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -727,6 +740,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Grid current L2',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -783,6 +797,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Grid current L3',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -839,6 +854,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Grid frequency',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -895,6 +911,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Grid injection',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -951,6 +968,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Grid power flow',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1007,6 +1025,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Grid voltage L1',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1063,6 +1082,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Grid voltage L2',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1119,6 +1139,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Grid voltage L3',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1175,6 +1196,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Injection power limit',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1231,6 +1253,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Input power L1',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1287,6 +1310,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Input power L2',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1343,6 +1367,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Input power L3',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1399,6 +1424,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Input power total',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1455,6 +1481,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Inverter state',
     'capabilities': dict({
       'options': list([
         'not_connected',
@@ -1519,6 +1546,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Meter power',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1575,6 +1603,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Output current L1',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1631,6 +1660,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Output current L2',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1687,6 +1717,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Output current L3',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1743,6 +1774,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Output frequency',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1799,6 +1831,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Output power L1',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1855,6 +1888,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Output power L2',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1911,6 +1945,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Output power L3',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1967,6 +2002,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Output power total',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2023,6 +2059,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Output voltage L1',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2079,6 +2116,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Output voltage L2',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2135,6 +2173,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Output voltage L3',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2191,6 +2230,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'PV consumed',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2247,6 +2287,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'PV injected',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2303,6 +2344,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'PV power 1',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2359,6 +2401,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'PV power 2',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2415,6 +2458,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'PV power total',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2471,6 +2515,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Self-consumption',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -2526,6 +2571,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Self-sufficiency',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -2581,6 +2627,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Solar production',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2637,6 +2684,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Timeline status',
     'capabilities': dict({
       'options': list([
         'com_lost',
@@ -2719,6 +2767,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Today battery-consumed energy',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -2775,6 +2824,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Today battery-stored energy',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -2831,6 +2881,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Today building consumption',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -2887,6 +2938,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Today grid-consumed energy',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -2943,6 +2995,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Today grid-injected energy',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -2999,6 +3052,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Today PV energy',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),

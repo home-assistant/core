@@ -4,6 +4,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Chlorine',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -53,6 +54,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Chlorine dosing type',
     'capabilities': dict({
       'options': list([
         'low',
@@ -111,6 +113,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Chlorine peristaltic dosing',
     'capabilities': dict({
       'options': list([
         'off',
@@ -173,6 +176,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Flow rate',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -226,6 +230,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'ORP',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -279,6 +284,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'ORP calibration offset',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -332,6 +338,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'ORP calibration slope',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -385,6 +392,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'ORP calibration type',
     'capabilities': dict({
       'options': list([
         'off',
@@ -445,6 +453,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'ORP dosing type',
     'capabilities': dict({
       'options': list([
         'low',
@@ -503,6 +512,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'ORP overfeed alert time',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -556,6 +566,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'ORP peristaltic dosing',
     'capabilities': dict({
       'options': list([
         'off',
@@ -618,6 +629,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'pH',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -667,6 +679,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'pH calibration offset',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -720,6 +733,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'pH calibration slope',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -773,6 +787,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'pH calibration type',
     'capabilities': dict({
       'options': list([
         'off',
@@ -835,6 +850,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'pH dosing type',
     'capabilities': dict({
       'options': list([
         'alcalyne',
@@ -893,6 +909,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'pH overfeed alert time',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -946,6 +963,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'pH peristaltic dosing',
     'capabilities': dict({
       'options': list([
         'proportional',
@@ -1006,6 +1024,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Temperature',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1059,6 +1078,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Totalizer',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),

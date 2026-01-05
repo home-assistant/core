@@ -4,6 +4,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Balance',
     'capabilities': dict({
       'max': 10,
       'min': -10,
@@ -61,6 +62,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Bass',
     'capabilities': dict({
       'max': 10,
       'min': -10,
@@ -118,6 +120,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Treble',
     'capabilities': dict({
       'max': 10,
       'min': -10,
@@ -175,6 +178,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Turn-on volume',
     'capabilities': dict({
       'max': 100,
       'min': 0,
@@ -232,6 +236,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Balance',
     'capabilities': dict({
       'max': 10,
       'min': -10,
@@ -289,6 +294,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Bass',
     'capabilities': dict({
       'max': 10,
       'min': -10,
@@ -346,6 +352,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Treble',
     'capabilities': dict({
       'max': 10,
       'min': -10,
@@ -403,6 +410,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Turn-on volume',
     'capabilities': dict({
       'max': 100,
       'min': 0,
@@ -460,6 +468,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Balance',
     'capabilities': dict({
       'max': 10,
       'min': -10,
@@ -517,6 +526,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Bass',
     'capabilities': dict({
       'max': 10,
       'min': -10,
@@ -574,6 +584,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Treble',
     'capabilities': dict({
       'max': 10,
       'min': -10,
@@ -631,6 +642,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Turn-on volume',
     'capabilities': dict({
       'max': 100,
       'min': 0,
@@ -688,6 +700,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Balance',
     'capabilities': dict({
       'max': 10,
       'min': -10,
@@ -745,6 +758,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Bass',
     'capabilities': dict({
       'max': 10,
       'min': -10,
@@ -802,6 +816,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Treble',
     'capabilities': dict({
       'max': 10,
       'min': -10,
@@ -859,6 +874,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Turn-on volume',
     'capabilities': dict({
       'max': 100,
       'min': 0,

@@ -41,6 +41,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'Airversa AP2 1808 Identify',
             'capabilities': None,
             'categories': dict({
             }),
@@ -84,6 +85,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'Airversa AP2 1808 AirPurifier',
             'capabilities': dict({
               'preset_modes': list([
                 'auto',
@@ -137,6 +139,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'Airversa AP2 1808 Air Purifier Mode',
             'capabilities': dict({
               'options': list([
                 'automatic',
@@ -188,6 +191,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'Airversa AP2 1808 Air Purifier Status',
             'capabilities': dict({
               'options': list([
                 'inactive',
@@ -242,6 +246,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'Airversa AP2 1808 Air Quality',
             'capabilities': dict({
               'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
             }),
@@ -288,6 +293,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'Airversa AP2 1808 Filter lifetime',
             'capabilities': dict({
               'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
             }),
@@ -334,6 +340,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'Airversa AP2 1808 PM2.5 Density',
             'capabilities': dict({
               'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
             }),
@@ -381,6 +388,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'Airversa AP2 1808 Thread Capabilities',
             'capabilities': dict({
               'options': list([
                 'border_router_capable',
@@ -441,6 +449,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'Airversa AP2 1808 Thread Status',
             'capabilities': dict({
               'options': list([
                 'border_router',
@@ -503,6 +512,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'Airversa AP2 1808 Lock Physical Controls',
             'capabilities': None,
             'categories': dict({
             }),
@@ -545,6 +555,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'Airversa AP2 1808 Mute',
             'capabilities': None,
             'categories': dict({
             }),
@@ -587,6 +598,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'Airversa AP2 1808 Sleep Mode',
             'capabilities': None,
             'categories': dict({
             }),
@@ -670,6 +682,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'eufy HomeBase2-0AAA Identify',
             'capabilities': None,
             'categories': dict({
             }),
@@ -750,6 +763,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'eufyCam2-0000 Motion Sensor',
             'capabilities': None,
             'categories': dict({
             }),
@@ -793,6 +807,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'eufyCam2-0000 Identify',
             'capabilities': None,
             'categories': dict({
             }),
@@ -836,6 +851,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'eufyCam2-0000',
             'capabilities': None,
             'categories': dict({
             }),
@@ -879,6 +895,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'eufyCam2-0000 Battery',
             'capabilities': dict({
               'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
             }),
@@ -927,6 +944,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'eufyCam2-0000 Mute',
             'capabilities': None,
             'categories': dict({
             }),
@@ -1006,6 +1024,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'eufyCam2-000A Motion Sensor',
             'capabilities': None,
             'categories': dict({
             }),
@@ -1049,6 +1068,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'eufyCam2-000A Identify',
             'capabilities': None,
             'categories': dict({
             }),
@@ -1092,6 +1112,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'eufyCam2-000A',
             'capabilities': None,
             'categories': dict({
             }),
@@ -1135,6 +1156,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'eufyCam2-000A Battery',
             'capabilities': dict({
               'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
             }),
@@ -1183,6 +1205,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'eufyCam2-000A Mute',
             'capabilities': None,
             'categories': dict({
             }),
@@ -1262,6 +1285,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'eufyCam2-000A Motion Sensor',
             'capabilities': None,
             'categories': dict({
             }),
@@ -1305,6 +1329,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'eufyCam2-000A Identify',
             'capabilities': None,
             'categories': dict({
             }),
@@ -1348,6 +1373,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'eufyCam2-000A',
             'capabilities': None,
             'categories': dict({
             }),
@@ -1391,6 +1417,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'eufyCam2-000A Battery',
             'capabilities': dict({
               'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
             }),
@@ -1439,6 +1466,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'eufyCam2-000A Mute',
             'capabilities': None,
             'categories': dict({
             }),
@@ -1522,6 +1550,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'Aqara-Hub-E1-00A0 Security System',
             'capabilities': None,
             'categories': dict({
             }),
@@ -1568,6 +1597,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'Aqara-Hub-E1-00A0 Identify',
             'capabilities': None,
             'categories': dict({
             }),
@@ -1611,6 +1641,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'Aqara-Hub-E1-00A0 Volume',
             'capabilities': dict({
               'max': 100,
               'min': 0.0,
@@ -1662,6 +1693,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'Aqara-Hub-E1-00A0 Pairing Mode',
             'capabilities': None,
             'categories': dict({
             }),
@@ -1741,6 +1773,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'Contact Sensor',
             'capabilities': None,
             'categories': dict({
             }),
@@ -1784,6 +1817,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'Contact Sensor Identify',
             'capabilities': None,
             'categories': dict({
             }),
@@ -1827,6 +1861,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'Contact Sensor Battery Sensor',
             'capabilities': dict({
               'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
             }),
@@ -1916,6 +1951,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'Aqara Hub-1563 Security System',
             'capabilities': None,
             'categories': dict({
             }),
@@ -1962,6 +1998,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'Aqara Hub-1563 Identify',
             'capabilities': None,
             'categories': dict({
             }),
@@ -2005,6 +2042,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'Aqara Hub-1563 Lightbulb-1563',
             'capabilities': dict({
               'max_color_temp_kelvin': 6535,
               'max_mireds': 500,
@@ -2072,6 +2110,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'Aqara Hub-1563 Volume',
             'capabilities': dict({
               'max': 100,
               'min': 0.0,
@@ -2123,6 +2162,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'Aqara Hub-1563 Pairing Mode',
             'capabilities': None,
             'categories': dict({
             }),
@@ -2206,6 +2246,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'Programmable Switch Identify',
             'capabilities': None,
             'categories': dict({
             }),
@@ -2249,6 +2290,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'Programmable Switch Battery Sensor',
             'capabilities': dict({
               'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
             }),
@@ -2338,6 +2380,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'ArloBabyA0 Motion',
             'capabilities': None,
             'categories': dict({
             }),
@@ -2381,6 +2424,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'ArloBabyA0 Identify',
             'capabilities': None,
             'categories': dict({
             }),
@@ -2424,6 +2468,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'ArloBabyA0',
             'capabilities': None,
             'categories': dict({
             }),
@@ -2467,6 +2512,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'ArloBabyA0 Nightlight',
             'capabilities': dict({
               'max_color_temp_kelvin': 6535,
               'max_mireds': 500,
@@ -2534,6 +2580,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'ArloBabyA0 Air Quality',
             'capabilities': dict({
               'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
             }),
@@ -2580,6 +2627,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'ArloBabyA0 Battery',
             'capabilities': dict({
               'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
             }),
@@ -2628,6 +2676,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'ArloBabyA0 Humidity',
             'capabilities': dict({
               'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
             }),
@@ -2675,6 +2724,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'ArloBabyA0 Temperature',
             'capabilities': dict({
               'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
             }),
@@ -2725,6 +2775,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'ArloBabyA0 Mute',
             'capabilities': None,
             'categories': dict({
             }),
@@ -2767,6 +2818,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'ArloBabyA0 Mute',
             'capabilities': None,
             'categories': dict({
             }),
@@ -2850,6 +2902,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'InWall Outlet-0394DE Identify',
             'capabilities': None,
             'categories': dict({
             }),
@@ -2893,6 +2946,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'InWall Outlet-0394DE Current',
             'capabilities': dict({
               'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
             }),
@@ -2943,6 +2997,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'InWall Outlet-0394DE Current',
             'capabilities': dict({
               'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
             }),
@@ -2993,6 +3048,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'InWall Outlet-0394DE Energy kWh',
             'capabilities': dict({
               'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
             }),
@@ -3043,6 +3099,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'InWall Outlet-0394DE Energy kWh',
             'capabilities': dict({
               'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
             }),
@@ -3093,6 +3150,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'InWall Outlet-0394DE Power',
             'capabilities': dict({
               'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
             }),
@@ -3143,6 +3201,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'InWall Outlet-0394DE Power',
             'capabilities': dict({
               'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
             }),
@@ -3193,6 +3252,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'InWall Outlet-0394DE Outlet A',
             'capabilities': None,
             'categories': dict({
             }),
@@ -3236,6 +3296,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'InWall Outlet-0394DE Outlet B',
             'capabilities': None,
             'categories': dict({
             }),
@@ -3320,6 +3381,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'Basement',
             'capabilities': None,
             'categories': dict({
             }),
@@ -3363,6 +3425,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'Basement Identify',
             'capabilities': None,
             'categories': dict({
             }),
@@ -3406,6 +3469,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'Basement Temperature',
             'capabilities': dict({
               'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
             }),
@@ -3493,6 +3557,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'HomeW',
             'capabilities': None,
             'categories': dict({
             }),
@@ -3536,6 +3601,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'HomeW',
             'capabilities': None,
             'categories': dict({
             }),
@@ -3579,6 +3645,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'HomeW Clear Hold',
             'capabilities': None,
             'categories': dict({
             }),
@@ -3621,6 +3688,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'HomeW Identify',
             'capabilities': None,
             'categories': dict({
             }),
@@ -3664,6 +3732,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'HomeW',
             'capabilities': dict({
               'hvac_modes': list([
                 <HVACMode.OFF: 'off'>,
@@ -3735,6 +3804,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'HomeW Current Mode',
             'capabilities': dict({
               'options': list([
                 'home',
@@ -3788,6 +3858,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'HomeW Temperature Display Units',
             'capabilities': dict({
               'options': list([
                 'celsius',
@@ -3839,6 +3910,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'HomeW Current Humidity',
             'capabilities': dict({
               'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
             }),
@@ -3886,6 +3958,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'HomeW Current Temperature',
             'capabilities': dict({
               'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
             }),
@@ -3973,6 +4046,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'Kitchen',
             'capabilities': None,
             'categories': dict({
             }),
@@ -4016,6 +4090,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'Kitchen Identify',
             'capabilities': None,
             'categories': dict({
             }),
@@ -4059,6 +4134,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'Kitchen Temperature',
             'capabilities': dict({
               'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
             }),
@@ -4146,6 +4222,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'Porch',
             'capabilities': None,
             'categories': dict({
             }),
@@ -4189,6 +4266,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'Porch Identify',
             'capabilities': None,
             'categories': dict({
             }),
@@ -4232,6 +4310,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'Porch Temperature',
             'capabilities': dict({
               'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
             }),
@@ -4323,6 +4402,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'Basement Motion',
             'capabilities': None,
             'categories': dict({
             }),
@@ -4366,6 +4446,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'Basement Occupancy',
             'capabilities': None,
             'categories': dict({
             }),
@@ -4409,6 +4490,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'Basement Identify',
             'capabilities': None,
             'categories': dict({
             }),
@@ -4452,6 +4534,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'Basement Battery',
             'capabilities': dict({
               'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
             }),
@@ -4500,6 +4583,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'Basement Temperature',
             'capabilities': dict({
               'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
             }),
@@ -4587,6 +4671,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'Basement Window 1 Contact',
             'capabilities': None,
             'categories': dict({
             }),
@@ -4630,6 +4715,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'Basement Window 1 Motion',
             'capabilities': None,
             'categories': dict({
             }),
@@ -4673,6 +4759,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'Basement Window 1 Occupancy',
             'capabilities': None,
             'categories': dict({
             }),
@@ -4716,6 +4803,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'Basement Window 1 Identify',
             'capabilities': None,
             'categories': dict({
             }),
@@ -4759,6 +4847,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'Basement Window 1 Battery',
             'capabilities': dict({
               'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
             }),
@@ -4844,6 +4933,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'Deck Door Contact',
             'capabilities': None,
             'categories': dict({
             }),
@@ -4887,6 +4977,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'Deck Door Motion',
             'capabilities': None,
             'categories': dict({
             }),
@@ -4930,6 +5021,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'Deck Door Occupancy',
             'capabilities': None,
             'categories': dict({
             }),
@@ -4973,6 +5065,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'Deck Door Identify',
             'capabilities': None,
             'categories': dict({
             }),
@@ -5016,6 +5109,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'Deck Door Battery',
             'capabilities': dict({
               'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
             }),
@@ -5101,6 +5195,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'Front Door Contact',
             'capabilities': None,
             'categories': dict({
             }),
@@ -5144,6 +5239,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'Front Door Motion',
             'capabilities': None,
             'categories': dict({
             }),
@@ -5187,6 +5283,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'Front Door Occupancy',
             'capabilities': None,
             'categories': dict({
             }),
@@ -5230,6 +5327,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'Front Door Identify',
             'capabilities': None,
             'categories': dict({
             }),
@@ -5273,6 +5371,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'Front Door Battery',
             'capabilities': dict({
               'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
             }),
@@ -5358,6 +5457,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'Garage Door Contact',
             'capabilities': None,
             'categories': dict({
             }),
@@ -5401,6 +5501,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'Garage Door Motion',
             'capabilities': None,
             'categories': dict({
             }),
@@ -5444,6 +5545,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'Garage Door Occupancy',
             'capabilities': None,
             'categories': dict({
             }),
@@ -5487,6 +5589,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'Garage Door Identify',
             'capabilities': None,
             'categories': dict({
             }),
@@ -5530,6 +5633,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'Garage Door Battery',
             'capabilities': dict({
               'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
             }),
@@ -5615,6 +5719,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'Living Room Motion',
             'capabilities': None,
             'categories': dict({
             }),
@@ -5658,6 +5763,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'Living Room Occupancy',
             'capabilities': None,
             'categories': dict({
             }),
@@ -5701,6 +5807,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'Living Room Identify',
             'capabilities': None,
             'categories': dict({
             }),
@@ -5744,6 +5851,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'Living Room Battery',
             'capabilities': dict({
               'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
             }),
@@ -5792,6 +5900,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'Living Room Temperature',
             'capabilities': dict({
               'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
             }),
@@ -5879,6 +5988,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'Living Room Window 1 Contact',
             'capabilities': None,
             'categories': dict({
             }),
@@ -5922,6 +6032,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'Living Room Window 1 Motion',
             'capabilities': None,
             'categories': dict({
             }),
@@ -5965,6 +6076,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'Living Room Window 1 Occupancy',
             'capabilities': None,
             'categories': dict({
             }),
@@ -6008,6 +6120,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'Living Room Window 1 Identify',
             'capabilities': None,
             'categories': dict({
             }),
@@ -6051,6 +6164,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'Living Room Window 1 Battery',
             'capabilities': dict({
               'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
             }),
@@ -6136,6 +6250,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'Loft window Contact',
             'capabilities': None,
             'categories': dict({
             }),
@@ -6179,6 +6294,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'Loft window Motion',
             'capabilities': None,
             'categories': dict({
             }),
@@ -6222,6 +6338,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'Loft window Occupancy',
             'capabilities': None,
             'categories': dict({
             }),
@@ -6265,6 +6382,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'Loft window Identify',
             'capabilities': None,
             'categories': dict({
             }),
@@ -6308,6 +6426,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'Loft window Battery',
             'capabilities': dict({
               'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
             }),
@@ -6393,6 +6512,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'Master BR Motion',
             'capabilities': None,
             'categories': dict({
             }),
@@ -6436,6 +6556,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'Master BR Occupancy',
             'capabilities': None,
             'categories': dict({
             }),
@@ -6479,6 +6600,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'Master BR Identify',
             'capabilities': None,
             'categories': dict({
             }),
@@ -6522,6 +6644,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'Master BR Battery',
             'capabilities': dict({
               'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
             }),
@@ -6570,6 +6693,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'Master BR Temperature',
             'capabilities': dict({
               'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
             }),
@@ -6657,6 +6781,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'Master BR Window Contact',
             'capabilities': None,
             'categories': dict({
             }),
@@ -6700,6 +6825,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'Master BR Window Motion',
             'capabilities': None,
             'categories': dict({
             }),
@@ -6743,6 +6869,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'Master BR Window Occupancy',
             'capabilities': None,
             'categories': dict({
             }),
@@ -6786,6 +6913,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'Master BR Window Identify',
             'capabilities': None,
             'categories': dict({
             }),
@@ -6829,6 +6957,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'Master BR Window Battery',
             'capabilities': dict({
               'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
             }),
@@ -6914,6 +7043,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'Thermostat Clear Hold',
             'capabilities': None,
             'categories': dict({
             }),
@@ -6956,6 +7086,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'Thermostat Identify',
             'capabilities': None,
             'categories': dict({
             }),
@@ -6999,6 +7130,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'Thermostat',
             'capabilities': dict({
               'fan_modes': list([
                 'on',
@@ -7074,6 +7206,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'Thermostat Current Mode',
             'capabilities': dict({
               'options': list([
                 'home',
@@ -7127,6 +7260,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'Thermostat Temperature Display Units',
             'capabilities': dict({
               'options': list([
                 'celsius',
@@ -7178,6 +7312,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'Thermostat Current Humidity',
             'capabilities': dict({
               'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
             }),
@@ -7225,6 +7360,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'Thermostat Current Temperature',
             'capabilities': dict({
               'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
             }),
@@ -7312,6 +7448,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'Upstairs BR Motion',
             'capabilities': None,
             'categories': dict({
             }),
@@ -7355,6 +7492,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'Upstairs BR Occupancy',
             'capabilities': None,
             'categories': dict({
             }),
@@ -7398,6 +7536,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'Upstairs BR Identify',
             'capabilities': None,
             'categories': dict({
             }),
@@ -7441,6 +7580,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'Upstairs BR Battery',
             'capabilities': dict({
               'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
             }),
@@ -7489,6 +7629,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'Upstairs BR Temperature',
             'capabilities': dict({
               'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
             }),
@@ -7576,6 +7717,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'Upstairs BR Window Contact',
             'capabilities': None,
             'categories': dict({
             }),
@@ -7619,6 +7761,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'Upstairs BR Window Motion',
             'capabilities': None,
             'categories': dict({
             }),
@@ -7662,6 +7805,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'Upstairs BR Window Occupancy',
             'capabilities': None,
             'categories': dict({
             }),
@@ -7705,6 +7849,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'Upstairs BR Window Identify',
             'capabilities': None,
             'categories': dict({
             }),
@@ -7748,6 +7893,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'Upstairs BR Window Battery',
             'capabilities': dict({
               'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
             }),
@@ -7837,6 +7983,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'HomeW',
             'capabilities': None,
             'categories': dict({
             }),
@@ -7880,6 +8027,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'HomeW',
             'capabilities': None,
             'categories': dict({
             }),
@@ -7923,6 +8071,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'HomeW Clear Hold',
             'capabilities': None,
             'categories': dict({
             }),
@@ -7965,6 +8114,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'HomeW Identify',
             'capabilities': None,
             'categories': dict({
             }),
@@ -8008,6 +8158,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'HomeW',
             'capabilities': dict({
               'hvac_modes': list([
                 <HVACMode.OFF: 'off'>,
@@ -8079,6 +8230,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'HomeW Current Mode',
             'capabilities': dict({
               'options': list([
                 'home',
@@ -8132,6 +8284,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'HomeW Temperature Display Units',
             'capabilities': dict({
               'options': list([
                 'celsius',
@@ -8183,6 +8336,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'HomeW Current Humidity',
             'capabilities': dict({
               'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
             }),
@@ -8230,6 +8384,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'HomeW Current Temperature',
             'capabilities': dict({
               'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
             }),
@@ -8321,6 +8476,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'Basement',
             'capabilities': None,
             'categories': dict({
             }),
@@ -8364,6 +8520,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'Basement Identify',
             'capabilities': None,
             'categories': dict({
             }),
@@ -8444,6 +8601,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'HomeW Identify',
             'capabilities': None,
             'categories': dict({
             }),
@@ -8487,6 +8645,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'HomeW',
             'capabilities': dict({
               'hvac_modes': list([
                 <HVACMode.OFF: 'off'>,
@@ -8558,6 +8717,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'HomeW Temperature Display Units',
             'capabilities': dict({
               'options': list([
                 'celsius',
@@ -8609,6 +8769,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'HomeW Current Humidity',
             'capabilities': dict({
               'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
             }),
@@ -8656,6 +8817,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'HomeW Current Temperature',
             'capabilities': dict({
               'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
             }),
@@ -8743,6 +8905,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'Kitchen',
             'capabilities': None,
             'categories': dict({
             }),
@@ -8786,6 +8949,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'Kitchen Identify',
             'capabilities': None,
             'categories': dict({
             }),
@@ -8829,6 +8993,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'Kitchen Temperature',
             'capabilities': dict({
               'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
             }),
@@ -8916,6 +9081,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'Porch',
             'capabilities': None,
             'categories': dict({
             }),
@@ -8959,6 +9125,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'Porch Identify',
             'capabilities': None,
             'categories': dict({
             }),
@@ -9002,6 +9169,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'Porch Temperature',
             'capabilities': dict({
               'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
             }),
@@ -9093,6 +9261,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'My ecobee Motion',
             'capabilities': None,
             'categories': dict({
             }),
@@ -9136,6 +9305,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'My ecobee Occupancy',
             'capabilities': None,
             'categories': dict({
             }),
@@ -9179,6 +9349,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'My ecobee Clear Hold',
             'capabilities': None,
             'categories': dict({
             }),
@@ -9221,6 +9392,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'My ecobee Identify',
             'capabilities': None,
             'categories': dict({
             }),
@@ -9264,6 +9436,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'My ecobee',
             'capabilities': dict({
               'fan_modes': list([
                 'on',
@@ -9344,6 +9517,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'My ecobee Current Mode',
             'capabilities': dict({
               'options': list([
                 'home',
@@ -9397,6 +9571,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'My ecobee Temperature Display Units',
             'capabilities': dict({
               'options': list([
                 'celsius',
@@ -9448,6 +9623,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'My ecobee Current Humidity',
             'capabilities': dict({
               'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
             }),
@@ -9495,6 +9671,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'My ecobee Current Temperature',
             'capabilities': dict({
               'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
             }),
@@ -9586,6 +9763,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'Master Fan',
             'capabilities': None,
             'categories': dict({
             }),
@@ -9629,6 +9807,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'Master Fan',
             'capabilities': None,
             'categories': dict({
             }),
@@ -9672,6 +9851,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'Master Fan Identify',
             'capabilities': None,
             'categories': dict({
             }),
@@ -9715,6 +9895,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'Master Fan Light Level',
             'capabilities': dict({
               'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
             }),
@@ -9762,6 +9943,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'Master Fan Temperature',
             'capabilities': dict({
               'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
             }),
@@ -9812,6 +9994,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'Master Fan',
             'capabilities': None,
             'categories': dict({
             }),
@@ -9895,6 +10078,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'Eve Degree AA11 Identify',
             'capabilities': None,
             'categories': dict({
             }),
@@ -9938,6 +10122,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'Eve Degree AA11 Elevation',
             'capabilities': dict({
               'max': 9000,
               'min': -450,
@@ -9989,6 +10174,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'Eve Degree AA11 Temperature Display Units',
             'capabilities': dict({
               'options': list([
                 'celsius',
@@ -10040,6 +10226,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'Eve Degree AA11 Air Pressure',
             'capabilities': dict({
               'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
             }),
@@ -10090,6 +10277,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'Eve Degree AA11 Battery',
             'capabilities': dict({
               'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
             }),
@@ -10138,6 +10326,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'Eve Degree AA11 Humidity',
             'capabilities': dict({
               'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
             }),
@@ -10185,6 +10374,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'Eve Degree AA11 Temperature',
             'capabilities': dict({
               'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
             }),
@@ -10276,6 +10466,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'Eve Energy 50FF Identify',
             'capabilities': None,
             'categories': dict({
             }),
@@ -10319,6 +10510,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'Eve Energy 50FF Amps',
             'capabilities': dict({
               'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
             }),
@@ -10369,6 +10561,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'Eve Energy 50FF Energy kWh',
             'capabilities': dict({
               'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
             }),
@@ -10419,6 +10612,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'Eve Energy 50FF Power',
             'capabilities': dict({
               'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
             }),
@@ -10469,6 +10663,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'Eve Energy 50FF Volts',
             'capabilities': dict({
               'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
             }),
@@ -10519,6 +10714,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'Eve Energy 50FF',
             'capabilities': None,
             'categories': dict({
             }),
@@ -10562,6 +10758,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'Eve Energy 50FF Lock Physical Controls',
             'capabilities': None,
             'categories': dict({
             }),
@@ -10645,6 +10842,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'HAA-C718B3 Identify',
             'capabilities': None,
             'categories': dict({
             }),
@@ -10688,6 +10886,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'HAA-C718B3 Setup',
             'capabilities': None,
             'categories': dict({
             }),
@@ -10730,6 +10929,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'HAA-C718B3 Update',
             'capabilities': None,
             'categories': dict({
             }),
@@ -10773,6 +10973,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'HAA-C718B3',
             'capabilities': dict({
               'preset_modes': list([
               ]),
@@ -10865,6 +11066,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'HAA-C718B3 Identify',
             'capabilities': None,
             'categories': dict({
             }),
@@ -10908,6 +11110,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'HAA-C718B3',
             'capabilities': None,
             'categories': dict({
             }),
@@ -10991,6 +11194,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'Family Room North Identify',
             'capabilities': None,
             'categories': dict({
             }),
@@ -11034,6 +11238,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'Family Room North',
             'capabilities': None,
             'categories': dict({
             }),
@@ -11078,6 +11283,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'Family Room North Battery',
             'capabilities': dict({
               'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
             }),
@@ -11163,6 +11369,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'HASS Bridge S6 Identify',
             'capabilities': None,
             'categories': dict({
             }),
@@ -11243,6 +11450,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'Kitchen Window Identify',
             'capabilities': None,
             'categories': dict({
             }),
@@ -11286,6 +11494,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'Kitchen Window',
             'capabilities': None,
             'categories': dict({
             }),
@@ -11330,6 +11539,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'Kitchen Window Battery',
             'capabilities': dict({
               'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
             }),
@@ -11419,6 +11629,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'Ceiling Fan Identify',
             'capabilities': None,
             'categories': dict({
             }),
@@ -11462,6 +11673,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'Ceiling Fan',
             'capabilities': dict({
               'preset_modes': list([
               ]),
@@ -11550,6 +11762,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'Home Assistant Bridge Identify',
             'capabilities': None,
             'categories': dict({
             }),
@@ -11630,6 +11843,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'Living Room Fan Identify',
             'capabilities': None,
             'categories': dict({
             }),
@@ -11673,6 +11887,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'Living Room Fan',
             'capabilities': dict({
               'preset_modes': list([
               ]),
@@ -11766,6 +11981,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': '89 Living Room Identify',
             'capabilities': None,
             'categories': dict({
             }),
@@ -11809,6 +12025,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': '89 Living Room',
             'capabilities': dict({
               'hvac_modes': list([
                 <HVACMode.HEAT_COOL: 'heat_cool'>,
@@ -11873,6 +12090,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': '89 Living Room',
             'capabilities': dict({
               'preset_modes': list([
                 'auto',
@@ -11927,6 +12145,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': '89 Living Room Temperature Display Units',
             'capabilities': dict({
               'options': list([
                 'celsius',
@@ -11978,6 +12197,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': '89 Living Room Current Humidity',
             'capabilities': dict({
               'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
             }),
@@ -12025,6 +12245,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': '89 Living Room Current Temperature',
             'capabilities': dict({
               'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
             }),
@@ -12112,6 +12333,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'HASS Bridge S6 Identify',
             'capabilities': None,
             'categories': dict({
             }),
@@ -12196,6 +12418,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'HASS Bridge S6 Identify',
             'capabilities': None,
             'categories': dict({
             }),
@@ -12276,6 +12499,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'Laundry Smoke ED78 Identify',
             'capabilities': None,
             'categories': dict({
             }),
@@ -12319,6 +12543,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'Laundry Smoke ED78',
             'capabilities': dict({
               'supported_color_modes': list([
                 <ColorMode.BRIGHTNESS: 'brightness'>,
@@ -12371,6 +12596,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'Laundry Smoke ED78 Battery',
             'capabilities': dict({
               'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
             }),
@@ -12460,6 +12686,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'Family Room North Identify',
             'capabilities': None,
             'categories': dict({
             }),
@@ -12503,6 +12730,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'Family Room North',
             'capabilities': None,
             'categories': dict({
             }),
@@ -12547,6 +12775,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'Family Room North Battery',
             'capabilities': dict({
               'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
             }),
@@ -12632,6 +12861,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'HASS Bridge S6 Identify',
             'capabilities': None,
             'categories': dict({
             }),
@@ -12712,6 +12942,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'Kitchen Window Identify',
             'capabilities': None,
             'categories': dict({
             }),
@@ -12755,6 +12986,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'Kitchen Window',
             'capabilities': None,
             'categories': dict({
             }),
@@ -12799,6 +13031,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'Kitchen Window Battery',
             'capabilities': dict({
               'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
             }),
@@ -12888,6 +13121,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'Ceiling Fan Identify',
             'capabilities': None,
             'categories': dict({
             }),
@@ -12931,6 +13165,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'Ceiling Fan',
             'capabilities': dict({
               'preset_modes': list([
               ]),
@@ -13019,6 +13254,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'Home Assistant Bridge Identify',
             'capabilities': None,
             'categories': dict({
             }),
@@ -13099,6 +13335,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'Living Room Fan Identify',
             'capabilities': None,
             'categories': dict({
             }),
@@ -13142,6 +13379,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'Living Room Fan',
             'capabilities': dict({
               'preset_modes': list([
               ]),
@@ -13236,6 +13474,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'Home Assistant Bridge Identify',
             'capabilities': None,
             'categories': dict({
             }),
@@ -13316,6 +13555,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'Living Room Fan Identify',
             'capabilities': None,
             'categories': dict({
             }),
@@ -13359,6 +13599,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'Living Room Fan',
             'capabilities': dict({
               'preset_modes': list([
               ]),
@@ -13453,6 +13694,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': '89 Living Room Identify',
             'capabilities': None,
             'categories': dict({
             }),
@@ -13496,6 +13738,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': '89 Living Room',
             'capabilities': dict({
               'hvac_modes': list([
                 <HVACMode.HEAT_COOL: 'heat_cool'>,
@@ -13569,6 +13812,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': '89 Living Room',
             'capabilities': dict({
               'preset_modes': list([
                 'auto',
@@ -13623,6 +13867,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': '89 Living Room Temperature Display Units',
             'capabilities': dict({
               'options': list([
                 'celsius',
@@ -13674,6 +13919,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': '89 Living Room Current Humidity',
             'capabilities': dict({
               'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
             }),
@@ -13721,6 +13967,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': '89 Living Room Current Temperature',
             'capabilities': dict({
               'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
             }),
@@ -13808,6 +14055,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'HASS Bridge S6 Identify',
             'capabilities': None,
             'categories': dict({
             }),
@@ -13892,6 +14140,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'HASS Bridge S6 Identify',
             'capabilities': None,
             'categories': dict({
             }),
@@ -13972,6 +14221,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'Humidifier 182A Identify',
             'capabilities': None,
             'categories': dict({
             }),
@@ -14015,6 +14265,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'Humidifier 182A',
             'capabilities': dict({
               'available_modes': list([
                 'normal',
@@ -14075,6 +14326,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'Humidifier 182A Current Humidity',
             'capabilities': dict({
               'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
             }),
@@ -14163,6 +14415,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'HASS Bridge S6 Identify',
             'capabilities': None,
             'categories': dict({
             }),
@@ -14243,6 +14496,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'Humidifier 182A Identify',
             'capabilities': None,
             'categories': dict({
             }),
@@ -14286,6 +14540,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'Humidifier 182A',
             'capabilities': dict({
               'available_modes': list([
                 'normal',
@@ -14346,6 +14601,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'Humidifier 182A Current Humidity',
             'capabilities': dict({
               'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
             }),
@@ -14434,6 +14690,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'HASS Bridge S6 Identify',
             'capabilities': None,
             'categories': dict({
             }),
@@ -14514,6 +14771,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'Laundry Smoke ED78 Identify',
             'capabilities': None,
             'categories': dict({
             }),
@@ -14557,6 +14815,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'Laundry Smoke ED78',
             'capabilities': dict({
               'max_color_temp_kelvin': 6535,
               'max_mireds': 500,
@@ -14624,6 +14883,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'Laundry Smoke ED78 Battery',
             'capabilities': dict({
               'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
             }),
@@ -14713,6 +14973,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'Air Conditioner Identify',
             'capabilities': None,
             'categories': dict({
             }),
@@ -14756,6 +15017,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'Air Conditioner SlaveID 1',
             'capabilities': dict({
               'fan_modes': list([
                 'off',
@@ -14834,6 +15096,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'Air Conditioner Current Temperature',
             'capabilities': dict({
               'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
             }),
@@ -14925,6 +15188,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'Hue ambiance candle Identify',
             'capabilities': None,
             'categories': dict({
             }),
@@ -14968,6 +15232,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'Hue ambiance candle',
             'capabilities': dict({
               'max_color_temp_kelvin': 6535,
               'max_mireds': 454,
@@ -15070,6 +15335,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'Hue ambiance candle Identify',
             'capabilities': None,
             'categories': dict({
             }),
@@ -15113,6 +15379,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'Hue ambiance candle',
             'capabilities': dict({
               'max_color_temp_kelvin': 6535,
               'max_mireds': 454,
@@ -15215,6 +15482,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'Hue ambiance candle Identify',
             'capabilities': None,
             'categories': dict({
             }),
@@ -15258,6 +15526,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'Hue ambiance candle',
             'capabilities': dict({
               'max_color_temp_kelvin': 6535,
               'max_mireds': 454,
@@ -15360,6 +15629,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'Hue ambiance candle Identify',
             'capabilities': None,
             'categories': dict({
             }),
@@ -15403,6 +15673,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'Hue ambiance candle',
             'capabilities': dict({
               'max_color_temp_kelvin': 6535,
               'max_mireds': 454,
@@ -15505,6 +15776,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'Hue ambiance spot Identify',
             'capabilities': None,
             'categories': dict({
             }),
@@ -15548,6 +15820,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'Hue ambiance spot',
             'capabilities': dict({
               'max_color_temp_kelvin': 6535,
               'max_mireds': 454,
@@ -15660,6 +15933,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'Hue ambiance spot Identify',
             'capabilities': None,
             'categories': dict({
             }),
@@ -15703,6 +15977,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'Hue ambiance spot',
             'capabilities': dict({
               'max_color_temp_kelvin': 6535,
               'max_mireds': 454,
@@ -15815,6 +16090,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'Hue dimmer switch Identify',
             'capabilities': None,
             'categories': dict({
             }),
@@ -15858,6 +16134,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'Hue dimmer switch button 1',
             'capabilities': dict({
               'event_types': list([
                 'single_press',
@@ -15909,6 +16186,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'Hue dimmer switch button 2',
             'capabilities': dict({
               'event_types': list([
                 'single_press',
@@ -15960,6 +16238,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'Hue dimmer switch button 3',
             'capabilities': dict({
               'event_types': list([
                 'single_press',
@@ -16011,6 +16290,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'Hue dimmer switch button 4',
             'capabilities': dict({
               'event_types': list([
                 'single_press',
@@ -16062,6 +16342,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'Hue dimmer switch battery',
             'capabilities': dict({
               'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
             }),
@@ -16147,6 +16428,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'Hue white lamp Identify',
             'capabilities': None,
             'categories': dict({
             }),
@@ -16190,6 +16472,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'Hue white lamp',
             'capabilities': dict({
               'supported_color_modes': list([
                 <ColorMode.BRIGHTNESS: 'brightness'>,
@@ -16279,6 +16562,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'Hue white lamp Identify',
             'capabilities': None,
             'categories': dict({
             }),
@@ -16322,6 +16606,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'Hue white lamp',
             'capabilities': dict({
               'supported_color_modes': list([
                 <ColorMode.BRIGHTNESS: 'brightness'>,
@@ -16411,6 +16696,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'Hue white lamp Identify',
             'capabilities': None,
             'categories': dict({
             }),
@@ -16454,6 +16740,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'Hue white lamp',
             'capabilities': dict({
               'supported_color_modes': list([
                 <ColorMode.BRIGHTNESS: 'brightness'>,
@@ -16543,6 +16830,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'Hue white lamp Identify',
             'capabilities': None,
             'categories': dict({
             }),
@@ -16586,6 +16874,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'Hue white lamp',
             'capabilities': dict({
               'supported_color_modes': list([
                 <ColorMode.BRIGHTNESS: 'brightness'>,
@@ -16675,6 +16964,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'Hue white lamp Identify',
             'capabilities': None,
             'categories': dict({
             }),
@@ -16718,6 +17008,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'Hue white lamp',
             'capabilities': dict({
               'supported_color_modes': list([
                 <ColorMode.BRIGHTNESS: 'brightness'>,
@@ -16807,6 +17098,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'Hue white lamp Identify',
             'capabilities': None,
             'categories': dict({
             }),
@@ -16850,6 +17142,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'Hue white lamp',
             'capabilities': dict({
               'supported_color_modes': list([
                 <ColorMode.BRIGHTNESS: 'brightness'>,
@@ -16939,6 +17232,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'Hue white lamp Identify',
             'capabilities': None,
             'categories': dict({
             }),
@@ -16982,6 +17276,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'Hue white lamp',
             'capabilities': dict({
               'supported_color_modes': list([
                 <ColorMode.BRIGHTNESS: 'brightness'>,
@@ -17071,6 +17366,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'Philips hue - 482544 Identify',
             'capabilities': None,
             'categories': dict({
             }),
@@ -17155,6 +17451,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'Koogeek-LS1-20833F Identify',
             'capabilities': None,
             'categories': dict({
             }),
@@ -17198,6 +17495,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'Koogeek-LS1-20833F Light Strip',
             'capabilities': dict({
               'max_color_temp_kelvin': 6535,
               'max_mireds': 500,
@@ -17306,6 +17604,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'Koogeek-P1-A00AA0 Identify',
             'capabilities': None,
             'categories': dict({
             }),
@@ -17349,6 +17648,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'Koogeek-P1-A00AA0 Power',
             'capabilities': dict({
               'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
             }),
@@ -17399,6 +17699,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'Koogeek-P1-A00AA0 outlet',
             'capabilities': None,
             'categories': dict({
             }),
@@ -17483,6 +17784,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'Koogeek-SW2-187A91 Identify',
             'capabilities': None,
             'categories': dict({
             }),
@@ -17526,6 +17828,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'Koogeek-SW2-187A91 Power',
             'capabilities': dict({
               'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
             }),
@@ -17576,6 +17879,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'Koogeek-SW2-187A91 Switch 1',
             'capabilities': None,
             'categories': dict({
             }),
@@ -17618,6 +17922,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'Koogeek-SW2-187A91 Switch 2',
             'capabilities': None,
             'categories': dict({
             }),
@@ -17701,6 +18006,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'Lennox Identify',
             'capabilities': None,
             'categories': dict({
             }),
@@ -17744,6 +18050,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'Lennox',
             'capabilities': dict({
               'hvac_modes': list([
                 <HVACMode.OFF: 'off'>,
@@ -17810,6 +18117,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'Lennox Temperature Display Units',
             'capabilities': dict({
               'options': list([
                 'celsius',
@@ -17861,6 +18169,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'Lennox Current Humidity',
             'capabilities': dict({
               'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
             }),
@@ -17908,6 +18217,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'Lennox Current Temperature',
             'capabilities': dict({
               'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
             }),
@@ -17999,6 +18309,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'LG webOS TV AF80 Identify',
             'capabilities': None,
             'categories': dict({
             }),
@@ -18042,6 +18353,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'LG webOS TV AF80',
             'capabilities': dict({
               'source_list': list([
                 'AirPlay',
@@ -18106,6 +18418,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'LG webOS TV AF80 Mute',
             'capabilities': None,
             'categories': dict({
             }),
@@ -18189,6 +18502,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'Caséta® Wireless Fan Speed Control Identify',
             'capabilities': None,
             'categories': dict({
             }),
@@ -18232,6 +18546,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'Caséta® Wireless Fan Speed Control',
             'capabilities': dict({
               'preset_modes': list([
               ]),
@@ -18320,6 +18635,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'Smart Bridge 2 Identify',
             'capabilities': None,
             'categories': dict({
             }),
@@ -18404,6 +18720,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'MSS425F-15cc Identify',
             'capabilities': None,
             'categories': dict({
             }),
@@ -18447,6 +18764,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'MSS425F-15cc Outlet-1',
             'capabilities': None,
             'categories': dict({
             }),
@@ -18489,6 +18807,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'MSS425F-15cc Outlet-2',
             'capabilities': None,
             'categories': dict({
             }),
@@ -18531,6 +18850,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'MSS425F-15cc Outlet-3',
             'capabilities': None,
             'categories': dict({
             }),
@@ -18573,6 +18893,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'MSS425F-15cc Outlet-4',
             'capabilities': None,
             'categories': dict({
             }),
@@ -18615,6 +18936,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'MSS425F-15cc USB',
             'capabilities': None,
             'categories': dict({
             }),
@@ -18698,6 +19020,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'MSS565-28da Identify',
             'capabilities': None,
             'categories': dict({
             }),
@@ -18741,6 +19064,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'MSS565-28da Dimmer Switch',
             'capabilities': dict({
               'supported_color_modes': list([
                 <ColorMode.BRIGHTNESS: 'brightness'>,
@@ -18834,6 +19158,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'Mysa-85dda9 Identify',
             'capabilities': None,
             'categories': dict({
             }),
@@ -18877,6 +19202,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'Mysa-85dda9 Thermostat',
             'capabilities': dict({
               'hvac_modes': list([
                 <HVACMode.OFF: 'off'>,
@@ -18941,6 +19267,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'Mysa-85dda9 Display',
             'capabilities': dict({
               'supported_color_modes': list([
                 <ColorMode.BRIGHTNESS: 'brightness'>,
@@ -18993,6 +19320,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'Mysa-85dda9 Temperature Display Units',
             'capabilities': dict({
               'options': list([
                 'celsius',
@@ -19044,6 +19372,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'Mysa-85dda9 Current Humidity',
             'capabilities': dict({
               'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
             }),
@@ -19091,6 +19420,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'Mysa-85dda9 Current Temperature',
             'capabilities': dict({
               'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
             }),
@@ -19182,6 +19512,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'Nanoleaf Strip 3B32 Identify',
             'capabilities': None,
             'categories': dict({
             }),
@@ -19225,6 +19556,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'Nanoleaf Strip 3B32 Nanoleaf Light Strip',
             'capabilities': dict({
               'max_color_temp_kelvin': 6535,
               'max_mireds': 470,
@@ -19302,6 +19634,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'Nanoleaf Strip 3B32 Thread Capabilities',
             'capabilities': dict({
               'options': list([
                 'border_router_capable',
@@ -19362,6 +19695,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'Nanoleaf Strip 3B32 Thread Status',
             'capabilities': dict({
               'options': list([
                 'border_router',
@@ -19465,6 +19799,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'Netatmo-Doorbell-g738658 Motion Sensor',
             'capabilities': None,
             'categories': dict({
             }),
@@ -19508,6 +19843,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'Netatmo-Doorbell-g738658 Identify',
             'capabilities': None,
             'categories': dict({
             }),
@@ -19551,6 +19887,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'Netatmo-Doorbell-g738658',
             'capabilities': None,
             'categories': dict({
             }),
@@ -19594,6 +19931,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'Netatmo-Doorbell-g738658',
             'capabilities': dict({
               'event_types': list([
                 'single_press',
@@ -19649,6 +19987,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'Netatmo-Doorbell-g738658 Mute',
             'capabilities': None,
             'categories': dict({
             }),
@@ -19691,6 +20030,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'Netatmo-Doorbell-g738658 Mute',
             'capabilities': None,
             'categories': dict({
             }),
@@ -19774,6 +20114,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'Smart CO Alarm Carbon Monoxide Sensor',
             'capabilities': None,
             'categories': dict({
             }),
@@ -19817,6 +20158,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'Smart CO Alarm Low Battery',
             'capabilities': None,
             'categories': dict({
             }),
@@ -19860,6 +20202,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'Smart CO Alarm Identify',
             'capabilities': None,
             'categories': dict({
             }),
@@ -19944,6 +20287,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'Healthy Home Coach Identify',
             'capabilities': None,
             'categories': dict({
             }),
@@ -19987,6 +20331,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'Healthy Home Coach Air Quality',
             'capabilities': dict({
               'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
             }),
@@ -20033,6 +20378,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'Healthy Home Coach Carbon Dioxide sensor',
             'capabilities': dict({
               'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
             }),
@@ -20080,6 +20426,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'Healthy Home Coach Humidity sensor',
             'capabilities': dict({
               'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
             }),
@@ -20127,6 +20474,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'Healthy Home Coach Noise',
             'capabilities': dict({
               'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
             }),
@@ -20177,6 +20525,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'Healthy Home Coach Temperature sensor',
             'capabilities': dict({
               'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
             }),
@@ -20268,6 +20617,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'RainMachine-00ce4a Identify',
             'capabilities': None,
             'categories': dict({
             }),
@@ -20311,6 +20661,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'RainMachine-00ce4a',
             'capabilities': None,
             'categories': dict({
             }),
@@ -20356,6 +20707,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'RainMachine-00ce4a',
             'capabilities': None,
             'categories': dict({
             }),
@@ -20401,6 +20753,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'RainMachine-00ce4a',
             'capabilities': None,
             'categories': dict({
             }),
@@ -20446,6 +20799,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'RainMachine-00ce4a',
             'capabilities': None,
             'categories': dict({
             }),
@@ -20491,6 +20845,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'RainMachine-00ce4a',
             'capabilities': None,
             'categories': dict({
             }),
@@ -20536,6 +20891,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'RainMachine-00ce4a',
             'capabilities': None,
             'categories': dict({
             }),
@@ -20581,6 +20937,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'RainMachine-00ce4a',
             'capabilities': None,
             'categories': dict({
             }),
@@ -20626,6 +20983,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'RainMachine-00ce4a',
             'capabilities': None,
             'categories': dict({
             }),
@@ -20712,6 +21070,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'Master Bath South Identify',
             'capabilities': None,
             'categories': dict({
             }),
@@ -20755,6 +21114,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'Master Bath South RYSE Shade',
             'capabilities': None,
             'categories': dict({
             }),
@@ -20799,6 +21159,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'Master Bath South RYSE Shade Battery',
             'capabilities': dict({
               'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
             }),
@@ -20884,6 +21245,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'RYSE SmartBridge Identify',
             'capabilities': None,
             'categories': dict({
             }),
@@ -20964,6 +21326,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'RYSE SmartShade Identify',
             'capabilities': None,
             'categories': dict({
             }),
@@ -21007,6 +21370,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'RYSE SmartShade RYSE Shade',
             'capabilities': None,
             'categories': dict({
             }),
@@ -21051,6 +21415,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'RYSE SmartShade RYSE Shade Battery',
             'capabilities': dict({
               'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
             }),
@@ -21140,6 +21505,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'BR Left Identify',
             'capabilities': None,
             'categories': dict({
             }),
@@ -21183,6 +21549,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'BR Left RYSE Shade',
             'capabilities': None,
             'categories': dict({
             }),
@@ -21227,6 +21594,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'BR Left RYSE Shade Battery',
             'capabilities': dict({
               'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
             }),
@@ -21312,6 +21680,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'LR Left Identify',
             'capabilities': None,
             'categories': dict({
             }),
@@ -21355,6 +21724,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'LR Left RYSE Shade',
             'capabilities': None,
             'categories': dict({
             }),
@@ -21399,6 +21769,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'LR Left RYSE Shade Battery',
             'capabilities': dict({
               'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
             }),
@@ -21484,6 +21855,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'LR Right Identify',
             'capabilities': None,
             'categories': dict({
             }),
@@ -21527,6 +21899,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'LR Right RYSE Shade',
             'capabilities': None,
             'categories': dict({
             }),
@@ -21571,6 +21944,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'LR Right RYSE Shade Battery',
             'capabilities': dict({
               'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
             }),
@@ -21656,6 +22030,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'RYSE SmartBridge Identify',
             'capabilities': None,
             'categories': dict({
             }),
@@ -21736,6 +22111,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'RZSS Identify',
             'capabilities': None,
             'categories': dict({
             }),
@@ -21779,6 +22155,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'RZSS RYSE Shade',
             'capabilities': None,
             'categories': dict({
             }),
@@ -21823,6 +22200,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'RZSS RYSE Shade Battery',
             'capabilities': dict({
               'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
             }),
@@ -21912,6 +22290,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'SENSE   Identify',
             'capabilities': None,
             'categories': dict({
             }),
@@ -21955,6 +22334,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'SENSE   Lock Mechanism',
             'capabilities': None,
             'categories': dict({
             }),
@@ -22039,6 +22419,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'SIMPLEconnect Fan-06F674 Identify',
             'capabilities': None,
             'categories': dict({
             }),
@@ -22082,6 +22463,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'SIMPLEconnect Fan-06F674 Hunter Fan',
             'capabilities': dict({
               'preset_modes': list([
               ]),
@@ -22134,6 +22516,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'SIMPLEconnect Fan-06F674 Hunter Light',
             'capabilities': dict({
               'supported_color_modes': list([
                 <ColorMode.BRIGHTNESS: 'brightness'>,
@@ -22227,6 +22610,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'VELUX Internal Cover Identify',
             'capabilities': None,
             'categories': dict({
             }),
@@ -22270,6 +22654,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'VELUX Internal Cover Venetian Blinds',
             'capabilities': None,
             'categories': dict({
             }),
@@ -22356,6 +22741,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'U by Moen-015F44 Identify',
             'capabilities': None,
             'categories': dict({
             }),
@@ -22399,6 +22785,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'U by Moen-015F44',
             'capabilities': dict({
               'hvac_modes': list([
                 <HVACMode.HEAT_COOL: 'heat_cool'>,
@@ -22464,6 +22851,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'U by Moen-015F44 Current Temperature',
             'capabilities': dict({
               'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
             }),
@@ -22514,6 +22902,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'U by Moen-015F44',
             'capabilities': None,
             'categories': dict({
             }),
@@ -22556,6 +22945,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'U by Moen-015F44 Outlet 1',
             'capabilities': None,
             'categories': dict({
             }),
@@ -22599,6 +22989,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'U by Moen-015F44 Outlet 2',
             'capabilities': None,
             'categories': dict({
             }),
@@ -22642,6 +23033,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'U by Moen-015F44 Outlet 3',
             'capabilities': None,
             'categories': dict({
             }),
@@ -22685,6 +23077,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'U by Moen-015F44 Outlet 4',
             'capabilities': None,
             'categories': dict({
             }),
@@ -22769,6 +23162,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'VELUX Sensor Identify',
             'capabilities': None,
             'categories': dict({
             }),
@@ -22812,6 +23206,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'VELUX Sensor Carbon Dioxide sensor',
             'capabilities': dict({
               'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
             }),
@@ -22859,6 +23254,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'VELUX Sensor Humidity sensor',
             'capabilities': dict({
               'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
             }),
@@ -22906,6 +23302,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'VELUX Sensor Temperature sensor',
             'capabilities': dict({
               'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
             }),
@@ -22997,6 +23394,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'VELUX Gateway Identify',
             'capabilities': None,
             'categories': dict({
             }),
@@ -23077,6 +23475,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'VELUX Sensor Identify',
             'capabilities': None,
             'categories': dict({
             }),
@@ -23120,6 +23519,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'VELUX Sensor Carbon Dioxide sensor',
             'capabilities': dict({
               'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
             }),
@@ -23167,6 +23567,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'VELUX Sensor Humidity sensor',
             'capabilities': dict({
               'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
             }),
@@ -23214,6 +23615,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'VELUX Sensor Temperature sensor',
             'capabilities': dict({
               'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
             }),
@@ -23301,6 +23703,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'VELUX Window Identify',
             'capabilities': None,
             'categories': dict({
             }),
@@ -23344,6 +23747,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'VELUX Window Roof Window',
             'capabilities': None,
             'categories': dict({
             }),
@@ -23430,6 +23834,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'VELUX Window Identify',
             'capabilities': None,
             'categories': dict({
             }),
@@ -23473,6 +23878,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'VELUX Window Roof Window',
             'capabilities': None,
             'categories': dict({
             }),
@@ -23559,6 +23965,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'VELUX External Cover Identify',
             'capabilities': None,
             'categories': dict({
             }),
@@ -23602,6 +24009,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'VELUX External Cover Awning Blinds',
             'capabilities': None,
             'categories': dict({
             }),
@@ -23687,6 +24095,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'VOCOlinc-Flowerbud-0d324b Identify',
             'capabilities': None,
             'categories': dict({
             }),
@@ -23730,6 +24139,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'VOCOlinc-Flowerbud-0d324b',
             'capabilities': dict({
               'available_modes': list([
                 'normal',
@@ -23790,6 +24200,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'VOCOlinc-Flowerbud-0d324b Mood Light',
             'capabilities': dict({
               'max_color_temp_kelvin': 6535,
               'max_mireds': 500,
@@ -23867,6 +24278,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'VOCOlinc-Flowerbud-0d324b Spray Quantity',
             'capabilities': dict({
               'max': 5,
               'min': 1,
@@ -23918,6 +24330,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'VOCOlinc-Flowerbud-0d324b Current Humidity',
             'capabilities': dict({
               'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
             }),
@@ -24006,6 +24419,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'VOCOlinc-VP3-123456 Identify',
             'capabilities': None,
             'categories': dict({
             }),
@@ -24049,6 +24463,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'VOCOlinc-VP3-123456 Power',
             'capabilities': dict({
               'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
             }),
@@ -24099,6 +24514,7 @@
             'aliases': list([
             ]),
             'area_id': None,
+            'calculated_object_id': 'VOCOlinc-VP3-123456 Outlet',
             'capabilities': None,
             'categories': dict({
             }),

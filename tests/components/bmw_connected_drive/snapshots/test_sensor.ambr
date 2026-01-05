@@ -4,6 +4,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'AC current limit',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -57,6 +58,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Charging end time',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -106,6 +108,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Charging start time',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -155,6 +158,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Charging status',
     'capabilities': dict({
       'options': list([
         'default',
@@ -233,6 +237,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Charging target',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -285,6 +290,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Mileage',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -341,6 +347,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Remaining battery percent',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -397,6 +404,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Remaining fuel',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -453,6 +461,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Remaining fuel percent',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -508,6 +517,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Remaining range electric',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -564,6 +574,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Remaining range fuel',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -620,6 +631,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Remaining range total',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -676,6 +688,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'AC current limit',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -729,6 +742,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Charging end time',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -778,6 +792,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Charging start time',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -827,6 +842,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Charging status',
     'capabilities': dict({
       'options': list([
         'default',
@@ -905,6 +921,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Charging target',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -957,6 +974,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Climate status',
     'capabilities': dict({
       'options': list([
         'cooling',
@@ -1021,6 +1039,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Front left target pressure',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1080,6 +1099,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Front left tire pressure',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1139,6 +1159,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Front right target pressure',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1198,6 +1219,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Front right tire pressure',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1257,6 +1279,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Mileage',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -1313,6 +1336,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Rear left target pressure',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1372,6 +1396,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Rear left tire pressure',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1431,6 +1456,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Rear right target pressure',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1490,6 +1516,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Rear right tire pressure',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1549,6 +1576,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Remaining battery percent',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1605,6 +1633,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Remaining range electric',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1661,6 +1690,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Remaining range total',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1717,6 +1747,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'AC current limit',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1770,6 +1801,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Charging end time',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1819,6 +1851,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Charging start time',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1868,6 +1901,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Charging status',
     'capabilities': dict({
       'options': list([
         'default',
@@ -1946,6 +1980,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Charging target',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1998,6 +2033,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Climate status',
     'capabilities': dict({
       'options': list([
         'cooling',
@@ -2062,6 +2098,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Front left target pressure',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2121,6 +2158,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Front left tire pressure',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2180,6 +2218,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Front right target pressure',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2239,6 +2278,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Front right tire pressure',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2298,6 +2338,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Mileage',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -2354,6 +2395,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Rear left target pressure',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2413,6 +2455,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Rear left tire pressure',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2472,6 +2515,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Rear right target pressure',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2531,6 +2575,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Rear right tire pressure',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2590,6 +2635,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Remaining battery percent',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2646,6 +2692,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Remaining range electric',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2702,6 +2749,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Remaining range total',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2758,6 +2806,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Climate status',
     'capabilities': dict({
       'options': list([
         'cooling',
@@ -2822,6 +2871,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Front left target pressure',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2881,6 +2931,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Front left tire pressure',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2940,6 +2991,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Front right target pressure',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2999,6 +3051,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Front right tire pressure',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -3058,6 +3111,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Mileage',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -3114,6 +3168,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Rear left target pressure',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -3173,6 +3228,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Rear left tire pressure',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -3232,6 +3288,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Rear right target pressure',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -3291,6 +3348,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Rear right tire pressure',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -3350,6 +3408,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Remaining fuel',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -3406,6 +3465,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Remaining fuel percent',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -3461,6 +3521,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Remaining range fuel',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -3517,6 +3578,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Remaining range total',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),

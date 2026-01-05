@@ -4,6 +4,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': None,
     'capabilities': dict({
       'effect_list': list([
         'Solid',
@@ -467,6 +468,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': None,
     'capabilities': dict({
       'effect_list': list([
         'Solid',
@@ -917,6 +919,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Main',
     'capabilities': dict({
       'supported_color_modes': list([
         <ColorMode.BRIGHTNESS: 'brightness'>,
@@ -975,6 +978,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Segment 1',
     'capabilities': dict({
       'effect_list': list([
         'Solid',
@@ -1425,6 +1429,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': None,
     'capabilities': dict({
       'effect_list': list([
         'Solid',
@@ -1875,6 +1880,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': None,
     'capabilities': dict({
       'effect_list': list([
         'Solid',
@@ -2325,6 +2331,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': None,
     'capabilities': dict({
       'effect_list': list([
         'Solid',

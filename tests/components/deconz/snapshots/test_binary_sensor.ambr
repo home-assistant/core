@@ -4,6 +4,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Alarm 10',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -55,6 +56,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Cave CO',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -105,6 +107,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Cave CO Low Battery',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -154,6 +157,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Cave CO Tampered',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -203,6 +207,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Presence sensor',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -255,6 +260,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Presence sensor Low Battery',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -304,6 +310,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Presence sensor Tampered',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -353,6 +360,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'sensor_kitchen_smoke',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -403,6 +411,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'sensor_kitchen_smoke Test Mode',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -452,6 +461,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'sensor_kitchen_smoke',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -502,6 +512,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'sensor_kitchen_smoke Test Mode',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -551,6 +562,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Kitchen Switch',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -600,6 +612,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Back Door',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -651,6 +664,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Motion sensor 4',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -702,6 +716,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'water2',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -753,6 +768,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'water2 Low Battery',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -802,6 +818,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'water2 Tampered',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -851,6 +868,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Vibration 1',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -909,6 +927,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Presence sensor',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -961,6 +980,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Presence sensor Low Battery',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1010,6 +1030,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Presence sensor Tampered',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,

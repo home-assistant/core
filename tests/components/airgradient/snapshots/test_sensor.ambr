@@ -4,6 +4,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Carbon dioxide',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -57,6 +58,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Carbon dioxide automatic baseline calibration',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -110,6 +112,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Display brightness',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -159,6 +162,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Display PM standard',
     'capabilities': dict({
       'options': list([
         'ugm3',
@@ -217,6 +221,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Display temperature unit',
     'capabilities': dict({
       'options': list([
         'c',
@@ -275,6 +280,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Humidity',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -328,6 +334,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'LED bar brightness',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -377,6 +384,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'LED bar mode',
     'capabilities': dict({
       'options': list([
         'off',
@@ -437,6 +445,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'NOx index',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -488,6 +497,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'NOx index learning offset',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -541,6 +551,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'PM0.3',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -593,6 +604,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'PM1',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -646,6 +658,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'PM10',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -699,6 +712,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'PM2.5',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -752,6 +766,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Raw NOx',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -804,6 +819,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Raw PM2.5',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -857,6 +873,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Raw VOC',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -909,6 +926,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Signal strength',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -962,6 +980,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1018,6 +1037,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'VOC index',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1069,6 +1089,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'VOC index learning offset',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1122,6 +1143,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Carbon dioxide automatic baseline calibration',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1175,6 +1197,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'NOx index',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1226,6 +1249,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'NOx index learning offset',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1279,6 +1303,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Raw NOx',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1331,6 +1356,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Raw VOC',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1383,6 +1409,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Signal strength',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1436,6 +1463,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'VOC index',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1487,6 +1515,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'VOC index learning offset',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,

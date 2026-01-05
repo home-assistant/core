@@ -4,6 +4,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Delta energy',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -57,6 +58,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Delta volume',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -110,6 +112,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Total energy',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -166,6 +169,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Total volume',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -222,6 +226,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Energy return',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -278,6 +283,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Energy usage',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -334,6 +340,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Energy usage high tariff',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -390,6 +397,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Energy usage low tariff',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -446,6 +454,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Power',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -502,6 +511,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Cold water',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -558,6 +568,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Warm water',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),

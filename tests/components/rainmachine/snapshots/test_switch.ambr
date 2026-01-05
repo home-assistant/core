@@ -4,6 +4,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Evening',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -78,6 +79,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Evening enabled',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -128,6 +130,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Extra water on hot days',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -177,6 +180,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Flower box',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -240,6 +244,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Flower box enabled',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -290,6 +295,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Freeze protection',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -339,6 +345,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Landscaping',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -402,6 +409,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Landscaping enabled',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -452,6 +460,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Morning',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -526,6 +535,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Morning enabled',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -576,6 +586,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Test',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -639,6 +650,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Test enabled',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -689,6 +701,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Zone 10',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -752,6 +765,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Zone 10 enabled',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -802,6 +816,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Zone 11',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -865,6 +880,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Zone 11 enabled',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -915,6 +931,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Zone 12',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -978,6 +995,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Zone 12 enabled',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1028,6 +1046,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Zone 4',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1091,6 +1110,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Zone 4 enabled',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1141,6 +1161,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Zone 5',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1204,6 +1225,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Zone 5 enabled',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1254,6 +1276,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Zone 6',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1317,6 +1340,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Zone 6 enabled',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1367,6 +1391,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Zone 7',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1430,6 +1455,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Zone 7 enabled',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1480,6 +1506,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Zone 8',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1543,6 +1570,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Zone 8 enabled',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1593,6 +1621,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Zone 9',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1656,6 +1685,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Zone 9 enabled',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,

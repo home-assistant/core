@@ -4,6 +4,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'CPU usage total',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -59,6 +60,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Image',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -107,6 +109,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Memory limit',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -166,6 +169,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Memory usage',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -225,6 +229,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Memory usage percentage',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -280,6 +285,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'State',
     'capabilities': dict({
       'options': list([
         'running',
@@ -346,6 +352,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'CPU usage total',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -401,6 +408,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Image',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -449,6 +457,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Memory limit',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -508,6 +517,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Memory usage',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -567,6 +577,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Memory usage percentage',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -622,6 +633,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'State',
     'capabilities': dict({
       'options': list([
         'running',
@@ -688,6 +700,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'API version',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -736,6 +749,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Architecture',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -784,6 +798,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Container count',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -835,6 +850,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Containers paused',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -886,6 +902,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Containers running',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -937,6 +954,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Containers stopped',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -988,6 +1006,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Docker version',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1036,6 +1055,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Image count',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1087,6 +1107,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Kernel version',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1135,6 +1156,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Operating system',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1183,6 +1205,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Operating system version',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1231,6 +1254,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Total CPU',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1282,6 +1306,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Total memory',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1341,6 +1366,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'CPU usage total',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1396,6 +1422,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Image',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1444,6 +1471,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Memory limit',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1503,6 +1531,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Memory usage',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1562,6 +1591,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Memory usage percentage',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1617,6 +1647,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'State',
     'capabilities': dict({
       'options': list([
         'running',
@@ -1683,6 +1714,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'CPU usage total',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1738,6 +1770,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Image',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1786,6 +1819,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Memory limit',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1845,6 +1879,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Memory usage',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1904,6 +1939,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Memory usage percentage',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1959,6 +1995,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'State',
     'capabilities': dict({
       'options': list([
         'running',
@@ -2025,6 +2062,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'CPU usage total',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2080,6 +2118,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Image',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2128,6 +2167,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Memory limit',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2187,6 +2227,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Memory usage',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2246,6 +2287,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Memory usage percentage',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2301,6 +2343,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'State',
     'capabilities': dict({
       'options': list([
         'running',

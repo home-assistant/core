@@ -4,6 +4,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Attachment bandwidth limit',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -60,6 +61,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Attachment expiry duration',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -116,6 +118,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Attachment file size limit',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -172,6 +175,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Attachment storage',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -228,6 +232,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Attachment storage limit',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -284,6 +289,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Attachment storage remaining',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -340,6 +346,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Email usage limit',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -389,6 +396,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Emails remaining',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -438,6 +446,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Emails sent',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -487,6 +496,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Messages expiry duration',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -543,6 +553,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Messages published',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -592,6 +603,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Messages remaining',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -641,6 +653,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Messages usage limit',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -690,6 +703,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Phone calls made',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -739,6 +753,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Phone calls remaining',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -788,6 +803,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Phone calls usage limit',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -837,6 +853,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Reserved topics',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -886,6 +903,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Reserved topics limit',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -935,6 +953,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Reserved topics remaining',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -984,6 +1003,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Subscription tier',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,

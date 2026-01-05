@@ -4,6 +4,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': None,
     'capabilities': dict({
     }),
     'config_entry_id': <ANY>,
@@ -54,6 +55,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': None,
     'capabilities': dict({
       'preset_modes': list([
         'sleep',
@@ -111,6 +113,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': None,
     'capabilities': dict({
       'preset_modes': None,
     }),
@@ -167,6 +170,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': None,
     'capabilities': dict({
       'preset_modes': list([
         'normal',
@@ -231,6 +235,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': None,
     'capabilities': dict({
       'preset_modes': None,
     }),
@@ -283,6 +288,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': None,
     'capabilities': dict({
     }),
     'config_entry_id': <ANY>,
@@ -333,6 +339,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': None,
     'capabilities': dict({
       'preset_modes': None,
     }),
@@ -388,6 +395,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': None,
     'capabilities': dict({
       'preset_modes': None,
     }),
@@ -443,6 +451,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': None,
     'capabilities': dict({
     }),
     'config_entry_id': <ANY>,
@@ -493,6 +502,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': None,
     'capabilities': dict({
       'preset_modes': list([
         'manual',
@@ -554,6 +564,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': None,
     'capabilities': dict({
       'preset_modes': None,
     }),
@@ -609,6 +620,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': None,
     'capabilities': dict({
       'preset_modes': list([
         'ordinary',

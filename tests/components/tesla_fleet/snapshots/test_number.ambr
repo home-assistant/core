@@ -4,6 +4,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Backup reserve',
     'capabilities': dict({
       'max': 100,
       'min': 0,
@@ -64,6 +65,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Off-grid reserve',
     'capabilities': dict({
       'max': 100,
       'min': 0,
@@ -124,6 +126,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Charge current',
     'capabilities': dict({
       'max': 16,
       'min': 0,
@@ -183,6 +186,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Charge limit',
     'capabilities': dict({
       'max': 100,
       'min': 50,

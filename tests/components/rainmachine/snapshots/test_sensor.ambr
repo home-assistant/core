@@ -4,6 +4,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Evening Run Completion Time',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -53,6 +54,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Flower Box Run Completion Time',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -102,6 +104,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Landscaping Run Completion Time',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -151,6 +154,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Morning Run Completion Time',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -200,6 +204,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Rain sensor rain start',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -250,6 +255,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'TEST Run Completion Time',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -299,6 +305,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Zone 10 Run Completion Time',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -348,6 +355,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Zone 11 Run Completion Time',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -397,6 +405,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Zone 12 Run Completion Time',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -446,6 +455,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Zone 4 Run Completion Time',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -495,6 +505,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Zone 5 Run Completion Time',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -544,6 +555,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Zone 6 Run Completion Time',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -593,6 +605,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Zone 7 Run Completion Time',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -642,6 +655,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Zone 8 Run Completion Time',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -691,6 +705,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Zone 9 Run Completion Time',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,

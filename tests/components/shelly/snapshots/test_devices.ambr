@@ -4,6 +4,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Cloud',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -53,6 +54,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Restart required',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -102,6 +104,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Restart',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -151,6 +154,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Left slot intensity',
     'capabilities': dict({
       'max': 100,
       'min': 0,
@@ -209,6 +213,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Right slot intensity',
     'capabilities': dict({
       'max': 100,
       'min': 0,
@@ -267,6 +272,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Mode',
     'capabilities': dict({
       'options': list([
         'hall',
@@ -334,6 +340,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Last restart',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -383,6 +390,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Left slot level',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -435,6 +443,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Left slot vial',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -483,6 +492,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Right slot level',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -535,6 +545,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Right slot vial',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -583,6 +594,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Signal strength',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -636,6 +648,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Away mode',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -684,6 +697,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Left slot',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -732,6 +746,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Left slot boost',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -780,6 +795,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Right slot',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -828,6 +844,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Right slot boost',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -876,6 +893,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Beta firmware',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -937,6 +955,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Firmware',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -998,6 +1017,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Cloud',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1047,6 +1067,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Restart required',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1096,6 +1117,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Restart',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1145,6 +1167,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Living room lamp',
     'capabilities': dict({
       'max_color_temp_kelvin': 6500,
       'max_mireds': 370,
@@ -1216,6 +1239,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Last restart',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1265,6 +1289,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Living room lamp energy',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -1324,6 +1349,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Living room lamp power',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1380,6 +1406,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Signal strength',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1433,6 +1460,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Beta firmware',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1494,6 +1522,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Firmware',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1555,6 +1584,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Overcurrent',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1604,6 +1634,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Overheating',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1653,6 +1684,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Overpowering',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1702,6 +1734,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Overvoltage',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1751,6 +1784,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Overcurrent',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1800,6 +1834,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Overheating',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1849,6 +1884,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Overpowering',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1898,6 +1934,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Overvoltage',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1947,6 +1984,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Cloud',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1996,6 +2034,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Overcurrent',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2045,6 +2084,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Overheating',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2094,6 +2134,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Overpowering',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2143,6 +2184,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Overvoltage',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2192,6 +2234,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Overcurrent',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2241,6 +2284,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Overheating',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2290,6 +2334,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Overpowering',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2339,6 +2384,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Overvoltage',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2388,6 +2434,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Restart required',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2437,6 +2484,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Restart',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2486,6 +2534,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': None,
     'capabilities': dict({
       'supported_color_modes': list([
         <ColorMode.ONOFF: 'onoff'>,
@@ -2543,6 +2592,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Current',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2599,6 +2649,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Energy',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -2658,6 +2709,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Energy consumed',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -2717,6 +2769,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Energy returned',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -2776,6 +2829,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Frequency',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2832,6 +2886,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Power',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2888,6 +2943,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Voltage',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2944,6 +3000,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Current',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -3000,6 +3057,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Energy',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -3059,6 +3117,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Energy consumed',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -3118,6 +3177,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Energy returned',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -3177,6 +3237,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Frequency',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -3233,6 +3294,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Power',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -3289,6 +3351,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Voltage',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -3345,6 +3408,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Last restart',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -3394,6 +3458,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Current',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -3450,6 +3515,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Energy',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -3509,6 +3575,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Energy consumed',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -3568,6 +3635,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Energy returned',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -3627,6 +3695,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Frequency',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -3683,6 +3752,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Power',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -3739,6 +3809,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Voltage',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -3795,6 +3866,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Current',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -3851,6 +3923,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Energy',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -3910,6 +3983,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Energy consumed',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -3969,6 +4043,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Energy returned',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -4028,6 +4103,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Frequency',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -4084,6 +4160,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Power',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -4140,6 +4217,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Voltage',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -4196,6 +4274,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Signal strength',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -4249,6 +4328,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -4297,6 +4377,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -4345,6 +4426,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -4393,6 +4475,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Beta firmware',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -4454,6 +4537,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Firmware',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -4515,6 +4599,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Cloud',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -4564,6 +4649,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'My zone occupancy',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -4613,6 +4699,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'New zone occupancy',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -4662,6 +4749,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Restart required',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -4711,6 +4799,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Room occupancy',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -4760,6 +4849,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Restart',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -4809,6 +4899,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Illuminance level',
     'capabilities': dict({
       'options': list([
         'dark',
@@ -4869,6 +4960,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Last restart',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -4918,6 +5010,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'My zone detected objects',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -4970,6 +5063,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'New zone detected objects',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -5022,6 +5116,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Room detected objects',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -5074,6 +5169,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Signal strength',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -5127,6 +5223,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Beta firmware',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -5188,6 +5285,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Firmware',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -5249,6 +5347,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Cloud',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -5298,6 +5397,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'External power',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -5347,6 +5447,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Input 2',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -5396,6 +5497,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Restart required',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -5445,6 +5547,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Restart',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -5494,6 +5597,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Turn off the screen',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -5542,6 +5646,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Turn on the screen',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -5590,6 +5695,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Input 0',
     'capabilities': dict({
     }),
     'config_entry_id': <ANY>,
@@ -5649,6 +5755,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Input 3',
     'capabilities': dict({
     }),
     'config_entry_id': <ANY>,
@@ -5708,6 +5815,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Input 4',
     'capabilities': dict({
     }),
     'config_entry_id': <ANY>,
@@ -5767,6 +5875,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Humidity',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -5823,6 +5932,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Illuminance',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -5876,6 +5986,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Illuminance level',
     'capabilities': dict({
       'options': list([
         'dark',
@@ -5936,6 +6047,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Last restart',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -5985,6 +6097,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Signal strength',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -6038,6 +6151,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -6094,6 +6208,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -6142,6 +6257,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Beta firmware',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -6203,6 +6319,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Firmware',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -6264,6 +6381,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Cloud',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -6313,6 +6431,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Input 0',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -6362,6 +6481,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Input 1',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -6411,6 +6531,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Overcurrent',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -6460,6 +6581,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Overheating',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -6509,6 +6631,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Overpowering',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -6558,6 +6681,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Overvoltage',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -6607,6 +6731,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Restart required',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -6656,6 +6781,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Restart',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -6705,6 +6831,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -6755,6 +6882,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Current',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -6811,6 +6939,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Energy',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -6870,6 +6999,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Frequency',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -6926,6 +7056,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Last restart',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -6975,6 +7106,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Power',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -7031,6 +7163,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Signal strength',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -7084,6 +7217,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -7140,6 +7274,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Voltage',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -7196,6 +7331,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Beta firmware',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -7257,6 +7393,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Firmware',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -7318,6 +7455,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Cloud',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -7367,6 +7505,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Input 0',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -7416,6 +7555,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Input 1',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -7465,6 +7605,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Overcurrent',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -7514,6 +7655,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Overheating',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -7563,6 +7705,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Overpowering',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -7612,6 +7755,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Overvoltage',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -7661,6 +7805,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Overcurrent',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -7710,6 +7855,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Overheating',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -7759,6 +7905,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Overpowering',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -7808,6 +7955,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Overvoltage',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -7857,6 +8005,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Restart required',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -7906,6 +8055,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Restart',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -7955,6 +8105,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Last restart',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -8004,6 +8155,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Current',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -8060,6 +8212,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Energy',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -8119,6 +8272,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Energy consumed',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -8178,6 +8332,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Energy returned',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -8237,6 +8392,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Frequency',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -8293,6 +8449,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Power',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -8349,6 +8506,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -8405,6 +8563,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Voltage',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -8461,6 +8620,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Current',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -8517,6 +8677,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Energy',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -8576,6 +8737,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Energy consumed',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -8635,6 +8797,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Energy returned',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -8694,6 +8857,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Frequency',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -8750,6 +8914,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Power',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -8806,6 +8971,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -8862,6 +9028,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Voltage',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -8918,6 +9085,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Signal strength',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -8971,6 +9139,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -9019,6 +9188,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -9067,6 +9237,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Beta firmware',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -9128,6 +9299,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Firmware',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -9189,6 +9361,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Cloud',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -9238,6 +9411,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Restart required',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -9287,6 +9461,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Restart',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -9336,6 +9511,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Apparent power',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -9392,6 +9568,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Current',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -9448,6 +9625,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Energy',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -9507,6 +9685,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Energy returned',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -9566,6 +9745,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Last restart',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -9615,6 +9795,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Neutral current',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -9671,6 +9852,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Apparent power',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -9727,6 +9909,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Current',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -9783,6 +9966,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Energy',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -9842,6 +10026,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Energy returned',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -9901,6 +10086,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Frequency',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -9957,6 +10143,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Power',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -10013,6 +10200,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Power factor',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -10065,6 +10253,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Voltage',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -10121,6 +10310,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Apparent power',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -10177,6 +10367,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Current',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -10233,6 +10424,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Energy',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -10292,6 +10484,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Energy returned',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -10351,6 +10544,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Frequency',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -10407,6 +10601,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Power',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -10463,6 +10658,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Power factor',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -10515,6 +10711,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Voltage',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -10571,6 +10768,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Apparent power',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -10627,6 +10825,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Current',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -10683,6 +10882,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Energy',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -10742,6 +10942,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Energy returned',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -10801,6 +11002,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Frequency',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -10857,6 +11059,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Power',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -10913,6 +11116,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Power factor',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -10965,6 +11169,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Voltage',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -11021,6 +11226,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Power',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -11077,6 +11283,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Signal strength',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -11130,6 +11337,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -11186,6 +11394,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Beta firmware',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -11247,6 +11456,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Firmware',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,

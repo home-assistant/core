@@ -4,6 +4,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Kitchen Light',
     'capabilities': dict({
       'event_types': list([
         'upper',
@@ -65,6 +66,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Switch 2',
     'capabilities': dict({
       'event_types': list([
         'upper',
@@ -126,6 +128,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Up/down remote',
     'capabilities': dict({
       'event_types': list([
         'released',

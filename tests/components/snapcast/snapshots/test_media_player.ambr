@@ -4,6 +4,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'test_client_1 Snapcast Client',
     'capabilities': dict({
       'source_list': list([
         'Test Stream 1',
@@ -79,6 +80,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'test_client_2 Snapcast Client',
     'capabilities': dict({
       'source_list': list([
         'Test Stream 1',
@@ -146,6 +148,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Test Group 1 Snapcast Group',
     'capabilities': dict({
       'source_list': list([
         'Test Stream 1',
@@ -217,6 +220,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Test Group 2 Snapcast Group',
     'capabilities': dict({
       'source_list': list([
         'Test Stream 1',

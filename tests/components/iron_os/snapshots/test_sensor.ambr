@@ -4,6 +4,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'DC input voltage',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -60,6 +61,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Estimated power',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -116,6 +118,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Hall effect strength',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -167,6 +170,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Handle temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -223,6 +227,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Last movement time',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -279,6 +284,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Max tip temperature',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -332,6 +338,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Operating mode',
     'capabilities': dict({
       'options': list([
         'idle',
@@ -416,6 +423,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Power level',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -472,6 +480,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Power source',
     'capabilities': dict({
       'options': list([
         'dc',
@@ -534,6 +543,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Raw tip voltage',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -590,6 +600,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Tip resistance',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -642,6 +653,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Tip temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -698,6 +710,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Uptime',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),

@@ -4,6 +4,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Child lock',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -52,6 +53,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Socket 1',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -101,6 +103,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Switch 1',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -150,6 +153,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Switch 2',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -199,6 +203,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Switch 3',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -248,6 +253,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Switch 4',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -297,6 +303,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Child lock',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -345,6 +352,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Socket 1',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -394,6 +402,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Socket 2',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -443,6 +452,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Switch',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -491,6 +501,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Socket',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -540,6 +551,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Socket 1',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -589,6 +601,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Child lock',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -637,6 +650,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Socket 1',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -686,6 +700,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Child lock',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -734,6 +749,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Socket 1',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -783,6 +799,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Child lock',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -831,6 +848,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Socket 1',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -880,6 +898,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Socket 1',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -929,6 +948,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Socket 1',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -978,6 +998,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Socket 1',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1027,6 +1048,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Switch 1',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1076,6 +1098,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Socket 1',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1125,6 +1148,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Child lock',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1173,6 +1197,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Snooze',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1222,6 +1247,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Power',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1270,6 +1296,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Socket 1',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1319,6 +1346,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Socket 2',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1368,6 +1396,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Socket 1',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1417,6 +1446,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Flip',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1465,6 +1495,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Motion alarm',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1513,6 +1544,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Motion tracking',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1561,6 +1593,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Privacy mode',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1609,6 +1642,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Sound detection',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1657,6 +1691,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Time watermark',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1705,6 +1740,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Video recording',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1753,6 +1789,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Flip',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1801,6 +1838,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Motion alarm',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1849,6 +1887,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Motion recording',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1897,6 +1936,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Motion tracking',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1945,6 +1985,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Time watermark',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1993,6 +2034,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Video recording',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2041,6 +2083,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Wide dynamic range',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2089,6 +2132,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Flip',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2137,6 +2181,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Motion alarm',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2185,6 +2230,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Sound detection',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2233,6 +2279,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Time watermark',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2281,6 +2328,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Video recording',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2329,6 +2377,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Flip',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2377,6 +2426,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Motion alarm',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2425,6 +2475,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Sound detection',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2473,6 +2524,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Time watermark',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2521,6 +2573,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Video recording',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2569,6 +2622,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Socket',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2618,6 +2672,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Output power limit',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2666,6 +2721,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Sound',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2714,6 +2770,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Child lock',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2762,6 +2819,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Socket 1',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2811,6 +2869,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Socket 2',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2860,6 +2919,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Child lock',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2909,6 +2969,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Ionizer',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2958,6 +3019,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Child lock',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -3007,6 +3069,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Child lock',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -3055,6 +3118,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Socket 1',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -3104,6 +3168,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Child lock',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -3153,6 +3218,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Filter reset',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -3202,6 +3268,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Ionizer',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -3251,6 +3318,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Socket',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -3300,6 +3368,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Socket 1',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -3349,6 +3418,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Child lock',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -3397,6 +3467,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Switch',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -3445,6 +3516,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Child lock',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -3493,6 +3565,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Switch',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -3541,6 +3614,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Switch',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -3589,6 +3663,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Child lock',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -3637,6 +3712,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Child lock',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -3685,6 +3761,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Socket 1',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -3734,6 +3811,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Child lock',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -3782,6 +3860,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Socket 1',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -3831,6 +3910,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Child lock',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -3879,6 +3959,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Socket 1',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -3928,6 +4009,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Child lock',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -3976,6 +4058,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Child lock',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -4024,6 +4107,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Socket 1',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -4073,6 +4157,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Socket 2',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -4122,6 +4207,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Switch 1',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -4171,6 +4257,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Flip',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -4219,6 +4306,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Motion alarm',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -4267,6 +4355,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Motion recording',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -4315,6 +4404,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Motion tracking',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -4363,6 +4453,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Privacy mode',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -4411,6 +4502,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Time watermark',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -4459,6 +4551,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Video recording',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -4507,6 +4600,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Socket 1',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -4556,6 +4650,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Socket',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -4605,6 +4700,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Child lock',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -4653,6 +4749,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Ionizer',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -4701,6 +4798,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Power',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -4749,6 +4847,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'UV sterilization',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -4797,6 +4896,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Mute',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -4845,6 +4945,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Switch',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -4893,6 +4994,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Socket 1',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -4942,6 +5044,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Socket 2',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -4991,6 +5094,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Child lock',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -5039,6 +5143,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Socket 1',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -5088,6 +5193,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Flip',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -5136,6 +5242,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Motion alarm',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -5184,6 +5291,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Time watermark',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -5232,6 +5340,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Switch 1',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -5280,6 +5389,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Switch 2',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -5328,6 +5438,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Switch 3',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -5376,6 +5487,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Switch 4',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -5424,6 +5536,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Child lock',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -5472,6 +5585,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Filter cartridge reset',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -5520,6 +5634,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Ionizer',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -5568,6 +5683,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Power',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -5616,6 +5732,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'UV sterilization',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -5664,6 +5781,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Switch 1',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -5713,6 +5831,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Child lock',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -5761,6 +5880,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Socket 1',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -5810,6 +5930,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Child lock',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -5858,6 +5979,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Frost protection',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -5906,6 +6028,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Filter cartridge reset',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -5954,6 +6077,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Power',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -6002,6 +6126,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Auto clean',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -6050,6 +6175,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Socket 1',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -6099,6 +6225,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Socket 2',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -6148,6 +6275,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Socket 3',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -6197,6 +6325,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'USB 1',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -6245,6 +6374,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Sleep',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -6293,6 +6423,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Child lock',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -6341,6 +6472,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Socket 1',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -6390,6 +6522,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Socket 1',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -6439,6 +6572,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Child lock',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -6488,6 +6622,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Ionizer',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -6537,6 +6672,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Socket',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -6586,6 +6722,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Reverse',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -6634,6 +6771,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Child lock',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -6682,6 +6820,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Mute',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -6730,6 +6869,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Child lock',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -6778,6 +6918,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Flip',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -6826,6 +6967,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Time watermark',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -6874,6 +7016,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Arm beep',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -6922,6 +7065,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Siren',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -6970,6 +7114,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Socket 1',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -7019,6 +7164,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Child lock',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -7067,6 +7213,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Switch 1',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -7116,6 +7263,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Socket 1',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -7165,6 +7313,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Switch',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -7213,6 +7362,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Switch 1',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -7262,6 +7412,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Switch 2',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -7311,6 +7462,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Filter reset',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -7359,6 +7511,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Power',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -7407,6 +7560,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Reset of water usage days',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -7455,6 +7609,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'UV sterilization',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -7503,6 +7658,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Water pump reset',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -7551,6 +7707,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Do not disturb',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -7599,6 +7756,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Auto clean',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -7647,6 +7805,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Socket 1',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -7696,6 +7855,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Ionizer',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -7745,6 +7905,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Switch 1',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -7794,6 +7955,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Child lock',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -7842,6 +8004,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Socket 1',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -7891,6 +8054,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Socket 1',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -7940,6 +8104,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Child lock',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -7988,6 +8153,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Socket',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -8037,6 +8203,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Socket 1',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -8086,6 +8253,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Child lock',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -8134,6 +8302,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Switch 1',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -8183,6 +8352,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Switch 2',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -8232,6 +8402,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Switch 3',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -8281,6 +8452,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Switch 4',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -8330,6 +8502,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Switch 5',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -8379,6 +8552,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Switch 6',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -8428,6 +8602,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Child lock',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -8476,6 +8651,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Socket 1',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -8525,6 +8701,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Socket 1',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -8574,6 +8751,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Switch',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -8622,6 +8800,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Switch 1',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -8670,6 +8849,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Switch 2',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -8718,6 +8898,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Child lock',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -8766,6 +8947,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Frost protection',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -8814,6 +8996,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -8862,6 +9045,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Music',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -8911,6 +9095,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Mute',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -8959,6 +9144,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Mute',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -9007,6 +9193,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Switch 1',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -9056,6 +9243,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Child lock',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -9104,6 +9292,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Socket 1',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -9153,6 +9342,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Socket 1',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -9202,6 +9392,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Energy saving',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -9250,6 +9441,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Start',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -9298,6 +9490,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Socket 1',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -9347,6 +9540,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Child lock',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -9395,6 +9589,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Socket 1',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -9444,6 +9639,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Socket 1',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -9493,6 +9689,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Socket',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -9542,6 +9739,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Power',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -9592,6 +9790,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Preheat',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -9642,6 +9841,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Side A Power',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -9692,6 +9892,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Side A Preheat',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -9742,6 +9943,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Side B Power',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -9792,6 +9994,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Side B Preheat',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -9842,6 +10045,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Child lock',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -9890,6 +10094,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Socket 1',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -9939,6 +10144,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Socket 2',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -9988,6 +10194,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Ionizer',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -10036,6 +10243,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Do not disturb',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -10084,6 +10292,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Socket 1',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -10133,6 +10342,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Child lock',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -10181,6 +10391,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Socket 1',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -10230,6 +10441,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Socket',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -10279,6 +10491,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Filter reset',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -10327,6 +10540,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Power',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -10375,6 +10589,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Water pump reset',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -10423,6 +10638,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Socket 1',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -10472,6 +10688,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Child lock',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -10520,6 +10737,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Socket 1',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -10569,6 +10787,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -10617,6 +10836,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Music',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -10666,6 +10886,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Child lock',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -10714,6 +10935,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Frost protection',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -10762,6 +10984,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Mute',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -10810,6 +11033,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Switch',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -10858,6 +11082,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Child lock',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -10906,6 +11131,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Switch',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -10954,6 +11180,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Socket',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,

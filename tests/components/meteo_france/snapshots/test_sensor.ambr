@@ -4,6 +4,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': '32 Weather alert',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -60,6 +61,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'La Clusaz Cloud cover',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -111,6 +113,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'La Clusaz Daily original condition',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -160,6 +163,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'La Clusaz Daily precipitation',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -214,6 +218,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'La Clusaz Freeze chance',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -265,6 +270,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'La Clusaz Humidity',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -319,6 +325,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'La Clusaz Original condition',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -368,6 +375,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'La Clusaz Pressure',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -425,6 +433,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'La Clusaz Rain chance',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -476,6 +485,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'La Clusaz Snow chance',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -527,6 +537,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'La Clusaz Temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -584,6 +595,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'La Clusaz UV',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -635,6 +647,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'La Clusaz Wind gust',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -693,6 +706,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'La Clusaz Wind speed',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -750,6 +764,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Meudon Next rain',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,

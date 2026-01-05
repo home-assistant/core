@@ -4,6 +4,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': None,
     'capabilities': dict({
       'hvac_modes': list([
         <HVACMode.HEAT: 'heat'>,
@@ -69,6 +70,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': None,
     'capabilities': dict({
       'hvac_modes': list([
         <HVACMode.HEAT: 'heat'>,
@@ -134,6 +136,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': None,
     'capabilities': dict({
       'hvac_modes': list([
         <HVACMode.HEAT: 'heat'>,
@@ -201,6 +204,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': None,
     'capabilities': dict({
       'hvac_modes': list([
         <HVACMode.HEAT: 'heat'>,
@@ -281,6 +285,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': None,
     'capabilities': dict({
       'hvac_modes': list([
         <HVACMode.HEAT: 'heat'>,

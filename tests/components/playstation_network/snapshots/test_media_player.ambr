@@ -4,6 +4,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': None,
     'capabilities': dict({
     }),
     'config_entry_id': <ANY>,
@@ -55,6 +56,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': None,
     'capabilities': dict({
     }),
     'config_entry_id': <ANY>,
@@ -111,6 +113,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': None,
     'capabilities': dict({
     }),
     'config_entry_id': <ANY>,
@@ -164,6 +167,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': None,
     'capabilities': dict({
     }),
     'config_entry_id': <ANY>,
@@ -217,6 +221,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': None,
     'capabilities': dict({
     }),
     'config_entry_id': <ANY>,
@@ -268,6 +273,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': None,
     'capabilities': dict({
     }),
     'config_entry_id': <ANY>,
@@ -324,6 +330,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': None,
     'capabilities': dict({
     }),
     'config_entry_id': <ANY>,
@@ -377,6 +384,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': None,
     'capabilities': dict({
     }),
     'config_entry_id': <ANY>,
@@ -428,6 +436,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': None,
     'capabilities': dict({
     }),
     'config_entry_id': <ANY>,

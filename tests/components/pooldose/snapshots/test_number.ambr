@@ -4,6 +4,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Chlorine overfeed alarm lower limit',
     'capabilities': dict({
       'max': 10,
       'min': 0,
@@ -62,6 +63,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Chlorine overfeed alarm upper limit',
     'capabilities': dict({
       'max': 10,
       'min': 0,
@@ -120,6 +122,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Chlorine target',
     'capabilities': dict({
       'max': 65535,
       'min': 0,
@@ -178,6 +181,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'ORP overfeed alarm lower limit',
     'capabilities': dict({
       'max': 1000,
       'min': 0,
@@ -237,6 +241,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'ORP overfeed alarm upper limit',
     'capabilities': dict({
       'max': 1000,
       'min': 0,
@@ -296,6 +301,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'ORP target',
     'capabilities': dict({
       'max': 850,
       'min': 400,
@@ -355,6 +361,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'pH overfeed alarm lower limit',
     'capabilities': dict({
       'max': 14,
       'min': 0,
@@ -413,6 +420,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'pH overfeed alarm upper limit',
     'capabilities': dict({
       'max': 14,
       'min': 0,
@@ -471,6 +479,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'pH target',
     'capabilities': dict({
       'max': 8,
       'min': 6,

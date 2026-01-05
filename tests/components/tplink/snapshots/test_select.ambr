@@ -39,6 +39,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Alarm sound',
     'capabilities': dict({
       'options': list([
         'Doorbell Ring 1',
@@ -130,6 +131,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Alarm volume',
     'capabilities': dict({
       'options': list([
         'low',
@@ -189,6 +191,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Light preset',
     'capabilities': dict({
       'options': list([
         'Off',

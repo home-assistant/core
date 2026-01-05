@@ -4,6 +4,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Average mission time',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -53,6 +54,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Battery',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -103,6 +105,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Battery cycles',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -154,6 +157,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Canceled missions',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -206,6 +210,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Dock tank level',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -255,6 +260,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Failed missions',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -307,6 +313,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Last mission start time',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -356,6 +363,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Scrubs',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -408,6 +416,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Successful missions',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -460,6 +469,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Tank level',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -509,6 +519,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Total cleaned area',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -561,6 +572,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Total cleaning time',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -610,6 +622,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Total missions',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),

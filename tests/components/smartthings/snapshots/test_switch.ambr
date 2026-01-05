@@ -4,6 +4,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -52,6 +53,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Sound effect',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -100,6 +102,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Display lighting',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -148,6 +151,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Sound effect',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -196,6 +200,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -244,6 +249,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Sabbath mode',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -292,6 +298,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Cubed ice',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -340,6 +347,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Power cool',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -388,6 +396,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Power freeze',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -436,6 +445,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Sabbath mode',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -484,6 +494,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Cubed ice',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -532,6 +543,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Power cool',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -580,6 +592,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Power freeze',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -628,6 +641,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Cubed ice',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -676,6 +690,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Ice Bites',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -724,6 +739,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Power cool',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -772,6 +788,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Power freeze',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -820,6 +837,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Sabbath mode',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -868,6 +886,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Power cool',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -916,6 +935,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -964,6 +984,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1012,6 +1033,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Auto Cycle Link',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1060,6 +1082,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Keep fresh mode',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1108,6 +1131,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Sanitize',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1156,6 +1180,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Wrinkle prevent',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1204,6 +1229,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Wrinkle prevent',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1252,6 +1278,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Wrinkle prevent',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1300,6 +1327,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Bubble Soak',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1348,6 +1376,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Bubble Soak',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1396,6 +1425,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1444,6 +1474,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1492,6 +1523,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1540,6 +1572,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1588,6 +1621,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,

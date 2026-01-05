@@ -4,6 +4,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Brew by weight dose 1',
     'capabilities': dict({
       'max': 100,
       'min': 5,
@@ -44,6 +45,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Brew by weight dose 2',
     'capabilities': dict({
       'max': 100,
       'min': 5,
@@ -141,6 +143,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Coffee target temperature',
     'capabilities': dict({
       'max': 104,
       'min': 85,
@@ -200,6 +203,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Smart standby time',
     'capabilities': dict({
       'max': 240,
       'min': 0,
@@ -259,6 +263,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Prebrew off time',
     'capabilities': dict({
       'max': 10,
       'min': 0,
@@ -318,6 +323,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Prebrew on time',
     'capabilities': dict({
       'max': 10,
       'min': 0,
@@ -377,6 +383,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Preinfusion time',
     'capabilities': dict({
       'max': 10,
       'min': 0,
@@ -436,6 +443,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Steam target temperature',
     'capabilities': dict({
       'max': 134,
       'min': 20,

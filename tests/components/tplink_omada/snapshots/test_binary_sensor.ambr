@@ -4,6 +4,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Port 10 LAN status',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -53,6 +54,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Port 10 PoE delivery',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -102,6 +104,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Port 11 LAN status',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -151,6 +154,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Port 11 PoE delivery',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -200,6 +204,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Port 12 LAN status',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -249,6 +254,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Port 12 PoE delivery',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -298,6 +304,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Port 1 LAN status',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -347,6 +354,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Port 2 LAN status',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -396,6 +404,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Port 4 Internet link',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -445,6 +454,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Port 4 online detection',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -494,6 +504,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Port 5 LAN status',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -543,6 +554,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Port 5 PoE delivery',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -592,6 +604,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Port 6 LAN status',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -641,6 +654,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Port 6 PoE delivery',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -690,6 +704,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Port 7 LAN status',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -739,6 +754,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Port 7 PoE delivery',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -788,6 +804,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Port 8 LAN status',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -837,6 +854,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Port 8 PoE delivery',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -886,6 +904,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Port 9 LAN status',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -935,6 +954,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Port 9 PoE delivery',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,

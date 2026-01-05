@@ -4,6 +4,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Burglary alarm issues',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -52,6 +53,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Faulting points',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -101,6 +103,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Fire alarm issues',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -149,6 +152,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Gas alarm issues',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -197,6 +201,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Burglary alarm issues',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -245,6 +250,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Faulting points',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -294,6 +300,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Fire alarm issues',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -342,6 +349,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Gas alarm issues',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -390,6 +398,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Burglary alarm issues',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -438,6 +447,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Faulting points',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -487,6 +497,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Fire alarm issues',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -535,6 +546,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Gas alarm issues',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,

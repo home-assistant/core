@@ -4,6 +4,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Battery',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -57,6 +58,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Current 1',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -113,6 +115,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Current 2',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -169,6 +172,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Dawn',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -222,6 +226,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Device temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -278,6 +283,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Energy 1',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -334,6 +340,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Energy 2',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -390,6 +397,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Exhaust motor speed',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -442,6 +450,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'External temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -498,6 +507,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Floor temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -554,6 +564,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Humidity',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -607,6 +618,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Illuminance',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -659,6 +671,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Illuminance 1',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -712,6 +725,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Illuminance 2',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -765,6 +779,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Indoor humidity',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -818,6 +833,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Indoor temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -874,6 +890,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Intake motor speed',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -926,6 +943,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Level',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -982,6 +1000,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Link quality',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1033,6 +1052,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Node state',
     'capabilities': dict({
       'options': list([
         'available',
@@ -1115,6 +1135,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Operating hours',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -1171,6 +1192,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Outdoor humidity',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1224,6 +1246,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Outdoor temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1280,6 +1303,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Position',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1332,6 +1356,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'State',
     'capabilities': dict({
       'options': list([
         'open',
@@ -1396,6 +1421,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1452,6 +1478,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Total current',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1508,6 +1535,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Total energy',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -1564,6 +1592,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Total power',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1620,6 +1649,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Total voltage',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1676,6 +1706,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Ultraviolet',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1727,6 +1758,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Voltage 1',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1783,6 +1815,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Voltage 2',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1839,6 +1872,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Wind speed',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1898,6 +1932,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Window position',
     'capabilities': dict({
       'options': list([
         'closed',

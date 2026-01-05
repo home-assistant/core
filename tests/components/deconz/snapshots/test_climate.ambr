@@ -4,6 +4,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Zen-01',
     'capabilities': dict({
       'fan_modes': list([
         'smart',
@@ -93,6 +94,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Zen-01',
     'capabilities': dict({
       'fan_modes': list([
         'smart',
@@ -182,6 +184,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Zen-01',
     'capabilities': dict({
       'fan_modes': list([
         'smart',
@@ -290,6 +293,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Thermostat',
     'capabilities': dict({
       'hvac_modes': list([
         <HVACMode.HEAT: 'heat'>,
@@ -359,6 +363,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'CLIP thermostat',
     'capabilities': dict({
       'hvac_modes': list([
         <HVACMode.HEAT: 'heat'>,
@@ -425,6 +430,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Thermostat',
     'capabilities': dict({
       'hvac_modes': list([
         <HVACMode.HEAT: 'heat'>,
@@ -494,6 +500,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'thermostat',
     'capabilities': dict({
       'hvac_modes': list([
         <HVACMode.HEAT: 'heat'>,

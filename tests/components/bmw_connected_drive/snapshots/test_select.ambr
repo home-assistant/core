@@ -4,6 +4,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Charging mode',
     'capabilities': dict({
       'options': list([
         'immediate_charging',
@@ -63,6 +64,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'AC charging limit',
     'capabilities': dict({
       'options': list([
         '6',
@@ -143,6 +145,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Charging mode',
     'capabilities': dict({
       'options': list([
         'immediate_charging',
@@ -202,6 +205,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'AC charging limit',
     'capabilities': dict({
       'options': list([
         '6',
@@ -282,6 +286,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Charging mode',
     'capabilities': dict({
       'options': list([
         'immediate_charging',

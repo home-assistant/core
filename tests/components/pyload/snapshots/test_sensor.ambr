@@ -4,6 +4,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Active downloads',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -56,6 +57,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Downloads in queue',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -108,6 +110,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Free space',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -164,6 +167,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Speed',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -220,6 +224,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Total downloads',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -272,6 +277,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Active downloads',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -324,6 +330,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Downloads in queue',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -376,6 +383,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Free space',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -432,6 +440,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Speed',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -488,6 +497,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Total downloads',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -540,6 +550,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Active downloads',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -592,6 +603,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Downloads in queue',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -644,6 +656,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Free space',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -700,6 +713,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Speed',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -756,6 +770,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Total downloads',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -808,6 +823,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Active downloads',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -860,6 +876,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Downloads in queue',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -912,6 +929,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Free space',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -968,6 +986,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Speed',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1024,6 +1043,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Total downloads',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),

@@ -4,6 +4,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': None,
     'capabilities': dict({
       'options': list([
         'idle',
@@ -71,6 +72,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Black ink',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -126,6 +128,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Cyan ink',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -181,6 +184,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Magenta ink',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -236,6 +240,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Photo black ink',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -291,6 +296,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Uptime',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -340,6 +346,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Yellow ink',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),

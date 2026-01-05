@@ -4,6 +4,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'B/W pages',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -56,6 +57,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Belt unit remaining lifetime',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -108,6 +110,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Black drum page counter',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -160,6 +163,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Black drum remaining lifetime',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -212,6 +216,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Black drum remaining pages',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -264,6 +269,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Black toner remaining',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -316,6 +322,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Color pages',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -368,6 +375,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Cyan drum page counter',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -420,6 +428,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Cyan drum remaining lifetime',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -472,6 +481,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Cyan drum remaining pages',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -524,6 +534,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Cyan toner remaining',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -576,6 +587,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Drum page counter',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -628,6 +640,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Drum remaining lifetime',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -680,6 +693,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Drum remaining pages',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -732,6 +746,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Duplex unit page counter',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -784,6 +799,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Fuser remaining lifetime',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -836,6 +852,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Last restart',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -885,6 +902,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Magenta drum page counter',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -937,6 +955,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Magenta drum remaining lifetime',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -989,6 +1008,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Magenta drum remaining pages',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1041,6 +1061,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Magenta toner remaining',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1093,6 +1114,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Page counter',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1145,6 +1167,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'PF Kit 1 remaining lifetime',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1197,6 +1220,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Status',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1245,6 +1269,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Yellow drum page counter',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1297,6 +1322,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Yellow drum remaining lifetime',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1349,6 +1375,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Yellow drum remaining pages',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1401,6 +1428,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Yellow toner remaining',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),

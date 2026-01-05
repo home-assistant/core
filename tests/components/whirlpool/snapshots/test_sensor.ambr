@@ -4,6 +4,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'End time',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -54,6 +55,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'State',
     'capabilities': dict({
       'options': list([
         'standby',
@@ -150,6 +152,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Lower oven cook mode',
     'capabilities': dict({
       'options': list([
         'standby',
@@ -220,6 +223,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Lower oven current temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -276,6 +280,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Lower oven state',
     'capabilities': dict({
       'options': list([
         'standby',
@@ -336,6 +341,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Lower oven target temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -392,6 +398,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Upper oven cook mode',
     'capabilities': dict({
       'options': list([
         'standby',
@@ -462,6 +469,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Upper oven current temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -518,6 +526,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Upper oven state',
     'capabilities': dict({
       'options': list([
         'standby',
@@ -578,6 +587,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Upper oven target temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -634,6 +644,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Cook mode',
     'capabilities': dict({
       'options': list([
         'standby',
@@ -704,6 +715,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Current temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -760,6 +772,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'State',
     'capabilities': dict({
       'options': list([
         'standby',
@@ -820,6 +833,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Target temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -876,6 +890,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Detergent level',
     'capabilities': dict({
       'options': list([
         'empty',
@@ -940,6 +955,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'End time',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -990,6 +1006,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'State',
     'capabilities': dict({
       'options': list([
         'standby',

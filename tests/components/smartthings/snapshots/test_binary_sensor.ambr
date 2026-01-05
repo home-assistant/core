@@ -4,6 +4,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Motion',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -53,6 +54,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Tamper',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -102,6 +104,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Motion',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -151,6 +154,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Sound',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -200,6 +204,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -249,6 +254,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Child lock',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -297,6 +303,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Power',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -346,6 +353,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Power',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -395,6 +403,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Child lock',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -443,6 +452,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Door',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -492,6 +502,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Power',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -541,6 +552,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Remote control',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -589,6 +601,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Child lock',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -637,6 +650,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Door',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -686,6 +700,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Remote control',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -734,6 +749,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Child lock',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -782,6 +798,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Door',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -831,6 +848,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Remote control',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -879,6 +897,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Child lock',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -927,6 +946,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Door',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -976,6 +996,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Remote control',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1024,6 +1045,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Child lock',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1072,6 +1094,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Door',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1121,6 +1144,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Remote control',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1169,6 +1193,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Filter status',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1218,6 +1243,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Freezer door',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1267,6 +1293,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Fridge door',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1316,6 +1343,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'CoolSelect+ door',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1365,6 +1393,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Filter status',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1414,6 +1443,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Freezer door',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1463,6 +1493,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Fridge door',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1512,6 +1543,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Filter status',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1561,6 +1593,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Freezer door',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1610,6 +1643,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Fridge door',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1659,6 +1693,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Door',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1708,6 +1743,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Child lock',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1756,6 +1792,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Power',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1805,6 +1842,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Remote control',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1853,6 +1891,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Child lock',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1901,6 +1940,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Power',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1950,6 +1990,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Remote control',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1998,6 +2039,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Child lock',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2046,6 +2088,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Keep fresh mode active',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2094,6 +2137,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Power',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2143,6 +2187,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Remote control',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2191,6 +2236,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Child lock',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2239,6 +2285,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Power',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2288,6 +2335,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Remote control',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2336,6 +2384,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Wrinkle prevent active',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2384,6 +2433,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Child lock',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2432,6 +2482,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Power',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2481,6 +2532,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Remote control',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2529,6 +2581,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Wrinkle prevent active',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2577,6 +2630,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Child lock',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2625,6 +2679,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Power',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2674,6 +2729,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Remote control',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2722,6 +2778,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Wrinkle prevent active',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2770,6 +2827,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Child lock',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2818,6 +2876,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Power',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2867,6 +2926,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Remote control',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2915,6 +2975,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Child lock',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2963,6 +3024,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Power',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -3012,6 +3074,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Remote control',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -3060,6 +3123,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Child lock',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -3108,6 +3172,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Power',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -3157,6 +3222,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Remote control',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -3205,6 +3271,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Power',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -3254,6 +3321,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Remote control',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -3302,6 +3370,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Power',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -3351,6 +3420,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Remote control',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -3399,6 +3469,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Upper washer remote control',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -3447,6 +3518,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Motion',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -3496,6 +3568,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Presence',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -3545,6 +3618,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Gas',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -3594,6 +3668,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Presence',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -3643,6 +3718,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -3692,6 +3768,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Acceleration',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -3741,6 +3818,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Moisture',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,

@@ -4,6 +4,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Connection quality',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -53,6 +54,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Downtime',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -103,6 +105,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'ECM latency',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -152,6 +155,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Fan speed',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -204,6 +208,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Flame height',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -256,6 +261,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'IP address',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -305,6 +311,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Target temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -362,6 +369,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -419,6 +427,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Timer end',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -472,6 +481,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Uptime',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,

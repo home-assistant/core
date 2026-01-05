@@ -22,6 +22,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Status light brightness',
     'capabilities': dict({
       'max': 100.0,
       'min': 0.0,
@@ -115,6 +116,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Status light brightness',
     'capabilities': dict({
       'max': 100.0,
       'min': 0.0,

@@ -4,6 +4,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Battery',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -55,6 +56,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Chlorine',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -105,6 +107,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Chlorine high',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -155,6 +158,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Chlorine low',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -205,6 +209,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Last seen',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -255,6 +260,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'pH',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -305,6 +311,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'pH high',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -354,6 +361,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'pH low',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -403,6 +411,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Temperature',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,

@@ -4,6 +4,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Schedule turn-off',
     'capabilities': dict({
       'max': 100.0,
       'min': 0.0,
@@ -62,6 +63,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Schedule turn-on',
     'capabilities': dict({
       'max': 100.0,
       'min': 0.0,
@@ -120,6 +122,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Delayed start',
     'capabilities': dict({
       'max': 19,
       'min': 0,

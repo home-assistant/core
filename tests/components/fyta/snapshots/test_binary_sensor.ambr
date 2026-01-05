@@ -4,6 +4,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Battery',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -53,6 +54,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Light notification',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -101,6 +103,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Nutrition notification',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -149,6 +152,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Productive plant',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -197,6 +201,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Repotted',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -245,6 +250,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Temperature notification',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -293,6 +299,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Update',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -342,6 +349,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Water notification',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -390,6 +398,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Battery',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -439,6 +448,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Light notification',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -487,6 +497,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Nutrition notification',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -535,6 +546,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Productive plant',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -583,6 +595,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Repotted',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -631,6 +644,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Temperature notification',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -679,6 +693,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Update',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -728,6 +743,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Water notification',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,

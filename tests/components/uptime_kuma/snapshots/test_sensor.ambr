@@ -4,6 +4,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Certificate expiry',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -57,6 +58,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Monitor type',
     'capabilities': dict({
       'options': list([
         'http',
@@ -165,6 +167,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Monitored URL',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -213,6 +216,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Response time',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -266,6 +270,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Status',
     'capabilities': dict({
       'options': list([
         'down',
@@ -328,6 +333,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Monitor type',
     'capabilities': dict({
       'options': list([
         'http',
@@ -436,6 +442,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Monitored hostname',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -484,6 +491,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Monitored port',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -532,6 +540,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Response time',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -585,6 +594,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Status',
     'capabilities': dict({
       'options': list([
         'down',
@@ -647,6 +657,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Certificate expiry',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -700,6 +711,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Monitor type',
     'capabilities': dict({
       'options': list([
         'http',
@@ -808,6 +820,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Monitored URL',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -856,6 +869,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Response time',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -909,6 +923,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Status',
     'capabilities': dict({
       'options': list([
         'down',

@@ -4,6 +4,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Charging',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -53,6 +54,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'HVAC',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -101,6 +103,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Plug',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -150,6 +153,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Charging',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -199,6 +203,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'HVAC',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -247,6 +252,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Plug',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -296,6 +302,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'HVAC',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -344,6 +351,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Charging',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -393,6 +401,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'HVAC',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -441,6 +450,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Plug',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -490,6 +500,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Charging',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -539,6 +550,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'HVAC',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -587,6 +599,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Plug',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -636,6 +649,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Charging',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -685,6 +699,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'HVAC',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -733,6 +748,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Plug',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -782,6 +798,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Charging',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -831,6 +848,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'HVAC',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -879,6 +897,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Plug',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,

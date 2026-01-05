@@ -4,6 +4,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Battery charge power limit',
     'capabilities': dict({
       'max': 100,
       'min': 0,
@@ -62,6 +63,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Battery charge SOC limit',
     'capabilities': dict({
       'max': 100,
       'min': 0,
@@ -120,6 +122,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Battery discharge power limit',
     'capabilities': dict({
       'max': 100,
       'min': 0,
@@ -178,6 +181,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Battery discharge SOC limit',
     'capabilities': dict({
       'max': 100,
       'min': 0,

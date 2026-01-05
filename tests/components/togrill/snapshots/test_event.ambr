@@ -4,6 +4,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Event',
     'capabilities': dict({
       'event_types': list([
         'probe_acknowledge',
@@ -82,6 +83,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Event',
     'capabilities': dict({
       'event_types': list([
         'probe_acknowledge',
@@ -160,6 +162,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Event',
     'capabilities': dict({
       'event_types': list([
         'probe_acknowledge',
@@ -238,6 +241,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Event',
     'capabilities': dict({
       'event_types': list([
         'probe_acknowledge',
@@ -316,6 +320,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Event',
     'capabilities': dict({
       'event_types': list([
         'probe_acknowledge',
@@ -394,6 +399,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Event',
     'capabilities': dict({
       'event_types': list([
         'probe_acknowledge',

@@ -4,6 +4,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Filter last reset',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -53,6 +54,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Pure AQI',
     'capabilities': dict({
       'options': list([
         'good',
@@ -113,6 +115,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Pure sensitivity',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -161,6 +164,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Climate React high temperature threshold',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -225,6 +229,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Climate React low temperature threshold',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -289,6 +294,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Climate React type',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -337,6 +343,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Filter last reset',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -386,6 +393,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Battery voltage',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -442,6 +450,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Humidity',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -495,6 +504,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'RSSI',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -548,6 +558,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -604,6 +615,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Temperature feels like',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -660,6 +672,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Timer end time',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -711,6 +724,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Filter last reset',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -760,6 +774,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Pure AQI',
     'capabilities': dict({
       'options': list([
         'good',
@@ -820,6 +835,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Pure sensitivity',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,

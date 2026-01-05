@@ -4,6 +4,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Current streak',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -60,6 +61,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Highest streak',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -116,6 +118,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Last played',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -165,6 +168,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Played',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -217,6 +221,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Won',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -269,6 +274,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Played',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -321,6 +327,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Total pangrams found',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -373,6 +380,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Total words found',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -425,6 +433,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Current streak',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -481,6 +490,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Highest streak',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -537,6 +547,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Played',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -589,6 +600,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Won',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),

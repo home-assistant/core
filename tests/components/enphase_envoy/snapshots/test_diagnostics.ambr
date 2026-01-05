@@ -67,6 +67,7 @@
               'aliases': list([
               ]),
               'area_id': None,
+              'calculated_object_id': 'Current power production',
               'capabilities': dict({
                 'state_class': 'measurement',
               }),
@@ -120,6 +121,7 @@
               'aliases': list([
               ]),
               'area_id': None,
+              'calculated_object_id': 'Energy production today',
               'capabilities': dict({
                 'state_class': 'total_increasing',
               }),
@@ -173,6 +175,7 @@
               'aliases': list([
               ]),
               'area_id': None,
+              'calculated_object_id': 'Energy production last seven days',
               'capabilities': None,
               'categories': dict({
               }),
@@ -223,6 +226,7 @@
               'aliases': list([
               ]),
               'area_id': None,
+              'calculated_object_id': 'Lifetime energy production',
               'capabilities': dict({
                 'state_class': 'total_increasing',
               }),
@@ -313,6 +317,7 @@
               'aliases': list([
               ]),
               'area_id': None,
+              'calculated_object_id': None,
               'capabilities': dict({
                 'state_class': 'measurement',
               }),
@@ -363,6 +368,7 @@
               'aliases': list([
               ]),
               'area_id': None,
+              'calculated_object_id': 'DC voltage',
               'capabilities': dict({
                 'state_class': 'measurement',
               }),
@@ -401,6 +407,7 @@
               'aliases': list([
               ]),
               'area_id': None,
+              'calculated_object_id': 'DC current',
               'capabilities': dict({
                 'state_class': 'measurement',
               }),
@@ -439,6 +446,7 @@
               'aliases': list([
               ]),
               'area_id': None,
+              'calculated_object_id': 'AC voltage',
               'capabilities': dict({
                 'state_class': 'measurement',
               }),
@@ -477,6 +485,7 @@
               'aliases': list([
               ]),
               'area_id': None,
+              'calculated_object_id': 'AC current',
               'capabilities': dict({
                 'state_class': 'measurement',
               }),
@@ -515,6 +524,7 @@
               'aliases': list([
               ]),
               'area_id': None,
+              'calculated_object_id': 'Frequency',
               'capabilities': dict({
                 'state_class': 'measurement',
               }),
@@ -553,6 +563,7 @@
               'aliases': list([
               ]),
               'area_id': None,
+              'calculated_object_id': 'Temperature',
               'capabilities': dict({
                 'state_class': 'measurement',
               }),
@@ -591,6 +602,7 @@
               'aliases': list([
               ]),
               'area_id': None,
+              'calculated_object_id': 'Lifetime energy production',
               'capabilities': dict({
                 'state_class': 'total_increasing',
               }),
@@ -632,6 +644,7 @@
               'aliases': list([
               ]),
               'area_id': None,
+              'calculated_object_id': 'Energy production today',
               'capabilities': dict({
                 'state_class': 'total_increasing',
               }),
@@ -670,6 +683,7 @@
               'aliases': list([
               ]),
               'area_id': None,
+              'calculated_object_id': 'Last report duration',
               'capabilities': dict({
                 'state_class': 'measurement',
               }),
@@ -708,6 +722,7 @@
               'aliases': list([
               ]),
               'area_id': None,
+              'calculated_object_id': 'Energy production since previous report',
               'capabilities': dict({
                 'state_class': 'total',
               }),
@@ -746,6 +761,7 @@
               'aliases': list([
               ]),
               'area_id': None,
+              'calculated_object_id': 'Lifetime maximum power',
               'capabilities': dict({
                 'state_class': 'measurement',
               }),
@@ -784,6 +800,7 @@
               'aliases': list([
               ]),
               'area_id': None,
+              'calculated_object_id': 'Last reported',
               'capabilities': None,
               'categories': dict({
               }),
@@ -948,6 +965,7 @@
               'aliases': list([
               ]),
               'area_id': None,
+              'calculated_object_id': 'Current power production',
               'capabilities': dict({
                 'state_class': 'measurement',
               }),
@@ -1001,6 +1019,7 @@
               'aliases': list([
               ]),
               'area_id': None,
+              'calculated_object_id': 'Energy production today',
               'capabilities': dict({
                 'state_class': 'total_increasing',
               }),
@@ -1054,6 +1073,7 @@
               'aliases': list([
               ]),
               'area_id': None,
+              'calculated_object_id': 'Energy production last seven days',
               'capabilities': None,
               'categories': dict({
               }),
@@ -1104,6 +1124,7 @@
               'aliases': list([
               ]),
               'area_id': None,
+              'calculated_object_id': 'Lifetime energy production',
               'capabilities': dict({
                 'state_class': 'total_increasing',
               }),
@@ -1194,6 +1215,7 @@
               'aliases': list([
               ]),
               'area_id': None,
+              'calculated_object_id': None,
               'capabilities': dict({
                 'state_class': 'measurement',
               }),
@@ -1244,6 +1266,7 @@
               'aliases': list([
               ]),
               'area_id': None,
+              'calculated_object_id': 'DC voltage',
               'capabilities': dict({
                 'state_class': 'measurement',
               }),
@@ -1282,6 +1305,7 @@
               'aliases': list([
               ]),
               'area_id': None,
+              'calculated_object_id': 'DC current',
               'capabilities': dict({
                 'state_class': 'measurement',
               }),
@@ -1320,6 +1344,7 @@
               'aliases': list([
               ]),
               'area_id': None,
+              'calculated_object_id': 'AC voltage',
               'capabilities': dict({
                 'state_class': 'measurement',
               }),
@@ -1358,6 +1383,7 @@
               'aliases': list([
               ]),
               'area_id': None,
+              'calculated_object_id': 'AC current',
               'capabilities': dict({
                 'state_class': 'measurement',
               }),
@@ -1396,6 +1422,7 @@
               'aliases': list([
               ]),
               'area_id': None,
+              'calculated_object_id': 'Frequency',
               'capabilities': dict({
                 'state_class': 'measurement',
               }),
@@ -1434,6 +1461,7 @@
               'aliases': list([
               ]),
               'area_id': None,
+              'calculated_object_id': 'Temperature',
               'capabilities': dict({
                 'state_class': 'measurement',
               }),
@@ -1472,6 +1500,7 @@
               'aliases': list([
               ]),
               'area_id': None,
+              'calculated_object_id': 'Lifetime energy production',
               'capabilities': dict({
                 'state_class': 'total_increasing',
               }),
@@ -1513,6 +1542,7 @@
               'aliases': list([
               ]),
               'area_id': None,
+              'calculated_object_id': 'Energy production today',
               'capabilities': dict({
                 'state_class': 'total_increasing',
               }),
@@ -1551,6 +1581,7 @@
               'aliases': list([
               ]),
               'area_id': None,
+              'calculated_object_id': 'Last report duration',
               'capabilities': dict({
                 'state_class': 'measurement',
               }),
@@ -1589,6 +1620,7 @@
               'aliases': list([
               ]),
               'area_id': None,
+              'calculated_object_id': 'Energy production since previous report',
               'capabilities': dict({
                 'state_class': 'total',
               }),
@@ -1627,6 +1659,7 @@
               'aliases': list([
               ]),
               'area_id': None,
+              'calculated_object_id': 'Lifetime maximum power',
               'capabilities': dict({
                 'state_class': 'measurement',
               }),
@@ -1665,6 +1698,7 @@
               'aliases': list([
               ]),
               'area_id': None,
+              'calculated_object_id': 'Last reported',
               'capabilities': None,
               'categories': dict({
               }),
@@ -1873,6 +1907,7 @@
               'aliases': list([
               ]),
               'area_id': None,
+              'calculated_object_id': 'Current power production',
               'capabilities': dict({
                 'state_class': 'measurement',
               }),
@@ -1926,6 +1961,7 @@
               'aliases': list([
               ]),
               'area_id': None,
+              'calculated_object_id': 'Energy production today',
               'capabilities': dict({
                 'state_class': 'total_increasing',
               }),
@@ -1979,6 +2015,7 @@
               'aliases': list([
               ]),
               'area_id': None,
+              'calculated_object_id': 'Energy production last seven days',
               'capabilities': None,
               'categories': dict({
               }),
@@ -2029,6 +2066,7 @@
               'aliases': list([
               ]),
               'area_id': None,
+              'calculated_object_id': 'Lifetime energy production',
               'capabilities': dict({
                 'state_class': 'total_increasing',
               }),
@@ -2119,6 +2157,7 @@
               'aliases': list([
               ]),
               'area_id': None,
+              'calculated_object_id': None,
               'capabilities': dict({
                 'state_class': 'measurement',
               }),
@@ -2169,6 +2208,7 @@
               'aliases': list([
               ]),
               'area_id': None,
+              'calculated_object_id': 'DC voltage',
               'capabilities': dict({
                 'state_class': 'measurement',
               }),
@@ -2207,6 +2247,7 @@
               'aliases': list([
               ]),
               'area_id': None,
+              'calculated_object_id': 'DC current',
               'capabilities': dict({
                 'state_class': 'measurement',
               }),
@@ -2245,6 +2286,7 @@
               'aliases': list([
               ]),
               'area_id': None,
+              'calculated_object_id': 'AC voltage',
               'capabilities': dict({
                 'state_class': 'measurement',
               }),
@@ -2283,6 +2325,7 @@
               'aliases': list([
               ]),
               'area_id': None,
+              'calculated_object_id': 'AC current',
               'capabilities': dict({
                 'state_class': 'measurement',
               }),
@@ -2321,6 +2364,7 @@
               'aliases': list([
               ]),
               'area_id': None,
+              'calculated_object_id': 'Frequency',
               'capabilities': dict({
                 'state_class': 'measurement',
               }),
@@ -2359,6 +2403,7 @@
               'aliases': list([
               ]),
               'area_id': None,
+              'calculated_object_id': 'Temperature',
               'capabilities': dict({
                 'state_class': 'measurement',
               }),
@@ -2397,6 +2442,7 @@
               'aliases': list([
               ]),
               'area_id': None,
+              'calculated_object_id': 'Lifetime energy production',
               'capabilities': dict({
                 'state_class': 'total_increasing',
               }),
@@ -2438,6 +2484,7 @@
               'aliases': list([
               ]),
               'area_id': None,
+              'calculated_object_id': 'Energy production today',
               'capabilities': dict({
                 'state_class': 'total_increasing',
               }),
@@ -2476,6 +2523,7 @@
               'aliases': list([
               ]),
               'area_id': None,
+              'calculated_object_id': 'Last report duration',
               'capabilities': dict({
                 'state_class': 'measurement',
               }),
@@ -2514,6 +2562,7 @@
               'aliases': list([
               ]),
               'area_id': None,
+              'calculated_object_id': 'Energy production since previous report',
               'capabilities': dict({
                 'state_class': 'total',
               }),
@@ -2552,6 +2601,7 @@
               'aliases': list([
               ]),
               'area_id': None,
+              'calculated_object_id': 'Lifetime maximum power',
               'capabilities': dict({
                 'state_class': 'measurement',
               }),
@@ -2590,6 +2640,7 @@
               'aliases': list([
               ]),
               'area_id': None,
+              'calculated_object_id': 'Last reported',
               'capabilities': None,
               'categories': dict({
               }),
@@ -2819,6 +2870,7 @@
               'aliases': list([
               ]),
               'area_id': None,
+              'calculated_object_id': None,
               'capabilities': dict({
                 'state_class': 'measurement',
               }),
@@ -2869,6 +2921,7 @@
               'aliases': list([
               ]),
               'area_id': None,
+              'calculated_object_id': 'DC voltage',
               'capabilities': dict({
                 'state_class': 'measurement',
               }),
@@ -2907,6 +2960,7 @@
               'aliases': list([
               ]),
               'area_id': None,
+              'calculated_object_id': 'DC current',
               'capabilities': dict({
                 'state_class': 'measurement',
               }),
@@ -2945,6 +2999,7 @@
               'aliases': list([
               ]),
               'area_id': None,
+              'calculated_object_id': 'AC voltage',
               'capabilities': dict({
                 'state_class': 'measurement',
               }),
@@ -2983,6 +3038,7 @@
               'aliases': list([
               ]),
               'area_id': None,
+              'calculated_object_id': 'AC current',
               'capabilities': dict({
                 'state_class': 'measurement',
               }),
@@ -3021,6 +3077,7 @@
               'aliases': list([
               ]),
               'area_id': None,
+              'calculated_object_id': 'Frequency',
               'capabilities': dict({
                 'state_class': 'measurement',
               }),
@@ -3059,6 +3116,7 @@
               'aliases': list([
               ]),
               'area_id': None,
+              'calculated_object_id': 'Temperature',
               'capabilities': dict({
                 'state_class': 'measurement',
               }),
@@ -3097,6 +3155,7 @@
               'aliases': list([
               ]),
               'area_id': None,
+              'calculated_object_id': 'Lifetime energy production',
               'capabilities': dict({
                 'state_class': 'total_increasing',
               }),
@@ -3138,6 +3197,7 @@
               'aliases': list([
               ]),
               'area_id': None,
+              'calculated_object_id': 'Energy production today',
               'capabilities': dict({
                 'state_class': 'total_increasing',
               }),
@@ -3176,6 +3236,7 @@
               'aliases': list([
               ]),
               'area_id': None,
+              'calculated_object_id': 'Last report duration',
               'capabilities': dict({
                 'state_class': 'measurement',
               }),
@@ -3214,6 +3275,7 @@
               'aliases': list([
               ]),
               'area_id': None,
+              'calculated_object_id': 'Energy production since previous report',
               'capabilities': dict({
                 'state_class': 'total',
               }),
@@ -3252,6 +3314,7 @@
               'aliases': list([
               ]),
               'area_id': None,
+              'calculated_object_id': 'Lifetime maximum power',
               'capabilities': dict({
                 'state_class': 'measurement',
               }),
@@ -3290,6 +3353,7 @@
               'aliases': list([
               ]),
               'area_id': None,
+              'calculated_object_id': 'Last reported',
               'capabilities': None,
               'categories': dict({
               }),
@@ -3367,6 +3431,7 @@
               'aliases': list([
               ]),
               'area_id': None,
+              'calculated_object_id': 'Current power production',
               'capabilities': dict({
                 'state_class': 'measurement',
               }),
@@ -3420,6 +3485,7 @@
               'aliases': list([
               ]),
               'area_id': None,
+              'calculated_object_id': 'Energy production today',
               'capabilities': dict({
                 'state_class': 'total_increasing',
               }),
@@ -3473,6 +3539,7 @@
               'aliases': list([
               ]),
               'area_id': None,
+              'calculated_object_id': 'Energy production last seven days',
               'capabilities': None,
               'categories': dict({
               }),
@@ -3523,6 +3590,7 @@
               'aliases': list([
               ]),
               'area_id': None,
+              'calculated_object_id': 'Lifetime energy production',
               'capabilities': dict({
                 'state_class': 'total_increasing',
               }),
@@ -3709,6 +3777,7 @@
               'aliases': list([
               ]),
               'area_id': None,
+              'calculated_object_id': 'Current power production',
               'capabilities': dict({
                 'state_class': 'measurement',
               }),
@@ -3762,6 +3831,7 @@
               'aliases': list([
               ]),
               'area_id': None,
+              'calculated_object_id': 'Energy production today',
               'capabilities': dict({
                 'state_class': 'total_increasing',
               }),
@@ -3815,6 +3885,7 @@
               'aliases': list([
               ]),
               'area_id': None,
+              'calculated_object_id': 'Energy production last seven days',
               'capabilities': None,
               'categories': dict({
               }),
@@ -3865,6 +3936,7 @@
               'aliases': list([
               ]),
               'area_id': None,
+              'calculated_object_id': 'Lifetime energy production',
               'capabilities': dict({
                 'state_class': 'total_increasing',
               }),
@@ -3918,6 +3990,7 @@
               'aliases': list([
               ]),
               'area_id': None,
+              'calculated_object_id': 'Current power consumption',
               'capabilities': dict({
                 'state_class': 'measurement',
               }),
@@ -3971,6 +4044,7 @@
               'aliases': list([
               ]),
               'area_id': None,
+              'calculated_object_id': 'Energy consumption today',
               'capabilities': dict({
                 'state_class': 'total_increasing',
               }),
@@ -4024,6 +4098,7 @@
               'aliases': list([
               ]),
               'area_id': None,
+              'calculated_object_id': 'Energy consumption last seven days',
               'capabilities': None,
               'categories': dict({
               }),
@@ -4074,6 +4149,7 @@
               'aliases': list([
               ]),
               'area_id': None,
+              'calculated_object_id': 'Lifetime energy consumption',
               'capabilities': dict({
                 'state_class': 'total_increasing',
               }),
@@ -4127,6 +4203,7 @@
               'aliases': list([
               ]),
               'area_id': None,
+              'calculated_object_id': 'Balanced net power consumption',
               'capabilities': dict({
                 'state_class': 'measurement',
               }),
@@ -4168,6 +4245,7 @@
               'aliases': list([
               ]),
               'area_id': None,
+              'calculated_object_id': 'Lifetime balanced net energy consumption',
               'capabilities': dict({
                 'state_class': 'total',
               }),
@@ -4209,6 +4287,7 @@
               'aliases': list([
               ]),
               'area_id': None,
+              'calculated_object_id': 'Current power production l1',
               'capabilities': dict({
                 'state_class': 'measurement',
               }),
@@ -4250,6 +4329,7 @@
               'aliases': list([
               ]),
               'area_id': None,
+              'calculated_object_id': 'Energy production today l1',
               'capabilities': dict({
                 'state_class': 'total_increasing',
               }),
@@ -4291,6 +4371,7 @@
               'aliases': list([
               ]),
               'area_id': None,
+              'calculated_object_id': 'Energy production last seven days l1',
               'capabilities': None,
               'categories': dict({
               }),
@@ -4330,6 +4411,7 @@
               'aliases': list([
               ]),
               'area_id': None,
+              'calculated_object_id': 'Lifetime energy production l1',
               'capabilities': dict({
                 'state_class': 'total_increasing',
               }),
@@ -4371,6 +4453,7 @@
               'aliases': list([
               ]),
               'area_id': None,
+              'calculated_object_id': 'Current power production l2',
               'capabilities': dict({
                 'state_class': 'measurement',
               }),
@@ -4412,6 +4495,7 @@
               'aliases': list([
               ]),
               'area_id': None,
+              'calculated_object_id': 'Energy production today l2',
               'capabilities': dict({
                 'state_class': 'total_increasing',
               }),
@@ -4453,6 +4537,7 @@
               'aliases': list([
               ]),
               'area_id': None,
+              'calculated_object_id': 'Energy production last seven days l2',
               'capabilities': None,
               'categories': dict({
               }),
@@ -4492,6 +4577,7 @@
               'aliases': list([
               ]),
               'area_id': None,
+              'calculated_object_id': 'Lifetime energy production l2',
               'capabilities': dict({
                 'state_class': 'total_increasing',
               }),
@@ -4533,6 +4619,7 @@
               'aliases': list([
               ]),
               'area_id': None,
+              'calculated_object_id': 'Current power production l3',
               'capabilities': dict({
                 'state_class': 'measurement',
               }),
@@ -4574,6 +4661,7 @@
               'aliases': list([
               ]),
               'area_id': None,
+              'calculated_object_id': 'Energy production today l3',
               'capabilities': dict({
                 'state_class': 'total_increasing',
               }),
@@ -4615,6 +4703,7 @@
               'aliases': list([
               ]),
               'area_id': None,
+              'calculated_object_id': 'Energy production last seven days l3',
               'capabilities': None,
               'categories': dict({
               }),
@@ -4654,6 +4743,7 @@
               'aliases': list([
               ]),
               'area_id': None,
+              'calculated_object_id': 'Lifetime energy production l3',
               'capabilities': dict({
                 'state_class': 'total_increasing',
               }),
@@ -4695,6 +4785,7 @@
               'aliases': list([
               ]),
               'area_id': None,
+              'calculated_object_id': 'Current power consumption l1',
               'capabilities': dict({
                 'state_class': 'measurement',
               }),
@@ -4736,6 +4827,7 @@
               'aliases': list([
               ]),
               'area_id': None,
+              'calculated_object_id': 'Energy consumption today l1',
               'capabilities': dict({
                 'state_class': 'total_increasing',
               }),
@@ -4777,6 +4869,7 @@
               'aliases': list([
               ]),
               'area_id': None,
+              'calculated_object_id': 'Energy consumption last seven days l1',
               'capabilities': None,
               'categories': dict({
               }),
@@ -4816,6 +4909,7 @@
               'aliases': list([
               ]),
               'area_id': None,
+              'calculated_object_id': 'Lifetime energy consumption l1',
               'capabilities': dict({
                 'state_class': 'total_increasing',
               }),
@@ -4857,6 +4951,7 @@
               'aliases': list([
               ]),
               'area_id': None,
+              'calculated_object_id': 'Current power consumption l2',
               'capabilities': dict({
                 'state_class': 'measurement',
               }),
@@ -4898,6 +4993,7 @@
               'aliases': list([
               ]),
               'area_id': None,
+              'calculated_object_id': 'Energy consumption today l2',
               'capabilities': dict({
                 'state_class': 'total_increasing',
               }),
@@ -4939,6 +5035,7 @@
               'aliases': list([
               ]),
               'area_id': None,
+              'calculated_object_id': 'Energy consumption last seven days l2',
               'capabilities': None,
               'categories': dict({
               }),
@@ -4978,6 +5075,7 @@
               'aliases': list([
               ]),
               'area_id': None,
+              'calculated_object_id': 'Lifetime energy consumption l2',
               'capabilities': dict({
                 'state_class': 'total_increasing',
               }),
@@ -5019,6 +5117,7 @@
               'aliases': list([
               ]),
               'area_id': None,
+              'calculated_object_id': 'Current power consumption l3',
               'capabilities': dict({
                 'state_class': 'measurement',
               }),
@@ -5060,6 +5159,7 @@
               'aliases': list([
               ]),
               'area_id': None,
+              'calculated_object_id': 'Energy consumption today l3',
               'capabilities': dict({
                 'state_class': 'total_increasing',
               }),
@@ -5101,6 +5201,7 @@
               'aliases': list([
               ]),
               'area_id': None,
+              'calculated_object_id': 'Energy consumption last seven days l3',
               'capabilities': None,
               'categories': dict({
               }),
@@ -5140,6 +5241,7 @@
               'aliases': list([
               ]),
               'area_id': None,
+              'calculated_object_id': 'Lifetime energy consumption l3',
               'capabilities': dict({
                 'state_class': 'total_increasing',
               }),
@@ -5181,6 +5283,7 @@
               'aliases': list([
               ]),
               'area_id': None,
+              'calculated_object_id': 'Balanced net power consumption l1',
               'capabilities': dict({
                 'state_class': 'measurement',
               }),
@@ -5222,6 +5325,7 @@
               'aliases': list([
               ]),
               'area_id': None,
+              'calculated_object_id': 'Lifetime balanced net energy consumption l1',
               'capabilities': dict({
                 'state_class': 'total',
               }),
@@ -5263,6 +5367,7 @@
               'aliases': list([
               ]),
               'area_id': None,
+              'calculated_object_id': 'Balanced net power consumption l2',
               'capabilities': dict({
                 'state_class': 'measurement',
               }),
@@ -5304,6 +5409,7 @@
               'aliases': list([
               ]),
               'area_id': None,
+              'calculated_object_id': 'Lifetime balanced net energy consumption l2',
               'capabilities': dict({
                 'state_class': 'total',
               }),
@@ -5345,6 +5451,7 @@
               'aliases': list([
               ]),
               'area_id': None,
+              'calculated_object_id': 'Balanced net power consumption l3',
               'capabilities': dict({
                 'state_class': 'measurement',
               }),
@@ -5386,6 +5493,7 @@
               'aliases': list([
               ]),
               'area_id': None,
+              'calculated_object_id': 'Lifetime balanced net energy consumption l3',
               'capabilities': dict({
                 'state_class': 'total',
               }),
@@ -5427,6 +5535,7 @@
               'aliases': list([
               ]),
               'area_id': None,
+              'calculated_object_id': 'Lifetime net energy consumption',
               'capabilities': dict({
                 'state_class': 'total_increasing',
               }),
@@ -5480,6 +5589,7 @@
               'aliases': list([
               ]),
               'area_id': None,
+              'calculated_object_id': 'Lifetime battery energy discharged',
               'capabilities': dict({
                 'state_class': 'total_increasing',
               }),
@@ -5533,6 +5643,7 @@
               'aliases': list([
               ]),
               'area_id': None,
+              'calculated_object_id': 'Lifetime net energy production',
               'capabilities': dict({
                 'state_class': 'total_increasing',
               }),
@@ -5586,6 +5697,7 @@
               'aliases': list([
               ]),
               'area_id': None,
+              'calculated_object_id': 'Lifetime battery energy charged',
               'capabilities': dict({
                 'state_class': 'total_increasing',
               }),
@@ -5639,6 +5751,7 @@
               'aliases': list([
               ]),
               'area_id': None,
+              'calculated_object_id': 'Current net power consumption',
               'capabilities': dict({
                 'state_class': 'measurement',
               }),
@@ -5692,6 +5805,7 @@
               'aliases': list([
               ]),
               'area_id': None,
+              'calculated_object_id': 'Current battery discharge',
               'capabilities': dict({
                 'state_class': 'measurement',
               }),
@@ -5745,6 +5859,7 @@
               'aliases': list([
               ]),
               'area_id': None,
+              'calculated_object_id': 'Frequency net consumption CT',
               'capabilities': dict({
                 'state_class': 'measurement',
               }),
@@ -5783,6 +5898,7 @@
               'aliases': list([
               ]),
               'area_id': None,
+              'calculated_object_id': 'Frequency production CT',
               'capabilities': dict({
                 'state_class': 'measurement',
               }),
@@ -5821,6 +5937,7 @@
               'aliases': list([
               ]),
               'area_id': None,
+              'calculated_object_id': 'Frequency storage CT',
               'capabilities': dict({
                 'state_class': 'measurement',
               }),
@@ -5859,6 +5976,7 @@
               'aliases': list([
               ]),
               'area_id': None,
+              'calculated_object_id': 'Voltage net consumption CT',
               'capabilities': dict({
                 'state_class': 'measurement',
               }),
@@ -5900,6 +6018,7 @@
               'aliases': list([
               ]),
               'area_id': None,
+              'calculated_object_id': 'Voltage production CT',
               'capabilities': dict({
                 'state_class': 'measurement',
               }),
@@ -5941,6 +6060,7 @@
               'aliases': list([
               ]),
               'area_id': None,
+              'calculated_object_id': 'Voltage storage CT',
               'capabilities': dict({
                 'state_class': 'measurement',
               }),
@@ -5982,6 +6102,7 @@
               'aliases': list([
               ]),
               'area_id': None,
+              'calculated_object_id': 'Net consumption CT current',
               'capabilities': dict({
                 'state_class': 'measurement',
               }),
@@ -6023,6 +6144,7 @@
               'aliases': list([
               ]),
               'area_id': None,
+              'calculated_object_id': 'Production CT current',
               'capabilities': dict({
                 'state_class': 'measurement',
               }),
@@ -6064,6 +6186,7 @@
               'aliases': list([
               ]),
               'area_id': None,
+              'calculated_object_id': 'Storage CT current',
               'capabilities': dict({
                 'state_class': 'measurement',
               }),
@@ -6105,6 +6228,7 @@
               'aliases': list([
               ]),
               'area_id': None,
+              'calculated_object_id': 'Power factor net consumption CT',
               'capabilities': dict({
                 'state_class': 'measurement',
               }),
@@ -6143,6 +6267,7 @@
               'aliases': list([
               ]),
               'area_id': None,
+              'calculated_object_id': 'Power factor production CT',
               'capabilities': dict({
                 'state_class': 'measurement',
               }),
@@ -6181,6 +6306,7 @@
               'aliases': list([
               ]),
               'area_id': None,
+              'calculated_object_id': 'Power factor storage CT',
               'capabilities': dict({
                 'state_class': 'measurement',
               }),
@@ -6219,6 +6345,7 @@
               'aliases': list([
               ]),
               'area_id': None,
+              'calculated_object_id': 'Metering status net consumption CT',
               'capabilities': dict({
                 'options': list([
                   'normal',
@@ -6261,6 +6388,7 @@
               'aliases': list([
               ]),
               'area_id': None,
+              'calculated_object_id': 'Metering status production CT',
               'capabilities': dict({
                 'options': list([
                   'normal',
@@ -6303,6 +6431,7 @@
               'aliases': list([
               ]),
               'area_id': None,
+              'calculated_object_id': 'Metering status storage CT',
               'capabilities': dict({
                 'options': list([
                   'normal',
@@ -6345,6 +6474,7 @@
               'aliases': list([
               ]),
               'area_id': None,
+              'calculated_object_id': 'Meter status flags active net consumption CT',
               'capabilities': None,
               'categories': dict({
               }),
@@ -6381,6 +6511,7 @@
               'aliases': list([
               ]),
               'area_id': None,
+              'calculated_object_id': 'Meter status flags active production CT',
               'capabilities': None,
               'categories': dict({
               }),
@@ -6417,6 +6548,7 @@
               'aliases': list([
               ]),
               'area_id': None,
+              'calculated_object_id': 'Meter status flags active storage CT',
               'capabilities': None,
               'categories': dict({
               }),
@@ -6453,6 +6585,7 @@
               'aliases': list([
               ]),
               'area_id': None,
+              'calculated_object_id': 'Lifetime net energy consumption l1',
               'capabilities': dict({
                 'state_class': 'total_increasing',
               }),
@@ -6494,6 +6627,7 @@
               'aliases': list([
               ]),
               'area_id': None,
+              'calculated_object_id': 'Lifetime battery energy discharged l1',
               'capabilities': dict({
                 'state_class': 'total_increasing',
               }),
@@ -6535,6 +6669,7 @@
               'aliases': list([
               ]),
               'area_id': None,
+              'calculated_object_id': 'Lifetime net energy production l1',
               'capabilities': dict({
                 'state_class': 'total_increasing',
               }),
@@ -6576,6 +6711,7 @@
               'aliases': list([
               ]),
               'area_id': None,
+              'calculated_object_id': 'Lifetime battery energy charged l1',
               'capabilities': dict({
                 'state_class': 'total_increasing',
               }),
@@ -6617,6 +6753,7 @@
               'aliases': list([
               ]),
               'area_id': None,
+              'calculated_object_id': 'Current net power consumption l1',
               'capabilities': dict({
                 'state_class': 'measurement',
               }),
@@ -6658,6 +6795,7 @@
               'aliases': list([
               ]),
               'area_id': None,
+              'calculated_object_id': 'Current battery discharge l1',
               'capabilities': dict({
                 'state_class': 'measurement',
               }),
@@ -6699,6 +6837,7 @@
               'aliases': list([
               ]),
               'area_id': None,
+              'calculated_object_id': 'Frequency net consumption CT l1',
               'capabilities': dict({
                 'state_class': 'measurement',
               }),
@@ -6737,6 +6876,7 @@
               'aliases': list([
               ]),
               'area_id': None,
+              'calculated_object_id': 'Frequency production CT l1',
               'capabilities': dict({
                 'state_class': 'measurement',
               }),
@@ -6775,6 +6915,7 @@
               'aliases': list([
               ]),
               'area_id': None,
+              'calculated_object_id': 'Frequency storage CT l1',
               'capabilities': dict({
                 'state_class': 'measurement',
               }),
@@ -6813,6 +6954,7 @@
               'aliases': list([
               ]),
               'area_id': None,
+              'calculated_object_id': 'Voltage net consumption CT l1',
               'capabilities': dict({
                 'state_class': 'measurement',
               }),
@@ -6854,6 +6996,7 @@
               'aliases': list([
               ]),
               'area_id': None,
+              'calculated_object_id': 'Voltage production CT l1',
               'capabilities': dict({
                 'state_class': 'measurement',
               }),
@@ -6895,6 +7038,7 @@
               'aliases': list([
               ]),
               'area_id': None,
+              'calculated_object_id': 'Voltage storage CT l1',
               'capabilities': dict({
                 'state_class': 'measurement',
               }),
@@ -6936,6 +7080,7 @@
               'aliases': list([
               ]),
               'area_id': None,
+              'calculated_object_id': 'Net consumption CT current l1',
               'capabilities': dict({
                 'state_class': 'measurement',
               }),
@@ -6977,6 +7122,7 @@
               'aliases': list([
               ]),
               'area_id': None,
+              'calculated_object_id': 'Production CT current l1',
               'capabilities': dict({
                 'state_class': 'measurement',
               }),
@@ -7018,6 +7164,7 @@
               'aliases': list([
               ]),
               'area_id': None,
+              'calculated_object_id': 'Storage CT current l1',
               'capabilities': dict({
                 'state_class': 'measurement',
               }),
@@ -7059,6 +7206,7 @@
               'aliases': list([
               ]),
               'area_id': None,
+              'calculated_object_id': 'Power factor net consumption CT l1',
               'capabilities': dict({
                 'state_class': 'measurement',
               }),
@@ -7097,6 +7245,7 @@
               'aliases': list([
               ]),
               'area_id': None,
+              'calculated_object_id': 'Power factor production CT l1',
               'capabilities': dict({
                 'state_class': 'measurement',
               }),
@@ -7135,6 +7284,7 @@
               'aliases': list([
               ]),
               'area_id': None,
+              'calculated_object_id': 'Power factor storage CT l1',
               'capabilities': dict({
                 'state_class': 'measurement',
               }),
@@ -7173,6 +7323,7 @@
               'aliases': list([
               ]),
               'area_id': None,
+              'calculated_object_id': 'Metering status net consumption CT l1',
               'capabilities': dict({
                 'options': list([
                   'normal',
@@ -7215,6 +7366,7 @@
               'aliases': list([
               ]),
               'area_id': None,
+              'calculated_object_id': 'Metering status production CT l1',
               'capabilities': dict({
                 'options': list([
                   'normal',
@@ -7257,6 +7409,7 @@
               'aliases': list([
               ]),
               'area_id': None,
+              'calculated_object_id': 'Metering status storage CT l1',
               'capabilities': dict({
                 'options': list([
                   'normal',
@@ -7299,6 +7452,7 @@
               'aliases': list([
               ]),
               'area_id': None,
+              'calculated_object_id': 'Meter status flags active net consumption CT l1',
               'capabilities': None,
               'categories': dict({
               }),
@@ -7335,6 +7489,7 @@
               'aliases': list([
               ]),
               'area_id': None,
+              'calculated_object_id': 'Meter status flags active production CT l1',
               'capabilities': None,
               'categories': dict({
               }),
@@ -7371,6 +7526,7 @@
               'aliases': list([
               ]),
               'area_id': None,
+              'calculated_object_id': 'Meter status flags active storage CT l1',
               'capabilities': None,
               'categories': dict({
               }),
@@ -7407,6 +7563,7 @@
               'aliases': list([
               ]),
               'area_id': None,
+              'calculated_object_id': 'Lifetime net energy consumption l2',
               'capabilities': dict({
                 'state_class': 'total_increasing',
               }),
@@ -7448,6 +7605,7 @@
               'aliases': list([
               ]),
               'area_id': None,
+              'calculated_object_id': 'Lifetime battery energy discharged l2',
               'capabilities': dict({
                 'state_class': 'total_increasing',
               }),
@@ -7489,6 +7647,7 @@
               'aliases': list([
               ]),
               'area_id': None,
+              'calculated_object_id': 'Lifetime net energy production l2',
               'capabilities': dict({
                 'state_class': 'total_increasing',
               }),
@@ -7530,6 +7689,7 @@
               'aliases': list([
               ]),
               'area_id': None,
+              'calculated_object_id': 'Lifetime battery energy charged l2',
               'capabilities': dict({
                 'state_class': 'total_increasing',
               }),
@@ -7571,6 +7731,7 @@
               'aliases': list([
               ]),
               'area_id': None,
+              'calculated_object_id': 'Current net power consumption l2',
               'capabilities': dict({
                 'state_class': 'measurement',
               }),
@@ -7612,6 +7773,7 @@
               'aliases': list([
               ]),
               'area_id': None,
+              'calculated_object_id': 'Current battery discharge l2',
               'capabilities': dict({
                 'state_class': 'measurement',
               }),
@@ -7653,6 +7815,7 @@
               'aliases': list([
               ]),
               'area_id': None,
+              'calculated_object_id': 'Frequency net consumption CT l2',
               'capabilities': dict({
                 'state_class': 'measurement',
               }),
@@ -7691,6 +7854,7 @@
               'aliases': list([
               ]),
               'area_id': None,
+              'calculated_object_id': 'Frequency production CT l2',
               'capabilities': dict({
                 'state_class': 'measurement',
               }),
@@ -7729,6 +7893,7 @@
               'aliases': list([
               ]),
               'area_id': None,
+              'calculated_object_id': 'Frequency storage CT l2',
               'capabilities': dict({
                 'state_class': 'measurement',
               }),
@@ -7767,6 +7932,7 @@
               'aliases': list([
               ]),
               'area_id': None,
+              'calculated_object_id': 'Voltage net consumption CT l2',
               'capabilities': dict({
                 'state_class': 'measurement',
               }),
@@ -7808,6 +7974,7 @@
               'aliases': list([
               ]),
               'area_id': None,
+              'calculated_object_id': 'Voltage production CT l2',
               'capabilities': dict({
                 'state_class': 'measurement',
               }),
@@ -7849,6 +8016,7 @@
               'aliases': list([
               ]),
               'area_id': None,
+              'calculated_object_id': 'Voltage storage CT l2',
               'capabilities': dict({
                 'state_class': 'measurement',
               }),
@@ -7890,6 +8058,7 @@
               'aliases': list([
               ]),
               'area_id': None,
+              'calculated_object_id': 'Net consumption CT current l2',
               'capabilities': dict({
                 'state_class': 'measurement',
               }),
@@ -7931,6 +8100,7 @@
               'aliases': list([
               ]),
               'area_id': None,
+              'calculated_object_id': 'Production CT current l2',
               'capabilities': dict({
                 'state_class': 'measurement',
               }),
@@ -7972,6 +8142,7 @@
               'aliases': list([
               ]),
               'area_id': None,
+              'calculated_object_id': 'Storage CT current l2',
               'capabilities': dict({
                 'state_class': 'measurement',
               }),
@@ -8013,6 +8184,7 @@
               'aliases': list([
               ]),
               'area_id': None,
+              'calculated_object_id': 'Power factor net consumption CT l2',
               'capabilities': dict({
                 'state_class': 'measurement',
               }),
@@ -8051,6 +8223,7 @@
               'aliases': list([
               ]),
               'area_id': None,
+              'calculated_object_id': 'Power factor production CT l2',
               'capabilities': dict({
                 'state_class': 'measurement',
               }),
@@ -8089,6 +8262,7 @@
               'aliases': list([
               ]),
               'area_id': None,
+              'calculated_object_id': 'Power factor storage CT l2',
               'capabilities': dict({
                 'state_class': 'measurement',
               }),
@@ -8127,6 +8301,7 @@
               'aliases': list([
               ]),
               'area_id': None,
+              'calculated_object_id': 'Metering status net consumption CT l2',
               'capabilities': dict({
                 'options': list([
                   'normal',
@@ -8169,6 +8344,7 @@
               'aliases': list([
               ]),
               'area_id': None,
+              'calculated_object_id': 'Metering status production CT l2',
               'capabilities': dict({
                 'options': list([
                   'normal',
@@ -8211,6 +8387,7 @@
               'aliases': list([
               ]),
               'area_id': None,
+              'calculated_object_id': 'Metering status storage CT l2',
               'capabilities': dict({
                 'options': list([
                   'normal',
@@ -8253,6 +8430,7 @@
               'aliases': list([
               ]),
               'area_id': None,
+              'calculated_object_id': 'Meter status flags active net consumption CT l2',
               'capabilities': None,
               'categories': dict({
               }),
@@ -8289,6 +8467,7 @@
               'aliases': list([
               ]),
               'area_id': None,
+              'calculated_object_id': 'Meter status flags active production CT l2',
               'capabilities': None,
               'categories': dict({
               }),
@@ -8325,6 +8504,7 @@
               'aliases': list([
               ]),
               'area_id': None,
+              'calculated_object_id': 'Meter status flags active storage CT l2',
               'capabilities': None,
               'categories': dict({
               }),
@@ -8361,6 +8541,7 @@
               'aliases': list([
               ]),
               'area_id': None,
+              'calculated_object_id': 'Lifetime net energy consumption l3',
               'capabilities': dict({
                 'state_class': 'total_increasing',
               }),
@@ -8402,6 +8583,7 @@
               'aliases': list([
               ]),
               'area_id': None,
+              'calculated_object_id': 'Lifetime battery energy discharged l3',
               'capabilities': dict({
                 'state_class': 'total_increasing',
               }),
@@ -8443,6 +8625,7 @@
               'aliases': list([
               ]),
               'area_id': None,
+              'calculated_object_id': 'Lifetime net energy production l3',
               'capabilities': dict({
                 'state_class': 'total_increasing',
               }),
@@ -8484,6 +8667,7 @@
               'aliases': list([
               ]),
               'area_id': None,
+              'calculated_object_id': 'Lifetime battery energy charged l3',
               'capabilities': dict({
                 'state_class': 'total_increasing',
               }),
@@ -8525,6 +8709,7 @@
               'aliases': list([
               ]),
               'area_id': None,
+              'calculated_object_id': 'Current net power consumption l3',
               'capabilities': dict({
                 'state_class': 'measurement',
               }),
@@ -8566,6 +8751,7 @@
               'aliases': list([
               ]),
               'area_id': None,
+              'calculated_object_id': 'Current battery discharge l3',
               'capabilities': dict({
                 'state_class': 'measurement',
               }),
@@ -8607,6 +8793,7 @@
               'aliases': list([
               ]),
               'area_id': None,
+              'calculated_object_id': 'Frequency net consumption CT l3',
               'capabilities': dict({
                 'state_class': 'measurement',
               }),
@@ -8645,6 +8832,7 @@
               'aliases': list([
               ]),
               'area_id': None,
+              'calculated_object_id': 'Frequency production CT l3',
               'capabilities': dict({
                 'state_class': 'measurement',
               }),
@@ -8683,6 +8871,7 @@
               'aliases': list([
               ]),
               'area_id': None,
+              'calculated_object_id': 'Frequency storage CT l3',
               'capabilities': dict({
                 'state_class': 'measurement',
               }),
@@ -8721,6 +8910,7 @@
               'aliases': list([
               ]),
               'area_id': None,
+              'calculated_object_id': 'Voltage net consumption CT l3',
               'capabilities': dict({
                 'state_class': 'measurement',
               }),
@@ -8762,6 +8952,7 @@
               'aliases': list([
               ]),
               'area_id': None,
+              'calculated_object_id': 'Voltage production CT l3',
               'capabilities': dict({
                 'state_class': 'measurement',
               }),
@@ -8803,6 +8994,7 @@
               'aliases': list([
               ]),
               'area_id': None,
+              'calculated_object_id': 'Voltage storage CT l3',
               'capabilities': dict({
                 'state_class': 'measurement',
               }),
@@ -8844,6 +9036,7 @@
               'aliases': list([
               ]),
               'area_id': None,
+              'calculated_object_id': 'Net consumption CT current l3',
               'capabilities': dict({
                 'state_class': 'measurement',
               }),
@@ -8885,6 +9078,7 @@
               'aliases': list([
               ]),
               'area_id': None,
+              'calculated_object_id': 'Production CT current l3',
               'capabilities': dict({
                 'state_class': 'measurement',
               }),
@@ -8926,6 +9120,7 @@
               'aliases': list([
               ]),
               'area_id': None,
+              'calculated_object_id': 'Storage CT current l3',
               'capabilities': dict({
                 'state_class': 'measurement',
               }),
@@ -8967,6 +9162,7 @@
               'aliases': list([
               ]),
               'area_id': None,
+              'calculated_object_id': 'Power factor net consumption CT l3',
               'capabilities': dict({
                 'state_class': 'measurement',
               }),
@@ -9005,6 +9201,7 @@
               'aliases': list([
               ]),
               'area_id': None,
+              'calculated_object_id': 'Power factor production CT l3',
               'capabilities': dict({
                 'state_class': 'measurement',
               }),
@@ -9043,6 +9240,7 @@
               'aliases': list([
               ]),
               'area_id': None,
+              'calculated_object_id': 'Power factor storage CT l3',
               'capabilities': dict({
                 'state_class': 'measurement',
               }),
@@ -9081,6 +9279,7 @@
               'aliases': list([
               ]),
               'area_id': None,
+              'calculated_object_id': 'Metering status net consumption CT l3',
               'capabilities': dict({
                 'options': list([
                   'normal',
@@ -9123,6 +9322,7 @@
               'aliases': list([
               ]),
               'area_id': None,
+              'calculated_object_id': 'Metering status production CT l3',
               'capabilities': dict({
                 'options': list([
                   'normal',
@@ -9165,6 +9365,7 @@
               'aliases': list([
               ]),
               'area_id': None,
+              'calculated_object_id': 'Metering status storage CT l3',
               'capabilities': dict({
                 'options': list([
                   'normal',
@@ -9207,6 +9408,7 @@
               'aliases': list([
               ]),
               'area_id': None,
+              'calculated_object_id': 'Meter status flags active net consumption CT l3',
               'capabilities': None,
               'categories': dict({
               }),
@@ -9243,6 +9445,7 @@
               'aliases': list([
               ]),
               'area_id': None,
+              'calculated_object_id': 'Meter status flags active production CT l3',
               'capabilities': None,
               'categories': dict({
               }),
@@ -9279,6 +9482,7 @@
               'aliases': list([
               ]),
               'area_id': None,
+              'calculated_object_id': 'Meter status flags active storage CT l3',
               'capabilities': None,
               'categories': dict({
               }),
@@ -9315,6 +9519,7 @@
               'aliases': list([
               ]),
               'area_id': None,
+              'calculated_object_id': 'Battery',
               'capabilities': dict({
                 'state_class': 'measurement',
               }),
@@ -9362,6 +9567,7 @@
               'aliases': list([
               ]),
               'area_id': None,
+              'calculated_object_id': 'Reserve battery level',
               'capabilities': dict({
                 'state_class': 'measurement',
               }),
@@ -9409,6 +9615,7 @@
               'aliases': list([
               ]),
               'area_id': None,
+              'calculated_object_id': 'Available battery energy',
               'capabilities': dict({
                 'state_class': 'measurement',
               }),
@@ -9459,6 +9666,7 @@
               'aliases': list([
               ]),
               'area_id': None,
+              'calculated_object_id': 'Reserve battery energy',
               'capabilities': dict({
                 'state_class': 'measurement',
               }),
@@ -9509,6 +9717,7 @@
               'aliases': list([
               ]),
               'area_id': None,
+              'calculated_object_id': 'Battery capacity',
               'capabilities': None,
               'categories': dict({
               }),
@@ -9593,6 +9802,7 @@
               'aliases': list([
               ]),
               'area_id': None,
+              'calculated_object_id': 'Communicating',
               'capabilities': None,
               'categories': dict({
               }),
@@ -9636,6 +9846,7 @@
               'aliases': list([
               ]),
               'area_id': None,
+              'calculated_object_id': 'DC switch',
               'capabilities': None,
               'categories': dict({
               }),
@@ -9678,6 +9889,7 @@
               'aliases': list([
               ]),
               'area_id': None,
+              'calculated_object_id': 'Temperature',
               'capabilities': dict({
                 'state_class': 'measurement',
               }),
@@ -9728,6 +9940,7 @@
               'aliases': list([
               ]),
               'area_id': None,
+              'calculated_object_id': 'Last reported',
               'capabilities': None,
               'categories': dict({
               }),
@@ -9771,6 +9984,7 @@
               'aliases': list([
               ]),
               'area_id': None,
+              'calculated_object_id': 'Battery',
               'capabilities': dict({
                 'state_class': 'measurement',
               }),
@@ -9818,6 +10032,7 @@
               'aliases': list([
               ]),
               'area_id': None,
+              'calculated_object_id': 'Apparent power',
               'capabilities': dict({
                 'state_class': 'measurement',
               }),
@@ -9868,6 +10083,7 @@
               'aliases': list([
               ]),
               'area_id': None,
+              'calculated_object_id': 'Power',
               'capabilities': dict({
                 'state_class': 'measurement',
               }),
@@ -9955,6 +10171,7 @@
               'aliases': list([
               ]),
               'area_id': None,
+              'calculated_object_id': 'Communicating',
               'capabilities': None,
               'categories': dict({
               }),
@@ -9998,6 +10215,7 @@
               'aliases': list([
               ]),
               'area_id': None,
+              'calculated_object_id': 'Grid status',
               'capabilities': None,
               'categories': dict({
               }),
@@ -10040,6 +10258,7 @@
               'aliases': list([
               ]),
               'area_id': None,
+              'calculated_object_id': 'Reserve battery level',
               'capabilities': dict({
                 'max': 100.0,
                 'min': 0.0,
@@ -10093,6 +10312,7 @@
               'aliases': list([
               ]),
               'area_id': None,
+              'calculated_object_id': 'Storage mode',
               'capabilities': dict({
                 'options': list([
                   'backup',
@@ -10146,6 +10366,7 @@
               'aliases': list([
               ]),
               'area_id': None,
+              'calculated_object_id': 'Temperature',
               'capabilities': dict({
                 'state_class': 'measurement',
               }),
@@ -10196,6 +10417,7 @@
               'aliases': list([
               ]),
               'area_id': None,
+              'calculated_object_id': 'Last reported',
               'capabilities': None,
               'categories': dict({
               }),
@@ -10239,6 +10461,7 @@
               'aliases': list([
               ]),
               'area_id': None,
+              'calculated_object_id': 'Grid enabled',
               'capabilities': None,
               'categories': dict({
               }),
@@ -10281,6 +10504,7 @@
               'aliases': list([
               ]),
               'area_id': None,
+              'calculated_object_id': 'Charge from grid',
               'capabilities': None,
               'categories': dict({
               }),
@@ -10360,6 +10584,7 @@
               'aliases': list([
               ]),
               'area_id': None,
+              'calculated_object_id': 'Communicating',
               'capabilities': None,
               'categories': dict({
               }),
@@ -10403,6 +10628,7 @@
               'aliases': list([
               ]),
               'area_id': None,
+              'calculated_object_id': 'Temperature',
               'capabilities': dict({
                 'state_class': 'measurement',
               }),
@@ -10453,6 +10679,7 @@
               'aliases': list([
               ]),
               'area_id': None,
+              'calculated_object_id': 'Last reported',
               'capabilities': None,
               'categories': dict({
               }),
@@ -10496,6 +10723,7 @@
               'aliases': list([
               ]),
               'area_id': None,
+              'calculated_object_id': 'Grid status',
               'capabilities': None,
               'categories': dict({
               }),
@@ -10538,6 +10766,7 @@
               'aliases': list([
               ]),
               'area_id': None,
+              'calculated_object_id': 'Admin state',
               'capabilities': None,
               'categories': dict({
               }),
@@ -10580,6 +10809,7 @@
               'aliases': list([
               ]),
               'area_id': None,
+              'calculated_object_id': 'MID state',
               'capabilities': None,
               'categories': dict({
               }),
@@ -10659,6 +10889,7 @@
               'aliases': list([
               ]),
               'area_id': None,
+              'calculated_object_id': 'Communicating',
               'capabilities': None,
               'categories': dict({
               }),
@@ -10702,6 +10933,7 @@
               'aliases': list([
               ]),
               'area_id': None,
+              'calculated_object_id': 'Last reported',
               'capabilities': None,
               'categories': dict({
               }),
@@ -10782,6 +11014,7 @@
               'aliases': list([
               ]),
               'area_id': None,
+              'calculated_object_id': 'Cutoff battery level',
               'capabilities': dict({
                 'max': 100.0,
                 'min': 0.0,
@@ -10834,6 +11067,7 @@
               'aliases': list([
               ]),
               'area_id': None,
+              'calculated_object_id': 'Restore battery level',
               'capabilities': dict({
                 'max': 100.0,
                 'min': 0.0,
@@ -10886,6 +11120,7 @@
               'aliases': list([
               ]),
               'area_id': None,
+              'calculated_object_id': 'Mode',
               'capabilities': dict({
                 'options': list([
                   'standard',
@@ -10937,6 +11172,7 @@
               'aliases': list([
               ]),
               'area_id': None,
+              'calculated_object_id': 'Grid action',
               'capabilities': dict({
                 'options': list([
                   'powered',
@@ -10992,6 +11228,7 @@
               'aliases': list([
               ]),
               'area_id': None,
+              'calculated_object_id': 'Microgrid action',
               'capabilities': dict({
                 'options': list([
                   'powered',
@@ -11047,6 +11284,7 @@
               'aliases': list([
               ]),
               'area_id': None,
+              'calculated_object_id': 'Generator action',
               'capabilities': dict({
                 'options': list([
                   'powered',
@@ -11102,6 +11340,7 @@
               'aliases': list([
               ]),
               'area_id': None,
+              'calculated_object_id': None,
               'capabilities': None,
               'categories': dict({
               }),
@@ -11181,6 +11420,7 @@
               'aliases': list([
               ]),
               'area_id': None,
+              'calculated_object_id': 'Cutoff battery level',
               'capabilities': dict({
                 'max': 100.0,
                 'min': 0.0,
@@ -11233,6 +11473,7 @@
               'aliases': list([
               ]),
               'area_id': None,
+              'calculated_object_id': 'Restore battery level',
               'capabilities': dict({
                 'max': 100.0,
                 'min': 0.0,
@@ -11285,6 +11526,7 @@
               'aliases': list([
               ]),
               'area_id': None,
+              'calculated_object_id': 'Mode',
               'capabilities': dict({
                 'options': list([
                   'standard',
@@ -11336,6 +11578,7 @@
               'aliases': list([
               ]),
               'area_id': None,
+              'calculated_object_id': 'Grid action',
               'capabilities': dict({
                 'options': list([
                   'powered',
@@ -11391,6 +11634,7 @@
               'aliases': list([
               ]),
               'area_id': None,
+              'calculated_object_id': 'Microgrid action',
               'capabilities': dict({
                 'options': list([
                   'powered',
@@ -11446,6 +11690,7 @@
               'aliases': list([
               ]),
               'area_id': None,
+              'calculated_object_id': 'Generator action',
               'capabilities': dict({
                 'options': list([
                   'powered',
@@ -11501,6 +11746,7 @@
               'aliases': list([
               ]),
               'area_id': None,
+              'calculated_object_id': None,
               'capabilities': None,
               'categories': dict({
               }),
@@ -11580,6 +11826,7 @@
               'aliases': list([
               ]),
               'area_id': None,
+              'calculated_object_id': 'Cutoff battery level',
               'capabilities': dict({
                 'max': 100.0,
                 'min': 0.0,
@@ -11632,6 +11879,7 @@
               'aliases': list([
               ]),
               'area_id': None,
+              'calculated_object_id': 'Restore battery level',
               'capabilities': dict({
                 'max': 100.0,
                 'min': 0.0,
@@ -11684,6 +11932,7 @@
               'aliases': list([
               ]),
               'area_id': None,
+              'calculated_object_id': 'Mode',
               'capabilities': dict({
                 'options': list([
                   'standard',
@@ -11735,6 +11984,7 @@
               'aliases': list([
               ]),
               'area_id': None,
+              'calculated_object_id': 'Grid action',
               'capabilities': dict({
                 'options': list([
                   'powered',
@@ -11790,6 +12040,7 @@
               'aliases': list([
               ]),
               'area_id': None,
+              'calculated_object_id': 'Microgrid action',
               'capabilities': dict({
                 'options': list([
                   'powered',
@@ -11845,6 +12096,7 @@
               'aliases': list([
               ]),
               'area_id': None,
+              'calculated_object_id': 'Generator action',
               'capabilities': dict({
                 'options': list([
                   'powered',
@@ -11900,6 +12152,7 @@
               'aliases': list([
               ]),
               'area_id': None,
+              'calculated_object_id': None,
               'capabilities': None,
               'categories': dict({
               }),
@@ -11979,6 +12232,7 @@
               'aliases': list([
               ]),
               'area_id': None,
+              'calculated_object_id': None,
               'capabilities': dict({
                 'state_class': 'measurement',
               }),
@@ -12029,6 +12283,7 @@
               'aliases': list([
               ]),
               'area_id': None,
+              'calculated_object_id': 'DC voltage',
               'capabilities': dict({
                 'state_class': 'measurement',
               }),
@@ -12067,6 +12322,7 @@
               'aliases': list([
               ]),
               'area_id': None,
+              'calculated_object_id': 'DC current',
               'capabilities': dict({
                 'state_class': 'measurement',
               }),
@@ -12105,6 +12361,7 @@
               'aliases': list([
               ]),
               'area_id': None,
+              'calculated_object_id': 'AC voltage',
               'capabilities': dict({
                 'state_class': 'measurement',
               }),
@@ -12143,6 +12400,7 @@
               'aliases': list([
               ]),
               'area_id': None,
+              'calculated_object_id': 'AC current',
               'capabilities': dict({
                 'state_class': 'measurement',
               }),
@@ -12181,6 +12439,7 @@
               'aliases': list([
               ]),
               'area_id': None,
+              'calculated_object_id': 'Frequency',
               'capabilities': dict({
                 'state_class': 'measurement',
               }),
@@ -12219,6 +12478,7 @@
               'aliases': list([
               ]),
               'area_id': None,
+              'calculated_object_id': 'Temperature',
               'capabilities': dict({
                 'state_class': 'measurement',
               }),
@@ -12257,6 +12517,7 @@
               'aliases': list([
               ]),
               'area_id': None,
+              'calculated_object_id': 'Lifetime energy production',
               'capabilities': dict({
                 'state_class': 'total_increasing',
               }),
@@ -12298,6 +12559,7 @@
               'aliases': list([
               ]),
               'area_id': None,
+              'calculated_object_id': 'Energy production today',
               'capabilities': dict({
                 'state_class': 'total_increasing',
               }),
@@ -12336,6 +12598,7 @@
               'aliases': list([
               ]),
               'area_id': None,
+              'calculated_object_id': 'Last report duration',
               'capabilities': dict({
                 'state_class': 'measurement',
               }),
@@ -12374,6 +12637,7 @@
               'aliases': list([
               ]),
               'area_id': None,
+              'calculated_object_id': 'Energy production since previous report',
               'capabilities': dict({
                 'state_class': 'total',
               }),
@@ -12412,6 +12676,7 @@
               'aliases': list([
               ]),
               'area_id': None,
+              'calculated_object_id': 'Lifetime maximum power',
               'capabilities': dict({
                 'state_class': 'measurement',
               }),
@@ -12450,6 +12715,7 @@
               'aliases': list([
               ]),
               'area_id': None,
+              'calculated_object_id': 'Last reported',
               'capabilities': None,
               'categories': dict({
               }),

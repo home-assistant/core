@@ -4,6 +4,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Storage mode',
     'capabilities': dict({
       'options': list([
         'backup',
@@ -63,6 +64,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Storage mode',
     'capabilities': dict({
       'options': list([
         'backup',
@@ -122,6 +124,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Generator action',
     'capabilities': dict({
       'options': list([
         'powered',
@@ -183,6 +186,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Grid action',
     'capabilities': dict({
       'options': list([
         'powered',
@@ -244,6 +248,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Microgrid action',
     'capabilities': dict({
       'options': list([
         'powered',
@@ -305,6 +310,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Mode',
     'capabilities': dict({
       'options': list([
         'standard',
@@ -362,6 +368,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Generator action',
     'capabilities': dict({
       'options': list([
         'powered',
@@ -423,6 +430,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Grid action',
     'capabilities': dict({
       'options': list([
         'powered',
@@ -484,6 +492,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Microgrid action',
     'capabilities': dict({
       'options': list([
         'powered',
@@ -545,6 +554,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Mode',
     'capabilities': dict({
       'options': list([
         'standard',
@@ -602,6 +612,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Generator action',
     'capabilities': dict({
       'options': list([
         'powered',
@@ -663,6 +674,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Grid action',
     'capabilities': dict({
       'options': list([
         'powered',
@@ -724,6 +736,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Microgrid action',
     'capabilities': dict({
       'options': list([
         'powered',
@@ -785,6 +798,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Mode',
     'capabilities': dict({
       'options': list([
         'standard',

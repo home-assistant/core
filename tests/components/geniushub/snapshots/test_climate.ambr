@@ -4,6 +4,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Bedroom',
     'capabilities': dict({
       'hvac_modes': list([
         <HVACMode.OFF: 'off'>,
@@ -85,6 +86,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Ensuite',
     'capabilities': dict({
       'hvac_modes': list([
         <HVACMode.OFF: 'off'>,
@@ -169,6 +171,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Guest room',
     'capabilities': dict({
       'hvac_modes': list([
         <HVACMode.OFF: 'off'>,
@@ -253,6 +256,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Hall',
     'capabilities': dict({
       'hvac_modes': list([
         <HVACMode.OFF: 'off'>,
@@ -337,6 +341,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Kitchen',
     'capabilities': dict({
       'hvac_modes': list([
         <HVACMode.OFF: 'off'>,
@@ -421,6 +426,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Lounge',
     'capabilities': dict({
       'hvac_modes': list([
         <HVACMode.OFF: 'off'>,
@@ -502,6 +508,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Study',
     'capabilities': dict({
       'hvac_modes': list([
         <HVACMode.OFF: 'off'>,

@@ -4,6 +4,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Active torrents',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -53,6 +54,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'All-time download',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -112,6 +114,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'All-time upload',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -171,6 +174,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'All torrents',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -220,6 +224,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Connection status',
     'capabilities': dict({
       'options': list([
         'connected',
@@ -280,6 +285,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Download speed',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -339,6 +345,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Download speed limit',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -398,6 +405,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Errored torrents',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -447,6 +455,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Global ratio',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -498,6 +507,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Inactive torrents',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -547,6 +557,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Paused torrents',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -596,6 +607,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Status',
     'capabilities': dict({
       'options': list([
         'idle',
@@ -658,6 +670,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Upload speed',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -717,6 +730,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Upload speed limit',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),

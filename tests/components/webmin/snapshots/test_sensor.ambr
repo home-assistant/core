@@ -4,6 +4,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Disk free inodes /',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -55,6 +56,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Disk free inodes /media/disk1',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -106,6 +108,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Disk free inodes /media/disk2',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -157,6 +160,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Disk free space /',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -216,6 +220,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Disk free space /media/disk1',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -275,6 +280,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Disk free space /media/disk2',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -334,6 +340,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Disk inode usage /',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -386,6 +393,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Disk inode usage /media/disk1',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -438,6 +446,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Disk inode usage /media/disk2',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -490,6 +499,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Disk total inodes /',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -541,6 +551,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Disk total inodes /media/disk1',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -592,6 +603,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Disk total inodes /media/disk2',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -643,6 +655,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Disk total space /',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -702,6 +715,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Disk total space /media/disk1',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -761,6 +775,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Disk total space /media/disk2',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -820,6 +835,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Disk usage /',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -872,6 +888,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Disk usage /media/disk1',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -924,6 +941,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Disk usage /media/disk2',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -976,6 +994,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Disk used inodes /',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1027,6 +1046,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Disk used inodes /media/disk1',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1078,6 +1098,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Disk used inodes /media/disk2',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1129,6 +1150,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Disk used space /',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1188,6 +1210,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Disk used space /media/disk1',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1247,6 +1270,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Disk used space /media/disk2',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1306,6 +1330,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Disks free space',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1365,6 +1390,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Disks total space',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1424,6 +1450,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Disks used space',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1483,6 +1510,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Load (15 min)',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1534,6 +1562,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Load (1 min)',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1585,6 +1614,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Load (5 min)',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1636,6 +1666,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Memory free',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1695,6 +1726,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Memory total',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1754,6 +1786,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Swap free',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1813,6 +1846,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Swap total',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),

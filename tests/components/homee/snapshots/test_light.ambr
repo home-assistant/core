@@ -4,6 +4,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': None,
     'capabilities': dict({
       'max_color_temp_kelvin': 7000,
       'max_mireds': 500,
@@ -85,6 +86,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Light 1',
     'capabilities': dict({
       'max_color_temp_kelvin': 500,
       'max_mireds': 6535,
@@ -168,6 +170,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Light 2',
     'capabilities': dict({
       'max_color_temp_kelvin': 4000,
       'max_mireds': 454,
@@ -241,6 +244,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Light 3',
     'capabilities': dict({
       'supported_color_modes': list([
         <ColorMode.BRIGHTNESS: 'brightness'>,
@@ -299,6 +303,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Light 4',
     'capabilities': dict({
       'supported_color_modes': list([
         <ColorMode.ONOFF: 'onoff'>,

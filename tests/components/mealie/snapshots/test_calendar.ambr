@@ -138,6 +138,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Breakfast',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -192,6 +193,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Dessert',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -246,6 +248,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Dinner',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -300,6 +303,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Drink',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -354,6 +358,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Lunch',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -408,6 +413,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Side',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -462,6 +468,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Snack',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,

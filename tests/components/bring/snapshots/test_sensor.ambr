@@ -4,6 +4,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Discount only',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -53,6 +54,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'List access',
     'capabilities': dict({
       'options': list([
         'registered',
@@ -113,6 +115,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'On occasion',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -162,6 +165,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Region & language',
     'capabilities': dict({
       'options': list([
         'de-at',
@@ -256,6 +260,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Urgent',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -305,6 +310,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Discount only',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -354,6 +360,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'List access',
     'capabilities': dict({
       'options': list([
         'registered',
@@ -414,6 +421,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'On occasion',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -463,6 +471,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Region & language',
     'capabilities': dict({
       'options': list([
         'de-at',
@@ -557,6 +566,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Urgent',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,

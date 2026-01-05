@@ -4,6 +4,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Allow export',
     'capabilities': dict({
       'options': list([
         <EnergyExportMode.NEVER: 'never'>,
@@ -63,6 +64,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Operation mode',
     'capabilities': dict({
       'options': list([
         <EnergyOperationMode.AUTONOMOUS: 'autonomous'>,
@@ -122,6 +124,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Seat heater front left',
     'capabilities': dict({
       'options': list([
         'off',
@@ -183,6 +186,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Seat heater front right',
     'capabilities': dict({
       'options': list([
         'off',
@@ -244,6 +248,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Seat heater rear center',
     'capabilities': dict({
       'options': list([
         'off',
@@ -305,6 +310,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Seat heater rear left',
     'capabilities': dict({
       'options': list([
         'off',
@@ -366,6 +372,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Seat heater rear right',
     'capabilities': dict({
       'options': list([
         'off',
@@ -427,6 +434,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Seat heater third row left',
     'capabilities': dict({
       'options': list([
         'off',
@@ -488,6 +496,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Seat heater third row right',
     'capabilities': dict({
       'options': list([
         'off',
@@ -549,6 +558,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Steering wheel heater',
     'capabilities': dict({
       'options': list([
         'off',

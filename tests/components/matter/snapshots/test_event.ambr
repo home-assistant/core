@@ -4,6 +4,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Button (3)',
     'capabilities': dict({
       'event_types': list([
         'multi_press_1',
@@ -67,6 +68,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Button (4)',
     'capabilities': dict({
       'event_types': list([
         'multi_press_1',
@@ -130,6 +132,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Button (5)',
     'capabilities': dict({
       'event_types': list([
         'multi_press_1',
@@ -193,6 +196,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Button',
     'capabilities': dict({
       'event_types': list([
         'initial_press',
@@ -256,6 +260,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Button (1)',
     'capabilities': dict({
       'event_types': list([
         'multi_press_1',
@@ -319,6 +324,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Button (2)',
     'capabilities': dict({
       'event_types': list([
         'multi_press_1',
@@ -386,6 +392,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Button (1)',
     'capabilities': dict({
       'event_types': list([
         'multi_press_1',
@@ -449,6 +456,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Button (2)',
     'capabilities': dict({
       'event_types': list([
         'multi_press_1',
@@ -512,6 +520,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Button (3)',
     'capabilities': dict({
       'event_types': list([
         'multi_press_1',
@@ -575,6 +584,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Button (4)',
     'capabilities': dict({
       'event_types': list([
         'multi_press_1',
@@ -638,6 +648,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Button (5)',
     'capabilities': dict({
       'event_types': list([
         'multi_press_1',
@@ -701,6 +712,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Button (6)',
     'capabilities': dict({
       'event_types': list([
         'multi_press_1',
@@ -764,6 +776,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Button (1)',
     'capabilities': dict({
       'event_types': list([
         'multi_press_1',
@@ -835,6 +848,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Button (2)',
     'capabilities': dict({
       'event_types': list([
         'multi_press_1',
@@ -906,6 +920,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Button (3)',
     'capabilities': dict({
       'event_types': list([
         'multi_press_1',
@@ -971,6 +986,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Button (4)',
     'capabilities': dict({
       'event_types': list([
         'multi_press_1',
@@ -1042,6 +1058,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Button (5)',
     'capabilities': dict({
       'event_types': list([
         'multi_press_1',
@@ -1113,6 +1130,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Button (6)',
     'capabilities': dict({
       'event_types': list([
         'multi_press_1',
@@ -1178,6 +1196,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Button (7)',
     'capabilities': dict({
       'event_types': list([
         'multi_press_1',
@@ -1249,6 +1268,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Button (8)',
     'capabilities': dict({
       'event_types': list([
         'multi_press_1',
@@ -1320,6 +1340,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Button (9)',
     'capabilities': dict({
       'event_types': list([
         'multi_press_1',
@@ -1385,6 +1406,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Button (Config)',
     'capabilities': dict({
       'event_types': list([
         'multi_press_1',
@@ -1454,6 +1476,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Button (Down)',
     'capabilities': dict({
       'event_types': list([
         'multi_press_1',
@@ -1523,6 +1546,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Button (Up)',
     'capabilities': dict({
       'event_types': list([
         'multi_press_1',
@@ -1592,6 +1616,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Button (Config)',
     'capabilities': dict({
       'event_types': list([
         'multi_press_1',
@@ -1661,6 +1686,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Button (Down)',
     'capabilities': dict({
       'event_types': list([
         'multi_press_1',
@@ -1730,6 +1756,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Button (Up)',
     'capabilities': dict({
       'event_types': list([
         'multi_press_1',
@@ -1799,6 +1826,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Button',
     'capabilities': dict({
       'event_types': list([
         'initial_press',

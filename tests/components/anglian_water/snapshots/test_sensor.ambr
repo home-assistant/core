@@ -4,6 +4,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Latest reading',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -60,6 +61,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': "Yesterday's sewerage cost",
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -110,6 +112,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': "Yesterday's usage",
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -166,6 +169,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': "Yesterday's water cost",
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,

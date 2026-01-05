@@ -4,6 +4,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Thermostat',
     'capabilities': dict({
       'hvac_modes': list([
         <HVACMode.HEAT: 'heat'>,

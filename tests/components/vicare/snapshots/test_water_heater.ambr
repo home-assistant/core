@@ -4,6 +4,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Domestic hot water',
     'capabilities': dict({
       'max_temp': 60,
       'min_temp': 10,
@@ -62,6 +63,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Domestic hot water',
     'capabilities': dict({
       'max_temp': 60,
       'min_temp': 10,

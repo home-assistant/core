@@ -4,6 +4,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Aspect decimal',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -52,6 +53,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Aspect integer',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -100,6 +102,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Aspect name',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -148,6 +151,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Aspect resolution',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -196,6 +200,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'CPU temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -252,6 +257,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'GPU temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -308,6 +314,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'HDMI temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -364,6 +371,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Incoming aspect ratio',
     'capabilities': dict({
       'options': list([
         '16:9',
@@ -422,6 +430,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Incoming bit depth',
     'capabilities': dict({
       'options': list([
         '8bit',
@@ -482,6 +491,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Incoming black levels',
     'capabilities': dict({
       'options': list([
         'TV',
@@ -540,6 +550,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Incoming color space',
     'capabilities': dict({
       'options': list([
         'RGB',
@@ -602,6 +613,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Incoming colorimetry',
     'capabilities': dict({
       'options': list([
         'SDR',
@@ -670,6 +682,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Incoming frame rate',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -718,6 +731,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Incoming resolution',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -766,6 +780,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Incoming signal type',
     'capabilities': dict({
       'options': list([
         '2D',
@@ -824,6 +839,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Mainboard temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -880,6 +896,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Masking decimal',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -928,6 +945,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Masking integer',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -976,6 +994,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Masking resolution',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1024,6 +1043,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Outgoing bit depth',
     'capabilities': dict({
       'options': list([
         '8bit',
@@ -1084,6 +1104,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Outgoing black levels',
     'capabilities': dict({
       'options': list([
         'TV',
@@ -1142,6 +1163,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Outgoing color space',
     'capabilities': dict({
       'options': list([
         'RGB',
@@ -1204,6 +1226,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Outgoing colorimetry',
     'capabilities': dict({
       'options': list([
         'SDR',
@@ -1272,6 +1295,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Outgoing frame rate',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1320,6 +1344,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Outgoing resolution',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1368,6 +1393,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Outgoing signal type',
     'capabilities': dict({
       'options': list([
         '2D',

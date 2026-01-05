@@ -4,6 +4,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Dust filter alarm threshold',
     'capabilities': dict({
       'options': list([
         '180',
@@ -65,6 +66,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Dust filter alarm threshold',
     'capabilities': dict({
       'options': list([
         '180',
@@ -126,6 +128,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Lamp',
     'capabilities': dict({
       'options': list([
         'off',
@@ -185,6 +188,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Lamp',
     'capabilities': dict({
       'options': list([
         'off',
@@ -242,6 +246,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Lamp',
     'capabilities': dict({
       'options': list([
         'off',
@@ -299,6 +304,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Lamp',
     'capabilities': dict({
       'options': list([
         'off',
@@ -356,6 +362,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Lamp',
     'capabilities': dict({
       'options': list([
         'off',
@@ -413,6 +420,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Lamp',
     'capabilities': dict({
       'options': list([
         'on',
@@ -470,6 +478,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': None,
     'capabilities': dict({
       'options': list([
         'stop',
@@ -529,6 +538,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': None,
     'capabilities': dict({
       'options': list([
         'stop',
@@ -588,6 +598,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': None,
     'capabilities': dict({
       'options': list([
         'stop',
@@ -647,6 +658,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': None,
     'capabilities': dict({
       'options': list([
         'stop',
@@ -706,6 +718,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': None,
     'capabilities': dict({
       'options': list([
         'stop',
@@ -765,6 +778,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': None,
     'capabilities': dict({
       'options': list([
         'stop',
@@ -824,6 +838,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': None,
     'capabilities': dict({
       'options': list([
         'stop',
@@ -883,6 +898,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Soil level',
     'capabilities': dict({
       'options': list([
         'none',
@@ -948,6 +964,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Spin level',
     'capabilities': dict({
       'options': list([
         'rinse_hold',
@@ -1013,6 +1030,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Water temperature',
     'capabilities': dict({
       'options': list([
         'none',
@@ -1078,6 +1096,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': None,
     'capabilities': dict({
       'options': list([
         'stop',
@@ -1137,6 +1156,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Spin level',
     'capabilities': dict({
       'options': list([
         'rinse_hold',
@@ -1204,6 +1224,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Water temperature',
     'capabilities': dict({
       'options': list([
         'none',
@@ -1271,6 +1292,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': None,
     'capabilities': dict({
       'options': list([
         'stop',
@@ -1330,6 +1352,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Detergent dispense amount',
     'capabilities': dict({
       'options': list([
         'none',
@@ -1391,6 +1414,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Flexible compartment dispense amount',
     'capabilities': dict({
       'options': list([
         'none',
@@ -1452,6 +1476,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Spin level',
     'capabilities': dict({
       'options': list([
         'rinse_hold',
@@ -1519,6 +1544,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Water temperature',
     'capabilities': dict({
       'options': list([
         'none',
@@ -1586,6 +1612,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': None,
     'capabilities': dict({
       'options': list([
         'run',
@@ -1645,6 +1672,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': None,
     'capabilities': dict({
       'options': list([
         'run',

@@ -4,6 +4,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Volume',
     'capabilities': dict({
       'options': list([
         'high',
@@ -63,6 +64,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Volume',
     'capabilities': dict({
       'options': list([
         'high',
@@ -122,6 +124,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Volume',
     'capabilities': dict({
       'options': list([
         'high',
@@ -181,6 +184,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Volume',
     'capabilities': dict({
       'options': list([
         'high',
@@ -240,6 +244,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Volume',
     'capabilities': dict({
       'options': list([
         'high',
@@ -299,6 +304,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Volume',
     'capabilities': dict({
       'options': list([
         'high',

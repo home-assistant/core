@@ -4,6 +4,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Audio output',
     'capabilities': dict({
       'options': list([
         'Speaker A',
@@ -63,6 +64,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Control Bus mode',
     'capabilities': dict({
       'options': list([
         'amplifier',
@@ -122,6 +124,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Display brightness',
     'capabilities': dict({
       'options': list([
         'bright',

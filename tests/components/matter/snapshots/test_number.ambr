@@ -4,6 +4,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Hold time',
     'capabilities': dict({
       'max': 65534,
       'min': 1,
@@ -62,6 +63,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Hold time',
     'capabilities': dict({
       'max': 65534,
       'min': 1,
@@ -120,6 +122,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'User code temporary disable time',
     'capabilities': dict({
       'max': 255,
       'min': 1,
@@ -178,6 +181,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Wrong code limit',
     'capabilities': dict({
       'max': 255,
       'min': 1,
@@ -235,6 +239,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'On level',
     'capabilities': dict({
       'max': 255,
       'min': 0,
@@ -292,6 +297,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Off transition time',
     'capabilities': dict({
       'max': 65534,
       'min': 0,
@@ -350,6 +356,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'On level',
     'capabilities': dict({
       'max': 255,
       'min': 0,
@@ -407,6 +414,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'On/Off transition time',
     'capabilities': dict({
       'max': 65534,
       'min': 0,
@@ -465,6 +473,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'On transition time',
     'capabilities': dict({
       'max': 65534,
       'min': 0,
@@ -523,6 +532,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'On level',
     'capabilities': dict({
       'max': 255,
       'min': 0,
@@ -580,6 +590,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'On/Off transition time',
     'capabilities': dict({
       'max': 65534,
       'min': 0,
@@ -638,6 +649,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Auto-relock time',
     'capabilities': dict({
       'max': 65534,
       'min': 0,
@@ -696,6 +708,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'User code temporary disable time',
     'capabilities': dict({
       'max': 255,
       'min': 1,
@@ -754,6 +767,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Wrong code limit',
     'capabilities': dict({
       'max': 255,
       'min': 1,
@@ -811,6 +825,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Auto-relock time',
     'capabilities': dict({
       'max': 65534,
       'min': 0,
@@ -869,6 +884,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'User code temporary disable time',
     'capabilities': dict({
       'max': 255,
       'min': 1,
@@ -927,6 +943,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Wrong code limit',
     'capabilities': dict({
       'max': 255,
       'min': 1,
@@ -984,6 +1001,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Temperature offset',
     'capabilities': dict({
       'max': 50,
       'min': -50,
@@ -1043,6 +1061,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Altitude above sea level',
     'capabilities': dict({
       'max': 9000,
       'min': 0,
@@ -1102,6 +1121,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'On level',
     'capabilities': dict({
       'max': 255,
       'min': 0,
@@ -1159,6 +1179,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Hold time',
     'capabilities': dict({
       'max': 65534,
       'min': 1,
@@ -1217,6 +1238,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'LED off intensity (Load Control)',
     'capabilities': dict({
       'max': 75,
       'min': 0,
@@ -1274,6 +1296,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'LED on intensity (Load Control)',
     'capabilities': dict({
       'max': 75,
       'min': 0,
@@ -1331,6 +1354,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Off transition time (Load Control)',
     'capabilities': dict({
       'max': 65534,
       'min': 0,
@@ -1389,6 +1413,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'On level (Load Control)',
     'capabilities': dict({
       'max': 255,
       'min': 0,
@@ -1446,6 +1471,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'On level (RGB Indicator)',
     'capabilities': dict({
       'max': 255,
       'min': 0,
@@ -1503,6 +1529,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'On/Off transition time (Load Control)',
     'capabilities': dict({
       'max': 65534,
       'min': 0,
@@ -1561,6 +1588,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'On/Off transition time (RGB Indicator)',
     'capabilities': dict({
       'max': 65534,
       'min': 0,
@@ -1619,6 +1647,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'On transition time (Load Control)',
     'capabilities': dict({
       'max': 65534,
       'min': 0,
@@ -1677,6 +1706,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Cooking time',
     'capabilities': dict({
       'max': 86400,
       'min': 1,
@@ -1736,6 +1766,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Auto-relock time',
     'capabilities': dict({
       'max': 65534,
       'min': 0,
@@ -1794,6 +1825,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'User code temporary disable time',
     'capabilities': dict({
       'max': 255,
       'min': 1,
@@ -1852,6 +1884,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Wrong code limit',
     'capabilities': dict({
       'max': 255,
       'min': 1,
@@ -1909,6 +1942,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'On level',
     'capabilities': dict({
       'max': 255,
       'min': 0,
@@ -1966,6 +2000,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'LED off intensity',
     'capabilities': dict({
       'max': 75,
       'min': 0,
@@ -2023,6 +2058,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'LED on intensity',
     'capabilities': dict({
       'max': 75,
       'min': 0,
@@ -2080,6 +2116,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Off transition time',
     'capabilities': dict({
       'max': 65534,
       'min': 0,
@@ -2138,6 +2175,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'On level (1)',
     'capabilities': dict({
       'max': 255,
       'min': 0,
@@ -2195,6 +2233,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'On level (6)',
     'capabilities': dict({
       'max': 255,
       'min': 0,
@@ -2252,6 +2291,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'On/Off transition time',
     'capabilities': dict({
       'max': 65534,
       'min': 0,
@@ -2310,6 +2350,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'On transition time',
     'capabilities': dict({
       'max': 65534,
       'min': 0,
@@ -2368,6 +2409,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Off transition time',
     'capabilities': dict({
       'max': 65534,
       'min': 0,
@@ -2426,6 +2468,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'On level',
     'capabilities': dict({
       'max': 255,
       'min': 0,
@@ -2483,6 +2526,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'On/Off transition time',
     'capabilities': dict({
       'max': 65534,
       'min': 0,
@@ -2541,6 +2585,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'On transition time',
     'capabilities': dict({
       'max': 65534,
       'min': 0,
@@ -2599,6 +2644,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Off transition time',
     'capabilities': dict({
       'max': 65534,
       'min': 0,
@@ -2657,6 +2703,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'On level',
     'capabilities': dict({
       'max': 255,
       'min': 0,
@@ -2714,6 +2761,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'On/Off transition time',
     'capabilities': dict({
       'max': 65534,
       'min': 0,
@@ -2772,6 +2820,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'On transition time',
     'capabilities': dict({
       'max': 65534,
       'min': 0,
@@ -2830,6 +2879,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Off transition time',
     'capabilities': dict({
       'max': 65534,
       'min': 0,
@@ -2888,6 +2938,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'On level',
     'capabilities': dict({
       'max': 255,
       'min': 0,
@@ -2945,6 +2996,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'On/Off transition time',
     'capabilities': dict({
       'max': 65534,
       'min': 0,
@@ -3003,6 +3055,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'On transition time',
     'capabilities': dict({
       'max': 65534,
       'min': 0,
@@ -3061,6 +3114,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'On level',
     'capabilities': dict({
       'max': 255,
       'min': 0,
@@ -3118,6 +3172,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'On/Off transition time',
     'capabilities': dict({
       'max': 65534,
       'min': 0,
@@ -3176,6 +3231,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Temperature setpoint',
     'capabilities': dict({
       'max': 288.0,
       'min': 76.0,
@@ -3234,6 +3290,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'On level',
     'capabilities': dict({
       'max': 255,
       'min': 0,
@@ -3291,6 +3348,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Setpoint',
     'capabilities': dict({
       'max': 100,
       'min': 0.5,
@@ -3349,6 +3407,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Auto-relock time',
     'capabilities': dict({
       'max': 65534,
       'min': 0,
@@ -3407,6 +3466,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'User code temporary disable time',
     'capabilities': dict({
       'max': 255,
       'min': 1,
@@ -3465,6 +3525,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Wrong code limit',
     'capabilities': dict({
       'max': 255,
       'min': 1,
@@ -3522,6 +3583,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Temperature setpoint',
     'capabilities': dict({
       'max': 0.0,
       'min': 0.0,
@@ -3580,6 +3642,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Temperature setpoint (2)',
     'capabilities': dict({
       'max': -15.0,
       'min': -18.0,
@@ -3638,6 +3701,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Temperature setpoint (3)',
     'capabilities': dict({
       'max': 4.0,
       'min': 1.0,
@@ -3696,6 +3760,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Volume',
     'capabilities': dict({
       'max': 100,
       'min': 0,
@@ -3754,6 +3819,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Default open duration',
     'capabilities': dict({
       'max': 65534,
       'min': 1,

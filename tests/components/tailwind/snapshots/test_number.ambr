@@ -22,6 +22,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Status LED brightness',
     'capabilities': dict({
       'max': 100,
       'min': 0,

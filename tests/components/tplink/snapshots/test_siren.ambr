@@ -39,6 +39,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': None,
     'capabilities': dict({
       'available_tones': tuple(
         'Foo',

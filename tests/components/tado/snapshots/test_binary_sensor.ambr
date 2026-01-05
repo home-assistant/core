@@ -4,6 +4,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Connectivity',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -53,6 +54,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Overlay',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -103,6 +105,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Power',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -152,6 +155,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Window',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -201,6 +205,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Connectivity',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -250,6 +255,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Overlay',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -300,6 +306,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Power',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -349,6 +356,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Window',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -398,6 +406,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Connectivity',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -447,6 +456,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Overlay',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -496,6 +506,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Power',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -545,6 +556,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Window',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -594,6 +606,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Connectivity',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -643,6 +656,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Early start',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -692,6 +706,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Overlay',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -742,6 +757,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Power',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -791,6 +807,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Window',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -840,6 +857,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Connectivity',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -889,6 +907,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Overlay',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -939,6 +958,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Power',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -988,6 +1008,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Connectivity',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1037,6 +1058,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Overlay',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1086,6 +1108,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Power',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1135,6 +1158,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Connection state',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1184,6 +1208,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Connection state',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,

@@ -4,6 +4,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Reset filter condition',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -52,6 +53,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Reset filter condition',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -100,6 +102,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Identify',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -149,6 +152,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Identify (1)',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -198,6 +202,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Identify (2)',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -247,6 +252,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Identify (1)',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -296,6 +302,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Identify (2)',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -345,6 +352,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Identify (3)',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -394,6 +402,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Identify (4)',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -443,6 +452,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Identify (1)',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -492,6 +502,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Identify (2)',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -541,6 +552,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Identify (3)',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -590,6 +602,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Identify (4)',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -639,6 +652,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Identify (5)',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -688,6 +702,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Identify (1)',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -737,6 +752,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Identify (2)',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -786,6 +802,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Identify',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -835,6 +852,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Identify',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -884,6 +902,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Identify',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -933,6 +952,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Identify',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -982,6 +1002,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Identify',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1031,6 +1052,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Identify (0)',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1080,6 +1102,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Identify (1)',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1129,6 +1152,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Identify',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1178,6 +1202,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Identify (bottom)',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1227,6 +1252,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Identify (top)',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1276,6 +1302,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Identify',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1325,6 +1352,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Identify',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1374,6 +1402,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Identify',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1423,6 +1452,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Identify',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1472,6 +1502,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Identify (1)',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1521,6 +1552,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Identify (2)',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1570,6 +1602,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Identify',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1619,6 +1652,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Reset filter condition',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1667,6 +1701,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Reset filter condition',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1715,6 +1750,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Identify (Fan)',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1764,6 +1800,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Identify (1)',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1813,6 +1850,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Identify (1)',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1862,6 +1900,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Identify',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1911,6 +1950,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Identify (Load Control)',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1960,6 +2000,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Pause',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2008,6 +2049,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Resume',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2056,6 +2098,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Start',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2104,6 +2147,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Stop',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2152,6 +2196,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Identify',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2201,6 +2246,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Pause',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2249,6 +2295,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Resume',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2297,6 +2344,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Start',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2345,6 +2393,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Stop',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2393,6 +2442,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Identify',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2442,6 +2492,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Identify (0)',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2491,6 +2542,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Identify (1)',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2540,6 +2592,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Identify (1)',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2589,6 +2642,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Identify (2)',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2638,6 +2692,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Identify (6)',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2687,6 +2742,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Identify (Config)',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2736,6 +2792,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Identify (Down)',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2785,6 +2842,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Identify (Up)',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2834,6 +2892,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Identify',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2883,6 +2942,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Identify',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2932,6 +2992,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Identify',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2981,6 +3042,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Identify',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -3030,6 +3092,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Identify',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -3079,6 +3142,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Pause',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -3127,6 +3191,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Start',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -3175,6 +3240,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Stop',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -3223,6 +3289,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Identify',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -3272,6 +3339,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Pause',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -3320,6 +3388,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Resume',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -3368,6 +3437,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Start',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -3416,6 +3486,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Stop',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -3464,6 +3535,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Identify (1)',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -3513,6 +3585,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Identify',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -3562,6 +3635,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Cancel boost',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -3610,6 +3684,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Identify',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -3659,6 +3734,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Self-test',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -3707,6 +3783,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Identify',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -3756,6 +3833,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Identify',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -3805,6 +3883,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Identify',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -3854,6 +3933,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Identify',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -3903,6 +3983,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Identify',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,

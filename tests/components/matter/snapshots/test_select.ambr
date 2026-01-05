@@ -4,6 +4,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Sensitivity',
     'capabilities': dict({
       'options': list([
         '10 mm',
@@ -63,6 +64,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Sensitivity',
     'capabilities': dict({
       'options': list([
         'low',
@@ -122,6 +124,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Sensitivity',
     'capabilities': dict({
       'options': list([
         'low',
@@ -181,6 +184,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Temperature display mode',
     'capabilities': dict({
       'options': list([
         'Celsius',
@@ -238,6 +242,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Operating mode',
     'capabilities': dict({
       'options': list([
         'normal',
@@ -295,6 +300,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Lighting',
     'capabilities': dict({
       'options': list([
         'Dark',
@@ -354,6 +360,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Power-on behavior on startup',
     'capabilities': dict({
       'options': list([
         'on',
@@ -415,6 +422,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Temperature level',
     'capabilities': dict({
       'options': list([
         'Low',
@@ -474,6 +482,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'LED Color',
     'capabilities': dict({
       'options': list([
         'Red',
@@ -553,6 +562,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Power-on behavior on startup',
     'capabilities': dict({
       'options': list([
         'on',
@@ -614,6 +624,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Power-on behavior on startup',
     'capabilities': dict({
       'options': list([
         'on',
@@ -675,6 +686,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Operating mode',
     'capabilities': dict({
       'options': list([
         'normal',
@@ -732,6 +744,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Power-on behavior on startup',
     'capabilities': dict({
       'options': list([
         'on',
@@ -793,6 +806,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Sound volume',
     'capabilities': dict({
       'options': list([
         'silent',
@@ -854,6 +868,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Operating mode',
     'capabilities': dict({
       'options': list([
         'normal',
@@ -911,6 +926,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Power-on behavior on startup',
     'capabilities': dict({
       'options': list([
         'on',
@@ -972,6 +988,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Sound volume',
     'capabilities': dict({
       'options': list([
         'silent',
@@ -1033,6 +1050,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Clean mode',
     'capabilities': dict({
       'options': list([
         'Vacuum & Mop',
@@ -1092,6 +1110,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Clean mode',
     'capabilities': dict({
       'options': list([
         'Auto Mop & Vacuum',
@@ -1161,6 +1180,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Power-on behavior on startup (bottom)',
     'capabilities': dict({
       'options': list([
         'on',
@@ -1222,6 +1242,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Power-on behavior on startup (top)',
     'capabilities': dict({
       'options': list([
         'on',
@@ -1283,6 +1304,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Power-on behavior on startup',
     'capabilities': dict({
       'options': list([
         'on',
@@ -1344,6 +1366,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Power-on behavior on startup',
     'capabilities': dict({
       'options': list([
         'on',
@@ -1405,6 +1428,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Temperature display mode',
     'capabilities': dict({
       'options': list([
         'Celsius',
@@ -1462,6 +1486,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Lighting',
     'capabilities': dict({
       'options': list([
         'Dark',
@@ -1521,6 +1546,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Power-on behavior on startup',
     'capabilities': dict({
       'options': list([
         'on',
@@ -1582,6 +1608,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Sensitivity',
     'capabilities': dict({
       'options': list([
         'low',
@@ -1641,6 +1668,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Button Press Delay',
     'capabilities': dict({
       'options': list([
         'No Delay',
@@ -1710,6 +1738,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Dimming Speed',
     'capabilities': dict({
       'options': list([
         'Instant',
@@ -1793,6 +1822,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'LED Color',
     'capabilities': dict({
       'options': list([
         'Red',
@@ -1872,6 +1902,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'LED Effect',
     'capabilities': dict({
       'options': list([
         'Solid',
@@ -1959,6 +1990,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Local Protection',
     'capabilities': dict({
       'options': list([
         'Local Protection Disable',
@@ -2016,6 +2048,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Local Timer',
     'capabilities': dict({
       'options': list([
         'Local Timer Disable',
@@ -2073,6 +2106,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Power-on behavior on startup (Load Control)',
     'capabilities': dict({
       'options': list([
         'on',
@@ -2134,6 +2168,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Power-on behavior on startup (RGB Indicator)',
     'capabilities': dict({
       'options': list([
         'on',
@@ -2195,6 +2230,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Smart Bulb Mode',
     'capabilities': dict({
       'options': list([
         'Smart Bulb Disable',
@@ -2252,6 +2288,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Switch Mode',
     'capabilities': dict({
       'options': list([
         'On/Off+Single',
@@ -2313,6 +2350,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Temperature level',
     'capabilities': dict({
       'options': list([
         'Low',
@@ -2372,6 +2410,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Temperature display mode',
     'capabilities': dict({
       'options': list([
         'Celsius',
@@ -2429,6 +2468,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Power level (W)',
     'capabilities': dict({
       'options': list([
         '100',
@@ -2502,6 +2542,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Operating mode',
     'capabilities': dict({
       'options': list([
         'normal',
@@ -2559,6 +2600,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Sound volume',
     'capabilities': dict({
       'options': list([
         'silent',
@@ -2620,6 +2662,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Temperature display mode',
     'capabilities': dict({
       'options': list([
         'Celsius',
@@ -2677,6 +2720,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Power-on behavior on startup',
     'capabilities': dict({
       'options': list([
         'on',
@@ -2738,6 +2782,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Dimming Edge',
     'capabilities': dict({
       'options': list([
         'Leading',
@@ -2795,6 +2840,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Dimming Speed',
     'capabilities': dict({
       'options': list([
         'Instant',
@@ -2878,6 +2924,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'LED Color',
     'capabilities': dict({
       'options': list([
         'Red',
@@ -2957,6 +3004,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Power-on behavior on startup (1)',
     'capabilities': dict({
       'options': list([
         'on',
@@ -3018,6 +3066,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Power-on behavior on startup (6)',
     'capabilities': dict({
       'options': list([
         'on',
@@ -3079,6 +3128,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Relay',
     'capabilities': dict({
       'options': list([
         'Relay Click Enable',
@@ -3136,6 +3186,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Smart Bulb Mode',
     'capabilities': dict({
       'options': list([
         'Smart Bulb Disable',
@@ -3193,6 +3244,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Switch Mode',
     'capabilities': dict({
       'options': list([
         'OnOff+Single',
@@ -3260,6 +3312,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Power-on behavior on startup',
     'capabilities': dict({
       'options': list([
         'on',
@@ -3321,6 +3374,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Power-on behavior on startup',
     'capabilities': dict({
       'options': list([
         'on',
@@ -3382,6 +3436,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Power-on behavior on startup',
     'capabilities': dict({
       'options': list([
         'on',
@@ -3443,6 +3498,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Power-on behavior on startup',
     'capabilities': dict({
       'options': list([
         'on',
@@ -3504,6 +3560,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Power-on behavior on startup',
     'capabilities': dict({
       'options': list([
         'on',
@@ -3565,6 +3622,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Mode',
     'capabilities': dict({
       'options': list([
         'Bake',
@@ -3636,6 +3694,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Temperature level',
     'capabilities': dict({
       'options': list([
         'Low',
@@ -3695,6 +3754,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'mode',
     'capabilities': dict({
       'options': list([
         'normal',
@@ -3756,6 +3816,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Operating mode',
     'capabilities': dict({
       'options': list([
         'normal',
@@ -3815,6 +3876,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Energy management mode',
     'capabilities': dict({
       'options': list([
         'No energy management (forecast only)',
@@ -3878,6 +3940,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Mode',
     'capabilities': dict({
       'options': list([
         'Manual',
@@ -3939,6 +4002,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Number of rinses',
     'capabilities': dict({
       'options': list([
         'off',
@@ -3996,6 +4060,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Spin speed',
     'capabilities': dict({
       'options': list([
         'Off',
@@ -4057,6 +4122,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Temperature level',
     'capabilities': dict({
       'options': list([
         'Cold',
@@ -4116,6 +4182,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Mode',
     'capabilities': dict({
       'options': list([
         'Normal',
@@ -4175,6 +4242,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Energy management mode',
     'capabilities': dict({
       'options': list([
         'No energy management (forecast only)',
@@ -4238,6 +4306,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Power-on behavior on startup',
     'capabilities': dict({
       'options': list([
         'on',
@@ -4299,6 +4368,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Clean mode',
     'capabilities': dict({
       'options': list([
         'Quick',
@@ -4362,6 +4432,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Clean mode',
     'capabilities': dict({
       'options': list([
         'Quick',
@@ -4425,6 +4496,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Power-on behavior on startup',
     'capabilities': dict({
       'options': list([
         'on',

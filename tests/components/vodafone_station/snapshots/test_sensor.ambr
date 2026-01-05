@@ -4,6 +4,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Active connection',
     'capabilities': dict({
       'options': list([
         'dsl',
@@ -64,6 +65,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'CPU usage',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -113,6 +115,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Memory usage',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -162,6 +165,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Reboot cause',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -210,6 +214,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Uptime',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,

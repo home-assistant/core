@@ -4,6 +4,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Containers active',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -55,6 +56,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Containers CPU usage',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -107,6 +109,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Containers memory used',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -163,6 +166,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'cpu_thermal 1 temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -219,6 +223,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'dummy0 RX',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -278,6 +283,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'dummy0 TX',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -337,6 +343,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'err_temp temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -393,6 +400,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'eth0 RX',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -452,6 +460,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'eth0 TX',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -511,6 +520,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'lo RX',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -570,6 +580,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'lo TX',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -629,6 +640,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'md1 available',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -680,6 +692,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'md1 used',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -731,6 +744,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'md3 available',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -782,6 +796,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'md3 used',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -833,6 +848,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': '/media disk free',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -889,6 +905,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': '/media disk usage',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -941,6 +958,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': '/media disk used',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -997,6 +1015,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Memory free',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1053,6 +1072,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Memory usage',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1105,6 +1125,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Memory use',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1161,6 +1182,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'na_temp temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1217,6 +1239,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'NVIDIA GeForce RTX 3080 (GPU 0) fan speed',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1269,6 +1292,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'NVIDIA GeForce RTX 3080 (GPU 0) memory usage',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1321,6 +1345,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'NVIDIA GeForce RTX 3080 (GPU 0) processor usage',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1376,6 +1401,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'NVIDIA GeForce RTX 3080 (GPU 0) temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1432,6 +1458,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'nvme0n1 disk read',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1491,6 +1518,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'nvme0n1 disk write',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1550,6 +1578,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'sda disk read',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1609,6 +1638,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'sda disk write',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1668,6 +1698,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': '/ssl disk free',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1724,6 +1755,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': '/ssl disk usage',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1776,6 +1808,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': '/ssl disk used',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1832,6 +1865,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Uptime',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,

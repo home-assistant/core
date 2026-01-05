@@ -4,6 +4,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Combustion power',
     'capabilities': dict({
       'max': 5,
       'min': 1,
@@ -62,6 +63,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Left fan speed',
     'capabilities': dict({
       'max': 5,
       'min': 0,
@@ -120,6 +122,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Right fan speed',
     'capabilities': dict({
       'max': 5,
       'min': 0,

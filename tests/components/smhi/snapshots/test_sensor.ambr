@@ -4,6 +4,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Build up index',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -56,6 +57,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Drought code',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -108,6 +110,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Duff moisture code',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -160,6 +163,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Fine fuel moisture code',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -212,6 +216,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Fire weather index',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -264,6 +269,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Frozen precipitation',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -314,6 +320,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Fuel drying',
     'capabilities': dict({
       'options': list([
         'very_wet',
@@ -381,6 +388,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'FWI index',
     'capabilities': dict({
       'options': list([
         'very_low',
@@ -448,6 +456,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'High cloud coverage',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -498,6 +507,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Highest grass fire risk',
     'capabilities': dict({
       'options': list([
         'snow_cover',
@@ -565,6 +575,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Initial spread index',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -617,6 +628,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Low cloud coverage',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -667,6 +679,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Medium cloud coverage',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -717,6 +730,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Potential rate of spread',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -774,6 +788,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Precipitation category',
     'capabilities': dict({
       'options': list([
         '0',
@@ -843,6 +858,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Thunder probability',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -893,6 +909,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Total cloud coverage',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,

@@ -4,6 +4,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Jitter',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -59,6 +60,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Packet loss',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -110,6 +112,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Round-trip time average',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -165,6 +168,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Round-trip time maximum',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -226,6 +230,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Round-trip time minimum',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),

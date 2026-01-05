@@ -4,6 +4,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'AC',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -53,6 +54,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Humidity',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -107,6 +109,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Tado mode',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -155,6 +158,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -213,6 +217,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'AC',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -262,6 +267,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Humidity',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -316,6 +322,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Tado mode',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -364,6 +371,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -422,6 +430,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'AC',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -471,6 +480,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Humidity',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -525,6 +535,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Tado mode',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -573,6 +584,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -631,6 +643,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Heating',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -684,6 +697,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Humidity',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -738,6 +752,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Tado mode',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -786,6 +801,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -844,6 +860,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Automatic geofencing',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -892,6 +909,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Geofencing mode',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -940,6 +958,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Outdoor temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -997,6 +1016,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Solar percentage',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1050,6 +1070,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Tado mode',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1098,6 +1119,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Weather condition',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1147,6 +1169,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Tado mode',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1195,6 +1218,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Tado mode',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,

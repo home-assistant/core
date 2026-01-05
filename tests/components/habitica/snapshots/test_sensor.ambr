@@ -4,6 +4,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Class',
     'capabilities': dict({
       'options': list([
         'warrior',
@@ -67,6 +68,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Constitution',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -124,6 +126,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Display name',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -177,6 +180,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Experience',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -227,6 +231,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Health',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -280,6 +285,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Intelligence',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -337,6 +343,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Last check-in',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -386,6 +393,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Level',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -434,6 +442,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Mana',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -487,6 +496,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Max. mana',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -537,6 +547,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Next level',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -587,6 +598,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Perception',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -644,6 +656,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Strength',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -701,6 +714,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Class',
     'capabilities': dict({
       'options': list([
         'warrior',
@@ -764,6 +778,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Constitution',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -821,6 +836,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Display name',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -875,6 +891,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Eggs',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -928,6 +945,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Experience',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -978,6 +996,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Gems',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1031,6 +1050,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Gold',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1084,6 +1104,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Hatching potions',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1137,6 +1158,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Health',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1190,6 +1212,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Intelligence',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1247,6 +1270,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Last check-in',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1296,6 +1320,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Level',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1344,6 +1369,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Mana',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1397,6 +1423,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Max. mana',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1447,6 +1474,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Mystic hourglasses',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1500,6 +1528,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Next level',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1550,6 +1579,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Pending damage',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1603,6 +1633,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Pending quest items',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1652,6 +1683,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Perception',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1709,6 +1741,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Pet food',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1762,6 +1795,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Quest scrolls',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1816,6 +1850,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Boss health',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1869,6 +1904,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Boss health remaining',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1922,6 +1958,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Boss rage',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1975,6 +2012,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Boss rage limit break',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2030,6 +2068,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Collected quest items',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2081,6 +2120,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Group leader',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2129,6 +2169,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Member count',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2179,6 +2220,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Quest',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2230,6 +2272,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Quest boss',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2278,6 +2321,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Saddles',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2328,6 +2372,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Strength',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,

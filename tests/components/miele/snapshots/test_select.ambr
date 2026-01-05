@@ -4,6 +4,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Mode',
     'capabilities': dict({
       'options': list([
         'normal',
@@ -61,6 +62,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Mode',
     'capabilities': dict({
       'options': list([
         'normal',

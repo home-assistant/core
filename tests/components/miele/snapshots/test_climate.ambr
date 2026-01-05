@@ -4,6 +4,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': None,
     'capabilities': dict({
       'hvac_modes': list([
         <HVACMode.COOL: 'cool'>,
@@ -68,6 +69,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': None,
     'capabilities': dict({
       'hvac_modes': list([
         <HVACMode.COOL: 'cool'>,
@@ -132,6 +134,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': None,
     'capabilities': dict({
       'hvac_modes': list([
         <HVACMode.COOL: 'cool'>,
@@ -196,6 +199,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': None,
     'capabilities': dict({
       'hvac_modes': list([
         <HVACMode.COOL: 'cool'>,
@@ -260,6 +264,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Freezer',
     'capabilities': dict({
       'hvac_modes': list([
         <HVACMode.COOL: 'cool'>,
@@ -324,6 +329,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Freezer',
     'capabilities': dict({
       'hvac_modes': list([
         <HVACMode.COOL: 'cool'>,
@@ -388,6 +394,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Refrigerator',
     'capabilities': dict({
       'hvac_modes': list([
         <HVACMode.COOL: 'cool'>,
@@ -452,6 +459,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Refrigerator',
     'capabilities': dict({
       'hvac_modes': list([
         <HVACMode.COOL: 'cool'>,
@@ -516,6 +524,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Zone 3',
     'capabilities': dict({
       'hvac_modes': list([
         <HVACMode.COOL: 'cool'>,
@@ -580,6 +589,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Zone 3',
     'capabilities': dict({
       'hvac_modes': list([
         <HVACMode.COOL: 'cool'>,
@@ -644,6 +654,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Freezer',
     'capabilities': dict({
       'hvac_modes': list([
         <HVACMode.COOL: 'cool'>,
@@ -708,6 +719,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Freezer',
     'capabilities': dict({
       'hvac_modes': list([
         <HVACMode.COOL: 'cool'>,
@@ -772,6 +784,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Refrigerator',
     'capabilities': dict({
       'hvac_modes': list([
         <HVACMode.COOL: 'cool'>,
@@ -836,6 +849,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Refrigerator',
     'capabilities': dict({
       'hvac_modes': list([
         <HVACMode.COOL: 'cool'>,
@@ -900,6 +914,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Zone 3',
     'capabilities': dict({
       'hvac_modes': list([
         <HVACMode.COOL: 'cool'>,
@@ -964,6 +979,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Zone 3',
     'capabilities': dict({
       'hvac_modes': list([
         <HVACMode.COOL: 'cool'>,

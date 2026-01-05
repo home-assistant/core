@@ -4,6 +4,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Safety',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -53,6 +54,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Door',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -102,6 +104,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Feeding',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -150,6 +153,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Defrost',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -199,6 +203,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Tank full',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -248,6 +253,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Defrost',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -297,6 +303,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Tank full',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -346,6 +353,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Wet',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -395,6 +403,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Door',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -444,6 +453,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Door',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -493,6 +503,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Tamper',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -542,6 +553,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Door',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -591,6 +603,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Gas',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -640,6 +653,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Problem',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -689,6 +703,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Problem',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -738,6 +753,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Occupancy',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -787,6 +803,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Moisture',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -836,6 +853,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Bag full',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -885,6 +903,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Cover off',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -934,6 +953,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Problem',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -983,6 +1003,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Motion',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1032,6 +1053,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Tamper',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1081,6 +1103,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Motion',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1130,6 +1153,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Motion',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1179,6 +1203,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Tamper',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1228,6 +1253,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Smoke',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1277,6 +1303,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Smoke',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1326,6 +1353,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Charging',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1375,6 +1403,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Tamper',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1424,6 +1453,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Valve',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1472,6 +1502,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Safety',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1521,6 +1552,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Smoke',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1570,6 +1602,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Smoke',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1619,6 +1652,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Occupancy',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1668,6 +1702,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Door',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1717,6 +1752,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Moisture',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1766,6 +1802,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Smoke',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1815,6 +1852,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Door',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1864,6 +1902,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Problem',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,

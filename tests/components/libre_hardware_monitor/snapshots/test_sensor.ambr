@@ -4,6 +4,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Core (Tctl/Tdie) Temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -58,6 +59,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'CPU Total Load',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -112,6 +114,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Package Power',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -166,6 +169,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Package Temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -220,6 +224,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'VDDCR SoC Voltage',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -274,6 +279,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'VDDCR Voltage',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -328,6 +334,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': '+12V Voltage',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -382,6 +389,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': '+5V Voltage',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -436,6 +444,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'CPU Fan Fan',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -490,6 +499,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'CPU Temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -544,6 +554,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Pump Fan Fan',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -598,6 +609,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'System Fan #1 Fan',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -651,6 +663,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'System Temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -705,6 +718,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Vcore Voltage',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -759,6 +773,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'GPU Core Clock',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -813,6 +828,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'GPU Core Load',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -867,6 +883,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'GPU Core Temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -921,6 +938,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'GPU Fan 1 Fan',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -975,6 +993,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'GPU Fan 2 Fan',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1029,6 +1048,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'GPU Hot Spot Temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1083,6 +1103,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'GPU Memory Clock',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1137,6 +1158,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'GPU Memory Controller Load',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1191,6 +1213,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'GPU Package Power',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1245,6 +1268,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'GPU PCIe Tx Throughput',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1299,6 +1323,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'GPU Video Engine Load',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),

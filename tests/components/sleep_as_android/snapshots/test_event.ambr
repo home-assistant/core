@@ -4,6 +4,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Alarm clock',
     'capabilities': dict({
       'event_types': list([
         'alert_dismiss',
@@ -70,6 +71,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Jet lag prevention',
     'capabilities': dict({
       'event_types': list([
         'jet_lag_start',
@@ -128,6 +130,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Lullaby',
     'capabilities': dict({
       'event_types': list([
         'start',
@@ -188,6 +191,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Sleep health',
     'capabilities': dict({
       'event_types': list([
         'antisnoring',
@@ -246,6 +250,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Sleep phase',
     'capabilities': dict({
       'event_types': list([
         'awake',
@@ -310,6 +315,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Sleep tracking',
     'capabilities': dict({
       'event_types': list([
         'paused',
@@ -373,6 +379,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Smart wake-up',
     'capabilities': dict({
       'event_types': list([
         'before_smart_period',
@@ -431,6 +438,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Sound recognition',
     'capabilities': dict({
       'event_types': list([
         'baby',
@@ -495,6 +503,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'User notification',
     'capabilities': dict({
       'event_types': list([
         'wake_up_check',

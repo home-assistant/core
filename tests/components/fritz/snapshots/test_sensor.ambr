@@ -4,6 +4,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Connection uptime',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -53,6 +54,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Download throughput',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -109,6 +111,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'External IP',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -157,6 +160,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'External IPv6',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -205,6 +209,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'GB received',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -261,6 +266,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'GB sent',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -317,6 +323,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Last restart',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -366,6 +373,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Link download noise margin',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -415,6 +423,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Link download power attenuation',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -464,6 +473,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Link download throughput',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -517,6 +527,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Link upload noise margin',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -566,6 +577,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Link upload power attenuation',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -615,6 +627,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Link upload throughput',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -668,6 +681,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Max connection download throughput',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -721,6 +735,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Max connection upload throughput',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -774,6 +789,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Upload throughput',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -830,6 +846,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'CPU temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),

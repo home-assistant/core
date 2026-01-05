@@ -4,6 +4,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Brake fluid',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -53,6 +54,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Brake light center',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -102,6 +104,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Brake light left',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -151,6 +154,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Brake light right',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -200,6 +204,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Coolant level',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -249,6 +254,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Daytime running light left',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -298,6 +304,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Daytime running light right',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -347,6 +354,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Door front left',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -396,6 +404,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Door front right',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -445,6 +454,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Door rear left',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -494,6 +504,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Door rear right',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -543,6 +554,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Engine status',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -592,6 +604,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Fog light front',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -641,6 +654,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Fog light rear',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -690,6 +704,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Hazard lights',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -739,6 +754,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'High beam left',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -788,6 +804,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'High beam right',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -837,6 +854,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Hood',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -886,6 +904,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Low beam left',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -935,6 +954,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Low beam right',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -984,6 +1004,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Oil level',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1033,6 +1054,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Position light front left',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1082,6 +1104,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Position light front right',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1131,6 +1154,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Position light rear left',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1180,6 +1204,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Position light rear right',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1229,6 +1254,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Registration plate light',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1278,6 +1304,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Reverse lights',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1327,6 +1354,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Side mark lights',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1376,6 +1404,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Sunroof',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1425,6 +1454,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Tailgate',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1474,6 +1504,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Tank lid',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1523,6 +1554,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Tire front left',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1572,6 +1604,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Tire front right',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1621,6 +1654,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Tire rear left',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1670,6 +1704,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Tire rear right',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1719,6 +1754,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Turn indication front left',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1768,6 +1804,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Turn indication front right',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1817,6 +1854,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Turn indication rear left',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1866,6 +1904,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Turn indication rear right',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1915,6 +1954,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Washer fluid',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1964,6 +2004,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Window front left',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2013,6 +2054,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Window front right',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2062,6 +2104,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Window rear left',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2111,6 +2154,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Window rear right',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2160,6 +2204,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Brake fluid',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2209,6 +2254,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Brake light center',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2258,6 +2304,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Brake light left',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2307,6 +2354,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Brake light right',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2356,6 +2404,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Coolant level',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2405,6 +2454,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Daytime running light left',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2454,6 +2504,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Daytime running light right',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2503,6 +2554,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Door front left',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2552,6 +2604,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Door front right',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2601,6 +2654,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Door rear left',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2650,6 +2704,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Door rear right',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2699,6 +2754,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Engine status',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2748,6 +2804,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Fog light front',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2797,6 +2854,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Fog light rear',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2846,6 +2904,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Hazard lights',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2895,6 +2954,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'High beam left',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2944,6 +3004,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'High beam right',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2993,6 +3054,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Hood',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -3042,6 +3104,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Low beam left',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -3091,6 +3154,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Low beam right',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -3140,6 +3204,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Oil level',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -3189,6 +3254,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Position light front left',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -3238,6 +3304,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Position light front right',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -3287,6 +3354,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Position light rear left',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -3336,6 +3404,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Position light rear right',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -3385,6 +3454,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Registration plate light',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -3434,6 +3504,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Reverse lights',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -3483,6 +3554,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Side mark lights',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -3532,6 +3604,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Sunroof',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -3581,6 +3654,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Tailgate',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -3630,6 +3704,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Tank lid',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -3679,6 +3754,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Tire front left',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -3728,6 +3804,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Tire front right',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -3777,6 +3854,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Tire rear left',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -3826,6 +3904,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Tire rear right',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -3875,6 +3954,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Turn indication front left',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -3924,6 +4004,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Turn indication front right',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -3973,6 +4054,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Turn indication rear left',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -4022,6 +4104,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Turn indication rear right',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -4071,6 +4154,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Washer fluid',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -4120,6 +4204,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Window front left',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -4169,6 +4254,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Window front right',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -4218,6 +4304,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Window rear left',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -4267,6 +4354,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Window rear right',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -4316,6 +4404,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Brake fluid',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -4365,6 +4454,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Brake light center',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -4414,6 +4504,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Brake light left',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -4463,6 +4554,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Brake light right',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -4512,6 +4604,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Coolant level',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -4561,6 +4654,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Daytime running light left',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -4610,6 +4704,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Daytime running light right',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -4659,6 +4754,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Door front left',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -4708,6 +4804,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Door front right',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -4757,6 +4854,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Door rear left',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -4806,6 +4904,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Door rear right',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -4855,6 +4954,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Engine status',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -4904,6 +5004,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Fog light front',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -4953,6 +5054,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Fog light rear',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -5002,6 +5104,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Hazard lights',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -5051,6 +5154,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'High beam left',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -5100,6 +5204,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'High beam right',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -5149,6 +5254,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Hood',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -5198,6 +5304,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Low beam left',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -5247,6 +5354,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Low beam right',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -5296,6 +5404,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Oil level',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -5345,6 +5454,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Position light front left',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -5394,6 +5504,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Position light front right',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -5443,6 +5554,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Position light rear left',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -5492,6 +5604,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Position light rear right',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -5541,6 +5654,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Registration plate light',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -5590,6 +5704,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Reverse lights',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -5639,6 +5754,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Side mark lights',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -5688,6 +5804,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Sunroof',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -5737,6 +5854,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Tailgate',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -5786,6 +5904,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Tank lid',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -5835,6 +5954,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Tire front left',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -5884,6 +6004,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Tire front right',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -5933,6 +6054,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Tire rear left',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -5982,6 +6104,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Tire rear right',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -6031,6 +6154,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Turn indication front left',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -6080,6 +6204,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Turn indication front right',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -6129,6 +6254,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Turn indication rear left',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -6178,6 +6304,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Turn indication rear right',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -6227,6 +6354,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Washer fluid',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -6276,6 +6404,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Window front left',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -6325,6 +6454,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Window front right',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -6374,6 +6504,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Window rear left',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -6423,6 +6554,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Window rear right',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -6472,6 +6604,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Brake fluid',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -6521,6 +6654,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Brake light center',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -6570,6 +6704,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Brake light left',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -6619,6 +6754,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Brake light right',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -6668,6 +6804,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Coolant level',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -6717,6 +6854,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Daytime running light left',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -6766,6 +6904,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Daytime running light right',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -6815,6 +6954,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Door front left',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -6864,6 +7004,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Door front right',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -6913,6 +7054,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Door rear left',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -6962,6 +7104,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Door rear right',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -7011,6 +7154,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Engine status',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -7060,6 +7204,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Fog light front',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -7109,6 +7254,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Fog light rear',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -7158,6 +7304,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Hazard lights',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -7207,6 +7354,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'High beam left',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -7256,6 +7404,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'High beam right',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -7305,6 +7454,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Hood',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -7354,6 +7504,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Low beam left',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -7403,6 +7554,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Low beam right',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -7452,6 +7604,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Oil level',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -7501,6 +7654,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Position light front left',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -7550,6 +7704,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Position light front right',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -7599,6 +7754,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Position light rear left',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -7648,6 +7804,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Position light rear right',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -7697,6 +7854,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Registration plate light',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -7746,6 +7904,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Reverse lights',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -7795,6 +7954,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Side mark lights',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -7844,6 +8004,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Sunroof',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -7893,6 +8054,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Tailgate',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -7942,6 +8104,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Tank lid',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -7991,6 +8154,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Tire front left',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -8040,6 +8204,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Tire front right',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -8089,6 +8254,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Tire rear left',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -8138,6 +8304,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Tire rear right',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -8187,6 +8354,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Turn indication front left',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -8236,6 +8404,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Turn indication front right',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -8285,6 +8454,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Turn indication rear left',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -8334,6 +8504,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Turn indication rear right',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -8383,6 +8554,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Washer fluid',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -8432,6 +8604,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Window front left',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -8481,6 +8654,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Window front right',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -8530,6 +8704,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Window rear left',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -8579,6 +8754,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Window rear right',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,

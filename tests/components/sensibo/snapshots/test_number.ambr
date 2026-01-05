@@ -4,6 +4,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Humidity calibration',
     'capabilities': dict({
       'max': 10,
       'min': -10,
@@ -63,6 +64,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Temperature calibration',
     'capabilities': dict({
       'max': 10,
       'min': -10,
@@ -122,6 +124,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Humidity calibration',
     'capabilities': dict({
       'max': 10,
       'min': -10,
@@ -181,6 +184,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Temperature calibration',
     'capabilities': dict({
       'max': 10,
       'min': -10,
@@ -240,6 +244,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Humidity calibration',
     'capabilities': dict({
       'max': 10,
       'min': -10,
@@ -299,6 +304,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Temperature calibration',
     'capabilities': dict({
       'max': 10,
       'min': -10,

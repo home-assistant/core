@@ -35,6 +35,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Total available storage',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -91,6 +92,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Total size of backups',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -147,6 +149,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Used storage',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -203,6 +206,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Used storage in Drive',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -259,6 +263,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Used storage in Drive Trash',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,

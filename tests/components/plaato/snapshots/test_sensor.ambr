@@ -4,6 +4,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Plaato Plaatodevicetype.Airlock Device_Name Alcohol By Volume',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -53,6 +54,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Plaato Plaatodevicetype.Airlock Device_Name Batch Volume',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -101,6 +103,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Plaato Plaatodevicetype.Airlock Device_Name Bubbles',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -150,6 +153,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Plaato Plaatodevicetype.Airlock Device_Name Bubbles Per Minute',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -199,6 +203,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Plaato Plaatodevicetype.Airlock Device_Name Co2 Volume',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -247,6 +252,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Plaato Plaatodevicetype.Airlock Device_Name Original Gravity',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -296,6 +302,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Plaato Plaatodevicetype.Airlock Device_Name Specific Gravity',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -345,6 +352,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Plaato Plaatodevicetype.Airlock Device_Name Temperature',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -393,6 +401,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Plaato Plaatodevicetype.Keg Device_Name Beer Left',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -444,6 +453,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Plaato Plaatodevicetype.Keg Device_Name Last Pour Amount',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -496,6 +506,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Plaato Plaatodevicetype.Keg Device_Name Percent Beer Left',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -548,6 +559,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Plaato Plaatodevicetype.Keg Device_Name Temperature',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,

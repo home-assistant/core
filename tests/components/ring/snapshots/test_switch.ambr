@@ -4,6 +4,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'In-home chime',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -53,6 +54,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Motion detection',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -102,6 +104,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Motion detection',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -151,6 +154,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Siren',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -174,7 +178,7 @@
     'original_name': 'Siren',
     'platform': 'ring',
     'previous_unique_id': None,
-    'suggested_object_id': 'front_siren',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'siren',
     'unique_id': '765432-siren',
@@ -200,6 +204,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Motion detection',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -249,6 +254,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Siren',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -272,7 +278,7 @@
     'original_name': 'Siren',
     'platform': 'ring',
     'previous_unique_id': None,
-    'suggested_object_id': 'internal_siren',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'siren',
     'unique_id': '345678-siren',

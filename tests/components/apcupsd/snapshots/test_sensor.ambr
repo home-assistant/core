@@ -244,6 +244,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Alarm delay',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -293,6 +294,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Battery',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -346,6 +348,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Battery nominal voltage',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -399,6 +402,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Battery replaced',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -447,6 +451,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Battery shutdown',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -496,6 +501,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Battery timeout',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -545,6 +551,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Battery voltage',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -601,6 +608,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Cable type',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -649,6 +657,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Daemon version',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -697,6 +706,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Date and time',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -745,6 +755,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Driver',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -793,6 +804,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Firmware version',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -841,6 +853,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Input voltage',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -897,6 +910,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Internal temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -953,6 +967,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Last self-test',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1001,6 +1016,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Last transfer',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1049,6 +1065,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Load',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1101,6 +1118,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Mode',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1149,6 +1167,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Model',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1197,6 +1216,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Model',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1245,6 +1265,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Name',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1293,6 +1314,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Nominal apparent power',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1346,6 +1368,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Nominal input voltage',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1399,6 +1422,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Nominal output power',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1452,6 +1476,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Output current',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1508,6 +1533,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Self-test interval',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1557,6 +1583,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Self-test result',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1605,6 +1632,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Sensitivity',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1653,6 +1681,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Serial number',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1701,6 +1730,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Shutdown time',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1750,6 +1780,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Status',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1798,6 +1829,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Status data',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1846,6 +1878,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Status date',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1894,6 +1927,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Status flag',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1942,6 +1976,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Time left',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1998,6 +2033,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Time on battery',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -2054,6 +2090,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Total time on battery',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -2110,6 +2147,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Transfer count',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -2161,6 +2199,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Transfer from battery',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2209,6 +2248,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Transfer high',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2262,6 +2302,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Transfer low',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2315,6 +2356,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Transfer to battery',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,

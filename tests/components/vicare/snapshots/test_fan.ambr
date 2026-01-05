@@ -4,6 +4,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Ventilation',
     'capabilities': dict({
       'preset_modes': list([
         <VentilationMode.PERMANENT: 'permanent'>,
@@ -75,6 +76,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Ventilation',
     'capabilities': dict({
       'preset_modes': list([
         <VentilationMode.PERMANENT: 'permanent'>,
@@ -144,6 +146,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Ventilation',
     'capabilities': dict({
       'preset_modes': list([
         <VentilationMode.VENTILATION: 'ventilation'>,

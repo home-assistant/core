@@ -39,6 +39,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Clean count',
     'capabilities': dict({
       'max': 65536,
       'min': 0,
@@ -96,6 +97,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Pan degrees',
     'capabilities': dict({
       'max': 65536,
       'min': 0,
@@ -153,6 +155,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Power protection',
     'capabilities': dict({
       'max': 65536,
       'min': 0,
@@ -210,6 +213,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Smooth off',
     'capabilities': dict({
       'max': 60,
       'min': 0,
@@ -267,6 +271,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Smooth on',
     'capabilities': dict({
       'max': 60,
       'min': 0,
@@ -324,6 +329,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Temperature offset',
     'capabilities': dict({
       'max': 10,
       'min': -10,
@@ -382,6 +388,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Tilt degrees',
     'capabilities': dict({
       'max': 65536,
       'min': 0,
@@ -439,6 +446,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Turn off in',
     'capabilities': dict({
       'max': 60,
       'min': 0,

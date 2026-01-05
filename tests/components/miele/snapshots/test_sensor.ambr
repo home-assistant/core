@@ -4,6 +4,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': None,
     'capabilities': dict({
       'options': list([
         'autocleaning',
@@ -97,6 +98,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Program',
     'capabilities': dict({
       'options': list([
         'appliance_rinse',
@@ -214,6 +216,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Program phase',
     'capabilities': dict({
       'options': list([
         '2nd_espresso',
@@ -292,6 +295,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Program type',
     'capabilities': dict({
       'options': list([
         'automatic_program',
@@ -356,6 +360,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Rinse aid level',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -405,6 +410,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Salt level',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -454,6 +460,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'TwinDos 1 level',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -503,6 +510,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'TwinDos 1 level',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -552,6 +560,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'TwinDos 2 level',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -601,6 +610,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'TwinDos 2 level',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -650,6 +660,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': None,
     'capabilities': dict({
       'options': list([
         'autocleaning',
@@ -743,6 +754,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': None,
     'capabilities': dict({
       'options': list([
         'autocleaning',
@@ -836,6 +848,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Plate 1',
     'capabilities': dict({
       'options': list([
         'plate_step_0',
@@ -934,6 +947,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Plate 1',
     'capabilities': dict({
       'options': list([
         'plate_step_0',
@@ -1032,6 +1046,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Plate 2',
     'capabilities': dict({
       'options': list([
         'plate_step_0',
@@ -1130,6 +1145,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Plate 2',
     'capabilities': dict({
       'options': list([
         'plate_step_0',
@@ -1228,6 +1244,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Plate 3',
     'capabilities': dict({
       'options': list([
         'plate_step_0',
@@ -1326,6 +1343,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Plate 3',
     'capabilities': dict({
       'options': list([
         'plate_step_0',
@@ -1424,6 +1442,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Plate 4',
     'capabilities': dict({
       'options': list([
         'plate_step_0',
@@ -1522,6 +1541,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Plate 4',
     'capabilities': dict({
       'options': list([
         'plate_step_0',
@@ -1620,6 +1640,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Plate 5',
     'capabilities': dict({
       'options': list([
         'plate_step_0',
@@ -1718,6 +1739,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': None,
     'capabilities': dict({
       'options': list([
         'autocleaning',
@@ -1811,6 +1833,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Rinse aid level',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1860,6 +1883,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Salt level',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1909,6 +1933,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'TwinDos 1 level',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1958,6 +1983,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'TwinDos 1 level',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2007,6 +2033,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'TwinDos 2 level',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2056,6 +2083,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'TwinDos 2 level',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2105,6 +2133,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': None,
     'capabilities': dict({
       'options': list([
         'autocleaning',
@@ -2198,6 +2227,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': None,
     'capabilities': dict({
       'options': list([
         'autocleaning',
@@ -2291,6 +2321,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2347,6 +2378,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2403,6 +2435,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Temperature zone 2',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2459,6 +2492,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Rinse aid level',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2508,6 +2542,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Salt level',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2557,6 +2592,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'TwinDos 1 level',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2606,6 +2642,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'TwinDos 1 level',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2655,6 +2692,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'TwinDos 2 level',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2704,6 +2742,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'TwinDos 2 level',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2753,6 +2792,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': None,
     'capabilities': dict({
       'options': list([
         'autocleaning',
@@ -2846,6 +2886,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Plate 1',
     'capabilities': dict({
       'options': list([
         'plate_step_0',
@@ -2944,6 +2985,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Plate 2',
     'capabilities': dict({
       'options': list([
         'plate_step_0',
@@ -3042,6 +3084,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Plate 3',
     'capabilities': dict({
       'options': list([
         'plate_step_0',
@@ -3140,6 +3183,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Plate 4',
     'capabilities': dict({
       'options': list([
         'plate_step_0',
@@ -3238,6 +3282,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Plate 5',
     'capabilities': dict({
       'options': list([
         'plate_step_0',
@@ -3336,6 +3381,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Rinse aid level',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -3385,6 +3431,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Salt level',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -3434,6 +3481,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'TwinDos 1 level',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -3483,6 +3531,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'TwinDos 1 level',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -3532,6 +3581,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'TwinDos 2 level',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -3581,6 +3631,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'TwinDos 2 level',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -3630,6 +3681,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': None,
     'capabilities': dict({
       'options': list([
         'autocleaning',
@@ -3723,6 +3775,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -3779,6 +3832,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': None,
     'capabilities': dict({
       'options': list([
         'autocleaning',
@@ -3872,6 +3926,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Rinse aid level',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -3921,6 +3976,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Salt level',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -3970,6 +4026,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'TwinDos 1 level',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -4019,6 +4076,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'TwinDos 2 level',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -4068,6 +4126,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': None,
     'capabilities': dict({
       'options': list([
         'autocleaning',
@@ -4161,6 +4220,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Core temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -4217,6 +4277,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Elapsed time',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -4270,6 +4331,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Finish',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -4319,6 +4381,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Program',
     'capabilities': dict({
       'options': list([
         'almond_macaroons_1_tray',
@@ -4685,6 +4748,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Program phase',
     'capabilities': dict({
       'options': list([
         'energy_save',
@@ -4751,6 +4815,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Program type',
     'capabilities': dict({
       'options': list([
         'automatic_program',
@@ -4815,6 +4880,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Remaining time',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -4868,6 +4934,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Start',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -4917,6 +4984,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Start in',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -4973,6 +5041,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Target temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -5029,6 +5098,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -5085,6 +5155,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': None,
     'capabilities': dict({
       'options': list([
         'autocleaning',
@@ -5178,6 +5249,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -5234,6 +5306,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': None,
     'capabilities': dict({
       'options': list([
         'autocleaning',
@@ -5327,6 +5400,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Elapsed time',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -5380,6 +5454,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Energy consumption',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -5436,6 +5511,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Energy forecast',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -5485,6 +5561,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Finish',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -5534,6 +5611,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Program',
     'capabilities': dict({
       'options': list([
         'automatic_plus',
@@ -5678,6 +5756,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Program phase',
     'capabilities': dict({
       'options': list([
         'anti_crease',
@@ -5774,6 +5853,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Program type',
     'capabilities': dict({
       'options': list([
         'automatic_program',
@@ -5838,6 +5918,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Remaining time',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -5891,6 +5972,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Spin speed',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -5940,6 +6022,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Start',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -5989,6 +6072,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Start in',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -6045,6 +6129,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Target temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -6101,6 +6186,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'TwinDos 1 level',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -6150,6 +6236,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'TwinDos 2 level',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -6199,6 +6286,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Water consumption',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -6255,6 +6343,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Water forecast',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -6304,6 +6393,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': None,
     'capabilities': dict({
       'options': list([
         'autocleaning',
@@ -6397,6 +6487,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -6453,6 +6544,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': None,
     'capabilities': dict({
       'options': list([
         'autocleaning',
@@ -6546,6 +6638,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Rinse aid level',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -6595,6 +6688,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Salt level',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -6644,6 +6738,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'TwinDos 1 level',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -6693,6 +6788,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'TwinDos 2 level',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -6742,6 +6838,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': None,
     'capabilities': dict({
       'options': list([
         'autocleaning',
@@ -6835,6 +6932,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Core temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -6891,6 +6989,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Elapsed time',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -6944,6 +7043,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Finish',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -6993,6 +7093,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Program',
     'capabilities': dict({
       'options': list([
         'almond_macaroons_1_tray',
@@ -7359,6 +7460,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Program phase',
     'capabilities': dict({
       'options': list([
         'energy_save',
@@ -7425,6 +7527,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Program type',
     'capabilities': dict({
       'options': list([
         'automatic_program',
@@ -7489,6 +7592,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Remaining time',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -7542,6 +7646,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Start',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -7591,6 +7696,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Start in',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -7647,6 +7753,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Target temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -7703,6 +7810,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -7759,6 +7867,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': None,
     'capabilities': dict({
       'options': list([
         'autocleaning',
@@ -7852,6 +7961,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -7908,6 +8018,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': None,
     'capabilities': dict({
       'options': list([
         'autocleaning',
@@ -8001,6 +8112,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Elapsed time',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -8054,6 +8166,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Energy consumption',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -8110,6 +8223,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Energy forecast',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -8159,6 +8273,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Finish',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -8208,6 +8323,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Program',
     'capabilities': dict({
       'options': list([
         'automatic_plus',
@@ -8352,6 +8468,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Program phase',
     'capabilities': dict({
       'options': list([
         'anti_crease',
@@ -8448,6 +8565,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Program type',
     'capabilities': dict({
       'options': list([
         'automatic_program',
@@ -8512,6 +8630,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Remaining time',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -8565,6 +8684,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Spin speed',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -8614,6 +8734,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Start',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -8663,6 +8784,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Start in',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -8719,6 +8841,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Target temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -8775,6 +8898,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'TwinDos 1 level',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -8824,6 +8948,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'TwinDos 2 level',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -8873,6 +8998,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Water consumption',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -8929,6 +9055,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Water forecast',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -8978,6 +9105,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Rinse aid level',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -9027,6 +9155,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Salt level',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -9076,6 +9205,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'TwinDos 1 level',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -9125,6 +9255,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'TwinDos 1 level',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -9174,6 +9305,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'TwinDos 2 level',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -9223,6 +9355,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'TwinDos 2 level',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -9272,6 +9405,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': None,
     'capabilities': dict({
       'options': list([
         'autocleaning',
@@ -9365,6 +9499,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Battery',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -9415,6 +9550,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Elapsed time',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -9468,6 +9604,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Finish',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -9517,6 +9654,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Program',
     'capabilities': dict({
       'options': list([
         'auto',
@@ -9581,6 +9719,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Program type',
     'capabilities': dict({
       'options': list([
         'automatic_program',
@@ -9645,6 +9784,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Remaining time',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -9698,6 +9838,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Start',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,

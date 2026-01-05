@@ -39,6 +39,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Battery cycles',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -125,6 +126,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Current',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -216,6 +218,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Energy export',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -307,6 +310,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Energy import',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -398,6 +402,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Frequency',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -489,6 +494,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Power',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -580,6 +586,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Production power',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -671,6 +678,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'State of charge',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -762,6 +770,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Uptime',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -846,6 +855,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Voltage',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -937,6 +947,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Wi-Fi RSSI',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1024,6 +1035,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Wi-Fi SSID',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1107,6 +1119,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Apparent power',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1198,6 +1211,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Current',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1289,6 +1303,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Energy export',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -1380,6 +1395,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Energy import',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -1471,6 +1487,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Frequency',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1562,6 +1579,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Power',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1653,6 +1671,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Power factor',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1741,6 +1760,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Production power',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1832,6 +1852,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Reactive power',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1923,6 +1944,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Voltage',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2014,6 +2036,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Wi-Fi SSID',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2097,6 +2120,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Wi-Fi strength',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2184,6 +2208,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Apparent power',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2275,6 +2300,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Apparent power phase 1',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2366,6 +2392,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Apparent power phase 2',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2457,6 +2484,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Apparent power phase 3',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2548,6 +2576,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Current',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2639,6 +2668,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Current phase 1',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2730,6 +2760,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Current phase 2',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2821,6 +2852,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Current phase 3',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2912,6 +2944,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Energy export',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -3003,6 +3036,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Energy import',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -3094,6 +3128,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Frequency',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -3185,6 +3220,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Power',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -3276,6 +3312,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Power factor phase 1',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -3364,6 +3401,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Power factor phase 2',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -3452,6 +3490,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Power factor phase 3',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -3540,6 +3579,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Power phase 1',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -3631,6 +3671,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Power phase 2',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -3722,6 +3763,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Power phase 3',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -3813,6 +3855,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Production power',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -3904,6 +3947,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Reactive power',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -3995,6 +4039,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Reactive power phase 1',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -4086,6 +4131,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Reactive power phase 2',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -4177,6 +4223,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Reactive power phase 3',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -4268,6 +4315,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Voltage phase 1',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -4359,6 +4407,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Voltage phase 2',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -4450,6 +4499,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Voltage phase 3',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -4541,6 +4591,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Wi-Fi SSID',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -4624,6 +4675,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Wi-Fi strength',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -4711,6 +4763,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Average demand',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -4799,6 +4852,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Current phase 1',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -4890,6 +4944,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Current phase 2',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -4981,6 +5036,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Current phase 3',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -5072,6 +5128,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'DSMR version',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -5155,6 +5212,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Energy export',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -5246,6 +5304,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Energy export tariff 1',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -5337,6 +5396,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Energy export tariff 2',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -5428,6 +5488,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Energy export tariff 3',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -5519,6 +5580,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Energy export tariff 4',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -5610,6 +5672,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Energy import',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -5701,6 +5764,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Energy import tariff 1',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -5792,6 +5856,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Energy import tariff 2',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -5883,6 +5948,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Energy import tariff 3',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -5974,6 +6040,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Energy import tariff 4',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -6065,6 +6132,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Frequency',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -6156,6 +6224,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Long power failures detected',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -6239,6 +6308,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Peak demand current month',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -6327,6 +6397,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Power',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -6418,6 +6489,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Power failures detected',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -6501,6 +6573,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Power phase 1',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -6592,6 +6665,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Power phase 2',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -6683,6 +6757,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Power phase 3',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -6774,6 +6849,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Smart meter identifier',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -6857,6 +6933,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Smart meter model',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -6940,6 +7017,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Tariff',
     'capabilities': dict({
       'options': list([
         '1',
@@ -7037,6 +7115,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Total water usage',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -7128,6 +7207,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Voltage phase 1',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -7219,6 +7299,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Voltage phase 2',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -7310,6 +7391,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Voltage phase 3',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -7401,6 +7483,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Voltage sags detected phase 1',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -7484,6 +7567,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Voltage sags detected phase 2',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -7567,6 +7651,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Voltage sags detected phase 3',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -7650,6 +7735,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Voltage swells detected phase 1',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -7733,6 +7819,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Voltage swells detected phase 2',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -7816,6 +7903,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Voltage swells detected phase 3',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -7899,6 +7987,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Water usage',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -7986,6 +8075,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Wi-Fi SSID',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -8069,6 +8159,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Wi-Fi strength',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -8152,6 +8243,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Gas',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -8239,6 +8331,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Energy',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -8326,6 +8419,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -8409,6 +8503,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Water',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -8496,6 +8591,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Water',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -8587,6 +8683,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Average demand',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -8675,6 +8772,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Current phase 1',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -8766,6 +8864,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Current phase 2',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -8857,6 +8956,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Current phase 3',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -8948,6 +9048,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'DSMR version',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -9031,6 +9132,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Energy export',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -9122,6 +9224,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Energy export tariff 1',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -9213,6 +9316,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Energy export tariff 2',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -9304,6 +9408,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Energy export tariff 3',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -9395,6 +9500,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Energy export tariff 4',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -9486,6 +9592,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Energy import',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -9577,6 +9684,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Energy import tariff 1',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -9668,6 +9776,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Energy import tariff 2',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -9759,6 +9868,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Energy import tariff 3',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -9850,6 +9960,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Energy import tariff 4',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -9941,6 +10052,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Frequency',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -10032,6 +10144,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Long power failures detected',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -10115,6 +10228,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Peak demand current month',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -10203,6 +10317,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Power',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -10294,6 +10409,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Power failures detected',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -10377,6 +10493,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Power phase 1',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -10468,6 +10585,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Power phase 2',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -10559,6 +10677,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Power phase 3',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -10650,6 +10769,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Smart meter identifier',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -10733,6 +10853,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Smart meter model',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -10816,6 +10937,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Tariff',
     'capabilities': dict({
       'options': list([
         '1',
@@ -10913,6 +11035,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Total water usage',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -11004,6 +11127,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Voltage phase 1',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -11095,6 +11219,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Voltage phase 2',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -11186,6 +11311,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Voltage phase 3',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -11277,6 +11403,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Voltage sags detected phase 1',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -11360,6 +11487,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Voltage sags detected phase 2',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -11443,6 +11571,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Voltage sags detected phase 3',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -11526,6 +11655,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Voltage swells detected phase 1',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -11609,6 +11739,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Voltage swells detected phase 2',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -11692,6 +11823,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Voltage swells detected phase 3',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -11775,6 +11907,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Water usage',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -11862,6 +11995,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Wi-Fi SSID',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -11945,6 +12079,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Wi-Fi strength',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -12028,6 +12163,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Gas',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -12115,6 +12251,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Energy',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -12202,6 +12339,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -12285,6 +12423,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Water',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -12372,6 +12511,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Water',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -12463,6 +12603,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Average demand',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -12551,6 +12692,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Current phase 1',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -12642,6 +12784,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Current phase 2',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -12733,6 +12876,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Current phase 3',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -12824,6 +12968,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Energy export',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -12915,6 +13060,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Energy export tariff 1',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -13006,6 +13152,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Energy export tariff 2',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -13097,6 +13244,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Energy export tariff 3',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -13188,6 +13336,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Energy export tariff 4',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -13279,6 +13428,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Energy import',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -13370,6 +13520,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Energy import tariff 1',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -13461,6 +13612,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Energy import tariff 2',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -13552,6 +13704,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Energy import tariff 3',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -13643,6 +13796,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Energy import tariff 4',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -13734,6 +13888,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Frequency',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -13825,6 +13980,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Long power failures detected',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -13908,6 +14064,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Power',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -13999,6 +14156,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Power failures detected',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -14082,6 +14240,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Power phase 1',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -14173,6 +14332,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Power phase 2',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -14264,6 +14424,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Power phase 3',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -14355,6 +14516,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Total water usage',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -14446,6 +14608,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Voltage phase 1',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -14537,6 +14700,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Voltage phase 2',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -14628,6 +14792,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Voltage phase 3',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -14719,6 +14884,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Voltage sags detected phase 1',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -14802,6 +14968,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Voltage sags detected phase 2',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -14885,6 +15052,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Voltage sags detected phase 3',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -14968,6 +15136,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Voltage swells detected phase 1',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -15051,6 +15220,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Voltage swells detected phase 2',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -15134,6 +15304,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Voltage swells detected phase 3',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -15217,6 +15388,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Water usage',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -15304,6 +15476,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Wi-Fi SSID',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -15387,6 +15560,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Wi-Fi strength',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -15474,6 +15648,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Energy export',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -15565,6 +15740,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Energy import',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -15656,6 +15832,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Power',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -15747,6 +15924,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Power phase 1',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -15838,6 +16016,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Production power',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -15929,6 +16108,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Wi-Fi SSID',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -16012,6 +16192,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Wi-Fi strength',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -16099,6 +16280,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Apparent power',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -16190,6 +16372,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Current',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -16281,6 +16464,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Energy export',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -16372,6 +16556,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Energy import',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -16463,6 +16648,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Frequency',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -16554,6 +16740,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Power',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -16645,6 +16832,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Power factor',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -16733,6 +16921,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Power phase 1',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -16824,6 +17013,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Production power',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -16915,6 +17105,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Reactive power',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -17006,6 +17197,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Voltage',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -17097,6 +17289,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Wi-Fi SSID',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -17180,6 +17373,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Wi-Fi strength',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -17267,6 +17461,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Total water usage',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -17358,6 +17553,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Water usage',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -17445,6 +17641,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Wi-Fi SSID',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -17528,6 +17725,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Wi-Fi strength',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -17615,6 +17813,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Apparent power',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -17706,6 +17905,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Current',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -17797,6 +17997,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Energy export',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -17888,6 +18089,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Energy import',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -17979,6 +18181,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Frequency',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -18070,6 +18273,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Power',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -18161,6 +18365,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Power factor',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -18249,6 +18454,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Production power',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -18340,6 +18546,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Reactive power',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -18431,6 +18638,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Voltage',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -18522,6 +18730,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Wi-Fi SSID',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -18605,6 +18814,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Wi-Fi strength',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -18692,6 +18902,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Apparent power',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -18783,6 +18994,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Apparent power phase 1',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -18874,6 +19086,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Apparent power phase 2',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -18965,6 +19178,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Apparent power phase 3',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -19056,6 +19270,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Current',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -19147,6 +19362,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Current phase 1',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -19238,6 +19454,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Current phase 2',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -19329,6 +19546,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Current phase 3',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -19420,6 +19638,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Energy export',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -19511,6 +19730,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Energy import',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -19602,6 +19822,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Frequency',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -19693,6 +19914,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Power',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -19784,6 +20006,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Power factor phase 1',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -19872,6 +20095,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Power factor phase 2',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -19960,6 +20184,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Power factor phase 3',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -20048,6 +20273,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Power phase 1',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -20139,6 +20365,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Power phase 2',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -20230,6 +20457,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Power phase 3',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -20321,6 +20549,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Production power',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -20412,6 +20641,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Reactive power',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -20503,6 +20733,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Reactive power phase 1',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -20594,6 +20825,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Reactive power phase 2',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -20685,6 +20917,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Reactive power phase 3',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -20776,6 +21009,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Voltage phase 1',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -20867,6 +21101,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Voltage phase 2',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -20958,6 +21193,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Voltage phase 3',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -21049,6 +21285,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Wi-Fi SSID',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -21132,6 +21369,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Wi-Fi strength',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),

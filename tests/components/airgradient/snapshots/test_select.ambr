@@ -4,6 +4,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'CO2 automatic baseline duration',
     'capabilities': dict({
       'options': list([
         '1',
@@ -69,6 +70,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Configuration source',
     'capabilities': dict({
       'options': list([
         'cloud',
@@ -126,6 +128,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Display PM standard',
     'capabilities': dict({
       'options': list([
         'ugm3',
@@ -183,6 +186,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Display temperature unit',
     'capabilities': dict({
       'options': list([
         'c',
@@ -240,6 +244,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'LED bar mode',
     'capabilities': dict({
       'options': list([
         'off',
@@ -299,6 +304,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'NOx index learning offset',
     'capabilities': dict({
       'options': list([
         '12',
@@ -362,6 +368,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'VOC index learning offset',
     'capabilities': dict({
       'options': list([
         '12',
@@ -425,6 +432,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'CO2 automatic baseline duration',
     'capabilities': dict({
       'options': list([
         '1',
@@ -490,6 +498,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Configuration source',
     'capabilities': dict({
       'options': list([
         'cloud',
@@ -547,6 +556,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'NOx index learning offset',
     'capabilities': dict({
       'options': list([
         '12',
@@ -610,6 +620,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'VOC index learning offset',
     'capabilities': dict({
       'options': list([
         '12',

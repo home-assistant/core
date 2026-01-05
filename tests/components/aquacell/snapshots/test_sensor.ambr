@@ -4,6 +4,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Battery',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -54,6 +55,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Last update',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -103,6 +105,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Salt left side percentage',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -155,6 +158,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Salt left side time remaining',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -208,6 +212,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Salt right side percentage',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -260,6 +265,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Salt right side time remaining',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -313,6 +319,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Wi-Fi strength',
     'capabilities': dict({
       'options': list([
         'high',

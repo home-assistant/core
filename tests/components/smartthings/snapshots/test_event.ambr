@@ -4,6 +4,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'button1',
     'capabilities': dict({
       'event_types': list([
         'pushed',
@@ -65,6 +66,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'button2',
     'capabilities': dict({
       'event_types': list([
         'pushed',
@@ -126,6 +128,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'button3',
     'capabilities': dict({
       'event_types': list([
         'pushed',
@@ -187,6 +190,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'button4',
     'capabilities': dict({
       'event_types': list([
         'pushed',
@@ -248,6 +252,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'button5',
     'capabilities': dict({
       'event_types': list([
         'pushed',
@@ -309,6 +314,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'button6',
     'capabilities': dict({
       'event_types': list([
         'pushed',

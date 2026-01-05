@@ -4,6 +4,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Air filter operating time',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -59,6 +60,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Electric heater power',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -112,6 +114,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Exhaust air fan',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -164,6 +167,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Exhaust air fan control signal',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -216,6 +220,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Exhaust air temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -272,6 +277,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Extract air temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -328,6 +334,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Fireplace ventilation remaining duration',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -384,6 +391,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Heat exchanger efficiency',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -436,6 +444,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Heat exchanger speed',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -488,6 +497,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Outside air temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -544,6 +554,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Rapid ventilation remaining duration',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -600,6 +611,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Room temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -656,6 +668,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Supply air fan',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -708,6 +721,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Supply air fan control signal',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -760,6 +774,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Supply air temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),

@@ -4,6 +4,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Alarm interval',
     'capabilities': dict({
       'max': 15,
       'min': 0,
@@ -63,6 +64,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Maximum temperature',
     'capabilities': dict({
       'max': 250,
       'min': 0,
@@ -123,6 +125,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Minimum temperature',
     'capabilities': dict({
       'max': 250,
       'min': 0,
@@ -183,6 +186,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Target temperature',
     'capabilities': dict({
       'max': 250,
       'min': 0,
@@ -243,6 +247,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Maximum temperature',
     'capabilities': dict({
       'max': 250,
       'min': 0,
@@ -303,6 +308,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Minimum temperature',
     'capabilities': dict({
       'max': 250,
       'min': 0,
@@ -363,6 +369,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Target temperature',
     'capabilities': dict({
       'max': 250,
       'min': 0,
@@ -423,6 +430,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Alarm interval',
     'capabilities': dict({
       'max': 15,
       'min': 0,
@@ -482,6 +490,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Maximum temperature',
     'capabilities': dict({
       'max': 250,
       'min': 0,
@@ -542,6 +551,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Minimum temperature',
     'capabilities': dict({
       'max': 250,
       'min': 0,
@@ -602,6 +612,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Target temperature',
     'capabilities': dict({
       'max': 250,
       'min': 0,
@@ -662,6 +673,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Maximum temperature',
     'capabilities': dict({
       'max': 250,
       'min': 0,
@@ -722,6 +734,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Minimum temperature',
     'capabilities': dict({
       'max': 250,
       'min': 0,
@@ -782,6 +795,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Target temperature',
     'capabilities': dict({
       'max': 250,
       'min': 0,

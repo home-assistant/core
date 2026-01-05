@@ -4,6 +4,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Fault',
     'capabilities': dict({
       'event_types': list([
         'clock_failed',

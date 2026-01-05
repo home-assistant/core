@@ -4,6 +4,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Battery',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -57,6 +58,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Cutting blade usage time',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -116,6 +118,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Downtime',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -175,6 +178,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Error',
     'capabilities': dict({
       'options': list([
         'alarm_mower_in_motion',
@@ -489,6 +493,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Front lawn last time completed',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -538,6 +543,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Front lawn progress',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -590,6 +596,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Inactive reason',
     'capabilities': dict({
       'options': list([
         <InactiveReasons.NONE: 'none'>,
@@ -650,6 +657,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Mode',
     'capabilities': dict({
       'options': list([
         <MowerModes.MAIN_AREA: 'main_area'>,
@@ -716,6 +724,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'My lawn last time completed',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -765,6 +774,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'My lawn progress',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -817,6 +827,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Next start',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -866,6 +877,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Number of charging cycles',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -917,6 +929,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Number of collisions',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -968,6 +981,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Remaining charging time',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1024,6 +1038,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Restricted reason',
     'capabilities': dict({
       'options': list([
         <RestrictedReasons.ALL_WORK_AREAS_COMPLETED: 'all_work_areas_completed'>,
@@ -1122,6 +1137,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Total charging time',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -1181,6 +1197,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Total cutting time',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -1240,6 +1257,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Total drive distance',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -1299,6 +1317,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Total running time',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -1358,6 +1377,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Total searching time',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -1417,6 +1437,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Uptime',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -1476,6 +1497,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Work area',
     'capabilities': dict({
       'options': list([
         'Front lawn',
@@ -1543,6 +1565,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Battery',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1596,6 +1619,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Error',
     'capabilities': dict({
       'options': list([
         'alarm_mower_in_motion',
@@ -1910,6 +1934,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Mode',
     'capabilities': dict({
       'options': list([
         <MowerModes.MAIN_AREA: 'main_area'>,
@@ -1976,6 +2001,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Next start',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2025,6 +2051,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Remaining charging time',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2081,6 +2108,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Restricted reason',
     'capabilities': dict({
       'options': list([
         <RestrictedReasons.ALL_WORK_AREAS_COMPLETED: 'all_work_areas_completed'>,

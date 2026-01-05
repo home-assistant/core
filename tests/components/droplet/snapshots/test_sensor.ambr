@@ -4,6 +4,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Flow rate',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -63,6 +64,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Server status',
     'capabilities': dict({
       'options': list([
         'connected',
@@ -123,6 +125,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Signal quality',
     'capabilities': dict({
       'options': list([
         'no_signal',
@@ -183,6 +186,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Water',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),

@@ -4,6 +4,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'External temperature',
     'capabilities': dict({
       'max': 50,
       'min': -50,
@@ -63,6 +64,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Valve position',
     'capabilities': dict({
       'max': 100,
       'min': 0,
@@ -121,6 +123,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Left slot intensity',
     'capabilities': dict({
       'max': 100,
       'min': 0,
@@ -179,6 +182,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Right slot intensity',
     'capabilities': dict({
       'max': 100,
       'min': 0,

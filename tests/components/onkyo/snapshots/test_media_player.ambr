@@ -4,6 +4,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'TX-NR7100',
     'capabilities': dict({
       'sound_mode_list': list([
         'Stereo',
@@ -81,6 +82,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'TX-NR7100 Zone 2',
     'capabilities': dict({
       'sound_mode_list': list([
         'Stereo',
@@ -148,6 +150,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'TX-NR7100 Zone 3',
     'capabilities': dict({
       'source_list': list([
         'TV',

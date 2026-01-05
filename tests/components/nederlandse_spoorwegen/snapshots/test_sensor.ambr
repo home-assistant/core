@@ -4,6 +4,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Actual arrival platform',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -53,6 +54,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Actual arrival time',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -103,6 +105,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Actual departure platform',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -152,6 +155,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Actual departure time',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -202,6 +206,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Departure',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -273,6 +278,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Next departure',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -323,6 +329,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Planned arrival platform',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -372,6 +379,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Planned arrival time',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -422,6 +430,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Planned departure platform',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -471,6 +480,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Planned departure time',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -521,6 +531,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Route',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -570,6 +581,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Status',
     'capabilities': dict({
       'options': list([
         'normal',
@@ -629,6 +641,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Transfers',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -678,6 +691,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Actual arrival platform',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -727,6 +741,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Actual arrival time',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -777,6 +792,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Actual departure platform',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -826,6 +842,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Actual departure time',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -876,6 +893,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Departure',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -947,6 +965,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Next departure',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -997,6 +1016,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Planned arrival platform',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1046,6 +1066,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Planned arrival time',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1096,6 +1117,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Planned departure platform',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1145,6 +1167,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Planned departure time',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1195,6 +1218,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Route',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1244,6 +1268,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Status',
     'capabilities': dict({
       'options': list([
         'normal',
@@ -1303,6 +1328,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Transfers',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1352,6 +1378,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Actual arrival platform',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1401,6 +1428,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Actual arrival time',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1451,6 +1479,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Actual departure platform',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1500,6 +1529,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Actual departure time',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1550,6 +1580,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Departure',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1621,6 +1652,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Next departure',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1671,6 +1703,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Planned arrival platform',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1720,6 +1753,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Planned arrival time',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1770,6 +1804,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Planned departure platform',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1819,6 +1854,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Planned departure time',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1869,6 +1905,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Route',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1918,6 +1955,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Status',
     'capabilities': dict({
       'options': list([
         'normal',
@@ -1977,6 +2015,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Transfers',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2026,6 +2065,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Actual arrival platform',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2075,6 +2115,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Actual arrival time',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2125,6 +2166,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Actual departure platform',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2174,6 +2216,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Actual departure time',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2224,6 +2267,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Departure',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2295,6 +2339,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Next departure',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2345,6 +2390,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Planned arrival platform',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2394,6 +2440,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Planned arrival time',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2444,6 +2491,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Planned departure platform',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2493,6 +2541,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Planned departure time',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2543,6 +2592,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Route',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2592,6 +2642,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Status',
     'capabilities': dict({
       'options': list([
         'normal',
@@ -2651,6 +2702,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Transfers',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,

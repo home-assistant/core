@@ -4,6 +4,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Fan',
     'capabilities': dict({
     }),
     'config_entry_id': <ANY>,
@@ -54,6 +55,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Fan',
     'capabilities': dict({
     }),
     'config_entry_id': <ANY>,
@@ -104,6 +106,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Fan',
     'capabilities': dict({
       'preset_modes': None,
     }),
@@ -159,6 +162,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Fan',
     'capabilities': dict({
       'preset_modes': None,
     }),

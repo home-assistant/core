@@ -4,6 +4,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Battery voltage',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -60,6 +61,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Controller temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -116,6 +118,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Device IP address',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -164,6 +167,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Engine compartment temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -220,6 +224,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Engine coolant temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -276,6 +281,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Engine frequency',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -332,6 +338,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Engine oil pressure',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -391,6 +398,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Engine speed',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -443,6 +451,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Engine state',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -491,6 +500,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Generator load',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -547,6 +557,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Generator load percentage',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -599,6 +610,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Generator status',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -647,6 +659,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Last exercise',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -696,6 +709,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Last maintainance',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -745,6 +759,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Last run',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -794,6 +809,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Lube oil temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -850,6 +866,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Next exercise',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -899,6 +916,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Next maintainance',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -948,6 +966,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Power source',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -996,6 +1015,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Runtime since last maintenance',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1052,6 +1072,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Server IP address',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1100,6 +1121,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Total operation',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1156,6 +1178,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Total runtime',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1212,6 +1235,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Utility voltage',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1268,6 +1292,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Voltage',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),

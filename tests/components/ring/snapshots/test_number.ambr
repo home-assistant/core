@@ -4,6 +4,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Volume',
     'capabilities': dict({
       'max': 11,
       'min': 0,
@@ -62,6 +63,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Volume',
     'capabilities': dict({
       'max': 11,
       'min': 0,
@@ -120,6 +122,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Volume',
     'capabilities': dict({
       'max': 11,
       'min': 0,
@@ -178,6 +181,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Doorbell volume',
     'capabilities': dict({
       'max': 8,
       'min': 0,
@@ -236,6 +240,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Mic volume',
     'capabilities': dict({
       'max': 11,
       'min': 0,
@@ -294,6 +299,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Voice volume',
     'capabilities': dict({
       'max': 11,
       'min': 0,
@@ -352,6 +358,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Volume',
     'capabilities': dict({
       'max': 11,
       'min': 0,

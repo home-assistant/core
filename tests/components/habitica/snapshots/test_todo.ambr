@@ -118,6 +118,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Dailies',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -167,6 +168,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': "To-Do's",
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,

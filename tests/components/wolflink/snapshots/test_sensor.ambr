@@ -35,6 +35,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Energy Parameter',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -91,6 +92,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Flow Parameter',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -147,6 +149,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Frequency Parameter',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -203,6 +206,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Hours Parameter',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -256,6 +260,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'List Item Parameter',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -307,6 +312,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Percentage Parameter',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -359,6 +365,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Power Parameter',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -415,6 +422,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Pressure Parameter',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -471,6 +479,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'RPM Parameter',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -526,6 +535,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Simple Parameter',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -577,6 +587,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Temperature Parameter',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,

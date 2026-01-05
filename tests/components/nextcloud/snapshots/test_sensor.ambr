@@ -4,6 +4,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Amount of active users last 5 minutes',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -55,6 +56,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Amount of active users last day',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -106,6 +108,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Amount of active users last hour',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -157,6 +160,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Amount of files',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -208,6 +212,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Amount of group shares',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -259,6 +264,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Amount of link shares',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -310,6 +316,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Amount of local storages',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -361,6 +368,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Amount of mail shares',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -412,6 +420,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Amount of other storages',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -463,6 +472,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Amount of passwordless link shares',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -514,6 +524,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Amount of room shares',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -565,6 +576,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Amount of shares',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -616,6 +628,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Amount of shares received',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -667,6 +680,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Amount of shares sent',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -718,6 +732,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Amount of storages',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -769,6 +784,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Amount of storages at home',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -820,6 +836,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Amount of user',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -871,6 +888,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Amount of user shares',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -922,6 +940,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Apps installed',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -973,6 +992,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Cache expunges',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1024,6 +1044,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Cache memory',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1072,6 +1093,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Cache memory size',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1128,6 +1150,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Cache number of entries',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1179,6 +1202,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Cache number of hits',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1230,6 +1254,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Cache number of inserts',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1281,6 +1306,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Cache number of misses',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1332,6 +1358,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Cache number of slots',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1383,6 +1410,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Cache start time',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1432,6 +1460,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Cache TTL',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1480,6 +1509,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'CPU load last 15 minutes',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1532,6 +1562,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'CPU load last 1 minute',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1584,6 +1615,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'CPU load last 5 minutes',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1636,6 +1668,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Database size',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1692,6 +1725,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Database type',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1740,6 +1774,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Database version',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1788,6 +1823,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Free memory',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1844,6 +1880,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Free space',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1900,6 +1937,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Free swap memory',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1956,6 +1994,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Interned buffer size',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2012,6 +2051,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Interned free memory',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2068,6 +2108,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Interned number of strings',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2119,6 +2160,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Interned used memory',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2175,6 +2217,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'JIT buffer free',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2231,6 +2274,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'JIT buffer size',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2287,6 +2331,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'JIT kind',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2335,6 +2380,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'JIT opt flags',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2383,6 +2429,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'JIT opt level',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2431,6 +2478,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Opcache blacklist miss ratio',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2483,6 +2531,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Opcache blacklist misses',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2534,6 +2583,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Opcache cached keys',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2585,6 +2635,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Opcache cached scripts',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2636,6 +2687,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Opcache current wasted percentage',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2688,6 +2740,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Opcache free memory',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2744,6 +2797,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Opcache hash restarts',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2795,6 +2849,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Opcache hit rate',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2847,6 +2902,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Opcache hits',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2898,6 +2954,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Opcache last restart time',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2947,6 +3004,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Opcache manual restarts',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2998,6 +3056,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Opcache max cached keys',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -3049,6 +3108,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Opcache misses',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -3100,6 +3160,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Opcache out of memory restarts',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -3151,6 +3212,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Opcache start time',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -3200,6 +3262,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Opcache used memory',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -3256,6 +3319,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Opcache wasted memory',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -3312,6 +3376,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'PHP max execution time',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -3365,6 +3430,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'PHP memory limit',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -3421,6 +3487,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'PHP upload maximum filesize',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -3477,6 +3544,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'PHP version',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -3525,6 +3593,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'SMA available memory',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -3581,6 +3650,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'SMA number of segments',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -3632,6 +3702,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'SMA segment size',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -3688,6 +3759,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'System memcache distributed',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -3736,6 +3808,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'System memcache local',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -3784,6 +3857,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'System memcache locking',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -3832,6 +3906,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'System theme',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -3880,6 +3955,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'System version',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -3928,6 +4004,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Total memory',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -3984,6 +4061,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Total swap memory',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -4040,6 +4118,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Updates available',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -4091,6 +4170,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Webserver',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,

@@ -4,6 +4,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'DSL attenuation down',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -57,6 +58,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'DSL attenuation up',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -110,6 +112,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'DSL connect count',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -159,6 +162,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'DSL CRC error count',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -208,6 +212,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'DSL line mode',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -256,6 +261,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'DSL line status',
     'capabilities': dict({
       'options': list([
         'no_defect',
@@ -320,6 +326,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'DSL noise down',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -373,6 +380,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'DSL noise up',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -426,6 +434,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'DSL rate down',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -482,6 +491,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'DSL rate up',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -538,6 +548,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'DSL training',
     'capabilities': dict({
       'options': list([
         'idle',
@@ -610,6 +621,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Network infrastructure',
     'capabilities': dict({
       'options': list([
         'adsl',
@@ -670,6 +682,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -726,6 +739,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Voltage',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -782,6 +796,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'WAN mode',
     'capabilities': dict({
       'options': list([
         'adsl_ppp',

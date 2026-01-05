@@ -4,6 +4,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Activity',
     'capabilities': dict({
       'options': list([
         'good',
@@ -64,6 +65,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Activity time',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -116,6 +118,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Calories burned',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -168,6 +171,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Daily goal',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -217,6 +221,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Day sleep',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -269,6 +274,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Night sleep',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -321,6 +327,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Rest time',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -373,6 +380,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Sleep',
     'capabilities': dict({
       'options': list([
         'good',
@@ -433,6 +441,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Tracker battery',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -483,6 +492,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Tracker state',
     'capabilities': dict({
       'options': list([
         'inaccurate_position',

@@ -4,6 +4,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Degree minutes',
     'capabilities': dict({
       'max': 3000.0,
       'min': -3000.0,
@@ -62,6 +63,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Degree minutes',
     'capabilities': dict({
       'max': 3000.0,
       'min': -3000.0,
@@ -120,6 +122,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Heating offset climate system 1',
     'capabilities': dict({
       'max': 10.0,
       'min': -10.0,
@@ -177,6 +180,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Heating offset climate system 1',
     'capabilities': dict({
       'max': 10.0,
       'min': -10.0,
@@ -234,6 +238,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Room sensor set point value heating climate system 1',
     'capabilities': dict({
       'max': 35.0,
       'min': 5.0,
@@ -291,6 +296,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Room sensor set point value heating climate system 1',
     'capabilities': dict({
       'max': 35.0,
       'min': 5.0,
@@ -348,6 +354,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'start diff additional heat',
     'capabilities': dict({
       'max': 2000.0,
       'min': 100.0,
@@ -406,6 +413,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'start diff additional heat',
     'capabilities': dict({
       'max': 2000.0,
       'min': 100.0,

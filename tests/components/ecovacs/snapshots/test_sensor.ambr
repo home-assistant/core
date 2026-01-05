@@ -4,6 +4,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Battery',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -55,6 +56,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Filter lifespan',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -104,6 +106,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Main brush lifespan',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -153,6 +156,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Side brush lifespan',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -210,6 +214,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Area cleaned',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -266,6 +271,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Battery',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -316,6 +322,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Blade lifespan',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -365,6 +372,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Cleaning duration',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -421,6 +429,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Error',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -470,6 +479,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'IP address',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -518,6 +528,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Lens brush lifespan',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -567,6 +578,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Total area cleaned',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -623,6 +635,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Total cleaning duration',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -682,6 +695,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Total cleanings',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -733,6 +747,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Wi-Fi RSSI',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -781,6 +796,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Wi-Fi SSID',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -829,6 +845,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Area cleaned',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -885,6 +902,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Battery',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -935,6 +953,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Cleaning duration',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -991,6 +1010,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Error',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1040,6 +1060,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Filter lifespan',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1089,6 +1110,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'IP address',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1137,6 +1159,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Main brush lifespan',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1186,6 +1209,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Round mop lifespan',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1235,6 +1259,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Side brush lifespan',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1284,6 +1309,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Station state',
     'capabilities': dict({
       'options': list([
         'idle',
@@ -1346,6 +1372,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Total area cleaned',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -1402,6 +1429,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Total cleaning duration',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -1461,6 +1489,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Total cleanings',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -1512,6 +1541,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Unit care lifespan',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1561,6 +1591,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Wi-Fi RSSI',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1609,6 +1640,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Wi-Fi SSID',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1657,6 +1689,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Area cleaned',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1713,6 +1746,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Battery',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1763,6 +1797,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Cleaning duration',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1819,6 +1854,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Error',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1868,6 +1904,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Filter lifespan',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1917,6 +1954,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'IP address',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1965,6 +2003,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Main brush lifespan',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2014,6 +2053,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Side brush lifespan',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2063,6 +2103,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Total area cleaned',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -2119,6 +2160,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Total cleaning duration',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -2178,6 +2220,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Total cleanings',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -2229,6 +2272,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Wi-Fi RSSI',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2277,6 +2321,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Wi-Fi SSID',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,

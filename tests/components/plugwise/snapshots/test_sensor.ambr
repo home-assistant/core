@@ -4,6 +4,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Outdoor temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -60,6 +61,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Setpoint',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -116,6 +118,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -172,6 +175,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Electricity consumed',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -228,6 +232,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Electricity produced',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -284,6 +289,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -340,6 +346,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Battery',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -393,6 +400,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Humidity',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -446,6 +454,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Setpoint',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -502,6 +511,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -558,6 +568,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Battery',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -611,6 +622,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Humidity',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -664,6 +676,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Setpoint',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -720,6 +733,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -776,6 +790,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Battery',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -829,6 +844,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Setpoint',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -885,6 +901,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -941,6 +958,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Electricity consumed',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -997,6 +1015,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Electricity produced',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1053,6 +1072,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1109,6 +1129,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Intended boiler temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1165,6 +1186,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Water temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1221,6 +1243,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Electricity consumed',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1277,6 +1300,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Electricity produced',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1333,6 +1357,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Battery',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1386,6 +1411,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Setpoint',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1442,6 +1468,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1498,6 +1525,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Temperature difference',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1554,6 +1582,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Valve position',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1606,6 +1635,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Electricity consumed',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1662,6 +1692,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Electricity produced',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1718,6 +1749,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1774,6 +1806,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Illuminance',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1827,6 +1860,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Setpoint',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1883,6 +1917,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1939,6 +1974,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Intended boiler temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1995,6 +2031,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Modulation level',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2047,6 +2084,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Water pressure',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2103,6 +2141,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Water temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2159,6 +2198,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Electricity consumed off-peak cumulative',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -2215,6 +2255,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Electricity consumed off-peak interval',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -2271,6 +2312,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Electricity consumed off-peak point',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2327,6 +2369,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Electricity consumed peak cumulative',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -2383,6 +2426,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Electricity consumed peak interval',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -2439,6 +2483,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Electricity consumed peak point',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2495,6 +2540,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Electricity phase one consumed',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2551,6 +2597,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Electricity phase one produced',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2607,6 +2654,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Electricity produced off-peak cumulative',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -2663,6 +2711,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Electricity produced off-peak interval',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -2719,6 +2768,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Electricity produced off-peak point',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2775,6 +2825,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Electricity produced peak cumulative',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -2831,6 +2882,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Electricity produced peak interval',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -2887,6 +2939,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Electricity produced peak point',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2943,6 +2996,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Gas consumed cumulative',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -2999,6 +3053,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Gas consumed interval',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -3051,6 +3106,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Net electricity cumulative',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -3107,6 +3163,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Net electricity point',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -3163,6 +3220,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Voltage phase one',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -3219,6 +3277,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Outdoor temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -3275,6 +3334,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Cooling setpoint',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -3331,6 +3391,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Heating setpoint',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -3387,6 +3448,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Illuminance',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -3440,6 +3502,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -3496,6 +3559,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'DHW temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -3552,6 +3616,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Intended boiler temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -3608,6 +3673,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Modulation level',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -3660,6 +3726,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Outdoor air temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -3716,6 +3783,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Return temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -3772,6 +3840,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Water pressure',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -3828,6 +3897,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Water temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -3884,6 +3954,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Outdoor temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -3940,6 +4011,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Electricity consumed off-peak cumulative',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -3996,6 +4068,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Electricity consumed off-peak interval',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -4052,6 +4125,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Electricity consumed off-peak point',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -4108,6 +4182,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Electricity consumed peak cumulative',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -4164,6 +4239,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Electricity consumed peak interval',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -4220,6 +4296,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Electricity consumed peak point',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -4276,6 +4353,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Electricity phase one consumed',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -4332,6 +4410,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Electricity phase one produced',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -4388,6 +4467,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Electricity phase three consumed',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -4444,6 +4524,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Electricity phase three produced',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -4500,6 +4581,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Electricity phase two consumed',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -4556,6 +4638,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Electricity phase two produced',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -4612,6 +4695,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Electricity produced off-peak cumulative',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -4668,6 +4752,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Electricity produced off-peak interval',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -4724,6 +4809,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Electricity produced off-peak point',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -4780,6 +4866,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Electricity produced peak cumulative',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -4836,6 +4923,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Electricity produced peak interval',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -4892,6 +4980,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Electricity produced peak point',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -4948,6 +5037,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Gas consumed cumulative',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -5004,6 +5094,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Gas consumed interval',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -5056,6 +5147,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Net electricity cumulative',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -5112,6 +5204,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Net electricity point',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -5168,6 +5261,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Voltage phase one',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -5224,6 +5318,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Voltage phase three',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -5280,6 +5375,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Voltage phase two',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -5336,6 +5432,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Electricity consumed off-peak cumulative',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -5392,6 +5489,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Electricity consumed off-peak interval',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -5448,6 +5546,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Electricity consumed off-peak point',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -5504,6 +5603,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Electricity consumed peak cumulative',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -5560,6 +5660,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Electricity consumed peak interval',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -5616,6 +5717,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Electricity consumed peak point',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -5672,6 +5774,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Electricity phase one consumed',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -5728,6 +5831,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Electricity phase one produced',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -5784,6 +5888,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Electricity produced off-peak cumulative',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -5840,6 +5945,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Electricity produced off-peak interval',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -5896,6 +6002,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Electricity produced off-peak point',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -5952,6 +6059,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Electricity produced peak cumulative',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -6008,6 +6116,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Electricity produced peak interval',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -6064,6 +6173,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Electricity produced peak point',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -6120,6 +6230,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Net electricity cumulative',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -6176,6 +6287,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Net electricity point',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -6232,6 +6344,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Electricity consumed',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -6288,6 +6401,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Electricity consumed interval',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -6344,6 +6458,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Electricity produced',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -6400,6 +6515,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Electricity consumed',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -6456,6 +6572,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Electricity consumed interval',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -6512,6 +6629,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Electricity produced',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -6568,6 +6686,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Electricity consumed',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -6624,6 +6743,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Electricity consumed interval',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -6680,6 +6800,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Electricity produced',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -6736,6 +6857,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Electricity consumed',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -6792,6 +6914,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Electricity consumed interval',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -6848,6 +6971,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Electricity produced',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -6904,6 +7028,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Electricity consumed',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -6960,6 +7085,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Electricity consumed interval',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -7016,6 +7142,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Electricity produced',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),

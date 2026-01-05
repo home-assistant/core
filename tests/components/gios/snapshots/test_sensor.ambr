@@ -4,6 +4,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Air quality index',
     'capabilities': dict({
       'options': list([
         'very_bad',
@@ -71,6 +72,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Benzene',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -127,6 +129,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Carbon monoxide',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -183,6 +186,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Nitrogen dioxide',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -240,6 +244,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Nitrogen dioxide index',
     'capabilities': dict({
       'options': list([
         'very_bad',
@@ -307,6 +312,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Nitrogen monoxide',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -364,6 +370,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Nitrogen oxides',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -420,6 +427,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Ozone',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -477,6 +485,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Ozone index',
     'capabilities': dict({
       'options': list([
         'very_bad',
@@ -544,6 +553,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'PM10',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -601,6 +611,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'PM10 index',
     'capabilities': dict({
       'options': list([
         'very_bad',
@@ -668,6 +679,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'PM2.5',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -725,6 +737,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'PM2.5 index',
     'capabilities': dict({
       'options': list([
         'very_bad',
@@ -792,6 +805,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Sulphur dioxide',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -849,6 +863,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Sulphur dioxide index',
     'capabilities': dict({
       'options': list([
         'very_bad',

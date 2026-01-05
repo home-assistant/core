@@ -4,6 +4,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Activities',
     'capabilities': dict({
       'event_types': list([
         'list_items_changed',
@@ -89,6 +90,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Activities',
     'capabilities': dict({
       'event_types': list([
         'list_items_changed',

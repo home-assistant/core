@@ -4,6 +4,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': None,
     'capabilities': dict({
       'max_temp': 31.0,
       'min_temp': 16.0,
@@ -73,6 +74,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': None,
     'capabilities': dict({
       'max_temp': 31.0,
       'min_temp': 16.0,
