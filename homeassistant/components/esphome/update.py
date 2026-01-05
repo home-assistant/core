@@ -111,7 +111,7 @@ class ESPHomeDashboardUpdateEntity(
     _attr_device_class = UpdateDeviceClass.FIRMWARE
     _attr_title = "ESPHome"
     _attr_release_url = "https://esphome.io/changelog/"
-    _attr_entity_registry_enabled_default = False
+    _attr_entity_registry_enabled_default = True
 
     def __init__(
         self, entry_data: RuntimeEntryData, coordinator: ESPHomeDashboardCoordinator
