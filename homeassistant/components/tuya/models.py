@@ -21,12 +21,13 @@ from .type_information import (
 class DeviceWrapper[T]:
     """Base device wrapper."""
 
-    max_value: float | None = None
-    min_value: float | None = None
     native_unit: str | None = None
     options: list[str] | None = None
     suggested_unit: str | None = None
-    value_step: float | None = None
+
+    max_value: float
+    min_value: float
+    value_step: float
 
     def read_device_status(self, device: CustomerDevice) -> T | None:
         """Read device status and convert to a Home Assistant value."""

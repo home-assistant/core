@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Any
+from typing import Any
 
 from tuya_sharing import CustomerDevice, Manager
 
@@ -158,9 +158,6 @@ class TuyaHumidifierEntity(TuyaEntity, HumidifierEntity):
 
         # Determine humidity parameters
         if target_humidity_wrapper:
-            if TYPE_CHECKING:
-                assert target_humidity_wrapper.max_value is not None
-                assert target_humidity_wrapper.min_value is not None
             self._attr_min_humidity = round(target_humidity_wrapper.min_value)
             self._attr_max_humidity = round(target_humidity_wrapper.max_value)
 

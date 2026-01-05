@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
-
 from tuya_sharing import CustomerDevice, Manager
 
 from homeassistant.components.number import (
@@ -498,10 +496,6 @@ class TuyaNumberEntity(TuyaEntity, NumberEntity):
         self._attr_unique_id = f"{super().unique_id}{description.key}"
         self._dpcode_wrapper = dpcode_wrapper
 
-        if TYPE_CHECKING:
-            assert dpcode_wrapper.max_value is not None
-            assert dpcode_wrapper.min_value is not None
-            assert dpcode_wrapper.value_step is not None
         self._attr_native_max_value = dpcode_wrapper.max_value
         self._attr_native_min_value = dpcode_wrapper.min_value
         self._attr_native_step = dpcode_wrapper.value_step
