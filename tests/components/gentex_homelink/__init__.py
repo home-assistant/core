@@ -11,14 +11,14 @@ from homeassistant.core import HomeAssistant
 from tests.common import MockConfigEntry
 
 TEST_UNIQUE_ID = "06ebba97-100b-4c09-9917-e85d40b7898a"
-INVALID_TEST_UNIQUE_ID = "0839246e-eb26-11f0-895d-325096b39f47"
 TEST_CREDENTIALS = {CONF_EMAIL: "test@test.com", CONF_PASSWORD: "SomePassword"}
+TEST_ACCESS_JWT = jwt.encode({"sub": TEST_UNIQUE_ID}, key="secret")
+
+INVALID_TEST_UNIQUE_ID = "0839246e-eb26-11f0-895d-325096b39f47"
 INVALID_TEST_CREDENTIALS = {
     CONF_EMAIL: "invalid@invalid.com",
     CONF_PASSWORD: "InvalidPassword",
 }
-
-TEST_ACCESS_JWT = jwt.encode({"sub": TEST_UNIQUE_ID}, key="secret")
 INVALID_TEST_ACCESS_JWT = jwt.encode({"sub": INVALID_TEST_UNIQUE_ID}, key="secret")
 
 
