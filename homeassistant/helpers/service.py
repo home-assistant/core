@@ -900,6 +900,21 @@ async def entity_service_call(
         call.domain,
         call.service,
     )
+    if entities:
+        _LOGGER.debug(
+            "Making service call with non-batched entities %s",
+            [entity.entity_id for entity in entities],
+        )
+    else:
+        _LOGGER.debug("No unbatched entities exist for service call")
+
+    for config_entry_id, entity_ids in per_config_entities.items():
+        _LOGGER.debug(
+            "Service call batched entities for config entry %s: %s",
+            config_entry_id,
+            entity_ids,
+        )
+
     if not entities and not any(per_config_entities.values()):
         if return_response:
             raise HomeAssistantError(
