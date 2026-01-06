@@ -29,7 +29,7 @@ from homeassistant.const import (
     ENTITY_MATCH_NONE,
 )
 from homeassistant.core import (
-    ConfigEntryServiceCallback,
+    BatchedServiceCallback,
     Context,
     EntityServiceResponse,
     HassJob,
@@ -728,14 +728,14 @@ def _filter_entities(
     entity_device_classes: Iterable[str | None] | None,
     required_features: Iterable[int] | None,
     referenced: target_helpers.SelectedEntities | None,
-    config_entries_with_overrides: set[ConfigEntry],
+    config_entries_with_batches: set[ConfigEntry],
     domain: str,
     service: str,
 ) -> tuple[list[Entity], dict[ConfigEntry, list[Entity]]]:
     """Return a list of entities that pass availability, device class, and features."""
     filtered: list[Entity] = []
-    per_entry_entities: dict[ConfigEntry, list[Entity]] = {
-        ce: [] for ce in config_entries_with_overrides
+    batched_entities_by_entry: dict[ConfigEntry, list[Entity]] = {
+        ce: [] for ce in config_entries_with_batches
     }
 
     for entity in entity_candidates:
@@ -760,34 +760,34 @@ def _filter_entities(
                 continue
         platform = entity.platform
         ce = platform.config_entry if platform is not None else None
-        if ce in config_entries_with_overrides:
-            per_entry_entities[ce].append(entity)
+        if ce in config_entries_with_batches:
+            batched_entities_by_entry[ce].append(entity)
         else:
             filtered.append(entity)
 
     # === Singleton reinsertion ===
     singleton_entities: list[Entity] = []
 
-    for ce, entities_list in list(per_entry_entities.items()):
+    for ce, entities_list in list(batched_entities_by_entry.items()):
         if len(entities_list) == 1:
             singleton_entities.extend(entities_list)
-            per_entry_entities.pop(ce)
+            batched_entities_by_entry.pop(ce)
 
     filtered.extend(singleton_entities)
 
     # remove empty entity lists
-    per_entry_entities = {
-        ce: entities for ce, entities in per_entry_entities.items() if entities
+    batched_entities_by_entry = {
+        ce: entities for ce, entities in batched_entities_by_entry.items() if entities
     }
 
-    return filtered, per_entry_entities
+    return filtered, batched_entities_by_entry
 
 
 async def _service_call_wrapper(
     *,
     hass: HomeAssistant,
     entities: list[Entity],
-    handler: ConfigEntryServiceCallback | str | HassJob,
+    handler: BatchedServiceCallback | str | HassJob,
     config_entry: ConfigEntry | None = None,
     call: ServiceCall,
     data: dict | ServiceCall,
@@ -898,43 +898,43 @@ async def entity_service_call(
     services = hass.services.async_services_internal()
     domain_services = services.get(call.domain)
     registered_service = domain_services.get(call.service) if domain_services else None
-    config_overrides = registered_service.overrides if registered_service else {}
-    config_entries_with_overrides = set(config_overrides.keys())
+    batch_overrides = registered_service.batched_handlers if registered_service else {}
+    config_entries_with_batches = set(batch_overrides.keys())
 
-    entities, per_config_entities = _filter_entities(
+    non_batched_entities, batched_entities_by_entry = _filter_entities(
         entity_candidates,
         entity_device_classes,
         required_features,
         referenced,
-        config_entries_with_overrides,
+        config_entries_with_batches,
         call.domain,
         call.service,
     )
-    if entities:
+    if non_batched_entities:
         _LOGGER.debug(
             "Making service call with non-batched entities %s",
-            [entity.entity_id for entity in entities],
+            [entity.entity_id for entity in non_batched_entities],
         )
     else:
         _LOGGER.debug("No unbatched entities exist for service call")
 
-    for config_entry_id, entity_ids in per_config_entities.items():
+    for config_entry_id, entity_ids in batched_entities_by_entry.items():
         _LOGGER.debug(
             "Service call batched entities for config entry %s: %s",
             config_entry_id,
             entity_ids,
         )
 
-    if not entities and not any(per_config_entities.values()):
+    if not non_batched_entities and not any(batched_entities_by_entry.values()):
         if return_response:
             raise HomeAssistantError(
                 "Service call requested response data but did not match any entities"
             )
         return None
 
-    if len(entities) == 1 and not per_config_entities:
+    if len(non_batched_entities) == 1 and not batched_entities_by_entry:
         # Single entity case avoids creating task
-        entity = entities[0]
+        entity = non_batched_entities[0]
         single_response = await _handle_entity_call(
             hass, entity, func, data, call.context
         )
@@ -945,15 +945,15 @@ async def entity_service_call(
             await entity.async_update_ha_state(True)
         return {entity.entity_id: single_response} if return_response else None
 
-    if not entities and len(per_config_entities) == 1:
+    if not non_batched_entities and len(batched_entities_by_entry) == 1:
         # Single override case
-        ((config_entry, entities_list),) = per_config_entities.items()
+        ((config_entry, entities_list),) = batched_entities_by_entry.items()
 
         override_response = await _service_call_wrapper(
             hass=hass,
             entities=entities_list,
             config_entry=config_entry,
-            handler=config_overrides[config_entry],
+            handler=batch_overrides[config_entry],
             call=call,
             data=data,
         )
@@ -964,21 +964,21 @@ async def entity_service_call(
             await entity.async_update_ha_state(force_refresh=True)
         return override_response if return_response else None
 
-    # For overrides: each config entry has a handler and set of entities
-    override_coros = [
+    # For batches each config entry has a handler and set of entities
+    batched_coros = [
         _service_call_wrapper(
             hass=hass,
             entities=entities_list,
-            handler=config_overrides[ce],
+            handler=batch_overrides[ce],
             config_entry=ce,
             call=call,
             data=data,
         )
-        for ce, entities_list in per_config_entities.items()
+        for ce, entities_list in batched_entities_by_entry.items()
     ]
 
-    # For normal entities (not overridden)
-    normal_coros = [
+    # Unbatched coroutines
+    unbatched_coros = [
         _service_call_wrapper(
             hass=hass,
             entities=[entity],
@@ -986,11 +986,11 @@ async def entity_service_call(
             call=call,
             data=data,
         )
-        for entity in entities
+        for entity in non_batched_entities
     ]
 
     all_results = await asyncio.gather(
-        *override_coros, *normal_coros, return_exceptions=True
+        *batched_coros, *unbatched_coros, return_exceptions=True
     )
 
     merged_results: EntityServiceResponse = {}
@@ -1009,15 +1009,21 @@ async def entity_service_call(
 
     tasks: list[asyncio.Task[None]] = []
 
-    for entity in entities:
-        if not entity.should_poll:
-            continue
+    # Combine unbatched and batched entities, only those that should poll
+    all_pollable_entities = [
+        entity for entity in non_batched_entities if entity.should_poll
+    ] + [
+        entity
+        for entities_list in batched_entities_by_entry.values()
+        for entity in entities_list
+        if entity.should_poll
+    ]
 
+    for entity in all_pollable_entities:
         # Context expires if the turn on commands took a long time.
         # Set context again so it's there when we update
         entity.async_set_context(call.context)
         tasks.append(create_eager_task(entity.async_update_ha_state(True)))
-
     if tasks:
         done, pending = await asyncio.wait(tasks)
         assert not pending
@@ -1354,22 +1360,20 @@ def async_register_platform_entity_service(
 
 
 @callback
-def async_register_entity_service_override(
+def async_register_batched_handler(
     hass: HomeAssistant,
     domain: str,
     service: str,
     config_entry: ConfigEntry,
-    handler: ConfigEntryServiceCallback,
+    handler: BatchedServiceCallback,
 ) -> None:
-    """Register a per-ConfigEntry service override for a service.
+    """Register a per-ConfigEntry batched entity handler for a service.
 
-    The `handler` receives a set of entities and an optional ServiceCall.
-    The handler is responsible for consuming (removing) all entities it processes.
-    Unconsumed entities will be passed to the default service handler for processing.
+    The handler receives a list of entities the ServiceCall.
     """
 
     service_obj = hass.services.async_services_internal().get(domain, {}).get(service)
     if not service_obj:
         raise HomeAssistantError(f"Service {domain}.{service} not found")
 
-    service_obj.async_register_config_entry_override(config_entry, handler)
+    service_obj.async_register_batched_handler(config_entry, handler)

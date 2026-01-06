@@ -126,7 +126,7 @@ BLOCK_LOG_TIMEOUT = 60
 
 type ServiceResponse = JsonObjectType | None
 type EntityServiceResponse = dict[str, ServiceResponse]
-type ConfigEntryServiceCallback = Callable[
+type BatchedServiceCallback = Callable[
     [ConfigEntry, list[Entity], ServiceCall],
     Coroutine[None, None, EntityServiceResponse | None],
 ]
@@ -2415,10 +2415,10 @@ class Service:
     """Representation of a callable service."""
 
     __slots__ = [
+        "batched_handlers",
         "description_placeholders",
         "domain",
         "job",
-        "overrides",
         "schema",
         "service",
         "supports_response",
@@ -2446,21 +2446,20 @@ class Service:
         self.schema = schema
         self.supports_response = supports_response
         self.description_placeholders = description_placeholders
-        self.overrides: dict[ConfigEntry, ConfigEntryServiceCallback] = {}
+        self.batched_handlers: dict[ConfigEntry, BatchedServiceCallback] = {}
 
     @callback
-    def async_register_config_entry_override(
+    def async_register_batched_handler(
         self,
         config_entry: ConfigEntry,
-        handler: ConfigEntryServiceCallback,
+        handler: BatchedServiceCallback,
     ) -> None:
-        """Register or update a per-ConfigEntry override for this service.
+        """Register or update a per-ConfigEntry batched entity handler for this service.
 
-        The override handler will receive a ConfigEntry, a set of entities
+        The handler will receive a ConfigEntry, a list of entities
         and a ServiceCall object.
-        The handler is responsible for consuming the entities it processes.
         """
-        self.overrides.setdefault(config_entry, handler)
+        self.batched_handlers.setdefault(config_entry, handler)
 
 
 class ServiceCall:
@@ -2668,22 +2667,17 @@ class ServiceRegistry:
         )
 
     @callback
-    def async_register_config_entry_override(
+    def async_register_batched_handler(
         self,
         domain: str,
         service: str,
         config_entry: ConfigEntry,
-        handler: ConfigEntryServiceCallback,
+        handler: BatchedServiceCallback,
     ) -> None:
-        """Register a per-ConfigEntry override for a specific service.
+        """Register a per-ConfigEntry batched entity handler for a specific service.
 
-        The override will be stored on the Service object and scoped to
-        the given ConfigEntry. The handler receives a set of entities and
-        an optional ServiceCall.
-
-        The `handler` receives a ConfigEntry, a set of entities and a ServiceCall.
-        The handler is responsible for consuming (removing) all entities it processes.
-        Unconsumed entities will be passed to the default service handler for processing.
+        The handler will be stored on the Service object and scoped to
+        the given ConfigEntry. The handler receives a list of entities and the ServiceCall.
         """
         domain = domain.lower()
         service = service.lower()
@@ -2695,7 +2689,7 @@ class ServiceRegistry:
                 f"Service {domain}.{service} does not exist; register it first"
             ) from err
 
-        service_obj.async_register_config_entry_override(config_entry, handler)
+        service_obj.async_register_batched_handler(config_entry, handler)
 
     def remove(self, domain: str, service: str) -> None:
         """Remove a registered service from service handler."""

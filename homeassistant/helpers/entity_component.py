@@ -17,7 +17,7 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP,
 )
 from homeassistant.core import (
-    ConfigEntryServiceCallback,
+    BatchedServiceCallback,
     Event,
     HassJobType,
     HomeAssistant,
@@ -270,19 +270,17 @@ class EntityComponent[_EntityT: entity.Entity = entity.Entity]:
         )
 
     @callback
-    def async_register_entity_service_override(
+    def async_register_batched_handler(
         self,
         name: str,
         config_entry: ConfigEntry,
-        handler: ConfigEntryServiceCallback,
+        handler: BatchedServiceCallback,
     ) -> None:
-        """Register a per-ConfigEntry override for an entity service.
+        """Register a per-ConfigEntry handler for a batched list of entities.
 
         This allows the integration to register a handler that receives all
-        entities associated with a specific ConfigEntry as well as a ServiceCall object.
-
-        The handler is responsible for consuming (removing) the entities it
-        processes. Any entities not consumed will be handled by the default service handler.
+        entities associated with a specific ConfigEntry for a given service
+        as well as the ServiceCall
         """
         # Look up the service object in the registry
         service_obj = (
@@ -292,7 +290,7 @@ class EntityComponent[_EntityT: entity.Entity = entity.Entity]:
             raise HomeAssistantError(f"Service {self.domain}.{name} is not registered")
 
         # Register the override
-        service_obj.async_register_config_entry_override(config_entry, handler)
+        service_obj.async_register_batched_handler(config_entry, handler)
 
     async def async_setup_platform(
         self,
