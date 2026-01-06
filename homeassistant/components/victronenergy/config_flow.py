@@ -516,13 +516,22 @@ class VictronConfigFlow(ConfigFlow, domain=DOMAIN):
             raise
         except CannotConnect:
             _LOGGER.warning("Connection failed")
-            return self.async_abort(reason="cannot_connect")
+            errors["base"] = "cannot_connect"
         except InvalidAuth:
             _LOGGER.warning("Authentication failed")
-            return self.async_abort(reason="invalid_auth")
+            errors["base"] = "invalid_auth"
         except Exception:
             _LOGGER.exception("Unexpected exception")
-            return self.async_abort(reason="unknown")
+            errors["base"] = "unknown"
+
+        # If we have errors, show the form again with error messages
+        if errors:
+            return self.async_show_form(
+                step_id="password",
+                data_schema=STEP_PASSWORD_DATA_SCHEMA,
+                errors=errors,
+                description_placeholders={"host": broker if broker else "unknown"},
+            )
 
     async def async_step_ssdp_password(
         self, user_input: dict[str, Any] | None = None
@@ -559,13 +568,28 @@ class VictronConfigFlow(ConfigFlow, domain=DOMAIN):
 
         except CannotConnect:
             _LOGGER.warning("Connection failed")
-            return self.async_abort(reason="cannot_connect")
+            return self.async_show_form(
+                step_id="ssdp_password",
+                data_schema=STEP_PASSWORD_DATA_SCHEMA,
+                errors={"base": "cannot_connect"},
+                description_placeholders=self.context.get("title_placeholders", {}),
+            )
         except InvalidAuth:
             _LOGGER.warning("Authentication failed")
-            return self.async_abort(reason="invalid_auth")
+            return self.async_show_form(
+                step_id="ssdp_password",
+                data_schema=STEP_PASSWORD_DATA_SCHEMA,
+                errors={"base": "invalid_auth"},
+                description_placeholders=self.context.get("title_placeholders", {}),
+            )
         except Exception:
             _LOGGER.exception("Unexpected exception")
-            return self.async_abort(reason="unknown")
+            return self.async_show_form(
+                step_id="ssdp_password",
+                data_schema=STEP_PASSWORD_DATA_SCHEMA,
+                errors={"base": "unknown"},
+                description_placeholders=self.context.get("title_placeholders", {}),
+            )
 
     async def async_step_ssdp_confirm(
         self, user_input: dict[str, Any] | None = None

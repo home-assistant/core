@@ -772,13 +772,36 @@ class VictronMqttManager:
 
         if self.client:
             try:
+                # Unsubscribe from all topics to clean up server-side subscriptions
+                await self.hass.async_add_executor_job(self.client.unsubscribe, "#")
+                _LOGGER.debug("Unsubscribed from all topics")
+            except Exception:
+                _LOGGER.debug("Error unsubscribing from topics (client may already be disconnected)")
+            
+            try:
+                # Stop the network loop first
                 await self.hass.async_add_executor_job(self.client.loop_stop)
+                _LOGGER.debug("MQTT loop stopped")
             except Exception:
                 _LOGGER.exception("Error stopping MQTT loop")
+            
             try:
+                # Disconnect the client
                 await self.hass.async_add_executor_job(self.client.disconnect)
+                _LOGGER.debug("MQTT client disconnected")
             except Exception:
                 _LOGGER.exception("Error disconnecting MQTT client")
+            
+            # Clear event handlers to remove callback references
+            try:
+                self.client.on_connect = None
+                self.client.on_message = None
+                self.client.on_disconnect = None
+                _LOGGER.debug("Cleared MQTT event handlers")
+            except Exception:
+                _LOGGER.debug("Error clearing MQTT event handlers")
+            
+            # Clear client reference
             self.client = None
         _LOGGER.info("VictronMqttManager cleanup completed")
 
@@ -879,16 +902,29 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
+    _LOGGER.info("Starting unload process for Victron Energy entry %s", entry.entry_id)
+    
+    # Get the manager before removing it from hass.data
+    manager: VictronMqttManager | None = hass.data.get(DOMAIN, {}).get(entry.entry_id)
+    
     # First unload platforms that were forwarded during setup
     unload_ok = await hass.config_entries.async_unload_platforms(entry, _PLATFORMS)
+    _LOGGER.debug("Platforms unloaded: %s", unload_ok)
 
-    manager: VictronMqttManager | None = hass.data.get(DOMAIN, {}).pop(
-        entry.entry_id, None
-    )
-
+    # Remove the manager from hass.data
+    hass.data.get(DOMAIN, {}).pop(entry.entry_id, None)
+    
+    # Clean up manager resources regardless of platform unload result
     if manager:
-        # Clean up manager resources regardless of platform unload result
         await manager.cleanup()
+        _LOGGER.debug("Manager cleanup completed")
+    else:
+        _LOGGER.warning("No manager found for entry %s during unload", entry.entry_id)
+
+    # Clean up the domain data if no more entries exist
+    if DOMAIN in hass.data and not hass.data[DOMAIN]:
+        hass.data.pop(DOMAIN, None)
+        _LOGGER.debug("Removed empty domain data")
 
     _LOGGER.info(
         "Victron Energy integration unloaded for entry %s (platforms unloaded=%s)",

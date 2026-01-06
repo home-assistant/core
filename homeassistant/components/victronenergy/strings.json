@@ -6,6 +6,9 @@
         "description": "Enter the IP address or hostname of your Victron Energy device.",
         "data": {
           "broker": "Host"
+        },
+        "data_description": {
+          "broker": "IP address or hostname of your Victron Energy device"
         }
       },
       "password": {
@@ -13,6 +16,9 @@
         "description": "Unsecure MQTT connection failed. Please enter the secure profile password for device {host}.",
         "data": {
           "password": "Secure profile password"
+        },
+        "data_description": {
+          "password": "Password required for secure MQTT connection"
         }
       },
       "ssdp_confirm": {
@@ -25,8 +31,16 @@
         "description": "Unsecure MQTT connection for {name} @ {host}. Please enter the secure profile password.",
         "data": {
           "password": "Secure profile password"
+        },
+        "data_description": {
+          "password": "Password for secure MQTT connection to the device"
         }
       }
+    },
+    "error": {
+      "cannot_connect": "Connection failed. Please check the device is online and accessible.",
+      "invalid_auth": "Authentication failed. Please check your credentials and try again.",
+      "unknown": "Unexpected error occurred. Please try again."
     },
     "abort": {
       "already_configured": "Device is already configured",
