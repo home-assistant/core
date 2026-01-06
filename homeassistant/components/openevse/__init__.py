@@ -17,7 +17,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: OpenEVSEConfigEntry) -> 
 
     entry.runtime_data = OpenEVSE(entry.data[CONF_HOST])
     try:
-        await entry.runtime_data.update()
+        await entry.runtime_data.test_and_get()
     except TimeoutError as ex:
         raise ConfigEntryError("Unable to connect to charger") from ex
 

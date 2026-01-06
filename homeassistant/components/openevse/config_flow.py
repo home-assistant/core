@@ -22,7 +22,7 @@ class OpenEVSEConfigFlow(ConfigFlow, domain=DOMAIN):
 
         charger = OpenEVSE(host)
         try:
-            await charger.update()
+            await charger.test_and_get()
         except TimeoutError:
             return False
         else:
