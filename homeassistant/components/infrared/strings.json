@@ -1,5 +1,8 @@
 {
   "exceptions": {
+    "entity_not_found": {
+      "message": "Infrared entity `{entity_id}` not found"
+    },
     "send_command_failed": {
       "message": "Failed to send IR command: {error}"
     }

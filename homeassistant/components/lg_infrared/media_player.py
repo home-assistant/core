@@ -2,14 +2,7 @@
 
 from __future__ import annotations
 
-import logging
-
-from homeassistant.components.infrared import (
-    DATA_COMPONENT,
-    InfraredEntity,
-    NECInfraredCommand,
-    NECInfraredProtocol,
-)
+from homeassistant.components.infrared import NECInfraredCommand, async_send_command
 from homeassistant.components.media_player import (
     MediaPlayerDeviceClass,
     MediaPlayerEntity,
@@ -31,10 +24,6 @@ from .const import (
     LGDeviceType,
     LGTVCommand,
 )
-
-_LOGGER = logging.getLogger(__name__)
-
-LG_PROTOCOL = NECInfraredProtocol()
 
 
 async def async_setup_entry(
@@ -103,27 +92,14 @@ class LgIrTvMediaPlayer(MediaPlayerEntity):
             ir_state is not None and ir_state.state != STATE_UNAVAILABLE
         )
 
-    def _get_infrared_entity(self) -> InfraredEntity | None:
-        """Get the infrared entity."""
-        component = self.hass.data.get(DATA_COMPONENT)
-        if component is None:
-            return None
-        return component.get_entity(self._infrared_entity_id)
-
     async def _send_command(self, command_code: int, repeat_count: int = 1) -> None:
         """Send an IR command using the LG protocol."""
-        entity = self._get_infrared_entity()
-        if entity is None:
-            _LOGGER.error("Infrared entity %s not found", self._infrared_entity_id)
-            return
-
         command = NECInfraredCommand(
             address=LG_ADDRESS,
             command=command_code,
-            protocol=LG_PROTOCOL,
             repeat_count=repeat_count,
         )
-        await entity.async_send_command(command)
+        await async_send_command(self.hass, self._infrared_entity_id, command)
 
     async def async_turn_on(self) -> None:
         """Turn on the TV."""

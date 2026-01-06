@@ -11,6 +11,7 @@ from propcache.api import cached_property
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
@@ -49,6 +50,7 @@ __all__ = [
     "SamsungInfraredCommand",
     "SamsungInfraredProtocol",
     "async_get_entities",
+    "async_send_command",
 ]
 
 _LOGGER = logging.getLogger(__name__)
@@ -94,6 +96,29 @@ def async_get_entities(
         protocol_set = set(protocols)
         entities = [e for e in entities if e.supported_protocols & protocol_set]
     return entities
+
+
+async def async_send_command(
+    hass: HomeAssistant, entity_id: str, command: InfraredCommand
+) -> None:
+    """Send an IR command to the specified infrared entity.
+
+    Raises:
+        HomeAssistantError: If the infrared entity is not found.
+    """
+    component = hass.data.get(DATA_COMPONENT)
+    if component is None:
+        raise HomeAssistantError("Infrared component not loaded.")
+
+    entity = component.get_entity(entity_id)
+    if entity is None:
+        raise HomeAssistantError(
+            translation_domain=DOMAIN,
+            translation_key="entity_not_found",
+            translation_placeholders={"entity_id": entity_id},
+        )
+
+    await entity.async_send_command(command)
 
 
 class InfraredEntityDescription(EntityDescription, frozen_or_thawed=True):

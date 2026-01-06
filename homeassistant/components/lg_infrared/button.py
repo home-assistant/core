@@ -3,14 +3,9 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-import logging
 
 from homeassistant.components.button import ButtonEntity, ButtonEntityDescription
-from homeassistant.components.infrared import (
-    DATA_COMPONENT,
-    InfraredEntity,
-    NECInfraredCommand,
-)
+from homeassistant.components.infrared import NECInfraredCommand, async_send_command
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import Event, EventStateChangedData, HomeAssistant, callback
@@ -26,8 +21,6 @@ from .const import (
     LGDeviceType,
     LGTVCommand,
 )
-
-_LOGGER = logging.getLogger(__name__)
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -251,23 +244,11 @@ class LgIrButton(ButtonEntity):
             ir_state is not None and ir_state.state != STATE_UNAVAILABLE
         )
 
-    def _get_infrared_entity(self) -> InfraredEntity | None:
-        """Get the infrared entity."""
-        component = self.hass.data.get(DATA_COMPONENT)
-        if component is None:
-            return None
-        return component.get_entity(self._infrared_entity_id)
-
     async def async_press(self) -> None:
         """Press the button."""
-        entity = self._get_infrared_entity()
-        if entity is None:
-            _LOGGER.error("Infrared entity %s not found", self._infrared_entity_id)
-            return
-
         command = NECInfraredCommand(
             address=LG_ADDRESS,
             command=self._description.command_code,
             repeat_count=1,
         )
-        await entity.async_send_command(command)
+        await async_send_command(self.hass, self._infrared_entity_id, command)

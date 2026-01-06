@@ -1,5 +1,7 @@
 """Tests for the Infrared integration setup."""
 
+import pytest
+
 from homeassistant.components.infrared import (
     DATA_COMPONENT,
     DOMAIN,
@@ -7,8 +9,10 @@ from homeassistant.components.infrared import (
     InfraredProtocolType,
     NECInfraredCommand,
     async_get_entities,
+    async_send_command,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.setup import async_setup_component
 
 from .conftest import MockInfraredEntity
@@ -92,3 +96,39 @@ async def test_infrared_entity_features(
     assert mock_infrared_entity.supported_features == InfraredEntityFeature.TRANSMIT
     assert InfraredProtocolType.NEC in mock_infrared_entity.supported_protocols
     assert InfraredProtocolType.PULSE_WIDTH in mock_infrared_entity.supported_protocols
+
+
+async def test_async_send_command_success(
+    hass: HomeAssistant,
+    init_integration: None,
+    mock_infrared_entity: MockInfraredEntity,
+) -> None:
+    """Test sending command via async_send_command helper."""
+    # Add the mock entity to the component
+    component = hass.data[DATA_COMPONENT]
+    await component.async_add_entities([mock_infrared_entity])
+
+    command = NECInfraredCommand(repeat_count=1, address=0x04FB, command=0x08F7)
+
+    await async_send_command(hass, "infrared.test_ir_transmitter", command)
+
+    assert len(mock_infrared_entity.send_command_calls) == 1
+    assert mock_infrared_entity.send_command_calls[0] is command
+
+
+async def test_async_send_command_entity_not_found(
+    hass: HomeAssistant, init_integration: None
+) -> None:
+    """Test async_send_command raises error when entity not found."""
+    command = NECInfraredCommand(repeat_count=1, address=0x04FB, command=0x08F7)
+
+    with pytest.raises(HomeAssistantError, match="entity_not_found"):
+        await async_send_command(hass, "infrared.nonexistent_entity", command)
+
+
+async def test_async_send_command_component_not_loaded(hass: HomeAssistant) -> None:
+    """Test async_send_command raises error when component not loaded."""
+    command = NECInfraredCommand(repeat_count=1, address=0x04FB, command=0x08F7)
+
+    with pytest.raises(HomeAssistantError, match="Infrared component not loaded"):
+        await async_send_command(hass, "infrared.some_entity", command)
