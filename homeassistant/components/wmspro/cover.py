@@ -48,7 +48,9 @@ async def async_setup_entry(
             entities.append(WebControlProValance(config_entry.entry_id, dest))
         if dest.hasAction(ACTION_DESC.RollerShutterBlindDrive):
             entities.append(WebControlProRollerShutter(config_entry.entry_id, dest))
-        elif dest.hasAction(ACTION_DESC.SlatDrive) and dest.hasAction(ACTION_DESC.SlatRotate):
+        if dest.hasAction(ACTION_DESC.SlatDrive) and dest.hasAction(
+            ACTION_DESC.SlatRotate
+        ):
             entities.append(WebControlProSlatRotate(config_entry.entry_id, dest))
         elif dest.hasAction(ACTION_DESC.SlatDrive):
             entities.append(WebControlProSlat(config_entry.entry_id, dest))
@@ -141,13 +143,11 @@ class WebControlProSlatRotate(WebControlProSlat):
 
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Open the cover and tilt like the hub."""
-        await super().async_open_cover(**kwargs)
-        await self.async_open_cover_tilt(**kwargs)
-
-    async def async_close_cover(self, **kwargs: Any) -> None:
-        """Close the cover and tilt like the hub."""
-        await super().async_close_cover(**kwargs)
-        await self.async_close_cover_tilt(**kwargs)
+        action_drive = self._dest.action(self._drive_action_desc)
+        action_list = action_drive.prep(percentage=0)
+        action_tilt = self._dest.action(self._tilt_action_desc)
+        action_list += action_tilt.prep(rotation=0)
+        await action_list()
 
     @property
     def current_cover_tilt_position(self) -> int | None:
