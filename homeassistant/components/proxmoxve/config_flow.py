@@ -49,7 +49,7 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-def _validate_input_sync(data: dict[str, Any]) -> list[dict[str, Any]]:
+def _get_nodes_data(data: dict[str, Any]) -> list[dict[str, Any]]:
     """Validate the user input and fetch data (sync, for executor)."""
     user_id = (
         data[CONF_USERNAME]
