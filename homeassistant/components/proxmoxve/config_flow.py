@@ -18,7 +18,6 @@ from homeassistant.const import (
     CONF_USERNAME,
     CONF_VERIFY_SSL,
 )
-from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
@@ -97,13 +96,6 @@ def _get_nodes_data(data: dict[str, Any]) -> list[dict[str, Any]]:
     return nodes_data
 
 
-async def _validate_input(
-    hass: HomeAssistant, data: dict[str, Any]
-) -> list[dict[str, Any]]:
-    """Return a simple wrapper to validate the user input."""
-    return await hass.async_add_executor_job(_validate_input_sync, data)
-
-
 class ProxmoxveConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Proxmox VE."""
 
@@ -117,7 +109,9 @@ class ProxmoxveConfigFlow(ConfigFlow, domain=DOMAIN):
         proxmox_nodes: list[dict[str, Any]] = []
         if user_input is not None:
             try:
-                proxmox_nodes = await _validate_input(self.hass, user_input)
+                proxmox_nodes = await self.hass.async_add_executor_job(
+                    _get_nodes_data, user_input
+                )
             except ProxmoxConnectTimeout:
                 errors["base"] = "connect_timeout"
             except ProxmoxAuthenticationError:
@@ -129,20 +123,22 @@ class ProxmoxveConfigFlow(ConfigFlow, domain=DOMAIN):
 
             if "base" not in errors:
                 for node in proxmox_nodes:
-                    updated_node = {
-                        CONF_NODE: node["node"],
-                        CONF_VMS: [vm["vmid"] for vm in node["vms"]],
-                        CONF_CONTAINERS: [
-                            container["vmid"] for container in node["containers"]
-                        ],
-                    }
-                    user_input.setdefault(CONF_NODES, []).append(updated_node)
+                    user_input.setdefault(CONF_NODES, []).append(
+                        {
+                            CONF_NODE: node["node"],
+                            CONF_VMS: [vm["vmid"] for vm in node["vms"]],
+                            CONF_CONTAINERS: [
+                                container["vmid"] for container in node["containers"]
+                            ],
+                        }
+                    )
 
                 await self.async_set_unique_id(user_input[CONF_HOST])
                 self._abort_if_unique_id_configured()
 
                 return self.async_create_entry(
-                    title=user_input[CONF_HOST], data=user_input
+                    title=user_input[CONF_HOST],
+                    data={**user_input, CONF_NODES: user_input[CONF_NODES]},
                 )
 
         return self.async_show_form(

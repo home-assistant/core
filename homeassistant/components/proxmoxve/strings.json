@@ -11,13 +11,6 @@
       "ssl_error": "SSL check failed. Check the SSL settings"
     },
     "step": {
-      "setup": {
-        "data": {
-          "nodes": "Nodes"
-        },
-        "description": "Select the nodes you want to integrate with Home Assistant.",
-        "title": "Set up Proxmox VE"
-      },
       "user": {
         "data": {
           "host": "[%key:common::config_flow::data::host%]",
@@ -34,7 +27,7 @@
   },
   "issues": {
     "deprecated_yaml": {
-      "description": "Configuring Proxmox VE using YAML is being removed but there was a connection error importing your YAML configuration.\n\nEnsure connection to Proxmox VE works and restart Home Assistant to try again or remove the Proxmox VE YAML configuration from your configuration.yaml file and continue to set up the integration manually.",
+      "description": "Configuring Proxmox VE using YAML is being removed but there was a error importing your YAML configuration.\n\nEnsure connection to Proxmox VE works and restart Home Assistant to try again or remove the Proxmox VE YAML configuration from your configuration.yaml file and continue to set up the integration manually.",
       "title": "The {integration_title} YAML configuration is being removed"
     }
   }
