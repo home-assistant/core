@@ -173,7 +173,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             coordinator = create_coordinator_container_vm(
                 hass, entry, proxmox, host_name, node_name, vm["vmid"], TYPE_VM
             )
-            await coordinator.async_refresh()
+            await coordinator.async_config_entry_first_refresh()
 
             node_coordinators[vm["vmid"]] = coordinator
 
