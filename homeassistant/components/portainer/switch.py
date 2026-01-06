@@ -137,13 +137,19 @@ class PortainerContainerSwitch(PortainerContainerEntity, SwitchEntity):
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Start (turn on) the container."""
         await self.entity_description.turn_on_fn(
-            "start", self.coordinator.portainer, self.endpoint_id, self.device_id
+            "start",
+            self.coordinator.portainer,
+            self.endpoint_id,
+            self.container_data.container.id,
         )
         await self.coordinator.async_request_refresh()
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Stop (turn off) the container."""
         await self.entity_description.turn_off_fn(
-            "stop", self.coordinator.portainer, self.endpoint_id, self.device_id
+            "stop",
+            self.coordinator.portainer,
+            self.endpoint_id,
+            self.container_data.container.id,
         )
         await self.coordinator.async_request_refresh()

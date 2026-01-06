@@ -19,6 +19,7 @@ from homeassistant.components.light import (
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.util import color as color_util
 
 from .entity import (
     ReolinkChannelCoordinatorEntity,
@@ -157,16 +158,16 @@ class ReolinkLightEntity(ReolinkChannelCoordinatorEntity, LightEntity):
 
     @property
     def brightness(self) -> int | None:
-        """Return the brightness of this light between 0.255."""
+        """Return the brightness of this light between 1.255."""
         assert self.entity_description.get_brightness_fn is not None
 
         bright_pct = self.entity_description.get_brightness_fn(
             self._host.api, self._channel
         )
-        if bright_pct is None:
+        if not bright_pct:
             return None
 
-        return round(255 * bright_pct / 100.0)
+        return color_util.value_to_brightness((1, 100), bright_pct)
 
     @property
     def color_temp_kelvin(self) -> int | None:
@@ -189,7 +190,7 @@ class ReolinkLightEntity(ReolinkChannelCoordinatorEntity, LightEntity):
         if (
             brightness := kwargs.get(ATTR_BRIGHTNESS)
         ) is not None and self.entity_description.set_brightness_fn is not None:
-            brightness_pct = int(brightness / 255.0 * 100)
+            brightness_pct = round(color_util.brightness_to_value((1, 100), brightness))
             await self.entity_description.set_brightness_fn(
                 self._host.api, self._channel, brightness_pct
             )

@@ -662,7 +662,7 @@
       'area_id': None,
       'capabilities': dict({
         'preset_modes': list([
-          'advancedSleep',
+          'advanced_sleep',
           'auto',
           'normal',
           'turbo',
@@ -710,7 +710,7 @@
       'percentage_step': 8.333333333333334,
       'preset_mode': 'normal',
       'preset_modes': list([
-        'advancedSleep',
+        'advanced_sleep',
         'auto',
         'normal',
         'turbo',
