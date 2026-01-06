@@ -38,7 +38,7 @@
           "1": "Input 1",
           "2": "Input 2",
           "3": "Input 3",
-          "4": "Input TX1"
+          "4": "Copy TX1"
         }
       },
       "portseltx1": {
@@ -48,7 +48,7 @@
           "1": "Input 1",
           "2": "Input 2",
           "3": "Input 3",
-          "4": "Input TX0"
+          "4": "Copy TX0"
         }
       }
     }
