@@ -52,9 +52,7 @@ class BraviaTVConfigFlow(ConfigFlow, domain=DOMAIN):
             self.hass,
             cookie_jar=CookieJar(unsafe=True, quote_cookie=False),
         )
-        self.client = BraviaClient(
-            host=host, session=session, ssl=ssl, ssl_verify=False
-        )
+        self.client = BraviaClient(host=host, session=session, ssl=ssl)
 
     async def gen_instance_ids(self) -> tuple[str, str]:
         """Generate client_id and nickname."""
