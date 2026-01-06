@@ -8597,7 +8597,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0.0',
+    'state': '0.304',
   })
 # ---
 # name: test_platform_setup_and_discovery[sensor.ha_socket_delta_test_power-entry]
@@ -8653,7 +8653,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0.0',
+    'state': '5.4',
   })
 # ---
 # name: test_platform_setup_and_discovery[sensor.ha_socket_delta_test_total_energy-entry]
@@ -8704,7 +8704,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0.1',
+    'state': '0.084',
   })
 # ---
 # name: test_platform_setup_and_discovery[sensor.ha_socket_delta_test_voltage-entry]
@@ -8763,7 +8763,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0.0',
+    'state': '224.0',
   })
 # ---
 # name: test_platform_setup_and_discovery[sensor.hl400_pm2_5-entry]

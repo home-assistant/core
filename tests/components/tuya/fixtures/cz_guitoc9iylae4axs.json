@@ -3,6 +3,7 @@
   "mqtt_connected": true,
   "disabled_by": null,
   "disabled_polling": false,
+
   "name": "HA Socket Delta Test",
   "category": "cz",
   "product_id": "guitoc9iylae4axs",
@@ -34,6 +35,10 @@
         "range": ["power_off", "power_on", "last"]
       }
     },
+    "overcharge_switch": {
+      "type": "Boolean",
+      "value": {}
+    },
     "light_mode": {
       "type": "Enum",
       "value": {
@@ -42,6 +47,18 @@
     },
     "child_lock": {
       "type": "Boolean",
+      "value": {}
+    },
+    "cycle_time": {
+      "type": "String",
+      "value": {}
+    },
+    "random_time": {
+      "type": "String",
+      "value": {}
+    },
+    "switch_inching": {
+      "type": "String",
       "value": {}
     }
   },
@@ -100,6 +117,42 @@
         "step": 1
       }
     },
+    "voltage_coe": {
+      "type": "Integer",
+      "value": {
+        "min": 0,
+        "max": 1000000,
+        "scale": 0,
+        "step": 1
+      }
+    },
+    "electric_coe": {
+      "type": "Integer",
+      "value": {
+        "min": 0,
+        "max": 1000000,
+        "scale": 0,
+        "step": 1
+      }
+    },
+    "power_coe": {
+      "type": "Integer",
+      "value": {
+        "min": 0,
+        "max": 1000000,
+        "scale": 0,
+        "step": 1
+      }
+    },
+    "electricity_coe": {
+      "type": "Integer",
+      "value": {
+        "min": 0,
+        "max": 1000000,
+        "scale": 0,
+        "step": 1
+      }
+    },
     "fault": {
       "type": "Bitmap",
       "value": {
@@ -112,6 +165,10 @@
         "range": ["power_off", "power_on", "last"]
       }
     },
+    "overcharge_switch": {
+      "type": "Boolean",
+      "value": {}
+    },
     "light_mode": {
       "type": "Enum",
       "value": {
@@ -121,19 +178,39 @@
     "child_lock": {
       "type": "Boolean",
       "value": {}
+    },
+    "cycle_time": {
+      "type": "String",
+      "value": {}
+    },
+    "random_time": {
+      "type": "String",
+      "value": {}
+    },
+    "switch_inching": {
+      "type": "String",
+      "value": {}
     }
   },
   "status": {
-    "switch_1": false,
+    "switch_1": true,
     "countdown_1": 0,
-    "add_ele": 100,
-    "cur_current": 0,
-    "cur_power": 0,
-    "cur_voltage": 0,
+    "add_ele": 84,
+    "cur_current": 304,
+    "cur_power": 54,
+    "cur_voltage": 2240,
+    "voltage_coe": 0,
+    "electric_coe": 0,
+    "power_coe": 0,
+    "electricity_coe": 0,
     "fault": 0,
     "relay_status": "power_off",
+    "overcharge_switch": false,
     "light_mode": "relay",
-    "child_lock": false
+    "child_lock": false,
+    "cycle_time": "",
+    "random_time": "",
+    "switch_inching": ""
   },
   "set_up": true,
   "support_local": true
