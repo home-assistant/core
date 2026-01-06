@@ -97,6 +97,32 @@
         "default": "mdi:ph"
       }
     },
+    "select": {
+      "cl_type_dosing_method": {
+        "default": "mdi:beaker"
+      },
+      "cl_type_dosing_set": {
+        "default": "mdi:pool"
+      },
+      "flow_rate_unit": {
+        "default": "mdi:pipe-valve"
+      },
+      "orp_type_dosing_method": {
+        "default": "mdi:beaker"
+      },
+      "orp_type_dosing_set": {
+        "default": "mdi:water-check"
+      },
+      "ph_type_dosing_method": {
+        "default": "mdi:beaker"
+      },
+      "ph_type_dosing_set": {
+        "default": "mdi:ph"
+      },
+      "water_meter_unit": {
+        "default": "mdi:water"
+      }
+    },
     "sensor": {
       "cl": {
         "default": "mdi:pool"
