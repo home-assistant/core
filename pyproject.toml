@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "homeassistant"
-version = "2026.1.0.dev0"
+version = "2026.2.0.dev0"
 license = "Apache-2.0"
 license-files = ["LICENSE*", "homeassistant/backports/LICENSE*"]
 description = "Open-source home automation platform running on Python 3."
@@ -29,7 +29,7 @@ dependencies = [
   # change behavior based on presence of supervisor. Deprecated with #127228
   # Lib can be removed with 2025.11
   "aiohasupervisor==0.3.3",
-  "aiohttp==3.13.2",
+  "aiohttp==3.13.3",
   "aiohttp_cors==0.8.1",
   "aiohttp-fast-zlib==0.3.0",
   "aiohttp-asyncmdnsresolver==0.1.1",
@@ -76,9 +76,9 @@ dependencies = [
   "ulid-transform==1.5.2",
   "urllib3>=2.0",
   "uv==0.9.17",
-  "voluptuous==0.15.2",
+  "voluptuous==0.16.0",
   "voluptuous-serialize==2.7.0",
-  "voluptuous-openapi==0.1.0",
+  "voluptuous-openapi==0.3.0",
   "yarl==1.22.0",
   "webrtc-models==0.3.0",
   "zeroconf==0.148.0",
