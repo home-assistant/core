@@ -22,7 +22,7 @@ from homeassistant.components.cover import (
 )
 from homeassistant.components.number import NumberMode
 from homeassistant.components.sensor import (
-    CONF_STATE_CLASS,
+    CONF_STATE_CLASS as CONF_SENSOR_STATE_CLASS,
     DEVICE_CLASSES_SCHEMA as SENSOR_DEVICE_CLASSES_SCHEMA,
     STATE_CLASSES_SCHEMA,
 )
@@ -63,6 +63,7 @@ from .const import (
     FanZeroMode,
     SceneConf,
 )
+from .dpt import get_supported_dpts
 from .validation import (
     backwards_compatible_xknx_climate_enum_member,
     dpt_base_type_validator,
@@ -72,6 +73,7 @@ from .validation import (
     sensor_type_validator,
     string_type_validator,
     sync_state_validator,
+    validate_sensor_attributes,
 )
 
 
@@ -169,6 +171,13 @@ def select_options_sub_validator(entity_config: OrderedDict) -> OrderedDict:
             raise vol.Invalid(f"duplicate item for 'payload' not allowed: {payload}")
         payloads_seen.add(payload)
     return entity_config
+
+
+def _sensor_attribute_sub_validator(config: dict) -> dict:
+    """Validate that state_class is compatible with device_class and unit_of_measurement."""
+    transcoder: type[DPTBase] = DPTBase.parse_transcoder(config[CONF_TYPE])  # type: ignore[assignment]  # already checked in sensor_type_validator
+    dpt_metadata = get_supported_dpts()[transcoder.dpt_number_str()]
+    return validate_sensor_attributes(dpt_metadata, config)
 
 
 #########
@@ -874,17 +883,20 @@ class SensorSchema(KNXPlatformSchema):
     CONF_SYNC_STATE = CONF_SYNC_STATE
     DEFAULT_NAME = "KNX Sensor"
 
-    ENTITY_SCHEMA = vol.Schema(
-        {
-            vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-            vol.Optional(CONF_SYNC_STATE, default=True): sync_state_validator,
-            vol.Optional(CONF_ALWAYS_CALLBACK, default=False): cv.boolean,
-            vol.Optional(CONF_STATE_CLASS): STATE_CLASSES_SCHEMA,
-            vol.Required(CONF_TYPE): sensor_type_validator,
-            vol.Required(CONF_STATE_ADDRESS): ga_list_validator,
-            vol.Optional(CONF_DEVICE_CLASS): SENSOR_DEVICE_CLASSES_SCHEMA,
-            vol.Optional(CONF_ENTITY_CATEGORY): ENTITY_CATEGORIES_SCHEMA,
-        }
+    ENTITY_SCHEMA = vol.All(
+        vol.Schema(
+            {
+                vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+                vol.Optional(CONF_SYNC_STATE, default=True): sync_state_validator,
+                vol.Optional(CONF_ALWAYS_CALLBACK, default=False): cv.boolean,
+                vol.Optional(CONF_SENSOR_STATE_CLASS): STATE_CLASSES_SCHEMA,
+                vol.Required(CONF_TYPE): sensor_type_validator,
+                vol.Required(CONF_STATE_ADDRESS): ga_list_validator,
+                vol.Optional(CONF_DEVICE_CLASS): SENSOR_DEVICE_CLASSES_SCHEMA,
+                vol.Optional(CONF_ENTITY_CATEGORY): ENTITY_CATEGORIES_SCHEMA,
+            }
+        ),
+        _sensor_attribute_sub_validator,
     )
 
 
