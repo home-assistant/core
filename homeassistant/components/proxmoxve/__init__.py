@@ -187,7 +187,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 container["vmid"],
                 TYPE_CONTAINER,
             )
-            await coordinator.async_refresh()
+            await coordinator.async_config_entry_first_refresh()
 
             node_coordinators[container["vmid"]] = coordinator
 
