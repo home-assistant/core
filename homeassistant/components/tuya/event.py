@@ -177,14 +177,11 @@ async def async_setup_entry(
             if descriptions := EVENTS.get(device.category):
                 entities.extend(
                     TuyaEventEntity(
-                        device,
-                        manager,
-                        description,
-                        event_wrapper=event_wrapper,
+                        device, manager, description, dpcode_wrapper=dpcode_wrapper
                     )
                     for description in descriptions
                     if (
-                        event_wrapper := description.wrapper_class.find_dpcode(
+                        dpcode_wrapper := description.wrapper_class.find_dpcode(
                             device, description.key
                         )
                     )
@@ -209,24 +206,23 @@ class TuyaEventEntity(TuyaEntity, EventEntity):
         device: CustomerDevice,
         device_manager: Manager,
         description: EventEntityDescription,
-        *,
-        event_wrapper: DeviceWrapper[tuple[str, dict[str, Any] | None]],
+        dpcode_wrapper: DeviceWrapper[tuple[str, dict[str, Any] | None]],
     ) -> None:
         """Init Tuya event entity."""
         super().__init__(device, device_manager)
         self.entity_description = description
         self._attr_unique_id = f"{super().unique_id}{description.key}"
-        self._event_wrapper = event_wrapper
-        self._attr_event_types = event_wrapper.options
+        self._dpcode_wrapper = dpcode_wrapper
+        self._attr_event_types = dpcode_wrapper.options
 
     async def _handle_state_update(
         self,
         updated_status_properties: list[str] | None,
         dp_timestamps: dict | None = None,
     ) -> None:
-        if self._event_wrapper.skip_update(
+        if self._dpcode_wrapper.skip_update(
             self.device, updated_status_properties
-        ) or not (event_data := self._event_wrapper.read_device_status(self.device)):
+        ) or not (event_data := self._dpcode_wrapper.read_device_status(self.device)):
             return
 
         event_type, event_attributes = event_data
