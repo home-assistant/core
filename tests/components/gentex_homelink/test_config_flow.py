@@ -143,11 +143,11 @@ async def test_reauth_successful(
     hass: HomeAssistant,
     mock_srp_auth: AsyncMock,
     aioclient_mock: AiohttpClientMocker,
-    mock_expired_config_entry: MockConfigEntry,
+    mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test the reauth flow."""
-    await setup_integration(hass, mock_expired_config_entry)
-    result = await mock_expired_config_entry.start_reauth_flow(hass)
+    await setup_integration(hass, mock_config_entry)
+    result = await mock_config_entry.start_reauth_flow(hass)
     assert result["step_id"] == "reauth_confirm"
     assert result["type"] is FlowResultType.FORM
     result = await hass.config_entries.flow.async_configure(
@@ -162,11 +162,11 @@ async def test_reauth_error(
     hass: HomeAssistant,
     mock_invalid_srp_auth: AsyncMock,
     aioclient_mock: AiohttpClientMocker,
-    mock_expired_config_entry: MockConfigEntry,
+    mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test the reauth flow."""
-    await setup_integration(hass, mock_expired_config_entry)
-    result = await mock_expired_config_entry.start_reauth_flow(hass)
+    await setup_integration(hass, mock_config_entry)
+    result = await mock_config_entry.start_reauth_flow(hass)
     assert result["step_id"] == "reauth_confirm"
     assert result["type"] is FlowResultType.FORM
     result = await hass.config_entries.flow.async_configure(

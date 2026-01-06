@@ -2,7 +2,6 @@
 
 from collections.abc import Generator
 from http import HTTPStatus
-import time
 from unittest.mock import AsyncMock, patch
 
 from homelink.model.button import Button
@@ -100,26 +99,6 @@ def mock_config_entry() -> MockConfigEntry:
                 "expires_in": 3600,
                 "token_type": "bearer",
                 "expires_at": 1234567890,
-            },
-        },
-    )
-
-
-@pytest.fixture
-def mock_expired_config_entry() -> MockConfigEntry:
-    """Mock setup entry."""
-    return MockConfigEntry(
-        unique_id=TEST_UNIQUE_ID,
-        version=1,
-        domain=DOMAIN,
-        data={
-            "auth_implementation": "gentex_homelink",
-            "token": {
-                "access_token": "access",
-                "refresh_token": "refresh",
-                "expires_in": 3600,
-                "token_type": "bearer",
-                "expires_at": time.time() + 10000,
             },
         },
     )
