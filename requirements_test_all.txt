@@ -2423,7 +2423,7 @@ soco==0.30.14
 solaredge-web==0.0.1
 
 # homeassistant.components.solarlog
-solarlog_cli==0.6.1
+solarlog_cli==0.7.0
 
 # homeassistant.components.solax
 solax==3.2.3
