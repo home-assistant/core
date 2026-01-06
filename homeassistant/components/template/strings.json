@@ -6,6 +6,10 @@
     "code_format": "Code format",
     "device_class": "Device class",
     "device_id_description": "Select a device to link to this entity.",
+    "delay_on": "Delay on",
+    "delay_on_description": "The amount of time the template state must be met before this sensor switches to `on`.",
+    "delay_off": "Delay off",
+    "delay_off_description": "The amount of time the template state must not be met before this sensor switches to `off`.",
     "state": "State",
     "turn_off": "Actions on turn off",
     "turn_on": "Actions on turn on",
@@ -44,10 +48,14 @@
         "sections": {
           "advanced_options": {
             "data": {
-              "availability": "[%key:component::template::common::availability%]"
+              "availability": "[%key:component::template::common::availability%]",
+              "delay_on": "[%key:component::template::common::delay_on%]",
+              "delay_off": "[%key:component::template::common::delay_off%]"
             },
             "data_description": {
-              "availability": "[%key:component::template::common::availability_description%]"
+              "availability": "[%key:component::template::common::availability_description%]",
+              "delay_on": "[%key:component::template::common::delay_on_description%]",
+              "delay_off": "[%key:component::template::common::delay_off_description%]"
             },
             "name": "[%key:component::template::common::advanced_options%]"
           }
@@ -68,10 +76,14 @@
         "sections": {
           "advanced_options": {
             "data": {
-              "availability": "[%key:component::template::common::availability%]"
+              "availability": "[%key:component::template::common::availability%]",
+              "delay_on": "[%key:component::template::common::delay_on%]",
+              "delay_off": "[%key:component::template::common::delay_off%]"
             },
             "data_description": {
-              "availability": "[%key:component::template::common::availability_description%]"
+              "availability": "[%key:component::template::common::availability_description%]",
+              "delay_on": "[%key:component::template::common::delay_on_description%]",
+              "delay_off": "[%key:component::template::common::delay_off_description%]"
             },
             "name": "[%key:component::template::common::advanced_options%]"
           }
@@ -92,10 +104,14 @@
         "sections": {
           "advanced_options": {
             "data": {
-              "availability": "[%key:component::template::common::availability%]"
+              "availability": "[%key:component::template::common::availability%]",
+              "delay_on": "[%key:component::template::common::delay_on%]",
+              "delay_off": "[%key:component::template::common::delay_off%]"
             },
             "data_description": {
-              "availability": "[%key:component::template::common::availability_description%]"
+              "availability": "[%key:component::template::common::availability_description%]",
+              "delay_on": "[%key:component::template::common::delay_on_description%]",
+              "delay_off": "[%key:component::template::common::delay_off_description%]"
             },
             "name": "[%key:component::template::common::advanced_options%]"
           }
@@ -126,10 +142,14 @@
         "sections": {
           "advanced_options": {
             "data": {
-              "availability": "[%key:component::template::common::availability%]"
+              "availability": "[%key:component::template::common::availability%]",
+              "delay_on": "[%key:component::template::common::delay_on%]",
+              "delay_off": "[%key:component::template::common::delay_off%]"
             },
             "data_description": {
-              "availability": "[%key:component::template::common::availability_description%]"
+              "availability": "[%key:component::template::common::availability_description%]",
+              "delay_on": "[%key:component::template::common::delay_on_description%]",
+              "delay_off": "[%key:component::template::common::delay_off_description%]"
             },
             "name": "[%key:component::template::common::advanced_options%]"
           }
@@ -618,10 +638,14 @@
         "sections": {
           "advanced_options": {
             "data": {
-              "availability": "[%key:component::template::common::availability%]"
+              "availability": "[%key:component::template::common::availability%]",
+              "delay_on": "[%key:component::template::common::delay_on%]",
+              "delay_off": "[%key:component::template::common::delay_off%]"
             },
             "data_description": {
-              "availability": "[%key:component::template::common::availability_description%]"
+              "availability": "[%key:component::template::common::availability_description%]",
+              "delay_on": "[%key:component::template::common::delay_on_description%]",
+              "delay_off": "[%key:component::template::common::delay_off_description%]"
             },
             "name": "[%key:component::template::common::advanced_options%]"
           }
