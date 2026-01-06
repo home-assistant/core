@@ -1,10 +1,4 @@
 {
-  "common": {
-    "trigger_event_offset_description": "Offset from the event time.",
-    "trigger_event_offset_name": "Offset",
-    "trigger_event_offset_type_description": "Whether to trigger before or after the event time, if an offset is defined.",
-    "trigger_event_offset_type_name": "Offset type"
-  },
   "entity_component": {
     "_": {
       "name": "[%key:component::calendar::title%]",
@@ -123,12 +117,12 @@
       "description": "Triggers when a calendar event ends.",
       "fields": {
         "offset": {
-          "description": "[%key:component::calendar::common::trigger_event_offset_description%]",
-          "name": "[%key:component::calendar::common::trigger_event_offset_name%]"
+          "description": "Offset from the end of the event.",
+          "name": "Offset"
         },
         "offset_type": {
-          "description": "[%key:component::calendar::common::trigger_event_offset_type_description%]",
-          "name": "[%key:component::calendar::common::trigger_event_offset_type_name%]"
+          "description": "Whether to trigger before or after the end of the event, if an offset is defined.",
+          "name": "Offset type"
         }
       },
       "name": "Calendar event ended"
@@ -137,12 +131,12 @@
       "description": "Triggers when a calendar event starts.",
       "fields": {
         "offset": {
-          "description": "[%key:component::calendar::common::trigger_event_offset_description%]",
-          "name": "[%key:component::calendar::common::trigger_event_offset_name%]"
+          "description": "Offset from the start of the event.",
+          "name": "Offset"
         },
         "offset_type": {
-          "description": "[%key:component::calendar::common::trigger_event_offset_type_description%]",
-          "name": "[%key:component::calendar::common::trigger_event_offset_type_name%]"
+          "description": "Whether to trigger before or after the start of the event, if an offset is defined.",
+          "name": "Offset type"
         }
       },
       "name": "Calendar event started"
