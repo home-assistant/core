@@ -5,7 +5,6 @@ from __future__ import annotations
 from abc import abstractmethod
 from dataclasses import dataclass
 from datetime import timedelta
-import json
 import logging
 from typing import TYPE_CHECKING, Any
 
@@ -175,10 +174,6 @@ class PlaystationNetworkGroupsUpdateCoordinator(
                 }
             )
         except PSNAWPForbiddenError as e:
-            try:
-                error = json.loads(e.args[0])
-            except json.JSONDecodeError as err:
-                raise PSNAWPServerError from err
             ir.async_create_issue(
                 self.hass,
                 DOMAIN,
@@ -189,7 +184,7 @@ class PlaystationNetworkGroupsUpdateCoordinator(
                 translation_key="group_chat_forbidden",
                 translation_placeholders={
                     CONF_NAME: self.config_entry.title,
-                    "error_message": error["error"]["message"],
+                    "error_message": e.message or "",
                 },
             )
             await self.async_shutdown()
@@ -256,12 +251,7 @@ class PlaystationNetworkFriendDataCoordinator(
     def _update_data(self) -> PlaystationNetworkData:
         """Update friend status data."""
         try:
-            return PlaystationNetworkData(
-                username=self.user.online_id,
-                account_id=self.user.account_id,
-                presence=self.user.get_presence(),
-                profile=self.profile,
-            )
+            presence = self.user.get_presence()
         except PSNAWPForbiddenError as error:
             raise UpdateFailed(
                 translation_domain=DOMAIN,
@@ -270,6 +260,19 @@ class PlaystationNetworkFriendDataCoordinator(
             ) from error
         except PSNAWPError:
             raise
+
+        try:
+            trophy_summary = self.user.trophy_summary()
+        except PSNAWPForbiddenError:
+            trophy_summary = None
+
+        return PlaystationNetworkData(
+            username=self.user.online_id,
+            account_id=self.user.account_id,
+            profile=self.profile,
+            presence=presence,
+            trophy_summary=trophy_summary,
+        )
 
     async def update_data(self) -> PlaystationNetworkData:
         """Update friend status data."""

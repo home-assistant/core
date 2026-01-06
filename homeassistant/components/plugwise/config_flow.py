@@ -31,14 +31,18 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 from .const import (
+    ANNA_WITH_ADAM,
     DEFAULT_PORT,
     DEFAULT_USERNAME,
     DOMAIN,
     FLOW_SMILE,
     FLOW_STRETCH,
     SMILE,
+    SMILE_OPEN_THERM,
+    SMILE_THERMO,
     STRETCH,
     STRETCH_USERNAME,
+    UNKNOWN_SMILE,
     ZEROCONF_MAP,
 )
 
@@ -117,7 +121,7 @@ class PlugwiseConfigFlow(ConfigFlow, domain=DOMAIN):
     VERSION = 1
 
     discovery_info: ZeroconfServiceInfo | None = None
-    product: str = "Unknown Smile"
+    product: str = UNKNOWN_SMILE
     _username: str = DEFAULT_USERNAME
 
     async def async_step_zeroconf(
@@ -151,20 +155,20 @@ class PlugwiseConfigFlow(ConfigFlow, domain=DOMAIN):
 
         if DEFAULT_USERNAME not in unique_id:
             self._username = STRETCH_USERNAME
-        self.product = _product = _properties.get("product", "Unknown Smile")
+        self.product = _product = _properties.get("product", UNKNOWN_SMILE)
         _version = _properties.get("version", "n/a")
         _name = f"{ZEROCONF_MAP.get(_product, _product)} v{_version}"
 
         # This is an Anna, but we already have config entries.
         # Assuming that the user has already configured Adam, aborting discovery.
-        if self._async_current_entries() and _product == "smile_thermo":
-            return self.async_abort(reason="anna_with_adam")
+        if self._async_current_entries() and _product == SMILE_THERMO:
+            return self.async_abort(reason=ANNA_WITH_ADAM)
 
         # If we have discovered an Adam or Anna, both might be on the network.
         # In that case, we need to cancel the Anna flow, as the Adam should
         # be added.
         if self.hass.config_entries.flow.async_has_matching_flow(self):
-            return self.async_abort(reason="anna_with_adam")
+            return self.async_abort(reason=ANNA_WITH_ADAM)
 
         self.context.update(
             {
@@ -179,11 +183,11 @@ class PlugwiseConfigFlow(ConfigFlow, domain=DOMAIN):
     def is_matching(self, other_flow: Self) -> bool:
         """Return True if other_flow is matching this flow."""
         # This is an Anna, and there is already an Adam flow in progress
-        if self.product == "smile_thermo" and other_flow.product == "smile_open_therm":
+        if self.product == SMILE_THERMO and other_flow.product == SMILE_OPEN_THERM:
             return True
 
         # This is an Adam, and there is already an Anna flow in progress
-        if self.product == "smile_open_therm" and other_flow.product == "smile_thermo":
+        if self.product == SMILE_OPEN_THERM and other_flow.product == SMILE_THERMO:
             self.hass.config_entries.flow.async_abort(other_flow.flow_id)
 
         return False

@@ -10,6 +10,7 @@ from kasa import Device, Feature
 
 from homeassistant.components.number import (
     DOMAIN as NUMBER_DOMAIN,
+    NumberDeviceClass,
     NumberEntity,
     NumberEntityDescription,
     NumberMode,
@@ -56,6 +57,7 @@ NUMBER_DESCRIPTIONS: Final = (
     TPLinkNumberEntityDescription(
         key="temperature_offset",
         mode=NumberMode.BOX,
+        device_class=NumberDeviceClass.TEMPERATURE_DELTA,
     ),
     TPLinkNumberEntityDescription(
         key="pan_step",

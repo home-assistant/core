@@ -2,15 +2,21 @@
 
 from datetime import timedelta
 import json
-from unittest.mock import patch
 
 from freezegun.api import FrozenDateTimeFactory
 import growattServer
 import pytest
+import requests
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.growatt_server.const import DOMAIN
+from homeassistant.components.growatt_server.const import (
+    AUTH_API_TOKEN,
+    AUTH_PASSWORD,
+    CONF_AUTH_TYPE,
+    DOMAIN,
+)
 from homeassistant.config_entries import ConfigEntryState
+from homeassistant.const import CONF_PASSWORD, CONF_TOKEN, CONF_URL, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
@@ -120,57 +126,270 @@ async def test_classic_api_setup(
     assert device_entry == snapshot
 
 
-@pytest.mark.usefixtures("init_integration")
-async def test_unload_removes_listeners(
+async def test_migrate_legacy_api_token_config(
     hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-) -> None:
-    """Test that unloading removes all listeners."""
-    # Get initial listener count
-    initial_listeners = len(hass.bus.async_listeners())
-
-    # Unload the integration
-    await hass.config_entries.async_unload(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    # Verify listeners were removed (should be same or less)
-    final_listeners = len(hass.bus.async_listeners())
-    assert final_listeners <= initial_listeners
-
-
-async def test_multiple_devices_discovered(
-    hass: HomeAssistant,
-    snapshot: SnapshotAssertion,
     mock_growatt_v1_api,
-    mock_config_entry: MockConfigEntry,
-    device_registry: dr.DeviceRegistry,
 ) -> None:
-    """Test handling multiple devices from device_list."""
-    # Reset and add multiple devices
-    mock_config_entry_new = MockConfigEntry(
+    """Test migration of legacy config entry with API token but no auth_type."""
+    # Create a legacy config entry without CONF_AUTH_TYPE
+    legacy_config = {
+        CONF_TOKEN: "test_token_123",
+        CONF_URL: "https://openapi.growatt.com/",
+        "plant_id": "plant_123",
+    }
+    mock_config_entry = MockConfigEntry(
         domain=DOMAIN,
-        data=mock_config_entry.data,
+        data=legacy_config,
+        unique_id="plant_123",
+    )
+
+    await setup_integration(hass, mock_config_entry)
+
+    # Verify migration occurred and auth_type was added
+    assert mock_config_entry.data[CONF_AUTH_TYPE] == AUTH_API_TOKEN
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+
+
+async def test_migrate_legacy_password_config(
+    hass: HomeAssistant,
+    mock_growatt_classic_api,
+) -> None:
+    """Test migration of legacy config entry with password auth but no auth_type."""
+    # Create a legacy config entry without CONF_AUTH_TYPE
+    legacy_config = {
+        CONF_USERNAME: "test_user",
+        CONF_PASSWORD: "test_password",
+        CONF_URL: "https://server.growatt.com/",
+        "plant_id": "plant_456",
+    }
+    mock_config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data=legacy_config,
         unique_id="plant_456",
     )
 
+    # Classic API doesn't support MIN devices - use TLX device instead
+    mock_growatt_classic_api.device_list.return_value = [
+        {"deviceSn": "TLX123456", "deviceType": "tlx"}
+    ]
+
+    await setup_integration(hass, mock_config_entry)
+
+    # Verify migration occurred and auth_type was added
+    assert mock_config_entry.data[CONF_AUTH_TYPE] == AUTH_PASSWORD
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+
+
+async def test_migrate_legacy_config_no_auth_fields(
+    hass: HomeAssistant,
+) -> None:
+    """Test that config entry with no recognizable auth fields raises error."""
+    # Create a config entry without any auth fields
+    invalid_config = {
+        CONF_URL: "https://openapi.growatt.com/",
+        "plant_id": "plant_789",
+    }
+    mock_config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data=invalid_config,
+        unique_id="plant_789",
+    )
+
+    await setup_integration(hass, mock_config_entry)
+
+    # The ConfigEntryError is caught by the config entry system
+    # and the entry state is set to SETUP_ERROR
+    assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
+
+
+@pytest.mark.parametrize(
+    "exception",
+    [
+        requests.exceptions.RequestException("Connection error"),
+        json.decoder.JSONDecodeError("Invalid JSON", "", 0),
+    ],
+    ids=["network_error", "json_error"],
+)
+async def test_classic_api_login_exceptions(
+    hass: HomeAssistant,
+    mock_growatt_classic_api,
+    mock_config_entry_classic: MockConfigEntry,
+    exception: Exception,
+) -> None:
+    """Test Classic API setup with login exceptions."""
+    mock_growatt_classic_api.login.side_effect = exception
+
+    await setup_integration(hass, mock_config_entry_classic)
+
+    assert mock_config_entry_classic.state is ConfigEntryState.SETUP_ERROR
+
+
+@pytest.mark.parametrize(
+    "login_response",
+    [
+        {"success": False, "msg": "502"},
+        {"success": False, "msg": "Server maintenance"},
+    ],
+    ids=["invalid_auth", "other_login_error"],
+)
+async def test_classic_api_login_failures(
+    hass: HomeAssistant,
+    mock_growatt_classic_api,
+    mock_config_entry_classic: MockConfigEntry,
+    login_response: dict,
+) -> None:
+    """Test Classic API setup with login failures."""
+    mock_growatt_classic_api.login.return_value = login_response
+
+    await setup_integration(hass, mock_config_entry_classic)
+
+    assert mock_config_entry_classic.state is ConfigEntryState.SETUP_ERROR
+
+
+@pytest.mark.parametrize(
+    "exception",
+    [
+        requests.exceptions.RequestException("Connection error"),
+        json.decoder.JSONDecodeError("Invalid JSON", "", 0),
+    ],
+    ids=["network_error", "json_error"],
+)
+async def test_classic_api_plant_list_exceptions(
+    hass: HomeAssistant,
+    mock_growatt_classic_api,
+    mock_config_entry_classic_default_plant: MockConfigEntry,
+    exception: Exception,
+) -> None:
+    """Test Classic API setup with plant list exceptions (default plant_id path)."""
+    # Login succeeds
+    mock_growatt_classic_api.login.return_value = {
+        "success": True,
+        "user": {"id": 123456},
+    }
+
+    # But plant_list raises exception
+    mock_growatt_classic_api.plant_list.side_effect = exception
+
+    await setup_integration(hass, mock_config_entry_classic_default_plant)
+
+    assert mock_config_entry_classic_default_plant.state is ConfigEntryState.SETUP_ERROR
+
+
+async def test_classic_api_plant_list_no_plants(
+    hass: HomeAssistant,
+    mock_growatt_classic_api,
+    mock_config_entry_classic_default_plant: MockConfigEntry,
+) -> None:
+    """Test Classic API setup when plant list returns no plants."""
+    # Login succeeds
+    mock_growatt_classic_api.login.return_value = {
+        "success": True,
+        "user": {"id": 123456},
+    }
+
+    # But plant_list returns empty list
+    mock_growatt_classic_api.plant_list.return_value = {"data": []}
+
+    await setup_integration(hass, mock_config_entry_classic_default_plant)
+
+    assert mock_config_entry_classic_default_plant.state is ConfigEntryState.SETUP_ERROR
+
+
+@pytest.mark.parametrize(
+    "exception",
+    [
+        requests.exceptions.RequestException("Connection error"),
+        json.decoder.JSONDecodeError("Invalid JSON", "", 0),
+    ],
+    ids=["network_error", "json_error"],
+)
+async def test_classic_api_device_list_errors(
+    hass: HomeAssistant,
+    mock_growatt_classic_api,
+    mock_config_entry_classic: MockConfigEntry,
+    exception: Exception,
+) -> None:
+    """Test Classic API setup with device list errors."""
+    mock_growatt_classic_api.device_list.side_effect = exception
+
+    await setup_integration(hass, mock_config_entry_classic)
+
+    assert mock_config_entry_classic.state is ConfigEntryState.SETUP_ERROR
+
+
+async def test_unknown_api_version(
+    hass: HomeAssistant,
+) -> None:
+    """Test setup with unknown API version."""
+    # Create a config entry with invalid auth type
+    config = {
+        CONF_URL: "https://openapi.growatt.com/",
+        "plant_id": "plant_123",
+        CONF_AUTH_TYPE: "unknown_auth",  # Invalid auth type
+    }
+    mock_config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data=config,
+        unique_id="plant_123",
+    )
+
+    await setup_integration(hass, mock_config_entry)
+
+    assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
+
+
+async def test_classic_api_auto_select_plant(
+    hass: HomeAssistant,
+    mock_growatt_classic_api,
+    mock_config_entry_classic_default_plant: MockConfigEntry,
+) -> None:
+    """Test Classic API setup with default plant ID (auto-selects first plant)."""
+    # Login succeeds and plant_list returns a plant
+    mock_growatt_classic_api.login.return_value = {
+        "success": True,
+        "user": {"id": 123456},
+    }
+    mock_growatt_classic_api.plant_list.return_value = {
+        "data": [{"plantId": "AUTO_PLANT_123", "plantName": "Auto Plant"}]
+    }
+    mock_growatt_classic_api.device_list.return_value = [
+        {"deviceSn": "TLX999999", "deviceType": "tlx"}
+    ]
+
+    await setup_integration(hass, mock_config_entry_classic_default_plant)
+
+    # Should be loaded successfully with auto-selected plant
+    assert mock_config_entry_classic_default_plant.state is ConfigEntryState.LOADED
+
+
+async def test_v1_api_unsupported_device_type(
+    hass: HomeAssistant,
+    mock_growatt_v1_api,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test V1 API logs warning for unsupported device types (non-MIN)."""
+    config = {
+        CONF_TOKEN: "test_token_123",
+        CONF_URL: "https://openapi.growatt.com/",
+        "plant_id": "plant_123",
+        CONF_AUTH_TYPE: AUTH_API_TOKEN,
+    }
+    mock_config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data=config,
+        unique_id="plant_123",
+    )
+
+    # Return mix of MIN (type 7) and other device types
     mock_growatt_v1_api.device_list.return_value = {
         "devices": [
-            {"device_sn": "MIN123456", "type": 7},
-            {"device_sn": "MIN789012", "type": 7},
+            {"device_sn": "MIN123456", "type": 7},  # Supported
+            {"device_sn": "TLX789012", "type": 5},  # Unsupported
         ]
     }
 
-    with patch(
-        "homeassistant.components.growatt_server.coordinator.SCAN_INTERVAL",
-        timedelta(minutes=5),
-    ):
-        await setup_integration(hass, mock_config_entry_new)
+    await setup_integration(hass, mock_config_entry)
 
-    # Verify both devices were created
-    device1 = device_registry.async_get_device(identifiers={(DOMAIN, "MIN123456")})
-    device2 = device_registry.async_get_device(identifiers={(DOMAIN, "MIN789012")})
-
-    assert device1 is not None
-    assert device1 == snapshot(name="device_min123456")
-    assert device2 is not None
-    assert device2 == snapshot(name="device_min789012")
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+    # Verify warning was logged for unsupported device
+    assert "Device TLX789012 with type 5 not supported in Open API V1" in caplog.text

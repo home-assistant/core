@@ -1,0 +1,5 @@
+{
+  "domain": "yale_august",
+  "name": "Yale August (US/Canada)",
+  "integrations": ["august", "august_ble"]
+}
