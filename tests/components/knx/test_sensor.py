@@ -1,5 +1,6 @@
 """Test KNX sensor."""
 
+import logging
 from typing import Any
 
 from freezegun.api import FrozenDateTimeFactory
@@ -11,7 +12,11 @@ from homeassistant.components.knx.const import (
     CONF_SYNC_STATE,
 )
 from homeassistant.components.knx.schema import SensorSchema
-from homeassistant.components.sensor import SensorDeviceClass, SensorStateClass
+from homeassistant.components.sensor import (
+    CONF_STATE_CLASS as CONF_SENSOR_STATE_CLASS,
+    SensorDeviceClass,
+    SensorStateClass,
+)
 from homeassistant.const import CONF_NAME, CONF_TYPE, STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant, State
 
@@ -176,6 +181,35 @@ async def test_always_callback(hass: HomeAssistant, knx: KNXTestKit) -> None:
     await knx.receive_write("1/1/1", (0xFA,))
     await knx.receive_write("2/2/2", (0xFA,))
     assert len(events) == 6
+
+
+async def test_sensor_yaml_attribute_validation(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    knx: KNXTestKit,
+) -> None:
+    """Test creating a sensor with invalid unit, state_class or device_class."""
+    with caplog.at_level(logging.ERROR):
+        await knx.setup_integration(
+            {
+                SensorSchema.PLATFORM: {
+                    CONF_NAME: "test",
+                    CONF_STATE_ADDRESS: "1/1/1",
+                    CONF_TYPE: "9.001",  # temperature 2 byte float
+                    CONF_SENSOR_STATE_CLASS: "totoal_increasing",  # invalid for temperature
+                }
+            }
+        )
+    assert len(caplog.messages) == 2
+    record = caplog.records[0]
+    assert record.levelname == "ERROR"
+    assert "Invalid config for 'knx': expected SensorStateClass" in record.message
+
+    record = caplog.records[1]
+    assert record.levelname == "ERROR"
+    assert "Setup failed for 'knx': Invalid config." in record.message
+
+    assert hass.states.get("sensor.test") is None
 
 
 @pytest.mark.parametrize(
