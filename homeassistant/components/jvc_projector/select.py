@@ -6,12 +6,13 @@ from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 from typing import Final
 
-from jvcprojector import JvcProjector, const
+from jvcprojector import JvcProjector, command as cmd
 
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
+from .const import INPUT
 from .coordinator import JVCConfigEntry, JvcProjectorDataUpdateCoordinator
 from .entity import JvcProjectorEntity
 
@@ -23,16 +24,14 @@ class JvcProjectorSelectDescription(SelectEntityDescription):
     command: Callable[[JvcProjector, str], Awaitable[None]]
 
 
-OPTIONS: Final[dict[str, dict[str, str]]] = {
-    "input": {const.HDMI1: const.REMOTE_HDMI_1, const.HDMI2: const.REMOTE_HDMI_2}
-}
+OPTIONS: Final[dict[str, list[str]]] = {INPUT: [cmd.Input.HDMI_1, cmd.Input.HDMI_2]}
 
 SELECTS: Final[list[JvcProjectorSelectDescription]] = [
     JvcProjectorSelectDescription(
-        key="input",
-        translation_key="input",
-        options=list(OPTIONS["input"]),
-        command=lambda device, option: device.remote(OPTIONS["input"][option]),
+        key=INPUT,
+        translation_key=INPUT,
+        options=OPTIONS[INPUT],
+        command=lambda device, option: device.set(cmd.Input, option),
     )
 ]
 

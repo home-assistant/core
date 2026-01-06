@@ -43,8 +43,8 @@
       "input": {
         "name": "Input",
         "state": {
-          "hdmi1": "HDMI 1",
-          "hdmi2": "HDMI 2"
+          "hdmi-1": "HDMI-1",
+          "hdmi-2": "HDMI-2"
         }
       }
     },
