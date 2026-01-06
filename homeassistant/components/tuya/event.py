@@ -21,6 +21,7 @@ from . import TuyaConfigEntry
 from .const import TUYA_DISCOVERY_NEW, DeviceCategory, DPCode
 from .entity import TuyaEntity
 from .models import (
+    DeviceWrapper,
     DPCodeEnumWrapper,
     DPCodeRawWrapper,
     DPCodeStringWrapper,
@@ -28,73 +29,58 @@ from .models import (
 )
 
 
-class _DPCodeEventWrapper(DPCodeTypeInformationWrapper):
-    """Base class for Tuya event wrappers."""
+class _EventEnumWrapper(DPCodeEnumWrapper):
+    """Wrapper for event enum DP codes."""
+
+    def read_device_status(self, device: CustomerDevice) -> tuple[str, None] | None:
+        """Return the event details."""
+        if (raw_value := super().read_device_status(device)) is None:
+            return None
+        return (raw_value, None)
+
+
+class _AlarmMessageWrapper(DPCodeStringWrapper):
+    """Wrapper for a STRING message on DPCode.ALARM_MESSAGE."""
 
     def __init__(self, dpcode: str, type_information: Any) -> None:
-        """Init _DPCodeEventWrapper."""
+        """Init _AlarmMessageWrapper."""
         super().__init__(dpcode, type_information)
         self.options = ["triggered"]
 
-    def get_event_type(
-        self, device: CustomerDevice, updated_status_properties: list[str] | None
-    ) -> str | None:
-        """Return the event type."""
-        if (
-            updated_status_properties is None
-            or self.dpcode not in updated_status_properties
-        ):
-            return None
-        return "triggered"
-
-    def get_event_attributes(self, device: CustomerDevice) -> dict[str, Any] | None:
-        """Return the event attributes."""
-        return None
-
-
-class _EventEnumWrapper(DPCodeEnumWrapper, _DPCodeEventWrapper):
-    """Wrapper for event enum DP codes."""
-
-    def get_event_type(
-        self, device: CustomerDevice, updated_status_properties: list[str] | None
-    ) -> str | None:
-        """Return the triggered event type."""
-        if (
-            updated_status_properties is None
-            or self.dpcode not in updated_status_properties
-        ):
-            return None
-        return self.read_device_status(device)
-
-
-class _AlarmMessageWrapper(DPCodeStringWrapper, _DPCodeEventWrapper):
-    """Wrapper for a STRING message on DPCode.ALARM_MESSAGE."""
-
-    def get_event_attributes(self, device: CustomerDevice) -> dict[str, Any] | None:
+    def read_device_status(
+        self, device: CustomerDevice
+    ) -> tuple[str, dict[str, Any]] | None:
         """Return the event attributes for the alarm message."""
-        if (raw_value := device.status.get(self.dpcode)) is None:
+        if (raw_value := super().read_device_status(device)) is None:
             return None
-        return {"message": b64decode(raw_value).decode("utf-8")}
+        return ("triggered", {"message": b64decode(raw_value).decode("utf-8")})
 
 
-class _DoorbellPicWrapper(DPCodeRawWrapper, _DPCodeEventWrapper):
+class _DoorbellPicWrapper(DPCodeRawWrapper):
     """Wrapper for a RAW message on DPCode.DOORBELL_PIC.
 
     It is expected that the RAW data is base64/utf8 encoded URL of the picture.
     """
 
-    def get_event_attributes(self, device: CustomerDevice) -> dict[str, Any] | None:
+    def __init__(self, dpcode: str, type_information: Any) -> None:
+        """Init _DoorbellPicWrapper."""
+        super().__init__(dpcode, type_information)
+        self.options = ["triggered"]
+
+    def read_device_status(
+        self, device: CustomerDevice
+    ) -> tuple[str, dict[str, Any]] | None:
         """Return the event attributes for the doorbell picture."""
         if (status := super().read_device_status(device)) is None:
             return None
-        return {"message": status.decode("utf-8")}
+        return ("triggered", {"message": status.decode("utf-8")})
 
 
 @dataclass(frozen=True)
 class TuyaEventEntityDescription(EventEntityDescription):
     """Describe a Tuya Event entity."""
 
-    wrapper_class: type[_DPCodeEventWrapper] = _EventEnumWrapper
+    wrapper_class: type[DPCodeTypeInformationWrapper] = _EventEnumWrapper
 
 
 # All descriptions can be found here. Mostly the Enum data types in the
@@ -191,11 +177,14 @@ async def async_setup_entry(
             if descriptions := EVENTS.get(device.category):
                 entities.extend(
                     TuyaEventEntity(
-                        device, manager, description, dpcode_wrapper=dpcode_wrapper
+                        device,
+                        manager,
+                        description,
+                        event_wrapper=event_wrapper,
                     )
                     for description in descriptions
                     if (
-                        dpcode_wrapper := description.wrapper_class.find_dpcode(
+                        event_wrapper := description.wrapper_class.find_dpcode(
                             device, description.key
                         )
                     )
@@ -220,29 +209,26 @@ class TuyaEventEntity(TuyaEntity, EventEntity):
         device: CustomerDevice,
         device_manager: Manager,
         description: EventEntityDescription,
-        dpcode_wrapper: _DPCodeEventWrapper,
+        *,
+        event_wrapper: DeviceWrapper[tuple[str, dict[str, Any] | None]],
     ) -> None:
         """Init Tuya event entity."""
         super().__init__(device, device_manager)
         self.entity_description = description
         self._attr_unique_id = f"{super().unique_id}{description.key}"
-        self._dpcode_wrapper = dpcode_wrapper
-        self._attr_event_types = dpcode_wrapper.options
+        self._event_wrapper = event_wrapper
+        self._attr_event_types = event_wrapper.options
 
     async def _handle_state_update(
         self,
         updated_status_properties: list[str] | None,
         dp_timestamps: dict | None = None,
     ) -> None:
-        if (
-            event_type := self._dpcode_wrapper.get_event_type(
-                self.device, updated_status_properties
-            )
-        ) is None:
+        if self._event_wrapper.skip_update(
+            self.device, updated_status_properties
+        ) or not (event_data := self._event_wrapper.read_device_status(self.device)):
             return
 
-        self._trigger_event(
-            event_type,
-            self._dpcode_wrapper.get_event_attributes(self.device),
-        )
+        event_type, event_attributes = event_data
+        self._trigger_event(event_type, event_attributes)
         self.async_write_ha_state()
