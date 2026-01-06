@@ -221,6 +221,7 @@ async def test_function_call(
         "function_response": {
             "id": None,
             "name": "test_tool",
+            "parts": None,
             "response": {
                 "result": "Test response",
             },
@@ -228,6 +229,7 @@ async def test_function_call(
             "will_continue": None,
         },
         "inline_data": None,
+        "media_resolution": None,
         "text": None,
         "thought": None,
         "thought_signature": None,
