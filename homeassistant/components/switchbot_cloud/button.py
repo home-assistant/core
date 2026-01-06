@@ -39,13 +39,11 @@ async def async_setup_entry(
 ART_FRAME_NEXT_BUTTON_DESCRIPTION = ButtonEntityDescription(
     key="Next",
     translation_key="art_frame_next_picture",
-    entity_registry_enabled_default=False,
 )
 
 ART_FRAME_PREVIOUS_BUTTON_DESCRIPTION = ButtonEntityDescription(
     key="Previous",
     translation_key="art_frame_previous_picture",
-    entity_registry_enabled_default=False,
 )
 
 
