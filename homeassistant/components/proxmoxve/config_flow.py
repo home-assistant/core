@@ -44,7 +44,7 @@ CONFIG_SCHEMA = vol.Schema(
         vol.Optional(CONF_REALM, default=DEFAULT_REALM): cv.string,
         vol.Required(CONF_USERNAME): cv.string,
         vol.Required(CONF_PASSWORD): cv.string,
-        vol.Optional(CONF_VERIFY_SSL, default=True): cv.boolean,
+        vol.Optional(CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL): cv.boolean,
     }
 )
 
