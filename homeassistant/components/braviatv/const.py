@@ -6,9 +6,11 @@ from enum import StrEnum
 from typing import Final
 
 ATTR_CID: Final = "cid"
+ATTR_GENERATION: Final = "generation"
 ATTR_MAC: Final = "macAddr"
 ATTR_MANUFACTURER: Final = "Sony"
 ATTR_MODEL: Final = "model"
+ATTR_SERIAL: Final = "serial"
 
 CONF_NICKNAME: Final = "nickname"
 CONF_USE_PSK: Final = "use_psk"

@@ -26,6 +26,7 @@ from .const import (
     ATTR_CID,
     ATTR_MAC,
     ATTR_MODEL,
+    ATTR_SERIAL,
     CONF_NICKNAME,
     CONF_USE_PSK,
     DOMAIN,
@@ -79,10 +80,13 @@ class BraviaTVConfigFlow(ConfigFlow, domain=DOMAIN):
 
         system_info = await self.client.get_system_info()
         cid = system_info[ATTR_CID].lower()
+        serial = system_info[ATTR_SERIAL]
 
         self.device_config[CONF_MAC] = system_info[ATTR_MAC]
 
-        await self.async_set_unique_id(cid)
+        # Use serial if cid is empty:
+        # https://github.com/home-assistant/core/issues/160322
+        await self.async_set_unique_id(cid or serial)
         self._abort_if_unique_id_configured()
 
         return self.async_create_entry(
