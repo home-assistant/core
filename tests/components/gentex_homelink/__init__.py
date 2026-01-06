@@ -19,7 +19,7 @@ INVALID_TEST_CREDENTIALS = {
 }
 
 TEST_ACCESS_JWT = jwt.encode({"sub": TEST_UNIQUE_ID}, key="secret")
-INVALID_TEST_ACCESS_JWT = jwt.encode({"sub": "some-other-uuid"}, key="secret")
+INVALID_TEST_ACCESS_JWT = jwt.encode({"sub": INVALID_TEST_UNIQUE_ID}, key="secret")
 
 
 async def setup_integration(hass: HomeAssistant, entry: MockConfigEntry) -> None:
