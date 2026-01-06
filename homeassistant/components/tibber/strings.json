@@ -26,17 +26,6 @@
     }
   },
   "entity": {
-    "binary_sensor": {
-      "charging_status": {
-        "name": "Charging status"
-      },
-      "connector_status": {
-        "name": "Connector status"
-      },
-      "device_status": {
-        "name": "Device status"
-      }
-    },
     "sensor": {
       "accumulated_consumption": {
         "name": "Accumulated consumption"
