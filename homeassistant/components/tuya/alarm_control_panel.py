@@ -183,13 +183,12 @@ class TuyaAlarmEntity(TuyaEntity, AlarmControlPanelEntity):
         self._state_wrapper = state_wrapper
 
         # Determine supported modes
-        if action_wrapper.options:
-            if "arm_home" in action_wrapper.options:
-                self._attr_supported_features |= AlarmControlPanelEntityFeature.ARM_HOME
-            if "arm_away" in action_wrapper.options:
-                self._attr_supported_features |= AlarmControlPanelEntityFeature.ARM_AWAY
-            if "trigger" in action_wrapper.options:
-                self._attr_supported_features |= AlarmControlPanelEntityFeature.TRIGGER
+        if "arm_home" in action_wrapper.options:
+            self._attr_supported_features |= AlarmControlPanelEntityFeature.ARM_HOME
+        if "arm_away" in action_wrapper.options:
+            self._attr_supported_features |= AlarmControlPanelEntityFeature.ARM_AWAY
+        if "trigger" in action_wrapper.options:
+            self._attr_supported_features |= AlarmControlPanelEntityFeature.TRIGGER
 
     @property
     def alarm_state(self) -> AlarmControlPanelState | None:

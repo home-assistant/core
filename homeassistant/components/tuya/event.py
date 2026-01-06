@@ -31,8 +31,6 @@ from .models import (
 class _DPCodeEventWrapper(DPCodeTypeInformationWrapper):
     """Base class for Tuya event wrappers."""
 
-    options: list[str]
-
     def __init__(self, dpcode: str, type_information: Any) -> None:
         """Init _DPCodeEventWrapper."""
         super().__init__(dpcode, type_information)

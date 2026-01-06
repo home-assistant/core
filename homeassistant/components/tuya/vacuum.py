@@ -212,7 +212,7 @@ class TuyaVacuumEntity(TuyaEntity, StateVacuumEntity):
         self._attr_fan_speed_list = []
         self._attr_supported_features = VacuumEntityFeature.SEND_COMMAND
 
-        if action_wrapper and action_wrapper.options:
+        if action_wrapper:
             if "pause" in action_wrapper.options:
                 self._attr_supported_features |= VacuumEntityFeature.PAUSE
             if "return_to_base" in action_wrapper.options:
@@ -227,7 +227,7 @@ class TuyaVacuumEntity(TuyaEntity, StateVacuumEntity):
         if activity_wrapper:
             self._attr_supported_features |= VacuumEntityFeature.STATE
 
-        if fan_speed_wrapper and fan_speed_wrapper.options:
+        if fan_speed_wrapper:
             self._attr_fan_speed_list = fan_speed_wrapper.options
             self._attr_supported_features |= VacuumEntityFeature.FAN_SPEED
 

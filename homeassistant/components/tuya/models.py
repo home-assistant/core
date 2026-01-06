@@ -22,12 +22,13 @@ class DeviceWrapper[T]:
     """Base device wrapper."""
 
     native_unit: str | None = None
-    options: list[str] | None = None
     suggested_unit: str | None = None
 
     max_value: float
     min_value: float
     value_step: float
+
+    options: list[str]
 
     def read_device_status(self, device: CustomerDevice) -> T | None:
         """Read device status and convert to a Home Assistant value."""
@@ -138,7 +139,6 @@ class DPCodeEnumWrapper(DPCodeTypeInformationWrapper[EnumTypeInformation]):
     """Simple wrapper for EnumTypeInformation values."""
 
     _DPTYPE = EnumTypeInformation
-    options: list[str]
 
     def __init__(self, dpcode: str, type_information: EnumTypeInformation) -> None:
         """Init DPCodeEnumWrapper."""

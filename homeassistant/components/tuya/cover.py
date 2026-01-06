@@ -351,7 +351,7 @@ class TuyaCoverEntity(TuyaEntity, CoverEntity):
         self._set_position = set_position
         self._tilt_position = tilt_position
 
-        if instruction_wrapper and instruction_wrapper.options:
+        if instruction_wrapper:
             if "open" in instruction_wrapper.options:
                 self._attr_supported_features |= CoverEntityFeature.OPEN
             if "close" in instruction_wrapper.options:
@@ -424,11 +424,7 @@ class TuyaCoverEntity(TuyaEntity, CoverEntity):
 
     async def async_stop_cover(self, **kwargs: Any) -> None:
         """Stop the cover."""
-        if (
-            self._instruction_wrapper
-            and (options := self._instruction_wrapper.options)
-            and "stop" in options
-        ):
+        if self._instruction_wrapper and "stop" in self._instruction_wrapper.options:
             await self._async_send_wrapper_updates(self._instruction_wrapper, "stop")
 
     async def async_set_cover_tilt_position(self, **kwargs: Any) -> None:
