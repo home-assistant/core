@@ -13,8 +13,8 @@
     "velbus-packet",
     "velbus-protocol"
   ],
-  "quality_scale": "bronze",
-  "requirements": ["velbus-aio==2026.1.0"],
+  "quality_scale": "silver",
+  "requirements": ["velbus-aio==2026.1.1"],
   "usb": [
     {
       "pid": "0B1B",
