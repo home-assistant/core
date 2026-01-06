@@ -137,9 +137,6 @@
       },
       "preheat_set_time": {
         "name": "Preheat set time"
-      },
-      "remaining_time": {
-        "name": "Remaining time"
       }
     },
     "switch": {
