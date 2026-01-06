@@ -33,7 +33,10 @@ class DeviceWrapper[T]:
     def skip_update(
         self, device: CustomerDevice, updated_status_properties: list[str] | None
     ) -> bool:
-        """Determine if the wrapper should skip an update."""
+        """Determine if the wrapper should skip an update.
+
+        The default is to always skip, unless overridden in subclasses.
+        """
         return True
 
     def read_device_status(self, device: CustomerDevice) -> T | None:
@@ -61,7 +64,11 @@ class DPCodeWrapper(DeviceWrapper):
     def skip_update(
         self, device: CustomerDevice, updated_status_properties: list[str] | None
     ) -> bool:
-        """Determine if the wrapper should skip an update."""
+        """Determine if the wrapper should skip an update.
+
+        By default, skip if updated_status_properties is given and
+        does not include this dpcode.
+        """
         return (
             updated_status_properties is None
             or self.dpcode not in updated_status_properties
