@@ -2,6 +2,7 @@
 
 from collections.abc import Generator
 from http import HTTPStatus
+import time
 from unittest.mock import AsyncMock, patch
 
 from homelink.model.button import Button
@@ -10,7 +11,7 @@ import pytest
 
 from homeassistant.components.gentex_homelink.const import DOMAIN, OAUTH2_TOKEN_URL
 
-from . import TEST_ACCESS_JWT
+from . import INVALID_TEST_ACCESS_JWT, TEST_ACCESS_JWT, TEST_UNIQUE_ID
 
 from tests.common import MockConfigEntry
 from tests.conftest import AiohttpClientMocker
@@ -26,6 +27,24 @@ def mock_srp_auth() -> Generator[AsyncMock]:
         instance.async_get_access_token.return_value = {
             "AuthenticationResult": {
                 "AccessToken": TEST_ACCESS_JWT,
+                "RefreshToken": "refresh",
+                "TokenType": "bearer",
+                "ExpiresIn": 3600,
+            }
+        }
+        yield instance
+
+
+@pytest.fixture
+def mock_invalid_srp_auth() -> Generator[AsyncMock]:
+    """Mock SRP authentication."""
+    with patch(
+        "homeassistant.components.gentex_homelink.config_flow.SRPAuth"
+    ) as mock_srp_auth:
+        instance = mock_srp_auth.return_value
+        instance.async_get_access_token.return_value = {
+            "AuthenticationResult": {
+                "AccessToken": INVALID_TEST_ACCESS_JWT,
                 "RefreshToken": "refresh",
                 "TokenType": "bearer",
                 "ExpiresIn": 3600,
@@ -70,7 +89,7 @@ def mock_device() -> AsyncMock:
 def mock_config_entry() -> MockConfigEntry:
     """Mock setup entry."""
     return MockConfigEntry(
-        unique_id="some-uuid",
+        unique_id=TEST_UNIQUE_ID,
         version=1,
         domain=DOMAIN,
         data={
@@ -81,6 +100,26 @@ def mock_config_entry() -> MockConfigEntry:
                 "expires_in": 3600,
                 "token_type": "bearer",
                 "expires_at": 1234567890,
+            },
+        },
+    )
+
+
+@pytest.fixture
+def mock_expired_config_entry() -> MockConfigEntry:
+    """Mock setup entry."""
+    return MockConfigEntry(
+        unique_id=TEST_UNIQUE_ID,
+        version=1,
+        domain=DOMAIN,
+        data={
+            "auth_implementation": "gentex_homelink",
+            "token": {
+                "access_token": "access",
+                "refresh_token": "refresh",
+                "expires_in": 3600,
+                "token_type": "bearer",
+                "expires_at": time.time() + 10000,
             },
         },
     )

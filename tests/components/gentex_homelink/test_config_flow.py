@@ -1,18 +1,23 @@
 """Test the homelink config flow."""
 
 from http import HTTPStatus
-import time
 from unittest.mock import AsyncMock
 
 import botocore.exceptions
 import pytest
 
 from homeassistant.components.gentex_homelink.const import DOMAIN, OAUTH2_TOKEN_URL
-from homeassistant.config_entries import SOURCE_USER, ConfigEntryState
+from homeassistant.config_entries import SOURCE_USER
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
-from . import TEST_ACCESS_JWT, TEST_CREDENTIALS, setup_integration
+from . import (
+    INVALID_TEST_CREDENTIALS,
+    TEST_ACCESS_JWT,
+    TEST_CREDENTIALS,
+    TEST_UNIQUE_ID,
+    setup_integration,
+)
 
 from tests.common import MockConfigEntry
 from tests.conftest import AiohttpClientMocker
@@ -45,7 +50,7 @@ async def test_full_flow(
             "expires_at": result["data"]["token"]["expires_at"],
         },
     }
-    assert result["result"].unique_id == "some-uuid"
+    assert result["result"].unique_id == TEST_UNIQUE_ID
 
 
 async def test_unique_configurations(
@@ -131,33 +136,42 @@ async def test_auth_error(
     )
     assert len(aioclient_mock.mock_calls) == 1
     assert aioclient_mock.mock_calls[0][0] == "POST"
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
-async def test_reauth_flow(
-    hass: HomeAssistant, mock_srp_auth: AsyncMock, aioclient_mock: AiohttpClientMocker
+async def test_reauth_successful(
+    hass: HomeAssistant,
+    mock_srp_auth: AsyncMock,
+    aioclient_mock: AiohttpClientMocker,
+    mock_expired_config_entry: MockConfigEntry,
 ) -> None:
     """Test the reauth flow."""
-    config_entry = MockConfigEntry(
-        domain=DOMAIN,
-        unique_id="some-uuid",
-        version=1,
-        data={
-            "auth_implementation": "gentex_homelink",
-            "token": {
-                "expires_at": time.time() + 10000,
-                "access_token": "",
-                "refresh_token": "",
-            },
-            "last_update_id": None,
-        },
-        state=ConfigEntryState.LOADED,
-    )
-    config_entry.add_to_hass(hass)
-    result = await config_entry.start_reauth_flow(hass)
+    await setup_integration(hass, mock_expired_config_entry)
+    result = await mock_expired_config_entry.start_reauth_flow(hass)
     assert result["step_id"] == "reauth_confirm"
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         user_input=TEST_CREDENTIALS,
     )
     assert result["reason"] == "reauth_successful"
+    assert result["type"] is FlowResultType.ABORT
+
+
+async def test_reauth_error(
+    hass: HomeAssistant,
+    mock_invalid_srp_auth: AsyncMock,
+    aioclient_mock: AiohttpClientMocker,
+    mock_expired_config_entry: MockConfigEntry,
+) -> None:
+    """Test the reauth flow."""
+    await setup_integration(hass, mock_expired_config_entry)
+    result = await mock_expired_config_entry.start_reauth_flow(hass)
+    assert result["step_id"] == "reauth_confirm"
+    assert result["type"] is FlowResultType.FORM
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input=INVALID_TEST_CREDENTIALS,
+    )
+    assert result["reason"] == "unique_id_mismatch"
+    assert result["type"] is FlowResultType.ABORT
