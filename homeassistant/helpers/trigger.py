@@ -537,7 +537,7 @@ def _validate_range[_T: dict[str, Any]](
 
 _NUMBER_OR_ENTITY_CHOOSE_SCHEMA = vol.Schema(
     {
-        vol.Required("chosen_selector"): vol.In(["number", "entity"]),
+        vol.Required("active_choice"): vol.In(["number", "entity"]),
         vol.Optional("entity"): cv.entity_id,
         vol.Optional("number"): vol.Coerce(float),
     }
@@ -548,7 +548,7 @@ def _validate_number_or_entity(value: dict | float | str) -> float | str:
     """Validate number or entity selector result."""
     if isinstance(value, dict):
         _NUMBER_OR_ENTITY_CHOOSE_SCHEMA(value)
-        return value[value["chosen_selector"]]  # type: ignore[no-any-return]
+        return value[value["active_choice"]]  # type: ignore[no-any-return]
     return value
 
 
