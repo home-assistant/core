@@ -368,7 +368,7 @@ class TuyaClimateEntity(TuyaEntity, ClimateEntity):
         # Determine HVAC modes
         self._attr_hvac_modes: list[HVACMode] = []
         self._hvac_to_tuya = {}
-        if hvac_mode_wrapper and hvac_mode_wrapper.options is not None:
+        if hvac_mode_wrapper:
             self._attr_hvac_modes = [HVACMode.OFF]
             unknown_hvac_modes: list[str] = []
             for tuya_mode in hvac_mode_wrapper.options:
