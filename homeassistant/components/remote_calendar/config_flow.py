@@ -8,7 +8,7 @@ from httpx import HTTPError, InvalidURL, TimeoutException
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
-from homeassistant.const import CONF_URL
+from homeassistant.const import CONF_URL, CONF_VERIFY_SSL
 from homeassistant.helpers.httpx_client import get_async_client
 
 from .client import get_calendar
@@ -21,6 +21,7 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_CALENDAR_NAME): str,
         vol.Required(CONF_URL): str,
+        vol.Required(CONF_VERIFY_SSL, default=True): bool,
     }
 )
 
@@ -48,7 +49,7 @@ class RemoteCalendarConfigFlow(ConfigFlow, domain=DOMAIN):
                 "webcal://", "https://", 1
             )
         self._async_abort_entries_match({CONF_URL: user_input[CONF_URL]})
-        client = get_async_client(self.hass)
+        client = get_async_client(self.hass, verify_ssl=user_input[CONF_VERIFY_SSL])
         try:
             res = await get_calendar(client, user_input[CONF_URL])
             if res.status_code == HTTPStatus.FORBIDDEN:

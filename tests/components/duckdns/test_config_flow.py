@@ -222,10 +222,9 @@ async def test_init_import_flow(
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
 
 
-@pytest.mark.usefixtures("mock_update_duckdns")
+@pytest.mark.usefixtures("mock_update_duckdns", "mock_setup_entry")
 async def test_flow_reconfigure(
     hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
     config_entry: MockConfigEntry,
 ) -> None:
     """Test reconfigure flow."""
@@ -255,6 +254,7 @@ async def test_flow_reconfigure(
         ([False, True], "update_failed"),
     ],
 )
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_flow_reconfigure_errors(
     hass: HomeAssistant,
     mock_setup_entry: AsyncMock,
