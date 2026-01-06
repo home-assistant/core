@@ -765,6 +765,16 @@ def _filter_entities(
         else:
             filtered.append(entity)
 
+    # === Singleton reinsertion ===
+    singleton_entities: list[Entity] = []
+
+    for ce, entities_list in list(per_entry_entities.items()):
+        if len(entities_list) == 1:
+            singleton_entities.extend(entities_list)
+            per_entry_entities.pop(ce)
+
+    filtered.extend(singleton_entities)
+
     # remove empty entity lists
     per_entry_entities = {
         ce: entities for ce, entities in per_entry_entities.items() if entities
