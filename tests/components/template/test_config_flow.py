@@ -423,7 +423,11 @@ async def test_config_flow_binary_sensor_delay_options(
         "state": "{{ true }}",
         "advanced_options": expected_advanced_options,
     }
-    assert hass.states.get("binary_sensor.my_template").state == "on"
+    state = hass.states.get("binary_sensor.my_template")
+    if "delay_on" in expected_advanced_options:
+        assert state.state == "unknown"
+    else:
+        assert state.state == "on"
 
 
 @pytest.mark.parametrize(
