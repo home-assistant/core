@@ -1,58 +1,58 @@
 {
   "config": {
-    "step": {
-      "user": {
-        "title": "Connect to Victron Energy device",
-        "description": "Enter the IP address or hostname of your Victron Energy device.",
-        "data": {
-          "broker": "Host"
-        },
-        "data_description": {
-          "broker": "IP address or hostname of your Victron Energy device"
-        }
-      },
-      "password": {
-        "title": "Secure profile password",
-        "description": "Unsecure MQTT connection failed. Please enter the secure profile password for device {host}.",
-        "data": {
-          "password": "Secure profile password"
-        },
-        "data_description": {
-          "password": "Password required for secure MQTT connection"
-        }
-      },
-      "ssdp_confirm": {
-        "title": "Add Victron Energy device",
-        "description": "Do you want to add {name} @ {host} to Home Assistant?",
-        "data": {}
-      },
-      "ssdp_password": {
-        "title": "Secure profile password",
-        "description": "Unsecure MQTT connection for {name} @ {host}. Please enter the secure profile password.",
-        "data": {
-          "password": "Secure profile password"
-        },
-        "data_description": {
-          "password": "Password for secure MQTT connection to the device"
-        }
-      }
-    },
-    "error": {
-      "cannot_connect": "Connection failed. Please check the device is online and accessible.",
-      "invalid_auth": "Authentication failed. Please check your credentials and try again.",
-      "unknown": "Unexpected error occurred. Please try again."
-    },
     "abort": {
       "already_configured": "Device is already configured",
       "already_in_progress": "Configuration flow is already in progress, perhaps because it was already automatically detected.",
       "cannot_connect": "Connection failed. Please check the device is online",
       "invalid_auth": "Authentication failed. Please check your credentials.",
       "invalid_host": "Invalid hostname or IP address: {error}",
-      "unknown": "Unexpected error occurred",
       "missing_unique_id": "Device does not have a unique identifier",
-      "no_discovery_support": "Device does not support Home Assistant discovery",
       "no_discovery": "No Home Assistant discovery topics found within 30 seconds",
+      "no_discovery_support": "Device does not support Home Assistant discovery",
+      "unknown": "Unexpected error occurred",
       "user_cancelled": "Setup cancelled by user"
+    },
+    "error": {
+      "cannot_connect": "Connection failed. Please check the device is online and accessible.",
+      "invalid_auth": "Authentication failed. Please check your credentials and try again.",
+      "unknown": "Unexpected error occurred. Please try again."
+    },
+    "step": {
+      "password": {
+        "data": {
+          "password": "Secure profile password"
+        },
+        "data_description": {
+          "password": "Password required for secure MQTT connection"
+        },
+        "description": "Unsecure MQTT connection failed. Please enter the secure profile password for device {host}.",
+        "title": "Secure profile password"
+      },
+      "ssdp_confirm": {
+        "data": {},
+        "description": "Do you want to add {name} @ {host} to Home Assistant?",
+        "title": "Add Victron Energy device"
+      },
+      "ssdp_password": {
+        "data": {
+          "password": "Secure profile password"
+        },
+        "data_description": {
+          "password": "Password for secure MQTT connection to the device"
+        },
+        "description": "Unsecure MQTT connection for {name} @ {host}. Please enter the secure profile password.",
+        "title": "Secure profile password"
+      },
+      "user": {
+        "data": {
+          "broker": "Host"
+        },
+        "data_description": {
+          "broker": "IP address or hostname of your Victron Energy device"
+        },
+        "description": "Enter the IP address or hostname of your Victron Energy device.",
+        "title": "Connect to Victron Energy device"
+      }
     }
   }
 }

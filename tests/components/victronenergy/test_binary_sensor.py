@@ -23,7 +23,10 @@ async def test_binary_sensor_integration_setup(
     """Test binary sensor platform setup."""
     mock_config_entry.add_to_hass(hass)
 
-    with patch("homeassistant.components.victronenergy.mqtt_client.Client", return_value=mock_mqtt_client):
+    with patch(
+        "homeassistant.components.victronenergy.mqtt_client.Client",
+        return_value=mock_mqtt_client,
+    ):
         await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
 
@@ -39,14 +42,17 @@ async def test_binary_sensor_mqtt_manager(
     """Test binary sensor platform uses MQTT manager correctly."""
     mock_config_entry.add_to_hass(hass)
 
-    with patch("homeassistant.components.victronenergy.mqtt_client.Client", return_value=mock_mqtt_client):
+    with patch(
+        "homeassistant.components.victronenergy.mqtt_client.Client",
+        return_value=mock_mqtt_client,
+    ):
         await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
 
         # Verify MQTT manager is available for binary sensors
         manager = hass.data[DOMAIN][mock_config_entry.entry_id]
         assert manager is not None
-        assert hasattr(manager, '_topic_entity_map')
+        assert hasattr(manager, "_topic_entity_map")
 
 
 async def test_binary_sensor_infrastructure(
@@ -58,10 +64,16 @@ async def test_binary_sensor_infrastructure(
     """Test binary sensor infrastructure is in place."""
     mock_config_entry.add_to_hass(hass)
 
-    with patch("homeassistant.components.victronenergy.mqtt_client.Client", return_value=mock_mqtt_client):
+    with patch(
+        "homeassistant.components.victronenergy.mqtt_client.Client",
+        return_value=mock_mqtt_client,
+    ):
         await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
 
         # Verify infrastructure is ready for binary sensor discovery
-        from homeassistant.components.victronenergy.binary_sensor import MQTTDiscoveredBinarySensor
+        from homeassistant.components.victronenergy.binary_sensor import (
+            MQTTDiscoveredBinarySensor,
+        )
+
         assert MQTTDiscoveredBinarySensor is not None

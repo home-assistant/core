@@ -4,14 +4,12 @@ from __future__ import annotations
 
 from unittest.mock import patch
 
-import pytest
-
 from homeassistant import config_entries
 from homeassistant.components.victronenergy.config_flow import (
     CannotConnect,
     InvalidAuth,
 )
-from homeassistant.components.victronenergy.const import DOMAIN, CONF_BROKER
+from homeassistant.components.victronenergy.const import CONF_BROKER, DOMAIN
 from homeassistant.const import CONF_PASSWORD
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -29,8 +27,8 @@ async def test_form_user_step(hass: HomeAssistant) -> None:
     assert result["errors"] == {}
 
 
-async def test_form_user_success_unsecure_mqtt(hass: HomeAssistant) -> None:
-    """Test successful user flow with unsecure MQTT connection."""
+async def test_form_user_success_insecure_mqtt(hass: HomeAssistant) -> None:
+    """Test successful user flow with insecure MQTT connection."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -63,7 +61,7 @@ async def test_form_user_success_unsecure_mqtt(hass: HomeAssistant) -> None:
 
 
 async def test_form_password_step(hass: HomeAssistant) -> None:
-    """Test password step when unsecure MQTT fails."""
+    """Test password step when insecure MQTT fails."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -75,7 +73,7 @@ async def test_form_password_step(hass: HomeAssistant) -> None:
         ),
         patch(
             "homeassistant.components.victronenergy.config_flow._test_basic_mqtt_connection",
-            return_value=False,  # Unsecure connection fails
+            return_value=False,  # Insecure connection fails
         ),
     ):
         result = await hass.config_entries.flow.async_configure(

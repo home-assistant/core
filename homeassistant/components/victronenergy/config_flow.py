@@ -45,11 +45,15 @@ STEP_PASSWORD_DATA_SCHEMA = vol.Schema(
 STEP_SSDP_CONFIRM_SCHEMA = vol.Schema({})
 
 
+def _raise_invalid_auth(message: str) -> None:
+    """Helper to raise InvalidAuth exception."""
+    raise InvalidAuth(message)
+
+
 def _generate_ha_device_id() -> str:
     """Generate a unique Home Assistant device identifier."""
     # Generate UUID and remove hyphens to make it alphanumeric only
-    device_id = str(uuid.uuid4()).replace("-", "")
-    return device_id
+    return str(uuid.uuid4()).replace("-", "")
 
 
 async def _test_basic_mqtt_connection(
@@ -75,7 +79,7 @@ async def _test_basic_mqtt_connection(
         connection_task = asyncio.create_task(connection_result.wait())
         error_task = asyncio.create_task(connection_error.wait())
 
-        done, pending = await asyncio.wait(
+        _done, pending = await asyncio.wait(
             [connection_task, error_task],
             timeout=10.0,
             return_when=asyncio.FIRST_COMPLETED,
@@ -86,7 +90,8 @@ async def _test_basic_mqtt_connection(
 
         return connection_result.is_set()
 
-    except Exception:
+    except Exception as err:
+        _LOGGER.debug("Connection test failed: %s", err)
         return False
     finally:
         client.loop_stop()
@@ -105,8 +110,8 @@ async def _detect_discovery_topics(
     hass: HomeAssistant,
     broker: str,
     port: int = 1883,
-    username: str = None,
-    password: str = None,
+    username: str | None = None,
+    password: str | None = None,
     use_ssl: bool = False,
 ) -> str | None:
     """Connect to MQTT and wait for Home Assistant discovery topics to detect unique_id."""
@@ -169,7 +174,7 @@ async def _detect_discovery_topics(
         # Wait for connection
         try:
             await asyncio.wait_for(connection_success.wait(), timeout=10.0)
-        except asyncio.TimeoutError:
+        except TimeoutError:
             _LOGGER.warning("MQTT connection timeout")
             return None
 
@@ -179,13 +184,14 @@ async def _detect_discovery_topics(
         try:
             await asyncio.wait_for(discovery_event.wait(), timeout=30.0)
             _LOGGER.info("Discovery completed, unique_id: %s", discovered_unique_id)
-        except asyncio.TimeoutError:
+        except TimeoutError:
             _LOGGER.warning("No discovery topics received within 30 seconds")
+            return None
 
         return discovered_unique_id
 
-    except Exception as e:
-        _LOGGER.error("Error during MQTT discovery detection: %s", e)
+    except Exception as err:
+        _LOGGER.error("Error during MQTT discovery detection: %s", err)
         return None
     finally:
         client.loop_stop()
@@ -245,7 +251,7 @@ async def _generate_victron_token(
                         response.status,
                         response_text,
                     )
-                    raise InvalidAuth(
+                    _raise_invalid_auth(
                         f"Token generation failed: HTTP {response.status}"
                     )
 
@@ -258,7 +264,7 @@ async def _generate_victron_token(
                         "No 'password' field in token response. Available fields: %s",
                         list(result.keys()),
                     )
-                    raise InvalidAuth("No password/token in response")
+                    _raise_invalid_auth("No password/token in response")
 
                 token = result["password"]
                 _LOGGER.info(
@@ -337,7 +343,7 @@ async def _test_secure_mqtt_connection(
         return connection_result.is_set()
 
     except Exception as err:
-        _LOGGER.info("Secure MQTT connection failed: %s", err)
+        _LOGGER.debug("Secure MQTT connection failed: %s", err)
         return False
 
 
@@ -415,13 +421,13 @@ class VictronConfigFlow(ConfigFlow, domain=DOMAIN):
 
         # Validate broker format first
         try:
-            info = await validate_input(self.hass, user_input)
+            await validate_input(self.hass, user_input)
         except InvalidHost as ex:
             return self.async_abort(
                 reason="invalid_host", description_placeholders={"error": str(ex)}
             )
         except Exception as ex:
-            _LOGGER.exception("Unexpected exception during validation: %s", ex)
+            _LOGGER.exception("Unexpected exception during validation")
             return self.async_abort(
                 reason="unknown", description_placeholders={"error": str(ex)}
             )
@@ -429,11 +435,11 @@ class VictronConfigFlow(ConfigFlow, domain=DOMAIN):
         # Store broker in context for later use
         self.context["broker"] = broker
 
-        # Try unsecure MQTT connection first (port 1883)
-        _LOGGER.info("Trying unsecure MQTT connection to %s:1883", broker)
+        # Try insecure MQTT connection first (port 1883)
+        _LOGGER.info("Trying insecure MQTT connection to %s:1883", broker)
         if await _test_basic_mqtt_connection(self.hass, broker):
             _LOGGER.info(
-                "Unsecure MQTT connection successful, detecting discovery topics"
+                "Insecure MQTT connection successful, detecting discovery topics"
             )
 
             # Listen for discovery topics
@@ -455,8 +461,8 @@ class VictronConfigFlow(ConfigFlow, domain=DOMAIN):
             _LOGGER.warning("Home assistant discovery topics not found")
             return self.async_abort(reason="no_discovery")
 
-        _LOGGER.info("Unsecure MQTT connection failed, trying secure connection")
-        # Unsecure failed, ask for password for secure connection
+        _LOGGER.info("Insecure MQTT connection failed, trying secure connection")
+        # Insecure failed, ask for password for secure connection
         return await self.async_step_password()
 
     async def async_step_password(
@@ -532,6 +538,9 @@ class VictronConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors=errors,
                 description_placeholders={"host": broker if broker else "unknown"},
             )
+
+        # Return an explicit failure response if we get here
+        return self.async_abort(reason="unknown")
 
     async def async_step_ssdp_password(
         self, user_input: dict[str, Any] | None = None
