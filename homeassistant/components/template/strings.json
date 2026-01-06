@@ -48,14 +48,10 @@
         "sections": {
           "advanced_options": {
             "data": {
-              "availability": "[%key:component::template::common::availability%]",
-              "delay_off": "[%key:component::template::common::delay_off%]",
-              "delay_on": "[%key:component::template::common::delay_on%]"
+              "availability": "[%key:component::template::common::availability%]"
             },
             "data_description": {
-              "availability": "[%key:component::template::common::availability_description%]",
-              "delay_off": "[%key:component::template::common::delay_off_description%]",
-              "delay_on": "[%key:component::template::common::delay_on_description%]"
+              "availability": "[%key:component::template::common::availability_description%]"
             },
             "name": "[%key:component::template::common::advanced_options%]"
           }
@@ -104,14 +100,10 @@
         "sections": {
           "advanced_options": {
             "data": {
-              "availability": "[%key:component::template::common::availability%]",
-              "delay_off": "[%key:component::template::common::delay_off%]",
-              "delay_on": "[%key:component::template::common::delay_on%]"
+              "availability": "[%key:component::template::common::availability%]"
             },
             "data_description": {
-              "availability": "[%key:component::template::common::availability_description%]",
-              "delay_off": "[%key:component::template::common::delay_off_description%]",
-              "delay_on": "[%key:component::template::common::delay_on_description%]"
+              "availability": "[%key:component::template::common::availability_description%]"
             },
             "name": "[%key:component::template::common::advanced_options%]"
           }
@@ -142,14 +134,10 @@
         "sections": {
           "advanced_options": {
             "data": {
-              "availability": "[%key:component::template::common::availability%]",
-              "delay_off": "[%key:component::template::common::delay_off%]",
-              "delay_on": "[%key:component::template::common::delay_on%]"
+              "availability": "[%key:component::template::common::availability%]"
             },
             "data_description": {
-              "availability": "[%key:component::template::common::availability_description%]",
-              "delay_off": "[%key:component::template::common::delay_off_description%]",
-              "delay_on": "[%key:component::template::common::delay_on_description%]"
+              "availability": "[%key:component::template::common::availability_description%]"
             },
             "name": "[%key:component::template::common::advanced_options%]"
           }
