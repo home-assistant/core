@@ -356,6 +356,71 @@ async def test_config_flow(
 
 
 @pytest.mark.parametrize(
+    ("advanced_input", "expected_advanced_options"),
+    [
+        ({"delay_on": {"seconds": 5}}, {"delay_on": {"seconds": 5.0}}),
+        ({"delay_off": {"minutes": 1}}, {"delay_off": {"minutes": 1.0}}),
+        (
+            {"delay_on": {"seconds": 5}, "delay_off": {"minutes": 1}},
+            {"delay_on": {"seconds": 5.0}, "delay_off": {"minutes": 1.0}},
+        ),
+    ],
+)
+async def test_config_flow_binary_sensor_delay_options(
+    hass: HomeAssistant,
+    advanced_input: dict[str, Any],
+    expected_advanced_options: dict[str, Any],
+) -> None:
+    """Test delay options in the binary sensor config flow."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    assert result["type"] is FlowResultType.MENU
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {"next_step_id": "binary_sensor"},
+    )
+    await hass.async_block_till_done()
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "binary_sensor"
+
+    with patch(
+        "homeassistant.components.template.async_setup_entry", wraps=async_setup_entry
+    ) as mock_setup_entry:
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                "name": "My template",
+                "state": "{{ true }}",
+                "advanced_options": advanced_input,
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "My template"
+    assert result["data"] == {}
+    assert result["options"] == {
+        "name": "My template",
+        "template_type": "binary_sensor",
+        "state": "{{ true }}",
+        "advanced_options": expected_advanced_options,
+    }
+    assert len(mock_setup_entry.mock_calls) == 1
+
+    config_entry = hass.config_entries.async_entries(DOMAIN)[0]
+    assert config_entry.data == {}
+    assert config_entry.options == {
+        "name": "My template",
+        "template_type": "binary_sensor",
+        "state": "{{ true }}",
+        "advanced_options": expected_advanced_options,
+    }
+    assert hass.states.get("binary_sensor.my_template").state == "on"
+
+
+@pytest.mark.parametrize(
     (
         "template_type",
         "state_template",
