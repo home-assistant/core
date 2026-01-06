@@ -1,5 +1,6 @@
 """Test the Switch config flow."""
 
+from datetime import timedelta
 from typing import Any
 from unittest.mock import patch
 
@@ -13,8 +14,13 @@ from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import device_registry as dr
+from homeassistant.util import dt as dt_util
 
-from tests.common import MockConfigEntry, get_schema_suggested_value
+from tests.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    get_schema_suggested_value,
+)
 from tests.typing import WebSocketGenerator
 
 SWITCH_BEFORE_OPTIONS = {
@@ -1089,6 +1095,66 @@ async def test_config_flow_preview(
     }
 
     assert len(hass.states.async_all()) == 3
+
+
+async def test_config_flow_preview_binary_sensor_delay(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test the config flow preview with a delayed binary sensor."""
+    client = await hass_ws_client(hass)
+
+    hass.states.async_set("binary_sensor.available", "on")
+    hass.states.async_set("binary_sensor.one", "off")
+    await hass.async_block_till_done()
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    assert result["type"] is FlowResultType.MENU
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {"next_step_id": "binary_sensor"},
+    )
+    await hass.async_block_till_done()
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "binary_sensor"
+    assert result["preview"] == "template"
+
+    await client.send_json_auto_id(
+        {
+            "type": "template/start_preview",
+            "flow_id": result["flow_id"],
+            "flow_type": "config_flow",
+            "user_input": {
+                "name": "My template",
+                "state": "{{ is_state('binary_sensor.one', 'on') }}",
+                "advanced_options": {
+                    "availability": "{{ True }}",
+                    "delay_on": {"seconds": 1},
+                },
+            },
+        }
+    )
+    msg = await client.receive_json()
+    assert msg["success"]
+    assert msg["result"] is None
+
+    msg = await client.receive_json()
+    assert msg["event"]["state"] == "off"
+
+    hass.states.async_set("binary_sensor.one", "on")
+    await hass.async_block_till_done()
+
+    msg = await client.receive_json()
+    assert msg["event"]["state"] == "off"
+
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=1))
+    await hass.async_block_till_done()
+
+    msg = await client.receive_json()
+    assert msg["event"]["state"] == "on"
 
 
 EARLY_END_ERROR = "invalid template (TemplateSyntaxError: unexpected 'end of template')"
