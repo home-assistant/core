@@ -106,7 +106,7 @@ class FireflyDataUpdateCoordinator(DataUpdateCoordinator[FireflyCoordinatorData]
                 for category in categories
             ]
             primary_currency = await self.firefly.get_currency_primary()
-            budgets = await self.firefly.get_budgets()
+            budgets = await self.firefly.get_budgets(start=start_date, end=end_date)
             bills = await self.firefly.get_bills()
         except FireflyAuthenticationError as err:
             raise ConfigEntryAuthFailed(

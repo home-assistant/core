@@ -31,38 +31,6 @@
     'version': 1,
   })
 # ---
-# name: test_reauth_flow_migration
-  ConfigEntrySnapshot({
-    'data': dict({
-      'endpoint': 'mocked_endpoint',
-      'terminal_id': 'mocked_terminal_id',
-      'token_info': dict({
-        'access_token': 'mocked_access_token',
-        'expire_time': 'mocked_expire_time',
-        'refresh_token': 'mocked_refresh_token',
-        't': 'mocked_t',
-        'uid': 'mocked_uid',
-      }),
-      'user_code': '12345',
-    }),
-    'disabled_by': None,
-    'discovery_keys': dict({
-    }),
-    'domain': 'tuya',
-    'entry_id': <ANY>,
-    'minor_version': 1,
-    'options': dict({
-    }),
-    'pref_disable_new_entities': False,
-    'pref_disable_polling': False,
-    'source': 'user',
-    'subentries': list([
-    ]),
-    'title': 'Old Tuya configuration entry',
-    'unique_id': '12345',
-    'version': 1,
-  })
-# ---
 # name: test_user_flow
   FlowResultSnapshot({
     'context': dict({

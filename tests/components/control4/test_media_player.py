@@ -3,12 +3,19 @@
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from . import setup_integration
 
 from tests.common import MockConfigEntry, snapshot_platform
+
+
+@pytest.fixture
+def platforms() -> list[Platform]:
+    """Platforms which should be loaded during the test."""
+    return [Platform.MEDIA_PLAYER]
 
 
 @pytest.mark.usefixtures("mock_c4_account", "mock_c4_director", "mock_update_variables")

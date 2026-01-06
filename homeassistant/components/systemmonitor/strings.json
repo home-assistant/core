@@ -9,19 +9,6 @@
       }
     }
   },
-  "options": {
-    "step": {
-      "init": {
-        "description": "Configure a monitoring sensor for a running process",
-        "data": {
-          "process": "Processes to add as sensor(s)"
-        },
-        "data_description": {
-          "process": "Select a running process from the list or add a custom value. Multiple selections/custom values are supported"
-        }
-      }
-    }
-  },
   "entity": {
     "binary_sensor": {
       "process": {
@@ -29,6 +16,9 @@
       }
     },
     "sensor": {
+      "battery_empty": {
+        "name": "Battery empty"
+      },
       "disk_free": {
         "name": "Disk free {mount_point}"
       },
@@ -37,6 +27,9 @@
       },
       "disk_use_percent": {
         "name": "Disk usage {mount_point}"
+      },
+      "fan_speed": {
+        "name": "{fan_name} fan speed"
       },
       "ipv4_address": {
         "name": "IPv4 address {ip_address}"
@@ -77,20 +70,17 @@
       "packets_out": {
         "name": "Packets out {interface}"
       },
-      "throughput_network_in": {
-        "name": "Network throughput in {interface}"
-      },
-      "throughput_network_out": {
-        "name": "Network throughput out {interface}"
-      },
       "process": {
         "name": "Process {process}"
       },
-      "processor_use": {
-        "name": "Processor use"
+      "process_num_fds": {
+        "name": "Open file descriptors {process}"
       },
       "processor_temperature": {
         "name": "Processor temperature"
+      },
+      "processor_use": {
+        "name": "Processor use"
       },
       "swap_free": {
         "name": "Swap free"
@@ -101,8 +91,24 @@
       "swap_use_percent": {
         "name": "Swap usage"
       },
-      "process_num_fds": {
-        "name": "Open file descriptors {process}"
+      "throughput_network_in": {
+        "name": "Network throughput in {interface}"
+      },
+      "throughput_network_out": {
+        "name": "Network throughput out {interface}"
+      }
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "process": "Processes to add as sensor(s)"
+        },
+        "data_description": {
+          "process": "Select a running process from the list or add a custom value. Multiple selections/custom values are supported"
+        },
+        "description": "Configure a monitoring sensor for a running process"
       }
     }
   }

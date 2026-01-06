@@ -16,11 +16,11 @@
   },
   "iot_class": "local_push",
   "loggers": ["async_upnp_client", "yeelight"],
-  "requirements": ["yeelight==0.7.16", "async-upnp-client==0.45.0"],
+  "requirements": ["yeelight==0.7.16", "async-upnp-client==0.46.2"],
   "zeroconf": [
     {
-      "type": "_miio._udp.local.",
-      "name": "yeelink-*"
+      "name": "yeelink-*",
+      "type": "_miio._udp.local."
     }
   ]
 }

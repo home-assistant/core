@@ -18,6 +18,9 @@
       "uniqueModernGamertag": "Ikken Hissatsuu",
       "xboxOneRep": "GoodPlayer",
       "presenceState": "Offline",
+      "isFriend": true,
+      "isFriendRequestReceived": false,
+      "isFriendRequestSent": false,
       "presenceText": "Offline",
       "presenceDevices": null,
       "isBroadcasting": false,
@@ -35,8 +38,22 @@
       "search": null,
       "titleHistory": null,
       "multiplayerSummary": {
-        "InMultiplayerSession": 0,
-        "InParty": 0
+        "inMultiplayerSession": 0,
+        "inParty": 0,
+        "joinableActivities": [],
+        "partyDetails": [
+          {
+            "sessionRef": {
+              "scid": "7492baca-c1b4-440d-a391-b7ef364a8d40",
+              "templateName": "chat",
+              "name": "51935651-e782-45c6-854a-7a3858fc103a"
+            },
+            "status": "active",
+            "visibility": "open",
+            "joinRestriction": "followed",
+            "accepted": 1
+          }
+        ]
       },
       "recentPlayer": {
         "titles": [],
@@ -71,7 +88,17 @@
         "mute": false,
         "followerCount": 81,
         "followingCount": 73,
-        "hasGamePass": false
+        "hasGamePass": false,
+        "isFriend": true,
+        "canBeFriended": true,
+        "canBeFollowed": true,
+        "friendCount": 150,
+        "isFriendRequestReceived": false,
+        "isFriendRequestSent": false,
+        "isFriendListShared": true,
+        "isFollowingCaller": false,
+        "isFollowedByCaller": false,
+        "isFavorite": true
       },
       "communityManagerTitles": null,
       "socialManager": {
@@ -109,6 +136,9 @@
       "presenceState": "Offline",
       "presenceText": "Last seen 17h ago: Home",
       "presenceDevices": null,
+      "isFriend": true,
+      "isFriendRequestReceived": false,
+      "isFriendRequestSent": false,
       "isBroadcasting": false,
       "isCloaked": null,
       "isQuarantined": false,
@@ -124,8 +154,8 @@
       "search": null,
       "titleHistory": null,
       "multiplayerSummary": {
-        "InMultiplayerSession": 0,
-        "InParty": 0
+        "inMultiplayerSession": 0,
+        "inParty": 0
       },
       "recentPlayer": {
         "titles": [],
@@ -172,7 +202,17 @@
         "mute": false,
         "followerCount": 18,
         "followingCount": 12,
-        "hasGamePass": false
+        "hasGamePass": false,
+        "isFriend": true,
+        "canBeFriended": true,
+        "canBeFollowed": true,
+        "friendCount": 150,
+        "isFriendRequestReceived": false,
+        "isFriendRequestSent": false,
+        "isFriendListShared": true,
+        "isFollowingCaller": false,
+        "isFollowedByCaller": false,
+        "isFavorite": true
       },
       "communityManagerTitles": null,
       "socialManager": {

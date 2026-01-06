@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
-import logging
 from typing import Any
 
 from pyportainer import Portainer
@@ -13,7 +12,6 @@ from pyportainer.exceptions import (
     PortainerConnectionError,
     PortainerTimeoutError,
 )
-from pyportainer.models.docker import DockerContainer
 
 from homeassistant.components.button import (
     ButtonDeviceClass,
@@ -27,10 +25,12 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import PortainerConfigEntry
 from .const import DOMAIN
-from .coordinator import PortainerCoordinator, PortainerCoordinatorData
+from .coordinator import (
+    PortainerContainerData,
+    PortainerCoordinator,
+    PortainerCoordinatorData,
+)
 from .entity import PortainerContainerEntity
-
-_LOGGER = logging.getLogger(__name__)
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -64,18 +64,30 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Portainer buttons."""
-    coordinator: PortainerCoordinator = entry.runtime_data
+    coordinator = entry.runtime_data
 
-    async_add_entities(
-        PortainerButton(
-            coordinator=coordinator,
-            entity_description=entity_description,
-            device_info=container,
-            via_device=endpoint,
+    def _async_add_new_containers(
+        containers: list[tuple[PortainerCoordinatorData, PortainerContainerData]],
+    ) -> None:
+        """Add new container button sensors."""
+        async_add_entities(
+            PortainerButton(
+                coordinator,
+                entity_description,
+                container,
+                endpoint,
+            )
+            for (endpoint, container) in containers
+            for entity_description in BUTTONS
         )
-        for endpoint in coordinator.data.values()
-        for container in endpoint.containers.values()
-        for entity_description in BUTTONS
+
+    coordinator.new_containers_callbacks.append(_async_add_new_containers)
+    _async_add_new_containers(
+        [
+            (endpoint, container)
+            for endpoint in coordinator.data.values()
+            for container in endpoint.containers.values()
+        ]
     )
 
 
@@ -88,25 +100,22 @@ class PortainerButton(PortainerContainerEntity, ButtonEntity):
         self,
         coordinator: PortainerCoordinator,
         entity_description: PortainerButtonDescription,
-        device_info: DockerContainer,
+        device_info: PortainerContainerData,
         via_device: PortainerCoordinatorData,
     ) -> None:
         """Initialize the Portainer button entity."""
         self.entity_description = entity_description
         super().__init__(device_info, coordinator, via_device)
 
-        device_identifier = (
-            self._device_info.names[0].replace("/", " ").strip()
-            if self._device_info.names
-            else None
-        )
-        self._attr_unique_id = f"{coordinator.config_entry.entry_id}_{device_identifier}_{entity_description.key}"
+        self._attr_unique_id = f"{coordinator.config_entry.entry_id}_{self.device_name}_{entity_description.key}"
 
     async def async_press(self) -> None:
         """Trigger the Portainer button press service."""
         try:
             await self.entity_description.press_action(
-                self.coordinator.portainer, self.endpoint_id, self.device_id
+                self.coordinator.portainer,
+                self.endpoint_id,
+                self.container_data.container.id,
             )
         except PortainerConnectionError as err:
             raise HomeAssistantError(

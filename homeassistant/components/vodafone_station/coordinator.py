@@ -7,7 +7,8 @@ from typing import Any, cast
 
 from aiohttp import ClientSession
 from aiovodafone import exceptions
-from aiovodafone.api import VodafoneStationDevice, init_api_class
+from aiovodafone.api import VodafoneStationDevice
+from aiovodafone.models import init_device_class
 from yarl import URL
 
 from homeassistant.components.device_tracker import (
@@ -70,7 +71,7 @@ class VodafoneStationRouter(DataUpdateCoordinator[UpdateCoordinatorDataType]):
 
         data = config_entry.data
 
-        self.api = init_api_class(
+        self.api = init_device_class(
             URL(data[CONF_DEVICE_DETAILS][DEVICE_URL]),
             data[CONF_DEVICE_DETAILS][DEVICE_TYPE],
             data,

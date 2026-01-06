@@ -9,7 +9,8 @@
     }
   ],
   "documentation": "https://www.home-assistant.io/integrations/vicare",
+  "integration_type": "hub",
   "iot_class": "cloud_polling",
   "loggers": ["PyViCare"],
-  "requirements": ["PyViCare==2.54.0"]
+  "requirements": ["PyViCare==2.55.0"]
 }
