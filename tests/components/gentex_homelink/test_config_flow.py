@@ -12,6 +12,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 from . import (
+    INVALID_TEST_ACCESS_JWT,
     INVALID_TEST_CREDENTIALS,
     TEST_ACCESS_JWT,
     TEST_CREDENTIALS,
@@ -158,9 +159,10 @@ async def test_reauth_successful(
     assert result["type"] is FlowResultType.ABORT
 
 
+@pytest.mark.parametrize("mock_srp_access_token", [INVALID_TEST_ACCESS_JWT])
 async def test_reauth_error(
     hass: HomeAssistant,
-    mock_invalid_srp_auth: AsyncMock,
+    mock_srp_auth: AsyncMock,
     aioclient_mock: AiohttpClientMocker,
     mock_config_entry: MockConfigEntry,
 ) -> None:

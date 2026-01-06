@@ -10,32 +10,20 @@ import pytest
 
 from homeassistant.components.gentex_homelink.const import DOMAIN, OAUTH2_TOKEN_URL
 
-from . import INVALID_TEST_ACCESS_JWT, TEST_ACCESS_JWT, TEST_UNIQUE_ID
+from . import TEST_ACCESS_JWT, TEST_UNIQUE_ID
 
 from tests.common import MockConfigEntry
 from tests.conftest import AiohttpClientMocker
 
 
 @pytest.fixture
-def mock_srp_auth() -> Generator[AsyncMock]:
-    """Mock SRP authentication."""
-    with patch(
-        "homeassistant.components.gentex_homelink.config_flow.SRPAuth"
-    ) as mock_srp_auth:
-        instance = mock_srp_auth.return_value
-        instance.async_get_access_token.return_value = {
-            "AuthenticationResult": {
-                "AccessToken": TEST_ACCESS_JWT,
-                "RefreshToken": "refresh",
-                "TokenType": "bearer",
-                "ExpiresIn": 3600,
-            }
-        }
-        yield instance
+def mock_srp_access_token() -> str:
+    """Return preferred JWT for mock SRP auth requests."""
+    return TEST_ACCESS_JWT
 
 
 @pytest.fixture
-def mock_invalid_srp_auth() -> Generator[AsyncMock]:
+def mock_srp_auth(mock_srp_access_token: str) -> Generator[AsyncMock]:
     """Mock SRP authentication."""
     with patch(
         "homeassistant.components.gentex_homelink.config_flow.SRPAuth"
@@ -43,7 +31,7 @@ def mock_invalid_srp_auth() -> Generator[AsyncMock]:
         instance = mock_srp_auth.return_value
         instance.async_get_access_token.return_value = {
             "AuthenticationResult": {
-                "AccessToken": INVALID_TEST_ACCESS_JWT,
+                "AccessToken": mock_srp_access_token,
                 "RefreshToken": "refresh",
                 "TokenType": "bearer",
                 "ExpiresIn": 3600,
