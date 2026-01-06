@@ -140,7 +140,7 @@ class PortainerBaseButton(ButtonEntity):
 
     @abstractmethod
     async def _async_press_call(self) -> None:
-        """Subclasses implement the actual press call, but we still need it here."""
+        """Abstract method used per Portainer button class."""
 
     async def async_press(self) -> None:
         """Trigger the Portainer button press service."""
