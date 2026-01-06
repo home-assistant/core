@@ -37,8 +37,8 @@ COMMANDS: list[str] = [
     cmd.Remote.LENS_CONTROL,
     cmd.Remote.SETTING_MEMORY,
     cmd.Remote.GAMMA_SETTINGS,
-    cmd.Remote.HDMI1,
-    cmd.Remote.HDMI2,
+    cmd.Remote.HDMI_1,
+    cmd.Remote.HDMI_2,
     cmd.Remote.MODE_1,
     cmd.Remote.MODE_2,
     cmd.Remote.MODE_3,
@@ -61,8 +61,8 @@ COMMANDS: list[str] = [
 RENAMED_COMMANDS: dict[str, str] = {
     "anamo": cmd.Remote.ANAMORPHIC,
     "lens_ap": cmd.Remote.LENS_APERTURE,
-    "hdmi1": cmd.Remote.HDMI1,
-    "hdmi2": cmd.Remote.HDMI2,
+    "hdmi1": cmd.Remote.HDMI_1,
+    "hdmi2": cmd.Remote.HDMI_2,
 }
 
 _LOGGER = logging.getLogger(__name__)

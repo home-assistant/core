@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from datetime import timedelta
 import logging
-from typing import TYPE_CHECKING, Any
+from typing import Any
 
 from jvcprojector import (
     JvcProjector,
@@ -15,7 +15,8 @@ from jvcprojector import (
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
+from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import INPUT, NAME, POWER
@@ -46,10 +47,16 @@ class JvcProjectorDataUpdateCoordinator(DataUpdateCoordinator[dict[str, str]]):
         )
 
         self.device: JvcProjector = device
+        self.unique_id: str | None = None
 
-        if TYPE_CHECKING:
-            assert config_entry.unique_id is not None
-        self.unique_id = config_entry.unique_id
+    async def _async_setup(self) -> None:
+        """Set up the coordinator."""
+        try:
+            self.unique_id = format_mac(await self.device.get(cmd.MacAddress))
+        except JvcProjectorTimeoutError as err:
+            raise ConfigEntryNotReady(f"Unable to connect to {self.device.ip}") from err
+        except JvcProjectorAuthError as err:
+            raise ConfigEntryAuthFailed("Password authentication failed") from err
 
     async def _async_update_data(self) -> dict[str, Any]:
         """Get the latest state data."""
@@ -65,7 +72,7 @@ class JvcProjectorDataUpdateCoordinator(DataUpdateCoordinator[dict[str, str]]):
                 state[INPUT] = await self.device.get(cmd.Input)
 
         except JvcProjectorTimeoutError as err:
-            raise UpdateFailed(f"Unable to connect to {self.device.host}") from err
+            raise UpdateFailed(f"Unable to connect to {self.device.ip}") from err
         except JvcProjectorAuthError as err:
             raise ConfigEntryAuthFailed("Password authentication failed") from err
 

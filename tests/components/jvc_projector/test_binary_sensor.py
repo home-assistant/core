@@ -7,7 +7,7 @@ from homeassistant.components.jvc_projector.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
-from . import MOCK_MAC, MOCK_MAC_FORMATED
+from . import MOCK_MAC
 
 from tests.common import MockConfigEntry
 
@@ -60,4 +60,6 @@ async def test_migrate_old_unique_id(
     assert entity
     entry = entity_registry.async_get(entity.entity_id)
     assert entry
-    assert entry.unique_id == f"{MOCK_MAC_FORMATED}_power"
+
+    coordinator = mock_config_entry.runtime_data
+    assert entry.unique_id == f"{coordinator.unique_id}_power"
