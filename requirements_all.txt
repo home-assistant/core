@@ -854,7 +854,7 @@ ecoaliface==0.4.0
 egauge-async==0.4.0
 
 # homeassistant.components.eheimdigital
-eheimdigital==1.4.0
+eheimdigital==1.5.0
 
 # homeassistant.components.ekeybionyx
 ekey-bionyxpy==1.0.1
@@ -1684,7 +1684,7 @@ openwrt-luci-rpc==1.1.17
 openwrt-ubus-rpc==0.0.2
 
 # homeassistant.components.opower
-opower==0.15.9
+opower==0.16.0
 
 # homeassistant.components.oralb
 oralb-ble==1.0.2
@@ -1867,7 +1867,7 @@ pyRFXtrx==0.31.1
 pySDCP==1
 
 # homeassistant.components.tibber
-pyTibber==0.33.1
+pyTibber==0.34.0
 
 # homeassistant.components.dlink
 pyW215==0.8.0
@@ -2959,7 +2959,7 @@ switchbot-api==2.9.0
 synology-srm==0.2.0
 
 # homeassistant.components.system_bridge
-systembridgeconnector==5.2.4
+systembridgeconnector==5.3.1
 
 # homeassistant.components.tailscale
 tailscale==0.6.2
