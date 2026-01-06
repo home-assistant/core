@@ -2417,10 +2417,8 @@ class Service:
     __slots__ = [
         "batched_handlers",
         "description_placeholders",
-        "domain",
         "job",
         "schema",
-        "service",
         "supports_response",
     ]
 
