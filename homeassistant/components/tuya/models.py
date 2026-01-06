@@ -30,6 +30,15 @@ class DeviceWrapper[T]:
 
     options: list[str]
 
+    def skip_update(
+        self, device: CustomerDevice, updated_status_properties: list[str] | None
+    ) -> bool:
+        """Determine if the wrapper should skip an update.
+
+        The default is to always skip, unless overridden in subclasses.
+        """
+        return True
+
     def read_device_status(self, device: CustomerDevice) -> T | None:
         """Read device status and convert to a Home Assistant value."""
         raise NotImplementedError
@@ -51,6 +60,19 @@ class DPCodeWrapper(DeviceWrapper):
     def __init__(self, dpcode: str) -> None:
         """Init DPCodeWrapper."""
         self.dpcode = dpcode
+
+    def skip_update(
+        self, device: CustomerDevice, updated_status_properties: list[str] | None
+    ) -> bool:
+        """Determine if the wrapper should skip an update.
+
+        By default, skip if updated_status_properties is given and
+        does not include this dpcode.
+        """
+        return (
+            updated_status_properties is None
+            or self.dpcode not in updated_status_properties
+        )
 
     def _convert_value_to_raw_value(self, device: CustomerDevice, value: Any) -> Any:
         """Convert a Home Assistant value back to a raw device value.
