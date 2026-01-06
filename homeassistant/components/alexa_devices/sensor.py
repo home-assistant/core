@@ -122,6 +122,7 @@ async def async_setup_entry(
                 AmazonSensorEntity(coordinator, serial_num, notification_desc)
                 for notification_desc in NOTIFICATIONS
                 for serial_num in new_devices
+                if coordinator.data[serial_num].notifications_supported
             ]
             async_add_entities(sensors_list + notifications_list)
 
