@@ -78,6 +78,17 @@ class TriggerFormat:
         """Get the trigger configuration data."""
         raise NotImplementedError
 
+    def get_expected_call_data(
+        self, entity_id: str, event_type: str, calendar_event: dict[str, Any]
+    ) -> dict[str, Any]:
+        """Get the expected call data for assertion."""
+        return {
+            "platform": self.get_platform(event_type),
+            "event": event_type,
+            "entity_id": entity_id,
+            "calendar_event": calendar_event,
+        }
+
 
 @dataclass
 class LegacyTriggerFormat(TriggerFormat):
@@ -153,6 +164,7 @@ TEST_AUTOMATION_ACTION = {
     "data": {
         "platform": "{{ trigger.platform }}",
         "event": "{{ trigger.event }}",
+        "entity_id": "{{ trigger.entity_id }}",
         "calendar_event": "{{ trigger.calendar_event }}",
     },
 }
@@ -167,6 +179,7 @@ TARGET_TEST_FIRST_START_CALL_DATA = [
     {
         "platform": "calendar.event_started",
         "event": "start",
+        "entity_id": "calendar.calendar_1",
         "calendar_event": {
             "start": "2022-04-19T11:00:00+00:00",
             "end": "2022-04-19T11:30:00+00:00",
@@ -179,6 +192,7 @@ TARGET_TEST_SECOND_START_CALL_DATA = [
     {
         "platform": "calendar.event_started",
         "event": "start",
+        "entity_id": "calendar.calendar_2",
         "calendar_event": {
             "start": "2022-04-19T11:15:00+00:00",
             "end": "2022-04-19T11:45:00+00:00",
@@ -191,6 +205,7 @@ TARGET_TEST_FIRST_END_CALL_DATA = [
     {
         "platform": "calendar.event_ended",
         "event": "end",
+        "entity_id": "calendar.calendar_1",
         "calendar_event": {
             "start": "2022-04-19T11:00:00+00:00",
             "end": "2022-04-19T11:30:00+00:00",
@@ -203,6 +218,7 @@ TARGET_TEST_SECOND_END_CALL_DATA = [
     {
         "platform": "calendar.event_ended",
         "event": "end",
+        "entity_id": "calendar.calendar_2",
         "calendar_event": {
             "start": "2022-04-19T11:15:00+00:00",
             "end": "2022-04-19T11:45:00+00:00",
@@ -396,11 +412,9 @@ async def test_event_start_trigger(
         )
 
     assert calls_data() == [
-        {
-            "platform": trigger_format.get_platform(EVENT_START),
-            "event": EVENT_START,
-            "calendar_event": event_data,
-        }
+        trigger_format.get_expected_call_data(
+            CALENDAR_ENTITY_ID, EVENT_START, event_data
+        )
     ]
 
 
@@ -438,11 +452,9 @@ async def test_event_start_trigger_with_offset(
             datetime.datetime.fromisoformat("2022-04-19 12:05:00+00:00") + offset_delta,
         )
         assert calls_data() == [
-            {
-                "platform": trigger_format.get_platform(EVENT_START),
-                "event": EVENT_START,
-                "calendar_event": event_data,
-            }
+            trigger_format.get_expected_call_data(
+                CALENDAR_ENTITY_ID, EVENT_START, event_data
+            )
         ]
 
 
@@ -470,11 +482,9 @@ async def test_event_end_trigger(
             datetime.datetime.fromisoformat("2022-04-19 12:10:00+00:00")
         )
         assert calls_data() == [
-            {
-                "platform": trigger_format.get_platform(EVENT_END),
-                "event": EVENT_END,
-                "calendar_event": event_data,
-            }
+            trigger_format.get_expected_call_data(
+                CALENDAR_ENTITY_ID, EVENT_END, event_data
+            )
         ]
 
 
@@ -510,11 +520,9 @@ async def test_event_end_trigger_with_offset(
             datetime.datetime.fromisoformat("2022-04-19 12:35:00+00:00") + offset_delta,
         )
         assert calls_data() == [
-            {
-                "platform": trigger_format.get_platform(EVENT_END),
-                "event": EVENT_END,
-                "calendar_event": event_data,
-            }
+            trigger_format.get_expected_call_data(
+                CALENDAR_ENTITY_ID, EVENT_END, event_data
+            )
         ]
 
 
@@ -559,16 +567,12 @@ async def test_multiple_start_events(
             datetime.datetime.fromisoformat("2022-04-19 11:30:00+00:00")
         )
     assert calls_data() == [
-        {
-            "platform": trigger_format.get_platform(EVENT_START),
-            "event": EVENT_START,
-            "calendar_event": event_data1,
-        },
-        {
-            "platform": trigger_format.get_platform(EVENT_START),
-            "event": EVENT_START,
-            "calendar_event": event_data2,
-        },
+        trigger_format.get_expected_call_data(
+            CALENDAR_ENTITY_ID, EVENT_START, event_data1
+        ),
+        trigger_format.get_expected_call_data(
+            CALENDAR_ENTITY_ID, EVENT_START, event_data2
+        ),
     ]
 
 
@@ -595,16 +599,12 @@ async def test_multiple_end_events(
         )
 
     assert calls_data() == [
-        {
-            "platform": trigger_format.get_platform(EVENT_END),
-            "event": EVENT_END,
-            "calendar_event": event_data1,
-        },
-        {
-            "platform": trigger_format.get_platform(EVENT_END),
-            "event": EVENT_END,
-            "calendar_event": event_data2,
-        },
+        trigger_format.get_expected_call_data(
+            CALENDAR_ENTITY_ID, EVENT_END, event_data1
+        ),
+        trigger_format.get_expected_call_data(
+            CALENDAR_ENTITY_ID, EVENT_END, event_data2
+        ),
     ]
 
 
@@ -631,16 +631,12 @@ async def test_multiple_events_sharing_start_time(
         )
 
     assert calls_data() == [
-        {
-            "platform": trigger_format.get_platform(EVENT_START),
-            "event": EVENT_START,
-            "calendar_event": event_data1,
-        },
-        {
-            "platform": trigger_format.get_platform(EVENT_START),
-            "event": EVENT_START,
-            "calendar_event": event_data2,
-        },
+        trigger_format.get_expected_call_data(
+            CALENDAR_ENTITY_ID, EVENT_START, event_data1
+        ),
+        trigger_format.get_expected_call_data(
+            CALENDAR_ENTITY_ID, EVENT_START, event_data2
+        ),
     ]
 
 
@@ -667,16 +663,12 @@ async def test_overlap_events(
         )
 
     assert calls_data() == [
-        {
-            "platform": trigger_format.get_platform(EVENT_START),
-            "event": EVENT_START,
-            "calendar_event": event_data1,
-        },
-        {
-            "platform": trigger_format.get_platform(EVENT_START),
-            "event": EVENT_START,
-            "calendar_event": event_data2,
-        },
+        trigger_format.get_expected_call_data(
+            CALENDAR_ENTITY_ID, EVENT_START, event_data1
+        ),
+        trigger_format.get_expected_call_data(
+            CALENDAR_ENTITY_ID, EVENT_START, event_data2
+        ),
     ]
 
 
@@ -753,16 +745,12 @@ async def test_update_next_event(
             datetime.datetime.fromisoformat("2022-04-19 11:30:00+00:00")
         )
     assert calls_data() == [
-        {
-            "platform": trigger_format.get_platform(EVENT_START),
-            "event": EVENT_START,
-            "calendar_event": event_data2,
-        },
-        {
-            "platform": trigger_format.get_platform(EVENT_START),
-            "event": EVENT_START,
-            "calendar_event": event_data1,
-        },
+        trigger_format.get_expected_call_data(
+            CALENDAR_ENTITY_ID, EVENT_START, event_data2
+        ),
+        trigger_format.get_expected_call_data(
+            CALENDAR_ENTITY_ID, EVENT_START, event_data1
+        ),
     ]
 
 
@@ -797,11 +785,9 @@ async def test_update_missed(
             datetime.datetime.fromisoformat("2022-04-19 11:05:00+00:00")
         )
         assert calls_data() == [
-            {
-                "platform": trigger_format.get_platform(EVENT_START),
-                "event": EVENT_START,
-                "calendar_event": event_data1,
-            },
+            trigger_format.get_expected_call_data(
+                CALENDAR_ENTITY_ID, EVENT_START, event_data1
+            ),
         ]
 
 
@@ -875,11 +861,9 @@ async def test_event_payload(
 
         await fake_schedule.fire_until(fire_time)
         assert calls_data() == [
-            {
-                "platform": trigger_format.get_platform(EVENT_START),
-                "event": EVENT_START,
-                "calendar_event": payload_data,
-            }
+            trigger_format.get_expected_call_data(
+                CALENDAR_ENTITY_ID, EVENT_START, payload_data
+            )
         ]
 
 
@@ -906,11 +890,9 @@ async def test_trigger_timestamp_window_edge(
             datetime.datetime.fromisoformat("2022-04-19 11:20:00+00:00")
         )
         assert calls_data() == [
-            {
-                "platform": trigger_format.get_platform(EVENT_START),
-                "event": EVENT_START,
-                "calendar_event": event_data,
-            }
+            trigger_format.get_expected_call_data(
+                CALENDAR_ENTITY_ID, EVENT_START, event_data
+            )
         ]
 
 
@@ -953,21 +935,15 @@ async def test_event_start_trigger_dst(
         )
 
         assert calls_data() == [
-            {
-                "platform": trigger_format.get_platform(EVENT_START),
-                "event": EVENT_START,
-                "calendar_event": event1_data,
-            },
-            {
-                "platform": trigger_format.get_platform(EVENT_START),
-                "event": EVENT_START,
-                "calendar_event": event2_data,
-            },
-            {
-                "platform": trigger_format.get_platform(EVENT_START),
-                "event": EVENT_START,
-                "calendar_event": event3_data,
-            },
+            trigger_format.get_expected_call_data(
+                CALENDAR_ENTITY_ID, EVENT_START, event1_data
+            ),
+            trigger_format.get_expected_call_data(
+                CALENDAR_ENTITY_ID, EVENT_START, event2_data
+            ),
+            trigger_format.get_expected_call_data(
+                CALENDAR_ENTITY_ID, EVENT_START, event3_data
+            ),
         ]
 
 
@@ -1003,11 +979,9 @@ async def test_config_entry_reload(
         )
 
     assert calls_data() == [
-        {
-            "platform": trigger_format.get_platform(EVENT_START),
-            "event": EVENT_START,
-            "calendar_event": event_data,
-        }
+        trigger_format.get_expected_call_data(
+            CALENDAR_ENTITY_ID, EVENT_START, event_data
+        )
     ]
 
 

@@ -11,6 +11,7 @@ from typing import TYPE_CHECKING, Any, cast
 import voluptuous as vol
 
 from homeassistant.const import (
+    ATTR_ENTITY_ID,
     CONF_ENTITY_ID,
     CONF_EVENT,
     CONF_OFFSET,
@@ -78,6 +79,7 @@ class QueuedCalendarEvent:
 
     trigger_time: datetime.datetime
     event: CalendarEvent
+    entity_id: str
 
 
 @dataclass
@@ -117,7 +119,7 @@ class Timespan:
         return f"[{self.start}, {self.end})"
 
 
-type EventFetcher = Callable[[Timespan], Awaitable[list[CalendarEvent]]]
+type EventFetcher = Callable[[Timespan], Awaitable[list[tuple[str, CalendarEvent]]]]
 type QueuedEventFetcher = Callable[[Timespan], Awaitable[list[QueuedCalendarEvent]]]
 
 
@@ -136,15 +138,20 @@ def get_entity(hass: HomeAssistant, entity_id: str) -> CalendarEntity:
 def event_fetcher(hass: HomeAssistant, entity_ids: set[str]) -> EventFetcher:
     """Build an async_get_events wrapper to fetch events during a time span."""
 
-    async def async_get_events(timespan: Timespan) -> list[CalendarEvent]:
+    async def async_get_events(timespan: Timespan) -> list[tuple[str, CalendarEvent]]:
         """Return events active in the specified time span."""
         # Expand by one second to make the end time exclusive
         end_time = timespan.end + datetime.timedelta(seconds=1)
 
-        events: list[CalendarEvent] = []
+        events: list[tuple[str, CalendarEvent]] = []
         for entity_id in entity_ids:
             entity = get_entity(hass, entity_id)
-            events.extend(await entity.async_get_events(hass, timespan.start, end_time))
+            events.extend(
+                (entity_id, event)
+                for event in await entity.async_get_events(
+                    hass, timespan.start, end_time
+                )
+            )
         return events
 
     return async_get_events
@@ -169,12 +176,11 @@ def queued_event_fetcher(
         # Example: For an EVENT_END trigger the event may start during this
         # time span, but need to be triggered later when the end happens.
         results = []
-        for trigger_time, event in zip(
-            map(get_trigger_time, active_events), active_events, strict=False
-        ):
+        for entity_id, event in active_events:
+            trigger_time = get_trigger_time(event)
             if trigger_time not in offset_timespan:
                 continue
-            results.append(QueuedCalendarEvent(trigger_time + offset, event))
+            results.append(QueuedCalendarEvent(trigger_time + offset, event, entity_id))
 
         _LOGGER.debug(
             "Scan events @ %s%s found %s eligible of %s active",
@@ -267,6 +273,7 @@ class CalendarEventListener:
             _LOGGER.debug("Dispatching event: %s", queued_event.event)
             payload = {
                 **self._trigger_payload,
+                ATTR_ENTITY_ID: queued_event.entity_id,
                 "calendar_event": queued_event.event.as_dict(),
             }
             self._action_runner(payload, "calendar event state change")
