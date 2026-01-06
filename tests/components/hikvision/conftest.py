@@ -1,7 +1,7 @@
 """Common fixtures for the Hikvision tests."""
 
 from collections.abc import AsyncGenerator, Generator
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import MagicMock, patch
 
 import pytest
 
@@ -40,7 +40,7 @@ async def mock_patch_platforms(platforms: list[Platform]) -> AsyncGenerator[None
 
 
 @pytest.fixture
-def mock_setup_entry() -> Generator[AsyncMock]:
+def mock_setup_entry() -> Generator[MagicMock]:
     """Override async_setup_entry."""
     with patch(
         "homeassistant.components.hikvision.async_setup_entry", return_value=True

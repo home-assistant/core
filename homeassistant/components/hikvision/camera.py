@@ -2,17 +2,14 @@
 
 from __future__ import annotations
 
-import logging
-
 from homeassistant.components.camera import Camera, CameraEntityFeature
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import HikvisionConfigEntry
 from .const import DOMAIN
-
-_LOGGER = logging.getLogger(__name__)
 
 PARALLEL_UPDATES = 0
 
@@ -51,13 +48,12 @@ class HikvisionCamera(Camera):
     ) -> None:
         """Initialize the camera."""
         super().__init__()
-        self._entry = entry
         self._data = entry.runtime_data
         self._channel = channel
         self._camera = self._data.camera
 
-        # Build unique ID
-        self._attr_unique_id = f"{self._data.device_id}_camera_{channel}"
+        # Build unique ID (unique per platform per integration)
+        self._attr_unique_id = f"{self._data.device_id}_{channel}"
 
         # Build entity name based on device type
         if self._data.device_type == "NVR":
@@ -81,17 +77,11 @@ class HikvisionCamera(Camera):
             return await self.hass.async_add_executor_job(
                 self._camera.get_snapshot, self._channel
             )
-        except Exception as err:  # noqa: BLE001
-            _LOGGER.error(
-                "Error getting camera image from %s channel %d: %s",
-                self._data.device_name,
-                self._channel,
-                err,
-            )
-            return None
+        except Exception as err:
+            raise HomeAssistantError(
+                f"Error getting image from {self._data.device_name} channel {self._channel}: {err}"
+            ) from err
 
     async def stream_source(self) -> str | None:
         """Return the stream source URL."""
-        return await self.hass.async_add_executor_job(
-            self._camera.get_stream_url, self._channel
-        )
+        return self._camera.get_stream_url(self._channel)

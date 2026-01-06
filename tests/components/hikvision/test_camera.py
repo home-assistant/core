@@ -5,10 +5,11 @@ from unittest.mock import MagicMock, patch
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.camera import async_get_image
+from homeassistant.components.camera import async_get_image, async_get_stream_source
 from homeassistant.components.hikvision.const import DOMAIN
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from . import setup_integration
@@ -19,7 +20,7 @@ from tests.common import MockConfigEntry, snapshot_platform
 
 @pytest.fixture
 def platforms() -> list[Platform]:
-    """Platforms, which should be loaded during the test."""
+    """Return platforms to load during test."""
     return [Platform.CAMERA]
 
 
@@ -38,18 +39,22 @@ async def test_all_entities(
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
 
-async def test_camera_created(
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_nvr_entities(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_hikcamera: MagicMock,
+    entity_registry: er.EntityRegistry,
+    snapshot: SnapshotAssertion,
 ) -> None:
-    """Test camera entity is created."""
-    await setup_integration(hass, mock_config_entry)
+    """Test NVR camera entities with multiple channels."""
+    mock_hikcamera.return_value.get_type = "NVR"
+    mock_hikcamera.return_value.get_channels.return_value = [1, 2]
 
-    # Check camera entity exists
-    state = hass.states.get("camera.front_camera")
-    assert state is not None
-    assert state.state == "idle"
+    with patch("random.SystemRandom.getrandbits", return_value=123123123123):
+        await setup_integration(hass, mock_config_entry)
+
+    await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
 
 async def test_camera_device_info(
@@ -68,25 +73,6 @@ async def test_camera_device_info(
     assert device_entry.name == TEST_DEVICE_NAME
     assert device_entry.manufacturer == "Hikvision"
     assert device_entry.model == "Camera"
-
-
-async def test_camera_nvr_device(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_hikcamera: MagicMock,
-) -> None:
-    """Test camera naming for NVR devices with multiple channels."""
-    mock_hikcamera.return_value.get_type = "NVR"
-    mock_hikcamera.return_value.get_channels.return_value = [1, 2]
-
-    await setup_integration(hass, mock_config_entry)
-
-    # NVR cameras should have channel number in name
-    state = hass.states.get("camera.front_camera_channel_1")
-    assert state is not None
-
-    state = hass.states.get("camera.front_camera_channel_2")
-    assert state is not None
 
 
 async def test_camera_no_channels_creates_single_camera(
@@ -126,17 +112,14 @@ async def test_camera_image_error(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_hikcamera: MagicMock,
-    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test camera image error handling."""
     mock_hikcamera.return_value.get_snapshot.side_effect = Exception("Connection error")
 
     await setup_integration(hass, mock_config_entry)
 
-    camera_entity = hass.data["camera"].get_entity("camera.front_camera")
-    result = await camera_entity.async_camera_image()
-    assert result is None
-    assert "Error getting camera image" in caplog.text
+    with pytest.raises(HomeAssistantError, match="Error getting image"):
+        await async_get_image(hass, "camera.front_camera")
 
 
 async def test_camera_stream_source(
@@ -147,8 +130,7 @@ async def test_camera_stream_source(
     """Test camera stream source URL."""
     await setup_integration(hass, mock_config_entry)
 
-    camera_entity = hass.data["camera"].get_entity("camera.front_camera")
-    stream_url = await camera_entity.stream_source()
+    stream_url = await async_get_stream_source(hass, "camera.front_camera")
 
     # Verify RTSP URL from library
     assert stream_url is not None
@@ -173,8 +155,7 @@ async def test_camera_stream_source_nvr(
 
     await setup_integration(hass, mock_config_entry)
 
-    camera_entity = hass.data["camera"].get_entity("camera.front_camera_channel_2")
-    stream_url = await camera_entity.stream_source()
+    stream_url = await async_get_stream_source(hass, "camera.front_camera_channel_2")
 
     # NVR channel 2 should use stream channel 201
     assert stream_url is not None
