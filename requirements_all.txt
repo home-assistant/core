@@ -1833,9 +1833,6 @@ py-sucks==0.9.11
 # homeassistant.components.synology_dsm
 py-synologydsm-api==2.7.3
 
-# homeassistant.components.html5
-py-vapid==1.9.2
-
 # homeassistant.components.atome
 pyAtome==0.1.1
 
