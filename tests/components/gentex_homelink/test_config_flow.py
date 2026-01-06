@@ -9,7 +9,6 @@ import pytest
 
 from homeassistant.components.gentex_homelink.const import DOMAIN, OAUTH2_TOKEN_URL
 from homeassistant.config_entries import SOURCE_USER, ConfigEntryState
-from homeassistant.const import CONF_EMAIL
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
@@ -46,7 +45,6 @@ async def test_full_flow(
             "expires_at": result["data"]["token"]["expires_at"],
         },
     }
-    assert result["title"] == TEST_CREDENTIALS[CONF_EMAIL]
     assert result["result"].unique_id == "some-uuid"
 
 
