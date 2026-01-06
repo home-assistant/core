@@ -20,12 +20,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
-from .const import (
-    CONF_URL_ENERGY,
-    CONF_URL_SECURITY,
-    CONF_URL_WEATHER,
-    NETATMO_CREATE_BINARY_SENSOR,
-)
+from .const import CONF_URL_WEATHER, NETATMO_CREATE_BINARY_SENSOR
 from .data_handler import NetatmoDevice
 from .entity import NetatmoModuleEntity
 
@@ -56,8 +51,6 @@ NETATMO_BINARY_SENSOR_DESCRIPTIONS: Final[
 
 DEVICE_CATEGORY_BINARY_URLS: Final[dict[NetatmoDeviceCategory, str]] = {
     NetatmoDeviceCategory.air_care: CONF_URL_WEATHER,
-    NetatmoDeviceCategory.climate: CONF_URL_ENERGY,
-    NetatmoDeviceCategory.opening: CONF_URL_SECURITY,
     NetatmoDeviceCategory.weather: CONF_URL_WEATHER,
 }
 
@@ -91,10 +84,8 @@ async def async_setup_entry(
 
         # Create binary sensors for module
         for description in descriptions_to_add:
-            if description.feature_name is None:
-                feature_check = description.key
-            else:
-                feature_check = description.feature_name
+            # Actual check is simple for reachable
+            feature_check = description.key
             if feature_check in netatmo_device.device.features:
                 _LOGGER.debug(
                     'Adding "%s" binary sensor for device %s',
@@ -162,12 +153,6 @@ class NetatmoBinarySensor(NetatmoModuleEntity, BinarySensorEntity):
                     netatmo_device.device.device_category,
                 )
                 return
-        else:
-            _LOGGER.warning(
-                "Device %s is missing a device_category, cannot set configuration URL for it's binary sensors",
-                netatmo_device.device.name,
-            )
-            return
 
         super().__init__(netatmo_device)
 
@@ -177,10 +162,9 @@ class NetatmoBinarySensor(NetatmoModuleEntity, BinarySensorEntity):
             self.original_device_class = description.device_class
         if description.name is not None:
             self._attr_name = description.name
-        if description.translation_key is not None:
-            self._attr_translation_key = description.translation_key
-        else:
-            self._attr_translation_key = None
+
+        # Translation key is not yet used (will be implemented in future)
+        self._attr_translation_key = None
 
         # For historical reasons, entities should have location set
         # as binary_sensors were handled as NETATMO_CREATE_WEATHER_SENSOR earlier
