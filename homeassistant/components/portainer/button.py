@@ -144,7 +144,11 @@ class PortainerBaseButton(ButtonEntity):
     async def async_press(self) -> None:
         """Trigger the Portainer button press service."""
         try:
-            await self._async_press_call()
+            await self.entity_description.press_action(
+                self.coordinator.portainer,
+                self.endpoint_id,
+                self.container_data.container.id,
+            )
         except PortainerConnectionError as err:
             _LOGGER.exception("Connection error for button: %s", self.entity_id)
             raise HomeAssistantError(

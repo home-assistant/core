@@ -18,17 +18,24 @@ from .type_information import (
 )
 
 
-class DeviceWrapper:
+class DeviceWrapper[T]:
     """Base device wrapper."""
 
-    options: list[str] | None = None
+    native_unit: str | None = None
+    suggested_unit: str | None = None
 
-    def read_device_status(self, device: CustomerDevice) -> Any | None:
+    max_value: float
+    min_value: float
+    value_step: float
+
+    options: list[str]
+
+    def read_device_status(self, device: CustomerDevice) -> T | None:
         """Read device status and convert to a Home Assistant value."""
         raise NotImplementedError
 
     def get_update_commands(
-        self, device: CustomerDevice, value: Any
+        self, device: CustomerDevice, value: T
     ) -> list[dict[str, Any]]:
         """Generate update commands for a Home Assistant action."""
         raise NotImplementedError
@@ -40,9 +47,6 @@ class DPCodeWrapper(DeviceWrapper):
     Used as a common interface for referring to a DPCode, and
     access read conversion routines.
     """
-
-    native_unit: str | None = None
-    suggested_unit: str | None = None
 
     def __init__(self, dpcode: str) -> None:
         """Init DPCodeWrapper."""
@@ -135,7 +139,6 @@ class DPCodeEnumWrapper(DPCodeTypeInformationWrapper[EnumTypeInformation]):
     """Simple wrapper for EnumTypeInformation values."""
 
     _DPTYPE = EnumTypeInformation
-    options: list[str]
 
     def __init__(self, dpcode: str, type_information: EnumTypeInformation) -> None:
         """Init DPCodeEnumWrapper."""

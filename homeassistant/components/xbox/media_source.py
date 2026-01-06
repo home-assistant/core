@@ -641,7 +641,7 @@ class XboxSource(MediaSource):
 
 def gamerpic(config_entry: XboxConfigEntry) -> str | None:
     """Return gamerpic."""
-    coordinator = config_entry.runtime_data.status
+    coordinator = config_entry.runtime_data.presence
     if TYPE_CHECKING:
         assert config_entry.unique_id
     person = coordinator.data.presence[coordinator.client.xuid]
