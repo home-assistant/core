@@ -112,6 +112,45 @@ async def test_command_switch_turn_on_off(
     )
 
 
+@pytest.mark.parametrize("device_fixture", ["da_wm_dw_01011"])
+@pytest.mark.parametrize(
+    ("action", "argument"),
+    [
+        (SERVICE_TURN_ON, True),
+        (SERVICE_TURN_OFF, False),
+    ],
+)
+async def test_dishwasher_washing_option_switch_turn_on_off(
+    hass: HomeAssistant,
+    devices: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    action: str,
+    argument: str,
+) -> None:
+    """Test switch turn on and off command."""
+    set_attribute_value(
+        devices,
+        Capability.REMOTE_CONTROL_STATUS,
+        Attribute.REMOTE_CONTROL_ENABLED,
+        "true",
+    )
+    await setup_integration(hass, mock_config_entry)
+
+    await hass.services.async_call(
+        SWITCH_DOMAIN,
+        action,
+        {ATTR_ENTITY_ID: "switch.dishwasher_speed_booster"},
+        blocking=True,
+    )
+    devices.execute_device_command.assert_called_once_with(
+        "7ff318f3-3772-524d-3c9f-72fcd26413ed",
+        Capability.SAMSUNG_CE_DISHWASHER_WASHING_OPTIONS,
+        Command.SET_SPEED_BOOSTER,
+        MAIN,
+        argument,
+    )
+
+
 @pytest.mark.parametrize("device_fixture", ["da_ref_normal_000001"])
 @pytest.mark.parametrize(
     ("action", "command"),
