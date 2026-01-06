@@ -149,20 +149,17 @@ class PortainerBaseButton(ButtonEntity):
         except PortainerConnectionError as err:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
-                translation_key="cannot_connect",
-                translation_placeholders={"error": ""},
+                translation_key="cannot_connect_no_details",
             ) from err
         except PortainerAuthenticationError as err:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
-                translation_key="invalid_auth",
-                translation_placeholders={"error": ""},
+                translation_key="invalid_auth_no_details",
             ) from err
         except PortainerTimeoutError as err:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
-                translation_key="timeout_connect",
-                translation_placeholders={"error": ""},
+                translation_key="timeout_connect_no_details",
             ) from err
 
 
