@@ -32,7 +32,7 @@ async def async_setup_entry(
     session = async_create_clientsession(
         hass, cookie_jar=CookieJar(unsafe=True, quote_cookie=False)
     )
-    client = BraviaClient(host, mac, session=session, ssl=ssl, ssl_verify=False)
+    client = BraviaClient(host, mac, session=session, ssl=ssl)
     coordinator = BraviaTVCoordinator(
         hass=hass,
         config_entry=config_entry,
