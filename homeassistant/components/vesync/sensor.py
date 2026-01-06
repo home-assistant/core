@@ -46,9 +46,7 @@ class VeSyncSensorEntityDescription(SensorEntityDescription):
 
     exists_fn: Callable[[VeSyncBaseDevice], bool]
 
-    native_unit_of_measurement_fn: (
-        Callable[[VeSyncBaseDevice], UnitOfTemperature | None] | None
-    ) = None
+    use_device_temperature_unit: bool = False
 
 
 SENSORS: tuple[VeSyncSensorEntityDescription, ...] = (
@@ -180,10 +178,7 @@ SENSORS: tuple[VeSyncSensorEntityDescription, ...] = (
         key="current_temp",
         translation_key="current_temp",
         device_class=SensorDeviceClass.TEMPERATURE,
-        native_unit_of_measurement_fn=lambda device: {
-            "celsius": UnitOfTemperature.CELSIUS,
-            "fahrenheit": UnitOfTemperature.FAHRENHEIT,
-        }.get(device.temp_unit),
+        use_device_temperature_unit=True,
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda device: device.state.current_temp,
         exists_fn=is_air_fryer,
@@ -192,10 +187,7 @@ SENSORS: tuple[VeSyncSensorEntityDescription, ...] = (
         key="cook_set_temp",
         translation_key="cook_set_temp",
         device_class=SensorDeviceClass.TEMPERATURE,
-        native_unit_of_measurement_fn=lambda device: {
-            "celsius": UnitOfTemperature.CELSIUS,
-            "fahrenheit": UnitOfTemperature.FAHRENHEIT,
-        }.get(device.temp_unit),
+        use_device_temperature_unit=True,
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda device: device.state.cook_set_temp,
         exists_fn=is_air_fryer,
@@ -293,7 +285,9 @@ class VeSyncSensorEntity(VeSyncBaseEntity, SensorEntity):
     @property
     def native_unit_of_measurement(self) -> str | None:
         """Return the unit the value was reported in by the sensor."""
-        if self.entity_description.native_unit_of_measurement_fn:
-            return self.entity_description.native_unit_of_measurement_fn(self.device)
-
+        if self.entity_description.use_device_temperature_unit:
+            if self.device.temp_unit == "celsius":
+                return UnitOfTemperature.CELSIUS
+            if self.device.temp_unit == "fahrenheit":
+                return UnitOfTemperature.FAHRENHEIT
         return super().native_unit_of_measurement
