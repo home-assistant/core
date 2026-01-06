@@ -3,15 +3,17 @@
 from __future__ import annotations
 
 from collections.abc import Generator
+import json
 from unittest.mock import AsyncMock, MagicMock, patch
 
+from aiopulsegrow import Device, DeviceData, UserUsage
 import pytest
 
 from homeassistant.components.pulsegrow.const import DOMAIN
 from homeassistant.const import CONF_API_KEY
 from homeassistant.core import HomeAssistant
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, load_fixture
 
 
 @pytest.fixture
@@ -34,37 +36,21 @@ def mock_pulsegrow_client() -> Generator[MagicMock]:
     ) as mock_client_class:
         mock_client = mock_client_class.return_value
 
-        # Mock users response
-        mock_user = MagicMock()
-        mock_user.user_id = "test-account-id"
-        mock_user.user_name = "Test User"
-        mock_user.user_email = "test@example.com"
-        mock_client.get_users = AsyncMock(return_value=[mock_user])
+        # Mock users response using JSON fixture
+        users_data = load_fixture("users.json", DOMAIN)
+        users_json = json.loads(users_data)
+        mock_client.get_users = AsyncMock(
+            return_value=[UserUsage.from_dict(u) for u in users_json]
+        )
 
-        # Mock device with most_recent_data_point
-        mock_data_point = MagicMock()
-        mock_data_point.temperature_f = 72.5
-        mock_data_point.humidity_rh = 55.0
-        mock_data_point.vpd = 1.2
-        mock_data_point.co2 = 800
-        mock_data_point.light_lux = 5000
-        mock_data_point.air_pressure = 101325
-        mock_data_point.dp_f = 55.0
-        mock_data_point.signal_strength = -50
-        mock_data_point.battery_v = 3.3
-
-        mock_device = MagicMock()
-        mock_device.id = 123
-        mock_device.guid = "device-123"
-        mock_device.name = "Test Pulse Pro"
-        mock_device.device_type = 1  # PULSE_PRO (DeviceType enum value)
-        mock_device.hub_id = None
-        mock_device.most_recent_data_point = mock_data_point
-        mock_device.pro_light_reading_preview = None  # No pro light by default
+        # Mock device using JSON fixture
+        device_data = load_fixture("device.json", DOMAIN)
+        device_json = json.loads(device_data)
+        device = Device.from_dict(device_json)
 
         # Mock DeviceData response (get_all_devices returns DeviceData)
-        mock_device_data = MagicMock()
-        mock_device_data.devices = [mock_device]
+        mock_device_data = MagicMock(spec=DeviceData)
+        mock_device_data.devices = [device]
         mock_device_data.sensors = []
         mock_client.get_all_devices = AsyncMock(return_value=mock_device_data)
 

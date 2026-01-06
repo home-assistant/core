@@ -1,0 +1,9 @@
+{
+  "id": 789,
+  "growId": 456,
+  "hidden": false,
+  "name": "Test Hub",
+  "macAddress": "AA:BB:CC:DD:EE:FF",
+  "hubThresholds": [],
+  "sensorDevices": []
+}
