@@ -171,8 +171,19 @@ SENSORS: tuple[VeSyncSensorEntityDescription, ...] = (
     VeSyncSensorEntityDescription(
         key="cook_status",
         translation_key="cook_status",
+        device_class=SensorDeviceClass.ENUM,
         value_fn=lambda device: device.state.cook_status.lower(),
         exists_fn=is_air_fryer,
+        options=[
+            "cookend",
+            "cooking",
+            "cookstop",
+            "heating",
+            "preheatend",
+            "preheatstop",
+            "pullout",
+            "standby",
+        ],
     ),
     VeSyncSensorEntityDescription(
         key="current_temp",

@@ -810,7 +810,18 @@
       'aliases': set({
       }),
       'area_id': None,
-      'capabilities': None,
+      'capabilities': dict({
+        'options': list([
+          'cookend',
+          'cooking',
+          'cookstop',
+          'heating',
+          'preheatend',
+          'preheatstop',
+          'pullout',
+          'standby',
+        ]),
+      }),
       'config_entry_id': <ANY>,
       'config_subentry_id': <ANY>,
       'device_class': None,
@@ -828,7 +839,7 @@
       'name': None,
       'options': dict({
       }),
-      'original_device_class': None,
+      'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
       'original_icon': None,
       'original_name': 'Cook status',
       'platform': 'vesync',
@@ -875,7 +886,18 @@
 # name: test_sensor_state[CS158-AF Air Fryer Cooking][sensor.cs158_af_air_fryer_cooking_cook_status]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'device_class': 'enum',
       'friendly_name': 'CS158-AF Air Fryer Cooking Cook status',
+      'options': list([
+        'cookend',
+        'cooking',
+        'cookstop',
+        'heating',
+        'preheatend',
+        'preheatstop',
+        'pullout',
+        'standby',
+      ]),
     }),
     'context': <ANY>,
     'entity_id': 'sensor.cs158_af_air_fryer_cooking_cook_status',
@@ -1148,7 +1170,18 @@
       'aliases': set({
       }),
       'area_id': None,
-      'capabilities': None,
+      'capabilities': dict({
+        'options': list([
+          'cookend',
+          'cooking',
+          'cookstop',
+          'heating',
+          'preheatend',
+          'preheatstop',
+          'pullout',
+          'standby',
+        ]),
+      }),
       'config_entry_id': <ANY>,
       'config_subentry_id': <ANY>,
       'device_class': None,
@@ -1166,7 +1199,7 @@
       'name': None,
       'options': dict({
       }),
-      'original_device_class': None,
+      'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
       'original_icon': None,
       'original_name': 'Cook status',
       'platform': 'vesync',
@@ -1212,7 +1245,18 @@
 # name: test_sensor_state[CS158-AF Air Fryer Standby][sensor.cs158_af_air_fryer_standby_cook_status]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'device_class': 'enum',
       'friendly_name': 'CS158-AF Air Fryer Standby Cook status',
+      'options': list([
+        'cookend',
+        'cooking',
+        'cookstop',
+        'heating',
+        'preheatend',
+        'preheatstop',
+        'pullout',
+        'standby',
+      ]),
     }),
     'context': <ANY>,
     'entity_id': 'sensor.cs158_af_air_fryer_standby_cook_status',
