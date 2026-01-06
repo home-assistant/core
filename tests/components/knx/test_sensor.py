@@ -196,14 +196,17 @@ async def test_sensor_yaml_attribute_validation(
                     CONF_NAME: "test",
                     CONF_STATE_ADDRESS: "1/1/1",
                     CONF_TYPE: "9.001",  # temperature 2 byte float
-                    CONF_SENSOR_STATE_CLASS: "totoal_increasing",  # invalid for temperature
+                    CONF_SENSOR_STATE_CLASS: "total_increasing",  # invalid for temperature
                 }
             }
         )
     assert len(caplog.messages) == 2
     record = caplog.records[0]
     assert record.levelname == "ERROR"
-    assert "Invalid config for 'knx': expected SensorStateClass" in record.message
+    assert (
+        "Invalid config for 'knx': State class 'total_increasing' is not valid for device class"
+        in record.message
+    )
 
     record = caplog.records[1]
     assert record.levelname == "ERROR"
