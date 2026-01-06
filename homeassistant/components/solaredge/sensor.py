@@ -46,7 +46,7 @@ SENSOR_TYPES = [
         key="lifetime_energy",
         json_key="lifeTimeData",
         translation_key="lifetime_energy",
-        state_class=SensorStateClass.TOTAL,
+        state_class=SensorStateClass.TOTAL_INCREASING,
         native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
     ),
