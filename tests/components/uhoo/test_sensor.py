@@ -3,7 +3,7 @@
 from datetime import timedelta
 from unittest.mock import patch
 
-from homeassistant.components.uhooair.const import (
+from homeassistant.components.uhoo.const import (
     API_CO,
     API_CO2,
     API_HUMIDITY,
@@ -15,8 +15,8 @@ from homeassistant.components.uhooair.const import (
     API_TEMP,
     API_TVOC,
     API_VIRUS,
-    SENSOR_TYPES,
 )
+from homeassistant.components.uhoo.sensor import SENSOR_TYPES
 from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
@@ -136,7 +136,7 @@ async def test_availability(
         assert state.state == expected_value
 
     with patch(
-        "homeassistant.components.uhooair.Client.get_latest_data",
+        "homeassistant.components.uhoo.Client.get_latest_data",
         side_effect=ConnectionError(),
     ):
         future = utcnow() + timedelta(minutes=60)

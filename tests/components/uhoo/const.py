@@ -5,7 +5,7 @@ from typing import Any
 from homeassistant.const import CONF_API_KEY
 
 # Mock config data to be used across multiple tests
-DOMAIN = "uhooair"
+DOMAIN = "uhoo"
 MOCK_CONFIG: dict = {CONF_API_KEY: "tes1232421232"}
 
 MOCK_DEVICE: dict[str, Any] = {

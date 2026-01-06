@@ -8,24 +8,20 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import DOMAIN, LOGGER, PLATFORMS, UhooConfigEntry
-from .coordinator import UhooDataUpdateCoordinator
+from .const import LOGGER, PLATFORMS
+from .coordinator import UhooConfigEntry, UhooDataUpdateCoordinator
 
 
 async def async_setup_entry(hass: HomeAssistant, config_entry: UhooConfigEntry) -> bool:
     """Set up uHoo integration from a config entry."""
-    coordinator = UhooDataUpdateCoordinator(hass, entry=config_entry)
-    if hass.data.get(DOMAIN) is None:
-        hass.data.setdefault(DOMAIN, {})
 
     # get api key and session from configuration
-    api_key = config_entry.data.get(CONF_API_KEY)
+    api_key = config_entry.data[CONF_API_KEY]
     session = async_get_clientsession(hass)
-    if api_key is None:
-        raise ValueError("API key is required")
+    client = Client(api_key, session, debug=True)
+    coordinator = UhooDataUpdateCoordinator(hass, client=client)
 
     try:
-        client = Client(api_key, session, debug=True)
         await client.login()
         await client.setup_devices()
     except UnauthorizedError as err:
@@ -34,11 +30,8 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: UhooConfigEntry) 
     except UhooError as err:
         raise ConfigEntryNotReady(err) from err
 
-    config_entry.runtime_data = client
-
     await coordinator.async_config_entry_first_refresh()
-
-    hass.data[DOMAIN][config_entry.entry_id] = coordinator
+    config_entry.runtime_data = coordinator
     await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
     return True
 

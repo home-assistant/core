@@ -1,6 +1,6 @@
 """Tests for uhoo-homeassistant integration."""
 
-from homeassistant.components.uhooair.const import DOMAIN
+from homeassistant.components.uhoo.const import DOMAIN
 from homeassistant.core import HomeAssistant
 
 from .const import MOCK_CONFIG

@@ -1,8 +1,7 @@
 {
   "config": {
     "abort": {
-      "already_configured": "This uHoo account is already configured.",
-      "single_instance_allowed": "Only a single instance of uHoo is supported."
+      "already_configured": "This uHoo account is already configured."
     },
     "error": {
       "auth": "Invalid API key. Please check your credentials and try again.",
@@ -12,7 +11,7 @@
     "step": {
       "user": {
         "data": {
-          "api_key": "api key"
+          "api_key": "[%key:common::config_flow::data::api_key%]"
         },
         "data_description": {
           "api_key": "Your uHoo API key. You can find this in your uHoo account settings."
@@ -24,6 +23,9 @@
   },
   "entity": {
     "sensor": {
+      "air_pressure": {
+        "name": "Air pressure"
+      },
       "co": {
         "name": "Carbon monoxide"
       },
@@ -33,7 +35,7 @@
       "humidity": {
         "name": "Humidity"
       },
-      "mold": {
+      "mold_index": {
         "name": "Mold index"
       },
       "no2": {
@@ -45,16 +47,13 @@
       "pm25": {
         "name": "PM2.5"
       },
-      "pressure": {
-        "name": "Air pressure"
-      },
-      "temp": {
+      "temperature": {
         "name": "Temperature"
       },
       "tvoc": {
         "name": "Total volatile organic compounds"
       },
-      "virus": {
+      "virus_index": {
         "name": "Virus index"
       }
     }

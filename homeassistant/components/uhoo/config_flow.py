@@ -4,12 +4,29 @@ from typing import Any
 
 from uhooapi import Client
 from uhooapi.errors import UnauthorizedError
+import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_API_KEY
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
+from homeassistant.helpers.selector import (
+    TextSelector,
+    TextSelectorConfig,
+    TextSelectorType,
+)
 
-from .const import DOMAIN, LOGGER, USER_DATA_SCHEMA
+from .const import DOMAIN, LOGGER
+
+USER_DATA_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_API_KEY): TextSelector(
+            TextSelectorConfig(
+                type=TextSelectorType.PASSWORD,
+                autocomplete="current-password",
+            )
+        ),
+    }
+)
 
 
 class UhooFlowHandler(ConfigFlow, domain=DOMAIN):
@@ -20,31 +37,32 @@ class UhooFlowHandler(ConfigFlow, domain=DOMAIN):
     def __init__(self) -> None:
         """Initialize the config flow."""
         self._errors: dict = {}
-        self.data_schema = (self.add_suggested_values_to_schema(USER_DATA_SCHEMA, {}),)
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle the start of the config flow."""
         self._errors = {}
-        # Check if an entry already exists
-        if self._async_current_entries():
-            return self.async_abort(reason="single_instance_allowed")
-
-        # Set the unique ID for the config flow.
-        await self.async_set_unique_id(DOMAIN)
-        self._abort_if_unique_id_configured()
 
         if user_input is None:
-            user_input = {}
-            user_input[CONF_API_KEY] = ""
             return await self._show_config_form(user_input)
 
-        valid = await self._test_credentials(user_input[CONF_API_KEY])
+        # Set the unique ID for the config flow.
+        api_key = user_input[CONF_API_KEY]
+        if not api_key:
+            self._errors["base"] = "auth"
+            return await self._show_config_form(user_input)
+
+        await self.async_set_unique_id(api_key)
+        self._abort_if_unique_id_configured()
+
+        valid = await self._test_credentials(api_key)
         if not valid:
             self._errors["base"] = "auth"
             return await self._show_config_form(user_input)
-        return self.async_create_entry(title="uHoo Devices", data=user_input)
+
+        entry_num = len(self._async_current_entries()) + 1
+        return self.async_create_entry(title=f"Account {entry_num}", data=user_input)
 
     async def _show_config_form(
         self, user_input: dict[str, Any] | None = None

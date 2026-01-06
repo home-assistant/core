@@ -718,7 +718,7 @@ FLOWS = {
         "twilio",
         "twinkly",
         "twitch",
-        "uhooair",
+        "uhoo",
         "ukraine_alarm",
         "unifi",
         "unifiprotect",

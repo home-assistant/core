@@ -7179,7 +7179,7 @@
       "integration_type": "virtual",
       "supported_by": "motion_blinds"
     },
-    "uhooair": {
+    "uhoo": {
       "name": "uHoo",
       "integration_type": "hub",
       "config_flow": true,
