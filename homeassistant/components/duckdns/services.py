@@ -2,11 +2,12 @@
 
 from __future__ import annotations
 
+from aiohttp import ClientError
 import voluptuous as vol
 
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_DOMAIN
 from homeassistant.core import HomeAssistant, ServiceCall, callback
-from homeassistant.exceptions import ServiceValidationError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.selector import ConfigEntrySelector
@@ -62,9 +63,25 @@ async def update_domain_service(call: ServiceCall) -> None:
 
     session = async_get_clientsession(call.hass)
 
-    await update_duckdns(
-        session,
-        entry.data[CONF_DOMAIN],
-        entry.data[CONF_ACCESS_TOKEN],
-        txt=call.data.get(ATTR_TXT),
-    )
+    try:
+        if not await update_duckdns(
+            session,
+            entry.data[CONF_DOMAIN],
+            entry.data[CONF_ACCESS_TOKEN],
+            txt=call.data.get(ATTR_TXT),
+        ):
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="update_failed",
+                translation_placeholders={
+                    CONF_DOMAIN: entry.data[CONF_DOMAIN],
+                },
+            )
+    except ClientError as e:
+        raise HomeAssistantError(
+            translation_domain=DOMAIN,
+            translation_key="connection_error",
+            translation_placeholders={
+                CONF_DOMAIN: entry.data[CONF_DOMAIN],
+            },
+        ) from e
