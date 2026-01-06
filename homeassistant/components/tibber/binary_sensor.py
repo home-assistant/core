@@ -133,7 +133,6 @@ class TibberDataAPIBinarySensor(
     def is_on(self) -> bool | None:
         """Return the state of the binary sensor."""
         sensors = self.coordinator.sensors_by_device.get(self._device_id, {})
-        sensor = sensors.get(self.entity_description.key)
-        assert sensor is not None
+        sensor = sensors[self.entity_description.key]
         value: str | None = str(sensor.value) if sensor.value is not None else None
         return self.entity_description.is_on_fn(value)
