@@ -127,7 +127,6 @@ SENSOR_TYPES = [
         translation_key="power_consumption",
         entity_registry_enabled_default=False,
         state_class=SensorStateClass.MEASUREMENT,
-        native_unit_of_measurement=UnitOfPower.WATT,
         device_class=SensorDeviceClass.POWER,
     ),
     SolarEdgeSensorEntityDescription(
@@ -136,7 +135,6 @@ SENSOR_TYPES = [
         translation_key="solar_power",
         entity_registry_enabled_default=False,
         state_class=SensorStateClass.MEASUREMENT,
-        native_unit_of_measurement=UnitOfPower.KILO_WATT,
         device_class=SensorDeviceClass.POWER,
     ),
     SolarEdgeSensorEntityDescription(
@@ -145,7 +143,6 @@ SENSOR_TYPES = [
         translation_key="grid_power",
         entity_registry_enabled_default=False,
         state_class=SensorStateClass.MEASUREMENT,
-        native_unit_of_measurement=UnitOfPower.KILO_WATT,
         device_class=SensorDeviceClass.POWER,
     ),
     SolarEdgeSensorEntityDescription(
@@ -154,7 +151,6 @@ SENSOR_TYPES = [
         translation_key="storage_power",
         entity_registry_enabled_default=False,
         state_class=SensorStateClass.MEASUREMENT,
-        native_unit_of_measurement=UnitOfPower.KILO_WATT,
         device_class=SensorDeviceClass.POWER,
     ),
     SolarEdgeSensorEntityDescription(
