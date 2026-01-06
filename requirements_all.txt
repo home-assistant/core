@@ -1870,7 +1870,7 @@ pyRFXtrx==0.31.1
 pySDCP==1
 
 # homeassistant.components.tibber
-pyTibber==0.34.0
+pyTibber==0.34.1
 
 # homeassistant.components.dlink
 pyW215==0.8.0
@@ -2899,7 +2899,7 @@ solaredge-local==0.2.3
 solaredge-web==0.0.1
 
 # homeassistant.components.solarlog
-solarlog_cli==0.6.1
+solarlog_cli==0.7.0
 
 # homeassistant.components.solax
 solax==3.2.3
@@ -3081,7 +3081,7 @@ typedmonarchmoney==0.4.4
 uasiren==0.0.1
 
 # homeassistant.components.unifiprotect
-uiprotect==7.33.3
+uiprotect==8.0.0
 
 # homeassistant.components.landisgyr_heat_meter
 ultraheat-api==0.5.7
