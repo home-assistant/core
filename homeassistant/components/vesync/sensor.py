@@ -36,6 +36,8 @@ from .entity import VeSyncBaseEntity
 
 _LOGGER = logging.getLogger(__name__)
 
+PARALLEL_UPDATES = 0
+
 
 @dataclass(frozen=True, kw_only=True)
 class VeSyncSensorEntityDescription(SensorEntityDescription):
@@ -63,6 +65,22 @@ SENSORS: tuple[VeSyncSensorEntityDescription, ...] = (
         exists_fn=(
             lambda device: rgetattr(device, "state.air_quality_string") is not None
         ),
+    ),
+    VeSyncSensorEntityDescription(
+        key="pm1",
+        device_class=SensorDeviceClass.PM1,
+        native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        state_class=SensorStateClass.MEASUREMENT,
+        value_fn=lambda device: device.state.pm1,
+        exists_fn=lambda device: rgetattr(device, "state.pm1") is not None,
+    ),
+    VeSyncSensorEntityDescription(
+        key="pm10",
+        device_class=SensorDeviceClass.PM10,
+        native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        state_class=SensorStateClass.MEASUREMENT,
+        value_fn=lambda device: device.state.pm10,
+        exists_fn=lambda device: rgetattr(device, "state.pm10") is not None,
     ),
     VeSyncSensorEntityDescription(
         key="pm25",
