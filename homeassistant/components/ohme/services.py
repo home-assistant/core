@@ -11,6 +11,7 @@ from homeassistant.core import (
     ServiceCall,
     ServiceResponse,
     SupportsResponse,
+    callback,
 )
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import selector
@@ -70,6 +71,7 @@ def __get_client(call: ServiceCall) -> OhmeApiClient:
     return entry.runtime_data.charge_session_coordinator.client
 
 
+@callback
 def async_setup_services(hass: HomeAssistant) -> None:
     """Register services."""
 

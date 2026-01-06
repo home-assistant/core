@@ -18,9 +18,9 @@ from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import AutomowerConfigEntry
-from .const import DOMAIN
+from .const import DOMAIN, ERROR_STATES
 from .coordinator import AutomowerDataUpdateCoordinator
-from .entity import AutomowerAvailableEntity, handle_sending_exception
+from .entity import AutomowerBaseEntity, handle_sending_exception
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -89,7 +89,7 @@ async def async_setup_entry(
     )
 
 
-class AutomowerLawnMowerEntity(AutomowerAvailableEntity, LawnMowerEntity):
+class AutomowerLawnMowerEntity(AutomowerBaseEntity, LawnMowerEntity):
     """Defining each mower Entity."""
 
     _attr_name = None
@@ -108,39 +108,49 @@ class AutomowerLawnMowerEntity(AutomowerAvailableEntity, LawnMowerEntity):
     def activity(self) -> LawnMowerActivity:
         """Return the state of the mower."""
         mower_attributes = self.mower_attributes
+        if mower_attributes.mower.state in ERROR_STATES:
+            return LawnMowerActivity.ERROR
         if mower_attributes.mower.state in PAUSED_STATES:
             return LawnMowerActivity.PAUSED
-        if (mower_attributes.mower.state == "RESTRICTED") or (
-            mower_attributes.mower.activity in DOCKED_ACTIVITIES
+        if mower_attributes.mower.activity == MowerActivities.GOING_HOME:
+            return LawnMowerActivity.RETURNING
+        if (
+            mower_attributes.mower.state is MowerStates.RESTRICTED
+            or mower_attributes.mower.activity in DOCKED_ACTIVITIES
         ):
             return LawnMowerActivity.DOCKED
         if mower_attributes.mower.state in MowerStates.IN_OPERATION:
-            if mower_attributes.mower.activity == MowerActivities.GOING_HOME:
-                return LawnMowerActivity.RETURNING
             return LawnMowerActivity.MOWING
         return LawnMowerActivity.ERROR
+
+    @property
+    def available(self) -> bool:
+        """Return the available attribute of the entity."""
+        return (
+            super().available and self.mower_attributes.mower.state != MowerStates.OFF
+        )
 
     @property
     def work_areas(self) -> dict[int, WorkArea] | None:
         """Return the work areas of the mower."""
         return self.mower_attributes.work_areas
 
-    @handle_sending_exception()
+    @handle_sending_exception
     async def async_start_mowing(self) -> None:
         """Resume schedule."""
         await self.coordinator.api.commands.resume_schedule(self.mower_id)
 
-    @handle_sending_exception()
+    @handle_sending_exception
     async def async_pause(self) -> None:
         """Pauses the mower."""
         await self.coordinator.api.commands.pause_mowing(self.mower_id)
 
-    @handle_sending_exception()
+    @handle_sending_exception
     async def async_dock(self) -> None:
         """Parks the mower until next schedule."""
         await self.coordinator.api.commands.park_until_next_schedule(self.mower_id)
 
-    @handle_sending_exception()
+    @handle_sending_exception
     async def async_override_schedule(
         self, override_mode: str, duration: timedelta
     ) -> None:
@@ -150,7 +160,7 @@ class AutomowerLawnMowerEntity(AutomowerAvailableEntity, LawnMowerEntity):
         if override_mode == PARK:
             await self.coordinator.api.commands.park_for(self.mower_id, duration)
 
-    @handle_sending_exception()
+    @handle_sending_exception
     async def async_override_schedule_work_area(
         self, work_area_id: int, duration: timedelta
     ) -> None:

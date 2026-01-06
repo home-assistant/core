@@ -13,7 +13,7 @@ from homeassistant.config_entries import (
     ConfigEntry,
     ConfigFlow,
     ConfigFlowResult,
-    OptionsFlow,
+    OptionsFlowWithReload,
 )
 from homeassistant.const import CONF_ZONE, UnitOfLength
 from homeassistant.core import State, callback
@@ -87,7 +87,7 @@ class ProximityConfigFlow(ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
-    def async_get_options_flow(config_entry: ConfigEntry) -> OptionsFlow:
+    def async_get_options_flow(config_entry: ConfigEntry) -> ProximityOptionsFlow:
         """Get the options flow for this handler."""
         return ProximityOptionsFlow()
 
@@ -118,7 +118,7 @@ class ProximityConfigFlow(ConfigFlow, domain=DOMAIN):
         )
 
 
-class ProximityOptionsFlow(OptionsFlow):
+class ProximityOptionsFlow(OptionsFlowWithReload):
     """Handle a option flow."""
 
     def _user_form_schema(self, user_input: dict[str, Any]) -> vol.Schema:

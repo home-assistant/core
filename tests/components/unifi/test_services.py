@@ -1,4 +1,4 @@
-"""deCONZ service tests."""
+"""UniFi service tests."""
 
 from typing import Any
 from unittest.mock import PropertyMock, patch

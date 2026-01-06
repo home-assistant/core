@@ -68,6 +68,13 @@ SWITCH = SmartThingsSwitchEntityDescription(
 CAPABILITY_TO_COMMAND_SWITCHES: dict[
     Capability | str, SmartThingsCommandSwitchEntityDescription
 ] = {
+    Capability.SAMSUNG_CE_AIR_CONDITIONER_LIGHTING: SmartThingsCommandSwitchEntityDescription(
+        key=Capability.SAMSUNG_CE_AIR_CONDITIONER_LIGHTING,
+        translation_key="display_lighting",
+        status_attribute=Attribute.LIGHTING,
+        command=Command.SET_LIGHTING_LEVEL,
+        entity_category=EntityCategory.CONFIG,
+    ),
     Capability.CUSTOM_DRYER_WRINKLE_PREVENT: SmartThingsCommandSwitchEntityDescription(
         key=Capability.CUSTOM_DRYER_WRINKLE_PREVENT,
         translation_key="wrinkle_prevent",
@@ -84,6 +91,15 @@ CAPABILITY_TO_COMMAND_SWITCHES: dict[
     ),
 }
 CAPABILITY_TO_SWITCHES: dict[Capability | str, SmartThingsSwitchEntityDescription] = {
+    Capability.SAMSUNG_CE_AIR_CONDITIONER_BEEP: SmartThingsSwitchEntityDescription(
+        key=Capability.SAMSUNG_CE_AIR_CONDITIONER_BEEP,
+        translation_key="sound_effect",
+        status_attribute=Attribute.BEEP,
+        on_key="on",
+        on_command=Command.ON,
+        off_command=Command.OFF,
+        entity_category=EntityCategory.CONFIG,
+    ),
     Capability.SAMSUNG_CE_WASHER_BUBBLE_SOAK: SmartThingsSwitchEntityDescription(
         key=Capability.SAMSUNG_CE_WASHER_BUBBLE_SOAK,
         translation_key="bubble_soak",
@@ -95,6 +111,7 @@ CAPABILITY_TO_SWITCHES: dict[Capability | str, SmartThingsSwitchEntityDescriptio
         status_attribute=Attribute.SWITCH,
         component_translation_key={
             "icemaker": "ice_maker",
+            "icemaker-02": "ice_maker_2",
         },
     ),
     Capability.SAMSUNG_CE_SABBATH_MODE: SmartThingsSwitchEntityDescription(

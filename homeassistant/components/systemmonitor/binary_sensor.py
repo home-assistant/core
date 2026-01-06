@@ -9,8 +9,6 @@ import logging
 import sys
 from typing import Literal
 
-from psutil import NoSuchProcess
-
 from homeassistant.components.binary_sensor import (
     DOMAIN as BINARY_SENSOR_DOMAIN,
     BinarySensorDeviceClass,
@@ -25,7 +23,7 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util import slugify
 
 from . import SystemMonitorConfigEntry
-from .const import CONF_PROCESS, DOMAIN
+from .const import CONF_PROCESS, DOMAIN, PROCESS_ERRORS
 from .coordinator import SystemMonitorCoordinator
 
 _LOGGER = logging.getLogger(__name__)
@@ -59,12 +57,8 @@ def get_process(entity: SystemMonitorSensor) -> bool:
             if entity.argument == proc.name():
                 state = True
                 break
-        except NoSuchProcess as err:
-            _LOGGER.warning(
-                "Failed to load process with ID: %s, old name: %s",
-                err.pid,
-                err.name,
-            )
+        except PROCESS_ERRORS:
+            continue
     return state
 
 
@@ -72,11 +66,11 @@ def get_process(entity: SystemMonitorSensor) -> bool:
 class SysMonitorBinarySensorEntityDescription(BinarySensorEntityDescription):
     """Describes System Monitor binary sensor entities."""
 
-    value_fn: Callable[[SystemMonitorSensor], bool]
+    value_fn: Callable[[SystemMonitorSensor], bool | None]
     add_to_update: Callable[[SystemMonitorSensor], tuple[str, str]]
 
 
-SENSOR_TYPES: tuple[SysMonitorBinarySensorEntityDescription, ...] = (
+PROCESS_TYPES: tuple[SysMonitorBinarySensorEntityDescription, ...] = (
     SysMonitorBinarySensorEntityDescription(
         key="binary_process",
         translation_key="process",
@@ -84,6 +78,20 @@ SENSOR_TYPES: tuple[SysMonitorBinarySensorEntityDescription, ...] = (
         value_fn=get_process,
         device_class=BinarySensorDeviceClass.RUNNING,
         add_to_update=lambda entity: ("processes", ""),
+    ),
+)
+
+BINARY_SENSOR_TYPES: tuple[SysMonitorBinarySensorEntityDescription, ...] = (
+    SysMonitorBinarySensorEntityDescription(
+        key="battery_plugged",
+        value_fn=(
+            lambda entity: entity.coordinator.data.battery.power_plugged
+            if entity.coordinator.data.battery
+            else None
+        ),
+        device_class=BinarySensorDeviceClass.BATTERY_CHARGING,
+        add_to_update=lambda entity: ("battery", ""),
+        entity_registry_enabled_default=False,
     ),
 )
 
@@ -96,18 +104,30 @@ async def async_setup_entry(
     """Set up System Monitor binary sensors based on a config entry."""
     coordinator = entry.runtime_data.coordinator
 
-    async_add_entities(
+    entities: list[SystemMonitorSensor] = []
+
+    entities.extend(
         SystemMonitorSensor(
             coordinator,
             sensor_description,
             entry.entry_id,
             argument,
         )
-        for sensor_description in SENSOR_TYPES
+        for sensor_description in PROCESS_TYPES
         for argument in entry.options.get(BINARY_SENSOR_DOMAIN, {}).get(
             CONF_PROCESS, []
         )
     )
+    entities.extend(
+        SystemMonitorSensor(
+            coordinator,
+            sensor_description,
+            entry.entry_id,
+            "",
+        )
+        for sensor_description in BINARY_SENSOR_TYPES
+    )
+    async_add_entities(entities)
 
 
 class SystemMonitorSensor(

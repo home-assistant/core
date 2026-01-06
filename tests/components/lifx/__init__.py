@@ -199,6 +199,17 @@ def _mocked_ceiling() -> Light:
     return bulb
 
 
+def _mocked_128zone_ceiling() -> Light:
+    bulb = _mocked_bulb()
+    bulb.product = 201  # LIFX 26"x13" Ceiling
+    bulb.effect = {"effect": "OFF"}
+    bulb.get_tile_effect = MockLifxCommand(bulb)
+    bulb.set_tile_effect = MockLifxCommand(bulb)
+    bulb.get64 = MockLifxCommand(bulb)
+    bulb.get_device_chain = MockLifxCommand(bulb)
+    return bulb
+
+
 def _mocked_bulb_old_firmware() -> Light:
     bulb = _mocked_bulb()
     bulb.host_firmware_version = "2.77"

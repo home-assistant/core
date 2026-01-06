@@ -2,11 +2,11 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable
+from collections.abc import Callable, Iterable
 from dataclasses import dataclass
 from datetime import datetime
 
-from pydrawise import Zone
+from pydrawise import Controller, Zone
 import voluptuous as vol
 
 from homeassistant.components.binary_sensor import (
@@ -81,37 +81,65 @@ async def async_setup_entry(
 ) -> None:
     """Set up the Hydrawise binary_sensor platform."""
     coordinators = config_entry.runtime_data
-    entities: list[HydrawiseBinarySensor] = []
-    for controller in coordinators.main.data.controllers.values():
-        entities.extend(
-            HydrawiseBinarySensor(coordinators.main, description, controller)
-            for description in CONTROLLER_BINARY_SENSORS
-        )
-        entities.extend(
-            HydrawiseBinarySensor(
-                coordinators.main,
-                description,
-                controller,
-                sensor_id=sensor.id,
+
+    def _add_new_controllers(controllers: Iterable[Controller]) -> None:
+        entities: list[HydrawiseBinarySensor] = []
+        for controller in controllers:
+            entities.extend(
+                HydrawiseBinarySensor(coordinators.main, description, controller)
+                for description in CONTROLLER_BINARY_SENSORS
             )
-            for sensor in controller.sensors
-            for description in RAIN_SENSOR_BINARY_SENSOR
-            if "rain sensor" in sensor.model.name.lower()
-        )
-        entities.extend(
+            entities.extend(
+                HydrawiseBinarySensor(
+                    coordinators.main,
+                    description,
+                    controller,
+                    sensor_id=sensor.id,
+                )
+                for sensor in controller.sensors
+                for description in RAIN_SENSOR_BINARY_SENSOR
+                if "rain sensor" in sensor.model.name.lower()
+            )
+        async_add_entities(entities)
+
+    def _add_new_zones(zones: Iterable[tuple[Zone, Controller]]) -> None:
+        async_add_entities(
             HydrawiseZoneBinarySensor(
                 coordinators.main, description, controller, zone_id=zone.id
             )
-            for zone in controller.zones
+            for zone, controller in zones
             for description in ZONE_BINARY_SENSORS
         )
-    async_add_entities(entities)
-    platform = entity_platform.async_get_current_platform()
-    platform.async_register_entity_service(SERVICE_RESUME, None, "resume")
-    platform.async_register_entity_service(
-        SERVICE_START_WATERING, SCHEMA_START_WATERING, "start_watering"
+
+    _add_new_controllers(coordinators.main.data.controllers.values())
+    _add_new_zones(
+        [
+            (zone, coordinators.main.data.zone_id_to_controller[zone.id])
+            for zone in coordinators.main.data.zones.values()
+        ]
     )
-    platform.async_register_entity_service(SERVICE_SUSPEND, SCHEMA_SUSPEND, "suspend")
+    coordinators.main.new_controllers_callbacks.append(_add_new_controllers)
+    coordinators.main.new_zones_callbacks.append(_add_new_zones)
+
+    platform = entity_platform.async_get_current_platform()
+    platform.async_register_entity_service(
+        SERVICE_RESUME,
+        None,
+        "resume",
+        entity_device_classes=(BinarySensorDeviceClass.RUNNING,),
+    )
+    platform.async_register_entity_service(
+        SERVICE_START_WATERING,
+        SCHEMA_START_WATERING,
+        "start_watering",
+        entity_device_classes=(BinarySensorDeviceClass.RUNNING,),
+    )
+    platform.async_register_entity_service(
+        SERVICE_SUSPEND,
+        SCHEMA_SUSPEND,
+        "suspend",
+        entity_device_classes=(BinarySensorDeviceClass.RUNNING,),
+    )
 
 
 class HydrawiseBinarySensor(HydrawiseEntity, BinarySensorEntity):

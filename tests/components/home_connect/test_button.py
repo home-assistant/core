@@ -1,12 +1,14 @@
 """Tests for home_connect button entities."""
 
 from collections.abc import Awaitable, Callable
-from typing import Any
+from typing import Any, cast
 from unittest.mock import AsyncMock, MagicMock
 
 from aiohomeconnect.model import (
     ArrayOfCommands,
     CommandKey,
+    Event,
+    EventKey,
     EventMessage,
     HomeAppliance,
 )
@@ -317,3 +319,62 @@ async def test_stop_program_button_exception(
             {ATTR_ENTITY_ID: entity_id},
             blocking=True,
         )
+
+
+@pytest.mark.parametrize("appliance", ["Washer"], indirect=True)
+async def test_enable_resume_command_on_pause(
+    hass: HomeAssistant,
+    client: MagicMock,
+    config_entry: MockConfigEntry,
+    integration_setup: Callable[[MagicMock], Awaitable[bool]],
+    appliance: HomeAppliance,
+) -> None:
+    """Test if all commands enabled option works as expected."""
+    entity_id = "button.washer_resume_program"
+
+    original_get_available_commands = client.get_available_commands
+
+    async def get_available_commands_side_effect(ha_id: str) -> ArrayOfCommands:
+        array_of_commands = cast(
+            ArrayOfCommands, await original_get_available_commands(ha_id)
+        )
+        if ha_id == appliance.ha_id:
+            for command in array_of_commands.commands:
+                if command.key == CommandKey.BSH_COMMON_RESUME_PROGRAM:
+                    # Simulate that the resume command is not available initially
+                    array_of_commands.commands.remove(command)
+                    break
+        return array_of_commands
+
+    client.get_available_commands = AsyncMock(
+        side_effect=get_available_commands_side_effect
+    )
+
+    assert await integration_setup(client)
+    assert config_entry.state is ConfigEntryState.LOADED
+
+    assert not hass.states.get(entity_id)
+
+    await client.add_events(
+        [
+            EventMessage(
+                appliance.ha_id,
+                EventType.STATUS,
+                data=ArrayOfEvents(
+                    [
+                        Event(
+                            key=EventKey.BSH_COMMON_STATUS_OPERATION_STATE,
+                            raw_key=EventKey.BSH_COMMON_STATUS_OPERATION_STATE.value,
+                            timestamp=0,
+                            level="",
+                            handling="",
+                            value="BSH.Common.EnumType.OperationState.Pause",
+                        )
+                    ]
+                ),
+            )
+        ]
+    )
+    await hass.async_block_till_done()
+
+    assert hass.states.get(entity_id)

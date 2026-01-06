@@ -10,11 +10,12 @@ from homeassistant.components.device_tracker import (
     ScannerEntity,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util import dt as dt_util
 
-from .const import CONF_IMPORTED_BY
+from .const import CONF_IMPORTED_BY, DOMAIN
 from .coordinator import PingConfigEntry, PingUpdateCoordinator
 
 
@@ -24,7 +25,7 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up a Ping config entry."""
-    async_add_entities([PingDeviceTracker(entry, entry.runtime_data)])
+    async_add_entities([PingDeviceTracker(hass, entry, entry.runtime_data)])
 
 
 class PingDeviceTracker(CoordinatorEntity[PingUpdateCoordinator], ScannerEntity):
@@ -33,7 +34,10 @@ class PingDeviceTracker(CoordinatorEntity[PingUpdateCoordinator], ScannerEntity)
     _last_seen: datetime | None = None
 
     def __init__(
-        self, config_entry: PingConfigEntry, coordinator: PingUpdateCoordinator
+        self,
+        hass: HomeAssistant,
+        config_entry: PingConfigEntry,
+        coordinator: PingUpdateCoordinator,
     ) -> None:
         """Initialize the Ping device tracker."""
         super().__init__(coordinator)
@@ -45,6 +49,13 @@ class PingDeviceTracker(CoordinatorEntity[PingUpdateCoordinator], ScannerEntity)
                 CONF_CONSIDER_HOME, DEFAULT_CONSIDER_HOME.seconds
             )
         )
+
+        if (
+            device := dr.async_get(hass).async_get_device(
+                identifiers={(DOMAIN, config_entry.entry_id)}
+            )
+        ) is not None:
+            self.device_entry = device
 
     @property
     def ip_address(self) -> str:

@@ -1,18 +1,18 @@
 {
   "services": {
     "send_command": {
-      "name": "Send command",
       "description": "Sends device command through RFLink.",
       "fields": {
         "command": {
-          "name": "Command",
-          "description": "The command to be sent."
+          "description": "The command to be sent.",
+          "name": "Command"
         },
         "device_id": {
-          "name": "Device ID",
-          "description": "RFLink device ID."
+          "description": "RFLink device ID.",
+          "name": "Device ID"
         }
-      }
+      },
+      "name": "Send command"
     }
   }
 }

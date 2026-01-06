@@ -24,7 +24,7 @@ async def async_setup_entry(
     unique_id = config_entry.unique_id
     assert unique_id is not None
 
-    async_add_entities([BraviaTVRemote(coordinator, unique_id, config_entry.title)])
+    async_add_entities([BraviaTVRemote(coordinator, unique_id)])
 
 
 class BraviaTVRemote(BraviaTVEntity, RemoteEntity):

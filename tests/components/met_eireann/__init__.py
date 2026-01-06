@@ -19,7 +19,7 @@ async def init_integration(hass: HomeAssistant) -> MockConfigEntry:
     }
     entry = MockConfigEntry(domain=DOMAIN, data=entry_data)
     with patch(
-        "homeassistant.components.met_eireann.meteireann.WeatherData.fetching_data",
+        "homeassistant.components.met_eireann.coordinator.meteireann.WeatherData.fetching_data",
         return_value=True,
     ):
         entry.add_to_hass(hass)

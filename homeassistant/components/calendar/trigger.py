@@ -2,29 +2,30 @@
 
 from __future__ import annotations
 
-from collections.abc import Awaitable, Callable, Coroutine
+from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 import datetime
 import logging
-from typing import Any
+from typing import TYPE_CHECKING, Any, cast
 
 import voluptuous as vol
 
-from homeassistant.const import CONF_ENTITY_ID, CONF_EVENT, CONF_OFFSET, CONF_PLATFORM
-from homeassistant.core import CALLBACK_TYPE, HassJob, HomeAssistant, callback
+from homeassistant.const import CONF_ENTITY_ID, CONF_EVENT, CONF_OFFSET, CONF_OPTIONS
+from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.automation import move_top_level_schema_fields_to_options
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.event import (
     async_track_point_in_time,
     async_track_time_interval,
 )
-from homeassistant.helpers.trigger import TriggerActionType, TriggerInfo
+from homeassistant.helpers.trigger import Trigger, TriggerActionRunner, TriggerConfig
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import dt as dt_util
 
 from . import CalendarEntity, CalendarEvent
-from .const import DATA_COMPONENT, DOMAIN
+from .const import DATA_COMPONENT
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -32,13 +33,17 @@ EVENT_START = "start"
 EVENT_END = "end"
 UPDATE_INTERVAL = datetime.timedelta(minutes=15)
 
-TRIGGER_SCHEMA = cv.TRIGGER_BASE_SCHEMA.extend(
+
+_OPTIONS_SCHEMA_DICT = {
+    vol.Required(CONF_ENTITY_ID): cv.entity_id,
+    vol.Optional(CONF_EVENT, default=EVENT_START): vol.In({EVENT_START, EVENT_END}),
+    vol.Optional(CONF_OFFSET, default=datetime.timedelta(0)): cv.time_period,
+}
+
+_CONFIG_SCHEMA = vol.Schema(
     {
-        vol.Required(CONF_PLATFORM): DOMAIN,
-        vol.Required(CONF_ENTITY_ID): cv.entity_id,
-        vol.Optional(CONF_EVENT, default=EVENT_START): vol.In({EVENT_START, EVENT_END}),
-        vol.Optional(CONF_OFFSET, default=datetime.timedelta(0)): cv.time_period,
-    }
+        vol.Required(CONF_OPTIONS): _OPTIONS_SCHEMA_DICT,
+    },
 )
 
 # mypy: disallow-any-generics
@@ -169,14 +174,14 @@ class CalendarEventListener:
     def __init__(
         self,
         hass: HomeAssistant,
-        job: HassJob[..., Coroutine[Any, Any, None]],
-        trigger_data: dict[str, Any],
+        action_runner: TriggerActionRunner,
+        trigger_payload: dict[str, Any],
         fetcher: QueuedEventFetcher,
     ) -> None:
         """Initialize CalendarEventListener."""
         self._hass = hass
-        self._job = job
-        self._trigger_data = trigger_data
+        self._action_runner = action_runner
+        self._trigger_payload = trigger_payload
         self._unsub_event: CALLBACK_TYPE | None = None
         self._unsub_refresh: CALLBACK_TYPE | None = None
         self._fetcher = fetcher
@@ -233,15 +238,11 @@ class CalendarEventListener:
         while self._events and self._events[0].trigger_time <= now:
             queued_event = self._events.pop(0)
             _LOGGER.debug("Dispatching event: %s", queued_event.event)
-            self._hass.async_run_hass_job(
-                self._job,
-                {
-                    "trigger": {
-                        **self._trigger_data,
-                        "calendar_event": queued_event.event.as_dict(),
-                    }
-                },
-            )
+            payload = {
+                **self._trigger_payload,
+                "calendar_event": queued_event.event.as_dict(),
+            }
+            self._action_runner(payload, "calendar event state change")
 
     async def _handle_refresh(self, now_utc: datetime.datetime) -> None:
         """Handle core config update."""
@@ -259,31 +260,69 @@ class CalendarEventListener:
         self._listen_next_calendar_event()
 
 
-async def async_attach_trigger(
-    hass: HomeAssistant,
-    config: ConfigType,
-    action: TriggerActionType,
-    trigger_info: TriggerInfo,
-) -> CALLBACK_TYPE:
-    """Attach trigger for the specified calendar."""
-    entity_id = config[CONF_ENTITY_ID]
-    event_type = config[CONF_EVENT]
-    offset = config[CONF_OFFSET]
+class EventTrigger(Trigger):
+    """Calendar event trigger."""
 
-    # Validate the entity id is valid
-    get_entity(hass, entity_id)
+    _options: dict[str, Any]
 
-    trigger_data = {
-        **trigger_info["trigger_data"],
-        "platform": DOMAIN,
-        "event": event_type,
-        "offset": offset,
-    }
-    listener = CalendarEventListener(
-        hass,
-        HassJob(action),
-        trigger_data,
-        queued_event_fetcher(event_fetcher(hass, entity_id), event_type, offset),
-    )
-    await listener.async_attach()
-    return listener.async_detach
+    @classmethod
+    async def async_validate_complete_config(
+        cls, hass: HomeAssistant, complete_config: ConfigType
+    ) -> ConfigType:
+        """Validate complete config."""
+        complete_config = move_top_level_schema_fields_to_options(
+            complete_config, _OPTIONS_SCHEMA_DICT
+        )
+        return await super().async_validate_complete_config(hass, complete_config)
+
+    @classmethod
+    async def async_validate_config(
+        cls, hass: HomeAssistant, config: ConfigType
+    ) -> ConfigType:
+        """Validate config."""
+        return cast(ConfigType, _CONFIG_SCHEMA(config))
+
+    def __init__(self, hass: HomeAssistant, config: TriggerConfig) -> None:
+        """Initialize trigger."""
+        super().__init__(hass, config)
+
+        if TYPE_CHECKING:
+            assert config.options is not None
+        self._options = config.options
+
+    async def async_attach_runner(
+        self, run_action: TriggerActionRunner
+    ) -> CALLBACK_TYPE:
+        """Attach a trigger."""
+
+        entity_id = self._options[CONF_ENTITY_ID]
+        event_type = self._options[CONF_EVENT]
+        offset = self._options[CONF_OFFSET]
+
+        # Validate the entity id is valid
+        get_entity(self._hass, entity_id)
+
+        trigger_data = {
+            "event": event_type,
+            "offset": offset,
+        }
+        listener = CalendarEventListener(
+            self._hass,
+            run_action,
+            trigger_data,
+            queued_event_fetcher(
+                event_fetcher(self._hass, entity_id), event_type, offset
+            ),
+        )
+        await listener.async_attach()
+        return listener.async_detach
+
+
+TRIGGERS: dict[str, type[Trigger]] = {
+    "_": EventTrigger,
+}
+
+
+async def async_get_triggers(hass: HomeAssistant) -> dict[str, type[Trigger]]:
+    """Return the triggers for calendars."""
+    return TRIGGERS

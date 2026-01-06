@@ -2,7 +2,7 @@
 
 import asyncio
 from typing import Any
-from unittest.mock import patch
+from unittest.mock import PropertyMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
@@ -298,6 +298,20 @@ async def test_loading_does_not_write_right_away(
     # Once for the task
     await hass.async_block_till_done()
     assert hass_storage[auth_store.STORAGE_KEY] != {}
+
+
+async def test_duplicate_uuid(
+    hass: HomeAssistant, hass_storage: dict[str, Any]
+) -> None:
+    """Test we don't override user if we have a duplicate user ID."""
+    hass_storage[auth_store.STORAGE_KEY] = MOCK_STORAGE_DATA
+    store = auth_store.AuthStore(hass)
+    await store.async_load()
+    with patch("uuid.UUID.hex", new_callable=PropertyMock) as hex_mock:
+        hex_mock.side_effect = ["user-id", "new-id"]
+        user = await store.async_create_user("Test User")
+    assert len(hex_mock.mock_calls) == 2
+    assert user.id == "new-id"
 
 
 async def test_add_remove_user_affects_tokens(

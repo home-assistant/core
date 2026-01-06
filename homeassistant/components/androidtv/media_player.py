@@ -8,7 +8,6 @@ import logging
 
 from androidtv.constants import APPS, KEYS
 from androidtv.setup_async import AndroidTVAsync, FireTVAsync
-import voluptuous as vol
 
 from homeassistant.components import persistent_notification
 from homeassistant.components.media_player import (
@@ -17,9 +16,7 @@ from homeassistant.components.media_player import (
     MediaPlayerEntityFeature,
     MediaPlayerState,
 )
-from homeassistant.const import ATTR_COMMAND
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util.dt import utcnow
@@ -39,24 +36,15 @@ from .const import (
     SIGNAL_CONFIG_ENTITY,
 )
 from .entity import AndroidTVEntity, adb_decorator
+from .services import ATTR_ADB_RESPONSE, ATTR_HDMI_INPUT, SERVICE_LEARN_SENDEVENT
 
 _LOGGER = logging.getLogger(__name__)
-
-ATTR_ADB_RESPONSE = "adb_response"
-ATTR_DEVICE_PATH = "device_path"
-ATTR_HDMI_INPUT = "hdmi_input"
-ATTR_LOCAL_PATH = "local_path"
-
-SERVICE_ADB_COMMAND = "adb_command"
-SERVICE_DOWNLOAD = "download"
-SERVICE_LEARN_SENDEVENT = "learn_sendevent"
-SERVICE_UPLOAD = "upload"
 
 # Translate from `AndroidTV` / `FireTV` reported state to HA state.
 ANDROIDTV_STATES = {
     "off": MediaPlayerState.OFF,
     "idle": MediaPlayerState.IDLE,
-    "standby": MediaPlayerState.STANDBY,
+    "standby": MediaPlayerState.IDLE,
     "playing": MediaPlayerState.PLAYING,
     "paused": MediaPlayerState.PAUSED,
 }
@@ -75,32 +63,6 @@ async def async_setup_entry(
             if device_class == DEVICE_ANDROIDTV
             else FireTVDevice(entry)
         ]
-    )
-
-    platform = entity_platform.async_get_current_platform()
-    platform.async_register_entity_service(
-        SERVICE_ADB_COMMAND,
-        {vol.Required(ATTR_COMMAND): cv.string},
-        "adb_command",
-    )
-    platform.async_register_entity_service(
-        SERVICE_LEARN_SENDEVENT, None, "learn_sendevent"
-    )
-    platform.async_register_entity_service(
-        SERVICE_DOWNLOAD,
-        {
-            vol.Required(ATTR_DEVICE_PATH): cv.string,
-            vol.Required(ATTR_LOCAL_PATH): cv.string,
-        },
-        "service_download",
-    )
-    platform.async_register_entity_service(
-        SERVICE_UPLOAD,
-        {
-            vol.Required(ATTR_DEVICE_PATH): cv.string,
-            vol.Required(ATTR_LOCAL_PATH): cv.string,
-        },
-        "service_upload",
     )
 
 

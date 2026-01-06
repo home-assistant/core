@@ -11,6 +11,9 @@ from .const import DOMAIN
 from .coordinator import FritzboxConfigEntry
 from .entity import FritzBoxEntity
 
+# Coordinator handles data updates, so we can allow unlimited parallel updates
+PARALLEL_UPDATES = 0
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -49,7 +52,7 @@ class FritzBoxTemplate(FritzBoxEntity, ButtonEntity):
             name=self.data.name,
             identifiers={(DOMAIN, self.ain)},
             configuration_url=self.coordinator.configuration_url,
-            manufacturer="AVM",
+            manufacturer="FRITZ!",
             model="SmartHome Template",
         )
 

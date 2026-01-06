@@ -1,4 +1,4 @@
-"""Test the Switch config flow."""
+"""Test the Group config flow."""
 
 from typing import Any
 from unittest.mock import patch
@@ -44,7 +44,8 @@ from tests.typing import WebSocketGenerator
             {},
         ),
         ("fan", "on", "on", {}, {}, {}, {}),
-        ("light", "on", "on", {}, {}, {}, {}),
+        ("light", "on", "on", {}, {}, {"all": False}, {}),
+        ("light", "on", "on", {}, {"all": True}, {"all": True}, {}),
         ("lock", "locked", "locked", {}, {}, {}, {}),
         ("notify", STATE_UNKNOWN, "2021-01-01T23:59:59.123+00:00", {}, {}, {}, {}),
         ("media_player", "on", "on", {}, {}, {}, {}),
@@ -57,7 +58,9 @@ from tests.typing import WebSocketGenerator
             {"type": "sum"},
             {},
         ),
-        ("switch", "on", "on", {}, {}, {}, {}),
+        ("switch", "on", "on", {}, {}, {"all": False}, {}),
+        ("switch", "on", "on", {}, {"all": True}, {"all": True}, {}),
+        ("valve", "open", "open", {}, {}, {}, {}),
     ],
 )
 async def test_config_flow(
@@ -146,6 +149,7 @@ async def test_config_flow(
         ("notify", {}),
         ("media_player", {}),
         ("switch", {}),
+        ("valve", {}),
     ],
 )
 async def test_config_flow_hides_members(
@@ -220,6 +224,7 @@ async def test_config_flow_hides_members(
             {"ignore_non_numeric": False, "type": "sum"},
         ),
         ("switch", "on", {"all": False}, {}),
+        ("valve", "open", {}, {}),
     ],
 )
 async def test_options(
@@ -315,11 +320,11 @@ async def test_options(
     ("group_type", "extra_options", "extra_options_after", "advanced"),
     [
         ("light", {"all": False}, {"all": False}, False),
-        ("light", {"all": True}, {"all": True}, False),
+        ("light", {"all": True}, {"all": False}, False),
         ("light", {"all": False}, {"all": False}, True),
         ("light", {"all": True}, {"all": False}, True),
         ("switch", {"all": False}, {"all": False}, False),
-        ("switch", {"all": True}, {"all": True}, False),
+        ("switch", {"all": True}, {"all": False}, False),
         ("switch", {"all": False}, {"all": False}, True),
         ("switch", {"all": True}, {"all": False}, True),
     ],
@@ -402,6 +407,7 @@ async def test_all_options(
         ("notify", {}),
         ("media_player", {}),
         ("switch", {}),
+        ("valve", {}),
     ],
 )
 async def test_options_flow_hides_members(
@@ -485,6 +491,7 @@ LOCK_ATTRS = [{"supported_features": 1}, {}]
 NOTIFY_ATTRS = [{"supported_features": 0}, {}]
 MEDIA_PLAYER_ATTRS = [{"supported_features": 0}, {}]
 SENSOR_ATTRS = [{"icon": "mdi:calculator"}, {"max_entity_id": "sensor.input_two"}]
+VALVE_ATTRS = [{"supported_features": 0}, {}]
 
 
 @pytest.mark.parametrize(
@@ -501,6 +508,7 @@ SENSOR_ATTRS = [{"icon": "mdi:calculator"}, {"max_entity_id": "sensor.input_two"
         ("media_player", {}, ["on", "off"], "on", MEDIA_PLAYER_ATTRS),
         ("sensor", {"type": "max"}, ["10", "20"], "20.0", SENSOR_ATTRS),
         ("switch", {}, ["on", "off"], "on", [{}, {}]),
+        ("valve", {}, ["open", "closed"], "open", VALVE_ATTRS),
     ],
 )
 async def test_config_flow_preview(
@@ -619,6 +627,7 @@ async def test_config_flow_preview(
             SENSOR_ATTRS,
         ),
         ("switch", {}, {}, ["on", "off"], "on", [{}, {}]),
+        ("valve", {}, {}, ["open", "closed"], "open", VALVE_ATTRS),
     ],
 )
 async def test_option_flow_preview(

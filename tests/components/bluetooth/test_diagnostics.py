@@ -37,7 +37,7 @@ class FakeHaScanner(FakeScannerMixin, HaScanner):
         """Return the discovered devices and advertisement data."""
         return {
             "44:44:33:11:23:45": (
-                generate_ble_device(name="x", rssi=-127, address="44:44:33:11:23:45"),
+                generate_ble_device(name="x", address="44:44:33:11:23:45"),
                 generate_advertisement_data(local_name="x"),
             )
         }
@@ -297,6 +297,7 @@ async def test_diagnostics_macos(
         assert diag == {
             "adapters": {
                 "Core Bluetooth": {
+                    "adapter_type": None,
                     "address": "00:00:00:00:00:00",
                     "manufacturer": "Apple",
                     "passive_scan": False,
@@ -317,6 +318,7 @@ async def test_diagnostics_macos(
                 },
                 "adapters": {
                     "Core Bluetooth": {
+                        "adapter_type": None,
                         "address": "00:00:00:00:00:00",
                         "manufacturer": "Apple",
                         "passive_scan": False,

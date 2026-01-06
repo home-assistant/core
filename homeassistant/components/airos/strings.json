@@ -1,0 +1,162 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]",
+      "unique_id_mismatch": "Re-authentication should be used for the same device not a new one"
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "key_data_missing": "Expected data not returned from the device, check the documentation for supported devices",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "flow_title": "Ubiquiti airOS device",
+    "step": {
+      "reauth_confirm": {
+        "data": {
+          "password": "[%key:common::config_flow::data::password%]"
+        },
+        "data_description": {
+          "password": "[%key:component::airos::config::step::user::data_description::password%]"
+        }
+      },
+      "reconfigure": {
+        "data": {
+          "password": "[%key:common::config_flow::data::password%]"
+        },
+        "data_description": {
+          "password": "[%key:component::airos::config::step::user::data_description::password%]"
+        },
+        "sections": {
+          "advanced_settings": {
+            "data": {
+              "ssl": "[%key:component::airos::config::step::user::sections::advanced_settings::data::ssl%]",
+              "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]"
+            },
+            "data_description": {
+              "ssl": "[%key:component::airos::config::step::user::sections::advanced_settings::data_description::ssl%]",
+              "verify_ssl": "[%key:component::airos::config::step::user::sections::advanced_settings::data_description::verify_ssl%]"
+            },
+            "name": "[%key:component::airos::config::step::user::sections::advanced_settings::name%]"
+          }
+        }
+      },
+      "user": {
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]",
+          "password": "[%key:common::config_flow::data::password%]",
+          "username": "[%key:common::config_flow::data::username%]"
+        },
+        "data_description": {
+          "host": "IP address or hostname of the airOS device",
+          "password": "Password configured through the UISP app or web interface",
+          "username": "Administrator username for the airOS device, normally 'ubnt'"
+        },
+        "sections": {
+          "advanced_settings": {
+            "data": {
+              "ssl": "Use HTTPS",
+              "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]"
+            },
+            "data_description": {
+              "ssl": "Whether the connection should be encrypted (required for most devices)",
+              "verify_ssl": "Whether the certificate should be verified when using HTTPS. This should be off for self-signed certificates"
+            },
+            "name": "Advanced settings"
+          }
+        }
+      }
+    }
+  },
+  "entity": {
+    "binary_sensor": {
+      "dhcp6_server": {
+        "name": "DHCPv6 server"
+      },
+      "dhcp_client": {
+        "name": "DHCP client"
+      },
+      "dhcp_server": {
+        "name": "DHCP server"
+      },
+      "port_forwarding": {
+        "name": "Port forwarding"
+      },
+      "pppoe": {
+        "name": "PPPoE link"
+      }
+    },
+    "sensor": {
+      "host_cpuload": {
+        "name": "CPU load"
+      },
+      "host_netrole": {
+        "name": "Network role",
+        "state": {
+          "bridge": "Bridge",
+          "router": "Router"
+        }
+      },
+      "host_uptime": {
+        "name": "Uptime"
+      },
+      "wireless_antenna_gain": {
+        "name": "Antenna gain"
+      },
+      "wireless_distance": {
+        "name": "Wireless distance"
+      },
+      "wireless_essid": {
+        "name": "Wireless SSID"
+      },
+      "wireless_frequency": {
+        "name": "Wireless frequency"
+      },
+      "wireless_mode": {
+        "name": "Wireless mode",
+        "state": {
+          "point_to_multipoint": "Point-to-multipoint",
+          "point_to_point": "Point-to-point"
+        }
+      },
+      "wireless_polling_dl_capacity": {
+        "name": "Download capacity"
+      },
+      "wireless_polling_ul_capacity": {
+        "name": "Upload capacity"
+      },
+      "wireless_remote_hostname": {
+        "name": "Remote hostname"
+      },
+      "wireless_role": {
+        "name": "Wireless role",
+        "state": {
+          "access_point": "Access point",
+          "station": "Station"
+        }
+      },
+      "wireless_throughput_rx": {
+        "name": "Throughput receive (actual)"
+      },
+      "wireless_throughput_tx": {
+        "name": "Throughput transmit (actual)"
+      }
+    }
+  },
+  "exceptions": {
+    "cannot_connect": {
+      "message": "[%key:common::config_flow::error::cannot_connect%]"
+    },
+    "error_data_missing": {
+      "message": "Data incomplete or missing"
+    },
+    "invalid_auth": {
+      "message": "[%key:common::config_flow::error::invalid_auth%]"
+    },
+    "key_data_missing": {
+      "message": "Key data not returned from device"
+    }
+  }
+}

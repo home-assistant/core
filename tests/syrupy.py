@@ -173,6 +173,8 @@ class HomeAssistantSnapshotSerializer(AmberDataSerializer):
         if serialized["primary_config_entry"] is not None:
             serialized["primary_config_entry"] = ANY
         serialized.pop("_cache")
+        # This can be removed when suggested_area is removed from DeviceEntry
+        serialized.pop("_suggested_area")
         return cls._remove_created_and_modified_at(serialized)
 
     @classmethod

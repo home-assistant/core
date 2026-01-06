@@ -38,6 +38,7 @@ def mock_tv():
     tv.application = None
     tv.applications = {}
     tv.system = MOCK_SYSTEM
+    tv.name = MOCK_NAME
     tv.api_version = 1
     tv.api_version_detected = None
     tv.on = True

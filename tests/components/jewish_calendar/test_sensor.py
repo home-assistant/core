@@ -1,5 +1,6 @@
 """The tests for the Jewish calendar sensors."""
 
+from collections.abc import AsyncGenerator
 from datetime import datetime as dt
 from typing import Any
 
@@ -7,12 +8,10 @@ from hdate.holidays import HolidayDatabase
 from hdate.parasha import Parasha
 import pytest
 
-from homeassistant.components.jewish_calendar.const import DOMAIN
-from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
-from homeassistant.const import CONF_PLATFORM
 from homeassistant.core import HomeAssistant
-from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
+
+from . import TimeValue, TimeValueSequence
 
 from tests.common import MockConfigEntry
 
@@ -140,6 +139,8 @@ TEST_PARAMS = [
             "attr": {
                 "hebrew_year": "5779",
                 "hebrew_month_name": "מרחשוון",
+                "hebrew_month_standard_order": "2",
+                "hebrew_month_biblical_order": "8",
                 "hebrew_day": "6",
                 "friendly_name": "Jewish Calendar Date",
             },
@@ -542,15 +543,24 @@ async def test_dafyomi_sensor(hass: HomeAssistant, results: str) -> None:
     assert hass.states.get("sensor.jewish_calendar_daf_yomi").state == results
 
 
-async def test_no_discovery_info(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+@pytest.mark.parametrize(
+    "test_sequence",
+    [
+        TimeValueSequence(
+            [
+                TimeValue(dt(2025, 6, 10, 17), "14 Sivan 5785"),  # Initial time
+                TimeValue(dt(2025, 6, 10, 23, 0), "15 Sivan 5785"),  # Later in the day
+                TimeValue(dt(2025, 6, 11, 9, 0), "15 Sivan 5785"),  # Next morning
+                TimeValue(dt(2025, 6, 11, 22, 0), "16 Sivan 5785"),  # Next evening
+            ]
+        )
+    ],
+    indirect=True,
+)
+async def test_sensor_date_changes_with_time(
+    hass: HomeAssistant, test_sequence: AsyncGenerator[Any]
 ) -> None:
-    """Test setup without discovery info."""
-    assert SENSOR_DOMAIN not in hass.config.components
-    assert await async_setup_component(
-        hass,
-        SENSOR_DOMAIN,
-        {SENSOR_DOMAIN: {CONF_PLATFORM: DOMAIN}},
-    )
-    await hass.async_block_till_done()
-    assert SENSOR_DOMAIN in hass.config.components
+    """Test that the Jewish calendar date sensor updates when time crosses date boundaries."""
+    async for expected_state in test_sequence():
+        current_state = hass.states.get("sensor.jewish_calendar_date").state
+        assert current_state == expected_state

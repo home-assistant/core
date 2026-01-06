@@ -16,7 +16,7 @@ def hlapi_mock():
     """Mock out 3rd party API."""
     mock_data = Opaque(value=b"\x9fx\x04=\xa4\x00\x00")
     with patch(
-        "homeassistant.components.snmp.sensor.getCmd",
+        "homeassistant.components.snmp.sensor.get_cmd",
         return_value=(None, None, None, [[mock_data]]),
     ):
         yield

@@ -5,7 +5,7 @@ from __future__ import annotations
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import issue_registry as ir
 
-from . import DOMAIN
+from .const import DOMAIN
 from .helpers import Observation
 
 

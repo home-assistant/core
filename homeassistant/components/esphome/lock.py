@@ -40,8 +40,10 @@ class EsphomeLock(EsphomeEntity[LockInfo, LockEntityState], LockEntity):
 
     @property
     @esphome_state_property
-    def is_locked(self) -> bool:
+    def is_locked(self) -> bool | None:
         """Return true if the lock is locked."""
+        if self._state.state is LockState.NONE:
+            return None
         return self._state.state is LockState.LOCKED
 
     @property
@@ -65,18 +67,24 @@ class EsphomeLock(EsphomeEntity[LockInfo, LockEntityState], LockEntity):
     @convert_api_error_ha_error
     async def async_lock(self, **kwargs: Any) -> None:
         """Lock the lock."""
-        self._client.lock_command(self._key, LockCommand.LOCK)
+        self._client.lock_command(
+            self._key, LockCommand.LOCK, device_id=self._static_info.device_id
+        )
 
     @convert_api_error_ha_error
     async def async_unlock(self, **kwargs: Any) -> None:
         """Unlock the lock."""
         code = kwargs.get(ATTR_CODE)
-        self._client.lock_command(self._key, LockCommand.UNLOCK, code)
+        self._client.lock_command(
+            self._key, LockCommand.UNLOCK, code, device_id=self._static_info.device_id
+        )
 
     @convert_api_error_ha_error
     async def async_open(self, **kwargs: Any) -> None:
         """Open the door latch."""
-        self._client.lock_command(self._key, LockCommand.OPEN)
+        self._client.lock_command(
+            self._key, LockCommand.OPEN, device_id=self._static_info.device_id
+        )
 
 
 async_setup_entry = partial(

@@ -46,7 +46,6 @@ async def test_full_flow(
         f"{OAUTH2_AUTHORIZE}?response_type=code&client_id={CLIENT_ID}"
         f"&redirect_uri={REDIRECT_URL}"
         f"&state={state}"
-        "&vg=sv-SE"
     )
 
     client = await hass_client_no_auth()
@@ -118,7 +117,6 @@ async def test_flow_reauth_abort(
         f"{OAUTH2_AUTHORIZE}?response_type=code&client_id={CLIENT_ID}"
         f"&redirect_uri={REDIRECT_URL}"
         f"&state={state}"
-        "&vg=sv-SE"
     )
 
     client = await hass_client_no_auth()
@@ -187,7 +185,6 @@ async def test_flow_reconfigure_abort(
         f"{OAUTH2_AUTHORIZE}?response_type=code&client_id={CLIENT_ID}"
         f"&redirect_uri={REDIRECT_URL}"
         f"&state={state}"
-        "&vg=sv-SE"
     )
 
     client = await hass_client_no_auth()
@@ -247,7 +244,6 @@ async def test_zeroconf_flow(
         f"{OAUTH2_AUTHORIZE}?response_type=code&client_id={CLIENT_ID}"
         f"&redirect_uri={REDIRECT_URL}"
         f"&state={state}"
-        "&vg=sv-SE"
     )
 
     client = await hass_client_no_auth()

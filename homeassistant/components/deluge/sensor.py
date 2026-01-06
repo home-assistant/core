@@ -110,6 +110,18 @@ SENSOR_TYPES: tuple[DelugeSensorEntityDescription, ...] = (
             data, DelugeSensorType.PROTOCOL_TRAFFIC_DOWNLOAD_SPEED_SENSOR.value
         ),
     ),
+    DelugeSensorEntityDescription(
+        key=DelugeSensorType.DOWNLOADING_COUNT_SENSOR.value,
+        translation_key=DelugeSensorType.DOWNLOADING_COUNT_SENSOR.value,
+        state_class=SensorStateClass.TOTAL,
+        value=lambda data: data[DelugeSensorType.DOWNLOADING_COUNT_SENSOR.value],
+    ),
+    DelugeSensorEntityDescription(
+        key=DelugeSensorType.SEEDING_COUNT_SENSOR.value,
+        translation_key=DelugeSensorType.SEEDING_COUNT_SENSOR.value,
+        state_class=SensorStateClass.TOTAL,
+        value=lambda data: data[DelugeSensorType.SEEDING_COUNT_SENSOR.value],
+    ),
 )
 
 

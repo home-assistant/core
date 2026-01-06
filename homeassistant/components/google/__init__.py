@@ -10,7 +10,6 @@ from typing import Any
 import aiohttp
 from gcal_sync.api import GoogleCalendarService
 from gcal_sync.exceptions import ApiException, AuthException
-from gcal_sync.model import DateOrDatetime, Event
 import voluptuous as vol
 import yaml
 
@@ -21,32 +20,14 @@ from homeassistant.const import (
     CONF_OFFSET,
     Platform,
 )
-from homeassistant.core import HomeAssistant, ServiceCall
-from homeassistant.exceptions import (
-    ConfigEntryAuthFailed,
-    ConfigEntryNotReady,
-    HomeAssistantError,
-)
+from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import config_entry_oauth2_flow, config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.entity import generate_entity_id
 
 from .api import ApiAuthImpl, get_feature_access
-from .const import (
-    DOMAIN,
-    EVENT_DESCRIPTION,
-    EVENT_END_DATE,
-    EVENT_END_DATETIME,
-    EVENT_IN,
-    EVENT_IN_DAYS,
-    EVENT_IN_WEEKS,
-    EVENT_LOCATION,
-    EVENT_START_DATE,
-    EVENT_START_DATETIME,
-    EVENT_SUMMARY,
-    EVENT_TYPES_CONF,
-    FeatureAccess,
-)
+from .const import DOMAIN
 from .store import GoogleConfigEntry, GoogleRuntimeData, LocalCalendarStore
 
 _LOGGER = logging.getLogger(__name__)
@@ -62,10 +43,6 @@ CONF_IGNORE_AVAILABILITY = "ignore_availability"
 CONF_MAX_RESULTS = "max_results"
 
 DEFAULT_CONF_OFFSET = "!!"
-
-EVENT_CALENDAR_ID = "calendar_id"
-
-SERVICE_ADD_EVENT = "add_event"
 
 YAML_DEVICES = f"{DOMAIN}_calendars.yaml"
 
@@ -98,41 +75,6 @@ DEVICE_SCHEMA = vol.Schema(
         ),
     },
     extra=vol.ALLOW_EXTRA,
-)
-
-_EVENT_IN_TYPES = vol.Schema(
-    {
-        vol.Exclusive(EVENT_IN_DAYS, EVENT_TYPES_CONF): cv.positive_int,
-        vol.Exclusive(EVENT_IN_WEEKS, EVENT_TYPES_CONF): cv.positive_int,
-    }
-)
-
-ADD_EVENT_SERVICE_SCHEMA = vol.All(
-    cv.has_at_least_one_key(EVENT_START_DATE, EVENT_START_DATETIME, EVENT_IN),
-    cv.has_at_most_one_key(EVENT_START_DATE, EVENT_START_DATETIME, EVENT_IN),
-    {
-        vol.Required(EVENT_CALENDAR_ID): cv.string,
-        vol.Required(EVENT_SUMMARY): cv.string,
-        vol.Optional(EVENT_DESCRIPTION, default=""): cv.string,
-        vol.Optional(EVENT_LOCATION, default=""): cv.string,
-        vol.Inclusive(
-            EVENT_START_DATE, "dates", "Start and end dates must both be specified"
-        ): cv.date,
-        vol.Inclusive(
-            EVENT_END_DATE, "dates", "Start and end dates must both be specified"
-        ): cv.date,
-        vol.Inclusive(
-            EVENT_START_DATETIME,
-            "datetimes",
-            "Start and end datetimes must both be specified",
-        ): cv.datetime,
-        vol.Inclusive(
-            EVENT_END_DATETIME,
-            "datetimes",
-            "Start and end datetimes must both be specified",
-        ): cv.datetime,
-        vol.Optional(EVENT_IN): _EVENT_IN_TYPES,
-    },
 )
 
 
@@ -190,13 +132,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: GoogleConfigEntry) -> bo
 
         hass.config_entries.async_update_entry(entry, unique_id=primary_calendar.id)
 
-    # Only expose the add event service if we have the correct permissions
-    if get_feature_access(entry) is FeatureAccess.read_write:
-        await async_setup_add_event_service(hass, calendar_service)
-
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-
-    entry.async_on_unload(entry.add_update_listener(async_reload_entry))
 
     return True
 
@@ -213,89 +149,10 @@ async def async_unload_entry(hass: HomeAssistant, entry: GoogleConfigEntry) -> b
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
 
-async def async_reload_entry(hass: HomeAssistant, entry: GoogleConfigEntry) -> None:
-    """Reload config entry if the access options change."""
-    if not async_entry_has_scopes(entry):
-        await hass.config_entries.async_reload(entry.entry_id)
-
-
 async def async_remove_entry(hass: HomeAssistant, entry: GoogleConfigEntry) -> None:
     """Handle removal of a local storage."""
     store = LocalCalendarStore(hass, entry.entry_id)
     await store.async_remove()
-
-
-async def async_setup_add_event_service(
-    hass: HomeAssistant,
-    calendar_service: GoogleCalendarService,
-) -> None:
-    """Add the service to add events."""
-
-    async def _add_event(call: ServiceCall) -> None:
-        """Add a new event to calendar."""
-        _LOGGER.warning(
-            "The Google Calendar add_event service has been deprecated, and "
-            "will be removed in a future Home Assistant release. Please move "
-            "calls to the create_event service"
-        )
-
-        start: DateOrDatetime | None = None
-        end: DateOrDatetime | None = None
-
-        if EVENT_IN in call.data:
-            if EVENT_IN_DAYS in call.data[EVENT_IN]:
-                now = datetime.now()
-
-                start_in = now + timedelta(days=call.data[EVENT_IN][EVENT_IN_DAYS])
-                end_in = start_in + timedelta(days=1)
-
-                start = DateOrDatetime(date=start_in)
-                end = DateOrDatetime(date=end_in)
-
-            elif EVENT_IN_WEEKS in call.data[EVENT_IN]:
-                now = datetime.now()
-
-                start_in = now + timedelta(weeks=call.data[EVENT_IN][EVENT_IN_WEEKS])
-                end_in = start_in + timedelta(days=1)
-
-                start = DateOrDatetime(date=start_in)
-                end = DateOrDatetime(date=end_in)
-
-        elif EVENT_START_DATE in call.data and EVENT_END_DATE in call.data:
-            start = DateOrDatetime(date=call.data[EVENT_START_DATE])
-            end = DateOrDatetime(date=call.data[EVENT_END_DATE])
-
-        elif EVENT_START_DATETIME in call.data and EVENT_END_DATETIME in call.data:
-            start_dt = call.data[EVENT_START_DATETIME]
-            end_dt = call.data[EVENT_END_DATETIME]
-            start = DateOrDatetime(
-                date_time=start_dt, timezone=str(hass.config.time_zone)
-            )
-            end = DateOrDatetime(date_time=end_dt, timezone=str(hass.config.time_zone))
-
-        if start is None or end is None:
-            raise ValueError(
-                "Missing required fields to set start or end date/datetime"
-            )
-        event = Event(
-            summary=call.data[EVENT_SUMMARY],
-            description=call.data[EVENT_DESCRIPTION],
-            start=start,
-            end=end,
-        )
-        if location := call.data.get(EVENT_LOCATION):
-            event.location = location
-        try:
-            await calendar_service.async_create_event(
-                call.data[EVENT_CALENDAR_ID],
-                event,
-            )
-        except ApiException as err:
-            raise HomeAssistantError(str(err)) from err
-
-    hass.services.async_register(
-        DOMAIN, SERVICE_ADD_EVENT, _add_event, schema=ADD_EVENT_SERVICE_SCHEMA
-    )
 
 
 def get_calendar_info(

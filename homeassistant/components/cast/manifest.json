@@ -12,9 +12,10 @@
   "codeowners": ["@emontnemery"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/cast",
+  "integration_type": "hub",
   "iot_class": "local_polling",
   "loggers": ["casttube", "pychromecast"],
-  "requirements": ["PyChromecast==14.0.7"],
+  "requirements": ["PyChromecast==14.0.9"],
   "single_config_entry": true,
   "zeroconf": ["_googlecast._tcp.local."]
 }

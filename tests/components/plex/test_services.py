@@ -17,7 +17,6 @@ from homeassistant.components.plex.const import (
     PLEX_SERVER_CONFIG,
     PLEX_URI_SCHEME,
     SERVICE_REFRESH_LIBRARY,
-    SERVICE_SCAN_CLIENTS,
 )
 from homeassistant.components.plex.services import process_plex_payload
 from homeassistant.const import CONF_URL
@@ -107,15 +106,6 @@ async def test_refresh_library(
     assert refresh.call_count == 1
 
 
-async def test_scan_clients(hass: HomeAssistant, mock_plex_server) -> None:
-    """Test scan_for_clients service call."""
-    await hass.services.async_call(
-        DOMAIN,
-        SERVICE_SCAN_CLIENTS,
-        blocking=True,
-    )
-
-
 async def test_lookup_media_for_other_integrations(
     hass: HomeAssistant,
     entry,
@@ -139,6 +129,10 @@ async def test_lookup_media_for_other_integrations(
     CONTENT_ID_SHUFFLE = (
         PLEX_URI_SCHEME
         + '{"library_name": "Music", "artist_name": "Artist", "shuffle": 1}'
+    )
+    CONTENT_ID_CONTINUOUS = (
+        PLEX_URI_SCHEME
+        + '{"library_name": "Music", "artist_name": "Artist", "continuous": 1}'
     )
 
     # Test with no Plex integration available
@@ -168,6 +162,7 @@ async def test_lookup_media_for_other_integrations(
     )
     assert isinstance(result.media, plexapi.audio.Artist)
     assert not result.shuffle
+    assert not result.continuous
 
     # Test media key payload without playqueue
     result = process_plex_payload(
@@ -189,6 +184,13 @@ async def test_lookup_media_for_other_integrations(
     )
     assert isinstance(result.media, plexapi.audio.Artist)
     assert result.shuffle
+
+    # Test continuous without playqueue
+    result = process_plex_payload(
+        hass, MediaType.MUSIC, CONTENT_ID_CONTINUOUS, supports_playqueues=False
+    )
+    assert isinstance(result.media, plexapi.audio.Artist)
+    assert result.continuous
 
     # Test with media not found
     with patch(
@@ -218,6 +220,10 @@ async def test_lookup_media_for_other_integrations(
     result = process_plex_payload(hass, MediaType.MUSIC, CONTENT_ID_SHUFFLE)
     assert isinstance(result.media, plexapi.playqueue.PlayQueue)
 
+    # Test playqueue is created with continuous
+    result = process_plex_payload(hass, MediaType.MUSIC, CONTENT_ID_CONTINUOUS)
+    assert isinstance(result.media, plexapi.playqueue.PlayQueue)
+
 
 async def test_lookup_media_with_urls(hass: HomeAssistant, mock_plex_server) -> None:
     """Test media lookup for media_player.play_media calls from cast/sonos."""
@@ -237,4 +243,13 @@ async def test_lookup_media_with_urls(hass: HomeAssistant, mock_plex_server) -> 
     )
     assert isinstance(result.media, plexapi.audio.Track)
     assert result.shuffle is True
+    assert result.offset == 0
+
+    # Test URL format with continuous
+    CONTENT_ID_URL_WITH_CONTINUOUS = CONTENT_ID_URL + "?continuous=1"
+    result = process_plex_payload(
+        hass, MediaType.MUSIC, CONTENT_ID_URL_WITH_CONTINUOUS, supports_playqueues=False
+    )
+    assert isinstance(result.media, plexapi.audio.Track)
+    assert result.continuous is True
     assert result.offset == 0

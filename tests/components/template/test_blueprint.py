@@ -16,6 +16,22 @@ from homeassistant.components.blueprint import (
     DomainBlueprints,
 )
 from homeassistant.components.template import DOMAIN, SERVICE_RELOAD
+from homeassistant.components.template.config import (
+    DOMAIN_ALARM_CONTROL_PANEL,
+    DOMAIN_BINARY_SENSOR,
+    DOMAIN_COVER,
+    DOMAIN_FAN,
+    DOMAIN_IMAGE,
+    DOMAIN_LIGHT,
+    DOMAIN_LOCK,
+    DOMAIN_NUMBER,
+    DOMAIN_SELECT,
+    DOMAIN_SENSOR,
+    DOMAIN_SWITCH,
+    DOMAIN_VACUUM,
+    DOMAIN_WEATHER,
+)
+from homeassistant.const import STATE_ON
 from homeassistant.core import Context, HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr
 from homeassistant.setup import async_setup_component
@@ -210,6 +226,90 @@ async def test_reload_template_when_blueprint_changes(hass: HomeAssistant) -> No
     not_inverted = hass.states.get("binary_sensor.inverted_foo")
     assert not_inverted
     assert not_inverted.state == "on"
+
+
+async def test_init_attribute_variables_from_blueprint(hass: HomeAssistant) -> None:
+    """Test a state based blueprint initializes icon, name, and picture with variables."""
+    blueprint = "test_init_attribute_variables.yaml"
+    source = "switch.foo"
+    entity_id = "sensor.foo"
+    hass.states.async_set(source, "on", {"friendly_name": "Foo"})
+    config = {
+        DOMAIN: [
+            {
+                "use_blueprint": {
+                    "path": blueprint,
+                    "input": {"switch": source},
+                },
+            }
+        ],
+    }
+    assert await async_setup_component(
+        hass,
+        DOMAIN,
+        config,
+    )
+    await hass.async_block_till_done()
+
+    # Check initial state
+    sensor = hass.states.get(entity_id)
+    assert sensor
+    assert sensor.state == "True"
+    assert sensor.attributes["icon"] == "mdi:lightbulb"
+    assert sensor.attributes["entity_picture"] == "on.png"
+    assert sensor.attributes["friendly_name"] == "Foo"
+    assert sensor.attributes["extra"] == "ab"
+
+    hass.states.async_set(source, "off", {"friendly_name": "Foo"})
+    await hass.async_block_till_done()
+
+    # Check to see that the template light works
+    sensor = hass.states.get(entity_id)
+    assert sensor
+    assert sensor.state == "False"
+    assert sensor.attributes["icon"] == "mdi:lightbulb-off"
+    assert sensor.attributes["entity_picture"] == "off.png"
+    assert sensor.attributes["friendly_name"] == "Foo"
+    assert sensor.attributes["extra"] == "ab"
+
+    # Reload the templates without any change, but with updated blueprint
+    blueprint_config = yaml_util.load_yaml(
+        pathlib.Path("tests/testing_config/blueprints/template/") / blueprint
+    )
+    blueprint_config["variables"]["extraa"] = "c"
+    blueprint_config["sensor"]["variables"]["extrab"] = "d"
+    with (
+        patch(
+            "homeassistant.config.load_yaml_config_file",
+            autospec=True,
+            return_value=config,
+        ),
+        patch(
+            "homeassistant.components.blueprint.models.yaml_util.load_yaml_dict",
+            autospec=True,
+            return_value=blueprint_config,
+        ),
+    ):
+        await hass.services.async_call(DOMAIN, SERVICE_RELOAD, blocking=True)
+
+    sensor = hass.states.get(entity_id)
+    assert sensor
+    assert sensor.state == "False"
+    assert sensor.attributes["icon"] == "mdi:lightbulb-off"
+    assert sensor.attributes["entity_picture"] == "off.png"
+    assert sensor.attributes["friendly_name"] == "Foo"
+    assert sensor.attributes["extra"] == "cd"
+
+    hass.states.async_set(source, "on", {"friendly_name": "Foo"})
+    await hass.async_block_till_done()
+
+    sensor = hass.states.get(entity_id)
+    assert sensor
+    assert sensor.state == "True"
+    assert sensor.attributes["icon"] == "mdi:lightbulb"
+    assert sensor.attributes["entity_picture"] == "on.png"
+    assert sensor.attributes["friendly_name"] == "Foo"
+    assert sensor.attributes["extra"] == "cd"
 
 
 @pytest.mark.parametrize(
@@ -459,3 +559,51 @@ async def test_no_blueprint(hass: HomeAssistant) -> None:
         template.helpers.blueprint_in_template(hass, "binary_sensor.test_entity")
         is None
     )
+
+
+@pytest.mark.parametrize(
+    ("domain", "set_state", "expected"),
+    [
+        (DOMAIN_ALARM_CONTROL_PANEL, STATE_ON, "armed_home"),
+        (DOMAIN_BINARY_SENSOR, STATE_ON, STATE_ON),
+        (DOMAIN_COVER, STATE_ON, "open"),
+        (DOMAIN_FAN, STATE_ON, STATE_ON),
+        (DOMAIN_IMAGE, "test.jpg", "2025-06-13T00:00:00+00:00"),
+        (DOMAIN_LIGHT, STATE_ON, STATE_ON),
+        (DOMAIN_LOCK, STATE_ON, "locked"),
+        (DOMAIN_NUMBER, "1", "1.0"),
+        (DOMAIN_SELECT, "option1", "option1"),
+        (DOMAIN_SENSOR, "foo", "foo"),
+        (DOMAIN_SWITCH, STATE_ON, STATE_ON),
+        (DOMAIN_VACUUM, "cleaning", "cleaning"),
+        (DOMAIN_WEATHER, "sunny", "sunny"),
+    ],
+)
+@pytest.mark.freeze_time("2025-06-13 00:00:00+00:00")
+async def test_variables_for_entity(
+    hass: HomeAssistant, domain: str, set_state: str, expected: str
+) -> None:
+    """Test regular template entities via blueprint with variables defined."""
+    hass.states.async_set("sensor.test_state", set_state)
+    await hass.async_block_till_done()
+
+    assert await async_setup_component(
+        hass,
+        "template",
+        {
+            "template": [
+                {
+                    "use_blueprint": {
+                        "path": f"test_{domain}_with_variables.yaml",
+                        "input": {"sensor": "sensor.test_state"},
+                    },
+                    "name": "Test",
+                },
+            ]
+        },
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get(f"{domain}.test")
+    assert state is not None
+    assert state.state == expected

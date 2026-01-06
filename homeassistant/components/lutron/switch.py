@@ -8,17 +8,16 @@ from typing import Any
 from pylutron import Button, Keypad, Led, Lutron, Output
 
 from homeassistant.components.switch import SwitchEntity
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import DOMAIN, LutronData
+from . import LutronConfigEntry
 from .entity import LutronDevice, LutronKeypad
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: LutronConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Lutron switch platform.
@@ -26,7 +25,7 @@ async def async_setup_entry(
     Adds switches from the Main Repeater associated with the config_entry as
     switch entities.
     """
-    entry_data: LutronData = hass.data[DOMAIN][config_entry.entry_id]
+    entry_data = config_entry.runtime_data
     entities: list[SwitchEntity] = []
 
     # Add Lutron Switches

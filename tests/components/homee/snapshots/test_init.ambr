@@ -1,0 +1,67 @@
+# serializer version: 1
+# name: test_general_data
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
+    'configuration_url': None,
+    'connections': set({
+      tuple(
+        'mac',
+        '00:05:55:11:ee:cc',
+      ),
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'homee',
+        '00055511EECC',
+      ),
+    }),
+    'labels': set({
+    }),
+    'manufacturer': 'homee',
+    'model': 'homee',
+    'model_id': None,
+    'name': 'TestHomee',
+    'name_by_user': None,
+    'primary_config_entry': <ANY>,
+    'serial_number': None,
+    'sw_version': '1.2.3',
+    'via_device_id': None,
+  })
+# ---
+# name: test_general_data.1
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
+    'configuration_url': None,
+    'connections': set({
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'homee',
+        '00055511EECC-3',
+      ),
+    }),
+    'labels': set({
+    }),
+    'manufacturer': None,
+    'model': 'shutter_position_switch',
+    'model_id': None,
+    'name': 'Test Cover',
+    'name_by_user': None,
+    'primary_config_entry': <ANY>,
+    'serial_number': None,
+    'sw_version': '4.54',
+    'via_device_id': <ANY>,
+  })
+# ---

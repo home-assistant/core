@@ -1,8 +1,10 @@
 """Test ZHA cover."""
 
+from collections.abc import Callable, Coroutine
 from unittest.mock import patch
 
 import pytest
+from zigpy.device import Device
 from zigpy.profiles import zha
 from zigpy.zcl.clusters import closures
 import zigpy.zcl.foundation as zcl_f
@@ -60,7 +62,11 @@ WCT = closures.WindowCovering.WindowCoveringType
 WCCS = closures.WindowCovering.ConfigStatus
 
 
-async def test_cover(hass: HomeAssistant, setup_zha, zigpy_device_mock) -> None:
+async def test_cover(
+    hass: HomeAssistant,
+    setup_zha: Callable[..., Coroutine[None]],
+    zigpy_device_mock: Callable[..., Device],
+) -> None:
     """Test ZHA cover platform."""
 
     await setup_zha()
@@ -327,7 +333,9 @@ async def test_cover(hass: HomeAssistant, setup_zha, zigpy_device_mock) -> None:
 
 
 async def test_cover_failures(
-    hass: HomeAssistant, setup_zha, zigpy_device_mock
+    hass: HomeAssistant,
+    setup_zha: Callable[..., Coroutine[None]],
+    zigpy_device_mock: Callable[..., Device],
 ) -> None:
     """Test ZHA cover platform failure cases."""
     await setup_zha()

@@ -7,7 +7,9 @@ from typing import Any
 from mastodon.Mastodon import (
     Account,
     Instance,
+    InstanceV2,
     MastodonNetworkError,
+    MastodonNotFoundError,
     MastodonUnauthorizedError,
 )
 import voluptuous as vol
@@ -61,7 +63,7 @@ class MastodonConfigFlow(ConfigFlow, domain=DOMAIN):
         client_secret: str,
         access_token: str,
     ) -> tuple[
-        Instance | None,
+        InstanceV2 | Instance | None,
         Account | None,
         dict[str, str],
     ]:
@@ -73,7 +75,10 @@ class MastodonConfigFlow(ConfigFlow, domain=DOMAIN):
                 client_secret,
                 access_token,
             )
-            instance = client.instance()
+            try:
+                instance = client.instance_v2()
+            except MastodonNotFoundError:
+                instance = client.instance_v1()
             account = client.account_verify_credentials()
 
         except MastodonNetworkError:
@@ -129,4 +134,8 @@ class MastodonConfigFlow(ConfigFlow, domain=DOMAIN):
                     data=user_input,
                 )
 
-        return self.show_user_form(user_input, errors)
+        return self.show_user_form(
+            user_input,
+            errors,
+            description_placeholders={"example_url": "https://mastodon.social"},
+        )

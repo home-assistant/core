@@ -13,6 +13,7 @@ DOMAIN = "hydrawise"
 DEFAULT_WATERING_TIME = timedelta(minutes=15)
 
 MANUFACTURER = "Hydrawise"
+MODEL_ZONE = "Zone"
 
 MAIN_SCAN_INTERVAL = timedelta(minutes=5)
 WATER_USE_SCAN_INTERVAL = timedelta(minutes=60)

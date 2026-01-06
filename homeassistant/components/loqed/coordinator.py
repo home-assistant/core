@@ -17,6 +17,8 @@ from .const import CONF_CLOUDHOOK_URL, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
+type LoqedConfigEntry = ConfigEntry[LoqedDataCoordinator]
+
 
 class BatteryMessage(TypedDict):
     """Properties in a battery update message."""
@@ -71,12 +73,12 @@ class StatusMessage(TypedDict):
 class LoqedDataCoordinator(DataUpdateCoordinator[StatusMessage]):
     """Data update coordinator for the loqed platform."""
 
-    config_entry: ConfigEntry
+    config_entry: LoqedConfigEntry
 
     def __init__(
         self,
         hass: HomeAssistant,
-        config_entry: ConfigEntry,
+        config_entry: LoqedConfigEntry,
         api: loqed.LoqedAPI,
         lock: loqed.Lock,
     ) -> None:
@@ -166,7 +168,9 @@ class LoqedDataCoordinator(DataUpdateCoordinator[StatusMessage]):
             await self.lock.deleteWebhook(webhook_index)
 
 
-async def async_cloudhook_generate_url(hass: HomeAssistant, entry: ConfigEntry) -> str:
+async def async_cloudhook_generate_url(
+    hass: HomeAssistant, entry: LoqedConfigEntry
+) -> str:
     """Generate the full URL for a webhook_id."""
     if CONF_CLOUDHOOK_URL not in entry.data:
         webhook_url = await cloud.async_create_cloudhook(

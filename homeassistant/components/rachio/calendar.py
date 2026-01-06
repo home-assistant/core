@@ -16,10 +16,8 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util import dt as dt_util
 
 from .const import (
-    KEY_ADDRESS,
     KEY_DURATION_SECONDS,
     KEY_ID,
-    KEY_LOCALITY,
     KEY_PROGRAM_ID,
     KEY_PROGRAM_NAME,
     KEY_RUN_SUMMARIES,
@@ -65,7 +63,6 @@ class RachioCalendarEntity(
         super().__init__(coordinator)
         self.base_station = base_station
         self._event: CalendarEvent | None = None
-        self._location = coordinator.base_station[KEY_ADDRESS][KEY_LOCALITY]
         self._attr_translation_placeholders = {
             "base": coordinator.base_station[KEY_SERIAL_NUMBER]
         }
@@ -87,7 +84,6 @@ class RachioCalendarEntity(
             end=dt_util.as_local(start_time)
             + timedelta(seconds=int(event[KEY_TOTAL_RUN_DURATION])),
             description=valves,
-            location=self._location,
         )
 
     def _handle_upcoming_event(self) -> dict[str, Any] | None:
@@ -155,7 +151,6 @@ class RachioCalendarEntity(
                     start=event_start,
                     end=event_end,
                     description=valves,
-                    location=self._location,
                     uid=f"{run[KEY_PROGRAM_ID]}/{run[KEY_START_TIME]}",
                 )
                 event_list.append(event)

@@ -52,6 +52,7 @@
         "elevation": "Elevation",
         "email": "Email",
         "host": "Host",
+        "implementation": "Application credentials",
         "ip": "IP address",
         "language": "Language",
         "latitude": "Latitude",
@@ -64,6 +65,7 @@
         "path": "Path",
         "pin": "PIN code",
         "port": "Port",
+        "prompt": "Instructions",
         "ssl": "Uses an SSL certificate",
         "url": "URL",
         "usb_path": "USB device path",
@@ -71,7 +73,8 @@
         "verify_ssl": "Verify SSL certificate"
       },
       "description": {
-        "confirm_setup": "Do you want to start setup?"
+        "confirm_setup": "Do you want to start setup?",
+        "implementation": "The credentials you want to use to authenticate."
       },
       "error": {
         "cannot_connect": "Failed to connect",
@@ -112,6 +115,11 @@
         "turned_on": "{entity_name} turned on"
       }
     },
+    "exceptions": {
+      "oauth2_implementation_unavailable": {
+        "message": "OAuth2 implementation unavailable, will retry"
+      }
+    },
     "generic": {
       "model": "Model",
       "ui_managed": "Managed via UI"
@@ -126,9 +134,11 @@
       "disabled": "Disabled",
       "discharging": "Discharging",
       "disconnected": "Disconnected",
+      "empty": "Empty",
       "enabled": "Enabled",
       "error": "Error",
       "fault": "Fault",
+      "full": "Full",
       "high": "High",
       "home": "Home",
       "idle": "Idle",
@@ -152,13 +162,13 @@
       "yes": "Yes"
     },
     "time": {
-      "monday": "Monday",
-      "tuesday": "Tuesday",
-      "wednesday": "Wednesday",
-      "thursday": "Thursday",
       "friday": "Friday",
+      "monday": "Monday",
       "saturday": "Saturday",
-      "sunday": "Sunday"
+      "sunday": "Sunday",
+      "thursday": "Thursday",
+      "tuesday": "Tuesday",
+      "wednesday": "Wednesday"
     }
   }
 }

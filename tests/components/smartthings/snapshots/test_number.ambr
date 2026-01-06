@@ -298,8 +298,8 @@
     }),
     'area_id': None,
     'capabilities': dict({
-      'max': -15,
-      'min': -23,
+      'max': -15.0,
+      'min': -23.0,
       'mode': <NumberMode.AUTO: 'auto'>,
       'step': 1,
     }),
@@ -337,8 +337,8 @@
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
       'friendly_name': 'Frigo Freezer temperature',
-      'max': -15,
-      'min': -23,
+      'max': -15.0,
+      'min': -23.0,
       'mode': <NumberMode.AUTO: 'auto'>,
       'step': 1,
       'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
@@ -348,7 +348,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '-17',
+    'state': '-22.0',
   })
 # ---
 # name: test_all_entities[da_ref_normal_01011][number.frigo_fridge_temperature-entry]
@@ -357,8 +357,8 @@
     }),
     'area_id': None,
     'capabilities': dict({
-      'max': 7,
-      'min': 1,
+      'max': 7.0,
+      'min': 1.0,
       'mode': <NumberMode.AUTO: 'auto'>,
       'step': 1,
     }),
@@ -396,8 +396,8 @@
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
       'friendly_name': 'Frigo Fridge temperature',
-      'max': 7,
-      'min': 1,
+      'max': 7.0,
+      'min': 1.0,
       'mode': <NumberMode.AUTO: 'auto'>,
       'step': 1,
       'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
@@ -407,7 +407,66 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '6',
+    'state': '2.0',
+  })
+# ---
+# name: test_all_entities[da_ref_normal_01011_onedoor][number.lodowka_target_temperature-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'max': 7,
+      'min': 1,
+      'mode': <NumberMode.AUTO: 'auto'>,
+      'step': 1,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'number',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'number.lodowka_target_temperature',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <NumberDeviceClass.TEMPERATURE: 'temperature'>,
+    'original_icon': None,
+    'original_name': 'Target temperature',
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'target_temperature',
+    'unique_id': '271d82e0-5b0c-e4b8-058e-cdf23a188610_onedoor_thermostatCoolingSetpoint_coolingSetpoint_coolingSetpoint',
+    'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+  })
+# ---
+# name: test_all_entities[da_ref_normal_01011_onedoor][number.lodowka_target_temperature-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'temperature',
+      'friendly_name': 'Lodówka Target temperature',
+      'max': 7,
+      'min': 1,
+      'mode': <NumberMode.AUTO: 'auto'>,
+      'step': 1,
+      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.lodowka_target_temperature',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '3',
   })
 # ---
 # name: test_all_entities[da_wm_wm_000001][number.washer_rinse_cycles-entry]

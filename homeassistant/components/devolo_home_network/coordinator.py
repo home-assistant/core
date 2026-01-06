@@ -207,7 +207,7 @@ class DevoloUptimeGetCoordinator(DevoloDataUpdateCoordinator[int]):
 
 
 class DevoloWifiConnectedStationsGetCoordinator(
-    DevoloDataUpdateCoordinator[list[ConnectedStationInfo]]
+    DevoloDataUpdateCoordinator[dict[str, ConnectedStationInfo]]
 ):
     """Class to manage fetching data from the WifiGuestAccessGet endpoint."""
 
@@ -230,10 +230,11 @@ class DevoloWifiConnectedStationsGetCoordinator(
         )
         self.update_method = self.async_get_wifi_connected_station
 
-    async def async_get_wifi_connected_station(self) -> list[ConnectedStationInfo]:
+    async def async_get_wifi_connected_station(self) -> dict[str, ConnectedStationInfo]:
         """Fetch data from API endpoint."""
         assert self.device.device
-        return await self.device.device.async_get_wifi_connected_station()
+        clients = await self.device.device.async_get_wifi_connected_station()
+        return {client.mac_address: client for client in clients}
 
 
 class DevoloWifiGuestAccessGetCoordinator(

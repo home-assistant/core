@@ -91,8 +91,6 @@ from .schema_basic import (
 
 _LOGGER = logging.getLogger(__name__)
 
-DOMAIN = "mqtt_json"
-
 DEFAULT_NAME = "MQTT JSON Light"
 
 DEFAULT_FLASH = True
@@ -223,6 +221,8 @@ class MqttLightJson(MqttEntity, LightEntity, RestoreEntity):
             # Brightness is supported and no supported_color_modes are set,
             # so set brightness as the supported color mode.
             self._attr_supported_color_modes = {ColorMode.BRIGHTNESS}
+        else:
+            self._attr_supported_color_modes = {ColorMode.ONOFF}
 
     def _update_color(self, values: dict[str, Any]) -> None:
         color_mode: str = values["color_mode"]

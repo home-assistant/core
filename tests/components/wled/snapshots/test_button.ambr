@@ -1,19 +1,40 @@
 # serializer version: 1
-# name: test_button_restart
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'restart',
-      'friendly_name': 'WLED RGB Light Restart',
+# name: test_device_snapshot
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
+    'configuration_url': 'http://127.0.0.1',
+    'connections': set({
+      tuple(
+        'mac',
+        'aa:bb:cc:dd:ee:ff',
+      ),
     }),
-    'context': <ANY>,
-    'entity_id': 'button.wled_rgb_light_restart',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'unknown',
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': 'esp32',
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'wled',
+        'aabbccddeeff',
+      ),
+    }),
+    'labels': set({
+    }),
+    'manufacturer': 'WLED',
+    'model': 'FOSS',
+    'model_id': None,
+    'name': 'WLED RGB Light',
+    'name_by_user': None,
+    'primary_config_entry': <ANY>,
+    'serial_number': None,
+    'sw_version': '0.14.4',
+    'via_device_id': None,
   })
 # ---
-# name: test_button_restart.1
+# name: test_snapshots[button.wled_rgb_light_restart-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -48,40 +69,17 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_button_restart.2
-  DeviceRegistryEntrySnapshot({
-    'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
-    'configuration_url': 'http://127.0.0.1',
-    'connections': set({
-      tuple(
-        'mac',
-        'aa:bb:cc:dd:ee:ff',
-      ),
+# name: test_snapshots[button.wled_rgb_light_restart-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'restart',
+      'friendly_name': 'WLED RGB Light Restart',
     }),
-    'disabled_by': None,
-    'entry_type': None,
-    'hw_version': 'esp32',
-    'id': <ANY>,
-    'identifiers': set({
-      tuple(
-        'wled',
-        'aabbccddeeff',
-      ),
-    }),
-    'is_new': False,
-    'labels': set({
-    }),
-    'manufacturer': 'WLED',
-    'model': 'FOSS',
-    'model_id': None,
-    'name': 'WLED RGB Light',
-    'name_by_user': None,
-    'primary_config_entry': <ANY>,
-    'serial_number': None,
-    'suggested_area': None,
-    'sw_version': '0.14.4',
-    'via_device_id': None,
+    'context': <ANY>,
+    'entity_id': 'button.wled_rgb_light_restart',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
   })
 # ---

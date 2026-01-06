@@ -126,7 +126,8 @@ async def test_command_line_output_single_command(
     await hass.services.async_call(
         NOTIFY_DOMAIN, "test3", {"message": "test message"}, blocking=True
     )
-    assert "Running command: echo, with message: test message" in caplog.text
+    assert "Running command: echo" in caplog.text
+    assert "Running with message: test message" in caplog.text
 
 
 async def test_command_template(hass: HomeAssistant) -> None:

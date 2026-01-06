@@ -19,22 +19,32 @@ from homeassistant.util.scaling import int_states_in_range
 from . import HomeeConfigEntry
 from .const import DOMAIN, PRESET_AUTO, PRESET_MANUAL, PRESET_SUMMER
 from .entity import HomeeNodeEntity
+from .helpers import setup_homee_platform
 
 PARALLEL_UPDATES = 0
+
+
+async def add_fan_entities(
+    config_entry: HomeeConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
+    nodes: list[HomeeNode],
+) -> None:
+    """Add homee fan entities."""
+    async_add_entities(
+        HomeeFan(node, config_entry)
+        for node in nodes
+        if node.profile == NodeProfile.VENTILATION_CONTROL
+    )
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: HomeeConfigEntry,
-    async_add_devices: AddConfigEntryEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Homee fan platform."""
 
-    async_add_devices(
-        HomeeFan(node, config_entry)
-        for node in config_entry.runtime_data.nodes
-        if node.profile == NodeProfile.VENTILATION_CONTROL
-    )
+    await setup_homee_platform(add_fan_entities, async_add_entities, config_entry)
 
 
 class HomeeFan(HomeeNodeEntity, FanEntity):

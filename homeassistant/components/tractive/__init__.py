@@ -39,6 +39,7 @@ from .const import (
     SERVER_UNAVAILABLE,
     SWITCH_KEY_MAP,
     TRACKER_HARDWARE_STATUS_UPDATED,
+    TRACKER_HEALTH_OVERVIEW_UPDATED,
     TRACKER_POSITION_UPDATED,
     TRACKER_SWITCH_STATUS_UPDATED,
     TRACKER_WELLNESS_STATUS_UPDATED,
@@ -64,6 +65,7 @@ class Trackables:
     tracker_details: dict
     hw_info: dict
     pos_report: dict
+    health_overview: dict
 
 
 @dataclass(slots=True)
@@ -114,6 +116,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: TractiveConfigEntry) -> 
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
+    # Send initial health overview data to sensors after platforms are set up
+    for item in filtered_trackables:
+        if item.health_overview:
+            tractive.send_health_overview_update(item.health_overview)
+
     async def cancel_listen_task(_: Event) -> None:
         await tractive.unsubscribe()
 
@@ -144,9 +151,13 @@ async def _generate_trackables(
         return None
 
     tracker = client.tracker(trackable["device_id"])
+    trackable_pet = client.trackable_object(trackable["_id"])
 
-    tracker_details, hw_info, pos_report = await asyncio.gather(
-        tracker.details(), tracker.hw_info(), tracker.pos_report()
+    tracker_details, hw_info, pos_report, health_overview = await asyncio.gather(
+        tracker.details(),
+        tracker.hw_info(),
+        tracker.pos_report(),
+        trackable_pet.health_overview(),
     )
 
     if not tracker_details.get("_id"):
@@ -154,7 +165,9 @@ async def _generate_trackables(
             f"Tractive API returns incomplete data for tracker {trackable['device_id']}",
         )
 
-    return Trackables(tracker, trackable, tracker_details, hw_info, pos_report)
+    return Trackables(
+        tracker, trackable, tracker_details, hw_info, pos_report, health_overview
+    )
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: TractiveConfigEntry) -> bool:
@@ -226,6 +239,9 @@ class TractiveClient:
                     if server_was_unavailable:
                         _LOGGER.debug("Tractive is back online")
                         server_was_unavailable = False
+                    if event["message"] == "health_overview":
+                        self.send_health_overview_update(event)
+                        continue
                     if event["message"] == "wellness_overview":
                         self._send_wellness_update(event)
                         continue
@@ -291,6 +307,7 @@ class TractiveClient:
         for switch, key in SWITCH_KEY_MAP.items():
             if switch_data := event.get(key):
                 payload[switch] = switch_data["active"]
+        payload[ATTR_POWER_SAVING] = event.get("tracker_state_reason") == "POWER_SAVING"
         self._dispatch_tracker_event(
             TRACKER_SWITCH_STATUS_UPDATED, event["tracker_id"], payload
         )
@@ -313,6 +330,27 @@ class TractiveClient:
         }
         self._dispatch_tracker_event(
             TRACKER_WELLNESS_STATUS_UPDATED, event["pet_id"], payload
+        )
+
+    def send_health_overview_update(self, event: dict[str, Any]) -> None:
+        """Handle health_overview events from Tractive API."""
+        # The health_overview response can be at root level or wrapped in 'content'
+        # Handle both structures for compatibility
+        data = event.get("content", event)
+
+        activity = data.get("activity", {})
+        sleep = data.get("sleep", {})
+
+        payload = {
+            ATTR_DAILY_GOAL: activity.get("minutesGoal"),
+            ATTR_MINUTES_ACTIVE: activity.get("minutesActive"),
+            ATTR_MINUTES_DAY_SLEEP: sleep.get("minutesDaySleep"),
+            ATTR_MINUTES_NIGHT_SLEEP: sleep.get("minutesNightSleep"),
+            # Calm minutes can be used as rest indicator
+            ATTR_MINUTES_REST: sleep.get("minutesCalm"),
+        }
+        self._dispatch_tracker_event(
+            TRACKER_HEALTH_OVERVIEW_UPDATED, data["petId"], payload
         )
 
     def _send_position_update(self, event: dict[str, Any]) -> None:

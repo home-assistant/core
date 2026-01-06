@@ -13,7 +13,7 @@ from propcache.api import cached_property
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (  # noqa: F401
+from homeassistant.const import (
     SERVICE_CLOSE_COVER,
     SERVICE_CLOSE_COVER_TILT,
     SERVICE_OPEN_COVER,
@@ -24,19 +24,9 @@ from homeassistant.const import (  # noqa: F401
     SERVICE_STOP_COVER_TILT,
     SERVICE_TOGGLE,
     SERVICE_TOGGLE_COVER_TILT,
-    STATE_CLOSED,
-    STATE_CLOSING,
-    STATE_OPEN,
-    STATE_OPENING,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.deprecation import (
-    DeprecatedConstantEnum,
-    all_with_deprecated_constants,
-    check_if_deprecated_constant,
-    dir_with_deprecated_constants,
-)
 from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.typing import ConfigType
@@ -61,15 +51,6 @@ class CoverState(StrEnum):
     CLOSING = "closing"
     OPEN = "open"
     OPENING = "opening"
-
-
-# STATE_* below are deprecated as of 2024.11
-# when imported from homeassistant.components.cover
-# use the CoverState enum instead.
-_DEPRECATED_STATE_CLOSED = DeprecatedConstantEnum(CoverState.CLOSED, "2025.11")
-_DEPRECATED_STATE_CLOSING = DeprecatedConstantEnum(CoverState.CLOSING, "2025.11")
-_DEPRECATED_STATE_OPEN = DeprecatedConstantEnum(CoverState.OPEN, "2025.11")
-_DEPRECATED_STATE_OPENING = DeprecatedConstantEnum(CoverState.OPENING, "2025.11")
 
 
 class CoverDeviceClass(StrEnum):
@@ -300,10 +281,6 @@ class CoverEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     def supported_features(self) -> CoverEntityFeature:
         """Flag supported features."""
         if (features := self._attr_supported_features) is not None:
-            if type(features) is int:
-                new_features = CoverEntityFeature(features)
-                self._report_deprecated_supported_features_values(new_features)
-                return new_features
             return features
 
         supported_features = (
@@ -467,11 +444,3 @@ class CoverEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         return (
             fns["close"] if self._cover_is_last_toggle_direction_open else fns["open"]
         )
-
-
-# These can be removed if no deprecated constant are in this module anymore
-__getattr__ = ft.partial(check_if_deprecated_constant, module_globals=globals())
-__dir__ = ft.partial(
-    dir_with_deprecated_constants, module_globals_keys=[*globals().keys()]
-)
-__all__ = all_with_deprecated_constants(globals())

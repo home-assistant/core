@@ -1,0 +1,16 @@
+get_forecasts:
+  fields:
+    config_entry_id:
+      required: true
+      selector:
+        config_entry:
+          integration: amberelectric
+    channel_type:
+      required: true
+      selector:
+        select:
+          options:
+            - general
+            - controlled_load
+            - feed_in
+          translation_key: channel_type

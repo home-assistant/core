@@ -1,0 +1,104 @@
+# serializer version: 1
+# name: test_binary_sensors[binary_sensor.openuv_protection_window-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.openuv_protection_window',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Protection window',
+    'platform': 'openuv',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'protection_window',
+    'unique_id': '51.528308_-0.3817765_uv_protection_window',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_binary_sensors[binary_sensor.openuv_protection_window-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'end_time': datetime.datetime(2018, 7, 30, 16, 47, 49, 750000, tzinfo=zoneinfo.ZoneInfo(key='America/Regina')),
+      'end_uv': 3.6483,
+      'friendly_name': 'OpenUV Protection window',
+      'start_time': datetime.datetime(2018, 7, 30, 9, 17, 49, 750000, tzinfo=zoneinfo.ZoneInfo(key='America/Regina')),
+      'start_uv': 3.2509,
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.openuv_protection_window',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_protection_window_recalculation[after-protection-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'end_time': datetime.datetime(2018, 7, 30, 16, 47, 49, 750000, tzinfo=zoneinfo.ZoneInfo(key='America/Regina')),
+      'end_uv': 3.6483,
+      'friendly_name': 'OpenUV Protection window',
+      'start_time': datetime.datetime(2018, 7, 30, 9, 17, 49, 750000, tzinfo=zoneinfo.ZoneInfo(key='America/Regina')),
+      'start_uv': 3.2509,
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.openuv_protection_window',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_protection_window_recalculation[before-protection-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'end_time': datetime.datetime(2018, 7, 30, 16, 47, 49, 750000, tzinfo=zoneinfo.ZoneInfo(key='America/Regina')),
+      'end_uv': 3.6483,
+      'friendly_name': 'OpenUV Protection window',
+      'start_time': datetime.datetime(2018, 7, 30, 9, 17, 49, 750000, tzinfo=zoneinfo.ZoneInfo(key='America/Regina')),
+      'start_uv': 3.2509,
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.openuv_protection_window',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_protection_window_recalculation[during-protection-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'end_time': datetime.datetime(2018, 7, 30, 16, 47, 49, 750000, tzinfo=zoneinfo.ZoneInfo(key='America/Regina')),
+      'end_uv': 3.6483,
+      'friendly_name': 'OpenUV Protection window',
+      'start_time': datetime.datetime(2018, 7, 30, 9, 17, 49, 750000, tzinfo=zoneinfo.ZoneInfo(key='America/Regina')),
+      'start_uv': 3.2509,
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.openuv_protection_window',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---

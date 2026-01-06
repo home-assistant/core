@@ -34,11 +34,11 @@ from homeassistant.core_config import (
     DATA_CUSTOMIZE,
     Config,
     ConfigSource,
-    _validate_stun_or_turn_url,
     async_process_ha_core_config,
+    validate_stun_or_turn_url,
 )
 from homeassistant.helpers import issue_registry as ir
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity import Entity, EntityPlatformState
 from homeassistant.util.unit_system import (
     METRIC_SYSTEM,
     US_CUSTOMARY_SYSTEM,
@@ -175,8 +175,8 @@ def test_webrtc_schema() -> None:
         assert validated["webrtc"] == validated_webrtc
 
 
-def test_validate_stun_or_turn_url() -> None:
-    """Test _validate_stun_or_turn_url."""
+def testvalidate_stun_or_turn_url() -> None:
+    """Test validate_stun_or_turn_url."""
     invalid_urls = (
         "custom_stun_server",
         "custom_stun_server:3478",
@@ -203,10 +203,10 @@ def test_validate_stun_or_turn_url() -> None:
 
     for url in invalid_urls:
         with pytest.raises(Invalid):
-            _validate_stun_or_turn_url(url)
+            validate_stun_or_turn_url(url)
 
     for url in valid_urls:
-        assert _validate_stun_or_turn_url(url) == url
+        assert validate_stun_or_turn_url(url) == url
 
 
 def test_customize_glob_is_ordered() -> None:
@@ -222,6 +222,7 @@ async def _compute_state(hass: HomeAssistant, config: dict[str, Any]) -> State |
     entity.entity_id = "test.test"
     entity.hass = hass
     entity.platform = MockEntityPlatform(hass)
+    entity._platform_state = EntityPlatformState.ADDED
     entity.schedule_update_ha_state()
 
     await hass.async_block_till_done()

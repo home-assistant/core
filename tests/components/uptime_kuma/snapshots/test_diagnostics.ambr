@@ -1,0 +1,41 @@
+# serializer version: 1
+# name: test_diagnostics
+  dict({
+    '1': dict({
+      'monitor_cert_days_remaining': 90,
+      'monitor_cert_is_valid': 1,
+      'monitor_hostname': None,
+      'monitor_id': 1,
+      'monitor_name': 'Monitor 1',
+      'monitor_port': None,
+      'monitor_response_time': 120,
+      'monitor_status': 1,
+      'monitor_type': 'http',
+      'monitor_url': '**REDACTED**',
+    }),
+    '2': dict({
+      'monitor_cert_days_remaining': 0,
+      'monitor_cert_is_valid': 0,
+      'monitor_hostname': None,
+      'monitor_id': 2,
+      'monitor_name': 'Monitor 2',
+      'monitor_port': None,
+      'monitor_response_time': 28,
+      'monitor_status': 1,
+      'monitor_type': 'port',
+      'monitor_url': None,
+    }),
+    '3': dict({
+      'monitor_cert_days_remaining': 90,
+      'monitor_cert_is_valid': 1,
+      'monitor_hostname': None,
+      'monitor_id': 3,
+      'monitor_name': 'Monitor 3',
+      'monitor_port': None,
+      'monitor_response_time': 120,
+      'monitor_status': 0,
+      'monitor_type': 'json-query',
+      'monitor_url': '**REDACTED**',
+    }),
+  })
+# ---

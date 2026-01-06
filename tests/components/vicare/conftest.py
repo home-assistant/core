@@ -39,8 +39,10 @@ class MockPyViCare:
                         f"installation{idx}", f"gateway{idx}", f"device{idx}", fixture
                     ),
                     f"deviceId{idx}",
-                    f"model{idx}",
-                    "online",
+                    "Vitovalor"
+                    if fixture.data_file.endswith("VitoValor.json")
+                    else f"model{idx}",
+                    "Online",
                 )
             )
 

@@ -17,7 +17,6 @@
     'id': <ANY>,
     'identifiers': set({
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'SMLIGHT',
@@ -27,7 +26,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': 'core: v2.3.6 / zigbee: 20240314',
     'via_device_id': None,
   })

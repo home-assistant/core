@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from enum import StrEnum
 import logging
+from typing import Any
 
 from thinqconnect import DeviceType
 from thinqconnect.integration import ExtendedProperty
@@ -154,7 +155,7 @@ class ThinQStateVacuumEntity(ThinQEntity, StateVacuumEntity):
             )
         )
 
-    async def async_return_to_base(self, **kwargs) -> None:
+    async def async_return_to_base(self, **kwargs: Any) -> None:
         """Return device to dock."""
         _LOGGER.debug(
             "[%s:%s] async_return_to_base",

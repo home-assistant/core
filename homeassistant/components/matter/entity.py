@@ -36,6 +36,21 @@ if TYPE_CHECKING:
 
 LOGGER = logging.getLogger(__name__)
 
+# Due to variances in labeling implementations, labels are vendor and product specific.
+# This dictionary defines which labels to use for specific vendor/product combinations.
+# The keys are vendor IDs, the values are dictionaries with product IDs as keys
+# and lists of label names to use as values. If the value is None, no labels are used
+VENDOR_LABELING_LIST: dict[int, dict[int, list[str] | None]] = {
+    4488: {259: ["position"]},  # TP-Link Dual Outdoor Plug US
+    4874: {105: ["orientation"]},  # Eve Energy dual Outlet US
+    4961: {
+        1: ["inovelliname", "label", "name", "button"],  # Inovelli VTM31
+        2: ["label", "devicetype", "button"],  # Inovelli VTM35
+        4: None,  # Inovelli VTM36
+        16: ["label", "name", "button"],  # Inovelli VTM30
+    },
+}
+
 
 def catch_matter_error[_R, **P](
     func: Callable[Concatenate[MatterEntity, P], Coroutine[Any, Any, _R]],
@@ -54,13 +69,13 @@ def catch_matter_error[_R, **P](
     return wrapper
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, kw_only=True)
 class MatterEntityDescription(EntityDescription):
     """Describe the Matter entity."""
 
     # convert the value from the primary attribute to the value used by HA
-    measurement_to_ha: Callable[[Any], Any] | None = None
-    ha_to_native_value: Callable[[Any], Any] | None = None
+    device_to_ha: Callable[[Any], Any] | None = None
+    ha_to_device: Callable[[Any], Any] | None = None
     command_timeout: int | None = None
 
 
@@ -112,29 +127,46 @@ class MatterEntity(Entity):
             if self._platform_translation_key and not self.translation_key:
                 self._attr_translation_key = self._platform_translation_key
 
-        # prefer the label attribute for the entity name
-        # Matter has a way for users and/or vendors to specify a name for an endpoint
-        # which is always preferred over a standard HA (generated) name
-        for attr in (
-            clusters.FixedLabel.Attributes.LabelList,
-            clusters.UserLabel.Attributes.LabelList,
-        ):
-            if not (labels := self.get_matter_attribute_value(attr)):
-                continue
-            for label in labels:
-                if label.label not in ["Label", "Button"]:
-                    continue
-                # fixed or user label found: use it
-                label_value: str = label.value
-                # in the case the label is only the label id, use it as postfix only
-                if label_value.isnumeric():
-                    self._name_postfix = label_value
-                else:
-                    self._attr_name = label_value
-                break
+        # Matter labels can be used to modify the entity name
+        # by appending the text.
+        if name_modifier := self._get_name_modifier():
+            self._name_postfix = name_modifier
 
         # make sure to update the attributes once
         self._update_from_device()
+
+    def _find_matching_labels(self) -> list[str]:
+        """Find all labels for a Matter entity."""
+
+        device_info = self._endpoint.device_info
+        labeling_list = VENDOR_LABELING_LIST.get(device_info.vendorID, {}).get(
+            device_info.productID
+        )
+
+        # get the labels from the UserLabel and FixedLabel clusters
+        user_label_list: list[clusters.UserLabel.Structs.LabelStruct] = (
+            self.get_matter_attribute_value(clusters.UserLabel.Attributes.LabelList)
+            or []
+        )
+        fixed_label_list: list[clusters.FixedLabel.Structs.LabelStruct] = (
+            self.get_matter_attribute_value(clusters.FixedLabel.Attributes.LabelList)
+            or []
+        )
+
+        found_labels: list[str] = [
+            lbl.value
+            for label in labeling_list or []
+            for lbl in (*user_label_list, *fixed_label_list)
+            if lbl.label.lower() == label
+        ]
+        return found_labels
+
+    def _get_name_modifier(self) -> str | None:
+        """Get the name modifier for the entity."""
+
+        if found_labels := self._find_matching_labels():
+            return found_labels[0]
+        return None
 
     async def async_added_to_hass(self) -> None:
         """Handle being added to Home Assistant."""

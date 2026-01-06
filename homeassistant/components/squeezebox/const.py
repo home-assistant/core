@@ -1,15 +1,13 @@
 """Constants for the Squeezebox component."""
 
 CONF_HTTPS = "https"
-DISCOVERY_TASK = "discovery_task"
 DOMAIN = "squeezebox"
 DEFAULT_PORT = 9000
-KNOWN_PLAYERS = "known_players"
-KNOWN_SERVERS = "known_servers"
-MANUFACTURER = "https://lyrion.org/"
 PLAYER_DISCOVERY_UNSUB = "player_discovery_unsub"
 SENSOR_UPDATE_INTERVAL = 60
+SERVER_MANUFACTURER = "https://lyrion.org/"
 SERVER_MODEL = "Lyrion Music Server"
+SERVER_MODEL_ID = "LMS"
 STATUS_API_TIMEOUT = 10
 STATUS_SENSOR_LASTSCAN = "lastscan"
 STATUS_SENSOR_NEEDSRESTART = "needsrestart"
@@ -21,6 +19,10 @@ STATUS_SENSOR_INFO_TOTAL_GENRES = "info total genres"
 STATUS_SENSOR_INFO_TOTAL_SONGS = "info total songs"
 STATUS_SENSOR_PLAYER_COUNT = "player count"
 STATUS_SENSOR_OTHER_PLAYER_COUNT = "other player count"
+PLAYER_SENSOR_ALARM_ACTIVE = "alarm_active"
+PLAYER_SENSOR_ALARM_SNOOZE = "alarm_snooze"
+PLAYER_SENSOR_ALARM_UPCOMING = "alarm_upcoming"
+PLAYER_SENSOR_NEXT_ALARM = "alarm_next"
 STATUS_QUERY_LIBRARYNAME = "libraryname"
 STATUS_QUERY_MAC = "mac"
 STATUS_QUERY_UUID = "uuid"
