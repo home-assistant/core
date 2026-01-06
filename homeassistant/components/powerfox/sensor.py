@@ -177,7 +177,7 @@ SENSORS_GAS: tuple[PowerfoxReportSensorEntityDescription, ...] = (
         native_unit_of_measurement=CURRENCY_EURO,
         device_class=SensorDeviceClass.MONETARY,
         suggested_display_precision=2,
-        state_class=SensorStateClass.TOTAL_INCREASING,
+        state_class=SensorStateClass.TOTAL,
         value_fn=lambda gas: gas.sum_currency,
     ),
     PowerfoxReportSensorEntityDescription(
@@ -312,16 +312,8 @@ class BasePowerfoxSensorEntity(
 class PowerfoxSensorEntity(BasePowerfoxSensorEntity[PowerfoxDataUpdateCoordinator]):
     """Defines a powerfox poweropti sensor."""
 
+    coordinator: PowerfoxDataUpdateCoordinator
     entity_description: PowerfoxSensorEntityDescription
-
-    def __init__(
-        self,
-        coordinator: PowerfoxDataUpdateCoordinator,
-        device: Device,
-        description: PowerfoxSensorEntityDescription,
-    ) -> None:
-        """Initialize Powerfox poweropti sensor."""
-        super().__init__(coordinator, device, description)
 
     @property
     def native_value(self) -> float | int | None:
@@ -334,16 +326,8 @@ class PowerfoxGasSensorEntity(
 ):
     """Defines a powerfox gas meter sensor."""
 
+    coordinator: PowerfoxReportDataUpdateCoordinator
     entity_description: PowerfoxReportSensorEntityDescription
-
-    def __init__(
-        self,
-        coordinator: PowerfoxReportDataUpdateCoordinator,
-        device: Device,
-        description: PowerfoxReportSensorEntityDescription,
-    ) -> None:
-        """Initialize Powerfox gas meter sensor."""
-        super().__init__(coordinator, device, description)
 
     @property
     def native_value(self) -> float | int | None:

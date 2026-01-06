@@ -7,14 +7,12 @@ from typing import Any, Generic, TypeVar
 from powerfox import Device
 
 from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.update_coordinator import (
-    CoordinatorEntity,
-    DataUpdateCoordinator,
-)
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
+from .coordinator import PowerfoxBaseCoordinator
 
-CoordinatorT = TypeVar("CoordinatorT", bound=DataUpdateCoordinator[Any])
+CoordinatorT = TypeVar("CoordinatorT", bound=PowerfoxBaseCoordinator[Any])
 
 
 class PowerfoxEntity(CoordinatorEntity[CoordinatorT], Generic[CoordinatorT]):
