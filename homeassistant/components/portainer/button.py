@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from abc import abstractmethod
 from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
 from datetime import timedelta
@@ -137,38 +138,31 @@ class PortainerBaseButton(ButtonEntity):
     entity_description: PortainerButtonDescription
     coordinator: PortainerCoordinator
 
+    @abstractmethod
     async def _async_press_call(self) -> None:
         """Subclasses implement the actual press call, but we still need it here."""
-        raise NotImplementedError
 
     async def async_press(self) -> None:
         """Trigger the Portainer button press service."""
         try:
-            await self.entity_description.press_action(
-                self.coordinator.portainer,
-                self.endpoint_id,
-                self.container_data.container.id,
-            )
+            await self._async_press_call()
         except PortainerConnectionError as err:
-            _LOGGER.exception("Connection error for button: %s", self.entity_id)
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="cannot_connect",
-                translation_placeholders={"error": "See details in logs"},
+                translation_placeholders={"error": ""},
             ) from err
         except PortainerAuthenticationError as err:
-            _LOGGER.exception("Authentication error for button: %s", self.entity_id)
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="invalid_auth",
-                translation_placeholders={"error": "See details in logs"},
+                translation_placeholders={"error": ""},
             ) from err
         except PortainerTimeoutError as err:
-            _LOGGER.exception("Timeout error for button: %s", self.entity_id)
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="timeout_connect",
-                translation_placeholders={"error": "See details in logs"},
+                translation_placeholders={"error": ""},
             ) from err
 
 
@@ -219,5 +213,5 @@ class PortainerContainerButton(PortainerContainerEntity, PortainerBaseButton):
         await self.entity_description.press_action(
             self.coordinator.portainer,
             self.endpoint_id,
-            self.device_id,
+            self.container_data.container.id,
         )
