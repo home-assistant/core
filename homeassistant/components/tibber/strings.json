@@ -70,7 +70,7 @@
         "name": "Estimated consumption current hour"
       },
       "grid_phase_count": {
-        "name": "Number of phases being used for charging"
+        "name": "Number of grid phases"
       },
       "last_meter_consumption": {
         "name": "Last meter consumption"
