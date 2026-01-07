@@ -375,7 +375,7 @@ aiorussound==4.9.0
 aioruuvigateway==0.1.0
 
 # homeassistant.components.shelly
-aioshelly==13.23.0
+aioshelly==13.23.1
 
 # homeassistant.components.skybell
 aioskybell==22.7.0
@@ -417,7 +417,7 @@ aiousbwatcher==1.1.1
 aiovlc==0.5.1
 
 # homeassistant.components.vodafone_station
-aiovodafone==3.0.0
+aiovodafone==3.1.1
 
 # homeassistant.components.waqi
 aiowaqi==3.1.0
