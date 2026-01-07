@@ -97,13 +97,13 @@ After setup, you can access device settings through:
 
 ## Security Considerations
 
-### Unsecure MQTT
-- The integration first attempts to connect using unsecure MQTT (port 1883)
+### Insecure MQTT
+- The integration first attempts to connect using insecure MQTT (port 1883)
 - This is the default configuration for most Victron devices
 - Data is transmitted in plain text on your local network
 
 ### Secure MQTT  
-- If unsecure connection fails, you'll be prompted for the secure profile password
+- If insecure connection fails, you'll be prompted for the secure profile password
 - Secure MQTT uses encryption and authentication
 - Configure the secure profile password in your device's MQTT settings first
 
@@ -122,7 +122,7 @@ After setup, you can access device settings through:
 
 ### Connection Failed
 - **Check Network Connectivity**: Verify the device IP address is correct and reachable
-- **Firewall Issues**: Ensure ports 1883 (unsecure) or 8883 (secure) are not blocked
+- **Firewall Issues**: Ensure ports 1883 (insecure) or 8883 (secure) are not blocked
 - **Device Settings**: Confirm MQTT services are running on the device
 
 ### Authentication Failed  
@@ -156,3 +156,33 @@ After setup, you can access device settings through:
 ### Additional Resources
 - [Victron Energy MQTT Documentation](https://www.victronenergy.com/live/venus_os:mqtt)
 - [Home Assistant MQTT Integration](https://www.home-assistant.io/integrations/mqtt/)
+
+## Removing the Integration
+
+To remove the Victron Energy integration from Home Assistant:
+
+1. **Remove via UI**: 
+   - Go to **Settings** > **Devices & Services**
+   - Find the **Victron Energy** integration
+   - Click the three-dot menu and select **Delete**
+   - Confirm removal when prompted
+
+2. **Alternative method via device**:
+   - Go to **Settings** > **Devices & Services** > **Devices**
+   - Find your Victron device
+   - Click the device name, then click **Delete Device**
+   - This will remove the device and all associated entities
+
+All entities and device data will be permanently removed from Home Assistant. The integration can be re-added later if needed.
+
+## Removal
+
+To remove the Victron Energy integration:
+
+1. Go to **Settings** > **Devices & Services**
+2. Find the **Victron Energy** integration
+3. Click the **three dots menu** (⋯) next to the integration
+4. Select **Delete**
+5. Confirm the deletion
+
+All entities and devices associated with the integration will be removed from Home Assistant.

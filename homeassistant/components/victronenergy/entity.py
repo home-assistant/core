@@ -21,6 +21,8 @@ _LOGGER = logging.getLogger(__name__)
 class VictronBaseEntity(Entity):
     """Base class for Victron Energy entities."""
 
+    _attr_has_entity_name = True
+
     _manager: "VictronMqttManager"
     _device_key: DeviceKey
     _device_info: dict[str, Any]

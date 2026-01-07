@@ -5,6 +5,9 @@ from __future__ import annotations
 from unittest.mock import MagicMock, patch
 
 from homeassistant.components.victronenergy.const import DOMAIN
+from homeassistant.components.victronenergy.diagnostics import (
+    async_get_config_entry_diagnostics,
+)
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
@@ -12,7 +15,6 @@ from tests.common import MockConfigEntry
 
 async def test_config_entry_diagnostics(
     hass: HomeAssistant,
-    hass_client_no_auth,
     mock_config_entry: MockConfigEntry,
     mock_mqtt_client: MagicMock,
 ) -> None:
@@ -27,10 +29,6 @@ async def test_config_entry_diagnostics(
         await hass.async_block_till_done()
 
         # Get diagnostics
-        from homeassistant.components.victronenergy.diagnostics import (
-            async_get_config_entry_diagnostics,
-        )
-
         diagnostics = await async_get_config_entry_diagnostics(hass, mock_config_entry)
 
         # Check diagnostics structure
@@ -72,10 +70,6 @@ async def test_diagnostics_data_structure(
         await hass.async_block_till_done()
 
         # Get diagnostics
-        from homeassistant.components.victronenergy.diagnostics import (
-            async_get_config_entry_diagnostics,
-        )
-
         diagnostics = await async_get_config_entry_diagnostics(hass, mock_config_entry)
 
         # Check that data includes discovered devices/topics

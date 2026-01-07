@@ -31,8 +31,9 @@ async def test_setup_unload_and_reload_entry(
         assert mock_mqtt_client.loop_start.called
 
         # Unload
-        await hass.config_entries.async_unload(mock_config_entry.entry_id)
-        assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
+        result = await hass.config_entries.async_unload(mock_config_entry.entry_id)
+        assert result
+        assert mock_config_entry.state == ConfigEntryState.NOT_LOADED  # type: ignore[comparison-overlap]
 
         # Verify cleanup
         assert mock_mqtt_client.unsubscribe.called
@@ -195,7 +196,7 @@ async def test_error_handling_during_cleanup(
         # Unload should succeed even with disconnect error
         result = await hass.config_entries.async_unload(mock_config_entry.entry_id)
         assert result
-        assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
+        assert mock_config_entry.state == ConfigEntryState.NOT_LOADED  # type: ignore[comparison-overlap]
 
         # Other cleanup methods should still be called
         assert mock_client.unsubscribe.called
