@@ -115,6 +115,7 @@ class WebsocketNotification(StrEnum):
     """Enum for WebSocket notification types."""
 
     ACTIVE_LISTENING_MODE = "active_listening_mode"
+    BATTERY = "battery"
     BEO_REMOTE_BUTTON = "beo_remote_button"
     BUTTON = "button"
     PLAYBACK_ERROR = "playback_error"
