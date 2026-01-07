@@ -105,12 +105,12 @@ async def test_climate_triggers_gated_by_labs_flag(
         # Valid configurations
         (
             "climate.hvac_mode_changed",
-            {CONF_HVAC_MODE: [HVACMode.HEAT, HVACMode.COOL]},
+            {CONF_HVAC_MODE: ["heat", "cool"]},
             does_not_raise(),
         ),
         (
             "climate.hvac_mode_changed",
-            {CONF_HVAC_MODE: HVACMode.HEAT},
+            {CONF_HVAC_MODE: "heat"},
             does_not_raise(),
         ),
         # Invalid configurations
@@ -280,7 +280,7 @@ def parametrize_xxx_crossed_threshold_trigger_states(
     [
         *parametrize_trigger_states(
             trigger="climate.hvac_mode_changed",
-            trigger_options={CONF_HVAC_MODE: [HVACMode.HEAT, HVACMode.COOL]},
+            trigger_options={CONF_HVAC_MODE: ["heat", "cool"]},
             target_states=[HVACMode.HEAT, HVACMode.COOL],
             other_states=other_states([HVACMode.HEAT, HVACMode.COOL]),
         ),
@@ -440,7 +440,7 @@ async def test_climate_state_attribute_trigger_behavior_any(
     [
         *parametrize_trigger_states(
             trigger="climate.hvac_mode_changed",
-            trigger_options={CONF_HVAC_MODE: [HVACMode.HEAT, HVACMode.COOL]},
+            trigger_options={CONF_HVAC_MODE: ["heat", "cool"]},
             target_states=[HVACMode.HEAT, HVACMode.COOL],
             other_states=other_states([HVACMode.HEAT, HVACMode.COOL]),
         ),
@@ -590,7 +590,7 @@ async def test_climate_state_attribute_trigger_behavior_first(
     [
         *parametrize_trigger_states(
             trigger="climate.hvac_mode_changed",
-            trigger_options={CONF_HVAC_MODE: [HVACMode.HEAT, HVACMode.COOL]},
+            trigger_options={CONF_HVAC_MODE: ["heat", "cool"]},
             target_states=[HVACMode.HEAT, HVACMode.COOL],
             other_states=other_states([HVACMode.HEAT, HVACMode.COOL]),
         ),
