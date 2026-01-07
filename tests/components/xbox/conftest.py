@@ -80,6 +80,12 @@ def mock_config_entry() -> MockConfigEntry:
                 title="test",
                 unique_id="2533274838782904",
             ),
+            ConfigSubentryData(
+                data={},
+                subentry_type="game",
+                title="Blue Dragon",
+                unique_id="1297287135",
+            ),
         ],
         minor_version=3,
     )
