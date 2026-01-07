@@ -674,7 +674,7 @@
       'disabled_by': None,
       'domain': 'sensor',
       'entity_category': None,
-      'entity_id': 'sensor.cs158_af_air_fryer_cooking_cook_set_temperature',
+      'entity_id': 'sensor.cs158_af_air_fryer_cooking_cooking_set_temperature',
       'has_entity_name': True,
       'hidden_by': None,
       'icon': None,
@@ -689,7 +689,7 @@
       }),
       'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
       'original_icon': None,
-      'original_name': 'Cook set temperature',
+      'original_name': 'Cooking set temperature',
       'platform': 'vesync',
       'previous_unique_id': None,
       'suggested_object_id': None,
@@ -710,7 +710,7 @@
       'disabled_by': None,
       'domain': 'sensor',
       'entity_category': None,
-      'entity_id': 'sensor.cs158_af_air_fryer_cooking_cook_set_time',
+      'entity_id': 'sensor.cs158_af_air_fryer_cooking_cooking_set_time',
       'has_entity_name': True,
       'hidden_by': None,
       'icon': None,
@@ -725,7 +725,7 @@
       }),
       'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
       'original_icon': None,
-      'original_name': 'Cook set time',
+      'original_name': 'Cooking set time',
       'platform': 'vesync',
       'previous_unique_id': None,
       'suggested_object_id': None,
@@ -746,7 +746,7 @@
       'disabled_by': None,
       'domain': 'sensor',
       'entity_category': None,
-      'entity_id': 'sensor.cs158_af_air_fryer_cooking_preheat_set_time',
+      'entity_id': 'sensor.cs158_af_air_fryer_cooking_preheating_set_time',
       'has_entity_name': True,
       'hidden_by': None,
       'icon': None,
@@ -761,7 +761,7 @@
       }),
       'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
       'original_icon': None,
-      'original_name': 'Preheat set time',
+      'original_name': 'Preheating set time',
       'platform': 'vesync',
       'previous_unique_id': None,
       'suggested_object_id': None,
@@ -793,7 +793,7 @@
       'disabled_by': None,
       'domain': 'sensor',
       'entity_category': None,
-      'entity_id': 'sensor.cs158_af_air_fryer_cooking_cook_status',
+      'entity_id': 'sensor.cs158_af_air_fryer_cooking_cooking_status',
       'has_entity_name': True,
       'hidden_by': None,
       'icon': None,
@@ -805,7 +805,7 @@
       }),
       'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
       'original_icon': None,
-      'original_name': 'Cook status',
+      'original_name': 'Cooking status',
       'platform': 'vesync',
       'previous_unique_id': None,
       'suggested_object_id': None,
@@ -816,42 +816,42 @@
     }),
   ])
 # ---
-# name: test_sensor_state[CS158-AF Air Fryer Cooking][sensor.cs158_af_air_fryer_cooking_cook_set_temperature]
+# name: test_sensor_state[CS158-AF Air Fryer Cooking][sensor.cs158_af_air_fryer_cooking_cooking_set_temperature]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
-      'friendly_name': 'CS158-AF Air Fryer Cooking Cook set temperature',
+      'friendly_name': 'CS158-AF Air Fryer Cooking Cooking set temperature',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.cs158_af_air_fryer_cooking_cook_set_temperature',
+    'entity_id': 'sensor.cs158_af_air_fryer_cooking_cooking_set_temperature',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '180',
   })
 # ---
-# name: test_sensor_state[CS158-AF Air Fryer Cooking][sensor.cs158_af_air_fryer_cooking_cook_set_time]
+# name: test_sensor_state[CS158-AF Air Fryer Cooking][sensor.cs158_af_air_fryer_cooking_cooking_set_time]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'duration',
-      'friendly_name': 'CS158-AF Air Fryer Cooking Cook set time',
+      'friendly_name': 'CS158-AF Air Fryer Cooking Cooking set time',
       'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.cs158_af_air_fryer_cooking_cook_set_time',
+    'entity_id': 'sensor.cs158_af_air_fryer_cooking_cooking_set_time',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '15',
   })
 # ---
-# name: test_sensor_state[CS158-AF Air Fryer Cooking][sensor.cs158_af_air_fryer_cooking_cook_status]
+# name: test_sensor_state[CS158-AF Air Fryer Cooking][sensor.cs158_af_air_fryer_cooking_cooking_status]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'enum',
-      'friendly_name': 'CS158-AF Air Fryer Cooking Cook status',
+      'friendly_name': 'CS158-AF Air Fryer Cooking Cooking status',
       'options': list([
         'cooking_end',
         'cooking',
@@ -864,7 +864,7 @@
       ]),
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.cs158_af_air_fryer_cooking_cook_status',
+    'entity_id': 'sensor.cs158_af_air_fryer_cooking_cooking_status',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -887,15 +887,15 @@
     'state': '17',
   })
 # ---
-# name: test_sensor_state[CS158-AF Air Fryer Cooking][sensor.cs158_af_air_fryer_cooking_preheat_set_time]
+# name: test_sensor_state[CS158-AF Air Fryer Cooking][sensor.cs158_af_air_fryer_cooking_preheating_set_time]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'duration',
-      'friendly_name': 'CS158-AF Air Fryer Cooking Preheat set time',
+      'friendly_name': 'CS158-AF Air Fryer Cooking Preheating set time',
       'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.cs158_af_air_fryer_cooking_preheat_set_time',
+    'entity_id': 'sensor.cs158_af_air_fryer_cooking_preheating_set_time',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -986,7 +986,7 @@
       'disabled_by': None,
       'domain': 'sensor',
       'entity_category': None,
-      'entity_id': 'sensor.cs158_af_air_fryer_standby_cook_set_temperature',
+      'entity_id': 'sensor.cs158_af_air_fryer_standby_cooking_set_temperature',
       'has_entity_name': True,
       'hidden_by': None,
       'icon': None,
@@ -998,7 +998,7 @@
       }),
       'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
       'original_icon': None,
-      'original_name': 'Cook set temperature',
+      'original_name': 'Cooking set temperature',
       'platform': 'vesync',
       'previous_unique_id': None,
       'suggested_object_id': None,
@@ -1019,7 +1019,7 @@
       'disabled_by': None,
       'domain': 'sensor',
       'entity_category': None,
-      'entity_id': 'sensor.cs158_af_air_fryer_standby_cook_set_time',
+      'entity_id': 'sensor.cs158_af_air_fryer_standby_cooking_set_time',
       'has_entity_name': True,
       'hidden_by': None,
       'icon': None,
@@ -1034,7 +1034,7 @@
       }),
       'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
       'original_icon': None,
-      'original_name': 'Cook set time',
+      'original_name': 'Cooking set time',
       'platform': 'vesync',
       'previous_unique_id': None,
       'suggested_object_id': None,
@@ -1055,7 +1055,7 @@
       'disabled_by': None,
       'domain': 'sensor',
       'entity_category': None,
-      'entity_id': 'sensor.cs158_af_air_fryer_standby_preheat_set_time',
+      'entity_id': 'sensor.cs158_af_air_fryer_standby_preheating_set_time',
       'has_entity_name': True,
       'hidden_by': None,
       'icon': None,
@@ -1070,7 +1070,7 @@
       }),
       'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
       'original_icon': None,
-      'original_name': 'Preheat set time',
+      'original_name': 'Preheating set time',
       'platform': 'vesync',
       'previous_unique_id': None,
       'suggested_object_id': None,
@@ -1102,7 +1102,7 @@
       'disabled_by': None,
       'domain': 'sensor',
       'entity_category': None,
-      'entity_id': 'sensor.cs158_af_air_fryer_standby_cook_status',
+      'entity_id': 'sensor.cs158_af_air_fryer_standby_cooking_status',
       'has_entity_name': True,
       'hidden_by': None,
       'icon': None,
@@ -1114,7 +1114,7 @@
       }),
       'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
       'original_icon': None,
-      'original_name': 'Cook status',
+      'original_name': 'Cooking status',
       'platform': 'vesync',
       'previous_unique_id': None,
       'suggested_object_id': None,
@@ -1125,41 +1125,41 @@
     }),
   ])
 # ---
-# name: test_sensor_state[CS158-AF Air Fryer Standby][sensor.cs158_af_air_fryer_standby_cook_set_temperature]
+# name: test_sensor_state[CS158-AF Air Fryer Standby][sensor.cs158_af_air_fryer_standby_cooking_set_temperature]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
-      'friendly_name': 'CS158-AF Air Fryer Standby Cook set temperature',
+      'friendly_name': 'CS158-AF Air Fryer Standby Cooking set temperature',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.cs158_af_air_fryer_standby_cook_set_temperature',
+    'entity_id': 'sensor.cs158_af_air_fryer_standby_cooking_set_temperature',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
 # ---
-# name: test_sensor_state[CS158-AF Air Fryer Standby][sensor.cs158_af_air_fryer_standby_cook_set_time]
+# name: test_sensor_state[CS158-AF Air Fryer Standby][sensor.cs158_af_air_fryer_standby_cooking_set_time]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'duration',
-      'friendly_name': 'CS158-AF Air Fryer Standby Cook set time',
+      'friendly_name': 'CS158-AF Air Fryer Standby Cooking set time',
       'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.cs158_af_air_fryer_standby_cook_set_time',
+    'entity_id': 'sensor.cs158_af_air_fryer_standby_cooking_set_time',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
 # ---
-# name: test_sensor_state[CS158-AF Air Fryer Standby][sensor.cs158_af_air_fryer_standby_cook_status]
+# name: test_sensor_state[CS158-AF Air Fryer Standby][sensor.cs158_af_air_fryer_standby_cooking_status]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'enum',
-      'friendly_name': 'CS158-AF Air Fryer Standby Cook status',
+      'friendly_name': 'CS158-AF Air Fryer Standby Cooking status',
       'options': list([
         'cooking_end',
         'cooking',
@@ -1172,7 +1172,7 @@
       ]),
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.cs158_af_air_fryer_standby_cook_status',
+    'entity_id': 'sensor.cs158_af_air_fryer_standby_cooking_status',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -1194,15 +1194,15 @@
     'state': 'unknown',
   })
 # ---
-# name: test_sensor_state[CS158-AF Air Fryer Standby][sensor.cs158_af_air_fryer_standby_preheat_set_time]
+# name: test_sensor_state[CS158-AF Air Fryer Standby][sensor.cs158_af_air_fryer_standby_preheating_set_time]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'duration',
-      'friendly_name': 'CS158-AF Air Fryer Standby Preheat set time',
+      'friendly_name': 'CS158-AF Air Fryer Standby Preheating set time',
       'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.cs158_af_air_fryer_standby_preheat_set_time',
+    'entity_id': 'sensor.cs158_af_air_fryer_standby_preheating_set_time',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
