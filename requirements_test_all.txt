@@ -1071,10 +1071,10 @@ hole==0.9.0
 holidays==0.84
 
 # homeassistant.components.frontend
-home-assistant-frontend==20251229.0
+home-assistant-frontend==20251229.1
 
 # homeassistant.components.conversation
-home-assistant-intents==2026.1.1
+home-assistant-intents==2026.1.6
 
 # homeassistant.components.gentex_homelink
 homelink-integration-api==0.0.1
@@ -1598,7 +1598,7 @@ pyHomee==1.3.8
 pyRFXtrx==0.31.1
 
 # homeassistant.components.tibber
-pyTibber==0.34.0
+pyTibber==0.34.1
 
 # homeassistant.components.dlink
 pyW215==0.8.0
@@ -1653,7 +1653,7 @@ pyblu==2.0.5
 pybotvac==0.0.28
 
 # homeassistant.components.braviatv
-pybravia==0.3.4
+pybravia==0.4.1
 
 # homeassistant.components.cloudflare
 pycfdns==3.0.0
@@ -2423,7 +2423,7 @@ soco==0.30.14
 solaredge-web==0.0.1
 
 # homeassistant.components.solarlog
-solarlog_cli==0.6.1
+solarlog_cli==0.7.0
 
 # homeassistant.components.solax
 solax==3.2.3
@@ -2572,7 +2572,7 @@ typedmonarchmoney==0.4.4
 uasiren==0.0.1
 
 # homeassistant.components.unifiprotect
-uiprotect==7.33.3
+uiprotect==8.0.0
 
 # homeassistant.components.landisgyr_heat_meter
 ultraheat-api==0.5.7
@@ -2741,7 +2741,7 @@ zeroconf==0.148.0
 zeversolar==0.3.2
 
 # homeassistant.components.zha
-zha==0.0.82
+zha==0.0.83
 
 # homeassistant.components.zwave_js
 zwave-js-server-python==0.67.1
