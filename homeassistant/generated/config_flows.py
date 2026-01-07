@@ -282,6 +282,7 @@ FLOWS = {
         "here_travel_time",
         "hikvision",
         "hisense_aehw4a1",
+        "hisense_connectlife",
         "hive",
         "hko",
         "hlk_sw16",
