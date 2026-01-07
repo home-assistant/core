@@ -7,7 +7,6 @@ import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_NAME
-from homeassistant.data_entry_flow import AbortFlow
 from homeassistant.helpers.service_info import zeroconf
 
 from .const import CONF_ID, DOMAIN
@@ -68,13 +67,6 @@ class OpenEVSEConfigFlow(ConfigFlow, domain=DOMAIN):
             title=f"OpenEVSE {data[CONF_HOST]}",
             data=data,
         )
-
-    async def _async_try_connect_and_fetch(self, host: str) -> bool:
-        """Try to connect."""
-        check = await self.check_status(host)
-        if not check:
-            raise AbortFlow("cannot_connect")
-        return check
 
     async def async_step_zeroconf(
         self, discovery_info: zeroconf.ZeroconfServiceInfo
