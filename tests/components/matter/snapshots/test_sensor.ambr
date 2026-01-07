@@ -2534,6 +2534,57 @@
     'state': '21.18',
   })
 # ---
+# name: test_sensors[aqara_thermostat_w500][sensor.floor_heating_thermostat_thread_attach_attempts-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.floor_heating_thermostat_thread_attach_attempts',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Thread attach attempts',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'thread_attach_attempt_count',
+    'unique_id': '00000000000004D2-0000000000000064-MatterNodeDevice-0-ThreadNetworkDiagnosticsAttachAttemptCount-53-18',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[aqara_thermostat_w500][sensor.floor_heating_thermostat_thread_attach_attempts-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Floor Heating Thermostat Thread attach attempts',
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.floor_heating_thermostat_thread_attach_attempts',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '1',
+  })
+# ---
 # name: test_sensors[aqara_u200][sensor.aqara_smart_lock_u200_battery-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -3233,6 +3284,108 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '180.0',
+  })
+# ---
+# name: test_sensors[door_lock][sensor.mock_door_lock_thread_attach_attempts-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.mock_door_lock_thread_attach_attempts',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Thread attach attempts',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'thread_attach_attempt_count',
+    'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-0-ThreadNetworkDiagnosticsAttachAttemptCount-53-18',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[door_lock][sensor.mock_door_lock_thread_attach_attempts-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Mock Door Lock Thread attach attempts',
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.mock_door_lock_thread_attach_attempts',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0',
+  })
+# ---
+# name: test_sensors[door_lock_with_unbolt][sensor.mock_door_lock_with_unbolt_thread_attach_attempts-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.mock_door_lock_with_unbolt_thread_attach_attempts',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Thread attach attempts',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'thread_attach_attempt_count',
+    'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-0-ThreadNetworkDiagnosticsAttachAttemptCount-53-18',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[door_lock_with_unbolt][sensor.mock_door_lock_with_unbolt_thread_attach_attempts-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Mock Door Lock with unbolt Thread attach attempts',
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.mock_door_lock_with_unbolt_thread_attach_attempts',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0',
   })
 # ---
 # name: test_sensors[eberle_ute3000][sensor.connected_thermostat_ute_3000_heating_demand-entry]
@@ -4171,6 +4324,57 @@
     'state': '3.558',
   })
 # ---
+# name: test_sensors[eve_contact_sensor][sensor.eve_door_thread_attach_attempts-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.eve_door_thread_attach_attempts',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Thread attach attempts',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'thread_attach_attempt_count',
+    'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-0-ThreadNetworkDiagnosticsAttachAttemptCount-53-18',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[eve_contact_sensor][sensor.eve_door_thread_attach_attempts-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Eve Door Thread attach attempts',
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.eve_door_thread_attach_attempts',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '1',
+  })
+# ---
 # name: test_sensors[eve_energy_20ecn4101][sensor.eve_energy_20ecn4101_current_top-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -4337,6 +4541,57 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '13.3999996185303',
+  })
+# ---
+# name: test_sensors[eve_energy_20ecn4101][sensor.eve_energy_20ecn4101_thread_attach_attempts-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.eve_energy_20ecn4101_thread_attach_attempts',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Thread attach attempts',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'thread_attach_attempt_count',
+    'unique_id': '00000000000004D2-00000000000000C7-MatterNodeDevice-0-ThreadNetworkDiagnosticsAttachAttemptCount-53-18',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[eve_energy_20ecn4101][sensor.eve_energy_20ecn4101_thread_attach_attempts-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Eve Energy 20ECN4101 Thread attach attempts',
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.eve_energy_20ecn4101_thread_attach_attempts',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '4',
   })
 # ---
 # name: test_sensors[eve_energy_20ecn4101][sensor.eve_energy_20ecn4101_voltage_top-entry]
@@ -4561,6 +4816,57 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0.0',
+  })
+# ---
+# name: test_sensors[eve_energy_plug][sensor.eve_energy_plug_thread_attach_attempts-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.eve_energy_plug_thread_attach_attempts',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Thread attach attempts',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'thread_attach_attempt_count',
+    'unique_id': '00000000000004D2-0000000000000053-MatterNodeDevice-0-ThreadNetworkDiagnosticsAttachAttemptCount-53-18',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[eve_energy_plug][sensor.eve_energy_plug_thread_attach_attempts-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Eve Energy Plug Thread attach attempts',
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.eve_energy_plug_thread_attach_attempts',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0',
   })
 # ---
 # name: test_sensors[eve_energy_plug][sensor.eve_energy_plug_voltage-entry]
@@ -4796,6 +5102,57 @@
     'state': '550.0',
   })
 # ---
+# name: test_sensors[eve_energy_plug_patched][sensor.eve_energy_plug_patched_thread_attach_attempts-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.eve_energy_plug_patched_thread_attach_attempts',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Thread attach attempts',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'thread_attach_attempt_count',
+    'unique_id': '00000000000004D2-00000000000000B7-MatterNodeDevice-0-ThreadNetworkDiagnosticsAttachAttemptCount-53-18',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[eve_energy_plug_patched][sensor.eve_energy_plug_patched_thread_attach_attempts-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Eve Energy Plug Patched Thread attach attempts',
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.eve_energy_plug_patched_thread_attach_attempts',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0',
+  })
+# ---
 # name: test_sensors[eve_energy_plug_patched][sensor.eve_energy_plug_patched_voltage-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -4902,6 +5259,57 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '100',
+  })
+# ---
+# name: test_sensors[eve_shutter][sensor.eve_shutter_switch_20eci1701_thread_attach_attempts-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.eve_shutter_switch_20eci1701_thread_attach_attempts',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Thread attach attempts',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'thread_attach_attempt_count',
+    'unique_id': '00000000000004D2-0000000000000094-MatterNodeDevice-0-ThreadNetworkDiagnosticsAttachAttemptCount-53-18',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[eve_shutter][sensor.eve_shutter_switch_20eci1701_thread_attach_attempts-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Eve Shutter Switch 20ECI1701 Thread attach attempts',
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.eve_shutter_switch_20eci1701_thread_attach_attempts',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '1',
   })
 # ---
 # name: test_sensors[eve_thermo][sensor.eve_thermo_battery-entry]
@@ -5070,6 +5478,57 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '21.0',
+  })
+# ---
+# name: test_sensors[eve_thermo][sensor.eve_thermo_thread_attach_attempts-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.eve_thermo_thread_attach_attempts',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Thread attach attempts',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'thread_attach_attempt_count',
+    'unique_id': '00000000000004D2-0000000000000021-MatterNodeDevice-0-ThreadNetworkDiagnosticsAttachAttemptCount-53-18',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[eve_thermo][sensor.eve_thermo_thread_attach_attempts-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Eve Thermo Thread attach attempts',
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.eve_thermo_thread_attach_attempts',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '13',
   })
 # ---
 # name: test_sensors[eve_thermo][sensor.eve_thermo_valve_position-entry]
@@ -5398,6 +5857,57 @@
     'state': '16.03',
   })
 # ---
+# name: test_sensors[eve_weather_sensor][sensor.eve_weather_thread_attach_attempts-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.eve_weather_thread_attach_attempts',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Thread attach attempts',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'thread_attach_attempt_count',
+    'unique_id': '00000000000004D2-000000000000001D-MatterNodeDevice-0-ThreadNetworkDiagnosticsAttachAttemptCount-53-18',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[eve_weather_sensor][sensor.eve_weather_thread_attach_attempts-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Eve Weather Thread attach attempts',
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.eve_weather_thread_attach_attempts',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '334',
+  })
+# ---
 # name: test_sensors[eve_weather_sensor][sensor.eve_weather_weather_trend-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -5562,6 +6072,57 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '100',
+  })
+# ---
+# name: test_sensors[fan][sensor.mocked_fan_switch_thread_attach_attempts-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.mocked_fan_switch_thread_attach_attempts',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Thread attach attempts',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'thread_attach_attempt_count',
+    'unique_id': '00000000000004D2-000000000000001D-MatterNodeDevice-0-ThreadNetworkDiagnosticsAttachAttemptCount-53-18',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[fan][sensor.mocked_fan_switch_thread_attach_attempts-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Mocked Fan Switch Thread attach attempts',
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.mocked_fan_switch_thread_attach_attempts',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0',
   })
 # ---
 # name: test_sensors[flow_sensor][sensor.mock_flow_sensor_flow-entry]
@@ -6185,6 +6746,57 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0',
+  })
+# ---
+# name: test_sensors[haojai_switch][sensor.hjmt_6b_thread_attach_attempts-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.hjmt_6b_thread_attach_attempts',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Thread attach attempts',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'thread_attach_attempt_count',
+    'unique_id': '00000000000004D2-0000000000000003-MatterNodeDevice-0-ThreadNetworkDiagnosticsAttachAttemptCount-53-18',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[haojai_switch][sensor.hjmt_6b_thread_attach_attempts-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'HJMT-6B Thread attach attempts',
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.hjmt_6b_thread_attach_attempts',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '3643',
   })
 # ---
 # name: test_sensors[heiman_motion_sensor_m1][sensor.smart_motion_sensor_battery-entry]
@@ -7412,6 +8024,57 @@
     'state': '0',
   })
 # ---
+# name: test_sensors[ikea_scroll_wheel][sensor.bilresa_scroll_wheel_thread_attach_attempts-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.bilresa_scroll_wheel_thread_attach_attempts',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Thread attach attempts',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'thread_attach_attempt_count',
+    'unique_id': '00000000000004D2-0000000000000002-MatterNodeDevice-0-ThreadNetworkDiagnosticsAttachAttemptCount-53-18',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[ikea_scroll_wheel][sensor.bilresa_scroll_wheel_thread_attach_attempts-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'BILRESA scroll wheel Thread attach attempts',
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.bilresa_scroll_wheel_thread_attach_attempts',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '1',
+  })
+# ---
 # name: test_sensors[inovelli_vtm30][sensor.white_series_onoff_switch_active_current-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -7849,6 +8512,57 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '21.83',
+  })
+# ---
+# name: test_sensors[inovelli_vtm30][sensor.white_series_onoff_switch_thread_attach_attempts-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.white_series_onoff_switch_thread_attach_attempts',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Thread attach attempts',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'thread_attach_attempt_count',
+    'unique_id': '00000000000004D2-0000000000000100-MatterNodeDevice-0-ThreadNetworkDiagnosticsAttachAttemptCount-53-18',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[inovelli_vtm30][sensor.white_series_onoff_switch_thread_attach_attempts-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'White Series OnOff Switch Thread attach attempts',
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.white_series_onoff_switch_thread_attach_attempts',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '12',
   })
 # ---
 # name: test_sensors[inovelli_vtm30][sensor.white_series_onoff_switch_voltage-entry]
@@ -8534,6 +9248,57 @@
     'state': '5',
   })
 # ---
+# name: test_sensors[mock_lock][sensor.mock_lock_thread_attach_attempts-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.mock_lock_thread_attach_attempts',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Thread attach attempts',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'thread_attach_attempt_count',
+    'unique_id': '00000000000004D2-0000000000000097-MatterNodeDevice-0-ThreadNetworkDiagnosticsAttachAttemptCount-53-18',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[mock_lock][sensor.mock_lock_thread_attach_attempts-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Mock Lock Thread attach attempts',
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.mock_lock_thread_attach_attempts',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0',
+  })
+# ---
 # name: test_sensors[mock_thermostat][sensor.mock_thermostat_heating_demand-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -8695,6 +9460,57 @@
     'state': '18.0',
   })
 # ---
+# name: test_sensors[mock_thermostat][sensor.mock_thermostat_thread_attach_attempts-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.mock_thermostat_thread_attach_attempts',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Thread attach attempts',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'thread_attach_attempt_count',
+    'unique_id': '00000000000004D2-0000000000000096-MatterNodeDevice-0-ThreadNetworkDiagnosticsAttachAttemptCount-53-18',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[mock_thermostat][sensor.mock_thermostat_thread_attach_attempts-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Mock Thermostat Thread attach attempts',
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.mock_thermostat_thread_attach_attempts',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0',
+  })
+# ---
 # name: test_sensors[multi_endpoint_light][sensor.inovelli_current_switch_position_config-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -8846,6 +9662,57 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0',
+  })
+# ---
+# name: test_sensors[multi_endpoint_light][sensor.inovelli_thread_attach_attempts-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.inovelli_thread_attach_attempts',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Thread attach attempts',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'thread_attach_attempt_count',
+    'unique_id': '00000000000004D2-00000000000000C5-MatterNodeDevice-0-ThreadNetworkDiagnosticsAttachAttemptCount-53-18',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[multi_endpoint_light][sensor.inovelli_thread_attach_attempts-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Inovelli Thread attach attempts',
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.inovelli_thread_attach_attempts',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '36',
   })
 # ---
 # name: test_sensors[oven][sensor.mock_oven_current_phase-entry]
@@ -9474,6 +10341,57 @@
     'state': '0.0',
   })
 # ---
+# name: test_sensors[secuyou_smart_lock][sensor.secuyou_smart_lock_thread_attach_attempts-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.secuyou_smart_lock_thread_attach_attempts',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Thread attach attempts',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'thread_attach_attempt_count',
+    'unique_id': '00000000000004D2-0000000000000002-MatterNodeDevice-0-ThreadNetworkDiagnosticsAttachAttemptCount-53-18',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[secuyou_smart_lock][sensor.secuyou_smart_lock_thread_attach_attempts-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Secuyou Smart Lock Thread attach attempts',
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.secuyou_smart_lock_thread_attach_attempts',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '239',
+  })
+# ---
 # name: test_sensors[silabs_dishwasher][sensor.dishwasher_effective_current-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -9834,6 +10752,57 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0.0',
+  })
+# ---
+# name: test_sensors[silabs_dishwasher][sensor.dishwasher_thread_attach_attempts-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.dishwasher_thread_attach_attempts',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Thread attach attempts',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'thread_attach_attempt_count',
+    'unique_id': '00000000000004D2-0000000000000036-MatterNodeDevice-0-ThreadNetworkDiagnosticsAttachAttemptCount-53-18',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[silabs_dishwasher][sensor.dishwasher_thread_attach_attempts-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Dishwasher Thread attach attempts',
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.dishwasher_thread_attach_attempts',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0',
   })
 # ---
 # name: test_sensors[silabs_evse_charging][sensor.evse_appliance_energy_state-entry]
@@ -10757,6 +11726,57 @@
     'state': '0.0',
   })
 # ---
+# name: test_sensors[silabs_laundrywasher][sensor.laundrywasher_thread_attach_attempts-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.laundrywasher_thread_attach_attempts',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Thread attach attempts',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'thread_attach_attempt_count',
+    'unique_id': '00000000000004D2-000000000000001D-MatterNodeDevice-0-ThreadNetworkDiagnosticsAttachAttemptCount-53-18',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[silabs_laundrywasher][sensor.laundrywasher_thread_attach_attempts-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'LaundryWasher Thread attach attempts',
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.laundrywasher_thread_attach_attempts',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0',
+  })
+# ---
 # name: test_sensors[silabs_light_switch][sensor.light_switch_example_current_switch_position-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -10806,6 +11826,57 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0',
+  })
+# ---
+# name: test_sensors[silabs_light_switch][sensor.light_switch_example_thread_attach_attempts-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.light_switch_example_thread_attach_attempts',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Thread attach attempts',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'thread_attach_attempt_count',
+    'unique_id': '00000000000004D2-000000000000008E-MatterNodeDevice-0-ThreadNetworkDiagnosticsAttachAttemptCount-53-18',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[silabs_light_switch][sensor.light_switch_example_thread_attach_attempts-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Light switch example Thread attach attempts',
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.light_switch_example_thread_attach_attempts',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2',
   })
 # ---
 # name: test_sensors[silabs_water_heater][sensor.water_heater_active_current-entry]
