@@ -699,6 +699,32 @@ async def test_vacuum_operational_error_sensor(
     assert state.state == "unknown"
 
 
+@pytest.mark.parametrize("node_fixture", ["eve_thermo"])
+async def test_thread_attach_attempt_count_sensor(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+) -> None:
+    """Test Thread attach attempt count sensor on Eve Thermo fixture."""
+
+    entity_id = "sensor.eve_thermo_thread_attach_attempts"
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == "13"
+
+    set_node_attribute(matter_node, 0, 53, 18, 15)
+    await trigger_subscription_callback(hass, matter_client)
+
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == "15"
+
+    entry = entity_registry.async_get(entity_id)
+    assert entry
+    assert entry.entity_category == EntityCategory.DIAGNOSTIC
+
+
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
 @pytest.mark.parametrize("node_fixture", ["mock_lock"])
 async def test_optional_door_event_sensors_from_featuremap(
