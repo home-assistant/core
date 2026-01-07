@@ -4,8 +4,7 @@ from __future__ import annotations
 
 import logging
 
-import openevsewifi
-from requests import RequestException
+from openevsehttp.__main__ import OpenEVSE
 import voluptuous as vol
 
 from homeassistant.components.sensor import (
@@ -175,7 +174,7 @@ class OpenEVSESensor(SensorEntity):
     def __init__(
         self,
         host: str,
-        charger: openevsewifi.Charger,
+        charger: OpenEVSE,
         description: SensorEntityDescription,
     ) -> None:
         """Initialize the sensor."""
@@ -183,25 +182,28 @@ class OpenEVSESensor(SensorEntity):
         self.host = host
         self.charger = charger
 
-    def update(self) -> None:
+    async def async_update(self) -> None:
         """Get the monitored data from the charger."""
         try:
-            sensor_type = self.entity_description.key
-            if sensor_type == "status":
-                self._attr_native_value = self.charger.getStatus()
-            elif sensor_type == "charge_time":
-                self._attr_native_value = self.charger.getChargeTimeElapsed() / 60
-            elif sensor_type == "ambient_temp":
-                self._attr_native_value = self.charger.getAmbientTemperature()
-            elif sensor_type == "ir_temp":
-                self._attr_native_value = self.charger.getIRTemperature()
-            elif sensor_type == "rtc_temp":
-                self._attr_native_value = self.charger.getRTCTemperature()
-            elif sensor_type == "usage_session":
-                self._attr_native_value = float(self.charger.getUsageSession()) / 1000
-            elif sensor_type == "usage_total":
-                self._attr_native_value = float(self.charger.getUsageTotal()) / 1000
-            else:
-                self._attr_native_value = "Unknown"
-        except (RequestException, ValueError, KeyError):
+            await self.charger.update()
+        except TimeoutError:
             _LOGGER.warning("Could not update status for %s", self.name)
+            return
+
+        sensor_type = self.entity_description.key
+        if sensor_type == "status":
+            self._attr_native_value = self.charger.status
+        elif sensor_type == "charge_time":
+            self._attr_native_value = self.charger.charge_time_elapsed / 60
+        elif sensor_type == "ambient_temp":
+            self._attr_native_value = self.charger.ambient_temperature
+        elif sensor_type == "ir_temp":
+            self._attr_native_value = self.charger.ir_temperature
+        elif sensor_type == "rtc_temp":
+            self._attr_native_value = self.charger.rtc_temperature
+        elif sensor_type == "usage_session":
+            self._attr_native_value = float(self.charger.usage_session) / 1000
+        elif sensor_type == "usage_total":
+            self._attr_native_value = float(self.charger.usage_total) / 1000
+        else:
+            self._attr_native_value = "Unknown"

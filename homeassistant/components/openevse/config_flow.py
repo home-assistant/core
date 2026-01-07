@@ -2,13 +2,14 @@
 
 from typing import Any
 
-import openevsewifi
+from openevsehttp.__main__ import OpenEVSE
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
-from homeassistant.const import CONF_HOST
+from homeassistant.const import CONF_HOST, CONF_NAME
+from homeassistant.helpers.service_info import zeroconf
 
-from .const import DOMAIN
+from .const import CONF_ID, DOMAIN
 
 
 class OpenEVSEConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -17,16 +18,20 @@ class OpenEVSEConfigFlow(ConfigFlow, domain=DOMAIN):
     VERSION = 1
     MINOR_VERSION = 1
 
+    def __init__(self) -> None:
+        """Set up the instance."""
+        self.discovery_info: dict[str, Any] = {}
+
     async def check_status(self, host: str) -> bool:
         """Check if we can connect to the OpenEVSE charger."""
 
-        charger = openevsewifi.Charger(host)
+        charger = OpenEVSE(host)
         try:
-            result = await self.hass.async_add_executor_job(charger.getStatus)
-        except AttributeError:
+            await charger.test_and_get()
+        except TimeoutError:
             return False
         else:
-            return result is not None
+            return True
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -61,4 +66,43 @@ class OpenEVSEConfigFlow(ConfigFlow, domain=DOMAIN):
         return self.async_create_entry(
             title=f"OpenEVSE {data[CONF_HOST]}",
             data=data,
+        )
+
+    async def async_step_zeroconf(
+        self, discovery_info: zeroconf.ZeroconfServiceInfo
+    ) -> ConfigFlowResult:
+        """Handle zeroconf discovery."""
+        self._async_abort_entries_match({CONF_HOST: discovery_info.host})
+
+        await self.async_set_unique_id(discovery_info.properties[CONF_ID])
+        self._abort_if_unique_id_configured(updates={CONF_HOST: discovery_info.host})
+
+        host = discovery_info.host
+        name = f"OpenEVSE {discovery_info.name.split('.')[0]}"
+        self.discovery_info.update(
+            {
+                CONF_HOST: host,
+                CONF_NAME: name,
+            }
+        )
+        self.context.update({"title_placeholders": {"name": name}})
+
+        if not await self.check_status(host):
+            return self.async_abort(reason="cannot_connect")
+
+        return await self.async_step_discovery_confirm()
+
+    async def async_step_discovery_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Confirm discovery."""
+        if user_input is None:
+            return self.async_show_form(
+                step_id="discovery_confirm",
+                description_placeholders={"name": self.discovery_info[CONF_NAME]},
+            )
+
+        return self.async_create_entry(
+            title=self.discovery_info[CONF_NAME],
+            data={CONF_HOST: self.discovery_info[CONF_HOST]},
         )
