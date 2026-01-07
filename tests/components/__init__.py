@@ -3,13 +3,15 @@
 from collections.abc import Iterable
 from enum import StrEnum
 import itertools
-from typing import TypedDict
+from typing import Any, TypedDict
 
 from homeassistant.const import (
     ATTR_AREA_ID,
     ATTR_DEVICE_ID,
     ATTR_FLOOR_ID,
     ATTR_LABEL_ID,
+    CONF_ABOVE,
+    CONF_BELOW,
     CONF_ENTITY_ID,
     CONF_OPTIONS,
     CONF_PLATFORM,
@@ -24,6 +26,12 @@ from homeassistant.helpers import (
     entity_registry as er,
     floor_registry as fr,
     label_registry as lr,
+)
+from homeassistant.helpers.trigger import (
+    CONF_LOWER_LIMIT,
+    CONF_THRESHOLD_TYPE,
+    CONF_UPPER_LIMIT,
+    ThresholdType,
 )
 from homeassistant.setup import async_setup_component
 
@@ -167,12 +175,13 @@ class StateDescription(TypedDict):
 def parametrize_trigger_states(
     *,
     trigger: str,
+    trigger_options: dict[str, Any] | None = None,
     target_states: list[str | None | tuple[str | None, dict]],
     other_states: list[str | None | tuple[str | None, dict]],
     additional_attributes: dict | None = None,
     trigger_from_none: bool = True,
     retrigger_on_target_state: bool = False,
-) -> list[tuple[str, list[StateDescription]]]:
+) -> list[tuple[str, dict[str, Any], list[StateDescription]]]:
     """Parametrize states and expected service call counts.
 
     The target_states and other_states iterables are either iterables of
@@ -189,6 +198,7 @@ def parametrize_trigger_states(
     """
 
     additional_attributes = additional_attributes or {}
+    trigger_options = trigger_options or {}
 
     def state_with_attributes(
         state: str | None | tuple[str | None, dict], count: int
@@ -222,6 +232,7 @@ def parametrize_trigger_states(
         # Initial state None
         (
             trigger,
+            trigger_options,
             list(
                 itertools.chain.from_iterable(
                     (
@@ -240,6 +251,7 @@ def parametrize_trigger_states(
         # Initial state different from target state
         (
             trigger,
+            trigger_options,
             # other_state,
             list(
                 itertools.chain.from_iterable(
@@ -257,6 +269,7 @@ def parametrize_trigger_states(
         # Initial state same as target state
         (
             trigger,
+            trigger_options,
             list(
                 itertools.chain.from_iterable(
                     (
@@ -276,6 +289,7 @@ def parametrize_trigger_states(
         # Initial state unavailable / unknown
         (
             trigger,
+            trigger_options,
             list(
                 itertools.chain.from_iterable(
                     (
@@ -291,6 +305,7 @@ def parametrize_trigger_states(
         ),
         (
             trigger,
+            trigger_options,
             list(
                 itertools.chain.from_iterable(
                     (
@@ -311,6 +326,7 @@ def parametrize_trigger_states(
         tests.append(
             (
                 trigger,
+                trigger_options,
                 list(
                     itertools.chain.from_iterable(
                         (
@@ -335,10 +351,127 @@ def parametrize_trigger_states(
     return tests
 
 
+def parametrize_numerical_attribute_changed_trigger_states(
+    trigger: str, state: str, attribute: str
+) -> list[tuple[str, dict[str, Any], list[StateDescription]]]:
+    """Parametrize states and expected service call counts for numerical changed triggers."""
+    return [
+        *parametrize_trigger_states(
+            trigger=trigger,
+            trigger_options={},
+            target_states=[
+                (state, {attribute: 0}),
+                (state, {attribute: 50}),
+                (state, {attribute: 100}),
+            ],
+            other_states=[(state, {attribute: None})],
+            retrigger_on_target_state=True,
+        ),
+        *parametrize_trigger_states(
+            trigger=trigger,
+            trigger_options={CONF_ABOVE: 10},
+            target_states=[
+                (state, {attribute: 50}),
+                (state, {attribute: 100}),
+            ],
+            other_states=[
+                (state, {attribute: None}),
+                (state, {attribute: 0}),
+            ],
+            retrigger_on_target_state=True,
+        ),
+        *parametrize_trigger_states(
+            trigger=trigger,
+            trigger_options={CONF_BELOW: 90},
+            target_states=[
+                (state, {attribute: 0}),
+                (state, {attribute: 50}),
+            ],
+            other_states=[
+                (state, {attribute: None}),
+                (state, {attribute: 100}),
+            ],
+            retrigger_on_target_state=True,
+        ),
+    ]
+
+
+def parametrize_numerical_attribute_crossed_threshold_trigger_states(
+    trigger: str, state: str, attribute: str
+) -> list[tuple[str, dict[str, Any], list[StateDescription]]]:
+    """Parametrize states and expected service call counts for numerical crossed threshold triggers."""
+    return [
+        *parametrize_trigger_states(
+            trigger=trigger,
+            trigger_options={
+                CONF_THRESHOLD_TYPE: ThresholdType.BETWEEN,
+                CONF_LOWER_LIMIT: 10,
+                CONF_UPPER_LIMIT: 90,
+            },
+            target_states=[
+                (state, {attribute: 50}),
+                (state, {attribute: 60}),
+            ],
+            other_states=[
+                (state, {attribute: None}),
+                (state, {attribute: 0}),
+                (state, {attribute: 100}),
+            ],
+        ),
+        *parametrize_trigger_states(
+            trigger=trigger,
+            trigger_options={
+                CONF_THRESHOLD_TYPE: ThresholdType.OUTSIDE,
+                CONF_LOWER_LIMIT: 10,
+                CONF_UPPER_LIMIT: 90,
+            },
+            target_states=[
+                (state, {attribute: 0}),
+                (state, {attribute: 100}),
+            ],
+            other_states=[
+                (state, {attribute: None}),
+                (state, {attribute: 50}),
+                (state, {attribute: 60}),
+            ],
+        ),
+        *parametrize_trigger_states(
+            trigger=trigger,
+            trigger_options={
+                CONF_THRESHOLD_TYPE: ThresholdType.ABOVE,
+                CONF_LOWER_LIMIT: 10,
+            },
+            target_states=[
+                (state, {attribute: 50}),
+                (state, {attribute: 100}),
+            ],
+            other_states=[
+                (state, {attribute: None}),
+                (state, {attribute: 0}),
+            ],
+        ),
+        *parametrize_trigger_states(
+            trigger=trigger,
+            trigger_options={
+                CONF_THRESHOLD_TYPE: ThresholdType.BELOW,
+                CONF_UPPER_LIMIT: 90,
+            },
+            target_states=[
+                (state, {attribute: 0}),
+                (state, {attribute: 50}),
+            ],
+            other_states=[
+                (state, {attribute: None}),
+                (state, {attribute: 100}),
+            ],
+        ),
+    ]
+
+
 async def arm_trigger(
     hass: HomeAssistant,
     trigger: str,
-    trigger_options: dict | None,
+    trigger_options: dict[str, Any] | None,
     trigger_target: dict,
 ) -> None:
     """Arm the specified trigger, call service test.automation when it triggers."""
