@@ -5,6 +5,11 @@ from functools import wraps
 from typing import Any, Concatenate
 
 from aioamazondevices.const.devices import SPEAKER_GROUP_FAMILY
+from aioamazondevices.const.schedules import (
+    NOTIFICATION_ALARM,
+    NOTIFICATION_REMINDER,
+    NOTIFICATION_TIMER,
+)
 from aioamazondevices.exceptions import CannotConnect, CannotRetrieveData
 
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
@@ -92,7 +97,11 @@ async def async_remove_unsupported_notification_sensors(
     entity_registry = er.async_get(hass)
 
     for serial_num in coordinator.data:
-        for notification_key in ("Alarm", "Reminder", "Timer"):
+        for notification_key in (
+            NOTIFICATION_ALARM,
+            NOTIFICATION_REMINDER,
+            NOTIFICATION_TIMER,
+        ):
             unique_id = f"{serial_num}-{notification_key}"
             entity_id = entity_registry.async_get_entity_id(
                 DOMAIN, SENSOR_DOMAIN, unique_id
