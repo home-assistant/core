@@ -34,6 +34,11 @@ def mock_charger() -> Generator[MagicMock]:
         charger.usage_session = 15000  # 15 kWh in Wh
         charger.usage_total = 500000  # 500 kWh in Wh
         charger.charging_current = 32.0
+        charger.test_and_get = AsyncMock()
+        charger.test_and_get.return_value = {
+            "serial": "deadbeeffeed",
+            "model": "openevse_wifi_v1",
+        }
         yield charger
 
 
@@ -47,8 +52,25 @@ def mock_setup_entry() -> Generator[AsyncMock]:
 
 
 @pytest.fixture
-def mock_config_entry() -> MockConfigEntry:
+def has_serial_number() -> bool:
+    """Return a serial number."""
+    return True
+
+
+@pytest.fixture
+def serial_number(has_serial_number: bool) -> str | None:
+    """Return a serial number."""
+    if has_serial_number:
+        return "deadbeeffeed"
+    return None
+
+
+@pytest.fixture
+def mock_config_entry(serial_number: str) -> MockConfigEntry:
     """Create a mock config entry."""
     return MockConfigEntry(
-        domain=DOMAIN, data={CONF_HOST: "192.168.1.100"}, entry_id="FAKE"
+        domain=DOMAIN,
+        data={CONF_HOST: "192.168.1.100"},
+        entry_id="FAKE",
+        unique_id=serial_number,
     )
