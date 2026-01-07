@@ -82,12 +82,10 @@ class OpenEVSEConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle zeroconf discovery."""
         self._async_abort_entries_match({CONF_HOST: discovery_info.host})
 
-        # Validate discovery entry
-        if CONF_ID not in discovery_info.properties:
-            return self.async_abort(reason="invalid_discovery_parameters")
+        await self.async_set_unique_id(discovery_info.properties[CONF_ID])
+        self._abort_if_unique_id_configured(updates={CONF_HOST: discovery_info.host})
 
         host = discovery_info.host
-        serial = discovery_info.properties[CONF_ID]
         name = f"OpenEVSE {discovery_info.name.split('.')[0]}"
         self.discovery_info.update(
             {
@@ -96,17 +94,9 @@ class OpenEVSEConfigFlow(ConfigFlow, domain=DOMAIN):
             }
         )
         self.context.update({"title_placeholders": {"name": name}})
-        await self._async_try_connect_and_fetch(host)
 
-        unique_id = f"{serial}"
-
-        await self.async_set_unique_id(unique_id)
-        self._abort_if_unique_id_configured(
-            updates={
-                CONF_HOST: host,
-                CONF_NAME: name,
-            },
-        )
+        if not await self.check_status(host):
+            return self.async_abort(reason="cannot_connect")
 
         return await self.async_step_discovery_confirm()
 
@@ -118,10 +108,9 @@ class OpenEVSEConfigFlow(ConfigFlow, domain=DOMAIN):
             return self.async_show_form(
                 step_id="discovery_confirm",
                 description_placeholders={"name": self.discovery_info[CONF_NAME]},
-                errors={},
             )
 
         return self.async_create_entry(
             title=self.discovery_info[CONF_NAME],
-            data=self.discovery_info,
+            data={CONF_HOST: self.discovery_info[CONF_HOST]},
         )
