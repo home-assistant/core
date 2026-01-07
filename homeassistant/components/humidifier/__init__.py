@@ -177,8 +177,8 @@ class HumidifierEntity(ToggleEntity, cached_properties=CACHED_PROPERTIES_WITH_AT
             ATTR_MIN_HUMIDITY: self.min_humidity,
             ATTR_MAX_HUMIDITY: self.max_humidity,
         }
-        if target_humidity_step := self.target_humidity_step:
-            data[ATTR_TARGET_HUMIDITY_STEP] = target_humidity_step
+        if self.target_humidity_step is not None:
+            data[ATTR_TARGET_HUMIDITY_STEP] = self.target_humidity_step
 
         if HumidifierEntityFeature.MODES in self.supported_features:
             data[ATTR_AVAILABLE_MODES] = self.available_modes
