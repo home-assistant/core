@@ -699,6 +699,7 @@ async def test_vacuum_operational_error_sensor(
     assert state.state == "unknown"
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 @pytest.mark.parametrize("node_fixture", ["eve_thermo"])
 async def test_thread_attach_attempt_count_sensor(
     hass: HomeAssistant,
@@ -725,6 +726,7 @@ async def test_thread_attach_attempt_count_sensor(
     assert entry.entity_category == EntityCategory.DIAGNOSTIC
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 @pytest.mark.parametrize("node_fixture", ["eve_thermo"])
 async def test_thread_partition_id_change_count_sensor(
     hass: HomeAssistant,
@@ -754,6 +756,7 @@ async def test_thread_partition_id_change_count_sensor(
     assert entry.entity_category == EntityCategory.DIAGNOSTIC
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 @pytest.mark.parametrize("node_fixture", ["eve_thermo"])
 async def test_thread_partition_id_sensor(
     hass: HomeAssistant,
