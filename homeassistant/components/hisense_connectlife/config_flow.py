@@ -7,9 +7,8 @@ from typing import Any
 
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigEntry, OptionsFlow, OptionsFlowResult
+from homeassistant.config_entries import ConfigEntry, ConfigFlowResult, OptionsFlow
 from homeassistant.core import callback
-from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import config_entry_oauth2_flow
 
 from .const import CLIENT_ID, DOMAIN
@@ -23,7 +22,7 @@ class HisenseOptionsFlowHandler(OptionsFlow):
 
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
-    ) -> OptionsFlowResult:
+    ) -> ConfigFlowResult:
         """Manage options."""
         errors = {}
         description_placeholders = {"message": ""}  # Initialize with empty message
@@ -134,9 +133,9 @@ class OAuth2FlowHandler(
         """Extra data that needs to be appended to the authorize url."""
         return {}
 
-    async def async_step_user(
+    async def async_step_user(  # type: ignore[override]
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle a flow start."""
         _LOGGER.debug("Starting user step with input: %s", user_input)
 
@@ -175,14 +174,16 @@ class OAuth2FlowHandler(
             _LOGGER.error("Failed to generate authorize URL: %s", err)
             return self.async_abort(reason="authorize_url_fail")
 
-    async def async_step_creation(
+    async def async_step_creation(  # type: ignore[override]
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle creation step."""
         _LOGGER.debug("Starting creation step with user_input: %s", user_input)
         return await super().async_step_creation(user_input)
 
-    async def async_oauth_create_entry(self, data: dict) -> FlowResult:
+    async def async_oauth_create_entry(  # type: ignore[override]
+        self, data: dict
+    ) -> ConfigFlowResult:
         """Create an entry for the flow."""
         _LOGGER.debug(
             "Creating entry with data: %s",
