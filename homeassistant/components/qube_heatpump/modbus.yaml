@@ -1,0 +1,780 @@
+# Based on Modbus documentation from HR-Energy:
+# https://www.hr-energy.com/media/m4gavc0p/202506_modbus-lijst-qube.pdf
+- name: "Qube Heatpump"
+  type: tcp
+  host: qube.local
+  port: 502
+
+  binary_sensors:
+    - name: "Voeding Bron pomp"
+      address: 0
+      input_type: discrete_input
+      scan_interval: 10
+      unique_id: Dout_SrcPmp_Val
+
+    - name: "Voeding User pomp"
+      address: 1
+      input_type: discrete_input
+      scan_interval: 10
+      unique_id: Dout_UsrPmp_Val
+
+    - name: "Sturing Vierwegafsluiter"
+      address: 2
+      input_type: discrete_input
+      scan_interval: 10
+      unique_id: Dout_FourWayVlv_Val
+
+    - name: "Uitgang Koeling Actief"
+      address: 3
+      input_type: discrete_input
+      scan_interval: 10
+      unique_id: Dout_Cooling_Val
+
+    - name: "Uitgang driewegafsluiter CV-Tapwater"
+      address: 4
+      input_type: discrete_input
+      scan_interval: 10
+      unique_id: Dout_ThreeWayVlv_Val
+
+    - name: "Uitgang Bufferpomp"
+      address: 5
+      input_type: discrete_input
+      scan_interval: 10
+      unique_id: Dout_BufferPmp_Val
+
+    - name: "Uitgang Heater 1"
+      address: 6
+      input_type: discrete_input
+      scan_interval: 10
+      unique_id: Dout_HeaterStep1_Val
+
+    - name: "Uitgang Heater 2"
+      address: 7
+      input_type: discrete_input
+      scan_interval: 10
+      unique_id: Dout_HeaterStep2_Val
+
+    - name: "Uitgang Heater 3"
+      address: 8
+      input_type: discrete_input
+      scan_interval: 10
+      unique_id: Dout_HeaterStep3_Val
+
+    - name: "Status warmtepomp bediening"
+      address: 9
+      input_type: discrete_input
+      scan_interval: 10
+      unique_id: KeybOnOff
+
+    - name: "Alarm Max Tijd Legionella overschreden"
+      address: 10
+      input_type: discrete_input
+      scan_interval: 10
+      unique_id: Al_MaxTime_ANTILEG_Active
+
+    - name: "Alarm Max Tijd Tapwater overschreden"
+      address: 11
+      input_type: discrete_input
+      scan_interval: 10
+      unique_id: Al_MaxTime_DHW_Active
+
+    - name: "Alarm dauwpunt (ingang) geactiveerd"
+      address: 12
+      input_type: discrete_input
+      scan_interval: 10
+      unique_id: Al_Dewpoint.Active
+
+    - name: "Alarm aanvoer hoge temperatuur CV"
+      address: 13
+      input_type: discrete_input
+      scan_interval: 10
+      unique_id: Al_UnderfloorSafety_Active
+
+    - name: "Alarm Flow CV"
+      address: 15
+      input_type: discrete_input
+      scan_interval: 10
+      unique_id: Alrm_Flw
+
+    - name: "Alarm verzamelalarm CV"
+      address: 16
+      input_type: discrete_input
+      scan_interval: 10
+      unique_id: UsrAlrms
+
+    - name: "Alarm verzamelalarm koelbedrijf"
+      address: 17
+      input_type: discrete_input
+      scan_interval: 10
+      unique_id: CoolingAlrms
+
+    - name: "Alarm verzamelalarm CV-bedrijf"
+      address: 18
+      input_type: discrete_input
+      scan_interval: 10
+      unique_id: HeatingAlrms
+
+    - name: "Alarm Bedrijfsuren"
+      address: 19
+      input_type: discrete_input
+      scan_interval: 10
+      unique_id: AlarmMng_Al_WorkingHour
+
+    - name: "Alarm Verzamelalarm Bron"
+      address: 20
+      input_type: discrete_input
+      scan_interval: 10
+      unique_id: SrsAlrm
+
+    - name: "Globaal Alarm"
+      address: 21
+      input_type: discrete_input
+      scan_interval: 10
+      unique_id: GlbAl
+
+    - name: "Alarm verzamelalarm compressor"
+      address: 22
+      input_type: discrete_input
+      scan_interval: 10
+      unique_id: AlarmMng_Al_PwrPlus
+
+    - name: "Ruimteopnemer geactiveerd"
+      address: 23
+      input_type: discrete_input
+      scan_interval: 10
+      unique_id: RoomPrb_En
+
+    - name: "Vraag Plant sensor"
+      address: 25
+      input_type: discrete_input
+      scan_interval: 10
+      unique_id: PlantDemand
+
+    - name: "Tapwater regelaar vrijgegeven"
+      address: 26
+      input_type: discrete_input
+      scan_interval: 10
+      unique_id: En_DHWPID
+
+    - name: "Plantopnemer is geactiveerd"
+      address: 27
+      input_type: discrete_input
+      scan_interval: 10
+      unique_id: PlantPrb_En
+
+    - name: "Bufferopnemer is geactiveerd"
+      address: 28
+      input_type: discrete_input
+      scan_interval: 10
+      unique_id: BufferPrb_En
+
+    - name: "Vraag op digitale ingang"
+      address: 29
+      input_type: discrete_input
+      scan_interval: 10
+      unique_id: ID_Demand
+
+    - name: "Digitale ingang zomerbedrijf geactiveerd"
+      address: 30
+      input_type: discrete_input
+      scan_interval: 10
+      unique_id: ID_SummerWinter
+
+    - name: "Digitale ingang dauwpunt geactiveerd"
+      address: 31
+      input_type: discrete_input
+      scan_interval: 10
+      unique_id: Dewpoint
+
+    - name: "Digitale ingang booster geactiveerd"
+      address: 32
+      input_type: discrete_input
+      scan_interval: 10
+      unique_id: BoosterSecurity
+
+    - name: "Digitale ingang flow bronzijde geactiveerd"
+      address: 34
+      input_type: discrete_input
+      scan_interval: 10
+      unique_id: SrcFlw
+
+    - name: "Status dag/nacht modus"
+      address: 37
+      input_type: discrete_input
+      scan_interval: 10
+      unique_id: DayNightMode
+
+    - name: "Vraag van thermostaat intern"
+      address: 38
+      input_type: discrete_input
+      scan_interval: 10
+      unique_id: ThermostatDemand
+
+    - name: "Antilegionella is vrijgegeven"
+      address: 39
+      input_type: discrete_input
+      scan_interval: 10
+      unique_id: Req_ANTILEG_1
+
+    - name: "Warmtevraag actief"
+      address: 19
+      input_type: coil
+      scan_interval: 10
+      unique_id: BMS_Demand
+
+    - name: "Surplus PV actief" # Verhoogt ruimte setpoint Linq met 1K
+      address: 64
+      input_type: coil
+      scan_interval: 10
+      unique_id: Surplus_PV
+
+  sensors:
+    - name: "Setpoint ruimte CV dag"
+      address: 27
+      input_type: holding
+      data_type: float32
+      scan_interval: 10
+      precision: 1
+      device_class: temperature
+      unit_of_measurement: "°C"
+      state_class: measurement
+      unique_id: Thermostat_HeatSetP_Day
+
+    - name: "Setpoint ruimte CV nacht"
+      address: 29
+      input_type: holding
+      data_type: float32
+      scan_interval: 10
+      precision: 1
+      device_class: temperature
+      unit_of_measurement: "°C"
+      state_class: measurement
+      unique_id: Thermostat_HeatSetP_Night
+
+    - name: "Setpoint ruimte Koel dag"
+      address: 31
+      input_type: holding
+      data_type: float32
+      scan_interval: 10
+      precision: 1
+      device_class: temperature
+      unit_of_measurement: "°C"
+      state_class: measurement
+      unique_id: Thermostat_CoolSetP_Day
+
+    - name: "Setpoint ruimte Koel nacht"
+      address: 33
+      input_type: holding
+      data_type: float32
+      scan_interval: 10
+      precision: 1
+      device_class: temperature
+      unit_of_measurement: "°C"
+      state_class: measurement
+      unique_id: Thermostat_CoolSetP_Night
+
+    - name: "dT aanvoertemperatuur tapwater"
+      address: 43
+      input_type: holding
+      data_type: int16
+      scan_interval: 10
+      precision: 1
+      device_class: temperature
+      unit_of_measurement: "°C"
+      state_class: measurement
+      unique_id: TapW_TimeProgram_DT_BMS
+
+    - name: "Minimumtemperatuur tapwater"
+      address: 44
+      input_type: holding
+      data_type: float32
+      scan_interval: 10
+      precision: 1
+      device_class: temperature
+      unit_of_measurement: "°C"
+      state_class: measurement
+      unique_id: TapW_TimeProgram_DHWS
+
+    - name: "Temperatuur tapwater bij actief tijdprogramma"
+      address: 46
+      input_type: holding
+      data_type: float32
+      scan_interval: 10
+      precision: 1
+      device_class: temperature
+      unit_of_measurement: "°C"
+      state_class: measurement
+      unique_id: TapW_TimeProgram_DHWS_prog
+
+    - name: "Minimum setpoint bufferregeling"
+      address: 99
+      input_type: holding
+      data_type: float32
+      scan_interval: 10
+      precision: 1
+      device_class: temperature
+      unit_of_measurement: "°C"
+      state_class: measurement
+      unique_id: Regulation_BufferSetP_Min
+
+    - name: "Heat setpoint (zonder stooklijn)"
+      address: 101
+      input_type: holding
+      data_type: float32
+      scan_interval: 10
+      precision: 1
+      device_class: temperature
+      unit_of_measurement: "°C"
+      state_class: measurement
+      unique_id: Usr_PID_HeatSetp
+
+    - name: "Koel setpoint (zonder stooklijn)"
+      address: 103
+      input_type: holding
+      data_type: float32
+      scan_interval: 10
+      precision: 1
+      device_class: temperature
+      unit_of_measurement: "°C"
+      state_class: measurement
+      unique_id: Usr_PID_CoolSetp
+
+    - name: "Maximaalwaarde buffer setpoint (koelbedrijf)"
+      address: 169
+      input_type: holding
+      data_type: float32
+      scan_interval: 10
+      precision: 1
+      device_class: temperature
+      unit_of_measurement: "°C"
+      state_class: measurement
+      unique_id: Regulation_BufferSetP_Max
+
+    - name: "User-defined setpoint tapwater" # Set DHW setpoint via Modbus
+      address: 173
+      write_type: holding
+      data_type: float32
+      scan_interval: 10
+      precision: 1
+      device_class: temperature
+      unit_of_measurement: "°C"
+      state_class: measurement
+      unique_id: TapW_TimeProgram_DHWSetP_NoLinQ
+
+    - name: "Percentage sturing User (CV) pomp"
+      address: 4
+      input_type: input
+      data_type: float32
+      offset: 100
+      scale: -1
+      precision: 0
+      scan_interval: 10
+      unit_of_measurement: "%"
+      state_class: measurement
+      unique_id: Aout_UsrPmp_Val
+
+    - name: "Percentage sturing bron pomp"
+      address: 6
+      input_type: input
+      data_type: float32
+      offset: 100
+      scale: -1
+      precision: 0
+      scan_interval: 10
+      unit_of_measurement: "%"
+      state_class: measurement
+      unique_id: Aout_SrcPmp_Val
+
+    - name: "Percentage sturing bron afsluiter"
+      address: 8
+      input_type: input
+      data_type: float32
+      precision: 0
+      scan_interval: 10
+      unit_of_measurement: "%"
+      state_class: measurement
+      unique_id: Aout_SrcValve_Val
+
+    - name: "Stuurvraag regeling tapwater"
+      address: 14
+      input_type: input
+      data_type: float32
+      unit_of_measurement: "%"
+      precision: 0
+      scan_interval: 10
+      unique_id: DHW_RegReq
+
+    - name: "Stuurvraag compressor"
+      address: 16
+      input_type: input
+      data_type: float32
+      unit_of_measurement: "%"
+      precision: 0
+      scan_interval: 10
+      unique_id: CompPwrReq
+
+    - name: "Gemeten Flow"
+      address: 18
+      input_type: input
+      data_type: float32
+      scan_interval: 10
+      precision: 0
+      min_value: 0
+      device_class: volume_flow_rate
+      unit_of_measurement: "L/min"
+      unique_id: Flow
+
+    - name: "Aanvoertemperatuur CV"
+      address: 20
+      input_type: input
+      data_type: float32
+      scan_interval: 10
+      precision: 1
+      device_class: temperature
+      unit_of_measurement: "°C"
+      state_class: measurement
+      unique_id: SupplyTemp
+
+    - name: "Retourtemperatuur CV"
+      address: 22
+      input_type: input
+      data_type: float32
+      scan_interval: 10
+      precision: 1
+      device_class: temperature
+      unit_of_measurement: "°C"
+      state_class: measurement
+      unique_id: RetTemp
+
+    - name: "Temperatuur bron vanaf dak"
+      address: 24
+      input_type: input
+      data_type: float32
+      scan_interval: 10
+      precision: 1
+      device_class: temperature
+      unit_of_measurement: "°C"
+      state_class: measurement
+      unique_id: SrcInTemp
+
+    - name: "Temperatuur bron naar dak"
+      address: 26
+      input_type: input
+      data_type: float32
+      scan_interval: 10
+      precision: 1
+      device_class: temperature
+      unit_of_measurement: "°C"
+      state_class: measurement
+      unique_id: SrcOutTemp
+
+    - name: "Ruimtetemperatuur"
+      address: 28
+      input_type: input
+      data_type: float32
+      scan_interval: 10
+      precision: 1
+      device_class: temperature
+      unit_of_measurement: "°C"
+      state_class: measurement
+      unique_id: RoomTemp
+
+    - name: "Tapwatertemperatuur"
+      address: 30
+      input_type: input
+      data_type: float32
+      scan_interval: 10
+      precision: 1
+      device_class: temperature
+      unit_of_measurement: "°C"
+      state_class: measurement
+      unique_id: DHW_Temp
+
+    - name: "Buitentemperatuur"
+      address: 32
+      input_type: input
+      data_type: float32
+      scan_interval: 10
+      precision: 1
+      device_class: temperature
+      unit_of_measurement: "°C"
+      state_class: measurement
+      unique_id: OutTemp
+
+    - name: "COP (berekend)"
+      address: 34
+      input_type: input
+      data_type: float32
+      scan_interval: 10
+      precision: 1
+      state_class: measurement
+      unique_id: GeneralMng_COP
+
+    - name: "Actueel Vermogen"
+      address: 36
+      input_type: input
+      data_type: float32
+      scan_interval: 10
+      precision: 0
+      device_class: power
+      unit_of_measurement: "W"
+      state_class: measurement
+      unique_id: GeneralMng_Thermic_Pwr
+
+    - name: "Status code"
+      state_class: measurement
+      scan_interval: 60
+      device_class: enum
+      slave: 1
+      address: 38
+      input_type: input
+      data_type: uint16
+      precision: 0
+      unique_id: UnitStatus
+
+    - name: "Berekend setpoint warmtepomp"
+      address: 39
+      input_type: input
+      data_type: float32
+      scan_interval: 10
+      precision: 1
+      device_class: temperature
+      unit_of_measurement: "°C"
+      state_class: measurement
+      unique_id: RegSetP
+
+    - name: "Koel Setpoint"
+      address: 41
+      input_type: input
+      data_type: float32
+      scan_interval: 10
+      precision: 1
+      device_class: temperature
+      unit_of_measurement: "°C"
+      state_class: measurement
+      unique_id: Coolsetp_1
+
+    - name: "Heat Setpoint"
+      address: 43
+      input_type: input
+      data_type: float32
+      scan_interval: 10
+      precision: 1
+      device_class: temperature
+      unit_of_measurement: "°C"
+      state_class: measurement
+      unique_id: Heatsetp_1
+
+    - name: "Actuele snelheid compressor"
+      address: 45
+      input_type: input
+      data_type: float32
+      scan_interval: 10
+      scale: 60
+      precision: 0
+      unit_of_measurement: "rpm"
+      state_class: measurement
+      unique_id: Bldc_Evd_PowerPlus_Info_Pump
+
+    - name: "Setpoint berekend tapwater"
+      address: 47
+      input_type: input
+      data_type: float32
+      scan_interval: 10
+      precision: 1
+      device_class: temperature
+      unit_of_measurement: "°C"
+      state_class: measurement
+      unique_id: DHW_SetP
+
+    - name: "Bedrijfsuren tapwaterbedrijf"
+      address: 50
+      input_type: input
+      data_type: int16
+      scan_interval: 10
+      precision: 0
+      device_class: duration
+      unit_of_measurement: "h"
+      state_class: measurement
+      unique_id: WorkingHours_DHW_HrsRet
+
+    - name: "Bedrijfsuren CV-bedrijf"
+      address: 52
+      input_type: input
+      data_type: int16
+      scan_interval: 10
+      precision: 0
+      device_class: duration
+      unit_of_measurement: "h"
+      state_class: measurement
+      unique_id: WorkingHours_Heat_HrsRet
+
+    - name: "Bedrijfsuren koelbedrijf"
+      address: 54
+      input_type: input
+      data_type: int16
+      scan_interval: 10
+      precision: 0
+      device_class: duration
+      unit_of_measurement: "h"
+      state_class: measurement
+      unique_id: WorkingHours_Cool_HrsRet
+
+    - name: "Bedrijfsuren Heater 1"
+      address: 56
+      input_type: input
+      data_type: int16
+      scan_interval: 10
+      precision: 0
+      device_class: duration
+      unit_of_measurement: "h"
+      state_class: measurement
+      unique_id: WorkingHours_Heater1_Hrs
+
+    - name: "Bedrijfsuren Heater 2"
+      address: 58
+      input_type: input
+      data_type: int16
+      scan_interval: 10
+      precision: 0
+      device_class: duration
+      unit_of_measurement: "h"
+      state_class: measurement
+      unique_id: WorkingHours_Heater2_Hrs
+
+    - name: "Bedrijfsuren Heater 3"
+      address: 60
+      input_type: input
+      data_type: int16
+      scan_interval: 10
+      precision: 0
+      device_class: duration
+      unit_of_measurement: "h"
+      state_class: measurement
+      unique_id: WorkingHours_Heater3_Hrs
+
+    - name: "Totaal elektrisch vermogen (berekend)"
+      address: 61
+      input_type: input
+      data_type: float32
+      scan_interval: 10
+      precision: 0
+      device_class: power
+      unit_of_measurement: "W"
+      state_class: measurement
+      unique_id: GeneralMng_EletricPwr
+
+    # Removed per vendor guidance: Input register 63 is invalid/unsupported
+
+    - name: "Setpoint plantregeling"
+      address: 65
+      input_type: input
+      data_type: float32
+      scan_interval: 10
+      precision: 1
+      device_class: temperature
+      unit_of_measurement: "°C"
+      state_class: measurement
+      unique_id: PlantSetP
+
+    - name: "Totaal elektrisch verbruik (excl. standby)"
+      address: 69
+      input_type: input
+      data_type: float32
+      scan_interval: 10
+      precision: 3
+      device_class: energy
+      unit_of_measurement: "kWh"
+      state_class: total_increasing
+      unique_id: GeneralMng_AcumulatedPwr
+
+    - name: "Totaal Thermische opbrengst"
+      address: 71
+      input_type: input
+      data_type: float32
+      scan_interval: 10
+      precision: 3
+      device_class: energy
+      unit_of_measurement: "kWh"
+      state_class: total_increasing
+      unique_id: GeneralMng_AcumulatedThermic
+
+    - name: "Linq ruimtetemperatuur"
+      address: 75
+      input_type: input
+      data_type: float32
+      scan_interval: 10
+      precision: 1
+      device_class: temperature
+      unit_of_measurement: "°C"
+      state_class: measurement
+      unique_id: Modbus_RoomTemp
+
+  switches:
+    - name: "Schakel zomerbedrijf in (koeling)"
+      address: 22
+      write_type: coil
+      command_on: 1
+      command_off: 0
+      scan_interval: 10
+      unique_id: BMS_SummerWinter
+
+    - name: "Start Tapwater verwarmen"
+      address: 23
+      write_type: coil
+      command_on: 1
+      command_off: 0
+      scan_interval: 10
+      unique_id: TapW_TimeProgram_BMS_Forced
+
+    - name: "Start Antilegionella"
+      address: 45
+      write_type: coil
+      command_on: 1
+      command_off: 0
+      scan_interval: 10
+      unique_id: Antilegionella_FrcStart_ANT
+
+    - name: "Stooklijn vrijgeven"
+      address: 62
+      write_type: coil
+      command_on: 1
+      command_off: 0
+      scan_interval: 10
+      unique_id: En_PlantSetP_Compens
+
+    - name: "SG Ready A" # SG Ready sturing
+      address: 65
+      write_type: coil
+      command_on: 1
+      command_off: 0
+      scan_interval: 10
+      unique_id: BMS_SGready_A
+
+    - name: "SG Ready B" # SG Ready sturing
+      address: 66
+      write_type: coil
+      command_on: 1
+      command_off: 0
+      scan_interval: 10
+      unique_id: BMS_SGready_B
+
+    - name: "Activeer warmtevraag Qube" # Trigger demand via Modbus
+      address: 67
+      write_type: coil
+      command_on: 1
+      command_off: 0
+      scan_interval: 10
+      unique_id: Modbus_Demand
+
+  # Qube elektriciteitsverbruik splitsen tussen CV en SWW
+  utility_meter:
+    heatpump_energy:
+      name: "Elektrisch verbruik CV/DHW per maand"
+      unique_id: warmtepomp.elektrisch_verbruik_cv_dhw
+      source: sensor.generalmng_acumulatedpwr
+      cycle: monthly
+      tariffs:
+        - CV
+        - SWW
+      always_available: true

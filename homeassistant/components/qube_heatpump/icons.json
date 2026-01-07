@@ -1,0 +1,10 @@
+{
+  "services": {
+    "reconfigure": {
+      "service": "mdi:cog"
+    },
+    "write_register": {
+      "service": "mdi:pencil"
+    }
+  }
+}

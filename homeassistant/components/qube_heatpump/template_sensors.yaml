@@ -1,0 +1,43 @@
+- sensor:
+    - name: Qube status full
+      unique_id: warmtepomp.unit_status_string
+      state: >
+        {% set status = states('sensor.wp_qube_status_warmtepomp') | int %}
+        {% if   status in (1, 14, 18) %} Standby
+        {% elif status ==  2 %} Alarm
+        {% elif status ==  6 %} Keyboard off
+        {% elif status ==  8 %} Compressor start up
+        {% elif status ==  9 %} Compressor shutdown
+        {% elif status == 15 %} Cooling
+        {% elif status == 16 %} Heating
+        {% elif status == 17 %} Start fail
+        {% elif status == 22 %} Heating DHW
+        {% else %} Unknown state
+        {% endif %}
+
+    # DHW stands for Domestic Hot Water, valve will switch between DHW and CV
+    - name: Qube Driewegklep SSW/CV status
+      unique_id: warmtepomp.driewegklep_dhw_cv_string
+      state: >
+        {% if is_state(
+          'binary_sensor.wp_qube_uitgang_driewegafsluiter_cv_tapwater_2',
+          'on') %}
+          DHW
+        {% elif is_state(
+          'binary_sensor.wp_qube_uitgang_driewegafsluiter_cv_tapwater_2',
+          'off') %}
+          CV
+        {% endif %}
+
+    - name: Qube Vierwegklep verwarmen/koelen status
+      unique_id: warmtepomp.vierwegklep_verwarmen_koelen_string
+      state: >
+        {% if is_state(
+          'binary_sensor.wp_qube_sturing_vierwegafsluiter_2',
+          'on' ) %}
+          Verwarmen
+        {% elif is_state(
+          'binary_sensor.wp_qube_sturing_vierwegafsluiter_2',
+          'off') %}
+          Koelen
+        {% endif %}

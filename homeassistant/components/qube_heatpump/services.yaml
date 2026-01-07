@@ -1,0 +1,29 @@
+reconfigure:
+  target:
+  fields:
+    entry_id:
+      required: false
+      example: "1234567890abcdef1234567890abcdef"
+write_register:
+  target:
+  fields:
+    address:
+      required: true
+      example: 173
+    value:
+      required: true
+      example: 55.0
+    data_type:
+      required: false
+      example: float32
+      default: uint16
+      selector:
+        select:
+          options:
+            - uint16
+            - int16
+            - float32
+    entry_id:
+      required: false
+    label:
+      required: false

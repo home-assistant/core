@@ -1870,6 +1870,7 @@ pymiele==0.6.1
 pymochad==0.2.0
 
 # homeassistant.components.modbus
+# homeassistant.components.qube_heatpump
 pymodbus==3.11.2
 
 # homeassistant.components.monoprice
