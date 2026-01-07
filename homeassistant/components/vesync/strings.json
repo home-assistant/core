@@ -136,7 +136,7 @@
         "name": "Filter lifetime"
       },
       "preheat_set_time": {
-        "name": "Preheat set time"
+        "name": "Preheating set time"
       }
     },
     "switch": {
