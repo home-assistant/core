@@ -35,7 +35,7 @@ class DeviceInfo:
         self.role = data.get("role")
         self.room_id = data.get("roomId")
         self.room_name = data.get("roomName")
-        self._failed_data = []
+        self._failed_data: list[str] = []
         # Status information
         status_list = data.get("statusList", {})
         if isinstance(status_list, dict):
@@ -90,7 +90,7 @@ class DeviceInfo:
         device_type = DeviceType(
             type_code=self.type_code,
             feature_code=self.feature_code,
-            description=self.name,
+            description=self.name or "",
         )
         _LOGGER.debug("Created device type: %s", device_type)
         if not device_type:
@@ -143,8 +143,7 @@ class DeviceInfo:
 
         if not parser:
             return False
-        return None
-        return None
+        return False
 
     def to_dict(self) -> dict[str, Any]:
         """Convert device info to dictionary."""
@@ -181,8 +180,8 @@ class DeviceInfo:
         ]
         return "\n".join(info)
 
-    @failed_data.setter
-    def failed_data(self, value):
+    def set_failed_data(self, value: list[str]) -> None:
+        """Set failed data."""
         self._failed_data = value
 
 

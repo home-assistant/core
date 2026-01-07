@@ -219,17 +219,17 @@ class DeviceConfiguration:
     min_temp: float = DEFAULT_MIN_TEMP
     max_temp: float = DEFAULT_MAX_TEMP
     target_temp_step: float = 1.0
-    fan_modes: list[str] = None
-    swing_modes: list[str] = None
+    fan_modes: list[str] | None = None
+    swing_modes: list[str] | None = None
     features: int = (
         ClimateEntityFeature.TARGET_TEMPERATURE
         | ClimateEntityFeature.FAN_MODE
         | ClimateEntityFeature.SWING_MODE
     )
-    hvac_modes: list[HVACMode] = None
+    hvac_modes: list[HVACMode] | None = None
     temperature_unit: str = "°C"
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         """Set default values for optional fields."""
         if self.fan_modes is None:
             self.fan_modes = ["auto", "high", "medium", "low"]
