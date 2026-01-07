@@ -20,11 +20,11 @@ CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 async def async_setup_entry(hass: HomeAssistant, entry: HomevoltConfigEntry) -> bool:
     """Set up Homevolt from a config entry."""
-    ip_address: str = entry.data[CONF_HOST]
+    host: str = entry.data[CONF_HOST]
     password: str | None = entry.data.get(CONF_PASSWORD)
 
     websession = async_get_clientsession(hass)
-    client = Homevolt(ip_address, password, websession=websession)
+    client = Homevolt(host, password, websession=websession)
 
     try:
         await client.update_info()

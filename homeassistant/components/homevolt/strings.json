@@ -14,6 +14,11 @@
           "host": "[%key:common::config_flow::data::host%]",
           "password": "[%key:common::config_flow::data::password%]"
         },
+        "data_description": {
+          "host": "The IP address or hostname of your Homevolt battery on your local network.",
+          "password": "The local password configured for your Homevolt battery, if required."
+        },
+        "description": "Connect Home Assistant to your Homevolt battery over the local network.",
         "title": "Homevolt Local"
       }
     }
