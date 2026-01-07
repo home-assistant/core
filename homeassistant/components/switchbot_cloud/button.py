@@ -3,8 +3,13 @@
 from dataclasses import dataclass
 from typing import Any
 
-from switchbot_api import Device, Remote, SwitchBotAPI
-from switchbot_api.commands import ArtFrameCommands, CommonCommands
+from switchbot_api import (
+    Commands as SwitchBotCloudBaseCommands,
+    Device,
+    Remote,
+    SwitchBotAPI,
+)
+from switchbot_api.commands import ArtFrameCommands, BotCommands, CommonCommands
 
 from homeassistant.components.button import ButtonEntity, ButtonEntityDescription
 from homeassistant.config_entries import ConfigEntry
@@ -20,7 +25,7 @@ from .entity import SwitchBotCloudEntity
 class SwitchbotCloudButtonEntityDescription(ButtonEntityDescription):
     """Switchbot Cloud Button EntityDescription."""
 
-    command: CommonCommands | str = CommonCommands.PRESS
+    command: SwitchBotCloudBaseCommands = CommonCommands.PRESS
     command_type: str = "command"
     parameters: dict | str = "default"
 
@@ -29,16 +34,20 @@ GENERAL_BUTTON_DESCRIPTION = SwitchbotCloudButtonEntityDescription(
     key="Button",
 )
 
+BOT_BUTTON_DESCRIPTION = SwitchbotCloudButtonEntityDescription(
+    key="Button", command=BotCommands.PRESS
+)
+
 ART_FRAME_NEXT_BUTTON_DESCRIPTION = SwitchbotCloudButtonEntityDescription(
     key="Next",
     translation_key="art_frame_next_picture",
-    command=ArtFrameCommands.NEXT.value,
+    command=ArtFrameCommands.NEXT,
 )
 
 ART_FRAME_PREVIOUS_BUTTON_DESCRIPTION = SwitchbotCloudButtonEntityDescription(
     key="Previous",
     translation_key="art_frame_previous_picture",
-    command=ArtFrameCommands.PREVIOUS.value,
+    command=ArtFrameCommands.PREVIOUS,
 )
 
 
@@ -101,9 +110,9 @@ class SwitchBotCloudBot(SwitchBotCloudEntity, ButtonEntity):
         """Button press command."""
         await self._api.send_command(
             self._device_id,
-            command=self.entity_description.command,
-            command_type=self.entity_description.command_type,
-            parameters=self.entity_description.parameters,
+            self.entity_description.command.value,
+            self.entity_description.command_type,
+            self.entity_description.parameters,
         )
 
 
