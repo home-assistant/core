@@ -293,6 +293,7 @@ FLOWS = {
         "homekit",
         "homekit_controller",
         "homematicip_cloud",
+        "homevolt",
         "homewizard",
         "homeworks",
         "honeywell",
