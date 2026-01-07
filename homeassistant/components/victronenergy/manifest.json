@@ -11,8 +11,8 @@
   "requirements": ["paho-mqtt==2.1.0"],
   "ssdp": [
     {
-      "st": "urn:schemas-upnp-org:device:Basic:1",
-      "manufacturer": "Victron Energy"
+      "manufacturer": "Victron Energy",
+      "st": "urn:schemas-upnp-org:device:Basic:1"
     }
   ]
 }

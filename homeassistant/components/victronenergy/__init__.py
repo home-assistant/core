@@ -162,7 +162,7 @@ class VictronMqttManager:
             # loop_forever and lets us stop the loop with loop_stop during cleanup.
             try:
                 self.client.loop_start()
-            except Exception:
+            except (RuntimeError, OSError):
                 _LOGGER.exception("Failed to start MQTT background loop thread")
 
     def _subscribe(
@@ -269,22 +269,26 @@ class VictronMqttManager:
         # Use the provided device_key for identifiers
         identifiers: set[DeviceKey] = {device_key}
 
-        # Build device info for registration
-        registration_info = {
-            "config_entry_id": self.entry.entry_id,
-            "identifiers": identifiers,
-            "manufacturer": str(device_info.get("manufacturer", "")),
-            "model": str(device_info.get("model", "")),
-            "name": str(device_info.get("name", "")),
-        }
+        # Extract connections if available
+        connections: set[tuple[str, str]] | None = device_info.get("connections")
 
         via_device = device_info.get("via_device")
+        via_device_tuple: tuple[str, str] | None = None
         if via_device is not None:
-            registration_info["via_device"] = (DOMAIN, str(via_device))
+            via_device_tuple = (DOMAIN, str(via_device))
 
         # Register/restore device in Home Assistant device registry
         device_registry = dr.async_get(self.hass)
-        device = device_registry.async_get_or_create(**registration_info)
+        device = device_registry.async_get_or_create(
+            config_entry_id=self.entry.entry_id,
+            identifiers=identifiers,
+            connections=connections,
+            manufacturer=device_info.get("manufacturer"),
+            name=device_info.get("name"),
+            model=device_info.get("model"),
+            sw_version=device_info.get("sw_version"),
+            via_device=via_device_tuple,
+        )
 
         _LOGGER.info(
             "Registered device in Home Assistant registry: %s (id: %s)",
@@ -433,7 +437,7 @@ class VictronMqttManager:
                 continue
 
             _LOGGER.info(
-                "processing deferred discovery with %d components: via_device '%s' is now available",
+                "Processing deferred discovery with %d components: via_device '%s' is now available",
                 len(pending_components),
                 device_key,
             )
@@ -536,7 +540,7 @@ class VictronMqttManager:
 
     def _handle_state_message(self, topic: str, payload: bytes) -> None:
         """Handle state messages by passing them on to the entities."""
-        entities = self._topic_entity_map.get(topic, {})
+        entities: set[VictronBaseEntity] = self._topic_entity_map.get(topic, set())
         for entity in entities:
             entity.handle_mqtt_message(topic, payload)
 
@@ -749,16 +753,13 @@ class VictronMqttManager:
                 self._keepalive_task = None
 
         # Clear all registries
-        registries_to_clear = [
-            self._entity_registry,
-            self._device_registry,
-            self._topic_device_map,
-            self._topic_payload_cache,
-            self._pending_via_device_discoveries,
-            self._topic_entity_map,
-        ]
-        for registry in registries_to_clear:
-            registry.clear()
+        # Clear all internal registries
+        self._entity_registry.clear()
+        self._device_registry.clear()
+        self._topic_device_map.clear()
+        self._topic_payload_cache.clear()
+        self._pending_via_device_discoveries.clear()
+        self._topic_entity_map.clear()
 
         # Disconnect MQTT if still connected
         # Stop the mqtt worker before disconnecting the client
@@ -775,7 +776,7 @@ class VictronMqttManager:
                 # Unsubscribe from all topics to clean up server-side subscriptions
                 await self.hass.async_add_executor_job(self.client.unsubscribe, "#")
                 _LOGGER.debug("Unsubscribed from all topics")
-            except Exception:
+            except (RuntimeError, OSError, AttributeError):
                 _LOGGER.debug(
                     "Error unsubscribing from topics (client may already be disconnected)"
                 )
@@ -800,8 +801,8 @@ class VictronMqttManager:
                 self.client.on_message = None
                 self.client.on_disconnect = None
                 _LOGGER.debug("Cleared MQTT event handlers")
-            except Exception as err:
-                _LOGGER.debug("Error clearing MQTT event handlers: %s", err)
+            except (RuntimeError, OSError, AttributeError):
+                _LOGGER.debug("Error clearing MQTT event handlers")
 
             # Clear client reference
             self.client = None

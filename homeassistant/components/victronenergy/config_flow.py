@@ -90,7 +90,7 @@ async def _test_basic_mqtt_connection(
 
         return connection_result.is_set()
 
-    except Exception as err:
+    except (RuntimeError, OSError, TimeoutError) as err:
         _LOGGER.debug("Connection test failed: %s", err)
         return False
     finally:
@@ -178,7 +178,7 @@ async def _detect_discovery_topics(
             _LOGGER.warning("MQTT connection timeout")
             return None
 
-        _LOGGER.info("Connected to MQTT, waiting for discovery topics...")
+        _LOGGER.info("Connected to MQTT, waiting for discovery topics")
 
         # Wait for discovery topics (max 30 seconds)
         try:
@@ -187,10 +187,10 @@ async def _detect_discovery_topics(
         except TimeoutError:
             _LOGGER.warning("No discovery topics received within 30 seconds")
             return None
+        else:
+            return discovered_unique_id
 
-        return discovered_unique_id
-
-    except Exception as err:
+    except (RuntimeError, OSError, TimeoutError) as err:
         _LOGGER.error("Error during MQTT discovery detection: %s", err)
         return None
     finally:
@@ -328,7 +328,7 @@ async def _test_secure_mqtt_connection(
         connection_task = asyncio.create_task(connection_result.wait())
         error_task = asyncio.create_task(connection_error.wait())
 
-        done, pending = await asyncio.wait(
+        _done, pending = await asyncio.wait(
             [connection_task, error_task],
             timeout=10.0,
             return_when=asyncio.FIRST_COMPLETED,
@@ -342,7 +342,7 @@ async def _test_secure_mqtt_connection(
 
         return connection_result.is_set()
 
-    except Exception as err:
+    except (RuntimeError, OSError, TimeoutError) as err:
         _LOGGER.debug("Secure MQTT connection failed: %s", err)
         return False
 
@@ -383,16 +383,15 @@ async def validate_secure_mqtt_connection(
         token = await _generate_victron_token(hass, broker, password, ha_device_id)
 
         # Test secure MQTT connection
-        if not await _test_secure_mqtt_connection(hass, broker, token, ha_device_id):
-            raise CannotConnect("Secure MQTT connection failed")
+        if await _test_secure_mqtt_connection(hass, broker, token, ha_device_id):
+            return {
+                "title": "Venus OS Hub",
+                "host": broker,
+                "token": token,
+                "ha_device_id": ha_device_id,
+            }
 
-        return {
-            "title": "Venus OS Hub",
-            "host": broker,
-            "token": token,
-            "ha_device_id": ha_device_id,
-        }
-
+        raise CannotConnect("Secure MQTT connection failed")
     except aiohttp.ClientError as err:
         raise CannotConnect(f"HTTP connection failed: {err}") from err
     except json.JSONDecodeError as err:
@@ -404,9 +403,10 @@ class VictronConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize the config flow."""
         super().__init__()
+        self._broker: str | None = None
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -432,8 +432,8 @@ class VictronConfigFlow(ConfigFlow, domain=DOMAIN):
                 reason="unknown", description_placeholders={"error": str(ex)}
             )
 
-        # Store broker in context for later use
-        self.context["broker"] = broker
+        # Store broker for later use in instance variable
+        self._broker = broker
 
         # Try insecure MQTT connection first (port 1883)
         _LOGGER.info("Trying insecure MQTT connection to %s:1883", broker)
@@ -470,19 +470,21 @@ class VictronConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Handle password step for token authentication."""
         errors: dict[str, str] = {}
-        broker = self.context.get("broker")
+        broker = getattr(self, "_broker", None)
 
         if user_input is None:
             return self.async_show_form(
                 step_id="password",
                 data_schema=STEP_PASSWORD_DATA_SCHEMA,
                 errors=errors,
-                description_placeholders={"host": broker if broker else "unknown"},
+                description_placeholders={"host": broker or "unknown"},
             )
 
         try:
             # Generate token and test secure connection
             ha_device_id = _generate_ha_device_id()
+            assert broker is not None, "Broker must be set in context"
+            assert isinstance(user_input[CONF_PASSWORD], str), "Password must be string"
             token = await _generate_victron_token(
                 self.hass, broker, user_input[CONF_PASSWORD], ha_device_id
             )
@@ -536,7 +538,7 @@ class VictronConfigFlow(ConfigFlow, domain=DOMAIN):
                 step_id="password",
                 data_schema=STEP_PASSWORD_DATA_SCHEMA,
                 errors=errors,
-                description_placeholders={"host": broker if broker else "unknown"},
+                description_placeholders={"host": broker or "unknown"},
             )
 
         # Return an explicit failure response if we get here
@@ -546,7 +548,7 @@ class VictronConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle password step for SSDP discovered device."""
-        broker = self.context.get("broker")
+        broker = getattr(self, "_broker", None)
         friendly_name = self.context.get("title_placeholders", {}).get(
             "name", "Victron Energy"
         )
@@ -559,6 +561,8 @@ class VictronConfigFlow(ConfigFlow, domain=DOMAIN):
             )
 
         try:
+            assert broker is not None, "Broker must be set in context"
+            assert isinstance(user_input[CONF_PASSWORD], str), "Password must be string"
             info = await validate_secure_mqtt_connection(
                 self.hass, broker, user_input[CONF_PASSWORD]
             )
@@ -604,7 +608,7 @@ class VictronConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle user confirmation for SSDP discovered device."""
-        _LOGGER.info("ssdp_confirm called with input: %s", user_input)
+        _LOGGER.info("SSDP confirm called with input: %s", user_input)
 
         broker = self.context.get("broker")
         friendly_name = self.context.get("title_placeholders", {}).get(
@@ -619,6 +623,8 @@ class VictronConfigFlow(ConfigFlow, domain=DOMAIN):
             )
 
         # Now test basic MQTT connection after user confirmation
+        broker = getattr(self, "_broker", None)
+        assert broker is not None, "Broker must be set"
         if await _test_basic_mqtt_connection(self.hass, broker):
             # Basic MQTT works, create entry with simple config
             return self.async_create_entry(
@@ -668,7 +674,7 @@ class VictronConfigFlow(ConfigFlow, domain=DOMAIN):
             "name": friendly_name or "Victron Energy Device",
             "host": str(host) if host else "unknown",
         }
-        self.context["broker"] = host
+        self._broker = host
 
         # Show confirmation step first, before testing connection
         return self.async_show_form(
