@@ -27,7 +27,7 @@ class EntityTemplate:
     template: Template
     validator: Callable[[Any], Any] | None
     on_update: Callable[[Any], None] | None
-    on_cancel: Callable[[Any], None] | None
+    on_cancel: Callable[[], None] | None
     none_on_template_error: bool
 
 

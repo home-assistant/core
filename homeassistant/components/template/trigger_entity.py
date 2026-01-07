@@ -57,9 +57,10 @@ class TriggerEntity(  # pylint: disable=hass-enforce-class-module
         attribute: str,
         validator: Callable[[Any], Any] | None = None,
         on_update: Callable[[Any], None] | None = None,
+        on_cancel: Callable[[], None] | None = None,
     ) -> None:
         """Set up a template that manages the main state of the entity."""
-        if self.add_template(option, attribute, validator, on_update):
+        if self.add_template(option, attribute, validator, on_update, on_cancel):
             self._to_render_simple.append(option)
             self._parse_result.add(option)
 
@@ -69,9 +70,10 @@ class TriggerEntity(  # pylint: disable=hass-enforce-class-module
         attribute: str,
         validator: Callable[[Any], Any] | None = None,
         on_update: Callable[[Any], None] | None = None,
+        on_cancel: Callable[[], None] | None = None,
     ) -> None:
         """Set up a template that manages any property or attribute of the entity."""
-        self.setup_state_template(option, attribute, validator, on_update)
+        self.setup_state_template(option, attribute, validator, on_update, on_cancel)
 
     @property
     def referenced_blueprint(self) -> str | None:
@@ -116,11 +118,18 @@ class TriggerEntity(  # pylint: disable=hass-enforce-class-module
         """Get a rendered result and return the value."""
         # Handle any templates.
         for option, entity_template in self._templates.items():
+            value = _SENTINEL
             if (rendered := self._rendered.get(option)) is not None:
                 value = rendered
 
             if entity_template.validator:
                 value = entity_template.validator(rendered)
+
+            # Capture templates that did not render a result due to an exception and
+            # ensure the state object updates. _SENTINEL is used to differentiate
+            # templates that render None.
+            if value is _SENTINEL:
+                return True
 
             if entity_template.on_update:
                 entity_template.on_update(value)
@@ -157,16 +166,24 @@ class TriggerEntity(  # pylint: disable=hass-enforce-class-module
         if self._render_availability_template(variables):
             self._render_templates(variables)
 
+            write_state = False
             # While transitioning platforms to the new framework, this
-            # if-statement is necessary for backward compatability with existing
+            # if-statement is necessary for backward compatibility with existing
             # trigger based platforms.
             if self._templates:
                 # Handle any results that were rendered.
-                if self._handle_rendered_results():
-                    self.async_write_ha_state()
+                write_state = self._handle_rendered_results()
+
+            # Check availability after rendering the results because the state
+            # template could render the entity unavailable
+            if not self.available:
+                write_state = True
+
+            if write_state:
+                self.async_write_ha_state()
         else:
             # While transitioning platforms to the new framework, this
-            # if-statement is necessary for backward compatability with existing
+            # if-statement is necessary for backward compatibility with existing
             # trigger based platforms.
             if self._templates:
                 # Cancel anything associated with any template when unavailable.
@@ -180,7 +197,7 @@ class TriggerEntity(  # pylint: disable=hass-enforce-class-module
         """Handle updated data from the coordinator.
 
         While transitioning platforms to the new framework, this
-        function is necessary for backward compatability with existing
+        function is necessary for backward compatibility with existing
         trigger based platforms.
         """
         self._process_data()

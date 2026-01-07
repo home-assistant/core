@@ -234,7 +234,12 @@ class StateBinarySensorEntity(TemplateEntity, AbstractTemplateBinarySensor):
     async def async_added_to_hass(self) -> None:
         """Restore state."""
         if (
-            (CONF_DELAY_ON in self._templates or CONF_DELAY_OFF in self._templates)
+            (
+                CONF_DELAY_ON in self._templates
+                or CONF_DELAY_OFF in self._templates
+                or self._delay_on is not None
+                or self._delay_off is not None
+            )
             and (last_state := await self.async_get_last_state()) is not None
             and last_state.state not in (STATE_UNKNOWN, STATE_UNAVAILABLE)
         ):
@@ -245,12 +250,10 @@ class StateBinarySensorEntity(TemplateEntity, AbstractTemplateBinarySensor):
     def _update_state(self, result):
         super()._update_state(result)
 
-        # TODO: Handle delay cancel for all state based template entities.
         if self._delay_cancel:
             self._delay_cancel()
             self._delay_cancel = None
 
-        # TODO: Update this function to use new boolean validators.
         state: bool | None = None
         if result is not None and not isinstance(result, TemplateError):
             state = template.result_as_boolean(result)
@@ -341,7 +344,6 @@ class TriggerBinarySensorEntity(TriggerEntity, AbstractTemplateBinarySensor):
     def _update_state(self, result):
         state: bool | None = None
         if result is not None:
-            # TODO: Update this function to use new boolean validators.
             state = template.result_as_boolean(result)
 
         if state:

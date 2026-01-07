@@ -813,7 +813,6 @@ async def test_available_without_availability_template(hass: HomeAssistant) -> N
 @pytest.mark.usefixtures("setup_single_attribute_binary_sensor")
 async def test_availability_template(hass: HomeAssistant) -> None:
     """Test availability template."""
-    x: int
     hass.states.async_set(TEST_AVAILABILITY_ENTITY_ID, STATE_OFF)
     await hass.async_block_till_done()
 
