@@ -1551,6 +1551,8 @@ DISCOVERY_SCHEMAS = [
             state_class=SensorStateClass.TOTAL_INCREASING,
         ),
         entity_class=MatterSensor,
-        required_attributes=(clusters.ThreadNetworkDiagnostics.Attributes.AttachAttemptCount,),
+        required_attributes=(
+            clusters.ThreadNetworkDiagnostics.Attributes.AttachAttemptCount,
+        ),
     ),
 ]
