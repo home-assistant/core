@@ -12,3 +12,4 @@ TEST_PASSWORD = "fake_password"
 TEST_TYPE = DeviceType.SERCOMM
 TEST_URL = f"https://{TEST_HOST}"
 TEST_USERNAME = "fake_username"
+TEST_SERIAL_NUMBER = "m123456789"
