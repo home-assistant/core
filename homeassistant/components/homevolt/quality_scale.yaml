@@ -37,9 +37,7 @@ rules:
   entity-unavailable: done
   integration-owner: done
   log-when-unavailable: done
-  parallel-updates:
-    status: exempt
-    comment: Coordinator handles updates, no explicit parallel updates needed.
+  parallel-updates: done
   reauthentication-flow: todo
   test-coverage: todo
 

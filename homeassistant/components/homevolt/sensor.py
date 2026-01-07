@@ -31,6 +31,7 @@ from .coordinator import HomevoltDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
+PARALLEL_UPDATES = 0  # Coordinator-based updates
 
 SENSORS: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
@@ -457,18 +458,22 @@ class HomevoltSensor(CoordinatorEntity[HomevoltDataUpdateCoordinator], SensorEnt
         self.entity_description = description
         device_id = coordinator.data.device_id
         self._attr_unique_id = f"{device_id}_{description.key}"
-        sensor = coordinator.data.sensors[description.key]
-        sensor_device_id = sensor.device_identifier
-        device_metadata = coordinator.data.device_metadata[sensor_device_id]
+        sensor_data = coordinator.data.sensors[description.key]
+        device_metadata = coordinator.data.device_metadata.get(
+            sensor_data.device_identifier
+        )
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, f"{device_id}_{sensor_device_id}")},
+            identifiers={(DOMAIN, f"{device_id}_{sensor_data.device_identifier}")},
             configuration_url=coordinator.client.hostname,
             manufacturer=MANUFACTURER,
-            model=device_metadata.model,
-            name=device_metadata.name,
+            model=device_metadata.model if device_metadata else None,
+            name=device_metadata.name if device_metadata else None,
         )
 
     @property
     def native_value(self) -> StateType:
         """Return the native value of the sensor."""
-        return self.coordinator.data.sensors[self.entity_description.key].value
+        sensor_data = self.coordinator.data.sensors[self.entity_description.key]
+        if sensor_data is None:
+            return None
+        return sensor_data.value

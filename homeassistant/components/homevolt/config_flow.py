@@ -38,16 +38,22 @@ class HomevoltConfigFlow(ConfigFlow, domain=DOMAIN):
             host = user_input[CONF_HOST]
             password = user_input.get(CONF_PASSWORD)
             websession = async_get_clientsession(self.hass)
+            client = Homevolt(host, password, websession=websession)
             try:
-                await Homevolt(host, password, websession=websession).update_info()
+                await client.update_info()
+                device = client.get_device()
+                device_id = device.device_id
             except HomevoltAuthenticationError:
                 errors["base"] = "invalid_auth"
             except HomevoltConnectionError:
                 errors["base"] = "cannot_connect"
-            except Exception:  # noqa: BLE001
+            except Exception:
+                _LOGGER.exception(
+                    "Error occurred while connecting to the Homevolt battery"
+                )
                 errors["base"] = "unknown"
             else:
-                await self.async_set_unique_id(host)
+                await self.async_set_unique_id(device_id)
                 self._abort_if_unique_id_configured()
 
                 return self.async_create_entry(
