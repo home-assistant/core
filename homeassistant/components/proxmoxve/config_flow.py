@@ -121,24 +121,23 @@ class ProxmoxveConfigFlow(ConfigFlow, domain=DOMAIN):
             except ProxmoxNoNodesFound:
                 errors["base"] = "no_nodes_found"
 
-            if "base" not in errors:
-                for node in proxmox_nodes:
-                    user_input.setdefault(CONF_NODES, []).append(
-                        {
-                            CONF_NODE: node["node"],
-                            CONF_VMS: [vm["vmid"] for vm in node["vms"]],
-                            CONF_CONTAINERS: [
-                                container["vmid"] for container in node["containers"]
-                            ],
-                        }
-                    )
+            if not errors:
+                nodes = [
+                    {
+                        CONF_NODE: node["node"],
+                        CONF_VMS: [vm["vmid"] for vm in node["vms"]],
+                        CONF_CONTAINERS: [
+                            container["vmid"] for container in node["containers"]
+                        ],
+                    }
+                    for node in proxmox_nodes
+                ]
 
                 await self.async_set_unique_id(user_input[CONF_HOST])
                 self._abort_if_unique_id_configured()
-
                 return self.async_create_entry(
                     title=user_input[CONF_HOST],
-                    data={**user_input, CONF_NODES: user_input[CONF_NODES]},
+                    data={**user_input, CONF_NODES: nodes},
                 )
 
         return self.async_show_form(
