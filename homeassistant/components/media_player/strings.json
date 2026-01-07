@@ -381,15 +381,14 @@
   "title": "Media player",
   "triggers": {
     "stopped_playing": {
-      "description": "Triggers when a media player stops playing.",
-      "description_configured": "[%key:component::media_player::triggers::stopped_playing::description%]",
+      "description": "Triggers after one or more media players stop playing media.",
       "fields": {
         "behavior": {
           "description": "[%key:component::media_player::common::trigger_behavior_description%]",
           "name": "[%key:component::media_player::common::trigger_behavior_name%]"
         }
       },
-      "name": "When a media player stops playing"
+      "name": "Media player stopped playing"
     }
   }
 }

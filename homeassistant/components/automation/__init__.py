@@ -27,6 +27,7 @@ from homeassistant.const import (
     CONF_EVENT_DATA,
     CONF_ID,
     CONF_MODE,
+    CONF_OPTIONS,
     CONF_PATH,
     CONF_PLATFORM,
     CONF_TRIGGERS,
@@ -124,13 +125,23 @@ _EXPERIMENTAL_CONDITION_PLATFORMS = {
 _EXPERIMENTAL_TRIGGER_PLATFORMS = {
     "alarm_control_panel",
     "assist_satellite",
+    "binary_sensor",
+    "button",
     "climate",
     "cover",
+    "device_tracker",
     "fan",
+    "humidifier",
     "lawn_mower",
     "light",
+    "lock",
     "media_player",
+    "person",
+    "scene",
+    "siren",
+    "switch",
     "text",
+    "update",
     "vacuum",
 }
 
@@ -1209,7 +1220,7 @@ def _trigger_extract_entities(trigger_conf: dict) -> list[str]:
         return trigger_conf[CONF_ENTITY_ID]  # type: ignore[no-any-return]
 
     if trigger_conf[CONF_PLATFORM] == "calendar":
-        return [trigger_conf[CONF_ENTITY_ID]]
+        return [trigger_conf[CONF_OPTIONS][CONF_ENTITY_ID]]
 
     if trigger_conf[CONF_PLATFORM] == "zone":
         return trigger_conf[CONF_ENTITY_ID] + [trigger_conf[CONF_ZONE]]  # type: ignore[no-any-return]

@@ -8,7 +8,6 @@ import pytest
 from homeassistant.components.lawn_mower import LawnMowerActivity
 from homeassistant.const import ATTR_LABEL_ID, CONF_ENTITY_ID
 from homeassistant.core import HomeAssistant, ServiceCall
-from homeassistant.setup import async_setup_component
 
 from tests.components import (
     StateDescription,
@@ -39,7 +38,7 @@ def enable_experimental_triggers_conditions() -> Generator[None]:
 @pytest.fixture
 async def target_lawn_mowers(hass: HomeAssistant) -> list[str]:
     """Create multiple lawn mower entities associated with different targets."""
-    return await target_entities(hass, "lawn_mower")
+    return (await target_entities(hass, "lawn_mower"))["included"]
 
 
 @pytest.mark.parametrize(
@@ -105,19 +104,18 @@ async def test_lawn_mower_state_trigger_behavior_any(
     states: list[StateDescription],
 ) -> None:
     """Test that the lawn mower state trigger fires when any lawn mower state changes to a specific state."""
-    await async_setup_component(hass, "lawn_mower", {})
-
     other_entity_ids = set(target_lawn_mowers) - {entity_id}
 
     # Set all lawn mowers, including the tested one, to the initial state
     for eid in target_lawn_mowers:
-        set_or_remove_state(hass, eid, states[0])
+        set_or_remove_state(hass, eid, states[0]["included"])
         await hass.async_block_till_done()
 
     await arm_trigger(hass, trigger, {}, trigger_target_config)
 
     for state in states[1:]:
-        set_or_remove_state(hass, entity_id, state)
+        included_state = state["included"]
+        set_or_remove_state(hass, entity_id, included_state)
         await hass.async_block_till_done()
         assert len(service_calls) == state["count"]
         for service_call in service_calls:
@@ -126,7 +124,7 @@ async def test_lawn_mower_state_trigger_behavior_any(
 
         # Check if changing other lawn mowers also triggers
         for other_entity_id in other_entity_ids:
-            set_or_remove_state(hass, other_entity_id, state)
+            set_or_remove_state(hass, other_entity_id, included_state)
             await hass.async_block_till_done()
         assert len(service_calls) == (entities_in_target - 1) * state["count"]
         service_calls.clear()
@@ -173,19 +171,18 @@ async def test_lawn_mower_state_trigger_behavior_first(
     states: list[StateDescription],
 ) -> None:
     """Test that the lawn mower state trigger fires when the first lawn mower changes to a specific state."""
-    await async_setup_component(hass, "lawn_mower", {})
-
     other_entity_ids = set(target_lawn_mowers) - {entity_id}
 
     # Set all lawn mowers, including the tested one, to the initial state
     for eid in target_lawn_mowers:
-        set_or_remove_state(hass, eid, states[0])
+        set_or_remove_state(hass, eid, states[0]["included"])
         await hass.async_block_till_done()
 
     await arm_trigger(hass, trigger, {"behavior": "first"}, trigger_target_config)
 
     for state in states[1:]:
-        set_or_remove_state(hass, entity_id, state)
+        included_state = state["included"]
+        set_or_remove_state(hass, entity_id, included_state)
         await hass.async_block_till_done()
         assert len(service_calls) == state["count"]
         for service_call in service_calls:
@@ -194,7 +191,7 @@ async def test_lawn_mower_state_trigger_behavior_first(
 
         # Triggering other lawn mowers should not cause the trigger to fire again
         for other_entity_id in other_entity_ids:
-            set_or_remove_state(hass, other_entity_id, state)
+            set_or_remove_state(hass, other_entity_id, included_state)
             await hass.async_block_till_done()
         assert len(service_calls) == 0
 
@@ -240,24 +237,23 @@ async def test_lawn_mower_state_trigger_behavior_last(
     states: list[StateDescription],
 ) -> None:
     """Test that the lawn_mower state trigger fires when the last lawn_mower changes to a specific state."""
-    await async_setup_component(hass, "lawn_mower", {})
-
     other_entity_ids = set(target_lawn_mowers) - {entity_id}
 
     # Set all lawn mowers, including the tested one, to the initial state
     for eid in target_lawn_mowers:
-        set_or_remove_state(hass, eid, states[0])
+        set_or_remove_state(hass, eid, states[0]["included"])
         await hass.async_block_till_done()
 
     await arm_trigger(hass, trigger, {"behavior": "last"}, trigger_target_config)
 
     for state in states[1:]:
+        included_state = state["included"]
         for other_entity_id in other_entity_ids:
-            set_or_remove_state(hass, other_entity_id, state)
+            set_or_remove_state(hass, other_entity_id, included_state)
             await hass.async_block_till_done()
         assert len(service_calls) == 0
 
-        set_or_remove_state(hass, entity_id, state)
+        set_or_remove_state(hass, entity_id, included_state)
         await hass.async_block_till_done()
         assert len(service_calls) == state["count"]
         for service_call in service_calls:
