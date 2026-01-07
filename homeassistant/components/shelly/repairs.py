@@ -169,11 +169,7 @@ def async_manage_coiot_unconfigured_issue(
         assert entry.runtime_data.block is not None
 
     device = entry.runtime_data.block.device
-    coiot_config = device.settings.get("coiot")
-    if not coiot_config:
-        ir.async_delete_issue(hass, DOMAIN, issue_id)
-        return
-
+    coiot_config = device.settings["coiot"]
     coiot_enabled = coiot_config.get("enabled")
 
     # Check if CoIoT is disabled or peer address is not correctly set

@@ -723,11 +723,11 @@ def async_remove_orphaned_entities(
 
 
 def _get_homeassistant_url(hass: HomeAssistant) -> URL | None:
-    """Return the CoIoT ip address and port."""
+    """Return HomeAssistant URL."""
     try:
         raw_url = get_url(hass, prefer_external=False, allow_cloud=False)
     except NoURLAvailableError:
-        LOGGER.debug("URL not available, skipping CoIoT setup")
+        LOGGER.debug("URL not available, skipping setup")
         return None
     return URL(raw_url)
 
