@@ -55,5 +55,22 @@
         "name": "Terminate apps"
       }
     }
+  },
+  "exceptions": {
+    "command_error": {
+      "message": "Error sending command to {device}: {error}"
+    },
+    "command_error_not_found": {
+      "message": "Error sending command to {device}: the Bravia API service is reloading"
+    },
+    "command_error_offline": {
+      "message": "Error sending command to {device}: the TV is turned off"
+    },
+    "update_error": {
+      "message": "Error updating data for {device}: {error}"
+    },
+    "update_error_not_found": {
+      "message": "Error updating data for {device}: the Bravia API service is stuck"
+    }
   }
 }
