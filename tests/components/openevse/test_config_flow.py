@@ -153,7 +153,7 @@ async def test_zeroconf_already_configured_unique_id(
     # Create an existing entry with the same unique_id but different IP
     config_entry = MockConfigEntry(
         domain=DOMAIN,
-        unique_id="1234",
+        unique_id="deadbeeffeed",
         data={CONF_HOST: "10.0.0.100"},
     )
     config_entry.add_to_hass(hass)
@@ -161,10 +161,10 @@ async def test_zeroconf_already_configured_unique_id(
     discovery_info = ZeroconfServiceInfo(
         ip_address=ip_address("192.168.1.123"),
         ip_addresses=[ip_address("192.168.1.123"), ip_address("2001:db8::1")],
-        hostname="openevse-1234.local.",
-        name="openevse-1234._openevse._tcp.local.",
+        hostname="openevse-deadbeeffeed.local.",
+        name="openevse-deadbeeffeed._openevse._tcp.local.",
         port=80,
-        properties={"id": "1234", "type": "openevse"},
+        properties={"id": "deadbeeffeed", "type": "openevse"},
         type="_openevse._tcp.local.",
     )
 
@@ -190,10 +190,10 @@ async def test_zeroconf_discovery(
     discovery_info = ZeroconfServiceInfo(
         ip_address=ip_address("192.168.1.123"),
         ip_addresses=[ip_address("192.168.1.123")],
-        hostname="openevse-1234.local.",
-        name="openevse-1234._openevse._tcp.local.",
+        hostname="openevse-deadbeeffeed.local.",
+        name="openevse-deadbeeffeed._openevse._tcp.local.",
         port=80,
-        properties={"id": "1234", "type": "openevse"},
+        properties={"id": "deadbeeffeed", "type": "openevse"},
         type="_openevse._tcp.local.",
     )
 
@@ -207,7 +207,7 @@ async def test_zeroconf_discovery(
     # Should present a confirmation form
     assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "discovery_confirm"
-    assert result["description_placeholders"] == {"name": "OpenEVSE openevse-1234"}
+    assert result["description_placeholders"] == {"name": "OpenEVSE openevse-deadbeeffeed"}
 
     # Confirm the discovery
     result = await hass.config_entries.flow.async_configure(
@@ -216,7 +216,7 @@ async def test_zeroconf_discovery(
 
     # Should create the entry
     assert result["type"] == FlowResultType.CREATE_ENTRY
-    assert result["title"] == "OpenEVSE openevse-1234"
+    assert result["title"] == "OpenEVSE openevse-deadbeeffeed"
     assert result["data"][CONF_HOST] == "192.168.1.123"
 
 
@@ -227,8 +227,8 @@ async def test_zeroconf_no_serial(
     discovery_info = ZeroconfServiceInfo(
         ip_address=ip_address("192.168.1.123"),
         ip_addresses=[ip_address("192.168.1.123"), ip_address("2001:db8::1")],
-        hostname="openevse-1234.local.",
-        name="openevse-1234._openevse._tcp.local.",
+        hostname="openevse-deadbeeffeed.local.",
+        name="openevse-deadbeeffeed._openevse._tcp.local.",
         port=80,
         properties={"type": "openevse"},  # Missing 'id'
         type="_openevse._tcp.local.",
@@ -252,10 +252,10 @@ async def test_zeroconf_connection_error(
     discovery_info = ZeroconfServiceInfo(
         ip_address=ip_address("192.168.1.123"),
         ip_addresses=[ip_address("192.168.1.123"), ip_address("2001:db8::1")],
-        hostname="openevse-1234.local.",
-        name="openevse-1234._openevse._tcp.local.",
+        hostname="openevse-deadbeeffeed.local.",
+        name="openevse-deadbeeffeed._openevse._tcp.local.",
         port=80,
-        properties={"id": "1234", "type": "openevse"},
+        properties={"id": "deadbeeffeed", "type": "openevse"},
         type="_openevse._tcp.local.",
     )
 
@@ -275,7 +275,7 @@ async def test_zeroconf_already_configured_host(
     """Test zeroconf discovery aborts if host is already configured."""
     config_entry = MockConfigEntry(
         domain=DOMAIN,
-        unique_id="1234",
+        unique_id="deadbeeffeed",
         data={CONF_HOST: "192.168.1.100"},
     )
     config_entry.add_to_hass(hass)
@@ -283,10 +283,10 @@ async def test_zeroconf_already_configured_host(
     discovery_info = ZeroconfServiceInfo(
         ip_address=ip_address("192.168.1.100"),
         ip_addresses=[ip_address("192.168.1.100"), ip_address("2001:db8::1")],
-        hostname="openevse-1234.local.",
-        name="openevse-1234._openevse._tcp.local.",
+        hostname="openevse-deadbeeffeed.local.",
+        name="openevse-deadbeeffeed._openevse._tcp.local.",
         port=80,
-        properties={"id": "1234", "type": "openevse"},
+        properties={"id": "deadbeeffeed", "type": "openevse"},
         type="_openevse._tcp.local.",
     )
 
