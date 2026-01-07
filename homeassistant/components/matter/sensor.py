@@ -1541,4 +1541,16 @@ DISCOVERY_SCHEMAS = [
         required_attributes=(clusters.DoorLock.Attributes.DoorClosedEvents,),
         featuremap_contains=clusters.DoorLock.Bitmaps.Feature.kDoorPositionSensor,
     ),
+    MatterDiscoverySchema(
+        platform=Platform.SENSOR,
+        entity_description=MatterSensorEntityDescription(
+            key="ThreadNetworkDiagnosticsAttachAttemptCount",
+            translation_key="attach_attempt_count",
+            entity_category=EntityCategory.DIAGNOSTIC,
+            # entity_registry_enabled_default=False,
+            state_class=SensorStateClass.TOTAL_INCREASING,
+        ),
+        entity_class=MatterSensor,
+        required_attributes=(clusters.ThreadNetworkDiagnostics.Attributes.AttachAttemptCount,),
+    ),
 ]
