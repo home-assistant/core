@@ -56,8 +56,12 @@ def catch_braviatv_errors[_BraviaTVCoordinatorT: BraviaTVCoordinator, **_P](
         """Catch Bravia errors and log message."""
         try:
             await func(self, *args, **kwargs)
+        except BraviaNotFound:
+            _LOGGER.error("Error sending command: the Bravia API service is reloading")
+        except (BraviaConnectionError, BraviaConnectionTimeout, BraviaTurnedOff):
+            _LOGGER.error("Error sending command: the TV is turned off")
         except BraviaError as err:
-            _LOGGER.error("Command error: %s", err)
+            _LOGGER.error("Error sending command: %s", err)
         await self.async_request_refresh()
 
     return wrapper
@@ -165,13 +169,13 @@ class BraviaTVCoordinator(DataUpdateCoordinator[None]):
             if self.skipped_updates < 10:
                 self.connected = False
                 self.skipped_updates += 1
-                _LOGGER.debug("Update skipped, Bravia API service is reloading")
+                _LOGGER.debug("Update skipped: the Bravia API service is reloading")
                 return
             raise UpdateFailed("Error communicating with device") from err
         except (BraviaConnectionError, BraviaConnectionTimeout, BraviaTurnedOff):
             self.is_on = False
             self.connected = False
-            _LOGGER.debug("Update skipped, Bravia TV is off")
+            _LOGGER.debug("Update skipped: the TV is turned off")
         except BraviaError as err:
             self.is_on = False
             self.connected = False
