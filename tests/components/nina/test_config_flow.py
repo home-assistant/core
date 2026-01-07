@@ -38,7 +38,7 @@ DUMMY_RESPONSE_REGIONS: dict[str, Any] = json.loads(
 )
 
 
-def assert_dummy_entry_created(result: dict[str, Any]):
+def assert_dummy_entry_created(result: dict[str, Any]) -> None:
     """Asserts that an entry from DUMMY_USER_INPUT is created."""
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "NINA"
