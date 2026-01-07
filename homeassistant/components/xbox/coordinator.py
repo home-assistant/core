@@ -18,7 +18,7 @@ from pythonxbox.api.provider.smartglass.models import (
     SmartglassConsole,
     SmartglassConsoleStatus,
 )
-from pythonxbox.api.provider.titlehub.models import Title
+from pythonxbox.api.provider.titlehub.models import Title, TitleFields
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -56,6 +56,7 @@ class XboxCoordinators:
     consoles: XboxConsolesCoordinator
     status: XboxConsoleStatusCoordinator
     presence: XboxPresenceCoordinator
+    title_history: XboxTitleHistoryCoordinator
 
 
 class XboxBaseCoordinator[_DataT](DataUpdateCoordinator[_DataT]):
@@ -280,3 +281,25 @@ class XboxPresenceCoordinator(XboxBaseCoordinator[XboxData]):
             for friend in self.config_entry.subentries.values()
             if friend.unique_id
         }
+
+
+class XboxTitleHistoryCoordinator(XboxBaseCoordinator[dict[str, Title]]):
+    """Update game title history data."""
+
+    config_entry: XboxConfigEntry
+    _update_interval = timedelta(minutes=10)
+
+    async def update_data(self) -> dict[str, Title]:
+        """Fetch game title history data."""
+
+        title_history = await self.client.titlehub.get_title_history(
+            self.client.xuid,
+            [
+                TitleFields.ACHIEVEMENT,
+                TitleFields.DETAIL,
+                TitleFields.IMAGE,
+            ],
+            max_items=1000,
+        )
+
+        return {title.title_id: title for title in title_history.titles}

@@ -67,6 +67,31 @@
           "title": "Friend online status"
         }
       }
+    },
+    "game": {
+      "abort": {
+        "no_game_titles": "Your game history is empty right now."
+      },
+      "entry_type": "Game",
+      "error": {
+        "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+        "unknown": "[%key:common::config_flow::error::unknown%]"
+      },
+      "initiate_flow": {
+        "user": "Add game title"
+      },
+      "step": {
+        "user": {
+          "data": {
+            "title_id": "Game title"
+          },
+          "data_description": {
+            "title_id": "Select a title from your played games to track your progress."
+          },
+          "description": "Track the progress in a game you are playing on Xbox Network.",
+          "title": "Game title progress"
+        }
+      }
     }
   },
   "entity": {
@@ -98,6 +123,17 @@
       }
     },
     "sensor": {
+      "current_achievements": {
+        "name": "Earned achievements",
+        "unit_of_measurement": "achievements"
+      },
+      "current_gamerscore": {
+        "name": "Earned Gamerscore",
+        "unit_of_measurement": "points"
+      },
+      "developer": {
+        "name": "[%key:component::xbox::entity::sensor::now_playing::state_attributes::developer::name%]"
+      },
       "follower": {
         "name": "Follower",
         "unit_of_measurement": "[%key:component::xbox::entity::sensor::following::unit_of_measurement%]"
@@ -117,6 +153,9 @@
         "name": "Gamerscore",
         "unit_of_measurement": "points"
       },
+      "genres": {
+        "name": "[%key:component::xbox::entity::sensor::now_playing::state_attributes::genres::name%]"
+      },
       "in_party": {
         "name": "In party",
         "unit_of_measurement": "[%key:component::xbox::entity::sensor::following::unit_of_measurement%]"
@@ -130,6 +169,13 @@
       },
       "last_online": {
         "name": "Last online"
+      },
+      "last_time_played": {
+        "name": "Last time played"
+      },
+      "min_age": {
+        "name": "[%key:component::xbox::entity::sensor::now_playing::state_attributes::min_age::name%]",
+        "unit_of_measurement": "years"
       },
       "now_playing": {
         "name": "Now playing",
@@ -147,8 +193,34 @@
           "short_description": { "name": "Short description" }
         }
       },
+      "progress": {
+        "name": "Progress"
+      },
+      "publisher": {
+        "name": "[%key:component::xbox::entity::sensor::now_playing::state_attributes::publisher::name%]"
+      },
+      "release_date": {
+        "name": "[%key:component::xbox::entity::sensor::now_playing::state_attributes::release_date::name%]"
+      },
       "status": {
         "name": "Status"
+      },
+      "title": {
+        "name": "Title",
+        "state_attributes": {
+          "description": { "name": "Description" },
+          "short_description": {
+            "name": "[%key:component::xbox::entity::sensor::now_playing::state_attributes::short_description::name%]"
+          }
+        }
+      },
+      "total_achievements": {
+        "name": "Total achievements",
+        "unit_of_measurement": "achievements"
+      },
+      "total_gamerscore": {
+        "name": "Total Gamerscore",
+        "unit_of_measurement": "points"
       },
       "total_storage": {
         "name": "Total space - {name}"

@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable
+from collections.abc import Callable, Mapping
 from dataclasses import dataclass
 from datetime import UTC, datetime
 from enum import StrEnum
@@ -20,15 +20,19 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.const import CONF_NAME, UnitOfInformation
+from homeassistant.const import CONF_NAME, PERCENTAGE, UnitOfInformation
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
-from .coordinator import XboxConfigEntry, XboxConsolesCoordinator
+from .coordinator import (
+    XboxConfigEntry,
+    XboxConsolesCoordinator,
+    XboxTitleHistoryCoordinator,
+)
 from .entity import (
     MAP_MODEL,
     XboxBaseEntity,
@@ -61,6 +65,18 @@ class XboxSensor(StrEnum):
     JOIN_RESTRICTIONS = "join_restrictions"
     TOTAL_STORAGE = "total_storage"
     FREE_STORAGE = "free_storage"
+    TITLE = "title"
+    TOTAL_ACHIEVEMENTS = "total_achievements"
+    TOTAL_GAMERSCORE = "total_gamerscore"
+    CURRENT_ACHIEVEMENTS = "current_achievements"
+    CURRENT_GAMERSCORE = "current_gamerscore"
+    PROGRESS = "progress"
+    LAST_TIME_PLAYED = "last_time_played"
+    RELEASE_DATE = "release_date"
+    MIN_AGE = "min_age"
+    PUBLISHER = "publisher"
+    DEVELOPER = "developer"
+    GENRES = "genres"
 
 
 @dataclass(kw_only=True, frozen=True)
@@ -77,6 +93,15 @@ class XboxStorageDeviceSensorEntityDescription(
     """Xbox console sensor description."""
 
     value_fn: Callable[[StorageDevice], StateType]
+
+
+@dataclass(kw_only=True, frozen=True)
+class XboxGameSensorEntityDescription(SensorEntityDescription):
+    """Xbox game sensor description."""
+
+    value_fn: Callable[[Title], StateType | datetime]
+    attributes_fn: Callable[[Title], Mapping[str, Any] | None] | None = None
+    entity_picture_fn: Callable[[Title], str | None] | None = None
 
 
 def now_playing_attributes(_: Person, title: Title | None) -> dict[str, Any]:
@@ -139,7 +164,7 @@ def join_restrictions(person: Person, _: Title | None = None) -> str | None:
     )
 
 
-def title_logo(_: Person, title: Title | None) -> str | None:
+def title_logo(title: Title | None) -> str | None:
     """Get the game logo."""
 
     return (
@@ -198,7 +223,7 @@ SENSOR_DESCRIPTIONS: tuple[XboxSensorEntityDescription, ...] = (
         translation_key=XboxSensor.NOW_PLAYING,
         value_fn=lambda _, title: title.name if title else None,
         attributes_fn=now_playing_attributes,
-        entity_picture_fn=title_logo,
+        entity_picture_fn=lambda _, x: title_logo(x),
     ),
     XboxSensorEntityDescription(
         key=XboxSensor.FRIENDS,
@@ -248,6 +273,95 @@ STORAGE_SENSOR_DESCRIPTIONS: tuple[XboxStorageDeviceSensorEntityDescription, ...
     ),
 )
 
+GAME_SENSOR_DESCRIPTIONS: tuple[XboxGameSensorEntityDescription, ...] = (
+    XboxGameSensorEntityDescription(
+        key=XboxSensor.TITLE,
+        translation_key=XboxSensor.TITLE,
+        value_fn=lambda x: x.name,
+        attributes_fn=(
+            lambda x: {
+                "description": x.detail.description if x.detail else None,
+                "short_description": x.detail.short_description if x.detail else None,
+            }
+        ),
+        entity_picture_fn=title_logo,
+    ),
+    XboxGameSensorEntityDescription(
+        key=XboxSensor.TOTAL_ACHIEVEMENTS,
+        translation_key=XboxSensor.TOTAL_ACHIEVEMENTS,
+        value_fn=lambda x: x.achievement.total_achievements if x.achievement else None,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    XboxGameSensorEntityDescription(
+        key=XboxSensor.TOTAL_GAMERSCORE,
+        translation_key=XboxSensor.TOTAL_GAMERSCORE,
+        value_fn=lambda x: x.achievement.total_gamerscore if x.achievement else None,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    XboxGameSensorEntityDescription(
+        key=XboxSensor.CURRENT_ACHIEVEMENTS,
+        translation_key=XboxSensor.CURRENT_ACHIEVEMENTS,
+        value_fn=(
+            lambda x: x.achievement.current_achievements if x.achievement else None
+        ),
+    ),
+    XboxGameSensorEntityDescription(
+        key=XboxSensor.CURRENT_GAMERSCORE,
+        translation_key=XboxSensor.CURRENT_GAMERSCORE,
+        value_fn=lambda x: x.achievement.current_gamerscore if x.achievement else None,
+    ),
+    XboxGameSensorEntityDescription(
+        key=XboxSensor.PROGRESS,
+        translation_key=XboxSensor.PROGRESS,
+        value_fn=lambda x: x.achievement.progress_percentage if x.achievement else None,
+        native_unit_of_measurement=PERCENTAGE,
+        suggested_display_precision=0,
+    ),
+    XboxGameSensorEntityDescription(
+        key=XboxSensor.LAST_TIME_PLAYED,
+        translation_key=XboxSensor.LAST_TIME_PLAYED,
+        value_fn=(
+            lambda x: x.title_history.last_time_played if x.title_history else None
+        ),
+        device_class=SensorDeviceClass.TIMESTAMP,
+    ),
+    XboxGameSensorEntityDescription(
+        key=XboxSensor.RELEASE_DATE,
+        translation_key=XboxSensor.RELEASE_DATE,
+        value_fn=lambda x: x.detail.release_date if x.detail else None,
+        device_class=SensorDeviceClass.TIMESTAMP,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    XboxGameSensorEntityDescription(
+        key=XboxSensor.MIN_AGE,
+        translation_key=XboxSensor.MIN_AGE,
+        value_fn=lambda x: x.detail.min_age if x.detail else None,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    XboxGameSensorEntityDescription(
+        key=XboxSensor.DEVELOPER,
+        translation_key=XboxSensor.DEVELOPER,
+        value_fn=(lambda x: (x.detail.developer_name or None) if x.detail else None),
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    XboxGameSensorEntityDescription(
+        key=XboxSensor.PUBLISHER,
+        translation_key=XboxSensor.PUBLISHER,
+        value_fn=lambda x: (x.detail.publisher_name or None) if x.detail else None,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    XboxGameSensorEntityDescription(
+        key=XboxSensor.GENRES,
+        translation_key=XboxSensor.GENRES,
+        value_fn=(
+            lambda x: ", ".join(x.detail.genres)
+            if x.detail and x.detail.genres
+            else None
+        ),
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+)
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -278,6 +392,19 @@ async def async_setup_entry(
                 )
                 and subentry.unique_id in presence.data.presence
                 and subentry.subentry_type == "friend"
+            ],
+            config_subentry_id=subentry_id,
+        )
+
+    title_history = config_entry.runtime_data.title_history
+    for subentry_id, subentry in config_entry.subentries.items():
+        async_add_entities(
+            [
+                XboxGameSensorEntity(title_history, subentry.unique_id, description)
+                for description in GAME_SENSOR_DESCRIPTIONS
+                if subentry.unique_id
+                and subentry.unique_id in title_history.data
+                and subentry.subentry_type == "game"
             ],
             config_subentry_id=subentry_id,
         )
@@ -379,3 +506,71 @@ class XboxStorageDeviceSensorEntity(
         """Return the state of the requested attribute."""
 
         return self.entity_description.value_fn(self.data) if self.data else None
+
+
+class XboxGameSensorEntity(
+    CoordinatorEntity[XboxTitleHistoryCoordinator], SensorEntity
+):
+    """Representation of a Xbox presence state."""
+
+    _attr_has_entity_name = True
+    entity_description: XboxGameSensorEntityDescription
+
+    def __init__(
+        self,
+        coordinator: XboxTitleHistoryCoordinator,
+        title_id: str,
+        entity_description: XboxGameSensorEntityDescription,
+    ) -> None:
+        """Initialize Xbox entity."""
+        super().__init__(coordinator)
+        self.xuid = coordinator.client.xuid
+        self.title_id = title_id
+        self.entity_description = entity_description
+
+        self._attr_unique_id = (
+            f"{coordinator.client.xuid}_{title_id}_{entity_description.key}"
+        )
+
+        self._attr_device_info = DeviceInfo(
+            entry_type=DeviceEntryType.SERVICE,
+            identifiers={(DOMAIN, f"{coordinator.client.xuid}_{title_id}")},
+            manufacturer=(
+                (self.data.detail.developer_name or self.data.detail.publisher_name)
+                if self.data.detail
+                else None
+            ),
+            model=self.data.name,
+            name=self.data.name,
+            via_device=(DOMAIN, coordinator.client.xuid),
+        )
+
+    @property
+    def data(self) -> Title:
+        """Return coordinator data for this person."""
+        return self.coordinator.data[self.title_id]
+
+    @property
+    def native_value(self) -> StateType | datetime:
+        """Return the state of the requested attribute."""
+        return self.entity_description.value_fn(self.data)
+
+    @property
+    def extra_state_attributes(self) -> Mapping[str, float | None] | None:
+        """Return entity specific state attributes."""
+        return (
+            fn(self.data)
+            if (fn := self.entity_description.attributes_fn)
+            else super().extra_state_attributes
+        )
+
+    @property
+    def entity_picture(self) -> str | None:
+        """Return the entity picture."""
+
+        return (
+            entity_picture
+            if (fn := self.entity_description.entity_picture_fn) is not None
+            and (entity_picture := fn(self.data)) is not None
+            else super().entity_picture
+        )

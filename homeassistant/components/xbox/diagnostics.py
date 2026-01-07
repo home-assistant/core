@@ -50,10 +50,15 @@ async def async_get_config_entry_diagnostics(
         title.model_dump()
         for title in config_entry.runtime_data.presence.data.title_info.values()
     ]
+    title_history = {
+        title_id: title.model_dump()
+        for title_id, title in config_entry.runtime_data.title_history.data.items()
+    }
 
     return {
         "consoles_status": consoles_status,
         "consoles_list": consoles_list,
         "presence": presence,
         "title_info": title_info,
+        "title_history": title_history,
     }
