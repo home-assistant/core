@@ -11,8 +11,8 @@ This integration supports Victron Energy devices that have:
 
 Common supported devices include:
 - Cerbo GX
-- Venus GX  
 - Ekrano GX
+- Any GX device supporting v3.70 and up.
 - MPPT Solar Charge Controllers
 - BMV Battery Monitors
 - MultiPlus Inverter/Chargers
@@ -72,7 +72,7 @@ If automatic discovery doesn't work:
    - Example: `192.168.1.100` or `venus.local`
 
 2. **Authentication** (if required):
-   - If using secure MQTT, you'll be prompted for the secure profile password
+   - If your Local Network Security Profile is set to Secured or Weak, you'll be prompted for the secure profile password
    - This is configured in your device's MQTT security settings
 
 3. **Discovery**:
@@ -102,9 +102,9 @@ After setup, you can access device settings through:
 - This is the default configuration for most Victron devices
 - Data is transmitted in plain text on your local network
 
-### Secure MQTT  
+### Local Network Security Profile
 - If insecure connection fails, you'll be prompted for the secure profile password
-- Secure MQTT uses encryption and authentication
+- If using a Secured Local Network Security Profile, MQTT uses encryption and authentication
 - Configure the secure profile password in your device's MQTT settings first
 
 ### Network Security
@@ -128,7 +128,7 @@ After setup, you can access device settings through:
 ### Authentication Failed  
 - Verify the secure profile password is correct
 - Check MQTT user credentials in device settings
-- Ensure secure MQTT is properly configured on the device
+- Ensure the Local Network Security Profile is properly configured on the device
 
 ### No Entities Discovered
 - Wait up to 30 seconds for discovery to complete
