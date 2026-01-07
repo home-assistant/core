@@ -328,8 +328,6 @@ async def build_item_response(  # noqa: C901
             ]
     elif media_content_type == BrowsableMedia.CURRENT_USER_SAVED_TRACKS:
         title = LIBRARY_MAP.get(media_content_type)
-        user_data = await spotify.get_current_user()
-        media_content_id = f"spotify:user:{user_data.user_id}:collection"
         if saved_tracks := await spotify.get_saved_tracks():
             items = [
                 _get_track_item_payload(saved_track.track)
