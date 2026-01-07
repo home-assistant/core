@@ -57,6 +57,17 @@ STR_TO_HVAC: dict[str, HVACMode] = {
 
 HVAC_TO_STR = {v: k for k, v in STR_TO_HVAC.items()}
 
+# Standard ordering for HVAC modes to ensure consistent UI display
+HVAC_MODE_ORDER: tuple[HVACMode, ...] = (
+    HVACMode.AUTO,
+    HVACMode.HEAT_COOL,
+    HVACMode.HEAT,
+    HVACMode.COOL,
+    HVACMode.DRY,
+    HVACMode.FAN_ONLY,
+    HVACMode.OFF,
+)
+
 THINQ_PRESET_MODE: list[str] = ["air_clean", "aroma", "energy_saving"]
 
 STR_TO_SWING = {
@@ -130,6 +141,9 @@ class ThinQClimateEntity(ThinQEntity, ClimateEntity):
             elif mode in THINQ_PRESET_MODE:
                 self._attr_preset_modes.append(mode)
                 self._attr_supported_features |= ClimateEntityFeature.PRESET_MODE
+
+        # Sort HVAC modes for consistent UI display order.
+        self._attr_hvac_modes.sort(key=HVAC_MODE_ORDER.index)
 
         # Set up fan modes.
         self._attr_fan_modes = [
