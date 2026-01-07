@@ -5,11 +5,8 @@
   "config_flow": true,
   "dependencies": [],
   "documentation": "https://www.home-assistant.io/integrations/homevolt",
-  "homekit": {},
   "integration_type": "device",
   "iot_class": "local_polling",
   "quality_scale": "bronze",
-  "requirements": ["homevolt==0.2.3"],
-  "ssdp": [],
-  "zeroconf": []
+  "requirements": ["homevolt==0.2.3"]
 }
