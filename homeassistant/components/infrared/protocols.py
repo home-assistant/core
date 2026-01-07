@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from abc import ABC
 from dataclasses import dataclass, field
 from enum import StrEnum
 
@@ -26,7 +25,7 @@ class IRTiming:
     low_us: int
 
 
-class InfraredProtocol(ABC):
+class InfraredProtocol:
     """Base class for IR protocol definitions."""
 
     type: InfraredProtocolType
@@ -96,7 +95,8 @@ class SamsungInfraredProtocol(InfraredProtocol):
         )
 
 
-class InfraredCommand(ABC):
+@dataclass(frozen=True, slots=True, kw_only=True)
+class InfraredCommand:
     """Base class for IR commands."""
 
     repeat_count: int
