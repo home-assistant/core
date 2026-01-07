@@ -1,0 +1,345 @@
+set_active_gear:
+  name: Set active gear
+  description: Set gear as active/default for an activity type. Provide either gear_uuid OR entity_id.
+  fields:
+    gear_uuid:
+      name: Gear UUID
+      description: The UUID of the gear. Find this in the gear sensor attributes.
+      required: false
+      example: "bdcea3e8f70e40a78d50cd2fe5397798"
+      selector:
+        text:
+    entity_id:
+      name: Gear sensor entity
+      description: Alternative to gear_uuid - select a gear sensor entity.
+      required: false
+      example: sensor.garmin_connect_my_running_shoes
+      selector:
+        entity:
+          integration: garmin_connect
+          domain: sensor
+    activity_type:
+      name: Activity type
+      description: The activity type for which to set the gear as default.
+      required: true
+      example: running
+      default: running
+      selector:
+        select:
+          options:
+            - running
+            - cycling
+            - hiking
+            - walking
+            - swimming
+            - other
+    setting:
+      name: Setting
+      description: The gear setting to apply. Defaults to "set this as default, unset others".
+      required: false
+      default: set this as default, unset others
+      selector:
+        select:
+          options:
+            - set this as default, unset others
+            - set as default
+            - unset default
+
+add_body_composition:
+  name: Add body composition
+  description: Add body composition metrics to Garmin Connect.
+  fields:
+    weight:
+      name: Weight
+      description: Weight in kilograms.
+      required: true
+      example: 82.3
+      selector:
+        number:
+          min: 0
+          max: 500
+          step: 0.1
+          unit_of_measurement: kg
+    timestamp:
+      name: Timestamp
+      description: When the measurement was recorded (defaults to now).
+      required: false
+      example: "2024-01-15T08:30:00"
+      selector:
+        text:
+    bmi:
+      name: BMI
+      description: Body Mass Index based on weight and height.
+      required: false
+      example: 24.7
+      selector:
+        number:
+          min: 0
+          max: 100
+          step: 0.1
+    percent_fat:
+      name: Body fat percentage
+      description: Percentage of body fat.
+      required: false
+      example: 23.6
+      selector:
+        number:
+          min: 0
+          max: 100
+          step: 0.1
+          unit_of_measurement: "%"
+    percent_hydration:
+      name: Hydration percentage
+      description: Percentage of body hydration.
+      required: false
+      example: 51.2
+      selector:
+        number:
+          min: 0
+          max: 100
+          step: 0.1
+          unit_of_measurement: "%"
+    visceral_fat_mass:
+      name: Visceral fat mass
+      description: Estimated mass of visceral fat in kilograms.
+      required: false
+      example: 2.5
+      selector:
+        number:
+          min: 0
+          max: 50
+          step: 0.1
+          unit_of_measurement: kg
+    bone_mass:
+      name: Bone mass
+      description: Estimated mass of bones in kilograms.
+      required: false
+      example: 3.2
+      selector:
+        number:
+          min: 0
+          max: 20
+          step: 0.1
+          unit_of_measurement: kg
+    muscle_mass:
+      name: Muscle mass
+      description: Estimated mass of muscle in kilograms.
+      required: false
+      example: 35.5
+      selector:
+        number:
+          min: 0
+          max: 100
+          step: 0.1
+          unit_of_measurement: kg
+    basal_met:
+      name: Basal metabolism
+      description: Basal metabolic rate in kcal.
+      required: false
+      example: 1900
+      selector:
+        number:
+          min: 0
+          max: 5000
+          step: 1
+          unit_of_measurement: kcal
+    active_met:
+      name: Active metabolism
+      description: Active metabolic rate in kcal.
+      required: false
+      example: 840
+      selector:
+        number:
+          min: 0
+          max: 5000
+          step: 1
+          unit_of_measurement: kcal
+    physique_rating:
+      name: Physique rating
+      description: Body physique rating (1-9 scale).
+      required: false
+      example: 5
+      selector:
+        number:
+          min: 1
+          max: 9
+          step: 1
+    metabolic_age:
+      name: Metabolic age
+      description: Estimated metabolic age in years.
+      required: false
+      example: 37
+      selector:
+        number:
+          min: 1
+          max: 120
+          step: 1
+          unit_of_measurement: years
+    visceral_fat_rating:
+      name: Visceral fat rating
+      description: Visceral fat rating (1-59 scale).
+      required: false
+      example: 10
+      selector:
+        number:
+          min: 1
+          max: 59
+          step: 1
+
+add_blood_pressure:
+  name: Add blood pressure
+  description: Add blood pressure measurement to Garmin Connect.
+  fields:
+    systolic:
+      name: Systolic
+      description: Systolic blood pressure value.
+      required: true
+      example: 120
+      selector:
+        number:
+          min: 60
+          max: 250
+          step: 1
+          unit_of_measurement: mmHg
+    diastolic:
+      name: Diastolic
+      description: Diastolic blood pressure value.
+      required: true
+      example: 80
+      selector:
+        number:
+          min: 40
+          max: 150
+          step: 1
+          unit_of_measurement: mmHg
+    pulse:
+      name: Pulse
+      description: Pulse rate.
+      required: true
+      example: 60
+      selector:
+        number:
+          min: 30
+          max: 220
+          step: 1
+          unit_of_measurement: bpm
+    timestamp:
+      name: Timestamp
+      description: When the measurement was recorded (defaults to now).
+      required: false
+      example: "2024-01-15T08:30:00"
+      selector:
+        text:
+    notes:
+      name: Notes
+      description: Additional notes for the measurement.
+      required: false
+      example: "Measured with Beurer BC54"
+      selector:
+        text:
+
+create_activity:
+  name: Create activity
+  description: Create an activity in Garmin Connect.
+  fields:
+    activity_name:
+      name: Activity name
+      description: Name of the activity.
+      required: true
+      example: "Morning Run"
+      selector:
+        text:
+    activity_type:
+      name: Activity type
+      description: Type of activity (e.g., running, cycling, walking).
+      required: true
+      example: running
+      default: running
+      selector:
+        select:
+          options:
+            - running
+            - cycling
+            - walking
+            - hiking
+            - swimming
+            - fitness_equipment
+            - other
+    start_datetime:
+      name: Start date and time
+      description: When the activity started (ISO format). Defaults to now if not specified.
+      required: false
+      example: "2024-01-15T08:30:00"
+      selector:
+        text:
+    duration_min:
+      name: Duration
+      description: Duration of the activity in minutes.
+      required: true
+      example: 30
+      selector:
+        number:
+          min: 1
+          max: 1440
+          step: 1
+          unit_of_measurement: min
+    distance_km:
+      name: Distance
+      description: Distance covered in kilometers (optional).
+      required: false
+      example: 5.0
+      selector:
+        number:
+          min: 0
+          max: 1000
+          step: 0.1
+          unit_of_measurement: km
+    time_zone:
+      name: Time zone
+      description: Time zone for the activity (defaults to HA's configured timezone).
+      required: false
+      example: "Europe/Amsterdam"
+      selector:
+        text:
+
+upload_activity:
+  name: Upload activity
+  description: Upload an activity file (FIT, GPX, TCX) to Garmin Connect.
+  fields:
+    file_path:
+      name: File path
+      description: Path to the activity file (relative to config directory) on the Home Assistant system.
+      required: true
+      example: "run.fit"
+      selector:
+        text:
+
+add_gear_to_activity:
+  name: Add gear to activity
+  description: Associate gear (shoes, bike, etc.) with a specific activity. Provide either gear_uuid OR entity_id.
+  fields:
+    activity_id:
+      name: Activity ID
+      description: The ID of the activity to add the gear to.
+      required: true
+      example: 12345678901
+      selector:
+        number:
+          min: 1
+          mode: box
+    gear_uuid:
+      name: Gear UUID
+      description: The UUID of the gear to add. Find this in the gear sensor attributes.
+      required: false
+      example: "bdcea3e8f70e40a78d50cd2fe5397798"
+      selector:
+        text:
+    entity_id:
+      name: Gear sensor entity
+      description: Alternative to gear_uuid - select a gear sensor entity.
+      required: false
+      example: sensor.garmin_connect_my_running_shoes
+      selector:
+        entity:
+          integration: garmin_connect
+          domain: sensor

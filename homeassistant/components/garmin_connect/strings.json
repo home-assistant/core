@@ -1,0 +1,499 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "Account is already configured",
+      "mfa_session_expired": "MFA session expired, please try again"
+    },
+    "error": {
+      "invalid_auth": "Invalid credentials",
+      "invalid_mfa": "Invalid verification code",
+      "unknown": "Unexpected error"
+    },
+    "step": {
+      "mfa": {
+        "data": {
+          "mfa_code": "Verification code"
+        },
+        "description": "Enter the verification code from Garmin.",
+        "title": "Two-Factor Authentication"
+      },
+      "reauth_confirm": {
+        "data": {
+          "password": "Password",
+          "username": "Email"
+        },
+        "description": "Your Garmin Connect session has expired. Please log in again.",
+        "title": "Reauthenticate"
+      },
+      "user": {
+        "data": {
+          "password": "Password",
+          "username": "Email"
+        },
+        "description": "Enter your Garmin Connect credentials.",
+        "title": "Garmin Connect"
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "abnormal_hr_alerts": {
+        "name": "Abnormal heart rate alerts"
+      },
+      "achievable_fitness_age": {
+        "name": "Achievable fitness age"
+      },
+      "active_calories": {
+        "name": "Active calories"
+      },
+      "active_goals": {
+        "name": "Active goals"
+      },
+      "active_time": {
+        "name": "Active time"
+      },
+      "activity_stress_duration": {
+        "name": "Activity stress duration"
+      },
+      "activity_stress_percentage": {
+        "name": "Activity stress percentage"
+      },
+      "avg_altitude": {
+        "name": "Average altitude"
+      },
+      "avg_spo2": {
+        "name": "Average SpO2"
+      },
+      "avg_stress_level": {
+        "name": "Average stress level"
+      },
+      "awake_duration": {
+        "name": "Awake duration"
+      },
+      "awake_sleep": {
+        "name": "Awake time"
+      },
+      "badges": {
+        "name": "Badges"
+      },
+      "bmi": {
+        "name": "BMI"
+      },
+      "bmr_calories": {
+        "name": "BMR calories"
+      },
+      "body_battery_charged": {
+        "name": "Body battery charged"
+      },
+      "body_battery_drained": {
+        "name": "Body battery drained"
+      },
+      "body_battery_highest": {
+        "name": "Body battery highest"
+      },
+      "body_battery_lowest": {
+        "name": "Body battery lowest"
+      },
+      "body_battery_most_recent": {
+        "name": "Body battery"
+      },
+      "body_fat": {
+        "name": "Body fat"
+      },
+      "body_water": {
+        "name": "Body water"
+      },
+      "bone_mass": {
+        "name": "Bone mass"
+      },
+      "bp_diastolic": {
+        "name": "Blood pressure diastolic"
+      },
+      "bp_measurement_time": {
+        "name": "Blood pressure measurement time"
+      },
+      "bp_pulse": {
+        "name": "Blood pressure pulse"
+      },
+      "bp_systolic": {
+        "name": "Blood pressure systolic"
+      },
+      "burned_calories": {
+        "name": "Burned calories"
+      },
+      "chronological_age": {
+        "name": "Chronological age"
+      },
+      "consumed_calories": {
+        "name": "Consumed calories"
+      },
+      "daily_step_goal": {
+        "name": "Daily step goal"
+      },
+      "deep_sleep": {
+        "name": "Deep sleep"
+      },
+      "device_last_synced": {
+        "name": "Last synced"
+      },
+      "endurance_score": {
+        "name": "Endurance score"
+      },
+      "fitness_age": {
+        "name": "Fitness age"
+      },
+      "floors_ascended": {
+        "name": "Floors ascended"
+      },
+      "floors_ascended_goal": {
+        "name": "Floors ascended goal"
+      },
+      "floors_ascended_meters": {
+        "name": "Floors ascended (meters)"
+      },
+      "floors_descended": {
+        "name": "Floors descended"
+      },
+      "floors_descended_meters": {
+        "name": "Floors descended (meters)"
+      },
+      "future_goals": {
+        "name": "Future goals"
+      },
+      "goals_history": {
+        "name": "Goals history"
+      },
+      "high_stress_duration": {
+        "name": "High stress duration"
+      },
+      "high_stress_percentage": {
+        "name": "High stress percentage"
+      },
+      "highest_respiration": {
+        "name": "Highest respiration"
+      },
+      "highly_active_time": {
+        "name": "Highly active time"
+      },
+      "hill_score": {
+        "name": "Hill score"
+      },
+      "hrv_baseline": {
+        "name": "HRV baseline"
+      },
+      "hrv_last_night_5min_high": {
+        "name": "HRV last night 5-min high"
+      },
+      "hrv_last_night_avg": {
+        "name": "HRV last night average"
+      },
+      "hrv_status": {
+        "name": "HRV status"
+      },
+      "hrv_weekly_avg": {
+        "name": "HRV weekly average"
+      },
+      "hydration": {
+        "name": "Hydration"
+      },
+      "hydration_activity_intake": {
+        "name": "Hydration activity intake"
+      },
+      "hydration_daily_average": {
+        "name": "Hydration daily average"
+      },
+      "hydration_goal": {
+        "name": "Hydration goal"
+      },
+      "hydration_sweat_loss": {
+        "name": "Hydration sweat loss"
+      },
+      "intensity_goal": {
+        "name": "Intensity minutes goal"
+      },
+      "lactate_threshold_hr": {
+        "name": "Lactate threshold heart rate"
+      },
+      "lactate_threshold_speed": {
+        "name": "Lactate threshold speed"
+      },
+      "last_7_days_avg_resting_heart_rate": {
+        "name": "7-day average resting heart rate"
+      },
+      "last_activities": {
+        "name": "Last activities"
+      },
+      "last_activity": {
+        "name": "Last activity"
+      },
+      "last_workout": {
+        "name": "Last workout"
+      },
+      "last_workouts": {
+        "name": "Last workouts"
+      },
+      "latest_respiration": {
+        "name": "Latest respiration"
+      },
+      "latest_respiration_time": {
+        "name": "Latest respiration time"
+      },
+      "latest_spo2": {
+        "name": "Latest SpO2"
+      },
+      "latest_spo2_time": {
+        "name": "Latest SpO2 time"
+      },
+      "light_sleep": {
+        "name": "Light sleep"
+      },
+      "low_stress_duration": {
+        "name": "Low stress duration"
+      },
+      "low_stress_percentage": {
+        "name": "Low stress percentage"
+      },
+      "lowest_respiration": {
+        "name": "Lowest respiration"
+      },
+      "lowest_spo2": {
+        "name": "Lowest SpO2"
+      },
+      "max_avg_heart_rate": {
+        "name": "Max average heart rate"
+      },
+      "max_heart_rate": {
+        "name": "Max heart rate"
+      },
+      "max_stress_level": {
+        "name": "Max stress level"
+      },
+      "medium_stress_duration": {
+        "name": "Medium stress duration"
+      },
+      "medium_stress_percentage": {
+        "name": "Medium stress percentage"
+      },
+      "menstrual_cycle_day": {
+        "name": "Menstrual cycle day"
+      },
+      "menstrual_cycle_phase": {
+        "name": "Menstrual cycle phase"
+      },
+      "menstrual_cycle_start": {
+        "name": "Menstrual cycle start"
+      },
+      "menstrual_cycle_type": {
+        "name": "Menstrual cycle type"
+      },
+      "menstrual_days_until_next_phase": {
+        "name": "Menstrual days until next phase"
+      },
+      "menstrual_fertile_window_end": {
+        "name": "Menstrual fertile window end"
+      },
+      "menstrual_fertile_window_start": {
+        "name": "Menstrual fertile window start"
+      },
+      "menstrual_next_predicted_cycle_start": {
+        "name": "Menstrual next predicted cycle start"
+      },
+      "menstrual_period_length": {
+        "name": "Menstrual period length"
+      },
+      "metabolic_age": {
+        "name": "Metabolic age"
+      },
+      "min_avg_heart_rate": {
+        "name": "Min average heart rate"
+      },
+      "min_heart_rate": {
+        "name": "Min heart rate"
+      },
+      "moderate_intensity": {
+        "name": "Moderate intensity minutes"
+      },
+      "morning_training_readiness": {
+        "name": "Morning training readiness"
+      },
+      "muscle_mass": {
+        "name": "Muscle mass"
+      },
+      "next_alarm": {
+        "name": "Next alarm"
+      },
+      "physique_rating": {
+        "name": "Physique rating"
+      },
+      "previous_fitness_age": {
+        "name": "Previous fitness age"
+      },
+      "rem_sleep": {
+        "name": "REM sleep"
+      },
+      "remaining_calories": {
+        "name": "Remaining calories"
+      },
+      "rest_stress_duration": {
+        "name": "Rest stress duration"
+      },
+      "rest_stress_percentage": {
+        "name": "Rest stress percentage"
+      },
+      "resting_heart_rate": {
+        "name": "Resting heart rate"
+      },
+      "sedentary_time": {
+        "name": "Sedentary time"
+      },
+      "sleep_duration": {
+        "name": "Sleep duration"
+      },
+      "sleep_score": {
+        "name": "Sleep score"
+      },
+      "sleeping_time": {
+        "name": "Sleeping time"
+      },
+      "stress_duration": {
+        "name": "Stress duration"
+      },
+      "stress_percentage": {
+        "name": "Stress percentage"
+      },
+      "stress_qualifier": {
+        "name": "Stress qualifier"
+      },
+      "total_calories": {
+        "name": "Total calories"
+      },
+      "total_distance": {
+        "name": "Total distance"
+      },
+      "total_sleep_duration": {
+        "name": "Total sleep duration"
+      },
+      "total_steps": {
+        "name": "Total steps"
+      },
+      "total_stress_duration": {
+        "name": "Total stress duration"
+      },
+      "training_readiness": {
+        "name": "Training readiness"
+      },
+      "training_status": {
+        "name": "Training status"
+      },
+      "uncategorized_stress_duration": {
+        "name": "Uncategorized stress duration"
+      },
+      "uncategorized_stress_percentage": {
+        "name": "Uncategorized stress percentage"
+      },
+      "user_level": {
+        "name": "User level"
+      },
+      "user_points": {
+        "name": "User points"
+      },
+      "vigorous_intensity": {
+        "name": "Vigorous intensity minutes"
+      },
+      "visceral_fat": {
+        "name": "Visceral fat"
+      },
+      "weekly_distance_avg": {
+        "name": "Weekly distance average"
+      },
+      "weekly_step_avg": {
+        "name": "Weekly step average"
+      },
+      "weight": {
+        "name": "Weight"
+      },
+      "wellness_active_calories": {
+        "name": "Wellness active calories"
+      },
+      "wellness_calories": {
+        "name": "Wellness calories"
+      },
+      "wellness_description": {
+        "name": "Wellness description"
+      },
+      "wellness_distance": {
+        "name": "Wellness distance"
+      },
+      "wellness_end_time": {
+        "name": "Wellness end time"
+      },
+      "wellness_start_time": {
+        "name": "Wellness start time"
+      },
+      "yesterday_distance": {
+        "name": "Yesterday distance"
+      },
+      "yesterday_steps": {
+        "name": "Yesterday steps"
+      }
+    }
+  },
+  "exceptions": {
+    "add_blood_pressure_failed": {
+      "message": "Failed to add blood pressure: {error}"
+    },
+    "add_body_composition_failed": {
+      "message": "Failed to add body composition: {error}"
+    },
+    "add_gear_to_activity_failed": {
+      "message": "Failed to add gear to activity: {error}"
+    },
+    "create_activity_failed": {
+      "message": "Failed to create activity: {error}"
+    },
+    "entity_not_found": {
+      "message": "Entity not found: {entity_id}"
+    },
+    "file_not_found": {
+      "message": "File not found: {file_path}"
+    },
+    "gear_uuid_not_found": {
+      "message": "Entity {entity_id} does not have a gear_uuid attribute. Please target a gear sensor."
+    },
+    "integration_not_loaded": {
+      "message": "Garmin Connect integration is not loaded."
+    },
+    "login_failed": {
+      "message": "Failed to log in to Garmin Connect."
+    },
+    "no_entity_target": {
+      "message": "No target entity specified. Please select a gear sensor."
+    },
+    "no_gear_specified": {
+      "message": "No gear specified. Provide either a gear sensor entity or a gear_uuid."
+    },
+    "no_integration_configured": {
+      "message": "Garmin Connect integration is not configured."
+    },
+    "set_active_gear_failed": {
+      "message": "Failed to set active gear: {error}"
+    },
+    "upload_activity_failed": {
+      "message": "Failed to upload activity: {error}"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "scan_interval": "Update interval (seconds)"
+        },
+        "data_description": {
+          "scan_interval": "How often to fetch data from Garmin Connect (60-3600 seconds)"
+        },
+        "description": "Configure your Garmin Connect integration settings.",
+        "title": "Garmin Connect Options"
+      }
+    }
+  }
+}

@@ -240,6 +240,7 @@ FLOWS = {
         "fyta",
         "garages_amsterdam",
         "gardena_bluetooth",
+        "garmin_connect",
         "gdacs",
         "generic",
         "geniushub",
