@@ -11,7 +11,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import VeluxConfigEntry
-from .entity import VeluxEntity
+from .entity import VeluxEntity, wrap_pyvlx_call_exceptions
 
 PARALLEL_UPDATES = 1
 
@@ -49,6 +49,7 @@ class VeluxLight(VeluxEntity, LightEntity):
         """Return true if light is on."""
         return not self.node.intensity.off and self.node.intensity.known
 
+    @wrap_pyvlx_call_exceptions
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Instruct the light to turn on."""
         if ATTR_BRIGHTNESS in kwargs:
@@ -60,6 +61,7 @@ class VeluxLight(VeluxEntity, LightEntity):
         else:
             await self.node.turn_on(wait_for_completion=True)
 
+    @wrap_pyvlx_call_exceptions
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Instruct the light to turn off."""
         await self.node.turn_off(wait_for_completion=True)
