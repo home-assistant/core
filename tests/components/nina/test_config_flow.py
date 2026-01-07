@@ -38,6 +38,19 @@ DUMMY_RESPONSE_REGIONS: dict[str, Any] = json.loads(
 )
 
 
+def assert_dummy_entry_created(result: dict[str, Any]) -> None:
+    """Asserts that an entry from DUMMY_USER_INPUT is created."""
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "NINA"
+    assert result["data"] == DUMMY_USER_INPUT | {
+        CONF_REGIONS: {
+            "095760000000": "Allersberg, M (Roth - Bayern) + Büchenbach (Roth - Bayern)"
+        }
+    }
+    assert result["version"] == 1
+    assert result["minor_version"] == 3
+
+
 async def test_step_user_connection_error(hass: HomeAssistant) -> None:
     """Test starting a flow by user but no connection."""
     with patch(
@@ -45,7 +58,7 @@ async def test_step_user_connection_error(hass: HomeAssistant) -> None:
         side_effect=ApiError("Could not connect to Api"),
     ):
         result: dict[str, Any] = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_USER}, data=deepcopy(DUMMY_USER_INPUT)
+            DOMAIN, context={"source": SOURCE_USER}
         )
 
         assert result["type"] is FlowResultType.ABORT
@@ -59,7 +72,7 @@ async def test_step_user_unexpected_exception(hass: HomeAssistant) -> None:
         side_effect=Exception("DUMMY"),
     ):
         result: dict[str, Any] = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_USER}, data=deepcopy(DUMMY_USER_INPUT)
+            DOMAIN, context={"source": SOURCE_USER}
         )
 
         assert result["type"] is FlowResultType.ABORT
@@ -73,18 +86,15 @@ async def test_step_user(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> No
         wraps=mocked_request_function,
     ):
         result: dict[str, Any] = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_USER}, data=deepcopy(DUMMY_USER_INPUT)
+            DOMAIN, context={"source": SOURCE_USER}
         )
 
-        assert result["type"] is FlowResultType.CREATE_ENTRY
-        assert result["title"] == "NINA"
-        assert result["data"] == DUMMY_USER_INPUT | {
-            CONF_REGIONS: {
-                "095760000000": "Allersberg, M (Roth - Bayern) + Büchenbach (Roth - Bayern)"
-            }
-        }
-        assert result["version"] == 1
-        assert result["minor_version"] == 3
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input=deepcopy(DUMMY_USER_INPUT),
+        )
+
+        assert_dummy_entry_created(result)
 
 
 async def test_step_user_no_selection(hass: HomeAssistant) -> None:
@@ -108,13 +118,7 @@ async def test_step_user_no_selection(hass: HomeAssistant) -> None:
             user_input=deepcopy(DUMMY_USER_INPUT),
         )
 
-        assert result["type"] is FlowResultType.CREATE_ENTRY
-        assert result["title"] == "NINA"
-        assert result["data"] == DUMMY_USER_INPUT | {
-            CONF_REGIONS: {
-                "095760000000": "Allersberg, M (Roth - Bayern) + Büchenbach (Roth - Bayern)"
-            }
-        }
+        assert_dummy_entry_created(result)
 
 
 async def test_step_user_already_configured(
@@ -126,7 +130,7 @@ async def test_step_user_already_configured(
         wraps=mocked_request_function,
     ):
         result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_USER}, data=deepcopy(DUMMY_USER_INPUT)
+            DOMAIN, context={"source": SOURCE_USER}
         )
 
         assert result["type"] is FlowResultType.ABORT
