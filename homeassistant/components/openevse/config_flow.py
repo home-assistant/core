@@ -3,13 +3,14 @@
 from typing import Any
 
 from openevsehttp.__main__ import OpenEVSE
+from openevsehttp.exceptions import MissingSerial
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_NAME
 from homeassistant.helpers.service_info import zeroconf
 
-from .const import CONF_ID, DOMAIN
+from .const import CONF_ID, CONF_SERIAL, DOMAIN
 
 
 class OpenEVSEConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -43,6 +44,12 @@ class OpenEVSEConfigFlow(ConfigFlow, domain=DOMAIN):
             self._async_abort_entries_match({CONF_HOST: user_input[CONF_HOST]})
 
             if await self.check_status(user_input[CONF_HOST]):
+                try:
+                    charger = OpenEVSE(user_input[CONF_HOST])
+                    result = await charger.test_and_get()
+                    await self.async_set_unique_id(result[CONF_SERIAL])
+                except MissingSerial:
+                    pass
                 return self.async_create_entry(
                     title=f"OpenEVSE {user_input[CONF_HOST]}",
                     data=user_input,
@@ -62,6 +69,13 @@ class OpenEVSEConfigFlow(ConfigFlow, domain=DOMAIN):
 
         if not await self.check_status(data[CONF_HOST]):
             return self.async_abort(reason="unavailable_host")
+        
+        try:
+            charger = OpenEVSE(data[CONF_HOST])
+            result = await charger.test_and_get()
+            await self.async_set_unique_id(result[CONF_SERIAL])
+        except MissingSerial:
+            pass        
 
         return self.async_create_entry(
             title=f"OpenEVSE {data[CONF_HOST]}",

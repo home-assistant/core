@@ -1,6 +1,7 @@
 """Tests for the OpenEVSE sensor platform."""
 
 from ipaddress import ip_address
+import pytest
 from unittest.mock import AsyncMock, MagicMock
 
 from homeassistant.components.openevse.const import DOMAIN
@@ -11,6 +12,8 @@ from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 from tests.common import MockConfigEntry
+
+from openevsehttp.exceptions import MissingSerial
 
 
 async def test_user_flow(
@@ -35,6 +38,7 @@ async def test_user_flow(
     assert result["data"] == {
         CONF_HOST: "10.0.0.131",
     }
+    assert result["result"].unique_id == "deadbeeffeed"
 
 
 async def test_user_flow_flaky(
@@ -68,6 +72,7 @@ async def test_user_flow_flaky(
     assert result["data"] == {
         CONF_HOST: "10.0.0.131",
     }
+    assert result["result"].unique_id == "deadbeeffeed"
 
 
 async def test_user_flow_duplicate(
@@ -108,6 +113,7 @@ async def test_import_flow(
     assert result["data"] == {
         CONF_HOST: "10.0.0.131",
     }
+    assert result["result"].unique_id == "deadbeeffeed"
 
 
 async def test_import_flow_bad(
@@ -266,3 +272,48 @@ async def test_zeroconf_already_configured_host(
     # Should abort because the host matches an existing entry
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
+
+
+async def test_import_flow_no_serial(
+    hass: HomeAssistant,
+    mock_charger: MagicMock,
+    mock_setup_entry: AsyncMock,
+) -> None:
+    """Test import flow."""
+    mock_charger.test_and_get.side_effect = MissingSerial
+    with pytest.raises(MissingSerial):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_IMPORT}, data={CONF_HOST: "10.0.0.131"}
+        )
+        assert result["type"] is FlowResultType.CREATE_ENTRY
+        assert result["title"] == "OpenEVSE 10.0.0.131"
+        assert result["data"] == {
+            CONF_HOST: "10.0.0.131",
+        }
+        assert result["result"].unique_id is None
+
+async def test_user_flow_no_serial(
+    hass: HomeAssistant,
+    mock_charger: MagicMock,
+    mock_setup_entry: AsyncMock,
+) -> None:
+    """Test user flow create entry with bad charger."""
+    mock_charger.test_and_get.side_effect = MissingSerial
+    with pytest.raises(MissingSerial):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_USER},
+        )
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "user"
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_HOST: "10.0.0.131"},
+        )
+        assert result["type"] is FlowResultType.CREATE_ENTRY
+        assert result["title"] == "OpenEVSE 10.0.0.131"
+        assert result["data"] == {
+            CONF_HOST: "10.0.0.131",
+        }
+        assert result["result"].unique_id is None       
