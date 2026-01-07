@@ -218,7 +218,7 @@ gql<4.0.0
 # Pin pytest-rerunfailures to prevent accidental breaks
 pytest-rerunfailures==16.0.1
 
-# Fix Detected blocking call to load_default_certs https://github.com/home-assistant/core/issues/157475
+# Fixes detected blocking call to load_default_certs https://github.com/home-assistant/core/issues/157475
 aiomqtt>=2.5.0
 """
 
