@@ -90,11 +90,11 @@ async def test_no_departures(
     departure_sensor = hass.states.get("sensor.mock_title_departure")
     assert departure_sensor.state == STATE_UNKNOWN
 
-    departure_sensor1 = hass.states.get("sensor.mock_title_departure1")
-    assert departure_sensor1.state == STATE_UNKNOWN
+    departure_sensor_1 = hass.states.get("sensor.mock_title_departure_1")
+    assert departure_sensor_1.state == STATE_UNKNOWN
 
-    departure_sensor2 = hass.states.get("sensor.mock_title_departure2")
-    assert departure_sensor2.state == STATE_UNKNOWN
+    departure_sensor_2 = hass.states.get("sensor.mock_title_departure_2")
+    assert departure_sensor_2.state == STATE_UNKNOWN
 
     # Non-departure sensors (platform, trains, train_number) also access index 0
     # and should have unknown state when no departures available
