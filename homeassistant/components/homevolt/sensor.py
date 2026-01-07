@@ -131,18 +131,15 @@ class HomevoltSensor(CoordinatorEntity[HomevoltDataUpdateCoordinator], SensorEnt
         sensor = coordinator.data.sensors[description.key]
         sensor_device_id = sensor.device_identifier
         device_metadata = coordinator.data.device_metadata.get(sensor_device_id)
-        if device_metadata:
-            self._attr_device_info = DeviceInfo(
-                identifiers={(DOMAIN, f"{device_id}_{sensor_device_id}")},
-                configuration_url=coordinator.client.hostname,
-                manufacturer=MANUFACTURER,
-                model=device_metadata.model,
-                name=device_metadata.name,
-            )
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, f"{device_id}_{sensor_device_id}")},
+            configuration_url=coordinator.client.hostname,
+            manufacturer=MANUFACTURER,
+            model=device_metadata.model,
+            name=device_metadata.name,
+        )
 
     @property
     def native_value(self) -> StateType:
         """Return the native value of the sensor."""
-        if self.entity_description.key in self.coordinator.data.sensors:
-            return self.coordinator.data.sensors[self.entity_description.key].value
-        return None
+        return self.coordinator.data.sensors[self.entity_description.key].value
