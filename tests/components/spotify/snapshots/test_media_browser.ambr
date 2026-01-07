@@ -47,7 +47,7 @@
         'media_content_id': 'spotify://01j5tx5a0ff6g5v0qjx6hbc94t/current_user_saved_tracks',
         'media_content_type': 'spotify://current_user_saved_tracks',
         'thumbnail': None,
-        'title': 'Liked songs',
+        'title': 'Liked Songs',
       }),
       dict({
         'can_expand': True,
@@ -69,7 +69,7 @@
         'media_content_id': 'spotify://01j5tx5a0ff6g5v0qjx6hbc94t/current_user_recently_played',
         'media_content_type': 'spotify://current_user_recently_played',
         'thumbnail': None,
-        'title': 'Recently played',
+        'title': 'Recently Played',
       }),
       dict({
         'can_expand': True,
@@ -415,7 +415,7 @@
     'media_content_type': 'spotify://current_user_recently_played',
     'not_shown': 0,
     'thumbnail': None,
-    'title': 'Recently played',
+    'title': 'Recently Played',
   })
 # ---
 # name: test_browsing[current_user_saved_albums-current_user_saved_albums]
@@ -529,7 +529,7 @@
     'media_content_type': 'spotify://current_user_saved_tracks',
     'not_shown': 0,
     'thumbnail': None,
-    'title': 'Liked songs',
+    'title': 'Liked Songs',
   })
 # ---
 # name: test_browsing[current_user_top_artists-current_user_top_artists]
