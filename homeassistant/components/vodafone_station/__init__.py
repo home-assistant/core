@@ -11,10 +11,15 @@ from .coordinator import VodafoneConfigEntry, VodafoneStationRouter
 from .utils import async_client_session
 
 PLATFORMS = [
+
     Platform.BUTTON,
+
     Platform.DEVICE_TRACKER,
+
     Platform.IMAGE,
     Platform.SENSOR,
+    Platform.SWITCH,
+,
 ]
 
 
