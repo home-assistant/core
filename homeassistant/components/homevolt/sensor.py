@@ -45,7 +45,11 @@ class Description:
 
 
 SENSOR_META: dict[SensorType, Description] = {
-    SensorType.COUNT: Description(None, SensorStateClass.MEASUREMENT, "N"),
+    SensorType.COUNT: Description(
+        None,
+        SensorStateClass.MEASUREMENT,
+        "N",
+    ),
     SensorType.CURRENT: Description(
         SensorDeviceClass.CURRENT,
         SensorStateClass.MEASUREMENT,
@@ -57,18 +61,30 @@ SENSOR_META: dict[SensorType, Description] = {
         UnitOfEnergy.KILO_WATT_HOUR,
     ),
     SensorType.ENERGY_TOTAL: Description(
-        SensorDeviceClass.ENERGY, SensorStateClass.TOTAL, UnitOfEnergy.WATT_HOUR
+        SensorDeviceClass.ENERGY,
+        SensorStateClass.TOTAL,
+        UnitOfEnergy.WATT_HOUR,
     ),
     SensorType.FREQUENCY: Description(
-        SensorDeviceClass.FREQUENCY, SensorStateClass.MEASUREMENT, UnitOfFrequency.HERTZ
+        SensorDeviceClass.FREQUENCY,
+        SensorStateClass.MEASUREMENT,
+        UnitOfFrequency.HERTZ,
     ),
     SensorType.PERCENTAGE: Description(
-        SensorDeviceClass.BATTERY, SensorStateClass.MEASUREMENT, PERCENTAGE
+        SensorDeviceClass.BATTERY,
+        SensorStateClass.MEASUREMENT,
+        PERCENTAGE,
     ),
     SensorType.POWER: Description(
-        SensorDeviceClass.POWER, SensorStateClass.MEASUREMENT, UnitOfPower.WATT
+        SensorDeviceClass.POWER,
+        SensorStateClass.MEASUREMENT,
+        UnitOfPower.WATT,
     ),
-    SensorType.SCHEDULE_TYPE: Description(None, None, None),
+    SensorType.SCHEDULE_TYPE: Description(
+        None,
+        None,
+        None,
+    ),
     SensorType.SIGNAL_STRENGTH: Description(
         SensorDeviceClass.SIGNAL_STRENGTH,
         SensorStateClass.MEASUREMENT,
@@ -79,7 +95,11 @@ SENSOR_META: dict[SensorType, Description] = {
         SensorStateClass.MEASUREMENT,
         UnitOfTemperature.CELSIUS,
     ),
-    SensorType.TEXT: Description(None, None, None),
+    SensorType.TEXT: Description(
+        None,
+        None,
+        None,
+    ),
     SensorType.VOLTAGE: Description(
         SensorDeviceClass.VOLTAGE,
         SensorStateClass.MEASUREMENT,
