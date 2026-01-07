@@ -486,6 +486,7 @@ FLOWS = {
         "open_meteo",
         "open_router",
         "openai_conversation",
+        "openevse",
         "openexchangerates",
         "opengarage",
         "openhome",

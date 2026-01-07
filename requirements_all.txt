@@ -545,7 +545,7 @@ asusrouter==1.21.3
 # homeassistant.components.ssdp
 # homeassistant.components.upnp
 # homeassistant.components.yeelight
-async-upnp-client==0.46.1
+async-upnp-client==0.46.2
 
 # homeassistant.components.arve
 asyncarve==0.1.1
@@ -854,7 +854,7 @@ ecoaliface==0.4.0
 egauge-async==0.4.0
 
 # homeassistant.components.eheimdigital
-eheimdigital==1.4.0
+eheimdigital==1.5.0
 
 # homeassistant.components.ekeybionyx
 ekey-bionyxpy==1.0.1
@@ -1093,7 +1093,7 @@ google-cloud-speech==2.31.1
 google-cloud-texttospeech==2.25.1
 
 # homeassistant.components.google_generative_ai_conversation
-google-genai==1.38.0
+google-genai==1.56.0
 
 # homeassistant.components.google_travel_time
 google-maps-routing==0.6.15
@@ -1213,10 +1213,10 @@ hole==0.9.0
 holidays==0.84
 
 # homeassistant.components.frontend
-home-assistant-frontend==20251229.0
+home-assistant-frontend==20251229.1
 
 # homeassistant.components.conversation
-home-assistant-intents==2026.1.1
+home-assistant-intents==2026.1.6
 
 # homeassistant.components.gentex_homelink
 homelink-integration-api==0.0.1
@@ -1684,7 +1684,7 @@ openwrt-luci-rpc==1.1.17
 openwrt-ubus-rpc==0.0.2
 
 # homeassistant.components.opower
-opower==0.15.9
+opower==0.16.0
 
 # homeassistant.components.oralb
 oralb-ble==1.0.2
@@ -1867,7 +1867,7 @@ pyRFXtrx==0.31.1
 pySDCP==1
 
 # homeassistant.components.tibber
-pyTibber==0.32.2
+pyTibber==0.34.1
 
 # homeassistant.components.dlink
 pyW215==0.8.0
@@ -1931,7 +1931,7 @@ pyblu==2.0.5
 pybotvac==0.0.28
 
 # homeassistant.components.braviatv
-pybravia==0.3.4
+pybravia==0.4.1
 
 # homeassistant.components.nissan_leaf
 pycarwings2==2.14
@@ -2896,7 +2896,7 @@ solaredge-local==0.2.3
 solaredge-web==0.0.1
 
 # homeassistant.components.solarlog
-solarlog_cli==0.6.1
+solarlog_cli==0.7.0
 
 # homeassistant.components.solax
 solax==3.2.3
@@ -2959,7 +2959,7 @@ switchbot-api==2.9.0
 synology-srm==0.2.0
 
 # homeassistant.components.system_bridge
-systembridgeconnector==5.2.4
+systembridgeconnector==5.3.1
 
 # homeassistant.components.tailscale
 tailscale==0.6.2
@@ -3060,7 +3060,7 @@ ttls==1.8.3
 ttn_client==1.2.3
 
 # homeassistant.components.tuya
-tuya-device-sharing-sdk==0.2.7
+tuya-device-sharing-sdk==0.2.8
 
 # homeassistant.components.twentemilieu
 twentemilieu==2.2.1
@@ -3078,7 +3078,7 @@ typedmonarchmoney==0.4.4
 uasiren==0.0.1
 
 # homeassistant.components.unifiprotect
-uiprotect==7.33.3
+uiprotect==8.0.0
 
 # homeassistant.components.landisgyr_heat_meter
 ultraheat-api==0.5.7
@@ -3250,7 +3250,7 @@ yeelight==0.7.16
 yeelightsunflower==0.0.10
 
 # homeassistant.components.yolink
-yolink-api==0.5.9
+yolink-api==0.6.1
 
 # homeassistant.components.youless
 youless-api==2.2.0
@@ -3277,7 +3277,7 @@ zeroconf==0.148.0
 zeversolar==0.3.2
 
 # homeassistant.components.zha
-zha==0.0.82
+zha==0.0.83
 
 # homeassistant.components.zhong_hong
 zhong-hong-hvac==1.0.13
