@@ -36,8 +36,7 @@ from homeassistant.helpers import (
 from homeassistant.helpers.automation import move_top_level_schema_fields_to_options
 from homeassistant.helpers.condition import (
     Condition,
-    ConditionCheckerType,
-    ConditionConfig,
+    ConditionChecker,
     async_validate_condition_config,
 )
 from homeassistant.helpers.template import Template
@@ -2124,22 +2123,19 @@ async def test_platform_multiple_conditions(hass: HomeAssistant) -> None:
             """Validate config."""
             return config
 
-        def __init__(self, hass: HomeAssistant, config: ConditionConfig) -> None:
-            """Initialize condition."""
-
     class MockCondition1(MockCondition):
         """Mock condition 1."""
 
-        async def async_get_checker(self) -> ConditionCheckerType:
+        async def async_get_checker(self) -> ConditionChecker:
             """Evaluate state based on configuration."""
-            return lambda hass, vars: True
+            return lambda **kwargs: True
 
     class MockCondition2(MockCondition):
         """Mock condition 2."""
 
-        async def async_get_checker(self) -> ConditionCheckerType:
+        async def async_get_checker(self) -> ConditionChecker:
             """Evaluate state based on configuration."""
-            return lambda hass, vars: False
+            return lambda **kwargs: False
 
     async def async_get_conditions(hass: HomeAssistant) -> dict[str, type[Condition]]:
         return {

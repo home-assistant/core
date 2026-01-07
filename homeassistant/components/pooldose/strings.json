@@ -68,6 +68,91 @@
         "name": "Auxiliary relay 3 status"
       }
     },
+    "number": {
+      "cl_target": {
+        "name": "Chlorine target"
+      },
+      "ofa_cl_lower": {
+        "name": "Chlorine overfeed alarm lower limit"
+      },
+      "ofa_cl_upper": {
+        "name": "Chlorine overfeed alarm upper limit"
+      },
+      "ofa_orp_lower": {
+        "name": "ORP overfeed alarm lower limit"
+      },
+      "ofa_orp_upper": {
+        "name": "ORP overfeed alarm upper limit"
+      },
+      "ofa_ph_lower": {
+        "name": "pH overfeed alarm lower limit"
+      },
+      "ofa_ph_upper": {
+        "name": "pH overfeed alarm upper limit"
+      },
+      "orp_target": {
+        "name": "ORP target"
+      },
+      "ph_target": {
+        "name": "pH target"
+      }
+    },
+    "select": {
+      "cl_type_dosing_method": {
+        "name": "Chlorine dosing method",
+        "state": {
+          "off": "[%key:common::state::off%]",
+          "on_off": "[%key:component::pooldose::entity::sensor::peristaltic_ph_dosing::state::on_off%]",
+          "proportional": "[%key:component::pooldose::entity::sensor::peristaltic_ph_dosing::state::proportional%]",
+          "timed": "[%key:component::pooldose::entity::sensor::peristaltic_ph_dosing::state::timed%]"
+        }
+      },
+      "cl_type_dosing_set": {
+        "name": "Chlorine dosing set",
+        "state": {
+          "high": "[%key:common::state::high%]",
+          "low": "[%key:common::state::low%]"
+        }
+      },
+      "flow_rate_unit": {
+        "name": "Flow rate unit"
+      },
+      "orp_type_dosing_method": {
+        "name": "ORP dosing method",
+        "state": {
+          "off": "[%key:common::state::off%]",
+          "on_off": "[%key:component::pooldose::entity::sensor::peristaltic_ph_dosing::state::on_off%]",
+          "proportional": "[%key:component::pooldose::entity::sensor::peristaltic_ph_dosing::state::proportional%]",
+          "timed": "[%key:component::pooldose::entity::sensor::peristaltic_ph_dosing::state::timed%]"
+        }
+      },
+      "orp_type_dosing_set": {
+        "name": "ORP dosing set",
+        "state": {
+          "high": "[%key:common::state::high%]",
+          "low": "[%key:common::state::low%]"
+        }
+      },
+      "ph_type_dosing_method": {
+        "name": "pH dosing method",
+        "state": {
+          "off": "[%key:common::state::off%]",
+          "on_off": "[%key:component::pooldose::entity::sensor::peristaltic_ph_dosing::state::on_off%]",
+          "proportional": "[%key:component::pooldose::entity::sensor::peristaltic_ph_dosing::state::proportional%]",
+          "timed": "[%key:component::pooldose::entity::sensor::peristaltic_ph_dosing::state::timed%]"
+        }
+      },
+      "ph_type_dosing_set": {
+        "name": "pH dosing set",
+        "state": {
+          "acid": "Acid (pH-)",
+          "alcalyne": "Alkaline (pH+)"
+        }
+      },
+      "water_meter_unit": {
+        "name": "Water meter unit"
+      }
+    },
     "sensor": {
       "cl": {
         "name": "Chlorine"
@@ -160,6 +245,9 @@
           "acid": "pH-",
           "alcalyne": "pH+"
         }
+      },
+      "water_meter_total_permanent": {
+        "name": "Totalizer"
       }
     },
     "switch": {
@@ -172,6 +260,14 @@
       "pump_monitoring": {
         "name": "Pump monitoring"
       }
+    }
+  },
+  "exceptions": {
+    "cannot_connect": {
+      "message": "Value can not be set because the device is not connected"
+    },
+    "write_rejected": {
+      "message": "The device rejected the value for {entity}: {value}"
     }
   }
 }

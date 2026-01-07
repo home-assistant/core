@@ -153,17 +153,13 @@ class TuyaHumidifierEntity(TuyaEntity, HumidifierEntity):
 
         # Determine humidity parameters
         if target_humidity_wrapper:
-            self._attr_min_humidity = round(
-                target_humidity_wrapper.type_information.min_scaled
-            )
-            self._attr_max_humidity = round(
-                target_humidity_wrapper.type_information.max_scaled
-            )
+            self._attr_min_humidity = round(target_humidity_wrapper.min_value)
+            self._attr_max_humidity = round(target_humidity_wrapper.max_value)
 
         # Determine mode support and provided modes
         if mode_wrapper:
             self._attr_supported_features |= HumidifierEntityFeature.MODES
-            self._attr_available_modes = mode_wrapper.type_information.range
+            self._attr_available_modes = mode_wrapper.options
 
     @property
     def is_on(self) -> bool | None:
@@ -192,7 +188,7 @@ class TuyaHumidifierEntity(TuyaEntity, HumidifierEntity):
                 self.device,
                 self.entity_description.dpcode or self.entity_description.key,
             )
-        await self._async_send_dpcode_update(self._switch_wrapper, True)
+        await self._async_send_wrapper_updates(self._switch_wrapper, True)
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the device off."""
@@ -201,7 +197,7 @@ class TuyaHumidifierEntity(TuyaEntity, HumidifierEntity):
                 self.device,
                 self.entity_description.dpcode or self.entity_description.key,
             )
-        await self._async_send_dpcode_update(self._switch_wrapper, False)
+        await self._async_send_wrapper_updates(self._switch_wrapper, False)
 
     async def async_set_humidity(self, humidity: int) -> None:
         """Set new target humidity."""
@@ -210,8 +206,8 @@ class TuyaHumidifierEntity(TuyaEntity, HumidifierEntity):
                 self.device,
                 self.entity_description.humidity,
             )
-        await self._async_send_dpcode_update(self._target_humidity_wrapper, humidity)
+        await self._async_send_wrapper_updates(self._target_humidity_wrapper, humidity)
 
     async def async_set_mode(self, mode: str) -> None:
         """Set new target preset mode."""
-        await self._async_send_dpcode_update(self._mode_wrapper, mode)
+        await self._async_send_wrapper_updates(self._mode_wrapper, mode)

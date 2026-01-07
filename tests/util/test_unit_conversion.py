@@ -1054,6 +1054,12 @@ _CONVERTED_VALUE: dict[
             10,
             UnitOfVolumeFlowRate.LITERS_PER_SECOND,
         ),
+        (
+            24,
+            UnitOfVolumeFlowRate.GALLONS_PER_DAY,
+            1,
+            UnitOfVolumeFlowRate.GALLONS_PER_HOUR,
+        ),
     ],
 }
 

@@ -84,7 +84,8 @@ class XboxBaseEntity(CoordinatorEntity[XboxUpdateCoordinator]):
 
         return (
             entity_picture
-            if (fn := self.entity_description.entity_picture_fn) is not None
+            if self.available
+            and (fn := self.entity_description.entity_picture_fn) is not None
             and (entity_picture := fn(self.data, self.title_info)) is not None
             else super().entity_picture
         )
@@ -97,6 +98,12 @@ class XboxBaseEntity(CoordinatorEntity[XboxUpdateCoordinator]):
             if (fn := self.entity_description.attributes_fn)
             else super().extra_state_attributes
         )
+
+    @property
+    def available(self) -> bool:
+        """Return True if entity is available."""
+
+        return super().available and self.xuid in self.coordinator.data.presence
 
 
 class XboxConsoleBaseEntity(CoordinatorEntity[XboxUpdateCoordinator]):

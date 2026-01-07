@@ -11,7 +11,6 @@ from homeassistant.components.alarm_control_panel import (
 )
 from homeassistant.const import ATTR_LABEL_ID, ATTR_SUPPORTED_FEATURES, CONF_ENTITY_ID
 from homeassistant.core import HomeAssistant, ServiceCall
-from homeassistant.setup import async_setup_component
 
 from tests.components import (
     StateDescription,
@@ -154,8 +153,6 @@ async def test_alarm_control_panel_state_trigger_behavior_any(
     states: list[StateDescription],
 ) -> None:
     """Test that the alarm control panel state trigger fires when any alarm control panel state changes to a specific state."""
-    await async_setup_component(hass, "alarm_control_panel", {})
-
     other_entity_ids = set(target_alarm_control_panels) - {entity_id}
 
     # Set all alarm control panels, including the tested one, to the initial state
@@ -266,8 +263,6 @@ async def test_alarm_control_panel_state_trigger_behavior_first(
     states: list[StateDescription],
 ) -> None:
     """Test that the alarm control panel state trigger fires when the first alarm control panel changes to a specific state."""
-    await async_setup_component(hass, "alarm_control_panel", {})
-
     other_entity_ids = set(target_alarm_control_panels) - {entity_id}
 
     # Set all alarm control panels, including the tested one, to the initial state
@@ -377,8 +372,6 @@ async def test_alarm_control_panel_state_trigger_behavior_last(
     states: list[StateDescription],
 ) -> None:
     """Test that the alarm_control_panel state trigger fires when the last alarm_control_panel changes to a specific state."""
-    await async_setup_component(hass, "alarm_control_panel", {})
-
     other_entity_ids = set(target_alarm_control_panels) - {entity_id}
 
     # Set all alarm control panels, including the tested one, to the initial state

@@ -663,7 +663,7 @@ async def test_get_request_host_no_host_header(hass: HomeAssistant) -> None:
         assert _get_request_host() is None
 
 
-@patch("homeassistant.components.hassio.is_hassio", Mock(return_value=True))
+@patch("homeassistant.helpers.hassio.is_hassio", Mock(return_value=True))
 @patch(
     "homeassistant.components.hassio.get_host_info",
     Mock(return_value={"hostname": "homeassistant"}),
