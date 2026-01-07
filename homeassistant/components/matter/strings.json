@@ -555,6 +555,9 @@
       "tank_volume": {
         "name": "Tank volume"
       },
+      "thread_attach_attempt_count": {
+        "name": "Thread attach attempts"
+      },
       "valve_position": {
         "name": "Valve position"
       },
