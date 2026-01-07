@@ -56,7 +56,7 @@ def has_serial_number() -> bool:
 def serial_number(has_serial_number: bool) -> str | None:
     """Return a serial number."""
     if has_serial_number:
-        return "deadbeef"
+        return "deadbeeffeed"
     return None
 
 

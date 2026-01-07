@@ -150,10 +150,10 @@ async def test_zeroconf_discovery(
     discovery_info = ZeroconfServiceInfo(
         ip_address=ip_address("192.168.1.123"),
         ip_addresses=[ip_address("192.168.1.123")],
-        hostname="openevse-deadbeef.local.",
-        name="openevse-deadbeef._openevse._tcp.local.",
+        hostname="openevse-deadbeeffeed.local.",
+        name="openevse-deadbeeffeed._openevse._tcp.local.",
         port=80,
-        properties={"id": "deadbeef", "type": "openevse"},
+        properties={"id": "deadbeeffeed", "type": "openevse"},
         type="_openevse._tcp.local.",
     )
 
@@ -167,7 +167,9 @@ async def test_zeroconf_discovery(
     # Should present a confirmation form
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "discovery_confirm"
-    assert result["description_placeholders"] == {"name": "OpenEVSE openevse-deadbeef"}
+    assert result["description_placeholders"] == {
+        "name": "OpenEVSE openevse-deadbeeffeed"
+    }
 
     # Confirm the discovery
     result = await hass.config_entries.flow.async_configure(
@@ -176,9 +178,9 @@ async def test_zeroconf_discovery(
 
     # Should create the entry
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == "OpenEVSE openevse-deadbeef"
+    assert result["title"] == "OpenEVSE openevse-deadbeeffeed"
     assert result["data"] == {CONF_HOST: "192.168.1.123"}
-    assert result["result"].unique_id == "deadbeef"
+    assert result["result"].unique_id == "deadbeeffeed"
 
 
 async def test_zeroconf_already_configured_unique_id(
@@ -193,10 +195,10 @@ async def test_zeroconf_already_configured_unique_id(
     discovery_info = ZeroconfServiceInfo(
         ip_address=ip_address("192.168.1.124"),
         ip_addresses=[ip_address("192.168.1.124"), ip_address("2001:db8::1")],
-        hostname="openevse-deadbeef.local.",
-        name="openevse-deadbeef._openevse._tcp.local.",
+        hostname="openevse-deadbeeffeed.local.",
+        name="openevse-deadbeeffeed._openevse._tcp.local.",
         port=80,
-        properties={"id": "deadbeef", "type": "openevse"},
+        properties={"id": "deadbeeffeed", "type": "openevse"},
         type="_openevse._tcp.local.",
     )
 
@@ -222,10 +224,10 @@ async def test_zeroconf_connection_error(
     discovery_info = ZeroconfServiceInfo(
         ip_address=ip_address("192.168.1.123"),
         ip_addresses=[ip_address("192.168.1.123"), ip_address("2001:db8::1")],
-        hostname="openevse-deadbeef.local.",
-        name="openevse-deadbeef._openevse._tcp.local.",
+        hostname="openevse-deadbeeffeed.local.",
+        name="openevse-deadbeeffeed._openevse._tcp.local.",
         port=80,
-        properties={"id": "deadbeef", "type": "openevse"},
+        properties={"id": "deadbeeffeed", "type": "openevse"},
         type="_openevse._tcp.local.",
     )
 
@@ -248,10 +250,10 @@ async def test_zeroconf_already_configured_host(
     discovery_info = ZeroconfServiceInfo(
         ip_address=ip_address("192.168.1.100"),
         ip_addresses=[ip_address("192.168.1.100"), ip_address("2001:db8::1")],
-        hostname="openevse-deadbeef.local.",
-        name="openevse-deadbeef._openevse._tcp.local.",
+        hostname="openevse-deadbeeffeed.local.",
+        name="openevse-deadbeeffeed._openevse._tcp.local.",
         port=80,
-        properties={"id": "deadbeef", "type": "openevse"},
+        properties={"id": "deadbeeffeed", "type": "openevse"},
         type="_openevse._tcp.local.",
     )
 
