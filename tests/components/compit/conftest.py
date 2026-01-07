@@ -1,7 +1,7 @@
 """Common fixtures for the Compit tests."""
 
 from collections.abc import Generator
-from unittest.mock import AsyncMock, MagicMock, PropertyMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
@@ -43,8 +43,7 @@ def mock_compit_api() -> Generator[AsyncMock]:
 
 @pytest.fixture
 def mock_connector():
-    """Create a mock CompitApiConnector."""
-    connector = MagicMock()
+    """Mock CompitApiConnector devices."""
 
     mock_device_1 = MagicMock()
     mock_device_1.definition.name = "Test Device 1"
@@ -85,36 +84,27 @@ def mock_connector():
     mock_device_3.definition.name = "Test Device 3"
     mock_device_3.definition.parameters = None
 
-    connector.all_devices = {1: mock_device_1, 2: mock_device_2, 3: mock_device_3}
+    all_devices = {1: mock_device_1, 2: mock_device_2, 3: mock_device_3}
 
     def mock_get_device(device_id: int):
-        return connector.all_devices.get(device_id)
+        return all_devices.get(device_id)
 
-    connector.get_device.side_effect = mock_get_device
+    mock_instance = MagicMock()
+    mock_instance.init = AsyncMock(return_value=True)
+    mock_instance.all_devices = all_devices
+    mock_instance.get_device_parameter = MagicMock()
+    mock_instance.set_device_parameter = AsyncMock()
+    mock_instance.update_state = AsyncMock()
+    mock_instance.get_device = MagicMock(side_effect=mock_get_device)
 
-    def mock_get_device_parameter(device_id, parameter_code):
-        if device_id == 1 and parameter_code == "op_mode":
-            return MagicMock(value=0)  # Auto mode
-        if device_id == 2 and parameter_code == "fan_speed":
-            return MagicMock(value=2)  # Medium speed
-        return None
-
-    connector.get_device_parameter.side_effect = mock_get_device_parameter
-    connector.set_device_parameter = AsyncMock()
-
-    return connector
-
-
-@pytest.fixture
-def mock_coordinator(mock_connector):
-    """Create a mock coordinator."""
-    coordinator = MagicMock()
-    coordinator.connector = mock_connector
-    coordinator.data = mock_connector.all_devices
-    coordinator.last_update_success = True
-    coordinator.async_config_entry_first_refresh = AsyncMock()
-
-    # Add properties to support CoordinatorEntity
-    type(coordinator).available = PropertyMock(return_value=True)
-
-    return coordinator
+    with (
+        patch(
+            "homeassistant.components.compit.CompitApiConnector",
+            return_value=mock_instance,
+        ),
+        patch(
+            "homeassistant.components.compit.coordinator.CompitApiConnector",
+            return_value=mock_instance,
+        ),
+    ):
+        yield mock_instance
