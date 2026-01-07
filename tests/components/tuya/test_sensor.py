@@ -99,8 +99,8 @@ async def test_delta_report_sensor_initial_state(
     state = hass.states.get("sensor.ha_socket_delta_test_total_energy")
 
     assert state is not None
-    # Initial value is 100 from fixture, scaled by 1000 (scale=3) = 0.1
-    assert state.state == "0.1"
+    # Initial value is 84 from fixture, scaled by 1000 (scale=3) = 0.084
+    assert state.state == "0.084"
     assert state.attributes["state_class"] == SensorStateClass.TOTAL_INCREASING
 
 
