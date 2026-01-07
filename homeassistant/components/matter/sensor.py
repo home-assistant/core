@@ -1544,6 +1544,17 @@ DISCOVERY_SCHEMAS = [
     MatterDiscoverySchema(
         platform=Platform.SENSOR,
         entity_description=MatterSensorEntityDescription(
+            key="ThreadNetworkDiagnosticsPartitionId",
+            translation_key="thread_partition_id",
+            entity_category=EntityCategory.DIAGNOSTIC,
+            # entity_registry_enabled_default=False,
+        ),
+        entity_class=MatterSensor,
+        required_attributes=(clusters.ThreadNetworkDiagnostics.Attributes.PartitionId,),
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.SENSOR,
+        entity_description=MatterSensorEntityDescription(
             key="ThreadNetworkDiagnosticsAttachAttemptCount",
             translation_key="thread_attach_attempt_count",
             entity_category=EntityCategory.DIAGNOSTIC,
@@ -1554,5 +1565,21 @@ DISCOVERY_SCHEMAS = [
         required_attributes=(
             clusters.ThreadNetworkDiagnostics.Attributes.AttachAttemptCount,
         ),
+        featuremap_contains=clusters.ThreadNetworkDiagnostics.Bitmaps.Feature.kMLECounts,
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.SENSOR,
+        entity_description=MatterSensorEntityDescription(
+            key="ThreadNetworkDiagnosticsPartitionIdChangeCount",
+            translation_key="thread_partition_id_change_count",
+            entity_category=EntityCategory.DIAGNOSTIC,
+            # entity_registry_enabled_default=False,
+            state_class=SensorStateClass.TOTAL_INCREASING,
+        ),
+        entity_class=MatterSensor,
+        required_attributes=(
+            clusters.ThreadNetworkDiagnostics.Attributes.PartitionIdChangeCount,
+        ),
+        featuremap_contains=clusters.ThreadNetworkDiagnostics.Bitmaps.Feature.kMLECounts,
     ),
 ]

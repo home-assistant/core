@@ -149,6 +149,12 @@
       "thread_attach_attempt_count": {
         "default": "mdi:antenna"
       },
+      "thread_partition_id": {
+        "default": "mdi:antenna"
+      },
+      "thread_partition_id_change_count": {
+        "default": "mdi:antenna"
+      },
       "valve_position": {
         "default": "mdi:valve"
       }

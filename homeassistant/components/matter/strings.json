@@ -558,6 +558,12 @@
       "thread_attach_attempt_count": {
         "name": "Thread attach attempts"
       },
+      "thread_partition_id": {
+        "name": "Thread partition ID"
+      },
+      "thread_partition_id_change_count": {
+        "name": "Thread partition ID changes"
+      },
       "valve_position": {
         "name": "Valve position"
       },
