@@ -11,9 +11,9 @@
         'medium',
       ]),
       'hvac_modes': list([
-        <HVACMode.OFF: 'off'>,
         <HVACMode.COOL: 'cool'>,
         <HVACMode.DRY: 'dry'>,
+        <HVACMode.OFF: 'off'>,
       ]),
       'max_temp': 86,
       'min_temp': 64,
@@ -73,9 +73,9 @@
       ]),
       'friendly_name': 'Test air conditioner',
       'hvac_modes': list([
-        <HVACMode.OFF: 'off'>,
         <HVACMode.COOL: 'cool'>,
         <HVACMode.DRY: 'dry'>,
+        <HVACMode.OFF: 'off'>,
       ]),
       'max_temp': 86,
       'min_temp': 64,
