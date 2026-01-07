@@ -6,6 +6,9 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
+from homeassistant.components.victronenergy.binary_sensor import (
+    MQTTDiscoveredBinarySensor,
+)
 from homeassistant.components.victronenergy.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
@@ -72,8 +75,4 @@ async def test_binary_sensor_infrastructure(
         await hass.async_block_till_done()
 
         # Verify infrastructure is ready for binary sensor discovery
-        from homeassistant.components.victronenergy.binary_sensor import (
-            MQTTDiscoveredBinarySensor,
-        )
-
         assert MQTTDiscoveredBinarySensor is not None
