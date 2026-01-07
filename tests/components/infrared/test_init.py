@@ -1,5 +1,6 @@
 """Tests for the Infrared integration setup."""
 
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 
 from homeassistant.components.infrared import (
@@ -11,11 +12,15 @@ from homeassistant.components.infrared import (
     async_get_entities,
     async_send_command,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.const import STATE_UNKNOWN
+from homeassistant.core import HomeAssistant, State
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.setup import async_setup_component
+from homeassistant.util import dt as dt_util
 
 from .conftest import MockInfraredEntity
+
+from tests.common import mock_restore_cache
 
 
 async def test_setup(hass: HomeAssistant) -> None:
@@ -62,6 +67,20 @@ async def test_get_entities_filter_by_protocol(
     assert len(samsung_entities) == 0
 
 
+async def test_infrared_entity_initial_state(
+    hass: HomeAssistant,
+    init_integration: None,
+    mock_infrared_entity: MockInfraredEntity,
+) -> None:
+    """Test infrared entity has no state before any command is sent."""
+    component = hass.data[DATA_COMPONENT]
+    await component.async_add_entities([mock_infrared_entity])
+
+    state = hass.states.get("infrared.test_ir_transmitter")
+    assert state is not None
+    assert state.state == STATE_UNKNOWN
+
+
 async def test_infrared_entity_send_command(
     hass: HomeAssistant,
     init_integration: None,
@@ -102,18 +121,26 @@ async def test_async_send_command_success(
     hass: HomeAssistant,
     init_integration: None,
     mock_infrared_entity: MockInfraredEntity,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test sending command via async_send_command helper."""
     # Add the mock entity to the component
     component = hass.data[DATA_COMPONENT]
     await component.async_add_entities([mock_infrared_entity])
 
-    command = NECInfraredCommand(repeat_count=1, address=0x04FB, command=0x08F7)
+    # Freeze time
+    now = dt_util.utcnow()
+    freezer.move_to(now)
 
+    command = NECInfraredCommand(repeat_count=1, address=0x04FB, command=0x08F7)
     await async_send_command(hass, "infrared.test_ir_transmitter", command)
 
     assert len(mock_infrared_entity.send_command_calls) == 1
     assert mock_infrared_entity.send_command_calls[0] is command
+
+    state = hass.states.get("infrared.test_ir_transmitter")
+    assert state is not None
+    assert state.state == now.isoformat(timespec="milliseconds")
 
 
 async def test_async_send_command_entity_not_found(
@@ -135,3 +162,29 @@ async def test_async_send_command_component_not_loaded(hass: HomeAssistant) -> N
 
     with pytest.raises(HomeAssistantError, match="Infrared component not loaded"):
         await async_send_command(hass, "infrared.some_entity", command)
+
+
+async def test_infrared_entity_state_restore(
+    hass: HomeAssistant,
+    mock_infrared_entity: MockInfraredEntity,
+) -> None:
+    """Test infrared entity restores state from previous session."""
+    # Set up restore cache with a previous state (milliseconds format)
+    previous_timestamp = "2026-01-01T12:00:00.000+00:00"
+    mock_restore_cache(
+        hass,
+        [State("infrared.test_ir_transmitter", previous_timestamp)],
+    )
+
+    # Set up integration
+    assert await async_setup_component(hass, DOMAIN, {})
+    await hass.async_block_till_done()
+
+    # Add entity
+    component = hass.data[DATA_COMPONENT]
+    await component.async_add_entities([mock_infrared_entity])
+
+    # Verify state was restored
+    state = hass.states.get("infrared.test_ir_transmitter")
+    assert state is not None
+    assert state.state == previous_timestamp
