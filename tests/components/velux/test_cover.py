@@ -21,6 +21,7 @@ from homeassistant.components.cover import (
 )
 from homeassistant.components.velux import DOMAIN
 from homeassistant.const import (
+    ATTR_ENTITY_ID,
     STATE_CLOSED,
     STATE_CLOSING,
     STATE_OPEN,
@@ -304,24 +305,20 @@ async def test_non_blind_has_no_tilt_position(
 
 
 @pytest.mark.parametrize(
-    ("exception_type", "exception_msg"),
-    [
-        (PyVLXException, "PyVLX error"),
-        (OSError, "OS error"),
-    ],
+    "exception",
+    [PyVLXException("PyVLX error"), OSError("OS error")],
 )
 async def test_cover_command_exception_handling(
     hass: HomeAssistant,
     mock_window: AsyncMock,
-    exception_type: type[Exception],
-    exception_msg: str,
+    exception: Exception,
 ) -> None:
     """Test that exceptions from node commands are wrapped in HomeAssistantError."""
 
     entity_id = "cover.test_window"
 
     # Make the close method raise an exception
-    mock_window.close.side_effect = exception_type(exception_msg)
+    mock_window.close.side_effect = exception
 
     with pytest.raises(
         HomeAssistantError,
@@ -330,6 +327,6 @@ async def test_cover_command_exception_handling(
         await hass.services.async_call(
             COVER_DOMAIN,
             SERVICE_CLOSE_COVER,
-            {"entity_id": entity_id},
+            {ATTR_ENTITY_ID: entity_id},
             blocking=True,
         )
