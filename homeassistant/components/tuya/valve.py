@@ -144,3 +144,13 @@ class TuyaValveEntity(TuyaEntity, ValveEntity):
     async def async_close_valve(self) -> None:
         """Close the valve."""
         await self._async_send_wrapper_updates(self._dpcode_wrapper, False)
+
+    async def _handle_state_update(
+        self,
+        updated_status_properties: list[str] | None,
+        dp_timestamps: dict | None = None,
+    ) -> None:
+        """Handle state update, only if this entity's dpcode was actually updated."""
+        if self._dpcode_wrapper.skip_update(self.device, updated_status_properties):
+            return
+        self.async_write_ha_state()
