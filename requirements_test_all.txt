@@ -2380,7 +2380,7 @@ sensoterra==2.0.1
 sentence-stream==1.2.0
 
 # homeassistant.components.sentry
-sentry-sdk==1.45.1
+sentry-sdk==2.48.0
 
 # homeassistant.components.homeassistant_hardware
 # homeassistant.components.zha
