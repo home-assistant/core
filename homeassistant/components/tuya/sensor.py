@@ -1848,10 +1848,13 @@ class TuyaSensorEntity(TuyaEntity, SensorEntity):
         dp_timestamps: dict | None = None,
     ) -> None:
         """Handle state update from device."""
+        if self._dpcode_wrapper.skip_update(self.device, updated_status_properties):
+            return
+
         if self._is_delta_report:
             self._process_delta_update(updated_status_properties, dp_timestamps)
 
-        await super()._handle_state_update(updated_status_properties, dp_timestamps)
+        self.async_write_ha_state()
 
     def _process_delta_update(
         self,
