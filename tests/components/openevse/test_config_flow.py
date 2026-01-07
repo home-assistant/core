@@ -248,7 +248,7 @@ async def test_zeroconf_connection_error(
     hass: HomeAssistant, mock_charger: MagicMock
 ) -> None:
     """Test zeroconf discovery with connection failure."""
-    mock_charger.getStatus.side_effect = AttributeError
+    mock_charger.test_and_get.side_effect = TimeoutError
     discovery_info = ZeroconfServiceInfo(
         ip_address=ip_address("192.168.1.123"),
         ip_addresses=[ip_address("192.168.1.123"), ip_address("2001:db8::1")],
