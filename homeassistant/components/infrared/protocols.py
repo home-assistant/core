@@ -2,7 +2,8 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from abc import ABC
+from dataclasses import dataclass, field
 from enum import StrEnum
 
 
@@ -25,7 +26,7 @@ class IRTiming:
     low_us: int
 
 
-class InfraredProtocol:
+class InfraredProtocol(ABC):
     """Base class for IR protocol definitions."""
 
     type: InfraredProtocolType
@@ -95,33 +96,29 @@ class SamsungInfraredProtocol(InfraredProtocol):
         )
 
 
-@dataclass(frozen=True, slots=True)
-class InfraredCommand:
+class InfraredCommand(ABC):
     """Base class for IR commands."""
 
     repeat_count: int
+    protocol: InfraredProtocol
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True, slots=True, kw_only=True)
 class PulseWidthInfraredCommand(InfraredCommand):
     """IR command with a numeric code for pulse-width protocols."""
 
-    protocol: PulseWidthIRProtocol
     code: int
     length_in_bits: int
+    protocol: PulseWidthIRProtocol
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True, slots=True, kw_only=True)
 class NECInfraredCommand(InfraredCommand):
     """NEC IR command."""
 
     address: int
     command: int
-
-    @property
-    def protocol(self) -> NECInfraredProtocol:
-        """Return the NEC protocol."""
-        return NECInfraredProtocol()
+    protocol: NECInfraredProtocol = field(default_factory=NECInfraredProtocol)
 
     def get_pulse_width_compat_code(self) -> int:
         """Return the code in pulse-width compatible 32-bit format."""
@@ -130,17 +127,13 @@ class NECInfraredCommand(InfraredCommand):
         return addr | (cmd << 16)
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True, slots=True, kw_only=True)
 class SamsungInfraredCommand(InfraredCommand):
     """Samsung IR command."""
 
     code: int
     length_in_bits: int = 32
-
-    @property
-    def protocol(self) -> SamsungInfraredProtocol:
-        """Return the Samsung protocol."""
-        return SamsungInfraredProtocol()
+    protocol: SamsungInfraredProtocol = field(default_factory=SamsungInfraredProtocol)
 
     def get_pulse_width_compat_code(self) -> int:
         """Return the code in pulse-width compatible format.
