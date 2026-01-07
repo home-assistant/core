@@ -69,13 +69,13 @@ class OpenEVSEConfigFlow(ConfigFlow, domain=DOMAIN):
 
         if not await self.check_status(data[CONF_HOST]):
             return self.async_abort(reason="unavailable_host")
-        
+
         try:
             charger = OpenEVSE(data[CONF_HOST])
             result = await charger.test_and_get()
             await self.async_set_unique_id(result[CONF_SERIAL])
         except MissingSerial:
-            pass        
+            pass
 
         return self.async_create_entry(
             title=f"OpenEVSE {data[CONF_HOST]}",

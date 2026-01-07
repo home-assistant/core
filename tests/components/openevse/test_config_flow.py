@@ -292,6 +292,7 @@ async def test_import_flow_no_serial(
         }
         assert result["result"].unique_id is None
 
+
 async def test_user_flow_no_serial(
     hass: HomeAssistant,
     mock_charger: MagicMock,
@@ -316,4 +317,4 @@ async def test_user_flow_no_serial(
         assert result["data"] == {
             CONF_HOST: "10.0.0.131",
         }
-        assert result["result"].unique_id is None       
+        assert result["result"].unique_id is None

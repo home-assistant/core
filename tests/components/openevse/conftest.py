@@ -35,7 +35,10 @@ def mock_charger() -> Generator[MagicMock]:
         charger.usage_total = 500000  # 500 kWh in Wh
         charger.charging_current = 32.0
         charger.test_and_get = AsyncMock()
-        charger.test_and_get.return_value = {"serial": "deadbeeffeed", "model": "openevse_wifi_v1"}
+        charger.test_and_get.return_value = {
+            "serial": "deadbeeffeed",
+            "model": "openevse_wifi_v1",
+        }
         yield charger
 
 
