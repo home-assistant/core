@@ -125,9 +125,6 @@ async def test_step_user_already_configured(
         "pynina.baseApi.BaseAPI._makeRequest",
         wraps=mocked_request_function,
     ):
-        await hass.config_entries.async_setup(mock_config_entry.entry_id)
-        await hass.async_block_till_done()
-
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_USER}, data=deepcopy(DUMMY_USER_INPUT)
         )
