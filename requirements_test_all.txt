@@ -2331,7 +2331,7 @@ rova==0.4.1
 rpi-bad-power==0.1.0
 
 # homeassistant.components.ruuvitag_ble
-ruuvitag-ble==0.3.0
+ruuvitag-ble==0.4.0
 
 # homeassistant.components.yamaha
 rxv==0.7.0
