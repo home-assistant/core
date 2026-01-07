@@ -146,6 +146,9 @@
       "tank_volume": {
         "default": "mdi:water-boiler"
       },
+      "thread_attach_attempt_count": {
+        "default": "mdi:antenna"
+      },
       "valve_position": {
         "default": "mdi:valve"
       }
