@@ -42,6 +42,7 @@ from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.start import async_at_start
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType, StateType
 
+from . import SAJConfigEntry
 from .const import CONNECTION_TYPES
 
 _LOGGER = logging.getLogger(__name__)
@@ -72,7 +73,7 @@ PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: SAJConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the SAJ sensors from a config entry."""

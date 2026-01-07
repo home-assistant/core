@@ -22,13 +22,17 @@ from .const import CONNECTION_TYPES
 
 _LOGGER = logging.getLogger(__name__)
 
+PLATFORMS: list[Platform] = [Platform.SENSOR]
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+type SAJConfigEntry = ConfigEntry[pysaj.SAJ]
+
+
+async def async_setup_entry(hass: HomeAssistant, entry: SAJConfigEntry) -> bool:
     """Set up SAJ from a config entry."""
     host = entry.data[CONF_HOST]
     connection_type = entry.data[CONF_TYPE]
-    username = entry.data.get(CONF_USERNAME, "")
-    password = entry.data.get(CONF_PASSWORD, "")
+    username = entry.data.get(CONF_USERNAME, None)
+    password = entry.data.get(CONF_PASSWORD, None)
 
     # Create SAJ connection
     kwargs: dict[str, Any] = {}
@@ -60,19 +64,22 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             "Error in SAJ, please check host/ip address. Original error: %s", err
         )
         raise ConfigEntryNotReady(f"Connection error: {err}") from err
-    except Exception as err:
-        _LOGGER.error("Unexpected error setting up SAJ: %s", err)
-        raise ConfigEntryNotReady(f"Unexpected error: {err}") from err
+    except TimeoutError as err:
+        _LOGGER.error("Connection timeout to SAJ at %s: %s", host, err)
+        raise ConfigEntryNotReady(f"Connection timeout: {err}") from err
+    except OSError as err:
+        _LOGGER.error("Network error connecting to SAJ at %s: %s", host, err)
+        raise ConfigEntryNotReady(f"Network error: {err}") from err
 
     # Store connection in runtime_data
     entry.runtime_data = saj
 
     # Forward setup to sensor platform
-    await hass.config_entries.async_forward_entry_setups(entry, (Platform.SENSOR,))
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: SAJConfigEntry) -> bool:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, (Platform.SENSOR,))
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
