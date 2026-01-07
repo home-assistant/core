@@ -133,7 +133,7 @@ class OAuth2FlowHandler(
         """Extra data that needs to be appended to the authorize url."""
         return {}
 
-    async def async_step_user(  # type: ignore[override]
+    async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle a flow start."""
@@ -174,14 +174,14 @@ class OAuth2FlowHandler(
             _LOGGER.error("Failed to generate authorize URL: %s", err)
             return self.async_abort(reason="authorize_url_fail")
 
-    async def async_step_creation(  # type: ignore[override]
+    async def async_step_creation(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle creation step."""
         _LOGGER.debug("Starting creation step with user_input: %s", user_input)
-        return await super().async_step_creation(user_input)  # type: ignore[return-value]
+        return await super().async_step_creation(user_input)
 
-    async def async_oauth_create_entry(  # type: ignore[override]
+    async def async_oauth_create_entry(
         self, data: dict
     ) -> ConfigFlowResult:
         """Create an entry for the flow."""
@@ -190,7 +190,7 @@ class OAuth2FlowHandler(
             {k: "***" if k in ("token", "token_type") else v for k, v in data.items()},
         )
 
-        return self.async_create_entry(  # type: ignore[return-value]
+        return self.async_create_entry(
             title=self.flow_impl.name,
             data={
                 **data,

@@ -136,7 +136,7 @@ class HisenseClimate(CoordinatorEntity, ClimateEntity):
 
         # State tracking
         self.hasAuto = False
-        self._last_command_time = 0
+        self._last_command_time: float = 0.0
         self.wait_time = 3
         self._cached_target_temp: float | None = None
         self._cached_hvac_mode = HVACMode.OFF
