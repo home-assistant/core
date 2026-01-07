@@ -7,8 +7,9 @@ from typing import Any
 
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigEntry, ConfigFlowResult, OptionsFlow
+from homeassistant.config_entries import ConfigEntry, OptionsFlow, OptionsFlowResult
 from homeassistant.core import callback
+from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import config_entry_oauth2_flow
 
 from .const import CLIENT_ID, DOMAIN
@@ -22,7 +23,7 @@ class HisenseOptionsFlowHandler(OptionsFlow):
 
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
+    ) -> OptionsFlowResult:
         """Manage options."""
         errors = {}
         description_placeholders = {"message": ""}  # Initialize with empty message
@@ -135,7 +136,7 @@ class OAuth2FlowHandler(
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
+    ) -> FlowResult:
         """Handle a flow start."""
         _LOGGER.debug("Starting user step with input: %s", user_input)
 
@@ -176,12 +177,12 @@ class OAuth2FlowHandler(
 
     async def async_step_creation(
         self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
+    ) -> FlowResult:
         """Handle creation step."""
         _LOGGER.debug("Starting creation step with user_input: %s", user_input)
         return await super().async_step_creation(user_input)
 
-    async def async_oauth_create_entry(self, data: dict) -> ConfigFlowResult:
+    async def async_oauth_create_entry(self, data: dict) -> FlowResult:
         """Create an entry for the flow."""
         _LOGGER.debug(
             "Creating entry with data: %s",

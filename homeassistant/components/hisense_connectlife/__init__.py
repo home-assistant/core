@@ -54,10 +54,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     # Create Home Assistant's OAuth2Session for token management
     ha_session = config_entry_oauth2_flow.OAuth2Session(hass, entry, implementation)
 
-    # Get the token data and add expiration time
-    token_info = await ha_session.async_ensure_token_valid()
-    if token_info is None:
-        token_info = entry.data.get("token", {})
+    # Ensure token is valid
+    await ha_session.async_ensure_token_valid()
+    token_info = entry.data.get("token", {})
 
     if "expires_in" in token_info and "expires_at" not in token_info:
         token_info["expires_at"] = time.time() + token_info["expires_in"]
@@ -70,10 +69,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         },
     )
 
+    # Get the implementation as HisenseOAuth2Implementation
+    hisense_impl = HisenseOAuth2Implementation(hass)
+
     # Create our custom OAuth2Session that wraps the HA session
     oauth_session = OAuth2Session(
         hass=hass,
-        oauth2_implementation=implementation,
+        oauth2_implementation=hisense_impl,
         token=token_info,
     )
 

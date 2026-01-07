@@ -4,11 +4,8 @@
   "codeowners": ["@qingshi688"],
   "config_flow": true,
   "dependencies": ["application_credentials"],
-  "documentation": "https://github.com/Connectlife-LLC/HomeAssistantPluginIntegration",
+  "documentation": "https://www.home-assistant.io/integrations/hisense_connectlife",
   "integration_type": "hub",
   "iot_class": "cloud_polling",
-  "issue_tracker": "https://github.com/Connectlife-LLC/HomeAssistantPluginIntegration/issues",
-  "requirements": ["connectlife-cloud>=0.3.3"],
-  "ssdp": [],
-  "zeroconf": []
+  "requirements": ["connectlife-cloud==0.3.3"]
 }

@@ -1,25 +1,25 @@
 rules:
   # Bronze
-  action-setup: pending
+  action-setup: done
   appropriate-polling:
     status: done
     comment: |
       Uses WebSocket for real-time updates with 30-second polling fallback
   brands: done
   common-modules: done
-  config-flow-test-coverage: pending
+  config-flow-test-coverage: done
   config-flow: done
   dependency-transparency: done
   docs-actions: not_relevant
-  docs-high-level-description: pending
-  docs-installation-instructions: pending
-  docs-removal-instructions: pending
+  docs-high-level-description: done
+  docs-installation-instructions: done
+  docs-removal-instructions: done
   entity-event-setup: done
   entity-unique-id: done
-  has-entity-name: pending
+  has-entity-name: done
   runtime-data: done
-  test-before-configure: pending
-  test-before-setup: pending
+  test-before-configure: done
+  test-before-setup: done
   unique-config-entry: done
 
   # Silver
@@ -28,7 +28,7 @@ rules:
   docs-configuration-parameters: pending
   docs-installation-parameters: pending
   entity-unavailable: done
-  integration-owner: pending
+  integration-owner: done
   log-when-unavailable: done
   parallel-updates: done
   reauthentication-flow:
