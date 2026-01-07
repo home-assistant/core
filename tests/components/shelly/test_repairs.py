@@ -531,13 +531,9 @@ async def test_coiot_missing_or_wrong_peer_issue(
     flow_id = result["flow_id"]
     assert result["step_id"] == "confirm"
 
-    mock_block_device.http_request.return_value = {
-        "coiot": {"enabled": True, "update_period": 15, "peer": "10.10.10.10:5683"}
-    }
-
     result = await process_repair_fix_flow(client, flow_id)
     assert result["type"] == "create_entry"
-    assert mock_block_device.http_request.call_count == 1
+    assert mock_block_device.configure_coiot_protocol.call_count == 1
 
     # Assert the issue is no longer present
     assert not issue_registry.async_get_issue(DOMAIN, issue_id)

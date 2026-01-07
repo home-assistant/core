@@ -29,7 +29,12 @@ from .const import (
     BLEScannerMode,
 )
 from .coordinator import ShellyConfigEntry
-from .utils import get_coiot_address, get_device_entry_gen, get_rpc_ws_url
+from .utils import (
+    get_coiot_address,
+    get_coiot_port,
+    get_device_entry_gen,
+    get_rpc_ws_url,
+)
 
 
 @callback
@@ -282,15 +287,13 @@ class CoiotConfigureFlow(ShellyBlockRepairsFlow):
         self, user_input: dict[str, str] | None = None
     ) -> data_entry_flow.FlowResult:
         """Handle the confirm step of a fix flow."""
-        peer = get_coiot_address(self.hass)
+
+        coiot_addr = get_coiot_address(self.hass)
+        coiot_port = get_coiot_port(self.hass)
+        if coiot_addr is None or coiot_port is None:
+            return self.async_abort(reason="cannot_configure")
         try:
-            result = await self._device.http_request(
-                method="POST",
-                path="settings/advanced",
-                params=f"coiot_enable=true&coiot_peer={peer}",
-            )
-            if result.get("coiot", {}).get("peer") != peer:
-                return self.async_abort(reason="cannot_configure")
+            await self._device.configure_coiot_protocol(coiot_addr, coiot_port)
             await self._device.trigger_reboot()
         except DeviceConnectionError:
             return self.async_abort(reason="cannot_connect")

@@ -722,25 +722,29 @@ def async_remove_orphaned_entities(
         async_remove_shelly_rpc_entities(hass, platform, mac, orphaned_entities)
 
 
-def get_coiot_address(hass: HomeAssistant) -> str | None:
+def _get_homeassistant_url(hass: HomeAssistant) -> URL | None:
     """Return the CoIoT ip address and port."""
     try:
         raw_url = get_url(hass, prefer_external=False, allow_cloud=False)
     except NoURLAvailableError:
         LOGGER.debug("URL not available, skipping CoIoT setup")
         return None
-    url = URL(raw_url)
-    return f"{url.host}:{get_coiot_port(hass)}"
+    return URL(raw_url)
+
+
+def get_coiot_address(hass: HomeAssistant) -> str | None:
+    """Return the CoIoT ip address."""
+    url = _get_homeassistant_url(hass)
+    if url is None:
+        return None
+    return str(url.host)
 
 
 def get_rpc_ws_url(hass: HomeAssistant) -> str | None:
     """Return the RPC websocket URL."""
-    try:
-        raw_url = get_url(hass, prefer_external=False, allow_cloud=False)
-    except NoURLAvailableError:
-        LOGGER.debug("URL not available, skipping outbound websocket setup")
+    url = _get_homeassistant_url(hass)
+    if url is None:
         return None
-    url = URL(raw_url)
     ws_url = url.with_scheme("wss" if url.scheme == "https" else "ws")
     return str(ws_url.joinpath(API_WS_URL.removeprefix("/")))
 
