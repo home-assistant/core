@@ -725,6 +725,69 @@ async def test_thread_attach_attempt_count_sensor(
     assert entry.entity_category == EntityCategory.DIAGNOSTIC
 
 
+@pytest.mark.parametrize("node_fixture", ["eve_thermo"])
+async def test_thread_partition_id_change_count_sensor(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+) -> None:
+    """Test Thread partition ID change count sensor on Eve Thermo fixture."""
+
+    entity_id = "sensor.eve_thermo_thread_partition_id_changes"
+
+    # Entity should be discovered with initial value from fixture (0/53/19)
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == "3"
+
+    # Update attribute: endpoint 0, cluster 53 (ThreadNetworkDiagnostics), attribute 19 (0x0013)
+    set_node_attribute(matter_node, 0, 53, 19, 5)
+    await trigger_subscription_callback(hass, matter_client)
+
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == "5"
+
+    entry = entity_registry.async_get(entity_id)
+    assert entry
+    assert entry.entity_category == EntityCategory.DIAGNOSTIC
+
+
+@pytest.mark.parametrize("node_fixture", ["eve_thermo"])
+async def test_thread_partition_id_sensor(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+) -> None:
+    """Test Thread partition ID sensor on Eve Thermo fixture."""
+
+    entity_id = "sensor.eve_thermo_thread_partition_id"
+
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == "867525816"
+
+    set_node_attribute(matter_node, 0, 53, 9, 50)
+    await trigger_subscription_callback(hass, matter_client)
+
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == "50"
+
+    entry = entity_registry.async_get(entity_id)
+    assert entry
+    assert entry.entity_category == EntityCategory.DIAGNOSTIC
+
+    set_node_attribute(matter_node, 0, 53, 9, None)
+    await trigger_subscription_callback(hass, matter_client)
+
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == "unknown"
+
+
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
 @pytest.mark.parametrize("node_fixture", ["mock_lock"])
 async def test_optional_door_event_sensors_from_featuremap(
