@@ -277,7 +277,7 @@ aioharmony==0.5.3
 aiohasupervisor==0.3.3
 
 # homeassistant.components.home_connect
-aiohomeconnect==0.26.0
+aiohomeconnect==0.28.0
 
 # homeassistant.components.homekit_controller
 aiohomekit==3.2.20
@@ -2783,7 +2783,7 @@ rpi-bad-power==0.1.0
 russound==0.2.0
 
 # homeassistant.components.ruuvitag_ble
-ruuvitag-ble==0.3.0
+ruuvitag-ble==0.4.0
 
 # homeassistant.components.yamaha
 rxv==0.7.0
@@ -3277,7 +3277,7 @@ zeroconf==0.148.0
 zeversolar==0.3.2
 
 # homeassistant.components.zha
-zha==0.0.83
+zha==0.0.84
 
 # homeassistant.components.zhong_hong
 zhong-hong-hvac==1.0.13
