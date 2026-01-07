@@ -5,6 +5,9 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 from fressnapftracker import (
     Device,
+    EnergySaving,
+    LedActivatable,
+    LedBrightness,
     PhoneVerificationResponse,
     Position,
     SmsCodeResponse,
@@ -40,29 +43,6 @@ def mock_setup_entry() -> Generator[AsyncMock]:
         return_value=True,
     ) as mock_setup_entry:
         yield mock_setup_entry
-
-
-@pytest.fixture
-def mock_tracker() -> Tracker:
-    """Create a mock Tracker object."""
-    return Tracker(
-        name="Fluffy",
-        battery=85,
-        charging=False,
-        position=Position(
-            lat=52.520008,
-            lng=13.404954,
-            accuracy=10,
-            timestamp="2024-01-15T12:00:00Z",
-        ),
-        tracker_settings=TrackerSettings(
-            generation="GPS Tracker 2.0",
-            features=TrackerFeatures(live_tracking=True),
-        ),
-        led_brightness=None,
-        deep_sleep=None,
-        led_activatable=None,
-    )
 
 
 @pytest.fixture
@@ -122,13 +102,44 @@ def mock_auth_client(mock_device: Device) -> Generator[MagicMock]:
 
 
 @pytest.fixture
-def mock_api_client(mock_tracker: Tracker) -> Generator[MagicMock]:
+def mock_api_client() -> Generator[MagicMock]:
     """Mock the ApiClient."""
     with patch(
         "homeassistant.components.fressnapf_tracker.coordinator.ApiClient"
     ) as mock_api_client:
         client = mock_api_client.return_value
-        client.get_tracker = AsyncMock(return_value=mock_tracker)
+        client.get_tracker = AsyncMock(
+            return_value=Tracker(
+                name="Fluffy",
+                battery=85,
+                charging=False,
+                position=Position(
+                    lat=52.520008,
+                    lng=13.404954,
+                    accuracy=10,
+                    timestamp="2024-01-15T12:00:00Z",
+                ),
+                tracker_settings=TrackerSettings(
+                    generation="GPS Tracker 2.0",
+                    features=TrackerFeatures(
+                        flash_light=True, energy_saving_mode=True, live_tracking=True
+                    ),
+                ),
+                led_brightness=LedBrightness(status="ok", value=50),
+                energy_saving=EnergySaving(status="ok", value=1),
+                deep_sleep=None,
+                led_activatable=LedActivatable(
+                    has_led=True,
+                    seen_recently=True,
+                    nonempty_battery=True,
+                    not_charging=True,
+                    overall=True,
+                ),
+                icon="http://res.cloudinary.com/iot-venture/image/upload/v1717594357/kyaqq7nfitrdvaoakb8s.jpg",
+            )
+        )
+        client.set_led_brightness = AsyncMock(return_value=None)
+        client.set_energy_saving = AsyncMock(return_value=None)
         yield client
 
 

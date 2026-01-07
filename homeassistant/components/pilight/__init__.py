@@ -25,6 +25,7 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.event import track_point_in_utc_time
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import dt as dt_util
+from homeassistant.util.async_ import run_callback_threadsafe
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -101,7 +102,18 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
         except OSError:
             _LOGGER.error("Pilight send failed for %s", str(message_data))
 
-    hass.services.register(DOMAIN, SERVICE_NAME, send_code, schema=RF_CODE_SCHEMA)
+    def _register_service() -> None:
+        hass.services.async_register(
+            DOMAIN,
+            SERVICE_NAME,
+            send_code,
+            schema=RF_CODE_SCHEMA,
+            description_placeholders={
+                "pilight_protocols_docs_url": "https://manual.pilight.org/protocols/index.html"
+            },
+        )
+
+    run_callback_threadsafe(hass.loop, _register_service).result()
 
     # Publish received codes on the HA event bus
     # A whitelist of codes to be published in the event bus

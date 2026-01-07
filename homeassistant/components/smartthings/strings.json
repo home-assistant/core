@@ -74,6 +74,9 @@
       }
     },
     "button": {
+      "reset_hood_filter": {
+        "name": "Reset filter"
+      },
       "reset_water_filter": {
         "name": "Reset water filter"
       },
@@ -135,6 +138,17 @@
         }
       }
     },
+    "fan": {
+      "hood": {
+        "state_attributes": {
+          "preset_mode": {
+            "state": {
+              "smart": "Smart"
+            }
+          }
+        }
+      }
+    },
     "number": {
       "cool_select_plus_temperature": {
         "name": "CoolSelect+ temperature"
@@ -147,6 +161,9 @@
       },
       "hood_fan_speed": {
         "name": "Fan speed"
+      },
+      "target_temperature": {
+        "name": "Target temperature"
       },
       "washer_rinse_cycles": {
         "name": "Rinse cycles",

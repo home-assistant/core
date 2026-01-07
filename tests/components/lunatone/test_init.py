@@ -25,6 +25,7 @@ async def test_load_unload_config_entry(
     await setup_integration(hass, mock_config_entry)
 
     assert mock_config_entry.state is ConfigEntryState.LOADED
+    assert mock_config_entry.unique_id
 
     device_entry = device_registry.async_get_device(
         identifiers={(DOMAIN, mock_config_entry.unique_id)}

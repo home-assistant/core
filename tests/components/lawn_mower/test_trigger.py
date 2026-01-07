@@ -1,6 +1,7 @@
 """Test lawn mower triggers."""
 
 from collections.abc import Generator
+from typing import Any
 from unittest.mock import patch
 
 import pytest
@@ -8,7 +9,6 @@ import pytest
 from homeassistant.components.lawn_mower import LawnMowerActivity
 from homeassistant.const import ATTR_LABEL_ID, CONF_ENTITY_ID
 from homeassistant.core import HomeAssistant, ServiceCall
-from homeassistant.setup import async_setup_component
 
 from tests.components import (
     StateDescription,
@@ -70,7 +70,7 @@ async def test_lawn_mower_triggers_gated_by_labs_flag(
     parametrize_target_entities("lawn_mower"),
 )
 @pytest.mark.parametrize(
-    ("trigger", "states"),
+    ("trigger", "trigger_options", "states"),
     [
         *parametrize_trigger_states(
             trigger="lawn_mower.docked",
@@ -102,11 +102,10 @@ async def test_lawn_mower_state_trigger_behavior_any(
     entity_id: str,
     entities_in_target: int,
     trigger: str,
+    trigger_options: dict[str, Any],
     states: list[StateDescription],
 ) -> None:
     """Test that the lawn mower state trigger fires when any lawn mower state changes to a specific state."""
-    await async_setup_component(hass, "lawn_mower", {})
-
     other_entity_ids = set(target_lawn_mowers) - {entity_id}
 
     # Set all lawn mowers, including the tested one, to the initial state
@@ -139,7 +138,7 @@ async def test_lawn_mower_state_trigger_behavior_any(
     parametrize_target_entities("lawn_mower"),
 )
 @pytest.mark.parametrize(
-    ("trigger", "states"),
+    ("trigger", "trigger_options", "states"),
     [
         *parametrize_trigger_states(
             trigger="lawn_mower.docked",
@@ -171,11 +170,10 @@ async def test_lawn_mower_state_trigger_behavior_first(
     entity_id: str,
     entities_in_target: int,
     trigger: str,
+    trigger_options: dict[str, Any],
     states: list[StateDescription],
 ) -> None:
     """Test that the lawn mower state trigger fires when the first lawn mower changes to a specific state."""
-    await async_setup_component(hass, "lawn_mower", {})
-
     other_entity_ids = set(target_lawn_mowers) - {entity_id}
 
     # Set all lawn mowers, including the tested one, to the initial state
@@ -207,7 +205,7 @@ async def test_lawn_mower_state_trigger_behavior_first(
     parametrize_target_entities("lawn_mower"),
 )
 @pytest.mark.parametrize(
-    ("trigger", "states"),
+    ("trigger", "trigger_options", "states"),
     [
         *parametrize_trigger_states(
             trigger="lawn_mower.docked",
@@ -239,11 +237,10 @@ async def test_lawn_mower_state_trigger_behavior_last(
     entity_id: str,
     entities_in_target: int,
     trigger: str,
+    trigger_options: dict[str, Any],
     states: list[StateDescription],
 ) -> None:
     """Test that the lawn_mower state trigger fires when the last lawn_mower changes to a specific state."""
-    await async_setup_component(hass, "lawn_mower", {})
-
     other_entity_ids = set(target_lawn_mowers) - {entity_id}
 
     # Set all lawn mowers, including the tested one, to the initial state
