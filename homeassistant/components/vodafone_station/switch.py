@@ -3,15 +3,25 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from json.decoder import JSONDecodeError
 from typing import Any, Final
 
 from aiovodafone.const import WIFI_DATA, WifiBand, WifiType
+from aiovodafone.exceptions import (
+    AlreadyLogged,
+    CannotAuthenticate,
+    CannotConnect,
+    GenericLoginError,
+    GenericResponseError,
+)
 
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
+from .const import DOMAIN
 from .coordinator import VodafoneConfigEntry, VodafoneStationRouter
 
 PARALLEL_UPDATES = 0
@@ -35,7 +45,6 @@ SWITCHES: Final = (
         key="guest",
         band=WifiBand.BAND_2_4_GHZ,
         typology=WifiType.GUEST,
-        icon="mdi:wifi-guest",
     ),
     VodafoneStationEntityDescription(
         key="main_5g",
@@ -86,17 +95,40 @@ class VodafoneSwitchEntity(CoordinatorEntity[VodafoneStationRouter], SwitchEntit
         self._attr_name = coordinator.data.wifi[WIFI_DATA][description.key]["ssid"]
         self._attr_unique_id = f"{coordinator.serial_number}_{description.key}"
 
+    async def _set_wifi_status(self, status: bool) -> None:
+        """Set the wifi status."""
+        try:
+            await self.coordinator.api.set_wifi_status(
+                status, self.entity_description.typology, self.entity_description.band
+            )
+        except CannotAuthenticate as err:
+            self.coordinator.config_entry.async_start_reauth(self.hass)
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="cannot_authenticate",
+                translation_placeholders={"error": repr(err)},
+            ) from err
+        except (
+            CannotConnect,
+            AlreadyLogged,
+            GenericLoginError,
+            GenericResponseError,
+            JSONDecodeError,
+        ) as err:
+            self.coordinator.last_update_success = False
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="cannot_execute_action",
+                translation_placeholders={"error": repr(err)},
+            ) from err
+
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
-        await self.coordinator.api.set_wifi_status(
-            True, self.entity_description.typology, self.entity_description.band
-        )
+        await self._set_wifi_status(True)
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the switch off."""
-        await self.coordinator.api.set_wifi_status(
-            False, self.entity_description.typology, self.entity_description.band
-        )
+        await self._set_wifi_status(False)
 
     @property
     def is_on(self) -> bool:

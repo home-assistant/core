@@ -23,7 +23,7 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:wifi-guest',
+    'original_icon': None,
     'original_name': 'Wifi-Guest',
     'platform': 'vodafone_station',
     'previous_unique_id': None,
@@ -38,7 +38,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Vodafone Station (m123456789) Wifi-Guest',
-      'icon': 'mdi:wifi-guest',
     }),
     'context': <ANY>,
     'entity_id': 'switch.vodafone_station_m123456789_wifi_guest',
