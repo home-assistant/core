@@ -354,7 +354,7 @@ def parametrize_trigger_states(
 def parametrize_numerical_attribute_changed_trigger_states(
     trigger: str, state: str, attribute: str
 ) -> list[tuple[str, dict[str, Any], list[StateDescription]]]:
-    """Parametrize states and expected service call counts for numerical triggers."""
+    """Parametrize states and expected service call counts for numerical changed triggers."""
     return [
         *parametrize_trigger_states(
             trigger=trigger,
@@ -399,7 +399,7 @@ def parametrize_numerical_attribute_changed_trigger_states(
 def parametrize_numerical_attribute_crossed_threshold_trigger_states(
     trigger: str, state: str, attribute: str
 ) -> list[tuple[str, dict[str, Any], list[StateDescription]]]:
-    """Parametrize states and expected service call counts for numerical triggers."""
+    """Parametrize states and expected service call counts for numerical crossed threshold triggers."""
     return [
         *parametrize_trigger_states(
             trigger=trigger,
