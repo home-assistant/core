@@ -97,7 +97,9 @@ async def async_setup_entry(
     coordinator = entry.runtime_data
     entities = []
     for sensor_name, sensor in coordinator.data.sensors.items():
-        sensor_meta = SENSOR_META.get(sensor.type, Description(None, None, None))
+        if sensor_name not in SENSOR_META:
+            continue
+        sensor_meta = SENSOR_META[sensor.type]
         entities.append(
             HomevoltSensor(
                 SensorEntityDescription(

@@ -29,8 +29,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: HomevoltConfigEntry) -> 
     try:
         await client.update_info()
     except HomevoltConnectionError as err:
-        await client.close_connection()
-        raise ConfigEntryNotReady(f"Unable to connect to device: {err}") from err
+        raise ConfigEntryNotReady(
+            f"Unable to connect to Homevolt battery: {err}"
+        ) from err
 
     coordinator = HomevoltDataUpdateCoordinator(hass, entry, client)
     await coordinator.async_config_entry_first_refresh()
