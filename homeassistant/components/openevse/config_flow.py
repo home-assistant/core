@@ -9,7 +9,7 @@ from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_NAME
 from homeassistant.helpers.service_info import zeroconf
 
-from .const import CONF_ID, DOMAIN
+from .const import CONF_ID, CONF_SERIAL, DOMAIN
 
 
 class OpenEVSEConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -22,27 +22,29 @@ class OpenEVSEConfigFlow(ConfigFlow, domain=DOMAIN):
         """Set up the instance."""
         self.discovery_info: dict[str, Any] = {}
 
-    async def check_status(self, host: str) -> bool:
+    async def check_status(self, host: str) -> tuple[bool, str | None]:
         """Check if we can connect to the OpenEVSE charger."""
 
         charger = OpenEVSE(host)
         try:
-            await charger.test_and_get()
+            result = await charger.test_and_get()
         except TimeoutError:
-            return False
-        else:
-            return True
+            return False, None
+        return True, result.get(CONF_SERIAL)
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle the initial step."""
 
-        errors = None
+        errors = {}
         if user_input is not None:
             self._async_abort_entries_match({CONF_HOST: user_input[CONF_HOST]})
 
-            if await self.check_status(user_input[CONF_HOST]):
+            if (result := await self.check_status(user_input[CONF_HOST]))[0]:
+                if (serial := result[1]) is not None:
+                    await self.async_set_unique_id(serial, raise_on_progress=False)
+                    self._abort_if_unique_id_configured()
                 return self.async_create_entry(
                     title=f"OpenEVSE {user_input[CONF_HOST]}",
                     data=user_input,
@@ -60,7 +62,11 @@ class OpenEVSEConfigFlow(ConfigFlow, domain=DOMAIN):
 
         self._async_abort_entries_match({CONF_HOST: data[CONF_HOST]})
 
-        if not await self.check_status(data[CONF_HOST]):
+        if (result := await self.check_status(data[CONF_HOST]))[0]:
+            if (serial := result[1]) is not None:
+                await self.async_set_unique_id(serial)
+                self._abort_if_unique_id_configured()
+        else:
             return self.async_abort(reason="unavailable_host")
 
         return self.async_create_entry(
@@ -87,7 +93,7 @@ class OpenEVSEConfigFlow(ConfigFlow, domain=DOMAIN):
         )
         self.context.update({"title_placeholders": {"name": name}})
 
-        if not await self.check_status(host):
+        if not (await self.check_status(host))[0]:
             return self.async_abort(reason="cannot_connect")
 
         return await self.async_step_discovery_confirm()
