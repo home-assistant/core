@@ -4767,8 +4767,8 @@
     },
     "openevse": {
       "name": "OpenEVSE",
-      "integration_type": "hub",
-      "config_flow": false,
+      "integration_type": "device",
+      "config_flow": true,
       "iot_class": "local_polling"
     },
     "openexchangerates": {
@@ -7474,7 +7474,7 @@
     },
     "waterfurnace": {
       "name": "WaterFurnace",
-      "integration_type": "hub",
+      "integration_type": "device",
       "config_flow": false,
       "iot_class": "cloud_polling"
     },
