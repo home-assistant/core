@@ -172,6 +172,87 @@ class StateDescription(TypedDict):
     count: int
 
 
+class ConditionStateDescription(TypedDict):
+    """Test state and expected service call count."""
+
+    included: _StateDescription
+    excluded: _StateDescription
+    count: int
+    valid: bool
+
+
+def parametrize_condition_states(
+    *,
+    condition: str,
+    condition_options: dict[str, Any] | None = None,
+    target_states: list[str | None | tuple[str | None, dict]],
+    other_states: list[str | None | tuple[str | None, dict]],
+    additional_attributes: dict | None = None,
+) -> list[tuple[str, dict[str, Any], ConditionStateDescription]]:
+    """Parametrize states and expected service call counts.
+
+    The target_states and other_states iterables are either iterables of
+    states or iterables of (state, attributes) tuples.
+
+    Returns a list of tuples with (condition, condition_options, ConditionStateDescription).
+    """
+
+    additional_attributes = additional_attributes or {}
+    condition_options = condition_options or {}
+
+    def state_with_attributes(
+        state: str | None | tuple[str | None, dict], count: int, valid: bool
+    ) -> ConditionStateDescription:
+        """Return (state, attributes) dict."""
+        if isinstance(state, str) or state is None:
+            return {
+                "included": {
+                    "state": state,
+                    "attributes": additional_attributes,
+                },
+                "excluded": {
+                    "state": state,
+                    "attributes": {},
+                },
+                "count": count,
+                "valid": valid,
+            }
+        return {
+            "included": {
+                "state": state[0],
+                "attributes": state[1] | additional_attributes,
+            },
+            "excluded": {
+                "state": state[0],
+                "attributes": state[1],
+            },
+            "count": count,
+            "valid": valid,
+        }
+
+    return [
+        (
+            condition,
+            condition_options,
+            list(
+                itertools.chain(
+                    (state_with_attributes(None, 0, False),),
+                    (state_with_attributes(STATE_UNAVAILABLE, 0, False),),
+                    (state_with_attributes(STATE_UNKNOWN, 0, False),),
+                    (
+                        state_with_attributes(other_state, 0, True)
+                        for other_state in other_states
+                    ),
+                    (
+                        state_with_attributes(target_state, 1, True)
+                        for target_state in target_states
+                    ),
+                )
+            ),
+        ),
+    ]
+
+
 def parametrize_trigger_states(
     *,
     trigger: str,
