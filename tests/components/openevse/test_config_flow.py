@@ -45,7 +45,7 @@ async def test_user_flow_flaky(
     )
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
-    mock_charger.getStatus.side_effect = AttributeError
+    mock_charger.test_and_get.side_effect = TimeoutError
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {CONF_HOST: "10.0.0.131"},
@@ -54,7 +54,7 @@ async def test_user_flow_flaky(
     assert result["step_id"] == "user"
     assert result["errors"] == {"host": "cannot_connect"}
 
-    mock_charger.getStatus.side_effect = "Charging"
+    mock_charger.test_and_get.side_effect = None
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {CONF_HOST: "10.0.0.131"},
@@ -112,7 +112,7 @@ async def test_import_flow_bad(
     mock_setup_entry: AsyncMock,
 ) -> None:
     """Test import flow with bad charger."""
-    mock_charger.getStatus.side_effect = AttributeError
+    mock_charger.test_and_get.side_effect = TimeoutError
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_IMPORT}, data={CONF_HOST: "10.0.0.131"}

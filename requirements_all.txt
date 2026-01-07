@@ -854,7 +854,7 @@ ecoaliface==0.4.0
 egauge-async==0.4.0
 
 # homeassistant.components.eheimdigital
-eheimdigital==1.4.0
+eheimdigital==1.5.0
 
 # homeassistant.components.ekeybionyx
 ekey-bionyxpy==1.0.1
@@ -1145,7 +1145,7 @@ growattServer==1.7.1
 gspread==5.5.0
 
 # homeassistant.components.profiler
-guppy3==3.1.5;python_version<'3.14'
+guppy3==3.1.6
 
 # homeassistant.components.iaqualink
 h2==4.3.0
@@ -1213,10 +1213,10 @@ hole==0.9.0
 holidays==0.84
 
 # homeassistant.components.frontend
-home-assistant-frontend==20251229.0
+home-assistant-frontend==20251229.1
 
 # homeassistant.components.conversation
-home-assistant-intents==2026.1.1
+home-assistant-intents==2026.1.6
 
 # homeassistant.components.gentex_homelink
 homelink-integration-api==0.0.1
@@ -1662,9 +1662,6 @@ openai==2.11.0
 # homeassistant.components.openerz
 openerz-api==0.3.0
 
-# homeassistant.components.openevse
-openevsewifi==1.1.2
-
 # homeassistant.components.openhome
 openhomedevice==2.2.0
 
@@ -1684,7 +1681,7 @@ openwrt-luci-rpc==1.1.17
 openwrt-ubus-rpc==0.0.2
 
 # homeassistant.components.opower
-opower==0.15.9
+opower==0.16.0
 
 # homeassistant.components.oralb
 oralb-ble==1.0.2
@@ -1867,7 +1864,7 @@ pyRFXtrx==0.31.1
 pySDCP==1
 
 # homeassistant.components.tibber
-pyTibber==0.33.1
+pyTibber==0.34.1
 
 # homeassistant.components.dlink
 pyW215==0.8.0
@@ -1931,7 +1928,7 @@ pyblu==2.0.5
 pybotvac==0.0.28
 
 # homeassistant.components.braviatv
-pybravia==0.3.4
+pybravia==0.4.1
 
 # homeassistant.components.nissan_leaf
 pycarwings2==2.14
@@ -2559,6 +2556,9 @@ python-open-router==0.3.3
 # homeassistant.components.swiss_public_transport
 python-opendata-transport==0.5.0
 
+# homeassistant.components.openevse
+python-openevse-http==0.2.1
+
 # homeassistant.components.opensky
 python-opensky==1.0.1
 
@@ -2582,7 +2582,7 @@ python-rabbitair==0.0.8
 python-ripple-api==0.0.3
 
 # homeassistant.components.roborock
-python-roborock==4.2.0
+python-roborock==4.2.1
 
 # homeassistant.components.smarttub
 python-smarttub==0.0.46
@@ -2839,7 +2839,7 @@ sensoterra==2.0.1
 sentence-stream==1.2.0
 
 # homeassistant.components.sentry
-sentry-sdk==1.45.1
+sentry-sdk==2.48.0
 
 # homeassistant.components.homeassistant_hardware
 # homeassistant.components.zha
@@ -2897,7 +2897,7 @@ solaredge-local==0.2.3
 solaredge-web==0.0.1
 
 # homeassistant.components.solarlog
-solarlog_cli==0.6.1
+solarlog_cli==0.7.0
 
 # homeassistant.components.solax
 solax==3.2.3
@@ -2960,7 +2960,7 @@ switchbot-api==2.9.0
 synology-srm==0.2.0
 
 # homeassistant.components.system_bridge
-systembridgeconnector==5.2.4
+systembridgeconnector==5.3.1
 
 # homeassistant.components.tailscale
 tailscale==0.6.2
@@ -3079,7 +3079,7 @@ typedmonarchmoney==0.4.4
 uasiren==0.0.1
 
 # homeassistant.components.unifiprotect
-uiprotect==7.33.3
+uiprotect==8.0.0
 
 # homeassistant.components.landisgyr_heat_meter
 ultraheat-api==0.5.7
@@ -3278,7 +3278,7 @@ zeroconf==0.148.0
 zeversolar==0.3.2
 
 # homeassistant.components.zha
-zha==0.0.82
+zha==0.0.83
 
 # homeassistant.components.zhong_hong
 zhong-hong-hvac==1.0.13

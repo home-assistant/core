@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
-
 from tuya_sharing import CustomerDevice, Manager
 
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
@@ -402,8 +400,6 @@ class TuyaSelectEntity(TuyaEntity, SelectEntity):
         self.entity_description = description
         self._attr_unique_id = f"{super().unique_id}{description.key}"
         self._dpcode_wrapper = dpcode_wrapper
-        if TYPE_CHECKING:
-            assert dpcode_wrapper.options
         self._attr_options = dpcode_wrapper.options
 
     @property
