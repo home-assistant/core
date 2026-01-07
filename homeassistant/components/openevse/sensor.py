@@ -19,6 +19,8 @@ from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import (
     CONF_HOST,
     CONF_MONITORED_VARIABLES,
+    CONF_PASSWORD,
+    CONF_USERNAME,
     UnitOfEnergy,
     UnitOfTemperature,
     UnitOfTime,
@@ -158,7 +160,7 @@ async def async_setup_entry(
     async_add_entities(
         (
             OpenEVSESensor(
-                config_entry.data[CONF_HOST],
+                config_entry,
                 config_entry.runtime_data,
                 description,
             )
@@ -173,13 +175,15 @@ class OpenEVSESensor(SensorEntity):
 
     def __init__(
         self,
-        host: str,
+        config: ConfigEntry,
         charger: OpenEVSE,
         description: SensorEntityDescription,
     ) -> None:
         """Initialize the sensor."""
         self.entity_description = description
-        self.host = host
+        self.host = config.data.get(CONF_HOST)
+        self.user = config.data.get(CONF_USERNAME)
+        self.password = config.data.get(CONF_PASSWORD)
         self.charger = charger
 
     async def async_update(self) -> None:

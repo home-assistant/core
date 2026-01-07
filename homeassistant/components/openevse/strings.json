@@ -5,12 +5,15 @@
       "unavailable_host": "Unable to connect to host"
     },
     "error": {
-      "cannot_connect": "Unable to connect"
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]"
     },
     "step": {
       "user": {
         "data": {
-          "host": "[%key:common::config_flow::data::host%]"
+          "host": "[%key:common::config_flow::data::host%]",
+          "password": "[%key:common::config_flow::data::password%]",
+          "username": "[%key:common::config_flow::data::username%]"
         },
         "data_description": {
           "host": "Enter the IP address of your OpenEVSE. Should match the address you used to set it up."
