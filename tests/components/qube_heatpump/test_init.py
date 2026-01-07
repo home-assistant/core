@@ -130,8 +130,6 @@ async def test_async_unload_entry_cleans_up(
     monkeypatch.setattr(hass.config_entries, "async_unload_platforms", unload_platforms)
 
     # Register mock service to avoid ServiceNotFound and avoid read-only async_call patch
-    mock_remove = AsyncMock()
-    hass.services.async_register("group", "remove", mock_remove)
 
     class DummyHub:
         async def async_close(self) -> None:  # pragma: no cover - replaced by mock
@@ -156,4 +154,3 @@ async def test_async_unload_entry_cleans_up(
     assert result is True
     unload_platforms.assert_called_once_with(entry, PLATFORMS)
     hub.async_close.assert_awaited()
-    assert len(mock_remove.mock_calls) > 0

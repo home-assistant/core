@@ -20,7 +20,6 @@ from homeassistant.config_entries import (
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er, issue_registry as ir
 from homeassistant.loader import async_get_integration, async_get_loaded_integration
-from homeassistant.setup import async_setup_component
 
 from .const import (
     CONF_FILE_NAME,
@@ -167,17 +166,6 @@ def _suggest_object_id(
     if apply_label and label and not base.startswith(f"{label}_"):
         base = f"{label}_{base}"
     return _slugify(base)
-
-
-def _is_alarm_entity(ent: EntityDef) -> bool:
-    """Check if entity is an alarm."""
-    if getattr(ent, "platform", None) != "binary_sensor":
-        return False
-    name = (getattr(ent, "name", "") or "").lower()
-    if "alarm" in name:
-        return True
-    vendor = (getattr(ent, "vendor_id", "") or "").lower()
-    return vendor.startswith("al")
 
 
 def _alarm_group_object_id(label: str | None, multi_device: bool) -> str:
@@ -371,15 +359,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: QubeConfigEntry) -> bool
 
     # Populate hub entities
     hub.entities.extend(
-        _to_entity_defs(
-            "binary_sensor", spec.get("binary_sensors"), entry.entry_id, multi_device
-        )
-    )
-    hub.entities.extend(
         _to_entity_defs("sensor", spec.get("sensors"), entry.entry_id, multi_device)
-    )
-    hub.entities.extend(
-        _to_entity_defs("switch", spec.get("switches"), entry.entry_id, multi_device)
     )
 
     ent_reg = er.async_get(hass)
@@ -494,40 +474,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: QubeConfigEntry) -> bool
 
     await coordinator.async_config_entry_first_refresh()
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-
-    # Alarm group sync
-    ant_reg = er.async_get(hass)
-    entity_ids: list[str] = []
-    for ent in hub.entities:
-        if not _is_alarm_entity(ent):
-            continue
-        if not ent.unique_id:
-            continue
-        reg_entity_id = ant_reg.async_get_entity_id(ent.platform, DOMAIN, ent.unique_id)
-        if reg_entity_id:
-            entity_ids.append(reg_entity_id)
-    await async_setup_component(hass, "group", {})
-    if not entity_ids:
-        with contextlib.suppress(Exception):
-            await hass.services.async_call(
-                "group",
-                "remove",
-                {"object_id": alarm_group_object_id},
-                blocking=True,
-            )
-    else:
-        name = "Qube alarm sensors"
-        if multi_device:
-            name = f"Qube alarm sensors ({label})"
-        service_data = {
-            "object_id": alarm_group_object_id,
-            "name": name,
-            "icon": "mdi:alarm-light",
-            "entities": sorted(set(entity_ids)),
-            "all": False,
-        }
-        with contextlib.suppress(Exception):
-            await hass.services.async_call("group", "set", service_data, blocking=True)
 
     return True
 

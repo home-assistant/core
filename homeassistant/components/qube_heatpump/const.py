@@ -1,7 +1,7 @@
 """Constants for the Qube Heat Pump integration."""
 
 DOMAIN = "qube_heatpump"
-PLATFORMS = ["binary_sensor", "button", "select", "sensor", "switch"]
+PLATFORMS = ["sensor"]
 
 TARIFF_OPTIONS = ("CV", "SWW")
 
