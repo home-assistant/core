@@ -125,7 +125,7 @@ LIBRARY_MAP = {
     BrowsableMedia.CURRENT_USER_PLAYLISTS.value: "Playlists",
     BrowsableMedia.CURRENT_USER_FOLLOWED_ARTISTS.value: "Artists",
     BrowsableMedia.CURRENT_USER_SAVED_ALBUMS.value: "Albums",
-    BrowsableMedia.CURRENT_USER_SAVED_TRACKS.value: "Liked Songs",
+    BrowsableMedia.CURRENT_USER_SAVED_TRACKS.value: "Liked songs",
     BrowsableMedia.CURRENT_USER_SAVED_SHOWS.value: "Podcasts",
     BrowsableMedia.CURRENT_USER_RECENTLY_PLAYED.value: "Recently played",
     BrowsableMedia.CURRENT_USER_TOP_ARTISTS.value: "Top Artists",
