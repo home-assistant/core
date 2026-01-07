@@ -12,11 +12,16 @@ from typing import Any
 import paho.mqtt.client as mqtt_client
 import paho.mqtt.properties as mqtt_properties
 import paho.mqtt.subscribeoptions as mqtt_subscribeoptions
+import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
-from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
+from homeassistant.core import HomeAssistant, ServiceCall
+from homeassistant.exceptions import (
+    ConfigEntryError,
+    ConfigEntryNotReady,
+    HomeAssistantError,
+)
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -128,6 +133,7 @@ class VictronMqttManager:
     _republish_task: asyncio.Task | None
     _unique_id: str | None
     _keepalive_task: asyncio.Task | None
+    _lock: asyncio.Lock
 
     def __init__(self, hass: HomeAssistant, entry: ConfigEntry) -> None:
         """Initialize the MQTT manager."""
@@ -146,6 +152,7 @@ class VictronMqttManager:
         self._republish_task = None
         self._unique_id = None
         self._keepalive_task = None
+        self._lock = asyncio.Lock()
 
     def _setup_and_run_client(self, broker: str, port: int) -> None:
         """Set up TLS (if needed) and run the MQTT client loop."""
@@ -458,85 +465,90 @@ class VictronMqttManager:
 
     async def _handle_discovery_message(self, topic: str, payload: bytes) -> None:
         """Handle a Home Assistant MQTT discovery message."""
-        # Check payload cache to avoid reprocessing identical discovery messages
-        cached_payload = self._topic_payload_cache.get(topic)
-        if cached_payload is not None and cached_payload == payload:
-            _LOGGER.debug("Ignoring duplicate discovery payload for topic: %s", topic)
-            return
+        async with self._lock:
+            # Check payload cache to avoid reprocessing identical discovery messages
+            cached_payload = self._topic_payload_cache.get(topic)
+            if cached_payload is not None and cached_payload == payload:
+                _LOGGER.debug(
+                    "Ignoring duplicate discovery payload for topic: %s", topic
+                )
+                return
 
-        # Update cache with new payload
-        self._topic_payload_cache[topic] = payload
-        _LOGGER.debug(
-            "Cached new discovery payload for topic: %s (size: %d bytes)",
-            topic,
-            len(payload),
-        )
-
-        # Check for empty payload - this indicates device should be removed
-        if len(payload) == 0:
-            _LOGGER.debug("Received empty discovery config on topic: %s", topic)
-            # Look up which device this topic belongs to and remove it
-            device_key = self._topic_device_map.get(topic)
-            if device_key and device_key in self._device_registry:
-                # Mark all entities for this device as unavailable before removing
-                for entity in self._entity_registry.get(device_key, {}).values():
-                    entity.set_available(False)
-
-                # Remove device from our administration
-                self._device_registry.remove(device_key)
-                del self._topic_device_map[topic]
-                _LOGGER.debug("Removed device %s from registry", device_key)
-            else:
-                _LOGGER.debug("Empty config received for unknown topic: %s", topic)
-            return
-
-        # Decode and parse JSON payload
-        try:
-            payload_str = payload.decode()
-            data = json.loads(payload_str)
-            _LOGGER.debug("Received config on topic %s: %s", topic, data)
-        except json.JSONDecodeError as err:
-            _LOGGER.warning("Failed to process device discovery JSON: %s", err)
-            return
-        except UnicodeDecodeError as err:
-            _LOGGER.warning("Failed to decode discovery message bytes: %s", err)
-            return
-
-        components = data.get("components")
-        device_info = data.get("device")
-        if not components or not device_info:
-            _LOGGER.debug("Invalid discovery message: missing components or device")
-            return
-
-        # Check if device has valid identifiers
-        device_key = _extract_device_key_from_discovery(device_info)
-        if not device_key:
-            _LOGGER.debug("Invalid discovery message: device has no valid identifiers")
-            return
-
-        # Check via_device availability once for the entire device (not per component)
-        via_device = _extract_via_device_from_discovery(device_info)
-
-        # Handle discovery deferral based on via_device availability before processing components
-        if via_device and via_device not in self._device_registry:
-            # Via_device doesn't exist yet, defer entire discovery data processing
-            if via_device not in self._pending_via_device_discoveries:
-                self._pending_via_device_discoveries[via_device] = []
-            self._pending_via_device_discoveries[via_device].append(data)
-            _LOGGER.info(
-                "Deferring discovery data of %s until via_device %s is available",
-                device_key,
-                via_device,
+            # Update cache with new payload
+            self._topic_payload_cache[topic] = payload
+            _LOGGER.debug(
+                "Cached new discovery payload for topic: %s (size: %d bytes)",
+                topic,
+                len(payload),
             )
-            return  # Exit early, don't process any components
 
-        # Process device after via_device check passes (store info, register, process components)
-        queue_republish = await self._process_device_after_via_check(
-            device_key, device_info, components
-        )
+            # Check for empty payload - this indicates device should be removed
+            if len(payload) == 0:
+                _LOGGER.debug("Received empty discovery config on topic: %s", topic)
+                # Look up which device this topic belongs to and remove it
+                device_key = self._topic_device_map.get(topic)
+                if device_key and device_key in self._device_registry:
+                    # Mark all entities for this device as unavailable before removing
+                    for entity in self._entity_registry.get(device_key, {}).values():
+                        entity.set_available(False)
 
-        if queue_republish:
-            self._queue_republish()
+                    # Remove device from our administration
+                    self._device_registry.remove(device_key)
+                    del self._topic_device_map[topic]
+                    _LOGGER.debug("Removed device %s from registry", device_key)
+                else:
+                    _LOGGER.debug("Empty config received for unknown topic: %s", topic)
+                return
+
+            # Decode and parse JSON payload
+            try:
+                payload_str = payload.decode()
+                data = json.loads(payload_str)
+                _LOGGER.debug("Received config on topic %s: %s", topic, data)
+            except json.JSONDecodeError as err:
+                _LOGGER.warning("Failed to process device discovery JSON: %s", err)
+                return
+            except UnicodeDecodeError as err:
+                _LOGGER.warning("Failed to decode discovery message bytes: %s", err)
+                return
+
+            components = data.get("components")
+            device_info = data.get("device")
+            if not components or not device_info:
+                _LOGGER.debug("Invalid discovery message: missing components or device")
+                return
+
+            # Check if device has valid identifiers
+            device_key = _extract_device_key_from_discovery(device_info)
+            if not device_key:
+                _LOGGER.debug(
+                    "Invalid discovery message: device has no valid identifiers"
+                )
+                return
+
+            # Check via_device availability once for the entire device (not per component)
+            via_device = _extract_via_device_from_discovery(device_info)
+
+            # Handle discovery deferral based on via_device availability before processing components
+            if via_device and via_device not in self._device_registry:
+                # Via_device doesn't exist yet, defer entire discovery data processing
+                if via_device not in self._pending_via_device_discoveries:
+                    self._pending_via_device_discoveries[via_device] = []
+                self._pending_via_device_discoveries[via_device].append(data)
+                _LOGGER.info(
+                    "Deferring discovery data of %s until via_device %s is available",
+                    device_key,
+                    via_device,
+                )
+                return  # Exit early, don't process any components
+
+            # Process device after via_device check passes (store info, register, process components)
+            queue_republish = await self._process_device_after_via_check(
+                device_key, device_info, components
+            )
+
+            if queue_republish:
+                self._queue_republish()
 
     def _handle_state_message(self, topic: str, payload: bytes) -> None:
         """Handle state messages by passing them on to the entities."""
@@ -544,61 +556,63 @@ class VictronMqttManager:
         for entity in entities:
             entity.handle_mqtt_message(topic, payload)
 
-    def _handle_connect(self) -> None:
+    async def _handle_connect(self) -> None:
         """Handle MQTT connection."""
-        if not self.client:
-            return
+        async with self._lock:
+            if not self.client:
+                return
 
-        # CLear the discovery data cache so that all discovery messages are reprocessed
-        self._topic_payload_cache.clear()
-        _LOGGER.info("Cleared discovery payload cache on MQTT reconnect")
+            # CLear the discovery data cache so that all discovery messages are reprocessed
+            self._topic_payload_cache.clear()
+            _LOGGER.info("Cleared discovery payload cache on MQTT reconnect")
 
-        # Subscribe to all discovery topics
-        # When these are received, the entities will be created/updated accordingly
-        # which will also re-subscribe to their state topics
-        self._subscribe("homeassistant/#")
-        _LOGGER.info("Subscribed to homeassistant/# discovery topics")
+            # Subscribe to all discovery topics
+            # When these are received, the entities will be created/updated accordingly
+            # which will also re-subscribe to their state topics
+            self._subscribe("homeassistant/#")
+            _LOGGER.info("Subscribed to homeassistant/# discovery topics")
 
-        # Start task to periodically send a keepalive with suppress-republish option.
-        # This keepalive is just to tell the GX MQTT broker that someone is still listening.
-        if self._unique_id and not self._keepalive_task:
-            # Start keepalive as a background task tied to the config entry.
-            # It needs to be a background tasks because during startup, Home Assistant
-            # waits until all created regular tasks are done.
-            try:
-                self._keepalive_task = self.entry.async_create_background_task(
-                    self.hass,
-                    self._keepalive_suppress_republish_task(),
-                    "victron keepalive",
-                )
-                self._keepalive_task.add_done_callback(self._keepalive_task_done)
+            # Start task to periodically send a keepalive with suppress-republish option.
+            # This keepalive is just to tell the GX MQTT broker that someone is still listening.
+            if self._unique_id and not self._keepalive_task:
+                # Start keepalive as a background task tied to the config entry.
+                # It needs to be a background tasks because during startup, Home Assistant
+                # waits until all created regular tasks are done.
+                try:
+                    self._keepalive_task = self.entry.async_create_background_task(
+                        self.hass,
+                        self._keepalive_suppress_republish_task(),
+                        "victron keepalive",
+                    )
+                    self._keepalive_task.add_done_callback(self._keepalive_task_done)
+                    _LOGGER.debug(
+                        "Started keepalive task for unique ID: %s", self._unique_id
+                    )
+                except Exception:
+                    _LOGGER.exception("Failed starting keepalive background task")
+            else:
                 _LOGGER.debug(
-                    "Started keepalive task for unique ID: %s", self._unique_id
+                    "Keepalive task already started for unique ID: %s", self._unique_id
                 )
-            except Exception:
-                _LOGGER.exception("Failed starting keepalive background task")
-        else:
-            _LOGGER.debug(
-                "Keepalive task already started for unique ID: %s", self._unique_id
-            )
 
-    def _handle_disconnect(self) -> None:
+    async def _handle_disconnect(self) -> None:
         """Handle MQTT disconnection."""
-        if not self.client:
-            # Busy with the cleanup
-            return
+        async with self._lock:
+            if not self.client:
+                # Busy with the cleanup
+                return
 
-        _LOGGER.info(
-            "MQTT disconnection - marking all entities as unavailable and devices as removed"
-        )
-        # Mark all entities as unavailable
-        for entity_dict in self._entity_registry.values():
-            for entity in entity_dict.values():
-                entity.set_available(False)
+            _LOGGER.info(
+                "MQTT disconnection - marking all entities as unavailable and devices as removed"
+            )
+            # Mark all entities as unavailable
+            for entity_dict in self._entity_registry.values():
+                for entity in entity_dict.values():
+                    entity.set_available(False)
 
-        # Clear the device registry to force re-registration on reconnect
-        self._device_registry.clear()
-        self._topic_device_map.clear()
+            # Clear the device registry to force re-registration on reconnect
+            self._device_registry.clear()
+            self._topic_device_map.clear()
 
     def _on_connect(self, client, userdata, flags, rc) -> None:
         """Handle MQTT connection."""
@@ -621,7 +635,7 @@ class VictronMqttManager:
 
         try:
             # schedule the in-loop handler
-            self.hass.loop.call_soon_threadsafe(self._handle_connect)
+            asyncio.run_coroutine_threadsafe(self._handle_connect(), self.hass.loop)
         except Exception:
             _LOGGER.exception("Failed scheduling connect handler")
 
@@ -654,7 +668,7 @@ class VictronMqttManager:
             )
         try:
             # schedule the in-loop handler
-            self.hass.loop.call_soon_threadsafe(self._handle_disconnect)
+            asyncio.run_coroutine_threadsafe(self._handle_disconnect(), self.hass.loop)
         except Exception:
             _LOGGER.exception("Failed scheduling disconnect handler")
 
@@ -766,7 +780,7 @@ class VictronMqttManager:
         if self._mqtt_worker:
             try:
                 self._mqtt_worker.stop()
-            except Exception:  # pragma: no cover - defensive
+            except Exception:
                 _LOGGER.exception("Error stopping MQTT worker")
             finally:
                 self._mqtt_worker = None
@@ -890,6 +904,84 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         hass.data.setdefault(DOMAIN, {})[entry.entry_id] = manager
         entry.runtime_data = manager
         manager.start()
+
+        # Register a service to allow publishing arbitrary MQTT messages to
+        # the broker associated with a config entry. Register once for the
+        # domain and keep a marker in hass.data so we unregister when the
+        # last entry is removed.
+        domain_store = hass.data.setdefault(DOMAIN, {})
+        if not domain_store.get("_service_registered"):
+
+            def _resolve_entry_id_from_device(device_id: str) -> str | None:
+                device_registry = dr.async_get(hass)
+                device = device_registry.async_get(device_id)
+                if not device:
+                    return None
+                # Return the first config entry id attached to the device
+                for cfg in device.config_entries:
+                    return cfg
+                return None
+
+            def _handle_publish(call: ServiceCall) -> None:
+                data = call.data
+                entry_id = data["config_entry"]
+                topic = data["topic"]
+                payload = data["payload"]
+                qos = int(data.get("qos", 0))
+                retain = bool(data.get("retain", False))
+
+                # Ensure the config entry exists and is set up (has a manager)
+                entry_obj = hass.config_entries.async_get_entry(entry_id)
+                if entry_obj is None:
+                    raise HomeAssistantError(f"Config entry {entry_id} does not exist")
+
+                mgr: VictronMqttManager | None = hass.data.get(DOMAIN, {}).get(entry_id)
+                if not mgr:
+                    raise HomeAssistantError(
+                        f"Config entry {entry_id} exists but is not loaded/instantiated (cannot publish)"
+                    )
+
+                # Ensure topic is a string
+                if not isinstance(topic, str):
+                    _LOGGER.error("Invalid topic type: %s", type(topic))
+                    return
+
+                # Resolve unique_id for this entry (prefer manager.entry.unique_id)
+                unique_id = mgr.entry.unique_id
+                if not unique_id:
+                    _LOGGER.error("No unique_id for entry_id %s", entry_id)
+                    return
+
+                stripped = topic.lstrip("/")
+                topic = f"W/{unique_id}/{stripped}"
+
+                try:
+                    # If payload is a non-string (dict/list), encode to JSON string
+                    if not isinstance(payload, (str, bytes, bytearray)):
+                        payload_to_send: str | bytes | bytearray = json.dumps(payload)
+                    else:
+                        payload_to_send = payload
+                    mgr.publish(topic, payload_to_send, qos, retain)
+                except Exception:
+                    _LOGGER.exception("Failed publishing MQTT message to %s", topic)
+
+            publish_schema = vol.Schema(
+                {
+                    vol.Required("config_entry"): str,
+                    vol.Required("topic"): str,
+                    vol.Required("payload"): object,
+                    vol.Optional("qos", default=0): vol.All(
+                        int, vol.Range(min=0, max=2)
+                    ),
+                    vol.Optional("retain", default=False): bool,
+                }
+            )
+
+            hass.services.async_register(
+                DOMAIN, "publish", _handle_publish, schema=publish_schema
+            )
+
+            domain_store["_service_registered"] = True
         await hass.config_entries.async_forward_entry_setups(entry, _PLATFORMS)
         # Restore devices from HA device registry now that the platforms are set up
         await manager.restore_devices_from_registry()
@@ -928,6 +1020,14 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     if DOMAIN in hass.data and not hass.data[DOMAIN]:
         hass.data.pop(DOMAIN, None)
         _LOGGER.debug("Removed empty domain data")
+
+    # If there are no more entries left for this domain, remove the domain-level service
+    domain_store = hass.data.get(DOMAIN, {})
+    if not domain_store:
+        try:
+            hass.services.async_remove(DOMAIN, "publish")
+        except Exception:
+            _LOGGER.exception("Failed removing victronenergy.publish service")
 
     _LOGGER.info(
         "Victron Energy integration unloaded for entry %s (platforms unloaded=%s)",
