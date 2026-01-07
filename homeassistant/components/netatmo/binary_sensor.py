@@ -19,7 +19,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
-from .const import CONF_URL_WEATHER, NETATMO_CREATE_BINARY_SENSOR
+from .const import CONF_URL_WEATHER, NETATMO_CREATE_BINARY_SENSOR, SIGNAL_NAME
 from .data_handler import NetatmoDevice
 from .entity import NetatmoModuleEntity
 
@@ -124,14 +124,20 @@ class NetatmoBinarySensor(NetatmoModuleEntity, BinarySensorEntity):
         super().__init__(netatmo_device)
 
         self.entity_description = description
-        self._attr_unique_id = f"{netatmo_device.device.entity_id}-{description.key}"
-        if description.device_class is not None:
-            self.original_device_class = description.device_class
-        if description.name is not None:
-            self._attr_name = description.name
+        self._attr_unique_id = f"{self.device.entity_id}-{description.key}"
 
-        # Translation key is not yet used (will be implemented in future)
-        self._attr_translation_key = None
+        # For historical reasons, entities should have publisher set
+        # as binary_sensors were handled as NETATMO_CREATE_WEATHER_SENSOR earlier
+        assert self.device.device_category
+        category = self.device.device_category.name
+        self._publishers.extend(
+            [
+                {
+                    "name": category,
+                    SIGNAL_NAME: category,
+                },
+            ]
+        )
 
         # For historical reasons, entities should have location set
         # as binary_sensors were handled as NETATMO_CREATE_WEATHER_SENSOR earlier
@@ -145,20 +151,13 @@ class NetatmoBinarySensor(NetatmoModuleEntity, BinarySensorEntity):
                     }
                 )
 
-    @property
-    def is_on(self) -> bool | None:
-        """Return true if the binary sensor is on."""
-        return self._attr_is_on
-
     @callback
     def async_update_callback(self) -> None:
         """Update the entity's state."""
 
         value: StateType = None
 
-        value = cast(
-            StateType, getattr(self.device, self.entity_description.netatmo_name, None)
-        )
+        value = getattr(self.device, self.entity_description.netatmo_name, None)
 
         if value is None:
             self._attr_available = False
