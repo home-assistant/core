@@ -40,6 +40,8 @@ class EsphomeInfraredEntity(
 ):
     """ESPHome infrared entity using native API."""
 
+    _attr_has_entity_name = True
+
     @callback
     def _on_static_info_update(self, static_info: EntityInfo) -> None:
         """Set attrs from static info."""
@@ -70,6 +72,15 @@ class EsphomeInfraredEntity(
         if self._entry_data.available:
             # Infrared entities should go available as soon as the device comes online
             self.async_write_ha_state()
+
+    @property
+    def name(self) -> str:
+        """Return the name of the infrared entity."""
+        if self.supported_features & InfraredEntityFeature.TRANSMIT:
+            return "IR Transmitter"
+        if self.supported_features & InfraredEntityFeature.RECEIVE:
+            return "IR Receiver"
+        return "IR Transceiver"
 
     async def async_send_command(self, command: InfraredCommand) -> None:
         """Send an IR command.
