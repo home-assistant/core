@@ -60,21 +60,9 @@ async def async_setup_entry(
 
     @callback
     def _create_binary_sensor_entity(netatmo_device: NetatmoDevice) -> None:
-        if netatmo_device.device.device_category is None:
-            _LOGGER.warning(
-                "Device %s is missing a device_category, cannot create binary sensors",
-                netatmo_device.device.name,
-            )
-            return
+        """Create binary sensor entities for a Netatmo device."""
 
         descriptions_to_add = NETATMO_BINARY_SENSOR_DESCRIPTIONS
-
-        _LOGGER.debug(
-            "Descriptions %s to add for module %s, features: %s",
-            len(descriptions_to_add),
-            netatmo_device.device.name,
-            netatmo_device.device.features,
-        )
 
         entities: list[NetatmoBinarySensor] = []
 
@@ -94,26 +82,9 @@ async def async_setup_entry(
                         description,
                     )
                 )
-            else:
-                _LOGGER.warning(
-                    "Failed to add %s (%s) binary sensor for device %s",
-                    feature_check,
-                    description.netatmo_name,
-                    netatmo_device.device.name,
-                )
 
         if entities:
-            _LOGGER.debug(
-                "Adding %s entities for device %s",
-                len(entities),
-                netatmo_device.device.name,
-            )
             async_add_entities(entities)
-        else:
-            _LOGGER.debug(
-                "No binary sensor entities created for device %s",
-                netatmo_device.device.name,
-            )
 
     entry.async_on_unload(
         async_dispatcher_connect(
@@ -144,7 +115,7 @@ class NetatmoBinarySensor(NetatmoModuleEntity, BinarySensorEntity):
                 ]
             else:
                 _LOGGER.warning(
-                    "Missing configuration URL for binary_sensor of %s device as category %s",
+                    "Missing configuration URL for binary_sensor of %s device as category %s. Please report this issue",
                     netatmo_device.device.name,
                     netatmo_device.device.device_category,
                 )
@@ -174,13 +145,6 @@ class NetatmoBinarySensor(NetatmoModuleEntity, BinarySensorEntity):
                     }
                 )
 
-        _LOGGER.debug(
-            "Initialized \"%s\" binary sensor (unique_id = %s) for module '%s'",
-            self.entity_description.key,
-            self._attr_unique_id,
-            self.device.name,
-        )
-
     @property
     def is_on(self) -> bool | None:
         """Return true if the binary sensor is on."""
@@ -197,25 +161,10 @@ class NetatmoBinarySensor(NetatmoModuleEntity, BinarySensorEntity):
         )
 
         if value is None:
-            _LOGGER.warning(
-                "No value can be found for \"%s\" for module '%s'",
-                self.entity_description.netatmo_name,
-                self.device.name,
-            )
-
-        if value is None:
             self._attr_available = False
             self._attr_is_on = False
         else:
             self._attr_available = True
             self._attr_is_on = cast(bool, value)
-
-        _LOGGER.debug(
-            "Updating binary sensor '%s' for module '%s' with available=%s and status=%s",
-            self.entity_description.key,
-            self.device.name,
-            self._attr_available,
-            self._attr_is_on,
-        )
 
         self.async_write_ha_state()
