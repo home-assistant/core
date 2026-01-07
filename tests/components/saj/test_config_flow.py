@@ -63,7 +63,12 @@ async def test_form_ethernet(
 
     assert result.get("type") is FlowResultType.CREATE_ENTRY
     assert result.get("title") == "SAJ Solar Inverter"
-    assert result.get("data") == MOCK_USER_INPUT_ETHERNET
+    result_data = result.get("data")
+    assert result_data is not None
+    assert result_data[CONF_HOST] == MOCK_USER_INPUT_ETHERNET[CONF_HOST]
+    assert result_data[CONF_TYPE] == MOCK_USER_INPUT_ETHERNET[CONF_TYPE]
+    assert result_data.get(CONF_USERNAME, "") == ""
+    assert result_data.get(CONF_PASSWORD, "") == ""
     result_entry = result.get("result")
     assert result_entry is not None
     assert result_entry.unique_id == MOCK_SERIAL_NUMBER
@@ -78,17 +83,36 @@ async def test_form_wifi(
         DOMAIN, context={"source": SOURCE_USER}
     )
     assert result.get("type") is FlowResultType.FORM
+    assert result.get("step_id") == "user"
     assert result.get("errors") is None
 
+    # Step 1: Submit host and type (WiFi)
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        MOCK_USER_INPUT_WIFI,
+        {
+            CONF_HOST: MOCK_USER_INPUT_WIFI[CONF_HOST],
+            CONF_TYPE: MOCK_USER_INPUT_WIFI[CONF_TYPE],
+        },
+    )
+    assert result.get("type") is FlowResultType.FORM
+    assert result.get("step_id") == "device_credentials"
+    assert result.get("errors") is None
+
+    # Step 2: Submit WiFi credentials
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_USERNAME: MOCK_USER_INPUT_WIFI[CONF_USERNAME],
+            CONF_PASSWORD: MOCK_USER_INPUT_WIFI[CONF_PASSWORD],
+        },
     )
     await hass.async_block_till_done()
 
     assert result.get("type") is FlowResultType.CREATE_ENTRY
     assert result.get("title") == "SAJ Solar Inverter"
-    assert result.get("data") == MOCK_USER_INPUT_WIFI
+    result_data = result.get("data")
+    assert result_data is not None
+    assert result_data == MOCK_USER_INPUT_WIFI
     result_entry = result.get("result")
     assert result_entry is not None
     assert result_entry.unique_id == MOCK_SERIAL_NUMBER
@@ -98,9 +122,9 @@ async def test_form_wifi(
 @pytest.mark.parametrize(
     ("exception", "error"),
     [
-        (pysaj.UnexpectedResponseException("Connection failed"), "invalid_auth"),
-        (pysaj.UnauthorizedException("Auth failed"), "invalid_auth"),
-        (Exception("Unknown error"), "invalid_auth"),
+        (pysaj.UnexpectedResponseException("Connection failed"), "cannot_connect"),
+        (pysaj.UnauthorizedException("Auth failed"), "cannot_connect"),
+        (Exception("Unknown error"), "cannot_connect"),
     ],
 )
 async def test_form_exceptions(

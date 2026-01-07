@@ -92,8 +92,9 @@ async def test_setup_entry_unexpected_error(
 
         with patch("pysaj.Sensors"):
             entry = await setup_integration(hass, mock_config_entry_ethernet)
-            # Entry should be in SETUP_RETRY state when setup fails
-            assert entry.state is ConfigEntryState.SETUP_RETRY
+            # Truly unexpected exceptions should result in SETUP_ERROR
+            # so the actual error is visible rather than being hidden
+            assert entry.state is ConfigEntryState.SETUP_ERROR
 
 
 async def test_unload_entry(

@@ -87,6 +87,8 @@ class SAJConfigFlow(ConfigFlow, domain=DOMAIN):
     def __init__(self) -> None:
         """Initialize flow."""
         self.discovery_info: dict[str, Any] = {}
+        self._host: str | None = None
+        self._connection_type: str | None = None
 
     async def _async_validate_input(
         self, user_input: dict[str, Any]
@@ -123,14 +125,21 @@ class SAJConfigFlow(ConfigFlow, domain=DOMAIN):
             serial_number = await _async_validate_connection()
 
         except pysaj.UnauthorizedException as err:
-            _LOGGER.error("Username and/or password is wrong for host %s", host)
-            raise ConfigEntryAuthFailed("Invalid authentication") from err
+            # Only raise auth error for WiFi connections with wrong credentials
+            if wifi:
+                _LOGGER.error("Username and/or password is wrong for host %s", host)
+                raise ConfigEntryAuthFailed("Invalid authentication") from err
+            # For ethernet, this likely means wrong connection type - treat as connection error
+            _LOGGER.error(
+                "Connection failed for host %s (wrong connection type?): %s", host, err
+            )
+            raise CannotConnect("Wrong connection type or cannot connect") from err
         except pysaj.UnexpectedResponseException as err:
             _LOGGER.error("Error connecting to SAJ at %s: %s", host, err)
-            raise ConfigEntryAuthFailed("Connection error") from err
+            raise CannotConnect(f"Connection error: {err}") from err
         except Exception as err:
             _LOGGER.error("Connection failed for host %s: %s", host, err)
-            raise ConfigEntryAuthFailed("Connection failed") from err
+            raise CannotConnect(f"Connection failed: {err}") from err
 
         return {
             "host": host,
@@ -146,9 +155,21 @@ class SAJConfigFlow(ConfigFlow, domain=DOMAIN):
         errors = {}
 
         if user_input is not None:
+            host = user_input["host"]
+            connection_type = user_input.get("type", CONNECTION_TYPES[0])
+
+            # Store for next step if WiFi is selected
+            self._host = host
+            self._connection_type = connection_type
+
+            # If WiFi is selected, proceed to credentials step
+            if connection_type == CONNECTION_TYPES[1]:
+                return await self.async_step_device_credentials()
+
+            # For Ethernet, validate and create entry directly
             try:
                 data, serial_number = await self._async_validate_input(
-                    user_input=user_input
+                    user_input={"host": host, "type": connection_type}
                 )
 
                 # Set unique_id if we got a serial number
@@ -162,6 +183,9 @@ class SAJConfigFlow(ConfigFlow, domain=DOMAIN):
             except ConfigEntryAuthFailed as err:
                 errors["base"] = "invalid_auth"
                 _LOGGER.debug("Authentication failed: %s", err)
+            except CannotConnect as err:
+                errors["base"] = "cannot_connect"
+                _LOGGER.debug("Connection failed: %s", err)
             except data_entry_flow.AbortFlow:
                 raise  # Let AbortFlow propagate (e.g., already_configured)
             except Exception:
@@ -170,18 +194,69 @@ class SAJConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="user",
-            data_schema=self._schema,
+            data_schema=self._schema_user(),
             errors=errors or None,
         )
 
-    @property
-    def _schema(self) -> vol.Schema:
-        """Define the schema for user input."""
-
+    def _schema_user(self) -> vol.Schema:
+        """Define the schema for the user step (host and connection type)."""
         return vol.Schema(
             {
                 vol.Required("host"): str,
-                vol.Optional("type", default="ethernet"): vol.In(CONNECTION_TYPES),
+                vol.Optional("type", default=CONNECTION_TYPES[0]): vol.In(
+                    CONNECTION_TYPES
+                ),
+            }
+        )
+
+    async def async_step_device_credentials(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle device credentials step (only shown for WiFi connections)."""
+        errors = {}
+
+        if user_input is not None:
+            # Combine data from both steps
+            combined_input = {
+                "host": self._host,
+                "type": self._connection_type,
+                "username": user_input.get("username", None),
+                "password": user_input.get("password", None),
+            }
+
+            try:
+                data, serial_number = await self._async_validate_input(
+                    user_input=combined_input
+                )
+
+                # Set unique_id if we got a serial number
+                if serial_number:
+                    await self.async_set_unique_id(serial_number)
+                    self._abort_if_unique_id_configured(updates=dict(data))
+
+                return self.async_create_entry(title="SAJ Solar Inverter", data=data)
+            except ConfigEntryAuthFailed as err:
+                errors["base"] = "invalid_auth"
+                _LOGGER.debug("Authentication failed: %s", err)
+            except CannotConnect as err:
+                errors["base"] = "cannot_connect"
+                _LOGGER.debug("Connection failed: %s", err)
+            except data_entry_flow.AbortFlow:
+                raise  # Let AbortFlow propagate (e.g., already_configured)
+            except Exception:
+                _LOGGER.exception("Unexpected error during device credentials flow")
+                errors["base"] = "unknown"
+
+        return self.async_show_form(
+            step_id="device_credentials",
+            data_schema=self._schema_device_credentials(),
+            errors=errors or None,
+        )
+
+    def _schema_device_credentials(self) -> vol.Schema:
+        """Define the schema for device credentials step."""
+        return vol.Schema(
+            {
                 vol.Optional("username", default=""): str,
                 vol.Optional("password", default=""): str,
             }

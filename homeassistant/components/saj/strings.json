@@ -7,6 +7,7 @@
       "no_unique_id": "Unable to identify device"
     },
     "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
@@ -18,11 +19,17 @@
       "user": {
         "data": {
           "host": "[%key:common::config_flow::data::host%]",
-          "type": "Connection type",
+          "type": "Connection type"
+        },
+        "description": "Configure your SAJ solar inverter. Enter the IP address or hostname. For automatic discovery to work, the device hostname must start with 'saj-' or MAC address must start with '44:17:93'. If you select WiFi connection type, you will be asked for device credentials in the next step."
+      },
+      "device_credentials": {
+        "data": {
           "username": "[%key:common::config_flow::data::username%]",
           "password": "[%key:common::config_flow::data::password%]"
         },
-        "description": "Configure your SAJ solar inverter. Enter the IP address or hostname. For automatic discovery to work, the device hostname must start with 'saj-' or MAC address must start with '44:17:93'. For WiFi-based inverters, provide username and password if required."
+        "description": "Enter device credentials for your SAJ inverter. These are only required when connecting via WiFi. Both fields are optional.",
+        "title": "Device Credentials"
       }
     }
   },

@@ -9,8 +9,6 @@ from tests.common import MockConfigEntry
 MOCK_USER_INPUT_ETHERNET = {
     CONF_HOST: "192.168.1.100",
     CONF_TYPE: CONNECTION_TYPES[0],
-    CONF_USERNAME: "",
-    CONF_PASSWORD: "",
 }
 
 MOCK_USER_INPUT_WIFI = {
