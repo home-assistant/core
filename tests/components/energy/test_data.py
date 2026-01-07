@@ -72,3 +72,152 @@ async def test_energy_preferences_migration_from_old_version(
     assert manager.data is not None
     assert "device_consumption_water" in manager.data
     assert manager.data["device_consumption_water"] == []
+
+
+async def test_battery_power_config_inverted_sets_stat_rate(
+    hass: HomeAssistant,
+) -> None:
+    """Test that battery with inverted power_config sets stat_rate to generated entity_id."""
+    manager = EnergyManager(hass)
+    await manager.async_initialize()
+    manager.data = manager.default_preferences()
+
+    await manager.async_update(
+        {
+            "energy_sources": [
+                {
+                    "type": "battery",
+                    "stat_energy_from": "sensor.battery_energy_from",
+                    "stat_energy_to": "sensor.battery_energy_to",
+                    "power_config": {
+                        "stat_rate_inverted": "sensor.battery_power",
+                    },
+                }
+            ],
+        }
+    )
+
+    # Verify stat_rate was set to the expected entity_id
+    assert manager.data is not None
+    assert len(manager.data["energy_sources"]) == 1
+    source = manager.data["energy_sources"][0]
+    assert source["stat_rate"] == "sensor.battery_power_inverted"
+    # Verify power_config is preserved
+    assert source["power_config"] == {"stat_rate_inverted": "sensor.battery_power"}
+
+
+async def test_battery_power_config_two_sensors_sets_stat_rate(
+    hass: HomeAssistant,
+) -> None:
+    """Test that battery with two-sensor power_config sets stat_rate."""
+    manager = EnergyManager(hass)
+    await manager.async_initialize()
+    manager.data = manager.default_preferences()
+
+    await manager.async_update(
+        {
+            "energy_sources": [
+                {
+                    "type": "battery",
+                    "stat_energy_from": "sensor.battery_energy_from",
+                    "stat_energy_to": "sensor.battery_energy_to",
+                    "power_config": {
+                        "stat_rate_from": "sensor.battery_discharge",
+                        "stat_rate_to": "sensor.battery_charge",
+                    },
+                }
+            ],
+        }
+    )
+
+    assert manager.data is not None
+    source = manager.data["energy_sources"][0]
+    # Entity ID includes discharge sensor name to avoid collisions
+    assert source["stat_rate"] == "sensor.energy_battery_battery_discharge_power"
+
+
+async def test_grid_power_config_inverted_sets_stat_rate(
+    hass: HomeAssistant,
+) -> None:
+    """Test that grid with inverted power_config sets stat_rate."""
+    manager = EnergyManager(hass)
+    await manager.async_initialize()
+    manager.data = manager.default_preferences()
+
+    await manager.async_update(
+        {
+            "energy_sources": [
+                {
+                    "type": "grid",
+                    "flow_from": [],
+                    "flow_to": [],
+                    "power": [
+                        {
+                            "power_config": {
+                                "stat_rate_inverted": "sensor.grid_power",
+                            },
+                        }
+                    ],
+                    "cost_adjustment_day": 0,
+                }
+            ],
+        }
+    )
+
+    assert manager.data is not None
+    grid_source = manager.data["energy_sources"][0]
+    assert grid_source["power"][0]["stat_rate"] == "sensor.grid_power_inverted"
+
+
+async def test_power_config_standard_uses_stat_rate_directly(
+    hass: HomeAssistant,
+) -> None:
+    """Test that power_config with standard stat_rate uses it directly."""
+    manager = EnergyManager(hass)
+    await manager.async_initialize()
+    manager.data = manager.default_preferences()
+
+    await manager.async_update(
+        {
+            "energy_sources": [
+                {
+                    "type": "battery",
+                    "stat_energy_from": "sensor.battery_energy_from",
+                    "stat_energy_to": "sensor.battery_energy_to",
+                    "power_config": {
+                        "stat_rate": "sensor.battery_power",
+                    },
+                }
+            ],
+        }
+    )
+
+    assert manager.data is not None
+    source = manager.data["energy_sources"][0]
+    # stat_rate should be set directly from power_config.stat_rate
+    assert source["stat_rate"] == "sensor.battery_power"
+
+
+async def test_battery_without_power_config_unchanged(hass: HomeAssistant) -> None:
+    """Test that battery without power_config is unchanged."""
+    manager = EnergyManager(hass)
+    await manager.async_initialize()
+    manager.data = manager.default_preferences()
+
+    await manager.async_update(
+        {
+            "energy_sources": [
+                {
+                    "type": "battery",
+                    "stat_energy_from": "sensor.battery_energy_from",
+                    "stat_energy_to": "sensor.battery_energy_to",
+                    "stat_rate": "sensor.battery_power",
+                }
+            ],
+        }
+    )
+
+    assert manager.data is not None
+    source = manager.data["energy_sources"][0]
+    assert source["stat_rate"] == "sensor.battery_power"
+    assert "power_config" not in source

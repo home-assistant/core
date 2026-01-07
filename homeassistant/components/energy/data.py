@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import asyncio
 from collections import Counter
-from collections.abc import Awaitable, Callable
+from collections.abc import Awaitable, Callable, Mapping
 from typing import Any, Literal, NotRequired, TypedDict
 
 import voluptuous as vol
@@ -59,12 +59,37 @@ class FlowToGridSourceType(TypedDict):
     number_energy_price: float | None  # Price for energy ($/kWh)
 
 
-class GridPowerSourceType(TypedDict):
+class PowerConfig(TypedDict, total=False):
+    """Dictionary holding power sensor configuration options.
+
+    Users can configure power sensors in three ways:
+    1. Standard: single sensor (positive=discharge/from_grid, negative=charge/to_grid)
+    2. Inverted: single sensor with opposite polarity (needs to be multiplied by -1)
+    3. Two sensors: separate positive sensors for each direction
+    """
+
+    # Standard: single sensor (positive=discharge/from_grid, negative=charge/to_grid)
+    stat_rate: str
+
+    # Inverted: single sensor with opposite polarity (needs to be multiplied by -1)
+    stat_rate_inverted: str
+
+    # Two sensors: separate positive sensors for each direction
+    # Result = stat_rate_from - stat_rate_to (positive when net outflow)
+    stat_rate_from: str  # Battery: discharge, Grid: consumption
+    stat_rate_to: str  # Battery: charge, Grid: return
+
+
+class GridPowerSourceType(TypedDict, total=False):
     """Dictionary holding the source of grid power consumption."""
 
     # statistic_id of a power meter (kW)
     # negative values indicate grid return
+    # This is either the original sensor or a generated template sensor
     stat_rate: str
+
+    # User's original power sensor configuration
+    power_config: PowerConfig
 
 
 class GridSourceType(TypedDict):
@@ -97,7 +122,11 @@ class BatterySourceType(TypedDict):
     stat_energy_from: str
     stat_energy_to: str
     # positive when discharging, negative when charging
+    # This is either the original sensor or a generated template sensor
     stat_rate: NotRequired[str]
+
+    # User's original power sensor configuration
+    power_config: NotRequired[PowerConfig]
 
 
 class GasSourceType(TypedDict):
@@ -211,10 +240,50 @@ FLOW_TO_GRID_SOURCE_SCHEMA = vol.Schema(
     }
 )
 
-GRID_POWER_SOURCE_SCHEMA = vol.Schema(
-    {
-        vol.Required("stat_rate"): str,
-    }
+
+def _validate_power_config(val: dict[str, Any]) -> dict[str, Any]:
+    """Validate power_config has at least one option."""
+    if not val:
+        raise vol.Invalid("power_config must have at least one option")
+    return val
+
+
+POWER_CONFIG_SCHEMA = vol.All(
+    vol.Schema(
+        {
+            vol.Exclusive("stat_rate", "power_source"): str,
+            vol.Exclusive("stat_rate_inverted", "power_source"): str,
+            # stat_rate_from/stat_rate_to: two sensors for bidirectional power
+            # Battery: from=discharge (out), to=charge (in)
+            # Grid: from=consumption, to=return
+            vol.Inclusive("stat_rate_from", "two_sensors"): str,
+            vol.Inclusive("stat_rate_to", "two_sensors"): str,
+        }
+    ),
+    _validate_power_config,
+)
+
+
+def _validate_grid_power_source(
+    val: dict[str, Any],
+) -> dict[str, Any]:
+    """Validate grid power source has either stat_rate or power_config."""
+    has_stat_rate = "stat_rate" in val
+    has_power_config = "power_config" in val
+    if not has_stat_rate and not has_power_config:
+        raise vol.Invalid("Either stat_rate or power_config is required")
+    return val
+
+
+GRID_POWER_SOURCE_SCHEMA = vol.All(
+    vol.Schema(
+        {
+            # stat_rate and power_config are mutually exclusive
+            vol.Exclusive("stat_rate", "power_source"): str,
+            vol.Exclusive("power_config", "power_source"): POWER_CONFIG_SCHEMA,
+        }
+    ),
+    _validate_grid_power_source,
 )
 
 
@@ -267,7 +336,9 @@ BATTERY_SOURCE_SCHEMA = vol.Schema(
         vol.Required("type"): "battery",
         vol.Required("stat_energy_from"): str,
         vol.Required("stat_energy_to"): str,
-        vol.Optional("stat_rate"): str,
+        # stat_rate and power_config are mutually exclusive
+        vol.Exclusive("stat_rate", "power_source"): str,
+        vol.Exclusive("power_config", "power_source"): POWER_CONFIG_SCHEMA,
     }
 )
 GAS_SOURCE_SCHEMA = vol.Schema(
@@ -387,6 +458,12 @@ class EnergyManager:
             if key in update:
                 data[key] = update[key]
 
+        # Process energy sources and set stat_rate for power configs
+        if "energy_sources" in update:
+            data["energy_sources"] = self._process_energy_sources(
+                data["energy_sources"]
+            )
+
         self.data = data
         self._store.async_delay_save(lambda: data, 60)
 
@@ -394,6 +471,74 @@ class EnergyManager:
             return
 
         await asyncio.gather(*(listener() for listener in self._update_listeners))
+
+    def _process_energy_sources(self, sources: list[SourceType]) -> list[SourceType]:
+        """Process energy sources and set stat_rate for power configs."""
+        from .helpers import generate_power_sensor_entity_id  # noqa: PLC0415
+
+        processed: list[SourceType] = []
+        for source in sources:
+            if source["type"] == "battery":
+                source = self._process_battery_power(
+                    source, generate_power_sensor_entity_id
+                )
+            elif source["type"] == "grid":
+                source = self._process_grid_power(
+                    source, generate_power_sensor_entity_id
+                )
+            processed.append(source)
+        return processed
+
+    def _process_battery_power(
+        self,
+        source: BatterySourceType,
+        generate_entity_id: Callable[[str, Mapping[str, Any]], str],
+    ) -> BatterySourceType:
+        """Set stat_rate for battery if power_config is specified."""
+        if "power_config" not in source:
+            return source
+
+        config = source["power_config"]
+
+        # If power_config has stat_rate (standard), just use it directly
+        if "stat_rate" in config:
+            return {**source, "stat_rate": config["stat_rate"]}
+
+        # For inverted or two-sensor config, set stat_rate to the generated entity_id
+        entity_id = generate_entity_id("battery", config)
+        if entity_id:
+            return {**source, "stat_rate": entity_id}
+
+        return source
+
+    def _process_grid_power(
+        self,
+        source: GridSourceType,
+        generate_entity_id: Callable[[str, Mapping[str, Any]], str],
+    ) -> GridSourceType:
+        """Set stat_rate for grid power sources if power_config is specified."""
+        if "power" not in source:
+            return source
+
+        processed_power: list[GridPowerSourceType] = []
+        for power in source["power"]:
+            if "power_config" in power:
+                config = power["power_config"]
+
+                # If power_config has stat_rate (standard), just use it directly
+                if "stat_rate" in config:
+                    processed_power.append({**power, "stat_rate": config["stat_rate"]})
+                    continue
+
+                # For inverted or two-sensor config, set stat_rate to generated entity_id
+                entity_id = generate_entity_id("grid", config)
+                if entity_id:
+                    processed_power.append({**power, "stat_rate": entity_id})
+                    continue
+
+            processed_power.append(power)
+
+        return {**source, "power": processed_power}
 
     @callback
     def async_listen_updates(self, update_listener: Callable[[], Awaitable]) -> None:
