@@ -122,7 +122,10 @@ async def test_async_send_command_entity_not_found(
     """Test async_send_command raises error when entity not found."""
     command = NECInfraredCommand(repeat_count=1, address=0x04FB, command=0x08F7)
 
-    with pytest.raises(HomeAssistantError, match="entity_not_found"):
+    with pytest.raises(
+        HomeAssistantError,
+        match="Infrared entity `infrared.nonexistent_entity` not found",
+    ):
         await async_send_command(hass, "infrared.nonexistent_entity", command)
 
 
