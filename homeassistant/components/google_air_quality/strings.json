@@ -1,0 +1,239 @@
+{
+  "common": {
+    "unable_to_fetch": "Unable to access the Google API. See the debug logs for more details."
+  },
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
+      "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]",
+      "unable_to_fetch": "[%key:component::google_air_quality::common::unable_to_fetch%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]",
+      "wrong_account": "Wrong account: Please authenticate with the right account."
+    },
+    "create_entry": {
+      "default": "[%key:common::config_flow::create_entry::authenticated%]"
+    },
+    "error": {
+      "cannot_connect": "Unable to connect to the Google Air Quality API:\n\n{error_message}",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "step": {
+      "user": {
+        "data": {
+          "api_key": "[%key:common::config_flow::data::api_key%]",
+          "location": "[%key:common::config_flow::data::location%]",
+          "name": "[%key:common::config_flow::data::name%]"
+        },
+        "data_description": {
+          "api_key": "A unique alphanumeric string that associates your Google billing account with Google Air Quality API",
+          "location": "Location coordinates",
+          "name": "Location name"
+        },
+        "description": "Get your API key from [here]({api_key_url}).",
+        "sections": {
+          "api_key_options": {
+            "data": {
+              "referrer": "HTTP referrer"
+            },
+            "data_description": {
+              "referrer": "Specify this only if the API key has a [website application restriction]({restricting_api_keys_url})."
+            },
+            "name": "Optional API key options"
+          }
+        }
+      }
+    }
+  },
+  "config_subentries": {
+    "location": {
+      "abort": {
+        "unable_to_fetch": "[%key:component::google_air_quality::common::unable_to_fetch%]"
+      },
+      "entry_type": "Air quality location",
+      "error": {
+        "location_already_configured": "[%key:common::config_flow::abort::already_configured_location%]",
+        "location_name_already_configured": "Location name already configured.",
+        "unknown": "[%key:common::config_flow::error::unknown%]"
+      },
+      "initiate_flow": {
+        "user": "Add location"
+      },
+      "step": {
+        "location": {
+          "data": {
+            "location": "[%key:common::config_flow::data::location%]",
+            "name": "[%key:common::config_flow::data::name%]"
+          },
+          "data_description": {
+            "location": "[%key:component::google_air_quality::config::step::user::data_description::location%]",
+            "name": "[%key:component::google_air_quality::config::step::user::data_description::name%]"
+          },
+          "description": "Select the coordinates for which you want to create an entry.",
+          "title": "Air quality data location"
+        }
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "local_aqi": {
+        "name": "{local_aqi} AQI"
+      },
+      "local_category": {
+        "name": "{local_aqi} category",
+        "state": {
+          "1_blue": "1 - Blue",
+          "1_green": "1 - Green",
+          "1a_very_good_air_quality": "1A - Very good air quality",
+          "1b_good_air_quality": "1B - Good air quality",
+          "2_cyan": "2 - Cyan",
+          "2_light_green": "2 - Light green",
+          "2a_acceptable_air_quality": "2A - Acceptable air quality",
+          "2b_acceptable_air_quality": "2B - Acceptable air quality",
+          "3_green": "3 - Green",
+          "3_yellow": "3 - Yellow",
+          "3a_aggravated_air_quality": "3A - Aggravated air quality",
+          "3b_bad_air_quality": "3B - Bad air quality",
+          "4_orange": "4 - Orange",
+          "4_yellow_watch": "4 - Yellow/Watch",
+          "5_orange_alert": "5 - Orange/Alert",
+          "5_red": "5 - Red",
+          "6_red_alert": "6 - Red/Alert+",
+          "10_33": "10-33% of guideline",
+          "33_66": "33-66% of guideline",
+          "66_100": "66-100% of guideline",
+          "above_average_air_pollution": "Above average air pollution",
+          "acceptable": "Acceptable",
+          "acceptable_air_quality": "Acceptable air quality",
+          "acutely_unhealthy": "Acutely unhealthy air quality",
+          "alarm_level": "Alarm level",
+          "alert": "Alert threshold",
+          "alert_level": "Alert level",
+          "average_air_pollution": "Average air pollution",
+          "average_air_quality": "Average air quality",
+          "bad_air_quality": "Bad air quality",
+          "below_10": "Less than 10% of guideline",
+          "below_average_air_pollution": "Below average air pollution",
+          "caution": "Caution",
+          "clean": "Clean",
+          "considerable_air_pollution": "Considerable air pollution",
+          "degraded_air_quality": "Degraded air quality",
+          "desirable_air_quality": "Desirable air quality",
+          "emergency": "Emergency",
+          "emergency_level": "Emergency level",
+          "evident_air_pollution": "Evident air pollution",
+          "excellent": "Excellent",
+          "excellent_air_quality": "Excellent air quality",
+          "extremely_bad_air_quality": "Extremely bad air quality",
+          "extremely_poor_air_quality": "Extremely poor air quality",
+          "extremely_unfavorable_air_quality": "Extremely unfavorable air quality",
+          "extremely_unhealthy_air_quality": "Extremely Unhealthy air quality",
+          "fair_air_quality": "Fair air quality",
+          "fairly_good_air_quality": "Fairly good air quality",
+          "good": "Good",
+          "good_air_quality": "Good air quality",
+          "greater_100": "Greater than 100% of guideline",
+          "hazardous_air_quality": "Hazardous air quality",
+          "heavily_polluted": "Heavily polluted",
+          "heavy_air_pollution": "Heavy air pollution",
+          "high_air_pollution": "High air pollution",
+          "high_health_risk": "High health risk",
+          "horrible_air_quality": "Horrible air quality",
+          "light_air_pollution": "Light air pollution",
+          "low": "Low pollution",
+          "low_air_pollution": "Low air pollution",
+          "low_air_quality": "Low air quality",
+          "low_health_risk": "Low health risk",
+          "medium_air_pollution": "Medium air pollution",
+          "medium_air_quality": "Medium air quality",
+          "moderate_air_pollution": "Moderate air pollution",
+          "moderate_air_quality": "Moderate air quality",
+          "moderate_health_risk": "Moderate health risk",
+          "moderately_polluted": "Moderately polluted",
+          "n1_good_air_quality": "N1 - Good air quality",
+          "n2_moderate_air_quality": "N2 - Moderate air quality",
+          "n3_bad_air_quality": "N3 - Bad air quality",
+          "n4_very_bad_air_quality": "N4 - Very bad air quality",
+          "n5_poor_air_quality": "N5 - Poor air quality",
+          "normal": "Normal",
+          "polluted": "Polluted",
+          "poor_air_quality": "Poor air quality",
+          "precautionary_level": "Precautionary level",
+          "reasonably_good_air_quality": "Reasonably good air quality",
+          "regular_air_quality": "Regular air quality",
+          "satisfactory_air_quality": "Satisfactory air quality",
+          "serious_air_pollution": "Serious air pollution",
+          "seriously_polluted": "Seriously polluted",
+          "severe_air_pollution": "Severe air pollution",
+          "severe_air_quality": "Severe air quality",
+          "slightly_polluted": "Slightly polluted",
+          "sufficient_air_quality": "Sufficient air quality",
+          "unfavorable_air_quality": "Unfavorable air quality",
+          "unfavorable_air_quality_for_sensitive_groups": "Unfavorable air quality for sensitive groups",
+          "unhealthy_air_quality": "Unhealthy air quality",
+          "unhealthy_sensitive": "Unhealthy air quality for sensitive groups",
+          "unsatisfactory_air_quality": "Unsatisfactory air quality",
+          "very_bad_air_quality": "Very bad air quality",
+          "very_good_air_quality": "Very good air quality",
+          "very_high_air_pollution": "Very high air pollution",
+          "very_high_health_risk": "Very high health risk",
+          "very_low_air_pollution": "Very low air pollution",
+          "very_polluted": "Very polluted",
+          "very_poor_air_quality": "Very poor air quality",
+          "very_unfavorable_air_quality": "Very unfavorable air quality",
+          "very_unhealthy_air_quality": "Very unhealthy air quality",
+          "warning_air_pollution": "Warning level air pollution"
+        }
+      },
+      "local_dominant_pollutant": {
+        "name": "{local_aqi} dominant pollutant",
+        "state": {
+          "co": "[%key:component::sensor::entity_component::carbon_monoxide::name%]",
+          "no2": "[%key:component::sensor::entity_component::nitrogen_dioxide::name%]",
+          "o3": "[%key:component::sensor::entity_component::ozone::name%]",
+          "pm10": "[%key:component::sensor::entity_component::pm10::name%]",
+          "pm25": "[%key:component::sensor::entity_component::pm25::name%]",
+          "so2": "[%key:component::sensor::entity_component::sulphur_dioxide::name%]"
+        }
+      },
+      "nitrogen_dioxide": {
+        "name": "[%key:component::sensor::entity_component::nitrogen_dioxide::name%]"
+      },
+      "ozone": {
+        "name": "[%key:component::sensor::entity_component::ozone::name%]"
+      },
+      "sulphur_dioxide": {
+        "name": "[%key:component::sensor::entity_component::sulphur_dioxide::name%]"
+      },
+      "uaqi": {
+        "name": "Universal Air Quality Index"
+      },
+      "uaqi_category": {
+        "name": "UAQI category",
+        "state": {
+          "excellent_air_quality": "[%key:component::google_air_quality::entity::sensor::local_category::state::excellent_air_quality%]",
+          "good_air_quality": "[%key:component::google_air_quality::entity::sensor::local_category::state::good_air_quality%]",
+          "low_air_quality": "[%key:component::google_air_quality::entity::sensor::local_category::state::low_air_quality%]",
+          "moderate_air_quality": "[%key:component::google_air_quality::entity::sensor::local_category::state::moderate_air_quality%]",
+          "poor_air_quality": "[%key:component::google_air_quality::entity::sensor::local_category::state::poor_air_quality%]"
+        }
+      },
+      "uaqi_dominant_pollutant": {
+        "name": "UAQI dominant pollutant",
+        "state": {
+          "co": "[%key:component::sensor::entity_component::carbon_monoxide::name%]",
+          "no2": "[%key:component::sensor::entity_component::nitrogen_dioxide::name%]",
+          "o3": "[%key:component::sensor::entity_component::ozone::name%]",
+          "pm10": "[%key:component::sensor::entity_component::pm10::name%]",
+          "pm25": "[%key:component::sensor::entity_component::pm25::name%]",
+          "so2": "[%key:component::sensor::entity_component::sulphur_dioxide::name%]"
+        }
+      }
+    }
+  },
+  "exceptions": {
+    "unable_to_fetch": {
+      "message": "[%key:component::google_air_quality::common::unable_to_fetch%]"
+    }
+  }
+}

@@ -13,19 +13,19 @@
         "data": {
           "region": "[%key:component::ukraine_alarm::config::step::user::data::region%]"
         },
-        "description": "If you want to monitor not only state and district, choose its specific community"
+        "description": "Choose the district you selected above or select a specific community within that district"
       },
       "district": {
         "data": {
           "region": "[%key:component::ukraine_alarm::config::step::user::data::region%]"
         },
-        "description": "If you want to monitor not only state, choose its specific district"
+        "description": "Choose a district to monitor within the selected state"
       },
       "user": {
         "data": {
           "region": "Region"
         },
-        "description": "Choose state to monitor"
+        "description": "Choose a state"
       }
     }
   },
@@ -49,6 +49,12 @@
       "urban_fights": {
         "name": "Urban fights"
       }
+    }
+  },
+  "issues": {
+    "deprecated_state_region": {
+      "description": "The region `{region_name}` is a state-level region, which is no longer supported. Please remove this integration entry and add it again, selecting a district or community instead of the entire state.",
+      "title": "State-level region monitoring is no longer supported"
     }
   }
 }

@@ -1,6 +1,6 @@
 {
   "domain": "ruuvitag_ble",
-  "name": "RuuviTag BLE",
+  "name": "Ruuvi BLE",
   "bluetooth": [
     {
       "connectable": false,
