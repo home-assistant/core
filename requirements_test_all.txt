@@ -417,7 +417,7 @@ aiousbwatcher==1.1.1
 aiovlc==0.5.1
 
 # homeassistant.components.vodafone_station
-aiovodafone==3.0.0
+aiovodafone==3.1.1
 
 # homeassistant.components.waqi
 aiowaqi==3.1.0
@@ -691,7 +691,7 @@ dbus-fast==3.1.2
 debugpy==1.8.17
 
 # homeassistant.components.ecovacs
-deebot-client==17.0.0
+deebot-client==17.0.1
 
 # homeassistant.components.ihc
 # homeassistant.components.namecheapdns
