@@ -1,0 +1,27 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "This charger is already configured",
+      "unavailable_host": "Unable to connect to host"
+    },
+    "error": {
+      "cannot_connect": "Unable to connect"
+    },
+    "step": {
+      "user": {
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]"
+        },
+        "data_description": {
+          "host": "Enter the IP Address of your openevse. Should match the address you used to set it up."
+        }
+      }
+    }
+  },
+  "issues": {
+    "yaml_deprecated": {
+      "description": "Configuring OpenEVSE using YAML is being removed. Your existing YAML configuration has been imported into the UI automatically. Remove the `openevse` configuration from your configuration.yaml file and restart Home Assistant to fix this issue.",
+      "title": "OpenEVSE YAML configuration is deprecated"
+    }
+  }
+}

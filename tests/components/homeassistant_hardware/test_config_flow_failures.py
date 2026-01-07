@@ -108,7 +108,7 @@ async def test_config_flow_thread_addon_info_fails(
         )
 
         # Cannot get addon info
-        assert result["type"] == FlowResultType.ABORT
+        assert result["type"] is FlowResultType.ABORT
         assert result["reason"] == "addon_info_failed"
         assert result["description_placeholders"] == {
             "model": TEST_HARDWARE_NAME,
@@ -159,7 +159,7 @@ async def test_config_flow_thread_addon_install_fails(
         )
 
         # Cannot install addon
-        assert result["type"] == FlowResultType.ABORT
+        assert result["type"] is FlowResultType.ABORT
         assert result["reason"] == "addon_install_failed"
         assert result["description_placeholders"] == {
             "model": TEST_HARDWARE_NAME,
@@ -206,7 +206,7 @@ async def test_config_flow_thread_addon_set_config_fails(
             ),
         )
 
-        assert pick_thread_progress_result["type"] == FlowResultType.ABORT
+        assert pick_thread_progress_result["type"] is FlowResultType.ABORT
         assert pick_thread_progress_result["reason"] == "addon_set_config_failed"
         assert pick_thread_progress_result["description_placeholders"] == {
             "model": TEST_HARDWARE_NAME,
@@ -252,7 +252,7 @@ async def test_config_flow_thread_flasher_run_fails(
             ),
         )
 
-        assert pick_thread_progress_result["type"] == FlowResultType.ABORT
+        assert pick_thread_progress_result["type"] is FlowResultType.ABORT
         assert pick_thread_progress_result["reason"] == "addon_start_failed"
         assert pick_thread_progress_result["description_placeholders"] == {
             "model": TEST_HARDWARE_NAME,
@@ -434,7 +434,7 @@ async def test_options_flow_zigbee_to_thread_zha_configured(
             user_input={"next_step_id": STEP_PICK_FIRMWARE_THREAD},
         )
 
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "zha_still_using_stick"
     assert result["description_placeholders"] == {
         "model": TEST_HARDWARE_NAME,
@@ -486,7 +486,7 @@ async def test_options_flow_thread_to_zigbee_otbr_configured(
             user_input={"next_step_id": STEP_PICK_FIRMWARE_ZIGBEE},
         )
 
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "otbr_still_using_stick"
     assert result["description_placeholders"] == {
         "model": TEST_HARDWARE_NAME,
