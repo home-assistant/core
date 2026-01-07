@@ -407,10 +407,6 @@ class TuyaSelectEntity(TuyaEntity, SelectEntity):
         """Return the selected entity option to represent the entity state."""
         return self._read_wrapper(self._dpcode_wrapper)
 
-    async def async_select_option(self, option: str) -> None:
-        """Change the selected option."""
-        await self._async_send_wrapper_updates(self._dpcode_wrapper, option)
-
     async def _handle_state_update(
         self,
         updated_status_properties: list[str] | None,
@@ -420,3 +416,7 @@ class TuyaSelectEntity(TuyaEntity, SelectEntity):
         if self._dpcode_wrapper.skip_update(self.device, updated_status_properties):
             return
         self.async_write_ha_state()
+
+    async def async_select_option(self, option: str) -> None:
+        """Change the selected option."""
+        await self._async_send_wrapper_updates(self._dpcode_wrapper, option)

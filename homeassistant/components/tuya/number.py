@@ -551,10 +551,6 @@ class TuyaNumberEntity(TuyaEntity, NumberEntity):
         """Return the entity value to represent the entity state."""
         return self._read_wrapper(self._dpcode_wrapper)
 
-    async def async_set_native_value(self, value: float) -> None:
-        """Set new value."""
-        await self._async_send_wrapper_updates(self._dpcode_wrapper, value)
-
     async def _handle_state_update(
         self,
         updated_status_properties: list[str] | None,
@@ -564,3 +560,7 @@ class TuyaNumberEntity(TuyaEntity, NumberEntity):
         if self._dpcode_wrapper.skip_update(self.device, updated_status_properties):
             return
         self.async_write_ha_state()
+
+    async def async_set_native_value(self, value: float) -> None:
+        """Set new value."""
+        await self._async_send_wrapper_updates(self._dpcode_wrapper, value)

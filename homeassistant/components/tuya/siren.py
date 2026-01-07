@@ -107,14 +107,6 @@ class TuyaSirenEntity(TuyaEntity, SirenEntity):
         """Return true if siren is on."""
         return self._read_wrapper(self._dpcode_wrapper)
 
-    async def async_turn_on(self, **kwargs: Any) -> None:
-        """Turn the siren on."""
-        await self._async_send_wrapper_updates(self._dpcode_wrapper, True)
-
-    async def async_turn_off(self, **kwargs: Any) -> None:
-        """Turn the siren off."""
-        await self._async_send_wrapper_updates(self._dpcode_wrapper, False)
-
     async def _handle_state_update(
         self,
         updated_status_properties: list[str] | None,
@@ -124,3 +116,11 @@ class TuyaSirenEntity(TuyaEntity, SirenEntity):
         if self._dpcode_wrapper.skip_update(self.device, updated_status_properties):
             return
         self.async_write_ha_state()
+
+    async def async_turn_on(self, **kwargs: Any) -> None:
+        """Turn the siren on."""
+        await self._async_send_wrapper_updates(self._dpcode_wrapper, True)
+
+    async def async_turn_off(self, **kwargs: Any) -> None:
+        """Turn the siren off."""
+        await self._async_send_wrapper_updates(self._dpcode_wrapper, False)
