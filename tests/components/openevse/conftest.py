@@ -16,22 +16,23 @@ def mock_charger() -> Generator[MagicMock]:
     """Create a mock OpenEVSE charger."""
     with (
         patch(
-            "homeassistant.components.openevse.openevsewifi.Charger",
+            "homeassistant.components.openevse.OpenEVSE",
             autospec=True,
         ) as mock,
         patch(
-            "homeassistant.components.openevse.config_flow.openevsewifi.Charger",
+            "homeassistant.components.openevse.config_flow.OpenEVSE",
             new=mock,
         ),
     ):
         charger = mock.return_value
-        charger.getStatus.return_value = "Charging"
-        charger.getChargeTimeElapsed.return_value = 3600  # 60 minutes in seconds
-        charger.getAmbientTemperature.return_value = 25.5
-        charger.getIRTemperature.return_value = 30.2
-        charger.getRTCTemperature.return_value = 28.7
-        charger.getUsageSession.return_value = 15000  # 15 kWh in Wh
-        charger.getUsageTotal.return_value = 500000  # 500 kWh in Wh
+        charger.update = AsyncMock()
+        charger.status = "Charging"
+        charger.charge_time_elapsed = 3600  # 60 minutes in seconds
+        charger.ambient_temperature = 25.5
+        charger.ir_temperature = 30.2
+        charger.rtc_temperature = 28.7
+        charger.usage_session = 15000  # 15 kWh in Wh
+        charger.usage_total = 500000  # 500 kWh in Wh
         charger.charging_current = 32.0
         yield charger
 
