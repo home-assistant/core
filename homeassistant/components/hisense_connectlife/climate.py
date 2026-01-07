@@ -120,7 +120,7 @@ class HisenseClimate(CoordinatorEntity, ClimateEntity):
     ) -> None:
         """Initialize the climate entity."""
         super().__init__(coordinator)
-        self._device_id = device.puid
+        self._device_id: str | None = device.puid
         self._attr_unique_id = f"{device.device_id}_climate"
         self._attr_name = device.name
 
@@ -138,9 +138,9 @@ class HisenseClimate(CoordinatorEntity, ClimateEntity):
         self.hasAuto = False
         self._last_command_time = 0
         self.wait_time = 3
-        self._cached_target_temp = None
+        self._cached_target_temp: float | None = None
         self._cached_hvac_mode = HVACMode.OFF
-        self._cached_fan_mode = None
+        self._cached_fan_mode: str | None = None
         self._cached_swing_mode = SWING_OFF
 
         self._attr_device_info = DeviceInfo(
@@ -339,6 +339,8 @@ class HisenseClimate(CoordinatorEntity, ClimateEntity):
     @property
     def _device(self) -> HisenseDeviceInfo | None:
         """Get current device data from coordinator."""
+        if not self._device_id:
+            return None
         coordinator: HisenseACPluginDataUpdateCoordinator = self.coordinator  # type: ignore[assignment]
         device = coordinator.get_device(self._device_id)
         if device:
@@ -525,6 +527,8 @@ class HisenseClimate(CoordinatorEntity, ClimateEntity):
         if temperature is None:
             return
 
+        if not self._device_id:
+            return
         try:
             coordinator: HisenseACPluginDataUpdateCoordinator = self.coordinator  # type: ignore[assignment]
             await coordinator.async_control_device(
@@ -536,11 +540,16 @@ class HisenseClimate(CoordinatorEntity, ClimateEntity):
 
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new target hvac mode."""
+        if not self._device_id:
+            return
         # Update cache and timestamp
         self._cached_hvac_mode = hvac_mode
-        self._cached_fan_mode = self.fan_mode
-        self._cached_swing_mode = self.swing_mode
-        self._cached_target_temp = self.target_temperature
+        fan_mode = self.fan_mode
+        self._cached_fan_mode = fan_mode if fan_mode else None
+        swing_mode = self.swing_mode
+        self._cached_swing_mode = swing_mode if swing_mode else SWING_OFF
+        target_temp = self.target_temperature
+        self._cached_target_temp = target_temp if target_temp is not None else None
         self._last_command_time = time.time()
         self.async_write_ha_state()
         if hvac_mode == HVACMode.OFF:
@@ -572,7 +581,7 @@ class HisenseClimate(CoordinatorEntity, ClimateEntity):
             power = (
                 self._device.get_status_value(StatusKey.POWER) if self._device else None
             )
-            if power == "0":
+            if power == "0" and self._device_id:
                 await coordinator.async_control_device(
                     puid=self._device_id,
                     properties={
@@ -581,7 +590,7 @@ class HisenseClimate(CoordinatorEntity, ClimateEntity):
                     },
                 )
                 return
-            if hisense_mode:
+            if hisense_mode and self._device_id:
                 _LOGGER.debug(
                     "Setting HVAC mode to %s (Hisense value: %s)",
                     hvac_mode,
@@ -600,11 +609,15 @@ class HisenseClimate(CoordinatorEntity, ClimateEntity):
 
     async def async_set_fan_mode(self, fan_mode: str) -> None:
         """Set new target fan mode."""
+        if not self._device_id:
+            return
         # Update cache and timestamp
         self._cached_fan_mode = fan_mode
         self._cached_hvac_mode = self.hvac_mode
-        self._cached_swing_mode = self.swing_mode
-        self._cached_target_temp = self.target_temperature
+        swing_mode = self.swing_mode
+        self._cached_swing_mode = swing_mode if swing_mode else SWING_OFF
+        target_temp = self.target_temperature
+        self._cached_target_temp = target_temp if target_temp is not None else None
         self._last_command_time = time.time()
         self.async_write_ha_state()
 
@@ -631,20 +644,25 @@ class HisenseClimate(CoordinatorEntity, ClimateEntity):
             _LOGGER.debug(
                 "Setting fan mode to %s (Hisense value: %s)", fan_mode, hisense_fan_mode
             )
-            await coordinator.async_control_device(
-                puid=self._device_id,
-                properties={StatusKey.FAN_SPEED: hisense_fan_mode},
-            )
+            if self._device_id:
+                await coordinator.async_control_device(
+                    puid=self._device_id,
+                    properties={StatusKey.FAN_SPEED: hisense_fan_mode},
+                )
         except Exception as err:  # noqa: BLE001
             _LOGGER.error("Failed to set fan mode: %s", err)
 
     async def async_set_swing_mode(self, swing_mode: str) -> None:
         """Set new target swing operation."""
+        if not self._device_id:
+            return
         # Update cache and timestamp
         self._cached_swing_mode = swing_mode
         self._cached_hvac_mode = self.hvac_mode
-        self._cached_fan_mode = self.fan_mode
-        self._cached_target_temp = self.target_temperature
+        fan_mode = self.fan_mode
+        self._cached_fan_mode = fan_mode if fan_mode else None
+        target_temp = self.target_temperature
+        self._cached_target_temp = target_temp if target_temp is not None else None
         self._last_command_time = time.time()
         self.async_write_ha_state()
         coordinator: HisenseACPluginDataUpdateCoordinator = self.coordinator  # type: ignore[assignment]
@@ -678,7 +696,7 @@ class HisenseClimate(CoordinatorEntity, ClimateEntity):
                     supported_properties["t_left_right"] = properties["t_left_right"]
 
                 # Send the command if we have supported properties
-                if supported_properties:
+                if supported_properties and self._device_id:
                     _LOGGER.debug(
                         "Setting swing mode to %s with properties: %s",
                         swing_mode,
@@ -694,6 +712,8 @@ class HisenseClimate(CoordinatorEntity, ClimateEntity):
 
     async def async_turn_on(self) -> None:
         """Turn the entity on."""
+        if not self._device_id:
+            return
         coordinator: HisenseACPluginDataUpdateCoordinator = self.coordinator  # type: ignore[assignment]
         try:
             _LOGGER.debug("Turning on device %s", self._device_id)
@@ -706,6 +726,8 @@ class HisenseClimate(CoordinatorEntity, ClimateEntity):
 
     async def async_turn_off(self) -> None:
         """Turn the entity off."""
+        if not self._device_id:
+            return
         coordinator: HisenseACPluginDataUpdateCoordinator = self.coordinator  # type: ignore[assignment]
         try:
             _LOGGER.debug("Turning off device %s", self._device_id)

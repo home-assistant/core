@@ -179,7 +179,7 @@ class OAuth2FlowHandler(
     ) -> ConfigFlowResult:
         """Handle creation step."""
         _LOGGER.debug("Starting creation step with user_input: %s", user_input)
-        return await super().async_step_creation(user_input)
+        return await super().async_step_creation(user_input)  # type: ignore[return-value]
 
     async def async_oauth_create_entry(  # type: ignore[override]
         self, data: dict
@@ -190,7 +190,7 @@ class OAuth2FlowHandler(
             {k: "***" if k in ("token", "token_type") else v for k, v in data.items()},
         )
 
-        return self.async_create_entry(
+        return self.async_create_entry(  # type: ignore[return-value]
             title=self.flow_impl.name,
             data={
                 **data,
