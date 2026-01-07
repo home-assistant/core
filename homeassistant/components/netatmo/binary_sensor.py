@@ -1,6 +1,5 @@
 """Support for Netatmo binary sensors."""
 
-from collections.abc import Callable
 from dataclasses import dataclass
 import logging
 from typing import Final, cast
@@ -31,11 +30,8 @@ _LOGGER = logging.getLogger(__name__)
 class NetatmoBinarySensorEntityDescription(BinarySensorEntityDescription):
     """Describes Netatmo binary sensor entity."""
 
-    device_class_fn: Callable[[NetatmoDevice], BinarySensorDeviceClass] | None = None
-    feature_name: str | None = None  # The feature key in the Module's features set
     name: str | None = None  # The default name of the sensor
     netatmo_name: str  # The name used by Netatmo API for this sensor
-    value_fn: Callable[[StateType], StateType] = lambda x: x
 
 
 NETATMO_BINARY_SENSOR_DESCRIPTIONS: Final[
@@ -195,23 +191,12 @@ class NetatmoBinarySensor(NetatmoModuleEntity, BinarySensorEntity):
         """Update the entity's state."""
 
         value: StateType = None
-        raw_value: StateType = None
 
-        raw_value = cast(
+        value = cast(
             StateType, getattr(self.device, self.entity_description.netatmo_name, None)
         )
 
-        if raw_value is not None:
-            value = self.entity_description.value_fn(raw_value)
-
-            _LOGGER.debug(
-                "\"%s\" translated from '%s' to '%s' for module '%s'",
-                self.entity_description.netatmo_name,
-                raw_value,
-                value,
-                self.device.name,
-            )
-        else:
+        if value is None:
             _LOGGER.warning(
                 "No value can be found for \"%s\" for module '%s'",
                 self.entity_description.netatmo_name,
