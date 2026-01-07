@@ -47,7 +47,7 @@
         'media_content_id': 'spotify://01j5tx5a0ff6g5v0qjx6hbc94t/current_user_saved_tracks',
         'media_content_type': 'spotify://current_user_saved_tracks',
         'thumbnail': None,
-        'title': 'Tracks',
+        'title': 'Liked Songs',
       }),
       dict({
         'can_expand': True,
@@ -497,7 +497,7 @@
 # name: test_browsing[current_user_saved_tracks-current_user_saved_tracks]
   dict({
     'can_expand': True,
-    'can_play': False,
+    'can_play': True,
     'can_search': False,
     'children': list([
       dict({
@@ -525,11 +525,11 @@
     ]),
     'children_media_class': <MediaClass.TRACK: 'track'>,
     'media_class': <MediaClass.DIRECTORY: 'directory'>,
-    'media_content_id': 'spotify://01j5tx5a0ff6g5v0qjx6hbc94t/current_user_saved_tracks',
+    'media_content_id': 'spotify://01j5tx5a0ff6g5v0qjx6hbc94t/spotify:user:1112264111:collection',
     'media_content_type': 'spotify://current_user_saved_tracks',
     'not_shown': 0,
     'thumbnail': None,
-    'title': 'Tracks',
+    'title': 'Liked Songs',
   })
 # ---
 # name: test_browsing[current_user_top_artists-current_user_top_artists]
