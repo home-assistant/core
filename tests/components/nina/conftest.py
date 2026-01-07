@@ -9,7 +9,7 @@ import pytest
 from homeassistant.components.nina.const import DOMAIN
 from homeassistant.core import HomeAssistant
 
-from .common import DUMMY_CONFIG_ENTRY
+from .const import DUMMY_CONFIG_ENTRY
 
 from tests.common import MockConfigEntry
 

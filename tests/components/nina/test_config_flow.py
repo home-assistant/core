@@ -29,7 +29,7 @@ from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import entity_registry as er
 
 from . import mocked_request_function
-from .common import DUMMY_CONFIG_ENTRY, DUMMY_USER_INPUT
+from .const import DUMMY_CONFIG_ENTRY, DUMMY_USER_INPUT
 
 from tests.common import MockConfigEntry, load_fixture
 
