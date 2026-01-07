@@ -93,13 +93,13 @@
         "name": "Air quality"
       },
       "cook_set_temp": {
-        "name": "Cook set temperature"
+        "name": "Cooking set temperature"
       },
       "cook_set_time": {
-        "name": "Cook set time"
+        "name": "Cooking set time"
       },
       "cook_status": {
-        "name": "Cook status",
+        "name": "Cooking status",
         "state": {
           "cooking": "Cooking",
           "cooking_end": "Cooking finished",
