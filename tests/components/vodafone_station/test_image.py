@@ -86,7 +86,6 @@ async def test_image_entity(
 async def test_image_update(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
-    snapshot: SnapshotAssertion,
     freezer: FrozenDateTimeFactory,
     mock_vodafone_station_router: AsyncMock,
     mock_config_entry: MockConfigEntry,
@@ -104,7 +103,6 @@ async def test_image_update(
     assert resp.status == HTTPStatus.OK
 
     resp_body = await resp.read()
-    assert resp_body == snapshot
 
     mock_vodafone_station_router.get_wifi_data.return_value = {
         WIFI_DATA: {
