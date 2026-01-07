@@ -264,7 +264,7 @@ async def test_init_invalid_region(
 ) -> None:
     """Test init with an invalid region in the token."""
 
-    # ou_code 'other' should be caught by the new assert and set to None
+    # ou_code 'other' should be caught by the region validation and set to None
     config_entry = create_config_entry(
         expires_at, [Scope.VEHICLE_DEVICE_DATA], region="other"
     )
