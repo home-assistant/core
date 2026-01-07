@@ -110,7 +110,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up a ProxmoxVE instance from a config entry."""
 
-    def build_client() -> ProxmoxClient | None:
+    def build_client() -> ProxmoxClient:
         """Build and return the Proxmox client connection."""
         host = entry.data[CONF_HOST]
         port = entry.data[CONF_PORT]
