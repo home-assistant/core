@@ -101,8 +101,10 @@ async def test_image_update(
 
     client = await hass_client()
     resp = await client.get(f"/api/image_proxy/{entity_id}")
-    resp_body = await resp.read()
     assert resp.status == HTTPStatus.OK
+
+    resp_body = await resp.read()
+    assert resp_body == snapshot
 
     mock_vodafone_station_router.get_wifi_data.return_value = {
         WIFI_DATA: {
@@ -124,10 +126,10 @@ async def test_image_update(
     await hass.async_block_till_done()
 
     resp = await client.get(f"/api/image_proxy/{entity_id}")
-    resp_body_new = await resp.read()
+    assert resp.status == HTTPStatus.OK
 
+    resp_body_new = await resp.read()
     assert resp_body != resp_body_new
-    assert resp_body_new == snapshot
 
 
 async def test_no_wifi_data(
@@ -143,6 +145,6 @@ async def test_no_wifi_data(
 
     assert mock_config_entry.state is ConfigEntryState.LOADED
 
-    # test image entities are generated as expected
+    # test image entities are not generated
     states = hass.states.async_all(IMAGE_DOMAIN)
     assert len(states) == 0

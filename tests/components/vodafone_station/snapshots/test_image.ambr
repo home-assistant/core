@@ -103,5 +103,5 @@
   b'fake-qr-code-guest'
 # ---
 # name: test_image_update
-  b'fake-qr-code-guest-updated'
+  b'fake-qr-code-guest'
 # ---
