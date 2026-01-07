@@ -10,7 +10,7 @@ from typing import Any, final
 from propcache.api import cached_property
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import Context, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity import EntityDescription
@@ -101,7 +101,10 @@ def async_get_entities(
 
 
 async def async_send_command(
-    hass: HomeAssistant, entity_id: str, command: InfraredCommand
+    hass: HomeAssistant,
+    entity_id: str,
+    command: InfraredCommand,
+    context: Context | None = None,
 ) -> None:
     """Send an IR command to the specified infrared entity.
 
@@ -119,6 +122,9 @@ async def async_send_command(
             translation_key="entity_not_found",
             translation_placeholders={"entity_id": entity_id},
         )
+
+    if context is not None:
+        entity.async_set_context(context)
 
     await entity.async_send_command_internal(command)
 

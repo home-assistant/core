@@ -99,7 +99,9 @@ class LgIrTvMediaPlayer(MediaPlayerEntity):
             command=command_code,
             repeat_count=repeat_count,
         )
-        await async_send_command(self.hass, self._infrared_entity_id, command)
+        await async_send_command(
+            self.hass, self._infrared_entity_id, command, context=self._context
+        )
 
     async def async_turn_on(self) -> None:
         """Turn on the TV."""

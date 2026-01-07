@@ -251,4 +251,6 @@ class LgIrButton(ButtonEntity):
             command=self._description.command_code,
             repeat_count=1,
         )
-        await async_send_command(self.hass, self._infrared_entity_id, command)
+        await async_send_command(
+            self.hass, self._infrared_entity_id, command, context=self._context
+        )
