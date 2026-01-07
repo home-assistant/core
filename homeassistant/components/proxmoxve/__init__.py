@@ -135,8 +135,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             return client
 
     proxmox_client = await hass.async_add_executor_job(build_client)
-    if proxmox_client is None:
-        raise ConfigEntryNotReady("Failed to create Proxmox client")
 
     coordinators: dict[
         str, dict[str, dict[int, DataUpdateCoordinator[dict[str, Any] | None]]]
