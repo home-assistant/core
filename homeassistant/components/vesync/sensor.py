@@ -31,7 +31,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
 from .common import is_air_fryer, is_humidifier, is_outlet, rgetattr
-from .const import VS_DEVICES, VS_DISCOVERY
+from .const import AIR_FRYER_MODE_MAP, VS_DEVICES, VS_DISCOVERY
 from .coordinator import VesyncConfigEntry, VeSyncDataCoordinator
 from .entity import VeSyncBaseEntity
 
@@ -172,16 +172,18 @@ SENSORS: tuple[VeSyncSensorEntityDescription, ...] = (
         key="cook_status",
         translation_key="cook_status",
         device_class=SensorDeviceClass.ENUM,
-        value_fn=lambda device: device.state.cook_status.lower(),
+        value_fn=lambda device: AIR_FRYER_MODE_MAP.get(
+            device.state.cook_status.lower(), device.state.cook_status.lower()
+        ),
         exists_fn=is_air_fryer,
         options=[
-            "cookend",
+            "cooking_end",
             "cooking",
-            "cookstop",
+            "cooking_stop",
             "heating",
-            "preheatend",
-            "preheatstop",
-            "pullout",
+            "preheat_end",
+            "preheat_stop",
+            "pull_out",
             "standby",
         ],
     ),
