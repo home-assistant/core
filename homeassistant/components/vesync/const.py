@@ -62,3 +62,14 @@ OUTLET_NIGHT_LIGHT_LEVEL_ON = "on"
 PURIFIER_NIGHT_LIGHT_LEVEL_DIM = "dim"
 PURIFIER_NIGHT_LIGHT_LEVEL_OFF = "off"
 PURIFIER_NIGHT_LIGHT_LEVEL_ON = "on"
+
+AIR_FRYER_MODE_MAP = {
+    "cookend": "cooking_end",
+    "cooking": "cooking",
+    "cookstop": "cooking_stop",
+    "heating": "heating",
+    "preheatend": "preheat_end",
+    "preheatstop": "preheat_stop",
+    "pullout": "pull_out",
+    "standby": "standby",
+}
