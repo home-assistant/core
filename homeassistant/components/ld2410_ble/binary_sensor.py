@@ -5,7 +5,6 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
@@ -13,8 +12,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import LD2410BLE, LD2410BLECoordinator
-from .const import DOMAIN
-from .models import LD2410BLEData
+from .models import LD2410BLEConfigEntry
 
 ENTITY_DESCRIPTIONS = (
     BinarySensorEntityDescription(
@@ -30,11 +28,11 @@ ENTITY_DESCRIPTIONS = (
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: LD2410BLEConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the platform for LD2410BLE."""
-    data: LD2410BLEData = hass.data[DOMAIN][entry.entry_id]
+    data = entry.runtime_data
     async_add_entities(
         LD2410BLEBinarySensor(data.coordinator, data.device, entry.title, description)
         for description in ENTITY_DESCRIPTIONS

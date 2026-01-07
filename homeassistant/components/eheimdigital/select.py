@@ -2,7 +2,7 @@
 
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
-from typing import Generic, TypeVar, override
+from typing import Any, override
 
 from eheimdigital.classic_vario import EheimDigitalClassicVario
 from eheimdigital.device import EheimDigitalDevice
@@ -17,15 +17,15 @@ from .entity import EheimDigitalEntity, exception_handler
 
 PARALLEL_UPDATES = 0
 
-_DeviceT_co = TypeVar("_DeviceT_co", bound=EheimDigitalDevice, covariant=True)
-
 
 @dataclass(frozen=True, kw_only=True)
-class EheimDigitalSelectDescription(SelectEntityDescription, Generic[_DeviceT_co]):
+class EheimDigitalSelectDescription[_DeviceT: EheimDigitalDevice](
+    SelectEntityDescription
+):
     """Class describing EHEIM Digital select entities."""
 
-    value_fn: Callable[[_DeviceT_co], str | None]
-    set_value_fn: Callable[[_DeviceT_co, str], Awaitable[None]]
+    value_fn: Callable[[_DeviceT], str | None]
+    set_value_fn: Callable[[_DeviceT, str], Awaitable[None]]
 
 
 CLASSICVARIO_DESCRIPTIONS: tuple[
@@ -59,7 +59,7 @@ async def async_setup_entry(
         device_address: dict[str, EheimDigitalDevice],
     ) -> None:
         """Set up the number entities for one or multiple devices."""
-        entities: list[EheimDigitalSelect[EheimDigitalDevice]] = []
+        entities: list[EheimDigitalSelect[Any]] = []
         for device in device_address.values():
             if isinstance(device, EheimDigitalClassicVario):
                 entities.extend(
@@ -75,18 +75,18 @@ async def async_setup_entry(
     async_setup_device_entities(coordinator.hub.devices)
 
 
-class EheimDigitalSelect(
-    EheimDigitalEntity[_DeviceT_co], SelectEntity, Generic[_DeviceT_co]
+class EheimDigitalSelect[_DeviceT: EheimDigitalDevice](
+    EheimDigitalEntity[_DeviceT], SelectEntity
 ):
     """Represent an EHEIM Digital select entity."""
 
-    entity_description: EheimDigitalSelectDescription[_DeviceT_co]
+    entity_description: EheimDigitalSelectDescription[_DeviceT]
 
     def __init__(
         self,
         coordinator: EheimDigitalUpdateCoordinator,
-        device: _DeviceT_co,
-        description: EheimDigitalSelectDescription[_DeviceT_co],
+        device: _DeviceT,
+        description: EheimDigitalSelectDescription[_DeviceT],
     ) -> None:
         """Initialize an EHEIM Digital select entity."""
         super().__init__(coordinator, device)

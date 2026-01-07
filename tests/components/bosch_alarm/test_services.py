@@ -9,11 +9,11 @@ import pytest
 import voluptuous as vol
 
 from homeassistant.components.bosch_alarm.const import (
-    ATTR_CONFIG_ENTRY_ID,
     ATTR_DATETIME,
     DOMAIN,
     SERVICE_SET_DATE_TIME,
 )
+from homeassistant.const import ATTR_CONFIG_ENTRY_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.setup import async_setup_component

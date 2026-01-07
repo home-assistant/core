@@ -9,10 +9,13 @@ import pytest
 
 from homeassistant.components.media_player import (
     ATTR_INPUT_SOURCE,
+    ATTR_MEDIA_CONTENT_ID,
+    ATTR_MEDIA_CONTENT_TYPE,
     ATTR_MEDIA_SEEK_POSITION,
     ATTR_MEDIA_VOLUME_LEVEL,
     ATTR_MEDIA_VOLUME_MUTED,
     DOMAIN as MP_DOMAIN,
+    SERVICE_PLAY_MEDIA,
     SERVICE_SELECT_SOURCE,
 )
 from homeassistant.const import (
@@ -32,7 +35,7 @@ from homeassistant.const import (
     STATE_PLAYING,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 
 from . import mock_state_update, setup_integration
 from .const import ENTITY_ID_ZONE_1
@@ -207,7 +210,7 @@ async def test_invalid_source_service(
 
     with pytest.raises(
         HomeAssistantError,
-        match="Error executing async_select_source on entity media_player.mca_c5_backyard",
+        match="Error executing async_select_source on entity media_player.backyard",
     ):
         await hass.services.async_call(
             MP_DOMAIN,
@@ -253,3 +256,94 @@ async def test_media_seek(
     mock_russound_client.controllers[1].zones[1].set_seek_time.assert_called_once_with(
         100
     )
+
+
+async def test_play_media_preset_item_id(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_russound_client: AsyncMock,
+) -> None:
+    """Test playing media with a preset item id."""
+    await setup_integration(hass, mock_config_entry)
+
+    await hass.services.async_call(
+        MP_DOMAIN,
+        SERVICE_PLAY_MEDIA,
+        {
+            ATTR_ENTITY_ID: ENTITY_ID_ZONE_1,
+            ATTR_MEDIA_CONTENT_TYPE: "preset",
+            ATTR_MEDIA_CONTENT_ID: "1",
+        },
+        blocking=True,
+    )
+    mock_russound_client.controllers[1].zones[1].restore_preset.assert_called_once_with(
+        1
+    )
+
+    await hass.services.async_call(
+        MP_DOMAIN,
+        SERVICE_PLAY_MEDIA,
+        {
+            ATTR_ENTITY_ID: ENTITY_ID_ZONE_1,
+            ATTR_MEDIA_CONTENT_TYPE: "preset",
+            ATTR_MEDIA_CONTENT_ID: "1,2",
+        },
+        blocking=True,
+    )
+    mock_russound_client.controllers[1].zones[1].select_source.assert_called_once_with(
+        1
+    )
+    mock_russound_client.controllers[1].zones[1].restore_preset.assert_called_with(2)
+
+    with pytest.raises(
+        ServiceValidationError,
+        match="The specified preset is not available for this source: 10",
+    ):
+        await hass.services.async_call(
+            MP_DOMAIN,
+            SERVICE_PLAY_MEDIA,
+            {
+                ATTR_ENTITY_ID: ENTITY_ID_ZONE_1,
+                ATTR_MEDIA_CONTENT_TYPE: "preset",
+                ATTR_MEDIA_CONTENT_ID: "10",
+            },
+            blocking=True,
+        )
+
+    with pytest.raises(
+        ServiceValidationError, match="Preset must be an integer, got: UNKNOWN_PRESET"
+    ):
+        await hass.services.async_call(
+            MP_DOMAIN,
+            SERVICE_PLAY_MEDIA,
+            {
+                ATTR_ENTITY_ID: ENTITY_ID_ZONE_1,
+                ATTR_MEDIA_CONTENT_TYPE: "preset",
+                ATTR_MEDIA_CONTENT_ID: "UNKNOWN_PRESET",
+            },
+            blocking=True,
+        )
+
+
+async def test_play_media_unknown_type(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_russound_client: AsyncMock,
+) -> None:
+    """Test playing media with an unsupported content type."""
+    await setup_integration(hass, mock_config_entry)
+
+    with pytest.raises(
+        HomeAssistantError,
+        match="Unsupported media type for Russound zone: unsupported_content_type",
+    ):
+        await hass.services.async_call(
+            MP_DOMAIN,
+            SERVICE_PLAY_MEDIA,
+            {
+                ATTR_ENTITY_ID: ENTITY_ID_ZONE_1,
+                ATTR_MEDIA_CONTENT_TYPE: "unsupported_content_type",
+                ATTR_MEDIA_CONTENT_ID: "1",
+            },
+            blocking=True,
+        )

@@ -28,6 +28,7 @@ class JustNimbusEntity(
             identifiers={(DOMAIN, device_id)},
             name="JustNimbus Sensor",
             manufacturer="JustNimbus",
+            sw_version=coordinator.data.api_version,
         )
 
     @property

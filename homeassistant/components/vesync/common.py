@@ -2,14 +2,12 @@
 
 import logging
 
-from pyvesync import VeSync
-from pyvesync.vesyncbasedevice import VeSyncBaseDevice
-from pyvesync.vesyncoutlet import VeSyncOutlet
-from pyvesync.vesyncswitch import VeSyncWallSwitch
-
-from homeassistant.core import HomeAssistant
-
-from .const import VeSyncFanDevice, VeSyncHumidifierDevice
+from pyvesync.base_devices import VeSyncHumidifier
+from pyvesync.base_devices.fan_base import VeSyncFanBase
+from pyvesync.base_devices.outlet_base import VeSyncOutlet
+from pyvesync.base_devices.purifier_base import VeSyncPurifier
+from pyvesync.base_devices.vesyncbasedevice import VeSyncBaseDevice
+from pyvesync.devices.vesyncswitch import VeSyncWallSwitch
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -36,32 +34,16 @@ def rgetattr(obj: object, attr: str):
     return obj
 
 
-async def async_generate_device_list(
-    hass: HomeAssistant, manager: VeSync
-) -> list[VeSyncBaseDevice]:
-    """Assign devices to proper component."""
-    devices: list[VeSyncBaseDevice] = []
-
-    await hass.async_add_executor_job(manager.update)
-
-    devices.extend(manager.fans)
-    devices.extend(manager.bulbs)
-    devices.extend(manager.outlets)
-    devices.extend(manager.switches)
-
-    return devices
-
-
 def is_humidifier(device: VeSyncBaseDevice) -> bool:
     """Check if the device represents a humidifier."""
 
-    return isinstance(device, VeSyncHumidifierDevice)
+    return isinstance(device, VeSyncHumidifier)
 
 
 def is_fan(device: VeSyncBaseDevice) -> bool:
     """Check if the device represents a fan."""
 
-    return isinstance(device, VeSyncFanDevice)
+    return isinstance(device, VeSyncFanBase)
 
 
 def is_outlet(device: VeSyncBaseDevice) -> bool:
@@ -74,3 +56,9 @@ def is_wall_switch(device: VeSyncBaseDevice) -> bool:
     """Check if the device represents a wall switch, note this doessn't include dimming switches."""
 
     return isinstance(device, VeSyncWallSwitch)
+
+
+def is_purifier(device: VeSyncBaseDevice) -> bool:
+    """Check if the device represents an air purifier."""
+
+    return isinstance(device, VeSyncPurifier)

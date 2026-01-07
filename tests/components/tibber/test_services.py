@@ -88,24 +88,20 @@ async def test_get_prices(
                 {
                     "start_time": START_TIME.isoformat(),
                     "price": 0.36914,
-                    "level": "VERY_EXPENSIVE",
                 },
                 {
                     "start_time": (START_TIME + dt.timedelta(hours=1)).isoformat(),
                     "price": 0.36914,
-                    "level": "VERY_EXPENSIVE",
                 },
             ],
             "second_home": [
                 {
                     "start_time": START_TIME.isoformat(),
                     "price": 0.36914,
-                    "level": "VERY_EXPENSIVE",
                 },
                 {
                     "start_time": (START_TIME + dt.timedelta(hours=1)).isoformat(),
                     "price": 0.36914,
-                    "level": "VERY_EXPENSIVE",
                 },
             ],
         }
@@ -138,24 +134,20 @@ async def test_get_prices_start_tomorrow(
                 {
                     "start_time": tomorrow.isoformat(),
                     "price": 0.46914,
-                    "level": "VERY_EXPENSIVE",
                 },
                 {
                     "start_time": (tomorrow + dt.timedelta(hours=1)).isoformat(),
                     "price": 0.46914,
-                    "level": "VERY_EXPENSIVE",
                 },
             ],
             "second_home": [
                 {
                     "start_time": tomorrow.isoformat(),
                     "price": 0.46914,
-                    "level": "VERY_EXPENSIVE",
                 },
                 {
                     "start_time": (tomorrow + dt.timedelta(hours=1)).isoformat(),
                     "price": 0.46914,
-                    "level": "VERY_EXPENSIVE",
                 },
             ],
         }
@@ -197,24 +189,20 @@ async def test_get_prices_with_timezones(
                 {
                     "start_time": START_TIME.isoformat(),
                     "price": 0.36914,
-                    "level": "VERY_EXPENSIVE",
                 },
                 {
                     "start_time": (START_TIME + dt.timedelta(hours=1)).isoformat(),
                     "price": 0.36914,
-                    "level": "VERY_EXPENSIVE",
                 },
             ],
             "second_home": [
                 {
                     "start_time": START_TIME.isoformat(),
                     "price": 0.36914,
-                    "level": "VERY_EXPENSIVE",
                 },
                 {
                     "start_time": (START_TIME + dt.timedelta(hours=1)).isoformat(),
                     "price": 0.36914,
-                    "level": "VERY_EXPENSIVE",
                 },
             ],
         }

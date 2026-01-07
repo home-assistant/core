@@ -56,7 +56,7 @@ async def test_configure_service_with_field(
         {
             "name": "Test",
             "state": {"reachable": True},
-            "type": "Light",
+            "type": "Dimmable light",
             "uniqueid": "00:00:00:00:00:00:00:01-00",
         }
     ],
@@ -85,7 +85,7 @@ async def test_configure_service_with_entity(
         {
             "name": "Test",
             "state": {"reachable": True},
-            "type": "Light",
+            "type": "Dimmable light",
             "uniqueid": "00:00:00:00:00:00:00:01-00",
         }
     ],
@@ -204,7 +204,7 @@ async def test_service_refresh_devices(
             "1": {
                 "name": "Light 1 name",
                 "state": {"reachable": True},
-                "type": "Light",
+                "type": "Dimmable light",
                 "uniqueid": "00:00:00:00:00:00:00:01-00",
             }
         },
@@ -270,7 +270,7 @@ async def test_service_refresh_devices_trigger_no_state_update(
             "1": {
                 "name": "Light 1 name",
                 "state": {"reachable": True},
-                "type": "Light",
+                "type": "Dimmable light",
                 "uniqueid": "00:00:00:00:00:00:00:01-00",
             }
         },
@@ -301,7 +301,7 @@ async def test_service_refresh_devices_trigger_no_state_update(
         {
             "name": "Light 0 name",
             "state": {"reachable": True},
-            "type": "Light",
+            "type": "Dimmable light",
             "uniqueid": "00:00:00:00:00:00:00:01-00",
         }
     ],
@@ -327,7 +327,12 @@ async def test_remove_orphaned_entries_service(
     """Test service works and also don't remove more than expected."""
     device = device_registry.async_get_or_create(
         config_entry_id=config_entry_setup.entry_id,
-        connections={(dr.CONNECTION_NETWORK_MAC, "123")},
+        identifiers={(DOMAIN, BRIDGE_ID)},
+    )
+
+    device_registry.async_get_or_create(
+        config_entry_id=config_entry_setup.entry_id,
+        identifiers={(DOMAIN, "orphaned")},
     )
 
     assert (
@@ -338,7 +343,7 @@ async def test_remove_orphaned_entries_service(
                 if config_entry_setup.entry_id in entry.config_entries
             ]
         )
-        == 5  # Host, gateway, light, switch and orphan
+        == 4  # Gateway, light, switch and orphan
     )
 
     entity_registry.async_get_or_create(
@@ -374,7 +379,7 @@ async def test_remove_orphaned_entries_service(
                 if config_entry_setup.entry_id in entry.config_entries
             ]
         )
-        == 4  # Host, gateway, light and switch
+        == 3  # Gateway, light and switch
     )
 
     assert (

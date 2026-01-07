@@ -1,24 +1,24 @@
 {
   "services": {
     "bypass_zone": {
-      "name": "Bypass zone",
       "description": "Bypasses a zone.",
       "fields": {
         "zone": {
-          "name": "Zone",
-          "description": "The number of the zone to be bypassed."
+          "description": "The number of the zone to be bypassed.",
+          "name": "Zone"
         }
-      }
+      },
+      "name": "Bypass zone"
     },
     "unbypass_zone": {
-      "name": "Un-bypass zone",
       "description": "Un-Bypasses a zone.",
       "fields": {
         "zone": {
-          "name": "[%key:component::nx584::services::bypass_zone::fields::zone::name%]",
-          "description": "The number of the zone to be un-bypassed."
+          "description": "The number of the zone to be un-bypassed.",
+          "name": "[%key:component::nx584::services::bypass_zone::fields::zone::name%]"
         }
-      }
+      },
+      "name": "Un-bypass zone"
     }
   }
 }

@@ -32,7 +32,6 @@ from homeassistant.const import (
     CONF_USERNAME,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.backup import async_initialize_backup
 from homeassistant.setup import async_setup_component
 from homeassistant.util.aiohttp import MockStreamReader, MockStreamReaderChunked
 
@@ -161,8 +160,7 @@ async def setup_dsm_with_filestation(
     hass: HomeAssistant,
     mock_dsm_with_filestation: MagicMock,
 ):
-    """Mock setup of synology dsm config entry and backup integration."""
-    async_initialize_backup(hass)
+    """Mock setup of synology dsm config entry."""
     with (
         patch(
             "homeassistant.components.synology_dsm.common.SynologyDSM",
@@ -220,7 +218,6 @@ async def test_agents_not_loaded(
 ) -> None:
     """Test backup agent with no loaded config entry."""
     with patch("homeassistant.components.backup.is_hassio", return_value=False):
-        async_initialize_backup(hass)
         assert await async_setup_component(hass, BACKUP_DOMAIN, {BACKUP_DOMAIN: {}})
         assert await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
         await hass.async_block_till_done()

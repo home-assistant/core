@@ -24,6 +24,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.httpx_client import get_async_client
@@ -103,6 +104,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: AqualinkConfigEntry) -> 
             raise ConfigEntryNotReady(
                 f"Error while attempting to retrieve devices list: {svc_exception}"
             ) from svc_exception
+
+        device_registry = dr.async_get(hass)
+        device_registry.async_get_or_create(
+            config_entry_id=entry.entry_id,
+            name=system.name,
+            identifiers={(DOMAIN, system.serial)},
+            manufacturer="Jandy",
+            serial_number=system.serial,
+        )
 
         for dev in devices.values():
             if isinstance(dev, AqualinkThermostat):

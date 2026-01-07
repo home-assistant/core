@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 from pyuptimerobot import (
     UptimeRobot,
     UptimeRobotAuthenticationException,
@@ -51,7 +53,12 @@ class UptimeRobotDataUpdateCoordinator(DataUpdateCoordinator[list[UptimeRobotMon
             raise UpdateFailed(exception) from exception
 
         if response.status != API_ATTR_OK:
-            raise UpdateFailed(response.error.message)
+            raise UpdateFailed(
+                response.error.message if response.error else "Unknown error"
+            )
+
+        if TYPE_CHECKING:
+            assert isinstance(response.data, list)
 
         monitors: list[UptimeRobotMonitor] = response.data
 
@@ -65,13 +72,9 @@ class UptimeRobotDataUpdateCoordinator(DataUpdateCoordinator[list[UptimeRobotMon
                 if device := device_registry.async_get_device(
                     identifiers={(DOMAIN, monitor_id)}
                 ):
-                    device_registry.async_remove_device(device.id)
-
-        # If there are new monitors, we should reload the config entry so we can
-        # create new devices and entities.
-        if self.data and new_monitors - current_monitors:
-            self.hass.async_create_task(
-                self.hass.config_entries.async_reload(self.config_entry.entry_id)
-            )
+                    device_registry.async_update_device(
+                        device_id=device.id,
+                        remove_config_entry_id=self.config_entry.entry_id,
+                    )
 
         return monitors

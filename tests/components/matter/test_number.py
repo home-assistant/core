@@ -2,6 +2,7 @@
 
 from unittest.mock import MagicMock, call
 
+from chip.clusters import Objects as clusters
 from matter_server.client.models.node import MatterNode
 from matter_server.common import custom_clusters
 from matter_server.common.errors import MatterError
@@ -101,6 +102,44 @@ async def test_eve_weather_sensor_altitude(
     )
 
 
+@pytest.mark.parametrize("node_fixture", ["silabs_refrigerator"])
+async def test_temperature_control_temperature_setpoint(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+) -> None:
+    """Test TemperatureSetpoint from TemperatureControl."""
+    # TemperatureSetpoint
+    state = hass.states.get("number.refrigerator_temperature_setpoint_2")
+    assert state
+    assert state.state == "-18.0"
+
+    set_node_attribute(matter_node, 2, 86, 0, -1600)
+    await trigger_subscription_callback(hass, matter_client)
+    state = hass.states.get("number.refrigerator_temperature_setpoint_2")
+    assert state
+    assert state.state == "-16.0"
+
+    # test set value
+    await hass.services.async_call(
+        "number",
+        "set_value",
+        {
+            "entity_id": "number.refrigerator_temperature_setpoint_2",
+            "value": -17,
+        },
+        blocking=True,
+    )
+    assert matter_client.send_device_command.call_count == 1
+    assert matter_client.send_device_command.call_args == call(
+        node_id=matter_node.node_id,
+        endpoint_id=2,
+        command=clusters.TemperatureControl.Commands.SetTemperature(
+            targetTemperature=-1700
+        ),
+    )
+
+
 @pytest.mark.parametrize("node_fixture", ["dimmable_light"])
 async def test_matter_exception_on_write_attribute(
     hass: HomeAssistant,
@@ -121,3 +160,132 @@ async def test_matter_exception_on_write_attribute(
             },
             blocking=True,
         )
+
+
+@pytest.mark.parametrize("node_fixture", ["pump"])
+async def test_pump_level(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+) -> None:
+    """Test level control for pump."""
+    # CurrentLevel on LevelControl cluster
+    state = hass.states.get("number.mock_pump_setpoint")
+    assert state
+    assert state.state == "100.0"
+
+    set_node_attribute(matter_node, 1, 8, 0, 100)
+    await trigger_subscription_callback(hass, matter_client)
+    state = hass.states.get("number.mock_pump_setpoint")
+    assert state
+    assert state.state == "50.0"
+
+    # test set value
+    await hass.services.async_call(
+        "number",
+        "set_value",
+        {
+            "entity_id": "number.mock_pump_setpoint",
+            "value": 75,
+        },
+        blocking=True,
+    )
+    assert matter_client.send_device_command.call_count == 1
+    assert (
+        matter_client.send_device_command.call_args
+        == call(
+            node_id=matter_node.node_id,
+            endpoint_id=1,
+            command=clusters.LevelControl.Commands.MoveToLevel(
+                level=150
+            ),  # 75 * 2 = 150, as the value is multiplied by 2 in the HA to native value conversion
+        )
+    )
+
+
+@pytest.mark.parametrize("node_fixture", ["microwave_oven"])
+async def test_microwave_oven(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+) -> None:
+    """Test Cooktime for microwave oven."""
+
+    # Cooktime on MicrowaveOvenControl cluster (1/96/2)
+    state = hass.states.get("number.microwave_oven_cooking_time")
+    assert state
+    assert state.state == "30"
+
+    # test set value
+    await hass.services.async_call(
+        "number",
+        "set_value",
+        {
+            "entity_id": "number.microwave_oven_cooking_time",
+            "value": 60,  # 60 seconds
+        },
+        blocking=True,
+    )
+    assert matter_client.send_device_command.call_count == 1
+    assert matter_client.send_device_command.call_args == call(
+        node_id=matter_node.node_id,
+        endpoint_id=1,
+        command=clusters.MicrowaveOvenControl.Commands.SetCookingParameters(
+            cookTime=60,  # 60 seconds
+        ),
+    )
+
+
+@pytest.mark.parametrize("node_fixture", ["door_lock"])
+async def test_lock_attributes(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+) -> None:
+    """Test door lock attributes."""
+    # WrongCodeEntryLimit for door lock
+    state = hass.states.get("number.mock_door_lock_wrong_code_limit")
+    assert state
+    assert state.state == "3"
+
+    set_node_attribute(matter_node, 1, 257, 48, 10)
+    await trigger_subscription_callback(hass, matter_client)
+    state = hass.states.get("number.mock_door_lock_wrong_code_limit")
+    assert state
+    assert state.state == "10"
+
+    # UserCodeTemporaryDisableTime for door lock
+    state = hass.states.get("number.mock_door_lock_user_code_temporary_disable_time")
+    assert state
+    assert state.state == "10"
+
+    set_node_attribute(matter_node, 1, 257, 49, 30)
+    await trigger_subscription_callback(hass, matter_client)
+    state = hass.states.get("number.mock_door_lock_user_code_temporary_disable_time")
+    assert state
+    assert state.state == "30"
+
+
+@pytest.mark.parametrize("node_fixture", ["door_lock"])
+async def test_matter_exception_on_door_lock_write_attribute(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+) -> None:
+    """Test that MatterError is handled for write_attribute call."""
+    entity_id = "number.mock_door_lock_wrong_code_limit"
+    state = hass.states.get(entity_id)
+    assert state
+    matter_client.write_attribute.side_effect = MatterError("Boom!")
+    with pytest.raises(HomeAssistantError) as exc_info:
+        await hass.services.async_call(
+            "number",
+            "set_value",
+            {
+                "entity_id": entity_id,
+                "value": 1,
+            },
+            blocking=True,
+        )
+
+    assert str(exc_info.value) == "Boom!"

@@ -27,7 +27,7 @@ _LOGGER = logging.getLogger(__name__)
 UPDATE_INTERVAL = datetime.timedelta(minutes=30)
 TIMEOUT = 10
 
-TokenManager = Callable[[], Awaitable[str]]
+type TokenManager = Callable[[], Awaitable[str]]
 
 
 @asynccontextmanager

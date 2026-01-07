@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from mastodon.Mastodon import Account, Instance
+from mastodon.Mastodon import Account, Instance, InstanceV2, MastodonNotFoundError
 
 from homeassistant.core import HomeAssistant
 
@@ -27,11 +27,16 @@ async def async_get_config_entry_diagnostics(
     }
 
 
-def get_diagnostics(config_entry: MastodonConfigEntry) -> tuple[Instance, Account]:
+def get_diagnostics(
+    config_entry: MastodonConfigEntry,
+) -> tuple[InstanceV2 | Instance, Account]:
     """Get mastodon diagnostics."""
     client = config_entry.runtime_data.client
 
-    instance = client.instance()
+    try:
+        instance = client.instance_v2()
+    except MastodonNotFoundError:
+        instance = client.instance_v1()
     account = client.account_verify_credentials()
 
     return instance, account

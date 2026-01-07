@@ -1,4 +1,4 @@
-"""Handle KNX Devices."""
+"""Handle Home Assistant Devices for the KNX integration."""
 
 from __future__ import annotations
 

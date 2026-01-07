@@ -7,7 +7,8 @@
           "volume": "10",
           "status": "ON",
           "enabled": "True",
-          "current_source": "1"
+          "current_source": "1",
+          "enabled_sources": [1, 2]
         },
         "2": {
           "name": "Kitchen",

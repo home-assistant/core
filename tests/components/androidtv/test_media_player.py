@@ -21,7 +21,7 @@ from homeassistant.components.androidtv.const import (
     DEFAULT_PORT,
     DOMAIN,
 )
-from homeassistant.components.androidtv.media_player import (
+from homeassistant.components.androidtv.services import (
     ATTR_DEVICE_PATH,
     ATTR_LOCAL_PATH,
     SERVICE_ADB_COMMAND,
@@ -54,9 +54,9 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
+    STATE_IDLE,
     STATE_OFF,
     STATE_PLAYING,
-    STATE_STANDBY,
     STATE_UNAVAILABLE,
 )
 from homeassistant.core import HomeAssistant
@@ -163,7 +163,7 @@ async def test_reconnect(
 
         state = hass.states.get(entity_id)
         assert state is not None
-        assert state.state == STATE_STANDBY
+        assert state.state == STATE_IDLE
         assert MSG_RECONNECT[patch_key] in caplog.record_tuples[2]
 
 
@@ -672,7 +672,7 @@ async def test_update_lock_not_acquired(hass: HomeAssistant) -> None:
         await async_update_entity(hass, entity_id)
         state = hass.states.get(entity_id)
         assert state is not None
-        assert state.state == STATE_STANDBY
+        assert state.state == STATE_IDLE
 
 
 async def test_download(hass: HomeAssistant) -> None:

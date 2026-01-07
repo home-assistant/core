@@ -5,6 +5,7 @@ from __future__ import annotations
 import asyncio
 from collections.abc import Callable, Coroutine
 import functools
+import inspect
 from typing import Any, Literal, assert_type, cast, overload
 
 from homeassistant.core import HomeAssistant
@@ -47,7 +48,7 @@ def singleton[_S, _T, _U](
 
     def wrapper(func: _FuncType[_Coro[_T] | _U]) -> _FuncType[_Coro[_T] | _U]:
         """Wrap a function with caching logic."""
-        if not asyncio.iscoroutinefunction(func):
+        if not inspect.iscoroutinefunction(func):
 
             @functools.lru_cache(maxsize=1)
             @bind_hass

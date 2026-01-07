@@ -1,5 +1,6 @@
 """Test ZHA climate."""
 
+from collections.abc import Callable, Coroutine
 from typing import Literal
 from unittest.mock import patch
 
@@ -7,6 +8,7 @@ import pytest
 from zha.application.platforms.climate.const import HVAC_MODE_2_SYSTEM, SEQ_OF_OPERATION
 import zhaquirks.sinope.thermostat
 import zhaquirks.tuya.ts0601_trv
+from zigpy.device import Device
 import zigpy.profiles
 from zigpy.profiles import zha
 import zigpy.types
@@ -147,7 +149,11 @@ def climate_platform_only():
 
 
 @pytest.fixture
-def device_climate_mock(hass: HomeAssistant, setup_zha, zigpy_device_mock):
+def device_climate_mock(
+    hass: HomeAssistant,
+    setup_zha: Callable[..., Coroutine[None]],
+    zigpy_device_mock: Callable[..., Device],
+):
     """Test regular thermostat device."""
 
     async def _dev(clusters, plug=None, manuf=None, quirk=None):
@@ -522,20 +528,28 @@ async def test_set_hvac_mode(
     state = hass.states.get(entity_id)
     assert state.state == HVACMode.OFF
 
-    await hass.services.async_call(
-        CLIMATE_DOMAIN,
-        SERVICE_SET_HVAC_MODE,
-        {ATTR_ENTITY_ID: entity_id, ATTR_HVAC_MODE: hvac_mode},
-        blocking=True,
-    )
-    state = hass.states.get(entity_id)
     if sys_mode is not None:
+        await hass.services.async_call(
+            CLIMATE_DOMAIN,
+            SERVICE_SET_HVAC_MODE,
+            {ATTR_ENTITY_ID: entity_id, ATTR_HVAC_MODE: hvac_mode},
+            blocking=True,
+        )
+        state = hass.states.get(entity_id)
         assert state.state == hvac_mode
         assert thrm_cluster.write_attributes.call_count == 1
         assert thrm_cluster.write_attributes.call_args[0][0] == {
             "system_mode": sys_mode
         }
     else:
+        with pytest.raises(ServiceValidationError):
+            await hass.services.async_call(
+                CLIMATE_DOMAIN,
+                SERVICE_SET_HVAC_MODE,
+                {ATTR_ENTITY_ID: entity_id, ATTR_HVAC_MODE: hvac_mode},
+                blocking=True,
+            )
+        state = hass.states.get(entity_id)
         assert thrm_cluster.write_attributes.call_count == 0
         assert state.state == HVACMode.OFF
 

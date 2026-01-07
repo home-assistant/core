@@ -7,12 +7,14 @@ from functools import lru_cache
 from math import floor, log10
 
 from homeassistant.const import (
+    CONCENTRATION_GRAMS_PER_CUBIC_METER,
     CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
     CONCENTRATION_MILLIGRAMS_PER_CUBIC_METER,
     CONCENTRATION_PARTS_PER_BILLION,
     CONCENTRATION_PARTS_PER_MILLION,
     PERCENTAGE,
     UNIT_NOT_RECOGNIZED_TEMPLATE,
+    UnitOfApparentPower,
     UnitOfArea,
     UnitOfBloodGlucoseConcentration,
     UnitOfConductivity,
@@ -27,6 +29,7 @@ from homeassistant.const import (
     UnitOfPower,
     UnitOfPressure,
     UnitOfReactiveEnergy,
+    UnitOfReactivePower,
     UnitOfSpeed,
     UnitOfTemperature,
     UnitOfTime,
@@ -35,6 +38,7 @@ from homeassistant.const import (
     UnitOfVolumetricFlux,
 )
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers.deprecation import deprecated_function
 
 # Distance conversion constants
 _MM_TO_M = 0.001  # 1 mm = 0.001 m
@@ -65,7 +69,8 @@ _HECTARE_TO_M2 = 100 * 100  # 1 hectare = 10,000 m²
 _MIN_TO_SEC = 60  # 1 min = 60 seconds
 _HRS_TO_MINUTES = 60  # 1 hr = 60 minutes
 _HRS_TO_SECS = _HRS_TO_MINUTES * _MIN_TO_SEC  # 1 hr = 60 minutes = 3600 seconds
-_DAYS_TO_SECS = 24 * _HRS_TO_SECS  # 1 day = 24 hours = 86400 seconds
+_DAYS_TO_HRS = 24  # 1 day = 24 hours
+_DAYS_TO_SECS = _DAYS_TO_HRS * _HRS_TO_SECS  # 1 day = 24 hours = 86400 seconds
 
 # Energy conversion constants
 _WH_TO_J = 3600  # 1 Wh = 3600 J
@@ -79,6 +84,7 @@ _STONE_TO_G = _POUND_TO_G * 14  # 14 pounds to a stone
 # Pressure conversion constants
 _STANDARD_GRAVITY = 9.80665
 _MERCURY_DENSITY = 13.5951
+_INH2O_TO_PA = 249.0889083333348  # 1 inH₂O = 249.0889083333348 Pa at 4°C
 
 # Volume conversion constants
 _L_TO_CUBIC_METER = 0.001  # 1 L = 0.001 m³
@@ -86,6 +92,17 @@ _ML_TO_CUBIC_METER = 0.001 * _L_TO_CUBIC_METER  # 1 mL = 0.001 L
 _GALLON_TO_CUBIC_METER = 231 * pow(_IN_TO_M, 3)  # US gallon is 231 cubic inches
 _FLUID_OUNCE_TO_CUBIC_METER = _GALLON_TO_CUBIC_METER / 128  # 128 fl. oz. in a US gallon
 _CUBIC_FOOT_TO_CUBIC_METER = pow(_FOOT_TO_M, 3)
+
+# Gas concentration conversion constants
+_IDEAL_GAS_CONSTANT = 8.31446261815324  # m3⋅Pa⋅K⁻¹⋅mol⁻¹
+# Ambient constants based on European Commission recommendations (20 °C and 1013mb)
+_AMBIENT_TEMPERATURE = 293.15  # K (20 °C)
+_AMBIENT_PRESSURE = 101325  # Pa (1 atm)
+_AMBIENT_IDEAL_GAS_MOLAR_VOLUME = (  # m3⋅mol⁻¹
+    _IDEAL_GAS_CONSTANT * _AMBIENT_TEMPERATURE / _AMBIENT_PRESSURE
+)
+# Molar masses in g⋅mol⁻¹
+_CARBON_MONOXIDE_MOLAR_MASS = 28.01
 
 
 class BaseUnitConverter:
@@ -138,7 +155,11 @@ class BaseUnitConverter:
             return lambda value: value
         from_ratio, to_ratio = cls._get_from_to_ratio(from_unit, to_unit)
         if cls._are_unit_inverses(from_unit, to_unit):
-            return lambda val: None if val is None else to_ratio / (val / from_ratio)
+            return (
+                lambda val: None
+                if val is None or val == 0
+                else to_ratio / (val / from_ratio)
+            )
         return lambda val: None if val is None else (val / from_ratio) * to_ratio
 
     @classmethod
@@ -162,6 +183,29 @@ class BaseUnitConverter:
     def _are_unit_inverses(cls, from_unit: str | None, to_unit: str | None) -> bool:
         """Return true if one unit is an inverse but not the other."""
         return (from_unit in cls._UNIT_INVERSES) != (to_unit in cls._UNIT_INVERSES)
+
+
+class CarbonMonoxideConcentrationConverter(BaseUnitConverter):
+    """Convert carbon monoxide ratio to mass per volume.
+
+    Using ambient temperature of 20°C and pressure of 1 ATM.
+    """
+
+    UNIT_CLASS = "carbon_monoxide"
+    _UNIT_CONVERSION: dict[str | None, float] = {
+        CONCENTRATION_PARTS_PER_MILLION: 1e6,
+        CONCENTRATION_MILLIGRAMS_PER_CUBIC_METER: (
+            _CARBON_MONOXIDE_MOLAR_MASS / _AMBIENT_IDEAL_GAS_MOLAR_VOLUME * 1e3
+        ),
+        CONCENTRATION_MICROGRAMS_PER_CUBIC_METER: (
+            _CARBON_MONOXIDE_MOLAR_MASS / _AMBIENT_IDEAL_GAS_MOLAR_VOLUME * 1e6
+        ),
+    }
+    VALID_UNITS = {
+        CONCENTRATION_PARTS_PER_MILLION,
+        CONCENTRATION_MILLIGRAMS_PER_CUBIC_METER,
+        CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+    }
 
 
 class DataRateConverter(BaseUnitConverter):
@@ -381,6 +425,22 @@ class MassConverter(BaseUnitConverter):
     }
 
 
+class ApparentPowerConverter(BaseUnitConverter):
+    """Utility to convert apparent power values."""
+
+    UNIT_CLASS = "apparent_power"
+    _UNIT_CONVERSION: dict[str | None, float] = {
+        UnitOfApparentPower.MILLIVOLT_AMPERE: 1 * 1000,
+        UnitOfApparentPower.VOLT_AMPERE: 1,
+        UnitOfApparentPower.KILO_VOLT_AMPERE: 1 / 1000,
+    }
+    VALID_UNITS = {
+        UnitOfApparentPower.MILLIVOLT_AMPERE,
+        UnitOfApparentPower.VOLT_AMPERE,
+        UnitOfApparentPower.KILO_VOLT_AMPERE,
+    }
+
+
 class PowerConverter(BaseUnitConverter):
     """Utility to convert power values."""
 
@@ -392,6 +452,7 @@ class PowerConverter(BaseUnitConverter):
         UnitOfPower.MEGA_WATT: 1 / 1e6,
         UnitOfPower.GIGA_WATT: 1 / 1e9,
         UnitOfPower.TERA_WATT: 1 / 1e12,
+        UnitOfPower.BTU_PER_HOUR: 1 / 0.29307107,
     }
     VALID_UNITS = {
         UnitOfPower.MILLIWATT,
@@ -400,6 +461,7 @@ class PowerConverter(BaseUnitConverter):
         UnitOfPower.MEGA_WATT,
         UnitOfPower.GIGA_WATT,
         UnitOfPower.TERA_WATT,
+        UnitOfPower.BTU_PER_HOUR,
     }
 
 
@@ -408,6 +470,7 @@ class PressureConverter(BaseUnitConverter):
 
     UNIT_CLASS = "pressure"
     _UNIT_CONVERSION: dict[str | None, float] = {
+        UnitOfPressure.MILLIPASCAL: 1 * 1000,
         UnitOfPressure.PA: 1,
         UnitOfPressure.HPA: 1 / 100,
         UnitOfPressure.KPA: 1 / 1000,
@@ -416,11 +479,13 @@ class PressureConverter(BaseUnitConverter):
         UnitOfPressure.MBAR: 1 / 100,
         UnitOfPressure.INHG: 1
         / (_IN_TO_M * 1000 * _STANDARD_GRAVITY * _MERCURY_DENSITY),
+        UnitOfPressure.INH2O: 1 / _INH2O_TO_PA,
         UnitOfPressure.PSI: 1 / 6894.757,
         UnitOfPressure.MMHG: 1
         / (_MM_TO_M * 1000 * _STANDARD_GRAVITY * _MERCURY_DENSITY),
     }
     VALID_UNITS = {
+        UnitOfPressure.MILLIPASCAL,
         UnitOfPressure.PA,
         UnitOfPressure.HPA,
         UnitOfPressure.KPA,
@@ -428,6 +493,7 @@ class PressureConverter(BaseUnitConverter):
         UnitOfPressure.CBAR,
         UnitOfPressure.MBAR,
         UnitOfPressure.INHG,
+        UnitOfPressure.INH2O,
         UnitOfPressure.PSI,
         UnitOfPressure.MMHG,
     }
@@ -444,6 +510,22 @@ class ReactiveEnergyConverter(BaseUnitConverter):
     VALID_UNITS = set(UnitOfReactiveEnergy)
 
 
+class ReactivePowerConverter(BaseUnitConverter):
+    """Utility to convert reactive power values."""
+
+    UNIT_CLASS = "reactive_power"
+    _UNIT_CONVERSION: dict[str | None, float] = {
+        UnitOfReactivePower.MILLIVOLT_AMPERE_REACTIVE: 1 * 1000,
+        UnitOfReactivePower.VOLT_AMPERE_REACTIVE: 1,
+        UnitOfReactivePower.KILO_VOLT_AMPERE_REACTIVE: 1 / 1000,
+    }
+    VALID_UNITS = {
+        UnitOfReactivePower.MILLIVOLT_AMPERE_REACTIVE,
+        UnitOfReactivePower.VOLT_AMPERE_REACTIVE,
+        UnitOfReactivePower.KILO_VOLT_AMPERE_REACTIVE,
+    }
+
+
 class SpeedConverter(BaseUnitConverter):
     """Utility to convert speed values."""
 
@@ -457,6 +539,7 @@ class SpeedConverter(BaseUnitConverter):
         UnitOfSpeed.INCHES_PER_SECOND: 1 / _IN_TO_M,
         UnitOfSpeed.KILOMETERS_PER_HOUR: _HRS_TO_SECS / _KM_TO_M,
         UnitOfSpeed.KNOTS: _HRS_TO_SECS / _NAUTICAL_MILE_TO_M,
+        UnitOfSpeed.METERS_PER_MINUTE: _MIN_TO_SEC,
         UnitOfSpeed.METERS_PER_SECOND: 1,
         UnitOfSpeed.MILLIMETERS_PER_SECOND: 1 / _MM_TO_M,
         UnitOfSpeed.MILES_PER_HOUR: _HRS_TO_SECS / _MILE_TO_M,
@@ -471,6 +554,7 @@ class SpeedConverter(BaseUnitConverter):
         UnitOfSpeed.FEET_PER_SECOND,
         UnitOfSpeed.KILOMETERS_PER_HOUR,
         UnitOfSpeed.KNOTS,
+        UnitOfSpeed.METERS_PER_MINUTE,
         UnitOfSpeed.METERS_PER_SECOND,
         UnitOfSpeed.MILES_PER_HOUR,
         UnitOfSpeed.MILLIMETERS_PER_SECOND,
@@ -629,6 +713,9 @@ class TemperatureConverter(BaseUnitConverter):
         )
 
     @classmethod
+    @deprecated_function(
+        "TemperatureDeltaConverter.convert", breaks_in_ha_version="2026.12.0"
+    )
     def convert_interval(cls, interval: float, from_unit: str, to_unit: str) -> float:
         """Convert a temperature interval from one unit to another.
 
@@ -672,6 +759,25 @@ class TemperatureConverter(BaseUnitConverter):
         return celsius + 273.15
 
 
+class TemperatureDeltaConverter(BaseUnitConverter):
+    """Utility to convert temperature intervals.
+
+    eg. a 10°C interval (10°C to 20°C) will return a 18°F (50°F to 68°F) interval
+    """
+
+    UNIT_CLASS = "temperature_delta"
+    VALID_UNITS = {
+        UnitOfTemperature.CELSIUS,
+        UnitOfTemperature.FAHRENHEIT,
+        UnitOfTemperature.KELVIN,
+    }
+    _UNIT_CONVERSION = {
+        UnitOfTemperature.CELSIUS: 1.0,
+        UnitOfTemperature.FAHRENHEIT: 1.8,
+        UnitOfTemperature.KELVIN: 1.0,
+    }
+
+
 class UnitlessRatioConverter(BaseUnitConverter):
     """Utility to convert unitless ratios."""
 
@@ -684,6 +790,8 @@ class UnitlessRatioConverter(BaseUnitConverter):
     }
     VALID_UNITS = {
         None,
+        CONCENTRATION_PARTS_PER_BILLION,
+        CONCENTRATION_PARTS_PER_MILLION,
         PERCENTAGE,
     }
 
@@ -693,12 +801,14 @@ class MassVolumeConcentrationConverter(BaseUnitConverter):
 
     UNIT_CLASS = "concentration"
     _UNIT_CONVERSION: dict[str | None, float] = {
-        CONCENTRATION_MICROGRAMS_PER_CUBIC_METER: 1000.0,  # 1000 µg/m³ = 1 mg/m³
-        CONCENTRATION_MILLIGRAMS_PER_CUBIC_METER: 1.0,
+        CONCENTRATION_MICROGRAMS_PER_CUBIC_METER: 1000000.0,  # 1000 µg/m³ = 1 mg/m³
+        CONCENTRATION_MILLIGRAMS_PER_CUBIC_METER: 1000.0,  # 1000 mg/m³ = 1 g/m³
+        CONCENTRATION_GRAMS_PER_CUBIC_METER: 1.0,
     }
     VALID_UNITS = {
         CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
         CONCENTRATION_MILLIGRAMS_PER_CUBIC_METER,
+        CONCENTRATION_GRAMS_PER_CUBIC_METER,
     }
 
 
@@ -715,6 +825,7 @@ class VolumeConverter(BaseUnitConverter):
         UnitOfVolume.CUBIC_METERS: 1,
         UnitOfVolume.CUBIC_FEET: 1 / _CUBIC_FOOT_TO_CUBIC_METER,
         UnitOfVolume.CENTUM_CUBIC_FEET: 1 / (100 * _CUBIC_FOOT_TO_CUBIC_METER),
+        UnitOfVolume.MILLE_CUBIC_FEET: 1 / (1000 * _CUBIC_FOOT_TO_CUBIC_METER),
     }
     VALID_UNITS = {
         UnitOfVolume.LITERS,
@@ -724,6 +835,7 @@ class VolumeConverter(BaseUnitConverter):
         UnitOfVolume.CUBIC_METERS,
         UnitOfVolume.CUBIC_FEET,
         UnitOfVolume.CENTUM_CUBIC_FEET,
+        UnitOfVolume.MILLE_CUBIC_FEET,
     }
 
 
@@ -734,6 +846,7 @@ class VolumeFlowRateConverter(BaseUnitConverter):
     # Units in terms of m³/h
     _UNIT_CONVERSION: dict[str | None, float] = {
         UnitOfVolumeFlowRate.CUBIC_METERS_PER_HOUR: 1,
+        UnitOfVolumeFlowRate.CUBIC_METERS_PER_MINUTE: 1 / _HRS_TO_MINUTES,
         UnitOfVolumeFlowRate.CUBIC_METERS_PER_SECOND: 1 / _HRS_TO_SECS,
         UnitOfVolumeFlowRate.CUBIC_FEET_PER_MINUTE: 1
         / (_HRS_TO_MINUTES * _CUBIC_FOOT_TO_CUBIC_METER),
@@ -741,19 +854,24 @@ class VolumeFlowRateConverter(BaseUnitConverter):
         UnitOfVolumeFlowRate.LITERS_PER_MINUTE: 1
         / (_HRS_TO_MINUTES * _L_TO_CUBIC_METER),
         UnitOfVolumeFlowRate.LITERS_PER_SECOND: 1 / (_HRS_TO_SECS * _L_TO_CUBIC_METER),
+        UnitOfVolumeFlowRate.GALLONS_PER_HOUR: 1 / _GALLON_TO_CUBIC_METER,
         UnitOfVolumeFlowRate.GALLONS_PER_MINUTE: 1
         / (_HRS_TO_MINUTES * _GALLON_TO_CUBIC_METER),
+        UnitOfVolumeFlowRate.GALLONS_PER_DAY: _DAYS_TO_HRS / _GALLON_TO_CUBIC_METER,
         UnitOfVolumeFlowRate.MILLILITERS_PER_SECOND: 1
         / (_HRS_TO_SECS * _ML_TO_CUBIC_METER),
     }
     VALID_UNITS = {
         UnitOfVolumeFlowRate.CUBIC_FEET_PER_MINUTE,
         UnitOfVolumeFlowRate.CUBIC_METERS_PER_HOUR,
+        UnitOfVolumeFlowRate.CUBIC_METERS_PER_MINUTE,
         UnitOfVolumeFlowRate.CUBIC_METERS_PER_SECOND,
         UnitOfVolumeFlowRate.LITERS_PER_HOUR,
         UnitOfVolumeFlowRate.LITERS_PER_MINUTE,
         UnitOfVolumeFlowRate.LITERS_PER_SECOND,
+        UnitOfVolumeFlowRate.GALLONS_PER_HOUR,
         UnitOfVolumeFlowRate.GALLONS_PER_MINUTE,
+        UnitOfVolumeFlowRate.GALLONS_PER_DAY,
         UnitOfVolumeFlowRate.MILLILITERS_PER_SECOND,
     }
 

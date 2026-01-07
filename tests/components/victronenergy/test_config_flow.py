@@ -1,148 +1,251 @@
 """Test the Victron Energy config flow."""
 
-from unittest.mock import AsyncMock, patch
+from __future__ import annotations
+
+from unittest.mock import patch
 
 from homeassistant import config_entries
 from homeassistant.components.victronenergy.config_flow import (
     CannotConnect,
     InvalidAuth,
 )
-from homeassistant.components.victronenergy.const import DOMAIN
-from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
+from homeassistant.components.victronenergy.const import CONF_BROKER, DOMAIN
+from homeassistant.const import CONF_PASSWORD
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
+from tests.common import MockConfigEntry
 
-async def test_form(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
-    """Test we get the form."""
+
+async def test_form_user_step(hass: HomeAssistant) -> None:
+    """Test we get the form for user step."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
     assert result["errors"] == {}
 
-    with patch(
-        "homeassistant.components.victronenergy.config_flow.PlaceholderHub.authenticate",
-        return_value=True,
-    ):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {
-                CONF_HOST: "1.1.1.1",
-                CONF_USERNAME: "test-username",
-                CONF_PASSWORD: "test-password",
-            },
-        )
-        await hass.async_block_till_done()
 
-    assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == "Name of the device"
-    assert result["data"] == {
-        CONF_HOST: "1.1.1.1",
-        CONF_USERNAME: "test-username",
-        CONF_PASSWORD: "test-password",
-    }
-    assert len(mock_setup_entry.mock_calls) == 1
-
-
-async def test_form_invalid_auth(
-    hass: HomeAssistant, mock_setup_entry: AsyncMock
-) -> None:
-    """Test we handle invalid auth."""
+async def test_form_user_success_insecure_mqtt(hass: HomeAssistant) -> None:
+    """Test successful user flow with insecure MQTT connection."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
+    with (
+        patch(
+            "homeassistant.components.victronenergy.config_flow.validate_input",
+            return_value={"title": "GX device (test_device)"},
+        ),
+        patch(
+            "homeassistant.components.victronenergy.config_flow._test_basic_mqtt_connection",
+            return_value=True,
+        ),
+        patch(
+            "homeassistant.components.victronenergy.config_flow._detect_discovery_topics",
+            return_value="test_device",
+        ),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_BROKER: "192.168.1.100"},
+        )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "GX device (test_device)"
+    assert result["data"] == {
+        CONF_BROKER: "192.168.1.100",
+        "port": 1883,
+    }
+
+
+async def test_form_password_step(hass: HomeAssistant) -> None:
+    """Test password step when insecure MQTT fails."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    with (
+        patch(
+            "homeassistant.components.victronenergy.config_flow.validate_input",
+            return_value={"title": "GX device"},
+        ),
+        patch(
+            "homeassistant.components.victronenergy.config_flow._test_basic_mqtt_connection",
+            return_value=False,  # Insecure connection fails
+        ),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_BROKER: "192.168.1.100"},
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "password"
+    assert result["errors"] == {}
+
+
+async def test_form_password_success(hass: HomeAssistant) -> None:
+    """Test successful password flow."""
+    # Start flow and get to password step
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    with (
+        patch(
+            "homeassistant.components.victronenergy.config_flow.validate_input",
+            return_value={"title": "GX device"},
+        ),
+        patch(
+            "homeassistant.components.victronenergy.config_flow._test_basic_mqtt_connection",
+            return_value=False,
+        ),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_BROKER: "192.168.1.100"},
+        )
+
+    # Test password step
+    with (
+        patch(
+            "homeassistant.components.victronenergy.config_flow._generate_ha_device_id",
+            return_value="test_device_id",
+        ),
+        patch(
+            "homeassistant.components.victronenergy.config_flow._generate_victron_token",
+            return_value="test_token",
+        ),
+        patch(
+            "homeassistant.components.victronenergy.config_flow._test_secure_mqtt_connection",
+            return_value=True,
+        ),
+        patch(
+            "homeassistant.components.victronenergy.config_flow._detect_discovery_topics",
+            return_value="test_device",
+        ),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_PASSWORD: "test-password"},
+        )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "GX device (test_device)"
+    assert result["data"]["broker"] == "192.168.1.100"
+    assert result["data"]["port"] == 8883
+    assert "token" in result["data"]
+
+
+async def test_form_password_invalid_auth(hass: HomeAssistant) -> None:
+    """Test password step with invalid authentication."""
+    # Get to password step
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    with (
+        patch(
+            "homeassistant.components.victronenergy.config_flow.validate_input",
+            return_value={"title": "GX device"},
+        ),
+        patch(
+            "homeassistant.components.victronenergy.config_flow._test_basic_mqtt_connection",
+            return_value=False,
+        ),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_BROKER: "192.168.1.100"},
+        )
+
+    # Test invalid auth in password step
     with patch(
-        "homeassistant.components.victronenergy.config_flow.PlaceholderHub.authenticate",
+        "homeassistant.components.victronenergy.config_flow._generate_victron_token",
         side_effect=InvalidAuth,
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {
-                CONF_HOST: "1.1.1.1",
-                CONF_USERNAME: "test-username",
-                CONF_PASSWORD: "test-password",
-            },
+            {CONF_PASSWORD: "wrong-password"},
         )
 
     assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "password"
     assert result["errors"] == {"base": "invalid_auth"}
 
-    # Make sure the config flow tests finish with either an
-    # FlowResultType.CREATE_ENTRY or FlowResultType.ABORT so
-    # we can show the config flow is able to recover from an error.
-    with patch(
-        "homeassistant.components.victronenergy.config_flow.PlaceholderHub.authenticate",
-        return_value=True,
-    ):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {
-                CONF_HOST: "1.1.1.1",
-                CONF_USERNAME: "test-username",
-                CONF_PASSWORD: "test-password",
-            },
-        )
-        await hass.async_block_till_done()
 
-    assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == "Name of the device"
-    assert result["data"] == {
-        CONF_HOST: "1.1.1.1",
-        CONF_USERNAME: "test-username",
-        CONF_PASSWORD: "test-password",
-    }
-    assert len(mock_setup_entry.mock_calls) == 1
-
-
-async def test_form_cannot_connect(
-    hass: HomeAssistant, mock_setup_entry: AsyncMock
-) -> None:
-    """Test we handle cannot connect error."""
+async def test_form_password_cannot_connect(hass: HomeAssistant) -> None:
+    """Test password step with connection error."""
+    # Get to password step
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
+    with (
+        patch(
+            "homeassistant.components.victronenergy.config_flow.validate_input",
+            return_value={"title": "GX device"},
+        ),
+        patch(
+            "homeassistant.components.victronenergy.config_flow._test_basic_mqtt_connection",
+            return_value=False,
+        ),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_BROKER: "192.168.1.100"},
+        )
+
+    # Test connection error in password step
     with patch(
-        "homeassistant.components.victronenergy.config_flow.PlaceholderHub.authenticate",
+        "homeassistant.components.victronenergy.config_flow._generate_victron_token",
         side_effect=CannotConnect,
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {
-                CONF_HOST: "1.1.1.1",
-                CONF_USERNAME: "test-username",
-                CONF_PASSWORD: "test-password",
-            },
+            {CONF_PASSWORD: "test-password"},
         )
 
     assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "password"
     assert result["errors"] == {"base": "cannot_connect"}
 
-    # Make sure the config flow tests finish with either an
-    # FlowResultType.CREATE_ENTRY or FlowResultType.ABORT so
-    # we can show the config flow is able to recover from an error.
 
-    with patch(
-        "homeassistant.components.victronenergy.config_flow.PlaceholderHub.authenticate",
-        return_value=True,
+async def test_duplicate_entry_prevention(hass: HomeAssistant) -> None:
+    """Test that duplicate entries are prevented."""
+    # Add existing entry
+    existing_entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="48e7da868f12",
+        data={CONF_BROKER: "192.168.1.100"},
+    )
+    existing_entry.add_to_hass(hass)
+
+    # Try to add duplicate
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    with (
+        patch(
+            "homeassistant.components.victronenergy.config_flow.validate_input",
+            return_value={"title": "GX device"},
+        ),
+        patch(
+            "homeassistant.components.victronenergy.config_flow._test_basic_mqtt_connection",
+            return_value=True,
+        ),
+        patch(
+            "homeassistant.components.victronenergy.config_flow._detect_discovery_topics",
+            return_value="48e7da868f12",  # Same unique ID
+        ),
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {
-                CONF_HOST: "1.1.1.1",
-                CONF_USERNAME: "test-username",
-                CONF_PASSWORD: "test-password",
-            },
+            {CONF_BROKER: "192.168.1.100"},
         )
-        await hass.async_block_till_done()
 
-    assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == "Name of the device"
-    assert result["data"] == {
-        CONF_HOST: "1.1.1.1",
-        CONF_USERNAME: "test-username",
-        CONF_PASSWORD: "test-password",
-    }
-    assert len(mock_setup_entry.mock_calls) == 1
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"

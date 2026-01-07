@@ -3,10 +3,9 @@
 from __future__ import annotations
 
 import asyncio
-from collections import OrderedDict
-from dataclasses import dataclass, field
 import datetime
 from functools import partial
+from http import HTTPStatus
 from ipaddress import AddressValueError, IPv4Address
 import logging
 import socket
@@ -14,7 +13,7 @@ from typing import Any, cast
 from urllib.parse import urlparse
 
 from aiohttp import ClientError
-from requests.exceptions import Timeout
+from requests.exceptions import HTTPError, Timeout
 from soco import events_asyncio, zonegroupstate
 import soco.config as soco_config
 from soco.core import SoCo
@@ -25,9 +24,8 @@ import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.components import ssdp
 from homeassistant.components.media_player import DOMAIN as MP_DOMAIN
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOSTS, EVENT_HOMEASSISTANT_STOP
-from homeassistant.core import CALLBACK_TYPE, Event, HomeAssistant, callback
+from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.helpers import (
     config_validation as cv,
     device_registry as dr,
@@ -46,7 +44,6 @@ from homeassistant.util.async_ import create_eager_task
 from .alarms import SonosAlarms
 from .const import (
     AVAILABILITY_CHECK_INTERVAL,
-    DATA_SONOS,
     DATA_SONOS_DISCOVERY_MANAGER,
     DISCOVERY_INTERVAL,
     DOMAIN,
@@ -58,11 +55,14 @@ from .const import (
     SUB_FAIL_ISSUE_ID,
     SUB_FAIL_URL,
     SUBSCRIPTION_TIMEOUT,
+    UPNP_DOCUMENTATION_URL,
+    UPNP_ISSUE_ID,
     UPNP_ST,
 )
 from .exception import SonosUpdateError
 from .favorites import SonosFavorites
-from .helpers import sync_get_visible_zones
+from .helpers import SonosConfigEntry, SonosData, sync_get_visible_zones
+from .services import async_setup_services
 from .speaker import SonosSpeaker
 
 _LOGGER = logging.getLogger(__name__)
@@ -95,32 +95,6 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-@dataclass
-class UnjoinData:
-    """Class to track data necessary for unjoin coalescing."""
-
-    speakers: list[SonosSpeaker]
-    event: asyncio.Event = field(default_factory=asyncio.Event)
-
-
-class SonosData:
-    """Storage class for platform global data."""
-
-    def __init__(self) -> None:
-        """Initialize the data."""
-        # OrderedDict behavior used by SonosAlarms and SonosFavorites
-        self.discovered: OrderedDict[str, SonosSpeaker] = OrderedDict()
-        self.favorites: dict[str, SonosFavorites] = {}
-        self.alarms: dict[str, SonosAlarms] = {}
-        self.topology_condition = asyncio.Condition()
-        self.hosts_heartbeat: CALLBACK_TYPE | None = None
-        self.discovery_known: set[str] = set()
-        self.boot_counts: dict[str, int] = {}
-        self.mdns_names: dict[str, str] = {}
-        self.entity_id_mappings: dict[str, SonosSpeaker] = {}
-        self.unjoin_data: dict[str, UnjoinData] = {}
-
-
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Sonos component."""
     conf = config.get(DOMAIN)
@@ -134,20 +108,20 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             )
         )
 
+    async_setup_services(hass)
+
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: SonosConfigEntry) -> bool:
     """Set up Sonos from a config entry."""
     soco_config.EVENTS_MODULE = events_asyncio
     soco_config.REQUEST_TIMEOUT = 9.5
     soco_config.ZGT_EVENT_FALLBACK = False
     zonegroupstate.EVENT_CACHE_TIMEOUT = SUBSCRIPTION_TIMEOUT
 
-    if DATA_SONOS not in hass.data:
-        hass.data[DATA_SONOS] = SonosData()
+    data = entry.runtime_data = SonosData()
 
-    data = hass.data[DATA_SONOS]
     config = hass.data[DOMAIN].get("media_player", {})
     hosts = config.get(CONF_HOSTS, [])
     _LOGGER.debug("Reached async_setup_entry, config=%s", config)
@@ -172,12 +146,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(
+    hass: HomeAssistant, config_entry: SonosConfigEntry
+) -> bool:
     """Unload a Sonos config entry."""
-    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    unload_ok = await hass.config_entries.async_unload_platforms(
+        config_entry, PLATFORMS
+    )
     await hass.data[DATA_SONOS_DISCOVERY_MANAGER].async_shutdown()
-    hass.data.pop(DATA_SONOS)
-    hass.data.pop(DATA_SONOS_DISCOVERY_MANAGER)
     return unload_ok
 
 
@@ -185,7 +161,11 @@ class SonosDiscoveryManager:
     """Manage sonos discovery."""
 
     def __init__(
-        self, hass: HomeAssistant, entry: ConfigEntry, data: SonosData, hosts: list[str]
+        self,
+        hass: HomeAssistant,
+        entry: SonosConfigEntry,
+        data: SonosData,
+        hosts: list[str],
     ) -> None:
         """Init discovery manager."""
         self.hass = hass
@@ -207,6 +187,32 @@ class SonosDiscoveryManager:
         """Check if device at provided IP is known to be invisible."""
         return any(x for x in self._known_invisible if x.ip_address == ip_address)
 
+    async def _process_http_connection_error(
+        self, err: HTTPError, ip_address: str
+    ) -> None:
+        """Process HTTP Errors when connecting to a Sonos speaker."""
+        response = err.response
+        # When UPnP is disabled, Sonos returns HTTP 403 Forbidden error.
+        # Create issue advising user to enable UPnP on Sonos system.
+        if response is not None and response.status_code == HTTPStatus.FORBIDDEN:
+            ir.async_create_issue(
+                self.hass,
+                DOMAIN,
+                f"{UPNP_ISSUE_ID}_{ip_address}",
+                is_fixable=False,
+                severity=ir.IssueSeverity.ERROR,
+                translation_key="upnp_disabled",
+                translation_placeholders={
+                    "device_ip": ip_address,
+                    "documentation_url": UPNP_DOCUMENTATION_URL,
+                },
+            )
+        _LOGGER.error(
+            "HTTP error connecting to Sonos speaker at %s: %s",
+            ip_address,
+            err,
+        )
+
     async def async_subscribe_to_zone_updates(self, ip_address: str) -> None:
         """Test subscriptions and create SonosSpeakers based on results."""
         try:
@@ -218,13 +224,29 @@ class SonosDiscoveryManager:
             )
             return
         soco = SoCo(ip_address)
-        # Cache now to avoid household ID lookup during first ZoneGroupState processing
-        await self.hass.async_add_executor_job(
-            getattr,
-            soco,
-            "household_id",
-        )
-        sub = await soco.zoneGroupTopology.subscribe()
+        try:
+            # Cache now to avoid household ID lookup during first ZoneGroupState processing
+            await self.hass.async_add_executor_job(
+                getattr,
+                soco,
+                "household_id",
+            )
+            sub = await soco.zoneGroupTopology.subscribe()
+        except HTTPError as err:
+            await self._process_http_connection_error(err, ip_address)
+            return
+        except (
+            OSError,
+            SoCoException,
+            Timeout,
+            TimeoutError,
+        ) as err:
+            _LOGGER.error(
+                "Error connecting to discovered Sonos speaker at %s: %s",
+                ip_address,
+                err,
+            )
+            return
 
         @callback
         def _async_add_visible_zones(subscription_succeeded: bool = False) -> None:
@@ -380,7 +402,9 @@ class SonosDiscoveryManager:
             if soco.uid not in self.data.boot_counts:
                 self.data.boot_counts[soco.uid] = soco.boot_seqnum
             _LOGGER.debug("Adding new speaker: %s", speaker_info)
-            speaker = SonosSpeaker(self.hass, soco, speaker_info, zone_group_state_sub)
+            speaker = SonosSpeaker(
+                self.hass, self.entry, soco, speaker_info, zone_group_state_sub
+            )
             self.data.discovered[soco.uid] = speaker
             for coordinator, coord_dict in (
                 (SonosAlarms, self.data.alarms),
@@ -388,7 +412,9 @@ class SonosDiscoveryManager:
             ):
                 c_dict: dict[str, Any] = coord_dict
                 if soco.household_id not in c_dict:
-                    new_coordinator = coordinator(self.hass, soco.household_id)
+                    new_coordinator = coordinator(
+                        self.hass, soco.household_id, self.entry
+                    )
                     new_coordinator.setup(soco)
                     c_dict[soco.household_id] = new_coordinator
             speaker.setup(self.entry)
@@ -409,6 +435,9 @@ class SonosDiscoveryManager:
                     sync_get_visible_zones,
                     soco,
                 )
+            except HTTPError as err:
+                await self._process_http_connection_error(err, ip_addr)
+                continue
             except (
                 OSError,
                 SoCoException,
@@ -622,10 +651,10 @@ class SonosDiscoveryManager:
 
 
 async def async_remove_config_entry_device(
-    hass: HomeAssistant, config_entry: ConfigEntry, device_entry: dr.DeviceEntry
+    hass: HomeAssistant, config_entry: SonosConfigEntry, device_entry: dr.DeviceEntry
 ) -> bool:
     """Remove Sonos config entry from a device."""
-    known_devices = hass.data[DATA_SONOS].discovered.keys()
+    known_devices = config_entry.runtime_data.discovered.keys()
     for identifier in device_entry.identifiers:
         if identifier[0] != DOMAIN:
             continue

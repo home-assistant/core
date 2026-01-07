@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_all_entities[climate.test_air_conditioner-entry]
+# name: test_climate_entities[air_conditioner][climate.test_air_conditioner-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -8,7 +8,7 @@
       'fan_modes': list([
         'low',
         'high',
-        'mid',
+        'medium',
       ]),
       'hvac_modes': list([
         <HVACMode.OFF: 'off'>,
@@ -18,6 +18,7 @@
       'max_temp': 86,
       'min_temp': 64,
       'preset_modes': list([
+        'none',
         'air_clean',
       ]),
       'swing_horizontal_modes': list([
@@ -53,22 +54,22 @@
     'platform': 'lg_thinq',
     'previous_unique_id': None,
     'suggested_object_id': None,
-    'supported_features': <ClimateEntityFeature: 955>,
+    'supported_features': <ClimateEntityFeature: 953>,
     'translation_key': <ExtendedProperty.CLIMATE_AIR_CONDITIONER: 'climate_air_conditioner'>,
     'unique_id': 'MW2-2E247F93-B570-46A6-B827-920E9E10F966_climate_air_conditioner',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[climate.test_air_conditioner-state]
+# name: test_climate_entities[air_conditioner][climate.test_air_conditioner-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'current_humidity': 40,
       'current_temperature': 77,
-      'fan_mode': 'mid',
+      'fan_mode': 'medium',
       'fan_modes': list([
         'low',
         'high',
-        'mid',
+        'medium',
       ]),
       'friendly_name': 'Test air conditioner',
       'hvac_modes': list([
@@ -78,11 +79,12 @@
       ]),
       'max_temp': 86,
       'min_temp': 64,
-      'preset_mode': None,
+      'preset_mode': 'none',
       'preset_modes': list([
+        'none',
         'air_clean',
       ]),
-      'supported_features': <ClimateEntityFeature: 955>,
+      'supported_features': <ClimateEntityFeature: 953>,
       'swing_horizontal_mode': 'off',
       'swing_horizontal_modes': list([
         'on',
@@ -93,8 +95,6 @@
         'on',
         'off',
       ]),
-      'target_temp_high': None,
-      'target_temp_low': None,
       'target_temp_step': 2,
       'temperature': 66,
     }),

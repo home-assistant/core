@@ -18,4 +18,3 @@ SERVICE_RESTORE = "restore"
 
 FIRST_RUN = "first_run"
 MONOPRICE_OBJECT = "monoprice_object"
-UNDO_UPDATE_LISTENER = "update_update_listener"

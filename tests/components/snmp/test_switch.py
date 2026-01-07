@@ -27,7 +27,7 @@ async def test_snmp_integer_switch_off(hass: HomeAssistant) -> None:
 
     mock_data = Integer32(0)
     with patch(
-        "homeassistant.components.snmp.switch.getCmd",
+        "homeassistant.components.snmp.switch.get_cmd",
         return_value=(None, None, None, [[mock_data]]),
     ):
         assert await async_setup_component(hass, SWITCH_DOMAIN, config)
@@ -41,7 +41,7 @@ async def test_snmp_integer_switch_on(hass: HomeAssistant) -> None:
 
     mock_data = Integer32(1)
     with patch(
-        "homeassistant.components.snmp.switch.getCmd",
+        "homeassistant.components.snmp.switch.get_cmd",
         return_value=(None, None, None, [[mock_data]]),
     ):
         assert await async_setup_component(hass, SWITCH_DOMAIN, config)
@@ -57,7 +57,7 @@ async def test_snmp_integer_switch_unknown(
 
     mock_data = Integer32(3)
     with patch(
-        "homeassistant.components.snmp.switch.getCmd",
+        "homeassistant.components.snmp.switch.get_cmd",
         return_value=(None, None, None, [[mock_data]]),
     ):
         assert await async_setup_component(hass, SWITCH_DOMAIN, config)

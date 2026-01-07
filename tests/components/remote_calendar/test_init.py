@@ -1,6 +1,6 @@
 """Tests for init platform of Remote Calendar."""
 
-from httpx import ConnectError, Response, UnsupportedProtocol
+from httpx import HTTPError, InvalidURL, Response, TimeoutException
 import pytest
 import respx
 
@@ -56,8 +56,9 @@ async def test_raise_for_status(
 @pytest.mark.parametrize(
     "side_effect",
     [
-        ConnectError("Connection failed"),
-        UnsupportedProtocol("Unsupported protocol"),
+        TimeoutException("Connection timed out"),
+        HTTPError("Connection failed"),
+        InvalidURL("Unsupported protocol"),
         ValueError("Invalid response"),
     ],
 )

@@ -28,7 +28,7 @@ from homeassistant.components.zwave_js.lock import (
     SERVICE_SET_LOCK_CONFIGURATION,
     SERVICE_SET_LOCK_USERCODE,
 )
-from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE, STATE_UNKNOWN
+from homeassistant.const import ATTR_ENTITY_ID, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 
@@ -295,7 +295,8 @@ async def test_door_lock(
     assert node.status == NodeStatus.DEAD
     state = hass.states.get(SCHLAGE_BE469_LOCK_ENTITY)
     assert state
-    assert state.state == STATE_UNAVAILABLE
+    # The state should still be locked, even if the node is dead
+    assert state.state == LockState.LOCKED
 
 
 async def test_only_one_lock(

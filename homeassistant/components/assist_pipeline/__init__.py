@@ -38,11 +38,11 @@ from .pipeline import (
     async_create_default_pipeline,
     async_get_pipeline,
     async_get_pipelines,
-    async_migrate_engine,
-    async_run_migrations,
     async_setup_pipeline_store,
     async_update_pipeline,
 )
+from .select import AssistPipelineSelect, VadSensitivitySelect
+from .vad import VadSensitivity
 from .websocket_api import async_register_websocket_api
 
 __all__ = (
@@ -53,17 +53,18 @@ __all__ = (
     "SAMPLE_CHANNELS",
     "SAMPLE_RATE",
     "SAMPLE_WIDTH",
+    "AssistPipelineSelect",
     "AudioSettings",
     "Pipeline",
     "PipelineEvent",
     "PipelineEventType",
     "PipelineNotFound",
+    "VadSensitivity",
+    "VadSensitivitySelect",
     "WakeWordSettings",
     "async_create_default_pipeline",
     "async_get_pipelines",
-    "async_migrate_engine",
     "async_pipeline_from_audio_stream",
-    "async_setup",
     "async_update_pipeline",
 )
 
@@ -87,7 +88,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     hass.data[DATA_LAST_WAKE_UP] = {}
 
     await async_setup_pipeline_store(hass)
-    await async_run_migrations(hass)
     async_register_websocket_api(hass)
 
     return True
@@ -107,6 +107,7 @@ async def async_pipeline_from_audio_stream(
     wake_word_settings: WakeWordSettings | None = None,
     audio_settings: AudioSettings | None = None,
     device_id: str | None = None,
+    satellite_id: str | None = None,
     start_stage: PipelineStage = PipelineStage.STT,
     end_stage: PipelineStage = PipelineStage.TTS,
     conversation_extra_system_prompt: str | None = None,
@@ -119,6 +120,7 @@ async def async_pipeline_from_audio_stream(
         pipeline_input = PipelineInput(
             session=session,
             device_id=device_id,
+            satellite_id=satellite_id,
             stt_metadata=stt_metadata,
             stt_stream=stt_stream,
             wake_word_phrase=wake_word_phrase,

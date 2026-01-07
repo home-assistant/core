@@ -1,18 +1,18 @@
 {
   "config": {
+    "error": {
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
     "step": {
       "user": {
-        "description": "Select the location you want to receive the Stookwijzer information for.",
         "data": {
           "location": "[%key:common::config_flow::data::location%]"
         },
         "data_description": {
           "location": "Use the map to set the location for Stookwijzer."
-        }
+        },
+        "description": "Select the location you want to receive the Stookwijzer information for."
       }
-    },
-    "error": {
-      "unknown": "[%key:common::config_flow::error::unknown%]"
     }
   },
   "entity": {
@@ -20,11 +20,22 @@
       "advice": {
         "name": "Advice code",
         "state": {
-          "code_yellow": "Yellow",
           "code_orange": "Orange",
-          "code_red": "Red"
+          "code_red": "Red",
+          "code_yellow": "Yellow"
         }
       }
+    }
+  },
+  "exceptions": {
+    "integration_not_found": {
+      "message": "Integration \"{target}\" not found in registry."
+    },
+    "no_data_received": {
+      "message": "No data received from Stookwijzer."
+    },
+    "not_loaded": {
+      "message": "{target} is not loaded."
     }
   },
   "issues": {
@@ -33,9 +44,16 @@
       "title": "Migration of your location failed"
     }
   },
-  "exceptions": {
-    "no_data_received": {
-      "message": "No data received from Stookwijzer."
+  "services": {
+    "get_forecast": {
+      "description": "Retrieves the advice forecast from Stookwijzer.",
+      "fields": {
+        "config_entry_id": {
+          "description": "The Stookwijzer instance to get the forecast from.",
+          "name": "Stookwijzer instance"
+        }
+      },
+      "name": "Get forecast"
     }
   }
 }

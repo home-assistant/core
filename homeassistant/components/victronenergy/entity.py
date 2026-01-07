@@ -4,9 +4,10 @@ import json
 import logging
 from typing import TYPE_CHECKING, Any
 
+from homeassistant.const import EntityCategory
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.entity import Entity, EntityCategory
+from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.template import Template
 
 if TYPE_CHECKING:

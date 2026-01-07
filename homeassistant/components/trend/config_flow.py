@@ -101,6 +101,8 @@ CONFIG_SCHEMA = vol.Schema(
 class ConfigFlowHandler(SchemaConfigFlowHandler, domain=DOMAIN):
     """Handle a config or options flow for Trend."""
 
+    MINOR_VERSION = 2
+
     config_flow = {
         "user": SchemaFlowFormStep(schema=CONFIG_SCHEMA, next_step="settings"),
         "settings": SchemaFlowFormStep(get_base_options_schema),
@@ -108,6 +110,7 @@ class ConfigFlowHandler(SchemaConfigFlowHandler, domain=DOMAIN):
     options_flow = {
         "init": SchemaFlowFormStep(get_extended_options_schema),
     }
+    options_flow_reloads = True
 
     def async_config_entry_title(self, options: Mapping[str, Any]) -> str:
         """Return config entry title."""

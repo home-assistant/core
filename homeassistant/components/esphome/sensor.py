@@ -81,6 +81,7 @@ class EsphomeSensor(EsphomeEntity[SensorInfo, SensorState], SensorEntity):
         # if the string is empty
         if unit_of_measurement := static_info.unit_of_measurement:
             self._attr_native_unit_of_measurement = unit_of_measurement
+        self._attr_suggested_display_precision = static_info.accuracy_decimals
         self._attr_device_class = try_parse_enum(
             SensorDeviceClass, static_info.device_class
         )
@@ -97,7 +98,7 @@ class EsphomeSensor(EsphomeEntity[SensorInfo, SensorState], SensorEntity):
             self._attr_state_class = _STATE_CLASSES.from_esphome(state_class)
 
     @property
-    def native_value(self) -> datetime | str | None:
+    def native_value(self) -> datetime | int | float | None:
         """Return the state of the entity."""
         if not self._has_state or (state := self._state).missing_state:
             return None
@@ -106,7 +107,7 @@ class EsphomeSensor(EsphomeEntity[SensorInfo, SensorState], SensorEntity):
             return None
         if self.device_class is SensorDeviceClass.TIMESTAMP:
             return dt_util.utc_from_timestamp(state_float)
-        return f"{state_float:.{self._static_info.accuracy_decimals}f}"
+        return state_float
 
 
 class EsphomeTextSensor(EsphomeEntity[TextSensorInfo, TextSensorState], SensorEntity):

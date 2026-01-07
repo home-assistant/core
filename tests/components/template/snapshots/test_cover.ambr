@@ -1,0 +1,16 @@
+# serializer version: 1
+# name: test_setup_config_entry
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'current_position': 100,
+      'friendly_name': 'My template',
+      'supported_features': <CoverEntityFeature: 7>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'cover.my_template',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'open',
+  })
+# ---

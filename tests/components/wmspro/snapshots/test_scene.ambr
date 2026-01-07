@@ -31,7 +31,6 @@
         '42581',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'WAREMA Renkhoff SE',
@@ -41,7 +40,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': '42581',
-    'suggested_area': 'Raum 0',
     'sw_version': None,
     'via_device_id': <ANY>,
   })

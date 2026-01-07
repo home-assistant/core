@@ -208,18 +208,17 @@ class UserOnboardingView(_BaseOnboardingStepView):
             area_registry = ar.async_get(hass)
 
             for area in DEFAULT_AREAS:
-                name = translations[f"component.onboarding.area.{area}"]
+                name = translations[f"component.onboarding.area.{area.key}"]
                 # Guard because area might have been created by an automatically
                 # set up integration.
                 if not area_registry.async_get_area_by_name(name):
-                    area_registry.async_create(name)
+                    area_registry.async_create(name, icon=area.icon)
 
             await self._async_mark_done(hass)
 
             # Return authorization code for fetching tokens and connect
             # during onboarding.
-            # pylint: disable-next=import-outside-toplevel
-            from homeassistant.components.auth import create_auth_code
+            from homeassistant.components.auth import create_auth_code  # noqa: PLC0415
 
             auth_code = create_auth_code(hass, data["client_id"], credentials)
             return self.json({"auth_code": auth_code})
@@ -309,8 +308,7 @@ class IntegrationOnboardingView(_BaseOnboardingStepView):
                 )
 
             # Return authorization code so we can redirect user and log them in
-            # pylint: disable-next=import-outside-toplevel
-            from homeassistant.components.auth import create_auth_code
+            from homeassistant.components.auth import create_auth_code  # noqa: PLC0415
 
             auth_code = create_auth_code(
                 hass, data["client_id"], refresh_token.credential
@@ -319,7 +317,7 @@ class IntegrationOnboardingView(_BaseOnboardingStepView):
 
 
 class WaitIntegrationOnboardingView(NoAuthBaseOnboardingView):
-    """Get backup info view."""
+    """View to wait for an integration."""
 
     url = "/api/onboarding/integration/wait"
     name = "api:onboarding:integration:wait"

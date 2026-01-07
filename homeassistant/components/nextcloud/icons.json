@@ -19,6 +19,12 @@
       "nextcloud_database_version": {
         "default": "mdi:database"
       },
+      "nextcloud_server_php_max_execution_time": {
+        "default": "mdi:language-php"
+      },
+      "nextcloud_server_php_memory_limit": {
+        "default": "mdi:language-php"
+      },
       "nextcloud_server_php_opcache_memory_usage_current_wasted_percentage": {
         "default": "mdi:language-php"
       },
@@ -29,12 +35,6 @@
         "default": "mdi:language-php"
       },
       "nextcloud_server_php_opcache_memory_usage_wasted_memory": {
-        "default": "mdi:language-php"
-      },
-      "nextcloud_server_php_max_execution_time": {
-        "default": "mdi:language-php"
-      },
-      "nextcloud_server_php_memory_limit": {
         "default": "mdi:language-php"
       },
       "nextcloud_server_php_upload_max_filesize": {
@@ -49,10 +49,10 @@
       "nextcloud_system_cpuload_1": {
         "default": "mdi:chip"
       },
-      "nextcloud_system_cpuload_5": {
+      "nextcloud_system_cpuload_15": {
         "default": "mdi:chip"
       },
-      "nextcloud_system_cpuload_15": {
+      "nextcloud_system_cpuload_5": {
         "default": "mdi:chip"
       },
       "nextcloud_system_freespace": {
@@ -64,10 +64,10 @@
       "nextcloud_system_mem_total": {
         "default": "mdi:memory"
       },
-      "nextcloud_system_swap_total": {
+      "nextcloud_system_swap_free": {
         "default": "mdi:memory"
       },
-      "nextcloud_system_swap_free": {
+      "nextcloud_system_swap_total": {
         "default": "mdi:memory"
       }
     }

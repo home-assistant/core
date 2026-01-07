@@ -223,7 +223,7 @@ async def async_setup_auth(
         # We first start with a string check to avoid parsing query params
         # for every request.
         elif (
-            request.method == "GET"
+            request.method in ["GET", "HEAD"]
             and SIGN_QUERY_PARAM in request.query_string
             and async_validate_signed_request(request)
         ):

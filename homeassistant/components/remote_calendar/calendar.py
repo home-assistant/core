@@ -79,22 +79,21 @@ class RemoteCalendarEntity(
         """
         await super().async_update()
 
-        def next_timeline_event() -> CalendarEvent | None:
-            """Return the next active event."""
+        def next_event() -> CalendarEvent | None:
             now = dt_util.now()
             events = self.coordinator.data.timeline_tz(now.tzinfo).active_after(now)
             if event := next(events, None):
                 return _get_calendar_event(event)
             return None
 
-        self._event = await self.hass.async_add_executor_job(next_timeline_event)
+        self._event = await self.hass.async_add_executor_job(next_event)
 
 
 def _get_calendar_event(event: Event) -> CalendarEvent:
     """Return a CalendarEvent from an API event."""
 
     return CalendarEvent(
-        summary=event.summary,
+        summary=event.summary or "",
         start=(
             dt_util.as_local(event.start)
             if isinstance(event.start, datetime)

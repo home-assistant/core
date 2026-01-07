@@ -9,14 +9,12 @@ from homeassistant.util.hass_dict import HassKey
 from .const import DOMAIN
 from .coordinator import FeedReaderConfigEntry, FeedReaderCoordinator, StoredData
 
-CONF_URLS = "urls"
-
-MY_KEY: HassKey[StoredData] = HassKey(DOMAIN)
+FEEDREADER_KEY: HassKey[StoredData] = HassKey(DOMAIN)
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: FeedReaderConfigEntry) -> bool:
     """Set up Feedreader from a config entry."""
-    storage = hass.data.setdefault(MY_KEY, StoredData(hass))
+    storage = hass.data.setdefault(FEEDREADER_KEY, StoredData(hass))
     if not storage.is_initialized:
         await storage.async_setup()
 
@@ -32,8 +30,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: FeedReaderConfigEntry) -
 
     await coordinator.async_config_entry_first_refresh()
 
-    entry.async_on_unload(entry.add_update_listener(_async_update_listener))
-
     return True
 
 
@@ -44,12 +40,5 @@ async def async_unload_entry(hass: HomeAssistant, entry: FeedReaderConfigEntry) 
     )
     # if this is the last entry, remove the storage
     if len(entries) == 1:
-        hass.data.pop(MY_KEY)
+        hass.data.pop(FEEDREADER_KEY)
     return await hass.config_entries.async_unload_platforms(entry, [Platform.EVENT])
-
-
-async def _async_update_listener(
-    hass: HomeAssistant, entry: FeedReaderConfigEntry
-) -> None:
-    """Handle reconfiguration."""
-    await hass.config_entries.async_reload(entry.entry_id)

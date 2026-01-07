@@ -19,8 +19,8 @@ from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.storage import STORAGE_DIR
 from homeassistant.helpers.typing import ConfigType
 
-from .const import DOMAIN
-from .services import setup_services
+from .const import CONF_VLP_FILE, DOMAIN
+from .services import async_setup_services
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -91,20 +91,24 @@ def _migrate_device_identifiers(hass: HomeAssistant, entry_id: str) -> None:
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the actions for the Velbus component."""
-    setup_services(hass)
+    async_setup_services(hass)
     return True
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: VelbusConfigEntry) -> bool:
     """Establish connection with velbus."""
     controller = Velbus(
-        entry.data[CONF_PORT],
+        dsn=entry.data[CONF_PORT],
         cache_dir=hass.config.path(STORAGE_DIR, f"velbuscache-{entry.entry_id}"),
+        vlp_file=entry.data.get(CONF_VLP_FILE),
     )
     try:
         await controller.connect()
     except VelbusConnectionFailed as error:
-        raise ConfigEntryNotReady("Cannot connect to Velbus") from error
+        raise ConfigEntryNotReady(
+            translation_domain=DOMAIN,
+            translation_key="connection_failed",
+        ) from error
 
     task = hass.async_create_task(velbus_scan_task(controller, hass, entry.entry_id))
     entry.runtime_data = VelbusData(controller=controller, scan_task=task)

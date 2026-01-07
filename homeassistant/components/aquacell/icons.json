@@ -13,9 +13,9 @@
       "wi_fi_strength": {
         "default": "mdi:wifi",
         "state": {
+          "high": "mdi:wifi-strength-4",
           "low": "mdi:wifi-strength-1",
-          "medium": "mdi:wifi-strength-2",
-          "high": "mdi:wifi-strength-4"
+          "medium": "mdi:wifi-strength-2"
         }
       }
     }

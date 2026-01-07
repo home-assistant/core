@@ -221,8 +221,6 @@ async def test_moving_todo_item(
             display=None,
             checked=False,
             position=1,
-            is_food=False,
-            disable_amount=None,
             quantity=2.0,
             label_id=None,
             food_id=None,

@@ -191,7 +191,7 @@ class AppleTvMediaPlayer(
             self._is_feature_available(FeatureName.PowerState)
             and self.atv.power.power_state == PowerState.Off
         ):
-            return MediaPlayerState.STANDBY
+            return MediaPlayerState.OFF
         if self._playing:
             state = self._playing.device_state
             if state in (DeviceState.Idle, DeviceState.Loading):
@@ -200,7 +200,7 @@ class AppleTvMediaPlayer(
                 return MediaPlayerState.PLAYING
             if state in (DeviceState.Paused, DeviceState.Seeking, DeviceState.Stopped):
                 return MediaPlayerState.PAUSED
-            return MediaPlayerState.STANDBY  # Bad or unknown state?
+            return MediaPlayerState.IDLE  # Bad or unknown state?
         return None
 
     @callback

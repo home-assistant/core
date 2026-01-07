@@ -25,7 +25,6 @@ class RomyVacuumCoordinator(DataUpdateCoordinator[None]):
             name=DOMAIN,
             update_interval=UPDATE_INTERVAL,
         )
-        self.hass = hass
         self.romy = romy
 
     async def _async_update_data(self) -> None:

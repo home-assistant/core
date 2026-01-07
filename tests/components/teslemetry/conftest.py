@@ -1,4 +1,4 @@
-"""Fixtures for Teslemetry."""
+"""Test fixtures for Teslemetry component."""
 
 from __future__ import annotations
 
@@ -14,11 +14,21 @@ from .const import (
     ENERGY_HISTORY,
     LIVE_STATUS,
     METADATA,
+    METADATA_LEGACY,
     PRODUCTS,
     SITE_INFO,
     VEHICLE_DATA,
     WAKE_UP_ONLINE,
 )
+
+
+@pytest.fixture
+def mock_setup_entry():
+    """Mock Teslemetry async_setup_entry method."""
+    with patch(
+        "homeassistant.components.teslemetry.async_setup_entry", return_value=True
+    ) as mock_async_setup_entry:
+        yield mock_async_setup_entry
 
 
 @pytest.fixture(autouse=True)
@@ -53,9 +63,9 @@ def mock_vehicle_data() -> Generator[AsyncMock]:
 def mock_legacy():
     """Mock Tesla Fleet Api products method."""
     with patch(
-        "tesla_fleet_api.teslemetry.Vehicle.pre2021", return_value=True
-    ) as mock_pre2021:
-        yield mock_pre2021
+        "tesla_fleet_api.teslemetry.Teslemetry.metadata", return_value=METADATA_LEGACY
+    ) as mock_products:
+        yield mock_products
 
 
 @pytest.fixture(autouse=True)
@@ -119,8 +129,17 @@ def mock_energy_history():
 
 
 @pytest.fixture(autouse=True)
-def mock_add_listener():
+def mock_stream_listen():
     """Mock Teslemetry Stream listen method."""
+    with patch(
+        "teslemetry_stream.TeslemetryStream.listen",
+    ) as mock_stream_listen:
+        yield mock_stream_listen
+
+
+@pytest.fixture(autouse=True)
+def mock_add_listener():
+    """Mock Teslemetry Stream add listener method."""
     with patch(
         "teslemetry_stream.TeslemetryStream.async_add_listener",
     ) as mock_add_listener:

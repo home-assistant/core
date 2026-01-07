@@ -44,7 +44,6 @@
       "unit": "F"
     }
   ],
-
   "timer": {
     "relativeStartTimer": "UNSET",
     "relativeStopTimer": "UNSET",

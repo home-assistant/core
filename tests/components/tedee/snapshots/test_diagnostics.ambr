@@ -3,6 +3,7 @@
   dict({
     '0': dict({
       'battery_level': 70,
+      'door_state': 0,
       'duration_pullspring': 2,
       'is_charging': False,
       'is_connected': True,
@@ -16,6 +17,7 @@
     }),
     '1': dict({
       'battery_level': 70,
+      'door_state': 2,
       'duration_pullspring': 0,
       'is_charging': False,
       'is_connected': True,

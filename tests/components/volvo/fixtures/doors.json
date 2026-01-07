@@ -1,0 +1,34 @@
+{
+  "centralLock": {
+    "value": "LOCKED",
+    "timestamp": "2024-12-30T14:20:20.570Z"
+  },
+  "frontLeftDoor": {
+    "value": "CLOSED",
+    "timestamp": "2024-12-30T14:20:20.570Z"
+  },
+  "frontRightDoor": {
+    "value": "CLOSED",
+    "timestamp": "2024-12-30T14:20:20.570Z"
+  },
+  "rearLeftDoor": {
+    "value": "CLOSED",
+    "timestamp": "2024-12-30T14:20:20.570Z"
+  },
+  "rearRightDoor": {
+    "value": "CLOSED",
+    "timestamp": "2024-12-30T14:20:20.570Z"
+  },
+  "hood": {
+    "value": "CLOSED",
+    "timestamp": "2024-12-30T14:20:20.570Z"
+  },
+  "tailgate": {
+    "value": "CLOSED",
+    "timestamp": "2024-12-30T14:20:20.570Z"
+  },
+  "tankLid": {
+    "value": "CLOSED",
+    "timestamp": "2024-12-30T14:20:20.570Z"
+  }
+}

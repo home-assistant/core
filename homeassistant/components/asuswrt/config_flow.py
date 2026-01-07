@@ -7,7 +7,7 @@ import os
 import socket
 from typing import Any, cast
 
-from pyasuswrt import AsusWrtError
+from asusrouter import AsusRouterError
 import voluptuous as vol
 
 from homeassistant.components.device_tracker import (
@@ -175,12 +175,12 @@ class AsusWrtFlowHandler(ConfigFlow, domain=DOMAIN):
         )
 
     async def _async_check_connection(
-        self, user_input: dict[str, Any]
+        self, user_input: dict[str, str | int]
     ) -> tuple[str, str | None]:
         """Attempt to connect the AsusWrt router."""
 
         api: AsusWrtBridge
-        host: str = user_input[CONF_HOST]
+        host = user_input[CONF_HOST]
         protocol = user_input[CONF_PROTOCOL]
         error: str | None = None
 
@@ -189,7 +189,7 @@ class AsusWrtFlowHandler(ConfigFlow, domain=DOMAIN):
         try:
             await api.async_connect()
 
-        except (AsusWrtError, OSError):
+        except (AsusRouterError, OSError):
             _LOGGER.error(
                 "Error connecting to the AsusWrt router at %s using protocol %s",
                 host,

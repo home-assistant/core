@@ -18,6 +18,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     # If path is relative, we assume relative to Home Assistant config dir
     if not os.path.isabs(download_path):
         download_path = hass.config.path(download_path)
+        hass.config_entries.async_update_entry(
+            entry, data={**entry.data, CONF_DOWNLOAD_DIR: download_path}
+        )
 
     if not await hass.async_add_executor_job(os.path.isdir, download_path):
         _LOGGER.error(

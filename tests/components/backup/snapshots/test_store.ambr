@@ -88,7 +88,6 @@
           'days': list([
           ]),
           'recurrence': 'never',
-          'state': 'never',
           'time': None,
         }),
       }),
@@ -187,7 +186,6 @@
           'days': list([
           ]),
           'recurrence': 'never',
-          'state': 'never',
           'time': None,
         }),
       }),
@@ -306,7 +304,6 @@
           'days': list([
           ]),
           'recurrence': 'never',
-          'state': 'never',
           'time': None,
         }),
       }),
@@ -413,7 +410,6 @@
           'days': list([
           ]),
           'recurrence': 'never',
-          'state': 'never',
           'time': None,
         }),
       }),
@@ -520,7 +516,6 @@
           'days': list([
           ]),
           'recurrence': 'never',
-          'state': 'never',
           'time': None,
         }),
       }),
@@ -633,7 +628,6 @@
           'days': list([
           ]),
           'recurrence': 'never',
-          'state': 'never',
           'time': None,
         }),
       }),
@@ -758,7 +752,6 @@
           'days': list([
           ]),
           'recurrence': 'never',
-          'state': 'never',
           'time': None,
         }),
       }),

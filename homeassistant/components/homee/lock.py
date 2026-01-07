@@ -3,6 +3,7 @@
 from typing import Any
 
 from pyHomee.const import AttributeChangedBy, AttributeType
+from pyHomee.model import HomeeNode
 
 from homeassistant.components.lock import LockEntity
 from homeassistant.core import HomeAssistant
@@ -10,24 +11,33 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import HomeeConfigEntry
 from .entity import HomeeEntity
-from .helpers import get_name_for_enum
+from .helpers import get_name_for_enum, setup_homee_platform
 
 PARALLEL_UPDATES = 0
+
+
+async def add_lock_entities(
+    config_entry: HomeeConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
+    nodes: list[HomeeNode],
+) -> None:
+    """Add homee lock entities."""
+    async_add_entities(
+        HomeeLock(attribute, config_entry)
+        for node in nodes
+        for attribute in node.attributes
+        if (attribute.type == AttributeType.LOCK_STATE and attribute.editable)
+    )
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: HomeeConfigEntry,
-    async_add_devices: AddConfigEntryEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Add the Homee platform for the lock component."""
+    """Add the homee platform for the lock component."""
 
-    async_add_devices(
-        HomeeLock(attribute, config_entry)
-        for node in config_entry.runtime_data.nodes
-        for attribute in node.attributes
-        if (attribute.type == AttributeType.LOCK_STATE and attribute.editable)
-    )
+    await setup_homee_platform(add_lock_entities, async_add_entities, config_entry)
 
 
 class HomeeLock(HomeeEntity, LockEntity):
@@ -58,9 +68,13 @@ class HomeeLock(HomeeEntity, LockEntity):
             AttributeChangedBy, self._attribute.changed_by
         )
         if self._attribute.changed_by == AttributeChangedBy.USER:
-            changed_id = self._entry.runtime_data.get_user_by_id(
+            user = self._entry.runtime_data.get_user_by_id(
                 self._attribute.changed_by_id
-            ).username
+            )
+            if user is not None:
+                changed_id = user.username
+            else:
+                changed_id = "Unknown"
 
         return f"{changed_by_name}-{changed_id}"
 

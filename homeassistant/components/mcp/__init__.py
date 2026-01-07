@@ -16,8 +16,6 @@ from .types import ModelContextProtocolConfigEntry
 
 __all__ = [
     "DOMAIN",
-    "async_setup_entry",
-    "async_unload_entry",
 ]
 
 API_PROMPT = "The following tools are available from a remote server named {name}."

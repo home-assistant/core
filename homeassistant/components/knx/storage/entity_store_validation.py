@@ -1,4 +1,4 @@
-"""KNX Entity Store Validation."""
+"""KNX entity store validation."""
 
 from typing import Literal, TypedDict
 

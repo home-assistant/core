@@ -1,0 +1,184 @@
+{
+  "endpoint": "https://apigw.tuyaeu.com",
+  "mqtt_connected": true,
+  "disabled_by": null,
+  "disabled_polling": false,
+  "name": "Human presence Office",
+  "category": "hps",
+  "product_id": "2aaelwxk",
+  "product_name": "Human presence sensor",
+  "online": true,
+  "sub": true,
+  "time_zone": "+01:00",
+  "active_time": "2023-12-31T14:40:17+00:00",
+  "create_time": "2023-12-31T14:40:17+00:00",
+  "update_time": "2023-12-31T14:40:17+00:00",
+  "function": {
+    "sensitivity": {
+      "type": "Integer",
+      "value": {
+        "unit": "x",
+        "min": 0,
+        "max": 10,
+        "scale": 0,
+        "step": 1
+      }
+    },
+    "near_detection": {
+      "type": "Integer",
+      "value": {
+        "unit": "cm",
+        "min": 0,
+        "max": 1000,
+        "scale": 0,
+        "step": 1
+      }
+    },
+    "far_detection": {
+      "type": "Integer",
+      "value": {
+        "unit": "cm",
+        "min": 0,
+        "max": 1000,
+        "scale": 0,
+        "step": 1
+      }
+    },
+    "presence_time": {
+      "type": "Integer",
+      "value": {
+        "unit": "s",
+        "min": 0,
+        "max": 28800,
+        "scale": 0,
+        "step": 1
+      }
+    },
+    "motionless_far_detection": {
+      "type": "Integer",
+      "value": {
+        "unit": "cm",
+        "min": 0,
+        "max": 600,
+        "scale": 0,
+        "step": 1
+      }
+    },
+    "motionless_sensitivity": {
+      "type": "Integer",
+      "value": {
+        "unit": "x",
+        "min": 0,
+        "max": 10,
+        "scale": 0,
+        "step": 1
+      }
+    },
+    "indicator": {
+      "type": "Boolean",
+      "value": {}
+    }
+  },
+  "status_range": {
+    "presence_state": {
+      "type": "Enum",
+      "value": {
+        "range": ["none", "presence"]
+      }
+    },
+    "sensitivity": {
+      "type": "Integer",
+      "value": {
+        "unit": "x",
+        "min": 0,
+        "max": 10,
+        "scale": 0,
+        "step": 1
+      }
+    },
+    "near_detection": {
+      "type": "Integer",
+      "value": {
+        "unit": "cm",
+        "min": 0,
+        "max": 1000,
+        "scale": 0,
+        "step": 1
+      }
+    },
+    "far_detection": {
+      "type": "Integer",
+      "value": {
+        "unit": "cm",
+        "min": 0,
+        "max": 1000,
+        "scale": 0,
+        "step": 1
+      }
+    },
+    "human_motion_state": {
+      "type": "Enum",
+      "value": {
+        "range": ["none", "large_move", "small_move"]
+      }
+    },
+    "presence_time": {
+      "type": "Integer",
+      "value": {
+        "unit": "s",
+        "min": 0,
+        "max": 28800,
+        "scale": 0,
+        "step": 1
+      }
+    },
+    "motionless_far_detection": {
+      "type": "Integer",
+      "value": {
+        "unit": "cm",
+        "min": 0,
+        "max": 600,
+        "scale": 0,
+        "step": 1
+      }
+    },
+    "motionless_sensitivity": {
+      "type": "Integer",
+      "value": {
+        "unit": "x",
+        "min": 0,
+        "max": 10,
+        "scale": 0,
+        "step": 1
+      }
+    },
+    "illuminance_value": {
+      "type": "Integer",
+      "value": {
+        "unit": "lux",
+        "min": 0,
+        "max": 6000,
+        "scale": 0,
+        "step": 1
+      }
+    },
+    "indicator": {
+      "type": "Boolean",
+      "value": {}
+    }
+  },
+  "status": {
+    "presence_state": "none",
+    "sensitivity": 3,
+    "near_detection": 40,
+    "far_detection": 220,
+    "human_motion_state": "none",
+    "presence_time": 30,
+    "motionless_far_detection": 30,
+    "motionless_sensitivity": 7,
+    "illuminance_value": 0,
+    "indicator": true
+  },
+  "set_up": true,
+  "support_local": true
+}
