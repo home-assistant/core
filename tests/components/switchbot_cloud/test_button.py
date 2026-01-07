@@ -34,7 +34,7 @@ async def test_pressmode_bot(
     entry = await configure_integration(hass)
     assert entry.state is ConfigEntryState.LOADED
 
-    entity_id = "button.bot_1"
+    entity_id = "button.bot_1_button"
     assert hass.states.get(entity_id).state == STATE_UNKNOWN
 
     with patch.object(SwitchBotAPI, "send_command") as mock_send_command:
@@ -42,7 +42,7 @@ async def test_pressmode_bot(
             BUTTON_DOMAIN, SERVICE_PRESS, {ATTR_ENTITY_ID: entity_id}, blocking=True
         )
         mock_send_command.assert_called_once_with(
-            "bot-id-1", BotCommands.PRESS, "command", "default"
+            "bot-id-1", BotCommands.PRESS.value, "command", "default"
         )
 
     assert hass.states.get(entity_id).state != STATE_UNKNOWN
@@ -69,30 +69,35 @@ async def test_switchmode_bot_no_button_entity(
     assert not hass.states.async_entity_ids(BUTTON_DOMAIN)
 
 
-@pytest.mark.parametrize("command", [ArtFrameCommands.NEXT, ArtFrameCommands.PREVIOUS])
-async def test_load_ai_art_frame(
-    hass: HomeAssistant, mock_list_devices, mock_get_status, command
+@pytest.mark.parametrize(
+    "buttons",
+    [
+        ("AI Art Frame", ArtFrameCommands.PREVIOUS),
+        ("AI Art Frame", ArtFrameCommands.NEXT),
+    ],
+)
+async def test_loaded_buttons(
+    hass: HomeAssistant, mock_list_devices, mock_get_status, buttons
 ) -> None:
     """Test press."""
     mock_list_devices.return_value = [
         Device(
             version="V1.0",
-            deviceId="ai-art-frame-id-1",
-            deviceName="ai-art-frame-1",
-            deviceType="AI Art Frame",
+            deviceId="device_id",
+            deviceName="device_name",
+            deviceType=buttons[0],
             hubDeviceId="test-hub-id",
         ),
     ]
 
     mock_get_status.return_value = {
-        "deviceType": "AI Art Frame",
-        "displayMode": 1,
+        "deviceType": buttons[0],
     }
 
     entry = await configure_integration(hass)
     assert entry.state is ConfigEntryState.LOADED
 
-    entity_id = f"button.ai_art_frame_1_{command.value}"
+    entity_id = f"button.device_name_{buttons[1].value}"
     assert hass.states.get(entity_id).state == STATE_UNKNOWN
 
     with patch.object(SwitchBotAPI, "send_command") as mock_send_command:
