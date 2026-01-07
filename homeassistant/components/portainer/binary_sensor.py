@@ -164,7 +164,11 @@ class PortainerContainerSensor(PortainerContainerEntity, BinarySensorEntity):
     @property
     def available(self) -> bool:
         """Return if the device is available."""
-        return super().available and self.endpoint_id in self.coordinator.data
+        return (
+            super().available
+            and self.endpoint_id in self.coordinator.data
+            and self.device_name in self.coordinator.data[self.endpoint_id].containers
+        )
 
     @property
     def is_on(self) -> bool | None:

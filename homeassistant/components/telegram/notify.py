@@ -80,10 +80,6 @@ class TelegramNotificationService(BaseNotificationService):
     def send_message(self, message="", **kwargs):
         """Send a message to a user."""
         service_data = {ATTR_TARGET: kwargs.get(ATTR_TARGET, self._chat_id)}
-        if ATTR_TITLE in kwargs:
-            service_data.update({ATTR_TITLE: kwargs.get(ATTR_TITLE)})
-        if message:
-            service_data.update({ATTR_MESSAGE: message})
         data = kwargs.get(ATTR_DATA)
 
         # Set message tag
@@ -161,6 +157,12 @@ class TelegramNotificationService(BaseNotificationService):
             )
 
         # Send message
+
+        if ATTR_TITLE in kwargs:
+            service_data.update({ATTR_TITLE: kwargs.get(ATTR_TITLE)})
+        if message:
+            service_data.update({ATTR_MESSAGE: message})
+
         _LOGGER.debug(
             "TELEGRAM NOTIFIER calling %s.send_message with %s",
             TELEGRAM_BOT_DOMAIN,

@@ -171,6 +171,7 @@ async def make_device_data(
         "K20+ Pro",
         "Robot Vacuum Cleaner K10+ Pro Combo",
         "Robot Vacuum Cleaner S10",
+        "Robot Vacuum Cleaner S20",
         "S20",
         "Robot Vacuum Cleaner K11 Plus",
     ]:
@@ -279,6 +280,9 @@ async def make_device_data(
         "RGBICWW Strip Light",
         "Ceiling Light",
         "Ceiling Light Pro",
+        "RGBIC Neon Rope Light",
+        "RGBIC Neon Wire Rope Light",
+        "Candle Warmer Lamp",
     ]:
         coordinator = await coordinator_for_device(
             hass, entry, api, device, coordinators_by_id
