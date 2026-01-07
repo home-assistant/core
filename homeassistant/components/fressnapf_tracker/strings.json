@@ -1,0 +1,93 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
+    },
+    "error": {
+      "account_change_not_allowed": "Reconfiguring to a different account is not allowed. Please create a new entry instead.",
+      "invalid_phone_number": "Please enter a valid phone number.",
+      "invalid_sms_code": "The SMS code you entered is invalid.",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "step": {
+      "reauth_confirm": {
+        "data": {
+          "phone_number": "[%key:component::fressnapf_tracker::config::step::user::data::phone_number%]"
+        },
+        "data_description": {
+          "phone_number": "[%key:component::fressnapf_tracker::config::step::user::data_description::phone_number%]"
+        },
+        "description": "Re-authenticate with your Fressnapf Tracker account to refresh your credentials."
+      },
+      "reauth_sms_code": {
+        "data": {
+          "sms_code": "[%key:component::fressnapf_tracker::config::step::sms_code::data::sms_code%]"
+        },
+        "data_description": {
+          "sms_code": "[%key:component::fressnapf_tracker::config::step::sms_code::data_description::sms_code%]"
+        }
+      },
+      "reconfigure": {
+        "data": {
+          "phone_number": "[%key:component::fressnapf_tracker::config::step::user::data::phone_number%]"
+        },
+        "data_description": {
+          "phone_number": "[%key:component::fressnapf_tracker::config::step::user::data_description::phone_number%]"
+        },
+        "description": "Update your Fressnapf Tracker account configuration."
+      },
+      "reconfigure_sms_code": {
+        "data": {
+          "sms_code": "[%key:component::fressnapf_tracker::config::step::sms_code::data::sms_code%]"
+        },
+        "data_description": {
+          "sms_code": "[%key:component::fressnapf_tracker::config::step::sms_code::data_description::sms_code%]"
+        }
+      },
+      "sms_code": {
+        "data": {
+          "sms_code": "SMS code"
+        },
+        "data_description": {
+          "sms_code": "Enter the SMS code you received on your phone."
+        }
+      },
+      "user": {
+        "data": {
+          "phone_number": "Phone number"
+        },
+        "data_description": {
+          "phone_number": "Enter your phone number in international format (e.g., +4917612345678)."
+        }
+      }
+    }
+  },
+  "entity": {
+    "light": {
+      "led": {
+        "name": "Flashlight"
+      }
+    },
+    "switch": {
+      "energy_saving": {
+        "name": "Sleep mode"
+      }
+    }
+  },
+  "exceptions": {
+    "charging": {
+      "message": "The flashlight cannot be activated while charging."
+    },
+    "invalid_auth": {
+      "message": "Your authentication with the Fressnapf Tracker API expired. Please re-authenticate to refresh your credentials."
+    },
+    "low_battery": {
+      "message": "The flashlight cannot be activated due to low battery."
+    },
+    "not_seen_recently": {
+      "message": "The flashlight cannot be activated when the tracker has not moved recently."
+    }
+  }
+}

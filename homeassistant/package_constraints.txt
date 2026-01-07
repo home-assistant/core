@@ -6,7 +6,7 @@ aiodns==3.6.1
 aiohasupervisor==0.3.3
 aiohttp-asyncmdnsresolver==0.1.1
 aiohttp-fast-zlib==0.3.0
-aiohttp==3.13.2
+aiohttp==3.13.3
 aiohttp_cors==0.8.1
 aiousbwatcher==1.1.1
 aiozoneinfo==0.2.3
@@ -21,7 +21,7 @@ av==16.0.1
 awesomeversion==25.8.0
 bcrypt==5.0.0
 bleak-retry-connector==4.4.3
-bleak==1.0.1
+bleak==2.0.0
 bluetooth-adapters==2.1.0
 bluetooth-auto-recovery==1.5.3
 bluetooth-data-tools==1.28.4
@@ -33,14 +33,14 @@ cryptography==46.0.2
 dbus-fast==3.1.2
 file-read-backwards==2.0.0
 fnv-hash-fast==1.6.0
-go2rtc-client==0.3.0
+go2rtc-client==0.4.0
 ha-ffmpeg==3.2.2
-habluetooth==5.7.0
+habluetooth==5.8.0
 hass-nabucasa==1.7.0
 hassil==3.5.0
 home-assistant-bluetooth==1.13.1
-home-assistant-frontend==20251203.3
-home-assistant-intents==2025.12.2
+home-assistant-frontend==20260107.0
+home-assistant-intents==2026.1.6
 httpx==0.28.1
 ifaddr==0.2.0
 Jinja2==3.1.6
@@ -53,10 +53,10 @@ Pillow==12.0.0
 propcache==0.4.1
 psutil-home-assistant==0.0.1
 PyJWT==2.10.1
-pymicro-vad==1.0.1
 PyNaCl==1.6.0
 pyOpenSSL==25.3.0
 pyserial==3.5
+pysilero-vad==3.0.1
 pyspeex-noise==1.0.2
 python-slugify==8.0.4
 PyTurboJPEG==1.8.0
@@ -69,10 +69,10 @@ standard-telnetlib==3.13.0
 typing-extensions>=4.15.0,<5.0
 ulid-transform==1.5.2
 urllib3>=2.0
-uv==0.9.6
-voluptuous-openapi==0.1.0
+uv==0.9.17
+voluptuous-openapi==0.3.0
 voluptuous-serialize==2.7.0
-voluptuous==0.15.2
+voluptuous==0.16.0
 webrtc-models==0.3.0
 yarl==1.22.0
 zeroconf==0.148.0
@@ -128,6 +128,9 @@ multidict>=6.0.2
 
 # Version 2.0 added typing, prevent accidental fallbacks
 backoff>=2.0
+
+# Brotli 1.2.0 fixes CVE and is required for aiohttp 3.13.3 compatibility
+Brotli>=1.2.0
 
 # ensure pydantic version does not float since it might have breaking changes
 pydantic==2.12.2
@@ -224,5 +227,5 @@ gql<4.0.0
 # Pin pytest-rerunfailures to prevent accidental breaks
 pytest-rerunfailures==16.0.1
 
-# pycares 5.x is not yet compatible with aiodns
-pycares==4.11.0
+# Fixes detected blocking call to load_default_certs https://github.com/home-assistant/core/issues/157475
+aiomqtt>=2.5.0

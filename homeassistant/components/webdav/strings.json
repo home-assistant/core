@@ -33,9 +33,6 @@
     "cannot_connect": {
       "message": "Cannot connect to WebDAV server"
     },
-    "failed_to_migrate_folder": {
-      "message": "Failed to migrate wrong encoded folder \"{wrong_path}\" to \"{correct_path}\"."
-    },
     "invalid_username_password": {
       "message": "Invalid username or password"
     }

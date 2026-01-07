@@ -22,5 +22,19 @@
     "unlock": {
       "service": "mdi:lock-open-variant"
     }
+  },
+  "triggers": {
+    "jammed": {
+      "trigger": "mdi:lock-alert"
+    },
+    "locked": {
+      "trigger": "mdi:lock"
+    },
+    "opened": {
+      "trigger": "mdi:lock-open-variant"
+    },
+    "unlocked": {
+      "trigger": "mdi:lock-open-variant"
+    }
   }
 }

@@ -1,0 +1,24 @@
+{
+  "version": 2,
+  "minor_version": 2,
+  "key": "knx/config_store.json",
+  "data": {
+    "entities": {
+      "scene": {
+        "knx_es_01KCXJ181N1TEDNC81WXEMXRNS": {
+          "entity": {
+            "name": "test",
+            "device_info": null,
+            "entity_category": null
+          },
+          "knx": {
+            "ga_scene": {
+              "write": "1/1/1"
+            },
+            "scene_number": 12
+          }
+        }
+      }
+    }
+  }
+}

@@ -8,12 +8,14 @@ import datetime
 import logging
 
 from roborock.data import (
+    B01Props,
     DyadError,
     RoborockDockErrorCode,
     RoborockDockTypeCode,
     RoborockDyadStateCode,
     RoborockErrorCode,
     RoborockStateCode,
+    WorkStatusMapping,
     ZeoError,
     ZeoState,
 )
@@ -34,9 +36,11 @@ from .coordinator import (
     RoborockConfigEntry,
     RoborockDataUpdateCoordinator,
     RoborockDataUpdateCoordinatorA01,
+    RoborockDataUpdateCoordinatorB01,
 )
 from .entity import (
     RoborockCoordinatedEntityA01,
+    RoborockCoordinatedEntityB01,
     RoborockCoordinatedEntityV1,
     RoborockEntity,
 )
@@ -62,6 +66,13 @@ class RoborockSensorDescriptionA01(SensorEntityDescription):
     """A class that describes Roborock sensors."""
 
     data_protocol: RoborockDyadDataProtocol | RoborockZeoProtocol
+
+
+@dataclass(frozen=True, kw_only=True)
+class RoborockSensorDescriptionB01(SensorEntityDescription):
+    """A class that describes Roborock B01 sensors."""
+
+    value_fn: Callable[[B01Props], StateType]
 
 
 def _dock_error_value_fn(state: DeviceState) -> str | None:
@@ -326,6 +337,62 @@ A01_SENSOR_DESCRIPTIONS: list[RoborockSensorDescriptionA01] = [
     ),
 ]
 
+Q7_B01_SENSOR_DESCRIPTIONS = [
+    RoborockSensorDescriptionB01(
+        key="q7_status",
+        value_fn=lambda data: data.status_name,
+        translation_key="q7_status",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        device_class=SensorDeviceClass.ENUM,
+        options=WorkStatusMapping.keys(),
+    ),
+    RoborockSensorDescriptionB01(
+        key="main_brush_time_left",
+        value_fn=lambda data: data.main_brush_time_left,
+        device_class=SensorDeviceClass.DURATION,
+        native_unit_of_measurement=UnitOfTime.MINUTES,
+        suggested_unit_of_measurement=UnitOfTime.HOURS,
+        translation_key="main_brush_time_left",
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    RoborockSensorDescriptionB01(
+        key="side_brush_time_left",
+        value_fn=lambda data: data.side_brush_time_left,
+        device_class=SensorDeviceClass.DURATION,
+        native_unit_of_measurement=UnitOfTime.MINUTES,
+        suggested_unit_of_measurement=UnitOfTime.HOURS,
+        translation_key="side_brush_time_left",
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    RoborockSensorDescriptionB01(
+        key="filter_time_left",
+        value_fn=lambda data: data.filter_time_left,
+        device_class=SensorDeviceClass.DURATION,
+        native_unit_of_measurement=UnitOfTime.MINUTES,
+        suggested_unit_of_measurement=UnitOfTime.HOURS,
+        translation_key="filter_time_left",
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    RoborockSensorDescriptionB01(
+        key="sensor_time_left",
+        value_fn=lambda data: data.sensor_dirty_time_left,
+        device_class=SensorDeviceClass.DURATION,
+        native_unit_of_measurement=UnitOfTime.MINUTES,
+        suggested_unit_of_measurement=UnitOfTime.HOURS,
+        translation_key="sensor_time_left",
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    RoborockSensorDescriptionB01(
+        key="mop_life_time_left",
+        value_fn=lambda data: data.mop_life_time_left,
+        device_class=SensorDeviceClass.DURATION,
+        native_unit_of_measurement=UnitOfTime.MINUTES,
+        suggested_unit_of_measurement=UnitOfTime.HOURS,
+        translation_key="mop_life_time_left",
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+]
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -353,6 +420,12 @@ async def async_setup_entry(
         for coordinator in coordinators.a01
         for description in A01_SENSOR_DESCRIPTIONS
         if description.data_protocol in coordinator.request_protocols
+    )
+    entities.extend(
+        RoborockSensorEntityB01(coordinator, description)
+        for coordinator in coordinators.b01
+        for description in Q7_B01_SENSOR_DESCRIPTIONS
+        if description.value_fn(coordinator.data) is not None
     )
     async_add_entities(entities)
 
@@ -440,3 +513,23 @@ class RoborockSensorEntityA01(RoborockCoordinatedEntityA01, SensorEntity):
     def native_value(self) -> StateType:
         """Return the value reported by the sensor."""
         return self.coordinator.data[self.entity_description.data_protocol]
+
+
+class RoborockSensorEntityB01(RoborockCoordinatedEntityB01, SensorEntity):
+    """Representation of a B01 Roborock sensor."""
+
+    entity_description: RoborockSensorDescriptionB01
+
+    def __init__(
+        self,
+        coordinator: RoborockDataUpdateCoordinatorB01,
+        description: RoborockSensorDescriptionB01,
+    ) -> None:
+        """Initialize the entity."""
+        self.entity_description = description
+        super().__init__(f"{description.key}_{coordinator.duid_slug}", coordinator)
+
+    @property
+    def native_value(self) -> StateType:
+        """Return the value reported by the sensor."""
+        return self.entity_description.value_fn(self.coordinator.data)

@@ -379,7 +379,7 @@ async def test_reauth_flow(
         result["flow_id"],
         {CONF_PASSWORD: "incorrect_password"},
     )
-    assert result.get("type") == FlowResultType.FORM
+    assert result.get("type") is FlowResultType.FORM
     assert result.get("step_id") == "reauth_confirm"
     assert result.get("errors") == {"base": "invalid_auth"}
 
@@ -388,7 +388,7 @@ async def test_reauth_flow(
         result["flow_id"],
         {CONF_PASSWORD: PASSWORD},
     )
-    assert result.get("type") == FlowResultType.ABORT
+    assert result.get("type") is FlowResultType.ABORT
     assert result.get("reason") == "reauth_successful"
 
     entries = hass.config_entries.async_entries(DOMAIN)

@@ -60,6 +60,7 @@ def mock_pooldose_client(device_info: dict[str, Any]) -> Generator[MagicMock]:
         )
 
         client.set_switch = AsyncMock(return_value=RequestStatus.SUCCESS)
+        client.set_select = AsyncMock(return_value=RequestStatus.SUCCESS)
         client.is_connected = True
         yield client
 

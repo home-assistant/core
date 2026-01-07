@@ -7,32 +7,24 @@
       "name": "Winter mode"
     }
   },
-  "selector": {
-    "mode": {
-      "options": {
-        "dark": "Dark",
-        "light": "Light"
-      }
-    }
-  },
   "services": {
     "reload_themes": {
       "description": "Reloads themes from the YAML-configuration.",
       "name": "Reload themes"
     },
     "set_theme": {
-      "description": "Sets the default theme Home Assistant uses. Can be overridden by a user.",
+      "description": "Sets the theme Home Assistant uses. Can be overridden by a user.",
       "fields": {
-        "mode": {
-          "description": "Theme mode.",
-          "name": "Mode"
-        },
         "name": {
-          "description": "Name of a theme.",
+          "description": "Name of the theme that is used by default.",
           "name": "Theme"
+        },
+        "name_dark": {
+          "description": "Alternative dark-mode theme that is used by default.",
+          "name": "Dark theme override"
         }
       },
-      "name": "Set the default theme"
+      "name": "Set theme"
     }
   }
 }

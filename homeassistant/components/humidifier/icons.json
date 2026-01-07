@@ -48,5 +48,25 @@
     "turn_on": {
       "service": "mdi:air-humidifier"
     }
+  },
+  "triggers": {
+    "current_humidity_changed": {
+      "trigger": "mdi:water-percent"
+    },
+    "current_humidity_crossed_threshold": {
+      "trigger": "mdi:water-percent"
+    },
+    "started_drying": {
+      "trigger": "mdi:arrow-down-bold"
+    },
+    "started_humidifying": {
+      "trigger": "mdi:arrow-up-bold"
+    },
+    "turned_off": {
+      "trigger": "mdi:air-humidifier-off"
+    },
+    "turned_on": {
+      "trigger": "mdi:air-humidifier"
+    }
   }
 }

@@ -120,6 +120,15 @@
         "oldest_first": "Oldest first",
         "worst_ratio_first": "Worst ratio first"
       }
+    },
+    "torrent_filter": {
+      "options": {
+        "active": "Active",
+        "all": "All",
+        "completed": "Completed",
+        "paused": "Paused",
+        "started": "Started"
+      }
     }
   },
   "services": {
@@ -134,12 +143,30 @@
           "description": "ID of the config entry to use.",
           "name": "Transmission entry"
         },
+        "labels": {
+          "description": "Optional comma-separated list of labels to assign to the torrent.",
+          "name": "Labels"
+        },
         "torrent": {
           "description": "URL, magnet link or Base64 encoded file.",
           "name": "Torrent"
         }
       },
       "name": "Add torrent"
+    },
+    "get_torrents": {
+      "description": "Get a list of current torrents",
+      "fields": {
+        "entry_id": {
+          "description": "[%key:component::transmission::services::add_torrent::fields::entry_id::description%]",
+          "name": "[%key:component::transmission::services::add_torrent::fields::entry_id::name%]"
+        },
+        "torrent_filter": {
+          "description": "What kind of torrents you want to return, such as All or Active.",
+          "name": "Torrent filter"
+        }
+      },
+      "name": "Get torrents"
     },
     "remove_torrent": {
       "description": "Removes a torrent.",

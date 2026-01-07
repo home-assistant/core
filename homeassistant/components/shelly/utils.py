@@ -110,8 +110,6 @@ def get_block_number_of_channels(device: BlockDevice, block: Block) -> int:
         channels = device.shelly.get("num_emeters")
     elif block.type in ["relay", "light"]:
         channels = device.shelly.get("num_outputs")
-    elif block.type in ["roller", "device"]:
-        channels = 1
 
     return channels or 1
 
@@ -132,21 +130,6 @@ def get_block_channel(block: Block | None, base: str = "1") -> str:
     assert block and block.channel
 
     return chr(int(block.channel) + ord(base))
-
-
-def get_block_channel_name(device: BlockDevice, block: Block | None) -> str | None:
-    """Get name based on device and channel name."""
-    if (
-        not block
-        or block.type in ("device", "light", "relay", "emeter")
-        or get_block_number_of_channels(device, block) == 1
-    ):
-        return None
-
-    if custom_name := get_block_custom_name(device, block):
-        return custom_name
-
-    return f"Channel {get_block_channel(block)}"
 
 
 def get_block_sub_device_name(device: BlockDevice, block: Block) -> str:
@@ -455,6 +438,8 @@ def get_rpc_sub_device_name(
         return f"{device.name} Energy Meter {component_id}"
     if component == "em" and emeter_phase is not None:
         return f"{device.name} Phase {emeter_phase}"
+    if component == "switch":
+        return f"{device.name} Output {component_id}"
 
     return f"{device.name} {component.title()} {component_id}"
 
@@ -664,10 +649,7 @@ def async_remove_shelly_rpc_entities(
 
 def get_virtual_component_ids(config: dict[str, Any], platform: str) -> list[str]:
     """Return a list of virtual component IDs for a platform."""
-    component = VIRTUAL_COMPONENTS_MAP.get(platform)
-
-    if not component:
-        return []
+    component = VIRTUAL_COMPONENTS_MAP[platform]
 
     ids: list[str] = []
 
@@ -975,10 +957,10 @@ def async_migrate_rpc_virtual_components_unique_ids(
     The new unique_id format is: {mac}-{key}-{component}_{role}
     """
     for component in VIRTUAL_COMPONENTS:
-        if entity_entry.unique_id.endswith(f"-{component!s}"):
-            key = entity_entry.unique_id.split("-")[-2]
-            if key not in config:
-                continue
+        if (
+            entity_entry.unique_id.endswith(f"-{component!s}")
+            and (key := entity_entry.unique_id.split("-")[-2]) in config
+        ):
             role = get_rpc_role_by_key(config, key)
             new_unique_id = f"{entity_entry.unique_id}_{role}"
             LOGGER.debug(
@@ -994,3 +976,11 @@ def async_migrate_rpc_virtual_components_unique_ids(
             }
 
     return None
+
+
+def is_rpc_ble_scanner_supported(entry: ConfigEntry) -> bool:
+    """Return true if BLE scanner is supported."""
+    return (
+        entry.runtime_data.rpc_supports_scripts
+        and not entry.runtime_data.rpc_zigbee_firmware
+    )

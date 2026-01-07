@@ -16,7 +16,6 @@ import voluptuous as vol
 
 from homeassistant.config_entries import (
     SOURCE_IGNORE,
-    ConfigEntry,
     ConfigEntryState,
     ConfigFlow,
     ConfigFlowResult,
@@ -32,6 +31,7 @@ from homeassistant.const import (
     CONF_VERIFY_SSL,
 )
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import selector
 from homeassistant.helpers.aiohttp_client import (
     async_create_clientsession,
     async_get_clientsession,
@@ -55,15 +55,113 @@ from .const import (
     MIN_REQUIRED_PROTECT_V,
     OUTDATED_LOG_MESSAGE,
 )
-from .data import async_last_update_was_successful
+from .data import UFPConfigEntry, async_last_update_was_successful
 from .discovery import async_start_discovery
-from .utils import _async_resolve, _async_short_mac, _async_unifi_mac_from_hass
+from .utils import (
+    _async_resolve,
+    _async_short_mac,
+    _async_unifi_mac_from_hass,
+    async_create_api_client,
+)
 
 _LOGGER = logging.getLogger(__name__)
+
+
+def _filter_empty_credentials(user_input: dict[str, Any]) -> dict[str, Any]:
+    """Filter out empty credential fields to preserve existing values."""
+    return {k: v for k, v in user_input.items() if v not in (None, "")}
+
+
+def _normalize_port(data: dict[str, Any]) -> dict[str, Any]:
+    """Ensure port is stored as int (NumberSelector returns float)."""
+    return {**data, CONF_PORT: int(data.get(CONF_PORT, DEFAULT_PORT))}
+
+
+def _build_data_without_credentials(entry_data: Mapping[str, Any]) -> dict[str, Any]:
+    """Build form data from existing config entry, excluding sensitive credentials."""
+    return {
+        CONF_HOST: entry_data[CONF_HOST],
+        CONF_PORT: entry_data[CONF_PORT],
+        CONF_VERIFY_SSL: entry_data[CONF_VERIFY_SSL],
+        CONF_USERNAME: entry_data[CONF_USERNAME],
+    }
+
+
+async def _async_clear_session_if_credentials_changed(
+    hass: HomeAssistant,
+    entry: UFPConfigEntry,
+    new_data: Mapping[str, Any],
+) -> None:
+    """Clear stored session if credentials have changed to force fresh authentication."""
+    existing_data = entry.data
+    if existing_data.get(CONF_USERNAME) != new_data.get(
+        CONF_USERNAME
+    ) or existing_data.get(CONF_PASSWORD) != new_data.get(CONF_PASSWORD):
+        _LOGGER.debug("Credentials changed, clearing stored session")
+        protect = async_create_api_client(hass, entry)
+        try:
+            await protect.clear_session()
+        except Exception as ex:  # noqa: BLE001
+            _LOGGER.debug("Failed to clear session, continuing anyway: %s", ex)
+
 
 ENTRY_FAILURE_STATES = (
     ConfigEntryState.SETUP_ERROR,
     ConfigEntryState.SETUP_RETRY,
+)
+
+# Selectors for config flow form fields
+_TEXT_SELECTOR = selector.TextSelector()
+_PASSWORD_SELECTOR = selector.TextSelector(
+    selector.TextSelectorConfig(type=selector.TextSelectorType.PASSWORD)
+)
+_PORT_SELECTOR = selector.NumberSelector(
+    selector.NumberSelectorConfig(
+        mode=selector.NumberSelectorMode.BOX, min=1, max=65535
+    )
+)
+_BOOL_SELECTOR = selector.BooleanSelector()
+
+
+def _build_schema(
+    *,
+    include_host: bool = True,
+    include_connection: bool = True,
+    credentials_optional: bool = False,
+) -> vol.Schema:
+    """Build a config flow schema.
+
+    Args:
+        include_host: Include host field (False when host comes from discovery).
+        include_connection: Include port/verify_ssl fields.
+        credentials_optional: Credentials optional (True to keep existing values).
+
+    """
+    req, opt = vol.Required, vol.Optional
+    cred_key = opt if credentials_optional else req
+
+    schema: dict[vol.Marker, selector.Selector] = {}
+    if include_host:
+        schema[req(CONF_HOST)] = _TEXT_SELECTOR
+    if include_connection:
+        schema[req(CONF_PORT, default=DEFAULT_PORT)] = _PORT_SELECTOR
+        schema[req(CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL)] = _BOOL_SELECTOR
+    schema[req(CONF_USERNAME)] = _TEXT_SELECTOR
+    schema[cred_key(CONF_PASSWORD)] = _PASSWORD_SELECTOR
+    schema[cred_key(CONF_API_KEY)] = _PASSWORD_SELECTOR
+    return vol.Schema(schema)
+
+
+# Schemas for different flow contexts
+# User flow: all fields required
+CONFIG_SCHEMA = _build_schema()
+# Reconfigure flow: keep existing credentials if not provided
+RECONFIGURE_SCHEMA = _build_schema(credentials_optional=True)
+# Discovery flow: host comes from discovery, user sets port/ssl
+DISCOVERY_SCHEMA = _build_schema(include_host=False)
+# Reauth flow: only credentials, connection settings preserved
+REAUTH_SCHEMA = _build_schema(
+    include_host=False, include_connection=False, credentials_optional=True
 )
 
 
@@ -80,7 +178,7 @@ def _host_is_direct_connect(host: str) -> bool:
 
 async def _async_console_is_offline(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: UFPConfigEntry,
 ) -> bool:
     """Check if a console is offline.
 
@@ -179,19 +277,40 @@ class ProtectFlowHandler(ConfigFlow, domain=DOMAIN):
         """Confirm discovery."""
         errors: dict[str, str] = {}
         discovery_info = self._discovered_device
+
+        form_data = {
+            CONF_HOST: discovery_info["direct_connect_domain"]
+            or discovery_info["source_ip"],
+            CONF_PORT: DEFAULT_PORT,
+            CONF_VERIFY_SSL: bool(discovery_info["direct_connect_domain"]),
+            CONF_USERNAME: "",
+            CONF_PASSWORD: "",
+        }
+
         if user_input is not None:
-            user_input[CONF_PORT] = DEFAULT_PORT
+            # Merge user input with discovery info
+            merged_input = {**form_data, **user_input}
             nvr_data = None
             if discovery_info["direct_connect_domain"]:
-                user_input[CONF_HOST] = discovery_info["direct_connect_domain"]
-                user_input[CONF_VERIFY_SSL] = True
-                nvr_data, errors = await self._async_get_nvr_data(user_input)
+                merged_input[CONF_HOST] = discovery_info["direct_connect_domain"]
+                merged_input[CONF_VERIFY_SSL] = True
+                nvr_data, errors = await self._async_get_nvr_data(merged_input)
             if not nvr_data or errors:
-                user_input[CONF_HOST] = discovery_info["source_ip"]
-                user_input[CONF_VERIFY_SSL] = False
-                nvr_data, errors = await self._async_get_nvr_data(user_input)
+                merged_input[CONF_HOST] = discovery_info["source_ip"]
+                merged_input[CONF_VERIFY_SSL] = False
+                nvr_data, errors = await self._async_get_nvr_data(merged_input)
             if nvr_data and not errors:
-                return self._async_create_entry(nvr_data.display_name, user_input)
+                return self._async_create_entry(nvr_data.display_name, merged_input)
+            # Preserve user input for form re-display, but keep discovery info
+            form_data = {
+                CONF_HOST: merged_input[CONF_HOST],
+                CONF_PORT: merged_input[CONF_PORT],
+                CONF_VERIFY_SSL: merged_input[CONF_VERIFY_SSL],
+                CONF_USERNAME: user_input.get(CONF_USERNAME, ""),
+                CONF_PASSWORD: user_input.get(CONF_PASSWORD, ""),
+            }
+            if CONF_API_KEY in user_input:
+                form_data[CONF_API_KEY] = user_input[CONF_API_KEY]
 
         placeholders = {
             "name": discovery_info["hostname"]
@@ -200,7 +319,6 @@ class ProtectFlowHandler(ConfigFlow, domain=DOMAIN):
             "ip_address": discovery_info["source_ip"],
         }
         self.context["title_placeholders"] = placeholders
-        user_input = user_input or {}
         return self.async_show_form(
             step_id="discovery_confirm",
             description_placeholders={
@@ -209,14 +327,8 @@ class ProtectFlowHandler(ConfigFlow, domain=DOMAIN):
                     self.hass
                 ),
             },
-            data_schema=vol.Schema(
-                {
-                    vol.Required(
-                        CONF_USERNAME, default=user_input.get(CONF_USERNAME)
-                    ): str,
-                    vol.Required(CONF_PASSWORD): str,
-                    vol.Required(CONF_API_KEY): str,
-                }
+            data_schema=self.add_suggested_values_to_schema(
+                DISCOVERY_SCHEMA, form_data
             ),
             errors=errors,
         )
@@ -224,7 +336,7 @@ class ProtectFlowHandler(ConfigFlow, domain=DOMAIN):
     @staticmethod
     @callback
     def async_get_options_flow(
-        config_entry: ConfigEntry,
+        config_entry: UFPConfigEntry,
     ) -> OptionsFlowHandler:
         """Get the options flow for this handler."""
         return OptionsFlowHandler()
@@ -233,7 +345,7 @@ class ProtectFlowHandler(ConfigFlow, domain=DOMAIN):
     def _async_create_entry(self, title: str, data: dict[str, Any]) -> ConfigFlowResult:
         return self.async_create_entry(
             title=title,
-            data={**data, CONF_ID: title},
+            data={**_normalize_port(data), CONF_ID: title},
             options={
                 CONF_DISABLE_RTSP: False,
                 CONF_ALL_UPDATES: False,
@@ -252,7 +364,7 @@ class ProtectFlowHandler(ConfigFlow, domain=DOMAIN):
         public_api_session = async_get_clientsession(self.hass)
 
         host = user_input[CONF_HOST]
-        port = user_input.get(CONF_PORT, DEFAULT_PORT)
+        port = int(user_input.get(CONF_PORT, DEFAULT_PORT))
         verify_ssl = user_input.get(CONF_VERIFY_SSL, DEFAULT_VERIFY_SSL)
 
         protect = ProtectApiClient(
@@ -262,7 +374,7 @@ class ProtectFlowHandler(ConfigFlow, domain=DOMAIN):
             port=port,
             username=user_input[CONF_USERNAME],
             password=user_input[CONF_PASSWORD],
-            api_key=user_input[CONF_API_KEY],
+            api_key=user_input.get(CONF_API_KEY, ""),
             verify_ssl=verify_ssl,
             cache_dir=Path(self.hass.config.path(STORAGE_DIR, "unifiprotect")),
             config_dir=Path(self.hass.config.path(STORAGE_DIR, "unifiprotect")),
@@ -291,14 +403,17 @@ class ProtectFlowHandler(ConfigFlow, domain=DOMAIN):
             auth_user = bootstrap.users.get(bootstrap.auth_user_id)
             if auth_user and auth_user.cloud_account:
                 errors["base"] = "cloud_user"
-        try:
-            await protect.get_meta_info()
-        except NotAuthorized as ex:
-            _LOGGER.debug(ex)
-            errors[CONF_API_KEY] = "invalid_auth"
-        except ClientError as ex:
-            _LOGGER.error(ex)
-            errors["base"] = "cannot_connect"
+
+        # Only validate API key if bootstrap succeeded
+        if nvr_data and not errors:
+            try:
+                await protect.get_meta_info()
+            except NotAuthorized as ex:
+                _LOGGER.debug(ex)
+                errors[CONF_API_KEY] = "invalid_auth"
+            except ClientError as ex:
+                _LOGGER.error(ex)
+                errors["base"] = "cannot_connect"
 
         return nvr_data, errors
 
@@ -314,16 +429,27 @@ class ProtectFlowHandler(ConfigFlow, domain=DOMAIN):
         """Confirm reauth."""
         errors: dict[str, str] = {}
 
-        # prepopulate fields
         reauth_entry = self._get_reauth_entry()
-        form_data = {**reauth_entry.data}
+        form_data = _build_data_without_credentials(reauth_entry.data)
+
         if user_input is not None:
-            form_data.update(user_input)
+            # Merge with existing config - empty credentials keep existing values
+            merged_input = {
+                **reauth_entry.data,
+                **_filter_empty_credentials(user_input),
+            }
+
+            # Clear stored session if credentials changed to force fresh authentication
+            await _async_clear_session_if_credentials_changed(
+                self.hass, reauth_entry, merged_input
+            )
 
             # validate login data
-            _, errors = await self._async_get_nvr_data(form_data)
+            _, errors = await self._async_get_nvr_data(merged_input)
             if not errors:
-                return self.async_update_reload_and_abort(reauth_entry, data=form_data)
+                return self.async_update_reload_and_abort(
+                    reauth_entry, data=_normalize_port(merged_input)
+                )
 
         self.context["title_placeholders"] = {
             "name": reauth_entry.title,
@@ -336,14 +462,58 @@ class ProtectFlowHandler(ConfigFlow, domain=DOMAIN):
                     self.hass
                 ),
             },
-            data_schema=vol.Schema(
-                {
-                    vol.Required(
-                        CONF_USERNAME, default=form_data.get(CONF_USERNAME)
-                    ): str,
-                    vol.Required(CONF_PASSWORD): str,
-                    vol.Required(CONF_API_KEY): str,
-                }
+            data_schema=self.add_suggested_values_to_schema(REAUTH_SCHEMA, form_data),
+            errors=errors,
+        )
+
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle reconfiguration of the integration."""
+        errors: dict[str, str] = {}
+
+        reconfigure_entry = self._get_reconfigure_entry()
+        form_data = _build_data_without_credentials(reconfigure_entry.data)
+
+        if user_input is not None:
+            # Merge with existing config - empty credentials keep existing values
+            merged_input = {
+                **reconfigure_entry.data,
+                **_filter_empty_credentials(user_input),
+            }
+
+            # Clear stored session if credentials changed to force fresh authentication
+            await _async_clear_session_if_credentials_changed(
+                self.hass, reconfigure_entry, merged_input
+            )
+
+            # validate login data
+            nvr_data, errors = await self._async_get_nvr_data(merged_input)
+            if nvr_data and not errors:
+                new_unique_id = _async_unifi_mac_from_hass(nvr_data.mac)
+                _LOGGER.debug(
+                    "Reconfigure: Current unique_id=%s, NVR MAC=%s, formatted=%s",
+                    reconfigure_entry.unique_id,
+                    nvr_data.mac,
+                    new_unique_id,
+                )
+                await self.async_set_unique_id(new_unique_id)
+                self._abort_if_unique_id_mismatch(reason="wrong_nvr")
+
+                return self.async_update_reload_and_abort(
+                    reconfigure_entry,
+                    data=_normalize_port(merged_input),
+                )
+
+        return self.async_show_form(
+            step_id="reconfigure",
+            description_placeholders={
+                "local_user_documentation_url": await async_local_user_documentation_url(
+                    self.hass
+                ),
+            },
+            data_schema=self.add_suggested_values_to_schema(
+                RECONFIGURE_SCHEMA, form_data
             ),
             errors=errors,
         )
@@ -363,7 +533,6 @@ class ProtectFlowHandler(ConfigFlow, domain=DOMAIN):
 
                 return self._async_create_entry(nvr_data.display_name, user_input)
 
-        user_input = user_input or {}
         return self.async_show_form(
             step_id="user",
             description_placeholders={
@@ -371,23 +540,7 @@ class ProtectFlowHandler(ConfigFlow, domain=DOMAIN):
                     self.hass
                 )
             },
-            data_schema=vol.Schema(
-                {
-                    vol.Required(CONF_HOST, default=user_input.get(CONF_HOST)): str,
-                    vol.Required(
-                        CONF_PORT, default=user_input.get(CONF_PORT, DEFAULT_PORT)
-                    ): int,
-                    vol.Required(
-                        CONF_VERIFY_SSL,
-                        default=user_input.get(CONF_VERIFY_SSL, DEFAULT_VERIFY_SSL),
-                    ): bool,
-                    vol.Required(
-                        CONF_USERNAME, default=user_input.get(CONF_USERNAME)
-                    ): str,
-                    vol.Required(CONF_PASSWORD): str,
-                    vol.Required(CONF_API_KEY): str,
-                }
-            ),
+            data_schema=self.add_suggested_values_to_schema(CONFIG_SCHEMA, user_input),
             errors=errors,
         )
 

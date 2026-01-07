@@ -5,7 +5,8 @@ from homeassistant.const import CONF_ACCESS_TOKEN
 
 from tests.common import load_json_object_fixture
 
-CONFIG = {CONF_ACCESS_TOKEN: "1234567890"}
+UNIQUE_ID = "abc-123"
+CONFIG_V1 = {CONF_ACCESS_TOKEN: "abc-123"}
 
 WAKE_UP_ONLINE = {"response": {"state": TeslemetryState.ONLINE}, "error": None}
 WAKE_UP_ASLEEP = {"response": {"state": TeslemetryState.ASLEEP}, "error": None}
@@ -37,7 +38,7 @@ COMMAND_ERRORS = (COMMAND_REASON, COMMAND_NOREASON, COMMAND_ERROR, COMMAND_NOERR
 RESPONSE_OK = {"response": {}, "error": None}
 
 METADATA = {
-    "uid": "abc-123",
+    "uid": UNIQUE_ID,
     "region": "NA",
     "scopes": [
         "openid",
@@ -63,7 +64,7 @@ METADATA = {
     },
 }
 METADATA_LEGACY = {
-    "uid": "abc-123",
+    "uid": UNIQUE_ID,
     "region": "NA",
     "scopes": [
         "openid",
@@ -89,7 +90,7 @@ METADATA_LEGACY = {
     },
 }
 METADATA_NOSCOPE = {
-    "uid": "abc-123",
+    "uid": UNIQUE_ID,
     "region": "NA",
     "scopes": ["openid", "offline_access", "vehicle_device_data"],
     "vehicles": {

@@ -128,6 +128,9 @@
     "action_call_failed": {
       "message": "Failed to execute the action call {call_name} on {device_name}: {error}"
     },
+    "action_call_timeout": {
+      "message": "Timeout waiting for response from action call {call_name} on {device_name}"
+    },
     "error_communicating_with_device": {
       "message": "Error communicating with the device {device_name}: {error}"
     },

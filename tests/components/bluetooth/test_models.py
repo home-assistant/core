@@ -26,6 +26,7 @@ from . import (
     generate_ble_device,
     inject_advertisement,
     inject_advertisement_with_source,
+    patch_bleak_backend_type,
 )
 
 
@@ -595,7 +596,7 @@ async def test_ble_device_with_proxy_client_out_of_connections_uses_best_availab
     ]
 
     client = HaBleakClientWrapper(switchbot_proxy_device_no_connection_slot)
-    with patch("bleak.get_platform_client_backend_type"):
+    with patch_bleak_backend_type():
         await client.connect()
     assert client.is_connected is True
     client.set_disconnected_callback(lambda client: None)

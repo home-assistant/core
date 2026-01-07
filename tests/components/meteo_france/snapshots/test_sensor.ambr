@@ -391,7 +391,7 @@
         'suggested_display_precision': 2,
       }),
     }),
-    'original_device_class': <SensorDeviceClass.PRESSURE: 'pressure'>,
+    'original_device_class': <SensorDeviceClass.ATMOSPHERIC_PRESSURE: 'atmospheric_pressure'>,
     'original_icon': None,
     'original_name': 'La Clusaz Pressure',
     'platform': 'meteo_france',
@@ -407,7 +407,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by Météo-France',
-      'device_class': 'pressure',
+      'device_class': 'atmospheric_pressure',
       'friendly_name': 'La Clusaz Pressure',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfPressure.HPA: 'hPa'>,

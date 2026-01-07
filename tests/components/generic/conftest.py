@@ -129,13 +129,15 @@ def config_entry_fixture(hass: HomeAssistant) -> MockConfigEntry:
             "stream_source": "http://janebloggs:letmein2@example.com/stream",
             "username": "johnbloggs",
             "password": "letmein123",
-            "limit_refetch_to_url_change": False,
-            "authentication": "basic",
-            "framerate": 2.0,
-            "verify_ssl": True,
             "content_type": "image/jpeg",
+            "advanced": {
+                "framerate": 2.0,
+                "verify_ssl": True,
+                "limit_refetch_to_url_change": False,
+                "authentication": "basic",
+            },
         },
-        version=1,
+        version=2,
     )
     entry.add_to_hass(hass)
     return entry

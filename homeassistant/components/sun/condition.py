@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from datetime import datetime, timedelta
-from typing import Any, cast
+from typing import Any, Unpack, cast
 
 import voluptuous as vol
 
@@ -13,14 +13,14 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.automation import move_top_level_schema_fields_to_options
 from homeassistant.helpers.condition import (
     Condition,
-    ConditionCheckerType,
+    ConditionChecker,
+    ConditionCheckParams,
     ConditionConfig,
     condition_trace_set_result,
     condition_trace_update_result,
-    trace_condition_function,
 )
 from homeassistant.helpers.sun import get_astral_event_date
-from homeassistant.helpers.typing import ConfigType, TemplateVarsType
+from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import dt as dt_util
 
 _OPTIONS_SCHEMA_DICT: dict[vol.Marker, Any] = {
@@ -150,20 +150,20 @@ class SunCondition(Condition):
 
     def __init__(self, hass: HomeAssistant, config: ConditionConfig) -> None:
         """Initialize condition."""
+        super().__init__(hass, config)
         assert config.options is not None
         self._options = config.options
 
-    async def async_get_checker(self) -> ConditionCheckerType:
+    async def async_get_checker(self) -> ConditionChecker:
         """Wrap action method with sun based condition."""
         before = self._options.get("before")
         after = self._options.get("after")
         before_offset = self._options.get("before_offset")
         after_offset = self._options.get("after_offset")
 
-        @trace_condition_function
-        def sun_if(hass: HomeAssistant, variables: TemplateVarsType = None) -> bool:
+        def sun_if(**kwargs: Unpack[ConditionCheckParams]) -> bool:
             """Validate time based if-condition."""
-            return sun(hass, before, after, before_offset, after_offset)
+            return sun(self._hass, before, after, before_offset, after_offset)
 
         return sun_if
 

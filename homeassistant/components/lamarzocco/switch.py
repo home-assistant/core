@@ -40,18 +40,6 @@ class LaMarzoccoSwitchEntityDescription(
 
 ENTITIES: tuple[LaMarzoccoSwitchEntityDescription, ...] = (
     LaMarzoccoSwitchEntityDescription(
-        key="main",
-        translation_key="main",
-        name=None,
-        control_fn=lambda machine, state: machine.set_power(state),
-        is_on_fn=(
-            lambda machine: cast(
-                MachineStatus, machine.dashboard.config[WidgetType.CM_MACHINE_STATUS]
-            ).mode
-            is MachineMode.BREWING_MODE
-        ),
-    ),
-    LaMarzoccoSwitchEntityDescription(
         key="steam_boiler_enable",
         translation_key="steam_boiler",
         control_fn=lambda machine, state: machine.set_steam(state),
@@ -65,6 +53,7 @@ ENTITIES: tuple[LaMarzoccoSwitchEntityDescription, ...] = (
             lambda coordinator: coordinator.device.dashboard.model_name
             in (ModelName.LINEA_MINI_R, ModelName.LINEA_MICRA)
         ),
+        bt_offline_mode=True,
     ),
     LaMarzoccoSwitchEntityDescription(
         key="steam_boiler_enable",
@@ -80,6 +69,7 @@ ENTITIES: tuple[LaMarzoccoSwitchEntityDescription, ...] = (
             lambda coordinator: coordinator.device.dashboard.model_name
             not in (ModelName.LINEA_MINI_R, ModelName.LINEA_MICRA)
         ),
+        bt_offline_mode=True,
     ),
     LaMarzoccoSwitchEntityDescription(
         key="smart_standby_enabled",
@@ -91,7 +81,22 @@ ENTITIES: tuple[LaMarzoccoSwitchEntityDescription, ...] = (
             minutes=machine.schedule.smart_wake_up_sleep.smart_stand_by_minutes,
         ),
         is_on_fn=lambda machine: machine.schedule.smart_wake_up_sleep.smart_stand_by_enabled,
+        bt_offline_mode=True,
     ),
+)
+
+MAIN_SWITCH_ENTITY = LaMarzoccoSwitchEntityDescription(
+    key="main",
+    translation_key="main",
+    name=None,
+    control_fn=lambda machine, state: machine.set_power(state),
+    is_on_fn=(
+        lambda machine: cast(
+            MachineStatus, machine.dashboard.config[WidgetType.CM_MACHINE_STATUS]
+        ).mode
+        is MachineMode.BREWING_MODE
+    ),
+    bt_offline_mode=True,
 )
 
 
@@ -103,10 +108,11 @@ async def async_setup_entry(
     """Set up switch entities and services."""
 
     coordinator = entry.runtime_data.config_coordinator
+    bluetooth_coordinator = entry.runtime_data.bluetooth_coordinator
 
     entities: list[SwitchEntity] = []
     entities.extend(
-        LaMarzoccoSwitchEntity(coordinator, description)
+        LaMarzoccoSwitchEntity(coordinator, description, bluetooth_coordinator)
         for description in ENTITIES
         if description.supported_fn(coordinator)
     )
@@ -114,6 +120,12 @@ async def async_setup_entry(
     entities.extend(
         LaMarzoccoAutoOnOffSwitchEntity(coordinator, wake_up_sleep_entry)
         for wake_up_sleep_entry in coordinator.device.schedule.smart_wake_up_sleep.schedules
+    )
+
+    entities.append(
+        LaMarzoccoMainSwitchEntity(
+            coordinator, MAIN_SWITCH_ENTITY, bluetooth_coordinator
+        )
     )
 
     async_add_entities(entities)
@@ -152,6 +164,17 @@ class LaMarzoccoSwitchEntity(LaMarzoccoEntity, SwitchEntity):
     def is_on(self) -> bool:
         """Return true if device is on."""
         return self.entity_description.is_on_fn(self.coordinator.device)
+
+
+class LaMarzoccoMainSwitchEntity(LaMarzoccoSwitchEntity):
+    """Switch representing espresso machine main power."""
+
+    @property
+    def entity_picture(self) -> str | None:
+        """Return the entity picture."""
+
+        image_url = self.coordinator.device.dashboard.image_url
+        return image_url if image_url else None  # image URL can be empty string
 
 
 class LaMarzoccoAutoOnOffSwitchEntity(LaMarzoccoBaseEntity, SwitchEntity):

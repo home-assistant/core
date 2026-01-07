@@ -1,0 +1,11 @@
+{
+  "domain": "fressnapf_tracker",
+  "name": "Fressnapf Tracker",
+  "codeowners": ["@eifinger"],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/fressnapf_tracker",
+  "integration_type": "hub",
+  "iot_class": "cloud_polling",
+  "quality_scale": "bronze",
+  "requirements": ["fressnapftracker==0.2.0"]
+}

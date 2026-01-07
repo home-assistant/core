@@ -4,9 +4,10 @@ from unittest.mock import MagicMock
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pyvlx.exception import PyVLXException
 
 from homeassistant.components.velux import DOMAIN
-from homeassistant.const import STATE_OFF, STATE_ON, Platform
+from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceRegistry
 from homeassistant.helpers.entity_registry import EntityRegistry
@@ -22,7 +23,9 @@ def platform() -> Platform:
     return Platform.BINARY_SENSOR
 
 
-@pytest.mark.usefixtures("setup_integration")
+pytestmark = pytest.mark.usefixtures("setup_integration")
+
+
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_rain_sensor_state(
     hass: HomeAssistant,
@@ -61,7 +64,6 @@ async def test_rain_sensor_state(
     assert state.state == STATE_OFF
 
 
-@pytest.mark.usefixtures("setup_integration")
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_rain_sensor_device_association(
     hass: HomeAssistant,
@@ -98,3 +100,67 @@ async def test_rain_sensor_device_association(
     assert via_device_entry.identifiers == {
         (DOMAIN, f"gateway_{mock_config_entry.entry_id}")
     }
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_rain_sensor_unavailability(
+    hass: HomeAssistant,
+    mock_window: MagicMock,
+    freezer: FrozenDateTimeFactory,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test rain sensor becomes unavailable on errors and logs appropriately."""
+
+    test_entity_id = "binary_sensor.test_window_rain_sensor"
+
+    # Entity should be available initially
+    state = hass.states.get(test_entity_id)
+    assert state is not None
+    assert state.state != STATE_UNAVAILABLE
+
+    # Simulate communication error
+    mock_window.get_limitation.side_effect = PyVLXException("Connection failed")
+    await update_polled_entities(hass, freezer)
+
+    # Entity should now be unavailable
+    state = hass.states.get(test_entity_id)
+    assert state is not None
+    assert state.state == STATE_UNAVAILABLE
+
+    # Verify unavailability was logged once
+    assert (
+        "Rain sensor binary_sensor.test_window_rain_sensor is unavailable"
+        in caplog.text
+    )
+    assert "Connection failed" in caplog.text
+    caplog.clear()
+
+    # Another update attempt should not log again (already logged)
+    await update_polled_entities(hass, freezer)
+    state = hass.states.get(test_entity_id)
+    assert state.state == STATE_UNAVAILABLE
+    assert "is unavailable" not in caplog.text
+    caplog.clear()
+
+    # Simulate recovery
+    mock_window.get_limitation.side_effect = None
+    mock_window.get_limitation.return_value.min_value = 95
+    await update_polled_entities(hass, freezer)
+
+    # Entity should be available again
+    state = hass.states.get(test_entity_id)
+    assert state is not None
+    assert state.state == STATE_OFF
+
+    # Verify recovery was logged
+    assert (
+        "Rain sensor binary_sensor.test_window_rain_sensor is back online"
+        in caplog.text
+    )
+    caplog.clear()
+
+    # Another successful update should not log recovery again
+    await update_polled_entities(hass, freezer)
+    state = hass.states.get(test_entity_id)
+    assert state.state == STATE_OFF
+    assert "back online" not in caplog.text

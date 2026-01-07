@@ -4,6 +4,12 @@
       "dust_box_inserted": {
         "default": "mdi:download"
       },
+      "interior_illumination_active": {
+        "default": "mdi:lightbulb-on",
+        "state": {
+          "off": "mdi:lightbulb-off"
+        }
+      },
       "lifted": {
         "default": "mdi:arrow-up-right-bold"
       },

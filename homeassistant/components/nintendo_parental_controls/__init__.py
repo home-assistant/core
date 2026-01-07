@@ -24,6 +24,7 @@ _PLATFORMS: list[Platform] = [
     Platform.TIME,
     Platform.SWITCH,
     Platform.NUMBER,
+    Platform.SELECT,
 ]
 
 PLATFORM_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)

@@ -147,7 +147,8 @@
         "low": "[%key:common::state::low%]",
         "medium": "[%key:common::state::medium%]",
         "minimal": "Minimal",
-        "none": "None"
+        "none": "None",
+        "xhigh": "X-High"
       }
     },
     "search_context_size": {

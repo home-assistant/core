@@ -14,7 +14,7 @@ from homeassistant.util import dt as dt_util
 
 from . import TuyaConfigEntry
 from .const import DOMAIN, DPCode
-from .models import DEVICE_WARNINGS
+from .type_information import DEVICE_WARNINGS
 
 _REDACTED_DPCODES = {
     DPCode.ALARM_MESSAGE,

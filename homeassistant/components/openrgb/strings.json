@@ -65,6 +65,11 @@
           }
         }
       }
+    },
+    "select": {
+      "profile": {
+        "name": "Profile"
+      }
     }
   },
   "exceptions": {
@@ -76,6 +81,9 @@
     },
     "openrgb_error": {
       "message": "An OpenRGB error occurred: {error}"
+    },
+    "profile_not_found": {
+      "message": "Profile `{profile}` not found"
     },
     "unsupported_effect": {
       "message": "Effect `{effect}` is not supported by {device_name}"

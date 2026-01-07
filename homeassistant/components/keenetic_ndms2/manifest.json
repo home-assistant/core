@@ -4,6 +4,7 @@
   "codeowners": ["@foxel"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/keenetic_ndms2",
+  "integration_type": "device",
   "iot_class": "local_polling",
   "loggers": ["ndms2_client"],
   "requirements": ["ndms2-client==0.1.2"],

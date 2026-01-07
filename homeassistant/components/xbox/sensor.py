@@ -6,7 +6,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import UTC, datetime
 from enum import StrEnum
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from pythonxbox.api.provider.people.models import Person
 from pythonxbox.api.provider.smartglass.models import SmartglassConsole, StorageDevice
@@ -21,7 +21,7 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.const import CONF_NAME, UnitOfInformation
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
@@ -253,28 +253,32 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Xbox Live friends."""
-    xuids_added: set[str] = set()
     coordinator = config_entry.runtime_data.status
-
-    @callback
-    def add_entities() -> None:
-        nonlocal xuids_added
-
-        current_xuids = set(coordinator.data.presence)
-        if new_xuids := current_xuids - xuids_added:
-            async_add_entities(
-                [
-                    XboxSensorEntity(coordinator, xuid, description)
-                    for xuid in new_xuids
-                    for description in SENSOR_DESCRIPTIONS
-                    if check_deprecated_entity(hass, xuid, description, SENSOR_DOMAIN)
-                ]
+    if TYPE_CHECKING:
+        assert config_entry.unique_id
+    async_add_entities(
+        [
+            XboxSensorEntity(coordinator, config_entry.unique_id, description)
+            for description in SENSOR_DESCRIPTIONS
+            if check_deprecated_entity(
+                hass, config_entry.unique_id, description, SENSOR_DOMAIN
             )
-            xuids_added |= new_xuids
-        xuids_added &= current_xuids
-
-    coordinator.async_add_listener(add_entities)
-    add_entities()
+        ]
+    )
+    for subentry_id, subentry in config_entry.subentries.items():
+        async_add_entities(
+            [
+                XboxSensorEntity(coordinator, subentry.unique_id, description)
+                for description in SENSOR_DESCRIPTIONS
+                if subentry.unique_id
+                and check_deprecated_entity(
+                    hass, subentry.unique_id, description, SENSOR_DOMAIN
+                )
+                and subentry.unique_id in coordinator.data.presence
+                and subentry.subentry_type == "friend"
+            ],
+            config_subentry_id=subentry_id,
+        )
 
     consoles_coordinator = config_entry.runtime_data.consoles
 
