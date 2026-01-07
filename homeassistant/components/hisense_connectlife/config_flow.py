@@ -181,9 +181,7 @@ class OAuth2FlowHandler(
         _LOGGER.debug("Starting creation step with user_input: %s", user_input)
         return await super().async_step_creation(user_input)
 
-    async def async_oauth_create_entry(
-        self, data: dict
-    ) -> ConfigFlowResult:
+    async def async_oauth_create_entry(self, data: dict) -> ConfigFlowResult:
         """Create an entry for the flow."""
         _LOGGER.debug(
             "Creating entry with data: %s",
