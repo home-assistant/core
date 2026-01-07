@@ -80,10 +80,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslaFleetConfigEntry) -
 
     token = jwt.decode(access_token, options={"verify_signature": False})
     scopes: list[Scope] = [Scope(s) for s in token["scp"]]
-    region = token["ou_code"].lower()
-    try:
-        assert region in ("na", "eu")
-    except AssertionError:
+    region: str | None = token["ou_code"].lower()
+    if region not in ("na", "eu"):
         region = None
 
     oauth_session = OAuth2Session(hass, entry, implementation)
