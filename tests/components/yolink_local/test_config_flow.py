@@ -72,7 +72,7 @@ async def test_user_flow_success(
     assert result["type"] == FlowResultType.CREATE_ENTRY
     assert result["title"] == "YoLink Local Hub"
     assert result["data"] == TEST_USER_INPUT
-    assert result["result"].unique_id == TEST_NET_ID
+    assert result["result"].unique_id == f"yolink_local_{TEST_NET_ID}"
 
 
 async def test_user_flow_cannot_connect(hass: HomeAssistant, mock_setup_entry) -> None:
@@ -155,7 +155,7 @@ async def test_user_flow_duplicate_entry(
     # Create an existing entry
     entry = MockConfigEntry(
         domain=DOMAIN,
-        unique_id=TEST_NET_ID,
+        unique_id=f"yolink_local_{TEST_NET_ID}",
         data=TEST_USER_INPUT,
     )
     entry.add_to_hass(hass)
