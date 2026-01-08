@@ -36,8 +36,9 @@ COPY --from=ghcr.io/astral-sh/uv:latest /uv /usr/local/bin/uv
 USER vscode
 
 ENV VIRTUAL_ENV="/home/vscode/.local/ha-venv"
-RUN uv python install 3.13 \
-    && uv venv --python 3.13 $VIRTUAL_ENV
+RUN --mount=type=bind,source=.python-version,target=.python-version \
+    uv python install \
+    && uv venv $VIRTUAL_ENV
 ENV PATH="$VIRTUAL_ENV/bin:$PATH"
 
 # Setup hass-release
