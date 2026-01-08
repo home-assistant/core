@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 import datetime
@@ -46,15 +47,15 @@ OFFSET_TYPE_BEFORE = "before"
 OFFSET_TYPE_AFTER = "after"
 
 
-_SINGLE_ENTITY_OPTIONS_SCHEMA_DICT = {
+_SINGLE_ENTITY_EVENT_OPTIONS_SCHEMA = {
     vol.Required(CONF_ENTITY_ID): cv.entity_id,
     vol.Optional(CONF_EVENT, default=EVENT_START): vol.In({EVENT_START, EVENT_END}),
     vol.Optional(CONF_OFFSET, default=datetime.timedelta(0)): cv.time_period,
 }
 
-_SINGLE_ENTITY_SCHEMA = vol.Schema(
+_SINGLE_ENTITY_EVENT_TRIGGER_SCHEMA = vol.Schema(
     {
-        vol.Required(CONF_OPTIONS): _SINGLE_ENTITY_OPTIONS_SCHEMA_DICT,
+        vol.Required(CONF_OPTIONS): _SINGLE_ENTITY_EVENT_OPTIONS_SCHEMA,
     },
 )
 
@@ -323,11 +324,17 @@ class TargetCalendarEventListener(TargetEntityChangeTracker):
             "offset": offset,
         }
 
+        self._pending_listener_task: asyncio.Task[None] | None = None
         self._calendar_event_listener: CalendarEventListener | None = None
 
+    @callback
     def _handle_entities(self, tracked_entities: set[str]) -> None:
         """Handle the tracked entities."""
-        self._hass.async_create_task(self._start_listening(tracked_entities))
+        if self._pending_listener_task:
+            self._pending_listener_task.cancel()
+        self._pending_listener_task = self._hass.async_create_task(
+            self._start_listening(tracked_entities)
+        )
 
     async def _start_listening(self, tracked_entities: set[str]) -> None:
         """Start listening for calendar events."""
@@ -349,6 +356,9 @@ class TargetCalendarEventListener(TargetEntityChangeTracker):
     def _unsubscribe(self) -> None:
         """Unsubscribe from all events."""
         super()._unsubscribe()
+        if self._pending_listener_task:
+            self._pending_listener_task.cancel()
+            self._pending_listener_task = None
         if self._calendar_event_listener:
             self._calendar_event_listener.async_detach()
             self._calendar_event_listener = None
@@ -365,7 +375,7 @@ class SingleEntityEventTrigger(Trigger):
     ) -> ConfigType:
         """Validate complete config."""
         complete_config = move_top_level_schema_fields_to_options(
-            complete_config, _SINGLE_ENTITY_OPTIONS_SCHEMA_DICT
+            complete_config, _SINGLE_ENTITY_EVENT_OPTIONS_SCHEMA
         )
         return await super().async_validate_complete_config(hass, complete_config)
 
@@ -374,7 +384,7 @@ class SingleEntityEventTrigger(Trigger):
         cls, hass: HomeAssistant, config: ConfigType
     ) -> ConfigType:
         """Validate config."""
-        return cast(ConfigType, _SINGLE_ENTITY_SCHEMA(config))
+        return cast(ConfigType, _SINGLE_ENTITY_EVENT_TRIGGER_SCHEMA(config))
 
     def __init__(self, hass: HomeAssistant, config: TriggerConfig) -> None:
         """Initialize trigger."""
@@ -441,7 +451,7 @@ class EventTrigger(Trigger):
         """Attach a trigger."""
 
         offset = self._options[CONF_OFFSET]
-        offset_type = self._options.get(CONF_OFFSET_TYPE, OFFSET_TYPE_BEFORE)
+        offset_type = self._options[CONF_OFFSET_TYPE]
 
         if offset_type == OFFSET_TYPE_BEFORE:
             offset = -offset

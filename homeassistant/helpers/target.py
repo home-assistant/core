@@ -288,16 +288,17 @@ class TargetEntityChangeTracker(abc.ABC):
     def async_setup(self) -> Callable[[], None]:
         """Set up the state change tracking."""
         self._setup_registry_listeners()
-        self._handle_changes()
+        self._handle_target_updates()
         return self._unsubscribe
 
     @abc.abstractmethod
+    @callback
     def _handle_entities(self, tracked_entities: set[str]) -> None:
         """Handle the tracked entities."""
 
     @callback
-    def _handle_changes(self, event: Event[Any] | None = None) -> None:
-        """Handle changes in the target."""
+    def _handle_target_updates(self, event: Event[Any] | None = None) -> None:
+        """Handle updates in the tracked targets."""
         selected = async_extract_referenced_entity_ids(
             self._hass, self._target_selection, expand_group=False
         )
@@ -318,13 +319,13 @@ class TargetEntityChangeTracker(abc.ABC):
         # changes don't affect which entities are tracked.
         self._registry_unsubs = [
             self._hass.bus.async_listen(
-                er.EVENT_ENTITY_REGISTRY_UPDATED, self._handle_changes
+                er.EVENT_ENTITY_REGISTRY_UPDATED, self._handle_target_updates
             ),
             self._hass.bus.async_listen(
-                dr.EVENT_DEVICE_REGISTRY_UPDATED, self._handle_changes
+                dr.EVENT_DEVICE_REGISTRY_UPDATED, self._handle_target_updates
             ),
             self._hass.bus.async_listen(
-                ar.EVENT_AREA_REGISTRY_UPDATED, self._handle_changes
+                ar.EVENT_AREA_REGISTRY_UPDATED, self._handle_target_updates
             ),
         ]
 
