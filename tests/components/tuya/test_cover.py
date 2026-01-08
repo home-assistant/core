@@ -61,14 +61,14 @@ async def test_platform_setup_and_discovery(
             SERVICE_OPEN_COVER,
             {},
             [
-                {"code": "control", "value": "open"},
+                {"code": "percent_control", "value": "0"},
             ],
         ),
         (
             SERVICE_CLOSE_COVER,
             {},
             [
-                {"code": "control", "value": "close"},
+                {"code": "percent_control", "value": "100"},
             ],
         ),
         (
