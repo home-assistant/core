@@ -1,7 +1,7 @@
 {
   "entity": {
     "light": {
-      "button-light": {
+      "button_light": {
         "state": {
           "off": "mdi:led-off",
           "on": "mdi:led-on"
