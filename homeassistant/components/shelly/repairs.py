@@ -243,12 +243,6 @@ class ShellyBlockRepairsFlow(RepairsFlow):
         """Initialize."""
         self._device = device
 
-    async def async_step_init(
-        self, user_input: dict[str, str] | None = None
-    ) -> data_entry_flow.FlowResult:
-        """Handle the first step of a fix flow."""
-        return await self.async_step_confirm()
-
     async def async_step_confirm(
         self, user_input: dict[str, str] | None = None
     ) -> data_entry_flow.FlowResult:
@@ -275,6 +269,20 @@ class ShellyBlockRepairsFlow(RepairsFlow):
 class CoiotConfigureFlow(ShellyBlockRepairsFlow):
     """Handler for fixing CoIoT configuration flow."""
 
+    async def async_step_init(
+        self, user_input: dict[str, str] | None = None
+    ) -> data_entry_flow.FlowResult:
+        """Handle the first step of a fix flow."""
+        issue_registry = ir.async_get(self.hass)
+        description_placeholders = None
+        if issue := issue_registry.async_get_issue(DOMAIN, self.issue_id):
+            description_placeholders = issue.translation_placeholders
+
+        return self.async_show_menu(
+            menu_options=["confirm", "ignore"],
+            description_placeholders=description_placeholders,
+        )
+
     async def _async_step_confirm(self) -> data_entry_flow.FlowResult:
         """Handle the confirm step of a fix flow."""
         return await self.async_step_configure_coiot()
@@ -295,6 +303,13 @@ class CoiotConfigureFlow(ShellyBlockRepairsFlow):
             return self.async_abort(reason="cannot_connect")
 
         return self.async_create_entry(title="", data={})
+
+    async def async_step_ignore(
+        self, user_input: dict[str, str] | None = None
+    ) -> data_entry_flow.FlowResult:
+        """Handle the ignore step of a fix flow."""
+        ir.async_ignore_issue(self.hass, DOMAIN, self.issue_id, True)
+        return self.async_abort(reason="issue_ignored")
 
 
 class ShellyRpcRepairsFlow(RepairsFlow):
