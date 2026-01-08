@@ -548,6 +548,7 @@ async def test_platform_multiple_triggers(
     action_method = getattr(action_helper, action_method)
 
     await async_initialize_triggers(hass, config_1, action_method, "test", "", log_cb)
+    await hass.async_block_till_done()
     assert len(action_helper.action_calls) == 1
     assert action_helper.action_calls[0][0] == {
         "trigger": {
@@ -562,6 +563,7 @@ async def test_platform_multiple_triggers(
     action_helper.action_calls.clear()
 
     await async_initialize_triggers(hass, config_2, action_method, "test", "", log_cb)
+    await hass.async_block_till_done()
     assert len(action_helper.action_calls) == 1
     assert action_helper.action_calls[0][0] == {
         "trigger": {
@@ -1038,7 +1040,17 @@ async def test_subscribe_triggers(
 @pytest.mark.parametrize(
     ("new_triggers_conditions_enabled", "expected_events"),
     [
-        (True, [{"light.turned_off", "light.turned_on"}]),
+        (
+            True,
+            [
+                {
+                    "light.brightness_changed",
+                    "light.brightness_crossed_threshold",
+                    "light.turned_off",
+                    "light.turned_on",
+                }
+            ],
+        ),
         (False, []),
     ],
 )
@@ -1195,19 +1207,19 @@ async def test_subscribe_triggers_no_triggers(
         ),
         # Test verbose choose selector options
         (
-            {CONF_ABOVE: {"chosen_selector": "entity", "entity": "sensor.test"}},
+            {CONF_ABOVE: {"active_choice": "entity", "entity": "sensor.test"}},
             does_not_raise(),
         ),
         (
-            {CONF_ABOVE: {"chosen_selector": "number", "number": 10}},
+            {CONF_ABOVE: {"active_choice": "number", "number": 10}},
             does_not_raise(),
         ),
         (
-            {CONF_BELOW: {"chosen_selector": "entity", "entity": "sensor.test"}},
+            {CONF_BELOW: {"active_choice": "entity", "entity": "sensor.test"}},
             does_not_raise(),
         ),
         (
-            {CONF_BELOW: {"chosen_selector": "number", "number": 90}},
+            {CONF_BELOW: {"active_choice": "number", "number": 90}},
             does_not_raise(),
         ),
         # Test invalid configurations
@@ -1223,7 +1235,7 @@ async def test_subscribe_triggers_no_triggers(
         ),
         (
             # Invalid choose selector option
-            {CONF_BELOW: {"chosen_selector": "cat", "cat": 90}},
+            {CONF_BELOW: {"active_choice": "cat", "cat": 90}},
             pytest.raises(vol.Invalid),
         ),
     ],
