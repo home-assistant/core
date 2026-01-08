@@ -1,25 +1,5 @@
 {
   "entity": {
-    "climate": {
-      "thermostat": {
-        "state_attributes": {
-          "hvac_mode": {
-            "state": {
-              "cool": "mdi:snowflake",
-              "heat": "mdi:radiator"
-            }
-          },
-          "preset_mode": {
-            "state": {
-              "comfort": "mdi:sofa",
-              "day": "mdi:weather-sunny",
-              "night": "mdi:weather-night",
-              "safe": "mdi:snowflake"
-            }
-          }
-        }
-      }
-    },
     "light": {
       "button-light": {
         "state": {
