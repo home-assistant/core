@@ -1,0 +1,22 @@
+{
+    "services": {
+        "set_active_gear": {
+            "service": "mdi:shoe-print"
+        },
+        "add_body_composition": {
+            "service": "mdi:scale-bathroom"
+        },
+        "add_blood_pressure": {
+            "service": "mdi:heart-pulse"
+        },
+        "create_activity": {
+            "service": "mdi:run"
+        },
+        "upload_activity": {
+            "service": "mdi:upload"
+        },
+        "add_gear_to_activity": {
+            "service": "mdi:plus-box"
+        }
+    }
+}

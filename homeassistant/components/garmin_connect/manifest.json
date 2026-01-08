@@ -1,11 +1,18 @@
 {
   "domain": "garmin_connect",
   "name": "Garmin Connect",
-  "codeowners": ["@cyberjunky"],
+  "codeowners": [
+    "@cyberjunky"
+  ],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/garmin_connect",
   "integration_type": "service",
   "iot_class": "cloud_polling",
-  "loggers": ["aiogarmin"],
-  "requirements": ["aiogarmin==0.1.1"]
+  "loggers": [
+    "aiogarmin"
+  ],
+  "quality_scale": "bronze",
+  "requirements": [
+    "aiogarmin==0.1.1"
+  ]
 }

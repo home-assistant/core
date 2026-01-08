@@ -27,6 +27,8 @@ from .const import (
     MIN_SCAN_INTERVAL,
 )
 
+type GarminConnectConfigEntry = ConfigEntry
+
 _LOGGER = logging.getLogger(__name__)
 
 STEP_USER_DATA_SCHEMA = vol.Schema(
@@ -54,7 +56,9 @@ class GarminConnectConfigFlow(ConfigFlow, domain=DOMAIN):
         self._username: str | None = None
 
     @staticmethod
-    def async_get_options_flow(config_entry: ConfigEntry) -> OptionsFlow:
+    def async_get_options_flow(
+        config_entry: GarminConnectConfigEntry,
+    ) -> OptionsFlow:
         """Get the options flow for this handler."""
         return GarminConnectOptionsFlow()
 
