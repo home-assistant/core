@@ -6,7 +6,8 @@ from typing import Any
 
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.nina.const import DOMAIN
+from homeassistant.components.nina.const import ATTR_HEADLINE, DOMAIN
+from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -23,7 +24,7 @@ ENTRY_DATA_NO_CORONA: dict[str, Any] = {
     },
 }
 
-ENTRY_DATA_NO_AREA: dict[str, Any] = {
+ENTRY_DATA_SPECIFIC_AREA: dict[str, Any] = {
     "slots": 5,
     "regions": {"083350000000": "Aach, Stadt"},
     "filters": {
@@ -61,18 +62,41 @@ async def test_sensors_without_corona_filter(
 
     await setup_platform(hass, conf_entry)
 
-    await snapshot_platform(hass, entity_registry, snapshot, conf_entry.entry_id)
+    state_w1 = hass.states.get("binary_sensor.nina_warning_aach_stadt_1")
+
+    assert state_w1.state == STATE_ON
+    assert (
+        state_w1.attributes.get(ATTR_HEADLINE)
+        == "Corona-Verordnung des Landes: Warnstufe durch Landesgesundheitsamt ausgerufen"
+    )
+
+    state_w2 = hass.states.get("binary_sensor.nina_warning_aach_stadt_2")
+
+    assert state_w2.state == STATE_ON
+    assert state_w2.attributes.get(ATTR_HEADLINE) == "Ausfall Notruf 112"
+
+    state_w3 = hass.states.get("binary_sensor.nina_warning_aach_stadt_3")
+
+    assert state_w3.state == STATE_OFF
+
+    state_w4 = hass.states.get("binary_sensor.nina_warning_aach_stadt_4")
+
+    assert state_w4.state == STATE_OFF
+
+    state_w5 = hass.states.get("binary_sensor.nina_warning_aach_stadt_5")
+
+    assert state_w5.state == STATE_OFF
 
 
 async def test_sensors_with_area_filter(
     hass: HomeAssistant, entity_registry: er.EntityRegistry, snapshot: SnapshotAssertion
 ) -> None:
-    """Test the creation and values of the NINA sensors with an area filter."""
+    """Test the creation and values of the NINA sensors with a restrictive area filter."""
 
     conf_entry: MockConfigEntry = MockConfigEntry(
         domain=DOMAIN,
         title="NINA",
-        data=ENTRY_DATA_NO_AREA,
+        data=ENTRY_DATA_SPECIFIC_AREA,
         version=1,
         minor_version=3,
     )
@@ -80,4 +104,23 @@ async def test_sensors_with_area_filter(
 
     await setup_platform(hass, conf_entry)
 
-    await snapshot_platform(hass, entity_registry, snapshot, conf_entry.entry_id)
+    state_w1 = hass.states.get("binary_sensor.nina_warning_aach_stadt_1")
+
+    assert state_w1.state == STATE_ON
+    assert state_w1.attributes.get(ATTR_HEADLINE) == "Ausfall Notruf 112"
+
+    state_w2 = hass.states.get("binary_sensor.nina_warning_aach_stadt_2")
+
+    assert state_w2.state == STATE_OFF
+
+    state_w3 = hass.states.get("binary_sensor.nina_warning_aach_stadt_3")
+
+    assert state_w3.state == STATE_OFF
+
+    state_w4 = hass.states.get("binary_sensor.nina_warning_aach_stadt_4")
+
+    assert state_w4.state == STATE_OFF
+
+    state_w5 = hass.states.get("binary_sensor.nina_warning_aach_stadt_5")
+
+    assert state_w5.state == STATE_OFF
