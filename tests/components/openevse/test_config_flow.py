@@ -3,11 +3,11 @@
 from ipaddress import ip_address
 from unittest.mock import AsyncMock, MagicMock
 
-from openevsehttp.exceptions import MissingSerial
+from openevsehttp.exceptions import AuthenticationError, MissingSerial
 
 from homeassistant.components.openevse.const import DOMAIN
 from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_USER, SOURCE_ZEROCONF
-from homeassistant.const import CONF_HOST
+from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
@@ -36,6 +36,8 @@ async def test_user_flow(
     assert result["title"] == "OpenEVSE 10.0.0.131"
     assert result["data"] == {
         CONF_HOST: "10.0.0.131",
+        CONF_PASSWORD: "",
+        CONF_USERNAME: "",
     }
     assert result["result"].unique_id == "deadbeeffeed"
 
@@ -70,6 +72,8 @@ async def test_user_flow_flaky(
     assert result["title"] == "OpenEVSE 10.0.0.131"
     assert result["data"] == {
         CONF_HOST: "10.0.0.131",
+        CONF_PASSWORD: "",
+        CONF_USERNAME: "",
     }
     assert result["result"].unique_id == "deadbeeffeed"
 
@@ -242,8 +246,8 @@ async def test_zeroconf_connection_error(
         data=discovery_info,
     )
 
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "cannot_connect"
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"]["host"] == "cannot_connect"
 
 
 async def test_zeroconf_already_configured_host(
@@ -311,3 +315,57 @@ async def test_import_flow_no_serial(
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "OpenEVSE 10.0.0.131"
     assert result["result"].unique_id is None
+
+
+async def test_user_flow_with_auth(
+    hass: HomeAssistant,
+    mock_charger: MagicMock,
+    mock_setup_entry: AsyncMock,
+) -> None:
+    """Test user flow create entry with authentication."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_USER},
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_HOST: "10.0.0.131",
+            CONF_USERNAME: "fakeuser",
+            CONF_PASSWORD: "muchpassword",
+        },
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "OpenEVSE 10.0.0.131"
+    assert result["data"] == {
+        CONF_HOST: "10.0.0.131",
+        CONF_USERNAME: "fakeuser",
+        CONF_PASSWORD: "muchpassword",
+    }
+
+
+async def test_user_flow_with_auth_error(
+    hass: HomeAssistant, mock_charger: MagicMock
+) -> None:
+    """Test user flow create entry with authentication error."""
+    mock_charger.test_and_get.side_effect = AuthenticationError
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_USER},
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_HOST: "10.0.0.131",
+            CONF_USERNAME: "fakeuser",
+            CONF_PASSWORD: "muchpassword",
+        },
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"]["base"] == "invalid_auth"
