@@ -1,0 +1,10 @@
+# Quality scale rules for Splunk integration
+rules:
+  config-flow:
+    status: done
+  entity-unique-id:
+    status: exempt
+    comment: Integration does not create entities; it exports state changes to Splunk.
+  action-setup:
+    status: exempt
+    comment: Integration does not register custom actions.
