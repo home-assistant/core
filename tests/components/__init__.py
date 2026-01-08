@@ -188,13 +188,14 @@ def parametrize_condition_states(
     target_states: list[str | None | tuple[str | None, dict]],
     other_states: list[str | None | tuple[str | None, dict]],
     additional_attributes: dict | None = None,
-) -> list[tuple[str, dict[str, Any], ConditionStateDescription]]:
+) -> list[tuple[str, dict[str, Any], list[ConditionStateDescription]]]:
     """Parametrize states and expected service call counts.
 
     The target_states and other_states iterables are either iterables of
     states or iterables of (state, attributes) tuples.
 
-    Returns a list of tuples with (condition, condition_options, ConditionStateDescription).
+    Returns a list of tuples with (trigger, list of states),
+    where states is a list of ConditionStateDescription dicts.
     """
 
     additional_attributes = additional_attributes or {}
@@ -283,7 +284,7 @@ def parametrize_trigger_states(
 
     def state_with_attributes(
         state: str | None | tuple[str | None, dict], count: int
-    ) -> dict:
+    ) -> StateDescription:
         """Return (state, attributes) dict."""
         if isinstance(state, str) or state is None:
             return {

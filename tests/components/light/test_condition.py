@@ -19,7 +19,7 @@ from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.setup import async_setup_component
 
 from tests.components import (
-    StateDescription,
+    ConditionStateDescription,
     parametrize_condition_states,
     parametrize_target_entities,
     set_or_remove_state,
@@ -144,7 +144,7 @@ async def test_light_state_condition_behavior_any(
     entities_in_target: int,
     condition: str,
     condition_options: dict[str, Any],
-    states: list[StateDescription],
+    states: list[ConditionStateDescription],
 ) -> None:
     """Test the light state condition with the 'any' behavior."""
     other_entity_ids = set(target_lights) - {entity_id}
@@ -210,7 +210,7 @@ async def test_light_state_condition_behavior_all(
     entities_in_target: int,
     condition: str,
     condition_options: dict[str, Any],
-    states: list[StateDescription],
+    states: list[ConditionStateDescription],
 ) -> None:
     """Test the light state condition with the 'all' behavior."""
     # Set state for two switches to ensure that they don't impact the condition
@@ -245,7 +245,7 @@ async def test_light_state_condition_behavior_all(
             set_or_remove_state(hass, other_entity_id, included_state)
             await hass.async_block_till_done()
 
-        # The condition passes is all entities are either in a target state or invalid
+        # The condition passes if all entities are either in a target state or invalid
         assert (
             await calls_after_trigger(hass, service_calls) == (not state["valid"])
             or state["count"]
