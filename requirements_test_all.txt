@@ -83,7 +83,7 @@ PyRMVtransport==0.3.3
 PySrDaliGateway==0.18.0
 
 # homeassistant.components.switchbot
-PySwitchbot==0.75.0
+PySwitchbot==0.76.0
 
 # homeassistant.components.syncthru
 PySyncThru==0.8.0
@@ -265,7 +265,7 @@ aioharmony==0.5.3
 aiohasupervisor==0.3.3
 
 # homeassistant.components.home_connect
-aiohomeconnect==0.26.0
+aiohomeconnect==0.28.0
 
 # homeassistant.components.homekit_controller
 aiohomekit==3.2.20
@@ -375,7 +375,7 @@ aiorussound==4.9.0
 aioruuvigateway==0.1.0
 
 # homeassistant.components.shelly
-aioshelly==13.23.0
+aioshelly==13.23.1
 
 # homeassistant.components.skybell
 aioskybell==22.7.0
@@ -417,7 +417,7 @@ aiousbwatcher==1.1.1
 aiovlc==0.5.1
 
 # homeassistant.components.vodafone_station
-aiovodafone==3.0.0
+aiovodafone==3.1.1
 
 # homeassistant.components.waqi
 aiowaqi==3.1.0
@@ -691,7 +691,7 @@ dbus-fast==3.1.2
 debugpy==1.8.17
 
 # homeassistant.components.ecovacs
-deebot-client==17.0.0
+deebot-client==17.0.1
 
 # homeassistant.components.ihc
 # homeassistant.components.namecheapdns
@@ -1071,7 +1071,7 @@ hole==0.9.0
 holidays==0.84
 
 # homeassistant.components.frontend
-home-assistant-frontend==20251229.1
+home-assistant-frontend==20260107.0
 
 # homeassistant.components.conversation
 home-assistant-intents==2026.1.6
@@ -1445,9 +1445,6 @@ openai==2.11.0
 # homeassistant.components.openerz
 openerz-api==0.3.0
 
-# homeassistant.components.openevse
-openevsewifi==1.1.2
-
 # homeassistant.components.openhome
 openhomedevice==2.2.0
 
@@ -1804,7 +1801,7 @@ pyisy==3.4.1
 pyituran==0.1.5
 
 # homeassistant.components.jvc_projector
-pyjvcprojector==1.1.2
+pyjvcprojector==1.1.3
 
 # homeassistant.components.kaleidescape
 pykaleidescape==1.0.2
@@ -1938,7 +1935,7 @@ pyotgw==2.2.2
 pyotp==2.9.0
 
 # homeassistant.components.overkiz
-pyoverkiz==1.19.3
+pyoverkiz==1.19.4
 
 # homeassistant.components.palazzetti
 pypalazzetti==0.1.20
@@ -2148,6 +2145,9 @@ python-open-router==0.3.3
 # homeassistant.components.swiss_public_transport
 python-opendata-transport==0.5.0
 
+# homeassistant.components.openevse
+python-openevse-http==0.2.1
+
 # homeassistant.components.opensky
 python-opensky==1.0.1
 
@@ -2168,7 +2168,7 @@ python-pooldose==0.8.1
 python-rabbitair==0.0.8
 
 # homeassistant.components.roborock
-python-roborock==4.2.0
+python-roborock==4.2.1
 
 # homeassistant.components.smarttub
 python-smarttub==0.0.46
@@ -2331,7 +2331,7 @@ rova==0.4.1
 rpi-bad-power==0.1.0
 
 # homeassistant.components.ruuvitag_ble
-ruuvitag-ble==0.3.0
+ruuvitag-ble==0.4.0
 
 # homeassistant.components.yamaha
 rxv==0.7.0
@@ -2380,7 +2380,7 @@ sensoterra==2.0.1
 sentence-stream==1.2.0
 
 # homeassistant.components.sentry
-sentry-sdk==1.45.1
+sentry-sdk==2.48.0
 
 # homeassistant.components.homeassistant_hardware
 # homeassistant.components.zha
@@ -2741,7 +2741,7 @@ zeroconf==0.148.0
 zeversolar==0.3.2
 
 # homeassistant.components.zha
-zha==0.0.83
+zha==0.0.84
 
 # homeassistant.components.zwave_js
 zwave-js-server-python==0.67.1
