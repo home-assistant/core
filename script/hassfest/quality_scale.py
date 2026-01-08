@@ -954,7 +954,6 @@ INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
     "tesla_fleet",
     "tesla_wall_connector",
     "teslemetry",
-    "tessie",
     "tfiac",
     "thermobeacon",
     "thermopro",
