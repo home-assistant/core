@@ -8,7 +8,6 @@ from homeassistant.components.infrared import (
     InfraredCommand,
     InfraredEntity,
     InfraredEntityFeature,
-    InfraredProtocolType,
 )
 from homeassistant.components.infrared.const import DOMAIN
 from homeassistant.core import HomeAssistant
@@ -32,10 +31,6 @@ class MockInfraredEntity(InfraredEntity):
         """Initialize mock entity."""
         self._attr_unique_id = unique_id
         self._attr_supported_features = InfraredEntityFeature.TRANSMIT
-        self._attr_supported_protocols = {
-            InfraredProtocolType.PULSE_WIDTH,
-            InfraredProtocolType.NEC,
-        }
         self.send_command_calls: list[InfraredCommand] = []
 
     async def async_send_command(self, command: InfraredCommand) -> None:

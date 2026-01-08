@@ -1,6 +1,5 @@
 """Test ESPHome infrared platform."""
 
-import json
 from unittest.mock import patch
 
 from aioesphomeapi import (
@@ -12,14 +11,8 @@ from aioesphomeapi import (
 import pytest
 
 from homeassistant.components.infrared import (
-    InfraredCommand,
     InfraredEntityFeature,
-    InfraredProtocolType,
-    IRTiming,
     NECInfraredCommand,
-    PulseWidthInfraredCommand,
-    PulseWidthIRProtocol,
-    SamsungInfraredCommand,
     async_get_entities,
 )
 from homeassistant.const import STATE_UNAVAILABLE
@@ -40,6 +33,21 @@ def _create_infrared_proxy_info(
     return InfraredProxyInfo(
         object_id=object_id, key=key, name=name, capabilities=capabilities
     )
+
+
+def _get_expected_entity_id(capabilities: InfraredProxyCapability) -> str:
+    """Get expected entity ID based on capabilities.
+
+    The entity name is dynamically determined in the entity based on capabilities:
+    - TRANSMITTER only -> "IR Transmitter" -> infrared.test_ir_transmitter
+    - RECEIVER only -> "IR Receiver" -> infrared.test_ir_receiver
+    - Both -> "IR Transceiver" -> infrared.test_ir_transceiver
+    """
+    if capabilities == InfraredProxyCapability.TRANSMITTER:
+        return "infrared.test_ir_transmitter"
+    if capabilities == InfraredProxyCapability.RECEIVER:
+        return "infrared.test_ir_receiver"
+    return "infrared.test_ir_transceiver"
 
 
 @pytest.mark.parametrize(
@@ -68,28 +76,10 @@ async def test_capabilities(
     await mock_esphome_device(mock_client=mock_client, entity_info=entity_info)
     await hass.async_block_till_done()
 
-    state = hass.states.get("infrared.test_my_remote")
+    entity_id = _get_expected_entity_id(capabilities)
+    state = hass.states.get(entity_id)
     assert state is not None
     assert state.attributes.get("supported_features") == expected_features
-
-
-async def test_supported_protocols(
-    hass: HomeAssistant,
-    mock_client: APIClient,
-    mock_esphome_device: MockESPHomeDeviceType,
-) -> None:
-    """Test infrared entity supported protocols."""
-    entity_info = [_create_infrared_proxy_info()]
-    await mock_esphome_device(mock_client=mock_client, entity_info=entity_info)
-    await hass.async_block_till_done()
-
-    state = hass.states.get("infrared.test_my_remote")
-    assert state is not None
-    protocols = state.attributes.get("supported_protocols")
-    assert protocols is not None
-    assert InfraredProtocolType.NEC.value in protocols
-    assert InfraredProtocolType.PULSE_WIDTH.value in protocols
-    assert InfraredProtocolType.SAMSUNG.value in protocols
 
 
 async def test_unavailability(
@@ -102,18 +92,19 @@ async def test_unavailability(
     device = await mock_esphome_device(mock_client=mock_client, entity_info=entity_info)
     await hass.async_block_till_done()
 
-    state = hass.states.get("infrared.test_my_remote")
+    entity_id = "infrared.test_ir_transmitter"
+    state = hass.states.get(entity_id)
     assert state is not None
     assert state.state != STATE_UNAVAILABLE
 
     await device.mock_disconnect(True)
     await hass.async_block_till_done()
-    state = hass.states.get("infrared.test_my_remote")
+    state = hass.states.get(entity_id)
     assert state.state == STATE_UNAVAILABLE
 
     await device.mock_connect()
     await hass.async_block_till_done()
-    state = hass.states.get("infrared.test_my_remote")
+    state = hass.states.get(entity_id)
     assert state.state != STATE_UNAVAILABLE
 
 
@@ -154,44 +145,31 @@ async def test_receive_event(
     assert "entry_id" in event_data
 
 
-@pytest.mark.parametrize(
-    ("command", "expected_json"),
-    [
-        (
-            NECInfraredCommand(
-                repeat_count=1,
-                address=0x10,
-                command=0x20,
-            ),
-            {"protocol": "nec", "address": 0x10, "command": 0x20, "repeat": 1},
-        ),
-        (
-            SamsungInfraredCommand(
-                repeat_count=2,
-                code=0xE0E040BF,
-                length_in_bits=32,
-            ),
-            {"protocol": "samsung", "data": 0xE0E040BF, "nbits": 32, "repeat": 2},
-        ),
-    ],
-)
 async def test_send_nec_command(
     hass: HomeAssistant,
     mock_client: APIClient,
     mock_esphome_device: MockESPHomeDeviceType,
-    command: InfraredCommand,
-    expected_json: dict,
 ) -> None:
-    """Test sending command via native API."""
+    """Test sending NEC command via native API using raw timings."""
     entity_info = [_create_infrared_proxy_info()]
     await mock_esphome_device(mock_client=mock_client, entity_info=entity_info)
     await hass.async_block_till_done()
 
-    entities = async_get_entities(hass)
+    entities = async_get_entities(
+        hass, supported_features=InfraredEntityFeature.TRANSMIT
+    )
     assert len(entities) == 1
     entity = entities[0]
 
-    with patch.object(mock_client, "infrared_proxy_transmit_protocol") as mock_transmit:
+    command = NECInfraredCommand(
+        address=0x10,
+        command=0x20,
+        repeat_count=1,
+    )
+
+    with patch.object(
+        mock_client, "infrared_proxy_transmit_raw_timings"
+    ) as mock_transmit:
         await entity.async_send_command(command)
         await hass.async_block_till_done()
 
@@ -199,56 +177,17 @@ async def test_send_nec_command(
         call_args = mock_transmit.call_args
         assert call_args[0][0] == 1  # key
 
-        cmd_json = json.loads(call_args[0][1])
-        assert cmd_json == expected_json
+        # Verify carrier frequency
+        assert call_args.kwargs.get("carrier_frequency") == 38000
 
-
-async def test_send_pulse_width_command(
-    hass: HomeAssistant,
-    mock_client: APIClient,
-    mock_esphome_device: MockESPHomeDeviceType,
-) -> None:
-    """Test sending pulse-width command via native API."""
-    entity_info = [_create_infrared_proxy_info()]
-    await mock_esphome_device(
-        mock_client=mock_client,
-        entity_info=entity_info,
-        user_service=[],
-        states=[],
-    )
-    await hass.async_block_till_done()
-
-    entities = async_get_entities(hass)
-    assert len(entities) == 1
-    entity = entities[0]
-
-    protocol = PulseWidthIRProtocol(
-        header=IRTiming(high_us=9000, low_us=4500),
-        one=IRTiming(high_us=560, low_us=1690),
-        zero=IRTiming(high_us=560, low_us=560),
-        footer=IRTiming(high_us=560, low_us=0),
-        frequency=38000,
-        msb_first=False,
-    )
-    command = PulseWidthInfraredCommand(
-        protocol=protocol, repeat_count=1, code=0x20DF10EF, length_in_bits=32
-    )
-
-    with patch.object(mock_client, "infrared_proxy_transmit") as mock_transmit:
-        await entity.async_send_command(command)
-        await hass.async_block_till_done()
-
-        mock_transmit.assert_called_once()
-        call_args = mock_transmit.call_args
-        assert call_args[0][0] == 1  # key
-        # Timing params should be second argument
-        timing = call_args[0][1]
-        assert timing.frequency == 38000
-        assert timing.length_in_bits == 32
-        # Data bytes should be third argument
-        data_bytes = call_args[0][2]
-        assert isinstance(data_bytes, bytes)
-        assert len(data_bytes) == 4
+        # Verify timings is a list of integers (alternating high/low)
+        timings = call_args.kwargs.get("timings")
+        assert timings is not None
+        assert isinstance(timings, list)
+        assert len(timings) > 0
+        # Should have alternating positive (high) and negative (low) values
+        # First should be positive (leader high)
+        assert timings[0] > 0
 
 
 async def test_send_command_no_transmitter(
@@ -263,11 +202,13 @@ async def test_send_command_no_transmitter(
     await mock_esphome_device(mock_client=mock_client, entity_info=entity_info)
     await hass.async_block_till_done()
 
-    entities = async_get_entities(hass)
+    entities = async_get_entities(
+        hass, supported_features=InfraredEntityFeature.RECEIVE
+    )
     assert len(entities) == 1
     entity = entities[0]
 
-    command = NECInfraredCommand(repeat_count=1, address=0x04, command=0x08)
+    command = NECInfraredCommand(address=0x04, command=0x08)
 
     with pytest.raises(HomeAssistantError):
         await entity.async_send_command(command)
@@ -290,6 +231,6 @@ async def test_device_association(
     )
     assert device is not None
 
-    entry = entity_registry.async_get("infrared.test_my_remote")
+    entry = entity_registry.async_get("infrared.test_ir_transmitter")
     assert entry is not None
     assert entry.device_id == device.id

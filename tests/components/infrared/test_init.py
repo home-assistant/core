@@ -7,7 +7,6 @@ from homeassistant.components.infrared import (
     DATA_COMPONENT,
     DOMAIN,
     InfraredEntityFeature,
-    InfraredProtocolType,
     NECInfraredCommand,
     async_get_entities,
     async_send_command,
@@ -37,34 +36,34 @@ async def test_get_entities_empty(hass: HomeAssistant) -> None:
     assert await async_setup_component(hass, DOMAIN, {})
     await hass.async_block_till_done()
 
-    entities = async_get_entities(hass)
+    entities = async_get_entities(
+        hass, supported_features=InfraredEntityFeature.TRANSMIT
+    )
     assert entities == []
 
 
-async def test_get_entities_filter_by_protocol(
+async def test_get_entities_filter_by_feature(
     hass: HomeAssistant,
     init_integration: None,
     mock_infrared_entity: MockInfraredEntity,
 ) -> None:
-    """Test filtering entities by protocol support."""
+    """Test filtering entities by feature support."""
     # Add the mock entity to the component
     component = hass.data[DATA_COMPONENT]
     await component.async_add_entities([mock_infrared_entity])
 
-    # Get all entities
-    all_entities = async_get_entities(hass)
-    assert len(all_entities) == 1
-    assert all_entities[0] is mock_infrared_entity
-
-    # Filter by NEC protocol (should match)
-    nec_entities = async_get_entities(hass, protocols=[InfraredProtocolType.NEC])
-    assert len(nec_entities) == 1
-
-    # Filter by Samsung protocol (should not match since mock only supports NEC and PULSE_WIDTH)
-    samsung_entities = async_get_entities(
-        hass, protocols=[InfraredProtocolType.SAMSUNG]
+    # Get entities with TRANSMIT feature (should match)
+    transmit_entities = async_get_entities(
+        hass, supported_features=InfraredEntityFeature.TRANSMIT
     )
-    assert len(samsung_entities) == 0
+    assert len(transmit_entities) == 1
+    assert transmit_entities[0] is mock_infrared_entity
+
+    # Get entities with RECEIVE feature (should not match since mock only supports TRANSMIT)
+    receive_entities = async_get_entities(
+        hass, supported_features=InfraredEntityFeature.RECEIVE
+    )
+    assert len(receive_entities) == 0
 
 
 async def test_infrared_entity_initial_state(
@@ -93,9 +92,9 @@ async def test_infrared_entity_send_command(
 
     # Create a test command
     command = NECInfraredCommand(
-        repeat_count=1,
         address=0x04FB,
         command=0x08F7,
+        repeat_count=1,
     )
 
     # Send command
@@ -113,8 +112,6 @@ async def test_infrared_entity_features(
 ) -> None:
     """Test infrared entity features property."""
     assert mock_infrared_entity.supported_features == InfraredEntityFeature.TRANSMIT
-    assert InfraredProtocolType.NEC in mock_infrared_entity.supported_protocols
-    assert InfraredProtocolType.PULSE_WIDTH in mock_infrared_entity.supported_protocols
 
 
 async def test_async_send_command_success(
@@ -132,7 +129,7 @@ async def test_async_send_command_success(
     now = dt_util.utcnow()
     freezer.move_to(now)
 
-    command = NECInfraredCommand(repeat_count=1, address=0x04FB, command=0x08F7)
+    command = NECInfraredCommand(address=0x04FB, command=0x08F7, repeat_count=1)
     await async_send_command(hass, "infrared.test_ir_transmitter", command)
 
     assert len(mock_infrared_entity.send_command_calls) == 1
@@ -147,7 +144,7 @@ async def test_async_send_command_entity_not_found(
     hass: HomeAssistant, init_integration: None
 ) -> None:
     """Test async_send_command raises error when entity not found."""
-    command = NECInfraredCommand(repeat_count=1, address=0x04FB, command=0x08F7)
+    command = NECInfraredCommand(address=0x04FB, command=0x08F7, repeat_count=1)
 
     with pytest.raises(
         HomeAssistantError,
@@ -158,7 +155,7 @@ async def test_async_send_command_entity_not_found(
 
 async def test_async_send_command_component_not_loaded(hass: HomeAssistant) -> None:
     """Test async_send_command raises error when component not loaded."""
-    command = NECInfraredCommand(repeat_count=1, address=0x04FB, command=0x08F7)
+    command = NECInfraredCommand(address=0x04FB, command=0x08F7, repeat_count=1)
 
     with pytest.raises(HomeAssistantError, match="Infrared component not loaded"):
         await async_send_command(hass, "infrared.some_entity", command)

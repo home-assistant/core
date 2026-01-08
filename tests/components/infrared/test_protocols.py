@@ -3,96 +3,89 @@
 import pytest
 
 from homeassistant.components.infrared import (
-    InfraredProtocolType,
-    IRTiming,
+    InfraredProtocol,
     NECInfraredCommand,
-    NECInfraredProtocol,
-    SamsungInfraredCommand,
-    SamsungInfraredProtocol,
+    Timing,
 )
 
 
-def test_nec_protocol_pulse_width_compat() -> None:
-    """Test NEC protocol conversion to pulse-width compatible format."""
-    protocol = NECInfraredProtocol()
-    compat = protocol.get_pulse_width_compat_protocol()
-
-    # Verify timing values match NEC standard
-    assert compat.header.high_us == 9000
-    assert compat.header.low_us == 4500
-    assert compat.one.high_us == 560
-    assert compat.one.low_us == 1690
-    assert compat.zero.high_us == 560
-    assert compat.zero.low_us == 560
-    assert compat.footer.high_us == 560
-    assert compat.footer.low_us == 0
-    assert compat.frequency == 38000
-    assert compat.msb_first is False
-    assert compat.minimum_idle_time_us == 40000
-
-
-def test_samsung_protocol_pulse_width_compat() -> None:
-    """Test Samsung protocol conversion to pulse-width compatible format."""
-    protocol = SamsungInfraredProtocol()
-    compat = protocol.get_pulse_width_compat_protocol()
-
-    # Verify timing values match Samsung standard
-    assert compat.header.high_us == 4500
-    assert compat.header.low_us == 4500
-    assert compat.one.high_us == 560
-    assert compat.one.low_us == 1690
-    assert compat.zero.high_us == 560
-    assert compat.zero.low_us == 560
-    assert compat.frequency == 38000
-
-
-def test_nec_command_pulse_width_compat_code() -> None:
-    """Test NEC command code conversion to pulse-width format."""
+def test_nec_command_get_raw_timings_standard() -> None:
+    """Test NEC command raw timings generation for standard 8-bit address."""
     command = NECInfraredCommand(
-        repeat_count=1,
+        address=0x04,
+        command=0x08,
+        repeat_count=0,
+    )
+
+    timings = command.get_raw_timings()
+
+    # Leader pulse
+    assert timings[0] == Timing(high_us=9000, low_us=4500)
+
+    # 32 data bits + end pulse = 33 more timings after leader
+    assert len(timings) == 34  # 1 leader + 32 data bits + 1 end pulse
+
+    # End pulse (no repeat, so low_us = 0)
+    assert timings[-1].high_us == 562
+    assert timings[-1].low_us == 0
+
+
+def test_nec_command_get_raw_timings_extended() -> None:
+    """Test NEC command raw timings generation for extended 16-bit address."""
+    command = NECInfraredCommand(
         address=0x04FB,  # 16-bit address
-        command=0x08F7,  # 16-bit command
+        command=0x08,
+        repeat_count=0,
     )
 
-    # Code should be: address | (command << 16)
-    expected_code = 0x04FB | (0x08F7 << 16)
-    assert command.get_pulse_width_compat_code() == expected_code
+    timings = command.get_raw_timings()
+
+    # Leader pulse
+    assert timings[0] == Timing(high_us=9000, low_us=4500)
+
+    # 32 data bits + end pulse = 33 more timings after leader
+    assert len(timings) == 34
 
 
-def test_samsung_command_pulse_width_compat_code() -> None:
-    """Test Samsung command code conversion (should be passthrough)."""
-    command = SamsungInfraredCommand(
-        repeat_count=1,
-        code=0xE0E040BF,
-        length_in_bits=32,
+def test_nec_command_get_raw_timings_with_repeat() -> None:
+    """Test NEC command raw timings generation with repeat codes."""
+    command = NECInfraredCommand(
+        address=0x04,
+        command=0x08,
+        repeat_count=2,
     )
 
-    # Samsung code should pass through unchanged
-    assert command.get_pulse_width_compat_code() == 0xE0E040BF
+    timings = command.get_raw_timings()
+
+    # Base: 1 leader + 32 data bits + 1 end pulse = 34
+    # Each repeat: replaces last low_us with gap, adds leader + end pulse = +2
+    # With 2 repeats: 34 + 2*2 = 38
+    assert len(timings) == 38
+
+    # Last timing should be end pulse with low_us=0
+    assert timings[-1].high_us == 562
+    assert timings[-1].low_us == 0
 
 
-def test_ir_timing_frozen() -> None:
-    """Test that IRTiming is immutable."""
-    timing = IRTiming(high_us=9000, low_us=4500)
+def test_nec_command_protocol_attribute() -> None:
+    """Test NEC command has correct protocol attribute."""
+    command = NECInfraredCommand(
+        address=0x04,
+        command=0x08,
+    )
+
+    assert command.protocol == InfraredProtocol.NEC
+
+
+def test_timing_frozen() -> None:
+    """Test that Timing is immutable."""
+    timing = Timing(high_us=9000, low_us=4500)
 
     with pytest.raises(AttributeError):
         timing.high_us = 1000  # type: ignore[misc]
 
 
-def test_nec_command_frozen() -> None:
-    """Test that NECIRCommand is immutable."""
-    command = NECInfraredCommand(
-        repeat_count=1,
-        address=0x04FB,
-        command=0x08F7,
-    )
-
-    with pytest.raises(AttributeError):
-        command.address = 0x0000  # type: ignore[misc]
-
-
 def test_protocol_types() -> None:
     """Test protocol type enum values."""
-    assert InfraredProtocolType.PULSE_WIDTH == "pulse_width"
-    assert InfraredProtocolType.NEC == "nec"
-    assert InfraredProtocolType.SAMSUNG == "samsung"
+    assert InfraredProtocol.NEC == "nec"
+    assert InfraredProtocol.SAMSUNG == "samsung"

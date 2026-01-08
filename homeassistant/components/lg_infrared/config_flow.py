@@ -6,7 +6,7 @@ import voluptuous as vol
 
 from homeassistant.components.infrared import (
     DOMAIN as INFRARED_DOMAIN,
-    InfraredProtocolType,
+    InfraredEntityFeature,
     async_get_entities,
 )
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
@@ -34,7 +34,9 @@ class LgIrConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle the initial step."""
-        entities = async_get_entities(self.hass, protocols={InfraredProtocolType.NEC})
+        entities = async_get_entities(
+            self.hass, supported_features=InfraredEntityFeature.TRANSMIT
+        )
         if not entities:
             return self.async_abort(reason="no_emitters")
 
