@@ -3,7 +3,7 @@
 from typing import Any
 
 from openevsehttp.__main__ import OpenEVSE
-from openevsehttp.exceptions import AuthenticationError
+from openevsehttp.exceptions import AuthenticationError, MissingSerial
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
@@ -36,6 +36,8 @@ class OpenEVSEConfigFlow(ConfigFlow, domain=DOMAIN):
             return {CONF_HOST: "cannot_connect"}
         except AuthenticationError:
             return {"base": "invalid_auth"}
+        except MissingSerial:
+            return {CONF_SERIAL: None}
         return {CONF_SERIAL: result.get(CONF_SERIAL)}
 
     async def async_step_user(
