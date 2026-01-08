@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Generic
+from typing import TYPE_CHECKING, Any
 
 from powerfox import Device, GasReport, HeatMeter, PowerMeter, WaterMeter
 
@@ -19,11 +19,12 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .coordinator import (
+    PowerfoxBaseCoordinator,
     PowerfoxConfigEntry,
     PowerfoxDataUpdateCoordinator,
     PowerfoxReportDataUpdateCoordinator,
 )
-from .entity import CoordinatorT, PowerfoxEntity
+from .entity import PowerfoxEntity
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -290,8 +291,8 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
-class BasePowerfoxSensorEntity(
-    PowerfoxEntity[CoordinatorT], SensorEntity, Generic[CoordinatorT]
+class BasePowerfoxSensorEntity[CoordinatorT: PowerfoxBaseCoordinator[Any]](
+    PowerfoxEntity[CoordinatorT], SensorEntity
 ):
     """Common base for Powerfox sensor entities."""
 
