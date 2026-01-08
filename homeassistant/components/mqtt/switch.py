@@ -137,7 +137,8 @@ class MqttSwitch(MqttEntity, SwitchEntity, RestoreEntity):
     @callback
     def _state_message_received(self, msg: ReceiveMessage) -> None:
         """Handle new MQTT state messages."""
-        payload = self._value_template(msg.payload)
+        if (payload := self._value_template(msg.payload)) in self._is_on_map:
+            self._attr_is_on = self._is_on_map[payload]
 
         # Update icon from icon_template, if configured
         if CONF_ICON_TEMPLATE in self._config and self._icon_template:
@@ -155,9 +156,6 @@ class MqttSwitch(MqttEntity, SwitchEntity, RestoreEntity):
                     self._attr_icon = icon
                 else:
                     self._attr_icon = None
-
-        if payload in self._is_on_map:
-            self._attr_is_on = self._is_on_map[payload]
 
     @callback
     def _prepare_subscribe_topics(self) -> None:
