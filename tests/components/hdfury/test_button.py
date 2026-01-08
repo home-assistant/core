@@ -1,4 +1,4 @@
-"""Tests for the HDFury select platform."""
+"""Tests for the HDFury button platform."""
 
 from syrupy.assertion import SnapshotAssertion
 
@@ -11,13 +11,13 @@ from . import setup_integration
 from tests.common import MockConfigEntry, snapshot_platform
 
 
-async def test_select_entities(
+async def test_button_entities(
     hass: HomeAssistant,
     snapshot: SnapshotAssertion,
     entity_registry: er.EntityRegistry,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test HDFury select entities."""
+    """Test HDFury button entities."""
 
-    await setup_integration(hass, mock_config_entry, [Platform.SELECT])
+    await setup_integration(hass, mock_config_entry, [Platform.BUTTON])
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)

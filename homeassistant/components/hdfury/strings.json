@@ -19,6 +19,14 @@
     }
   },
   "entity": {
+    "button": {
+      "issue_hotplug": {
+        "name": "Issue Hotplug"
+      },
+      "reboot": {
+        "name": "Reboot"
+      }
+    },
     "select": {
       "opmode": {
         "name": "Operation mode",

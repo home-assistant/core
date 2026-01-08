@@ -1,5 +1,13 @@
 {
   "entity": {
+    "button": {
+      "issue_hotplug": {
+        "default": "mdi:connection"
+      },
+      "reboot": {
+        "default": "mdi:restart"
+      }
+    },
     "select": {
       "opmode": {
         "default": "mdi:cogs"
