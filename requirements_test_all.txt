@@ -246,7 +246,6 @@ aioemonitor==1.0.5
 aioesphomeapi==43.9.1
 
 # homeassistant.components.matrix
-# homeassistant.components.ntfy
 # homeassistant.components.slack
 aiofiles==24.1.0
 

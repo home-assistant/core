@@ -1,19 +1,16 @@
 """Common fixtures for the ntfy tests."""
 
 import asyncio
-from collections.abc import AsyncGenerator, Callable, Generator
+from collections.abc import Callable, Generator
 from datetime import UTC, datetime
 from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
 from aiontfy import Account, AccountTokenResponse, Event, Notification
 import pytest
 
-from homeassistant.components import camera
 from homeassistant.components.ntfy.const import CONF_TOPIC, DOMAIN
 from homeassistant.config_entries import ConfigSubentryData
 from homeassistant.const import CONF_TOKEN, CONF_URL, CONF_USERNAME, CONF_VERIFY_SSL
-from homeassistant.core import HomeAssistant
-from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry, load_fixture
 
@@ -125,37 +122,3 @@ def mock_config_entry() -> MockConfigEntry:
             )
         ],
     )
-
-
-@pytest.fixture(name="mock_camera")
-async def mock_camera_fixture(hass: HomeAssistant) -> AsyncGenerator[None]:
-    """Initialize a demo camera platform."""
-    assert await async_setup_component(hass, "homeassistant", {})
-    assert await async_setup_component(
-        hass, "camera", {camera.DOMAIN: {"platform": "demo"}}
-    )
-    await hass.async_block_till_done()
-
-    with patch(
-        "homeassistant.components.demo.camera.Path.read_bytes",
-        return_value=b"I play the sax\n",
-    ):
-        yield
-
-
-@pytest.fixture(name="mock_image")
-async def mock_image_fixture(hass: HomeAssistant) -> AsyncGenerator[None]:
-    """Initialize image platform."""
-    assert await async_setup_component(hass, "image", {})
-    await hass.async_block_till_done()
-
-    image_entity = AsyncMock()
-    image_entity.async_image.return_value = b"\x89PNG"
-
-    with (
-        patch(
-            "homeassistant.helpers.entity_component.EntityComponent.get_entity",
-            return_value=image_entity,
-        ),
-    ):
-        yield

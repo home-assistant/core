@@ -281,9 +281,6 @@
     "entry_not_loaded": {
       "message": "The selected ntfy service is currently not loaded or disabled in Home Assistant."
     },
-    "image_source_not_found": {
-      "message": "The selected image source could not be found"
-    },
     "media_source_not_supported": {
       "message": "Media source currently not supported"
     },
