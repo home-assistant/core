@@ -73,7 +73,7 @@ SENSOR_DESCRIPTIONS: tuple[RotarexTankSensorEntityDescription, ...] = (
         translation_key="last_sync",
         device_class=SensorDeviceClass.TIMESTAMP,
         value_fn=lambda sync: (
-            dt_util.as_local(dt_util.parse_datetime(sync["SynchDate"]))
+            dt_util.parse_datetime(sync["SynchDate"])
             if sync and sync.get("SynchDate")
             else None
         ),
@@ -156,6 +156,13 @@ class RotarexTankSensor(CoordinatorEntity, SensorEntity):
     def device_info(self) -> DeviceInfo:
         """Return device information."""
         data = self.coordinator.data
+        if not isinstance(data, list):
+            return DeviceInfo(
+                identifiers={(DOMAIN, self._tank_id)},
+                name="Unknown Tank",
+                manufacturer="Rotarex",
+                model="DIMES SRG",
+            )
         tank_data = next(
             (t for t in data if isinstance(t, dict) and t.get("Guid") == self._tank_id),
             None,
