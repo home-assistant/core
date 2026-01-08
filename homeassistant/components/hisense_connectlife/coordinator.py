@@ -9,7 +9,6 @@ import logging
 from typing import Any
 
 from connectlife_cloud.devices import get_device_parser
-
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed

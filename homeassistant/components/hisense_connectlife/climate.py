@@ -11,7 +11,6 @@ from connectlife_cloud.mode_converter import (
     get_ha_fan_mode_string,
     get_ha_mode_string,
 )
-
 from homeassistant.components.climate import (
     FAN_AUTO,
     FAN_HIGH,

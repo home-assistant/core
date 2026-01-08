@@ -7,9 +7,9 @@ import logging
 from typing import Any
 
 import aiohttp
+
 from connectlife_cloud import ConnectLifeCloudClient, ConnectLifeWebSocket
 from connectlife_cloud.devices.base import BaseDeviceParser
-
 from homeassistant.core import HomeAssistant
 
 from .const import CLIENT_ID, CLIENT_SECRET
