@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import asyncio
 from collections import Counter
-from collections.abc import Awaitable, Callable, Mapping
+from collections.abc import Awaitable, Callable
 from typing import Any, Literal, NotRequired, TypedDict
 
 import voluptuous as vol
@@ -492,7 +492,7 @@ class EnergyManager:
     def _process_battery_power(
         self,
         source: BatterySourceType,
-        generate_entity_id: Callable[[str, Mapping[str, Any]], str],
+        generate_entity_id: Callable[[str, PowerConfig], str],
     ) -> BatterySourceType:
         """Set stat_rate for battery if power_config is specified."""
         if "power_config" not in source:
@@ -514,7 +514,7 @@ class EnergyManager:
     def _process_grid_power(
         self,
         source: GridSourceType,
-        generate_entity_id: Callable[[str, Mapping[str, Any]], str],
+        generate_entity_id: Callable[[str, PowerConfig], str],
     ) -> GridSourceType:
         """Set stat_rate for grid power sources if power_config is specified."""
         if "power" not in source:
