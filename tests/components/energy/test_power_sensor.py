@@ -9,7 +9,10 @@ from homeassistant.components.recorder import Recorder
 from homeassistant.components.sensor import SensorDeviceClass, SensorStateClass
 from homeassistant.const import ATTR_UNIT_OF_MEASUREMENT, UnitOfPower
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.setup import async_setup_component
+
+from tests.common import MockConfigEntry
 
 
 async def test_power_sensor_inverted_initialization(hass: HomeAssistant) -> None:
@@ -325,6 +328,7 @@ async def test_power_sensor_combined_non_numeric(hass: HomeAssistant) -> None:
 
 async def test_power_sensor_async_added_to_hass_inverted(
     hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
 ) -> None:
     """Test EnergyPowerSensor async_added_to_hass for inverted mode."""
     config: Mapping[str, Any] = {"stat_rate_inverted": "sensor.battery_power"}
@@ -337,14 +341,21 @@ async def test_power_sensor_async_added_to_hass_inverted(
     )
     sensor.hass = hass
 
-    # Set up source sensor with friendly name and unit
+    # Register source sensor in entity registry with unit
+    entity_registry.async_get_or_create(
+        "sensor",
+        "test",
+        "battery_power",
+        suggested_object_id="battery_power",
+        unit_of_measurement=UnitOfPower.WATT,
+        original_name="Battery Power",
+    )
+
+    # Set up source sensor state
     hass.states.async_set(
         "sensor.battery_power",
         "100.0",
-        {
-            "friendly_name": "Battery Power",
-            ATTR_UNIT_OF_MEASUREMENT: UnitOfPower.WATT,
-        },
+        {"friendly_name": "Battery Power"},
     )
     await hass.async_block_till_done()
 
@@ -377,6 +388,7 @@ async def test_power_sensor_async_added_to_hass_inverted_no_source(
 
 async def test_power_sensor_async_added_to_hass_combined(
     hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
 ) -> None:
     """Test EnergyPowerSensor async_added_to_hass for combined mode."""
     config: Mapping[str, Any] = {
@@ -392,12 +404,17 @@ async def test_power_sensor_async_added_to_hass_combined(
     )
     sensor.hass = hass
 
-    # Set up source sensors
-    hass.states.async_set(
-        "sensor.battery_discharge",
-        "100.0",
-        {ATTR_UNIT_OF_MEASUREMENT: UnitOfPower.KILO_WATT},
+    # Register first source sensor in entity registry with unit
+    entity_registry.async_get_or_create(
+        "sensor",
+        "test",
+        "battery_discharge",
+        suggested_object_id="battery_discharge",
+        unit_of_measurement=UnitOfPower.KILO_WATT,
     )
+
+    # Set up source sensor states
+    hass.states.async_set("sensor.battery_discharge", "100.0")
     hass.states.async_set("sensor.battery_charge", "30.0")
     await hass.async_block_till_done()
 
@@ -406,6 +423,73 @@ async def test_power_sensor_async_added_to_hass_combined(
     assert sensor._attr_name == "Battery Power"
     assert sensor._attr_native_unit_of_measurement == UnitOfPower.KILO_WATT
     assert sensor._attr_native_value == 70.0
+
+
+async def test_power_sensor_copies_display_precision(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test EnergyPowerSensor copies display precision from source."""
+    config: Mapping[str, Any] = {"stat_rate_inverted": "sensor.battery_power"}
+
+    sensor = EnergyPowerSensor(
+        source_type="battery",
+        config=config,
+        unique_id="test_inverted",
+        entity_id="sensor.test_inverted",
+    )
+    sensor.hass = hass
+
+    # Register source sensor in entity registry with unit and precision
+    entity_registry.async_get_or_create(
+        "sensor",
+        "test",
+        "battery_power",
+        suggested_object_id="battery_power",
+        unit_of_measurement=UnitOfPower.WATT,
+        capabilities={"suggested_display_precision": 2},
+    )
+
+    await sensor.async_added_to_hass()
+
+    assert sensor._attr_suggested_display_precision == 2
+    assert sensor._attr_native_unit_of_measurement == UnitOfPower.WATT
+
+
+async def test_power_sensor_copies_unit_when_unavailable(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test EnergyPowerSensor copies unit even when source is unavailable."""
+    config: Mapping[str, Any] = {"stat_rate_inverted": "sensor.battery_power"}
+
+    sensor = EnergyPowerSensor(
+        source_type="battery",
+        config=config,
+        unique_id="test_inverted",
+        entity_id="sensor.test_inverted",
+    )
+    sensor.hass = hass
+
+    # Register source sensor in entity registry with unit and precision
+    entity_registry.async_get_or_create(
+        "sensor",
+        "test",
+        "battery_power",
+        suggested_object_id="battery_power",
+        unit_of_measurement=UnitOfPower.WATT,
+        capabilities={"suggested_display_precision": 1},
+    )
+
+    # Set source sensor as unavailable
+    hass.states.async_set("sensor.battery_power", "unavailable")
+    await hass.async_block_till_done()
+
+    await sensor.async_added_to_hass()
+
+    # Unit and precision should still be copied from registry
+    assert sensor._attr_native_unit_of_measurement == UnitOfPower.WATT
+    assert sensor._attr_suggested_display_precision == 1
 
 
 async def test_power_sensor_state_change_listener(hass: HomeAssistant) -> None:
@@ -620,3 +704,143 @@ async def test_power_sensor_grid_combined(
     assert state is not None
     # 500 - 200 = 300 (net import)
     assert float(state.state) == 300.0
+
+
+async def test_power_sensor_device_assignment(
+    recorder_mock: Recorder,
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test power sensor is assigned to same device as source sensor."""
+    assert await async_setup_component(hass, "energy", {"energy": {}})
+    manager = await async_get_manager(hass)
+    manager.data = manager.default_preferences()
+
+    # Create a config entry for the device
+    config_entry = MockConfigEntry(domain="test")
+    config_entry.add_to_hass(hass)
+
+    # Create a device and register source sensor to it
+    device_entry = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        identifiers={("test", "battery_device")},
+        name="Battery Device",
+    )
+
+    # Register the source sensor with the device
+    entity_registry.async_get_or_create(
+        "sensor",
+        "test",
+        "battery_power",
+        suggested_object_id="battery_power",
+        device_id=device_entry.id,
+    )
+
+    # Set up source sensor state
+    hass.states.async_set(
+        "sensor.battery_power",
+        "100.0",
+        {ATTR_UNIT_OF_MEASUREMENT: UnitOfPower.WATT},
+    )
+    await hass.async_block_till_done()
+
+    # Update with battery that has inverted power_config
+    await manager.async_update(
+        {
+            "energy_sources": [
+                {
+                    "type": "battery",
+                    "stat_energy_from": "sensor.battery_energy_from",
+                    "stat_energy_to": "sensor.battery_energy_to",
+                    "power_config": {
+                        "stat_rate_inverted": "sensor.battery_power",
+                    },
+                }
+            ],
+        }
+    )
+    await hass.async_block_till_done()
+
+    # Verify the power sensor was created and assigned to same device
+    power_sensor_entry = entity_registry.async_get("sensor.battery_power_inverted")
+    assert power_sensor_entry is not None
+    assert power_sensor_entry.device_id == device_entry.id
+
+
+async def test_power_sensor_device_assignment_combined_second_sensor(
+    recorder_mock: Recorder,
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test power sensor checks second sensor if first has no device."""
+    assert await async_setup_component(hass, "energy", {"energy": {}})
+    manager = await async_get_manager(hass)
+    manager.data = manager.default_preferences()
+
+    # Create a config entry for the device
+    config_entry = MockConfigEntry(domain="test")
+    config_entry.add_to_hass(hass)
+
+    # Create a device and register second sensor to it
+    device_entry = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        identifiers={("test", "battery_device")},
+        name="Battery Device",
+    )
+
+    # Register first sensor WITHOUT device
+    entity_registry.async_get_or_create(
+        "sensor",
+        "test",
+        "battery_discharge",
+        suggested_object_id="battery_discharge",
+    )
+
+    # Register second sensor WITH device
+    entity_registry.async_get_or_create(
+        "sensor",
+        "test",
+        "battery_charge",
+        suggested_object_id="battery_charge",
+        device_id=device_entry.id,
+    )
+
+    # Set up source sensor states
+    hass.states.async_set(
+        "sensor.battery_discharge",
+        "100.0",
+        {ATTR_UNIT_OF_MEASUREMENT: UnitOfPower.WATT},
+    )
+    hass.states.async_set(
+        "sensor.battery_charge",
+        "50.0",
+        {ATTR_UNIT_OF_MEASUREMENT: UnitOfPower.WATT},
+    )
+    await hass.async_block_till_done()
+
+    # Update with battery that has combined power_config
+    await manager.async_update(
+        {
+            "energy_sources": [
+                {
+                    "type": "battery",
+                    "stat_energy_from": "sensor.battery_energy_from",
+                    "stat_energy_to": "sensor.battery_energy_to",
+                    "power_config": {
+                        "stat_rate_from": "sensor.battery_discharge",
+                        "stat_rate_to": "sensor.battery_charge",
+                    },
+                }
+            ],
+        }
+    )
+    await hass.async_block_till_done()
+
+    # Verify the power sensor was created and assigned to second sensor's device
+    power_sensor_entry = entity_registry.async_get(
+        "sensor.energy_battery_battery_discharge_power"
+    )
+    assert power_sensor_entry is not None
+    assert power_sensor_entry.device_id == device_entry.id

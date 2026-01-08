@@ -589,6 +589,7 @@ class EnergyPowerSensor(SensorEntity):
     _attr_should_poll = False
     _attr_device_class = SensorDeviceClass.POWER
     _attr_state_class = SensorStateClass.MEASUREMENT
+    _attr_has_entity_name = True
 
     def __init__(
         self,
@@ -659,26 +660,40 @@ class EnergyPowerSensor(SensorEntity):
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""
         # Set name based on source sensor(s)
-        if self._is_inverted:
-            source_state = self.hass.states.get(self._source_sensors[0])
-            if source_state:
-                name = source_state.attributes.get("friendly_name", source_state.name)
-                self._attr_name = f"{name} Inverted"
-            else:
-                sensor_name = split_entity_id(self._source_sensors[0])[1].replace(
-                    "_", " "
-                )
-                self._attr_name = f"{sensor_name.title()} Inverted"
-        elif self._is_combined:
-            self._attr_name = f"{self._source_type.title()} Power"
-
-        # Copy unit of measurement from primary source sensor
         if self._source_sensors:
-            source_state = self.hass.states.get(self._source_sensors[0])
-            if source_state:
-                self._attr_native_unit_of_measurement = source_state.attributes.get(
-                    ATTR_UNIT_OF_MEASUREMENT
+            entity_reg = er.async_get(self.hass)
+            device_id = None
+            source_name = None
+            # Check first sensor
+            if source_entry := entity_reg.async_get(self._source_sensors[0]):
+                device_id = source_entry.device_id
+                self._attr_native_unit_of_measurement = source_entry.unit_of_measurement
+                # Get source name from registry
+                source_name = source_entry.name or source_entry.original_name
+            # If first sensor has no device and we have a second sensor, check it
+            if not device_id and len(self._source_sensors) > 1:
+                if source_entry := entity_reg.async_get(self._source_sensors[1]):
+                    device_id = source_entry.device_id
+            # Update entity registry entry with device_id
+            if device_id and (power_entry := entity_reg.async_get(self.entity_id)):
+                entity_reg.async_update_entity(
+                    power_entry.entity_id, device_id=device_id
                 )
+
+            # Set name for inverted mode
+            if self._is_inverted:
+                if source_name:
+                    self._attr_name = f"{source_name} Inverted"
+                else:
+                    # Fall back to entity_id if no name in registry
+                    sensor_name = split_entity_id(self._source_sensors[0])[1].replace(
+                        "_", " "
+                    )
+                    self._attr_name = f"{sensor_name.title()} Inverted"
+
+        # Set name for combined mode
+        if self._is_combined:
+            self._attr_name = f"{self._source_type.title()} Power"
 
         self._update_state()
 
