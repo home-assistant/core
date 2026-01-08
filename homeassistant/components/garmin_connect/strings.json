@@ -31,6 +31,14 @@
           "username": "Email"
         },
         "description": "Enter your Garmin Connect credentials."
+      },
+      "reconfigure": {
+        "data": {
+          "password": "Password",
+          "username": "Email"
+        },
+        "description": "Update your Garmin Connect credentials.",
+        "title": "Reconfigure Garmin Connect"
       }
     }
   },

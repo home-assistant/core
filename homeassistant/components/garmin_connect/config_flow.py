@@ -193,6 +193,49 @@ class GarminConnectConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle reconfiguration of the integration."""
+        errors: dict[str, str] = {}
+        reconfigure_entry = self._get_reconfigure_entry()
+
+        if user_input is not None:
+            session = async_get_clientsession(self.hass)
+            self._auth = GarminAuth(session)
+            self._username = user_input[CONF_USERNAME]
+
+            try:
+                result = await self._auth.login(
+                    user_input[CONF_USERNAME],
+                    user_input[CONF_PASSWORD],
+                )
+
+                return self.async_update_reload_and_abort(
+                    reconfigure_entry,
+                    data={
+                        CONF_OAUTH1_TOKEN: result.oauth1_token,
+                        CONF_OAUTH2_TOKEN: result.oauth2_token,
+                    },
+                )
+
+            except GarminMFARequired:
+                return await self.async_step_mfa()
+
+            except GarminAuthError as err:
+                _LOGGER.error("Reconfigure failed: %s", err)
+                errors["base"] = "invalid_auth"
+
+            except Exception:
+                _LOGGER.exception("Unexpected error during reconfigure")
+                errors["base"] = "unknown"
+
+        return self.async_show_form(
+            step_id="reconfigure",
+            data_schema=STEP_USER_DATA_SCHEMA,
+            errors=errors,
+        )
+
 
 class GarminConnectOptionsFlow(OptionsFlow):
     """Handle options flow for Garmin Connect."""

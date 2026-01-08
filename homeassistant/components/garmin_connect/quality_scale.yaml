@@ -2,9 +2,7 @@ rules:
   # Bronze
   action-setup: done
   appropriate-polling: done
-  brands:
-    status: exempt
-    comment: Brand assets managed in home-assistant/brands repository.
+  brands: done
   common-modules: done
   config-flow: done
   config-flow-test-coverage: done
@@ -56,13 +54,11 @@ rules:
     comment: Uses single service device for all sensors.
   entity-category: done
   entity-device-class: done
-  entity-disabled-by-default:
-    status: exempt
-    comment: All sensors enabled by default per user request.
+  entity-disabled-by-default: done
   entity-translations: done
   exception-translations: done
   icon-translations: done
-  reconfiguration-flow: todo
+  reconfiguration-flow: done
   repair-issues: done
   stale-devices:
     status: exempt

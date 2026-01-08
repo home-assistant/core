@@ -11,7 +11,7 @@
   "loggers": [
     "aiogarmin"
   ],
-  "quality_scale": "bronze",
+  "quality_scale": "platinum",
   "requirements": [
     "aiogarmin==0.1.1"
   ]
