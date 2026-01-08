@@ -20,6 +20,7 @@ from homeassistant.components.sensor import AMBIGUOUS_UNITS
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_DEVICE_CLASS,
+    CONF_ICON_TEMPLATE,
     CONF_MODE,
     CONF_NAME,
     CONF_OPTIMISTIC,
@@ -48,6 +49,7 @@ from .entity import MqttEntity, async_setup_entity_entry_helper
 from .models import (
     MqttCommandTemplate,
     MqttValueTemplate,
+    PayloadSentinel,
     PublishPayloadType,
     ReceiveMessage,
 )
@@ -98,6 +100,7 @@ _PLATFORM_SCHEMA_BASE = MQTT_RW_SCHEMA.extend(
         ),
         vol.Optional(CONF_UNIT_OF_MEASUREMENT): vol.Any(cv.string, None),
         vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
+        vol.Optional(CONF_ICON_TEMPLATE): cv.template,
     },
 ).extend(MQTT_ENTITY_COMMON_SCHEMA.schema)
 
@@ -139,6 +142,9 @@ class MqttNumber(MqttEntity, RestoreNumber):
     _optimistic: bool
     _command_template: Callable[[PublishPayloadType], PublishPayloadType]
     _value_template: Callable[[ReceivePayloadType], ReceivePayloadType]
+    _icon_template: (
+        Callable[[ReceivePayloadType, PayloadSentinel], ReceivePayloadType] | None
+    ) = None
 
     @staticmethod
     def config_schema() -> VolSchemaType:
@@ -157,6 +163,11 @@ class MqttNumber(MqttEntity, RestoreNumber):
             config.get(CONF_VALUE_TEMPLATE),
             entity=self,
         ).async_render_with_possible_json_value
+
+        if icon_template := config.get(CONF_ICON_TEMPLATE):
+            self._icon_template = MqttValueTemplate(
+                icon_template, entity=self
+            ).async_render_with_possible_json_value
 
         self._attr_device_class = config.get(CONF_DEVICE_CLASS)
         self._attr_mode = config[CONF_MODE]
@@ -198,11 +209,30 @@ class MqttNumber(MqttEntity, RestoreNumber):
 
         self._attr_native_value = num_value
 
+        # Update icon from icon_template, if configured
+        if CONF_ICON_TEMPLATE in self._config and self._icon_template:
+            try:
+                icon = self._icon_template(msg.payload, PayloadSentinel.DEFAULT)
+            except Exception:  # Template errors are surfaced as various exceptions
+                _LOGGER.exception(
+                    "Error rendering icon template for %s", self.entity_id
+                )
+            else:
+                if icon is PayloadSentinel.DEFAULT:
+                    # Template chose to skip processing for this payload
+                    pass
+                elif isinstance(icon, str) and icon.strip():
+                    self._attr_icon = icon
+                else:
+                    self._attr_icon = None
+
     @callback
     def _prepare_subscribe_topics(self) -> None:
         """(Re)Subscribe to topics."""
         if not self.add_subscription(
-            CONF_STATE_TOPIC, self._message_received, {"_attr_native_value"}
+            CONF_STATE_TOPIC,
+            self._message_received,
+            {"_attr_native_value", "_attr_icon"},
         ):
             # Force into optimistic mode.
             self._attr_assumed_state = True

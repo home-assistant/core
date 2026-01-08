@@ -30,6 +30,7 @@ from homeassistant.const import (
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant, State
+from homeassistant.helpers import entity_registry as er
 from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM
 
 from .common import (
@@ -360,6 +361,44 @@ async def test_value_template(
 
     state = hass.states.get("number.test_number")
     assert state.state == "unknown"
+
+
+async def test_icon_template_discovery(
+    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
+) -> None:
+    """Test icon_template from MQTT discovery is rendered on state messages."""
+    await mqtt_mock_entry()
+
+    unique_id = "veryunique_icon"
+    config = {
+        "name": "test",
+        "state_topic": "test-topic",
+        "command_topic": "test-cmd",
+        "unique_id": unique_id,
+        "icon_template": "{{ 'mdi:greater' if (value|int) > 3 else '' }}",
+    }
+
+    data = json.dumps(config)
+    async_fire_mqtt_message(hass, f"homeassistant/number/{unique_id}/config", data)
+    await hass.async_block_till_done()
+
+    ent_registry = er.async_get(hass)
+    entity_id = ent_registry.async_get_entity_id(number.DOMAIN, mqtt.DOMAIN, unique_id)
+    assert entity_id is not None
+
+    # Send a state that yields empty icon -> attribute should be None
+    async_fire_mqtt_message(hass, "test-topic", "2")
+    await hass.async_block_till_done()
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.attributes.get("icon") is None
+
+    # Send a state that yields an icon
+    async_fire_mqtt_message(hass, "test-topic", "5")
+    await hass.async_block_till_done()
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.attributes.get("icon") == "mdi:greater"
 
 
 @pytest.mark.parametrize(

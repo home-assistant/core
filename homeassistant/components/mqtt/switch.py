@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Callable
+import logging
 from typing import Any
 
 import voluptuous as vol
@@ -12,6 +13,7 @@ from homeassistant.components.switch import DEVICE_CLASSES_SCHEMA, SwitchEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_DEVICE_CLASS,
+    CONF_ICON_TEMPLATE,
     CONF_NAME,
     CONF_OPTIMISTIC,
     CONF_PAYLOAD_OFF,
@@ -42,10 +44,13 @@ from .entity import MqttEntity, async_setup_entity_entry_helper
 from .models import (
     MqttCommandTemplate,
     MqttValueTemplate,
+    PayloadSentinel,
     PublishPayloadType,
     ReceiveMessage,
 )
 from .schemas import MQTT_ENTITY_COMMON_SCHEMA
+
+_LOGGER = logging.getLogger(__name__)
 
 PARALLEL_UPDATES = 0
 
@@ -60,6 +65,7 @@ PLATFORM_SCHEMA_MODERN = MQTT_RW_SCHEMA.extend(
         vol.Optional(CONF_STATE_OFF): cv.string,
         vol.Optional(CONF_STATE_ON): cv.string,
         vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
+        vol.Optional(CONF_ICON_TEMPLATE): cv.template,
         vol.Optional(CONF_DEVICE_CLASS): vol.Any(DEVICE_CLASSES_SCHEMA, None),
     }
 ).extend(MQTT_ENTITY_COMMON_SCHEMA.schema)
@@ -94,6 +100,9 @@ class MqttSwitch(MqttEntity, SwitchEntity, RestoreEntity):
     _is_on_map: dict[str | bytes | bytearray, bool | None]
     _command_template: Callable[[PublishPayloadType], PublishPayloadType]
     _value_template: Callable[[ReceivePayloadType], ReceivePayloadType]
+    _icon_template: (
+        Callable[[ReceivePayloadType, PayloadSentinel], ReceivePayloadType] | None
+    ) = None
 
     @staticmethod
     def config_schema() -> vol.Schema:
@@ -120,18 +129,43 @@ class MqttSwitch(MqttEntity, SwitchEntity, RestoreEntity):
         self._value_template = MqttValueTemplate(
             config.get(CONF_VALUE_TEMPLATE), entity=self
         ).async_render_with_possible_json_value
+        if icon_template := config.get(CONF_ICON_TEMPLATE):
+            self._icon_template = MqttValueTemplate(
+                icon_template, entity=self
+            ).async_render_with_possible_json_value
 
     @callback
     def _state_message_received(self, msg: ReceiveMessage) -> None:
         """Handle new MQTT state messages."""
-        if (payload := self._value_template(msg.payload)) in self._is_on_map:
+        payload = self._value_template(msg.payload)
+
+        # Update icon from icon_template, if configured
+        if CONF_ICON_TEMPLATE in self._config and self._icon_template:
+            try:
+                icon = self._icon_template(msg.payload, PayloadSentinel.DEFAULT)
+            except Exception:  # Template errors are surfaced as various exceptions
+                _LOGGER.exception(
+                    "Error rendering icon template for %s", self.entity_id
+                )
+            else:
+                if icon is PayloadSentinel.DEFAULT:
+                    # Template chose to skip processing for this payload
+                    pass
+                elif isinstance(icon, str) and icon.strip():
+                    self._attr_icon = icon
+                else:
+                    self._attr_icon = None
+
+        if payload in self._is_on_map:
             self._attr_is_on = self._is_on_map[payload]
 
     @callback
     def _prepare_subscribe_topics(self) -> None:
         """(Re)Subscribe to topics."""
         if not self.add_subscription(
-            CONF_STATE_TOPIC, self._state_message_received, {"_attr_is_on"}
+            CONF_STATE_TOPIC,
+            self._state_message_received,
+            {"_attr_is_on", "_attr_icon"},
         ):
             # Force into optimistic mode.
             self._optimistic = True

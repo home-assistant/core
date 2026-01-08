@@ -20,6 +20,7 @@ from homeassistant.const import (
     STATE_UNKNOWN,
 )
 from homeassistant.core import HomeAssistant, State, callback
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import dt as dt_util
 
@@ -97,7 +98,6 @@ async def test_setting_sensor_value_expires_availability_topic(
 
     state = hass.states.get("binary_sensor.test")
     assert state.state == STATE_UNAVAILABLE
-
     async_fire_mqtt_message(hass, "availability-topic", "online")
 
     # State should be unavailable since expire_after is defined and > 0
@@ -105,6 +105,47 @@ async def test_setting_sensor_value_expires_availability_topic(
     assert state.state == STATE_UNAVAILABLE
 
     await expires_helper(hass)
+
+
+async def test_icon_template_discovery(
+    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
+) -> None:
+    """Test icon_template from MQTT discovery is rendered on state messages."""
+    await mqtt_mock_entry()
+
+    unique_id = "veryunique_icon"
+    config = {
+        "name": "test",
+        "state_topic": "test-topic",
+        "unique_id": unique_id,
+        "icon_template": "{{ 'mdi:greater' if value == 'ON' else 'mdi:minus' }}",
+    }
+
+    data = json.dumps(config)
+    async_fire_mqtt_message(
+        hass, f"homeassistant/binary_sensor/{unique_id}/config", data
+    )
+    await hass.async_block_till_done()
+
+    ent_registry = er.async_get(hass)
+    entity_id = ent_registry.async_get_entity_id(
+        binary_sensor.DOMAIN, mqtt.DOMAIN, unique_id
+    )
+    assert entity_id is not None
+
+    # Send a state that yields empty icon -> attribute should be None
+    async_fire_mqtt_message(hass, "test-topic", "ON")
+    await hass.async_block_till_done()
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.attributes.get("icon") == "mdi:greater"
+
+    # Send a state that yields an icon
+    async_fire_mqtt_message(hass, "test-topic", "OFF")
+    await hass.async_block_till_done()
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.attributes.get("icon") == "mdi:minus"
 
 
 @pytest.mark.parametrize(
