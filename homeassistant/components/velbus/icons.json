@@ -6,12 +6,6 @@
           "off": "mdi:led-off",
           "on": "mdi:led-on"
         }
-      },
-      "light": {
-        "state": {
-          "off": "mdi:lightbulb-off",
-          "on": "mdi:lightbulb-on"
-        }
       }
     },
     "select": {

@@ -58,7 +58,6 @@ class VelbusLight(VelbusEntity, LightEntity):
     _attr_color_mode = ColorMode.BRIGHTNESS
     _attr_supported_color_modes = {ColorMode.BRIGHTNESS}
     _attr_supported_features = LightEntityFeature.TRANSITION
-    _attr_translation_key = "light"
 
     @property
     def is_on(self) -> bool:
