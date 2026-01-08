@@ -4,6 +4,7 @@ from unittest.mock import AsyncMock
 
 from mozart_api.models import BatteryState
 
+from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_registry import EntityRegistry
 
