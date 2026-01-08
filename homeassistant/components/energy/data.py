@@ -264,13 +264,9 @@ POWER_CONFIG_SCHEMA = vol.All(
 )
 
 
-def _validate_grid_power_source(
-    val: dict[str, Any],
-) -> dict[str, Any]:
+def _validate_grid_power_source(val: dict[str, Any]) -> dict[str, Any]:
     """Validate grid power source has either stat_rate or power_config."""
-    has_stat_rate = "stat_rate" in val
-    has_power_config = "power_config" in val
-    if not has_stat_rate and not has_power_config:
+    if "stat_rate" not in val and "power_config" not in val:
         raise vol.Invalid("Either stat_rate or power_config is required")
     return val
 
@@ -278,9 +274,10 @@ def _validate_grid_power_source(
 GRID_POWER_SOURCE_SCHEMA = vol.All(
     vol.Schema(
         {
-            # stat_rate and power_config are mutually exclusive
-            vol.Exclusive("stat_rate", "power_source"): str,
-            vol.Exclusive("power_config", "power_source"): POWER_CONFIG_SCHEMA,
+            # Both stat_rate and power_config are optional
+            # If power_config is provided, it takes precedence and stat_rate is overwritten
+            vol.Optional("stat_rate"): str,
+            vol.Optional("power_config"): POWER_CONFIG_SCHEMA,
         }
     ),
     _validate_grid_power_source,
@@ -294,7 +291,7 @@ def _generate_unique_value_validator(key: str) -> Callable[[list[dict]], list[di
         val: list[dict],
     ) -> list[dict]:
         """Ensure that the user doesn't add duplicate values."""
-        counts = Counter(flow_from[key] for flow_from in val)
+        counts = Counter(item.get(key) for item in val if item.get(key) is not None)
 
         for value, count in counts.items():
             if count > 1:
@@ -336,9 +333,10 @@ BATTERY_SOURCE_SCHEMA = vol.Schema(
         vol.Required("type"): "battery",
         vol.Required("stat_energy_from"): str,
         vol.Required("stat_energy_to"): str,
-        # stat_rate and power_config are mutually exclusive
-        vol.Exclusive("stat_rate", "power_source"): str,
-        vol.Exclusive("power_config", "power_source"): POWER_CONFIG_SCHEMA,
+        # Both stat_rate and power_config are optional
+        # If power_config is provided, it takes precedence and stat_rate is overwritten
+        vol.Optional("stat_rate"): str,
+        vol.Optional("power_config"): POWER_CONFIG_SCHEMA,
     }
 )
 GAS_SOURCE_SCHEMA = vol.Schema(

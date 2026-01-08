@@ -221,3 +221,34 @@ async def test_battery_without_power_config_unchanged(hass: HomeAssistant) -> No
     source = manager.data["energy_sources"][0]
     assert source["stat_rate"] == "sensor.battery_power"
     assert "power_config" not in source
+
+
+async def test_power_config_takes_precedence_over_stat_rate(
+    hass: HomeAssistant,
+) -> None:
+    """Test that power_config takes precedence when both are provided."""
+    manager = EnergyManager(hass)
+    await manager.async_initialize()
+    manager.data = manager.default_preferences()
+
+    # Frontend sends both stat_rate and power_config
+    await manager.async_update(
+        {
+            "energy_sources": [
+                {
+                    "type": "battery",
+                    "stat_energy_from": "sensor.battery_energy_from",
+                    "stat_energy_to": "sensor.battery_energy_to",
+                    "stat_rate": "sensor.battery_power",  # This should be ignored
+                    "power_config": {
+                        "stat_rate_inverted": "sensor.battery_power",
+                    },
+                }
+            ],
+        }
+    )
+
+    assert manager.data is not None
+    source = manager.data["energy_sources"][0]
+    # stat_rate should be overwritten to point to the generated inverted sensor
+    assert source["stat_rate"] == "sensor.battery_power_inverted"
