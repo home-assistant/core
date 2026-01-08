@@ -1386,6 +1386,7 @@ async def test_numerical_state_attribute_changed_error_handling(
     ("trigger_options", "expected_result"),
     [
         # Valid configurations
+        # Don't use the enum in tests to allow testing validation of strings when the source is JSON or YAML
         (
             {CONF_THRESHOLD_TYPE: "above", CONF_LOWER_LIMIT: 10},
             does_not_raise(),
