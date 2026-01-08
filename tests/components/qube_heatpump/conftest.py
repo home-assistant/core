@@ -74,7 +74,7 @@ def mock_hub(request: pytest.FixtureRequest) -> Generator[MagicMock]:
 def mock_modbus_client():
     """Globally block real Modbus client creation to prevent SocketBlockedError."""
     with patch(
-        "homeassistant.components.qube_heatpump.client.AsyncModbusTcpClient",
+        "python_qube_heatpump.client.AsyncModbusTcpClient",
     ) as mock_client:
         mock_client.return_value.connect = AsyncMock(return_value=True)
         mock_client.return_value.close = MagicMock()

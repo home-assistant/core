@@ -8,5 +8,5 @@
   "iot_class": "local_polling",
   "loggers": ["homeassistant.components.qube_heatpump"],
   "quality_scale": "bronze",
-  "requirements": ["pymodbus==3.11.2"]
+  "requirements": ["python-qube-heatpump==1.0.1"]
 }

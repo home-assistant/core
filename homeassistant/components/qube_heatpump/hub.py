@@ -8,7 +8,7 @@ from dataclasses import dataclass
 import logging
 from typing import TYPE_CHECKING, Any, cast
 
-from .client import QubeClient
+from python_qube_heatpump import QubeClient
 
 if TYPE_CHECKING:
     from homeassistant.core import HomeAssistant
