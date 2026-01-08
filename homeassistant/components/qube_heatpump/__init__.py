@@ -237,56 +237,6 @@ async def _service_reconfigure(hass: HomeAssistant, call: ServiceCall) -> None:
         _LOGGER.warning("Unexpected error in reconfigure flow: %s", exc)
 
 
-WRITE_REGISTER_SCHEMA = vol.Schema(
-    {
-        vol.Required("address"): vol.Coerce(int),
-        vol.Required("value"): vol.Coerce(float),
-        vol.Optional("data_type", default="uint16"): vol.In(
-            {"uint16", "int16", "float32"}
-        ),
-        vol.Optional("entry_id"): str,
-        vol.Optional("label"): str,
-    }
-)
-
-
-async def _service_write_register(hass: HomeAssistant, call: ServiceCall) -> None:
-    """Handle the write_register service."""
-    data = dict(call.data)
-    data = WRITE_REGISTER_SCHEMA(data)
-    target = _resolve_entry(hass, data.get("entry_id"), data.get("label"))
-    if target is None:
-        _LOGGER.error(
-            "Write_register: unable to resolve integration entry; specify entry_id or label"
-        )
-        return
-    target_data = target.runtime_data
-    if not target_data:
-        _LOGGER.error(
-            "Write_register: integration entry %s is not loaded", target.entry_id
-        )
-        return
-    hub_target = target_data.hub
-    if hub_target is None:
-        _LOGGER.error("Write_register: no hub available for entry %s", target.entry_id)
-        return
-    await hub_target.async_connect()
-    data_type = str(data["data_type"]).lower()
-
-    try:
-        await hub_target.async_write_register(
-            data["address"],
-            data["value"],
-            data_type,
-        )
-    except Exception:
-        _LOGGER.exception("Write_register: failed to write address %s", data["address"])
-        raise
-    coordinator_target = target_data.coordinator
-    if coordinator_target is not None:
-        await coordinator_target.async_request_refresh()
-
-
 async def async_setup_entry(hass: HomeAssistant, entry: QubeConfigEntry) -> bool:  # noqa: C901
     """Set up Qube Heat Pump from a config entry."""
     host = entry.data[CONF_HOST]
@@ -458,18 +408,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: QubeConfigEntry) -> bool
             "reconfigure",
             _reconfigure_wrapper,
             schema=vol.Schema({vol.Optional("entry_id"): str}),
-        )
-
-    if not hass.services.has_service(DOMAIN, "write_register"):
-
-        async def _write_register_wrapper(call: ServiceCall) -> None:
-            await _service_write_register(hass, call)
-
-        hass.services.async_register(
-            DOMAIN,
-            "write_register",
-            _write_register_wrapper,
-            schema=WRITE_REGISTER_SCHEMA,
         )
 
     await coordinator.async_config_entry_first_refresh()

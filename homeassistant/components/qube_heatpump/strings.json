@@ -544,32 +544,6 @@
         }
       },
       "name": "Trigger reconfigure flow"
-    },
-    "write_register": {
-      "description": "Write a value to a Modbus holding register exposed by the Qube heat pump. Supports uint16, int16, and float32 registers and mirrors the behaviour of Home Assistant's native modbus.write_register service.",
-      "fields": {
-        "address": {
-          "description": "The Modbus holding register address to write. Uses the same addressing as the bundled modbus.yaml (0-based unless noted differently).",
-          "name": "Register address"
-        },
-        "data_type": {
-          "description": "Register data type. Use float32 for 32-bit floating point registers.",
-          "name": "Data type"
-        },
-        "entry_id": {
-          "description": "Optional entry_id of the target integration instance. Needed when multiple Qube heat pumps are configured.",
-          "name": "Config entry ID"
-        },
-        "label": {
-          "description": "Optional hub label (e.g. qube1) to target a specific device when multiple hubs exist. Ignored if entry_id is provided.",
-          "name": "Hub label"
-        },
-        "value": {
-          "description": "The value to store in the register. Float values are encoded as big-endian IEEE 754 when data_type is float32.",
-          "name": "Value"
-        }
-      },
-      "name": "Write holding register"
     }
   }
 }
