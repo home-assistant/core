@@ -42,5 +42,24 @@
         "title": "[%key:common::config_flow::title::reauth%]"
       }
     }
+  },
+  "entity": {
+    "sensor": {
+      "backups_size": {
+        "name": "Total size of backups"
+      },
+      "storage_total": {
+        "name": "Total available storage"
+      },
+      "storage_used": {
+        "name": "Used storage"
+      },
+      "storage_used_in_drive": {
+        "name": "Used storage in Drive"
+      },
+      "storage_used_in_drive_trash": {
+        "name": "Used storage in Drive Trash"
+      }
+    }
   }
 }

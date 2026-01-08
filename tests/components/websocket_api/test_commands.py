@@ -24,6 +24,10 @@ from homeassistant.components.websocket_api.auth import (
     TYPE_AUTH_OK,
     TYPE_AUTH_REQUIRED,
 )
+from homeassistant.components.websocket_api.automation import (
+    AUTOMATION_COMPONENT_LOOKUP_CACHE,
+    _get_automation_component_lookup_table,
+)
 from homeassistant.components.websocket_api.commands import (
     ALL_CONDITION_DESCRIPTIONS_JSON_CACHE,
     ALL_SERVICE_DESCRIPTIONS_JSON_CACHE,
@@ -3665,6 +3669,7 @@ async def test_get_triggers_conditions_for_target(
     hass: HomeAssistant,
     websocket_client: MockHAClientWebSocket,
     automation_component: str,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test get_triggers_for_target/get_conditions_for_target command with mixed target types."""
 
@@ -3803,7 +3808,9 @@ async def test_get_triggers_conditions_for_target(
         await hass.async_block_till_done()
 
         async def assert_command(
-            target: dict[str, list[str]], expected: list[str]
+            target: dict[str, list[str]],
+            expected: list[str],
+            expect_lookup_cache: bool = True,
         ) -> Any:
             """Call the command and assert expected triggers/conditions."""
             await websocket_client.send_json_auto_id(
@@ -3815,8 +3822,13 @@ async def test_get_triggers_conditions_for_target(
             assert msg["success"]
             assert sorted(msg["result"]) == sorted(expected)
 
+            assert ("has no cache yet" not in caplog.text) == expect_lookup_cache
+            caplog.clear()
+
         # Test entity target - unknown entity
-        await assert_command({"entity_id": ["light.unknown_entity"]}, [])
+        await assert_command(
+            {"entity_id": ["light.unknown_entity"]}, [], expect_lookup_cache=False
+        )
 
         # Test entity target - entity not in registry
         await assert_command(
@@ -3936,6 +3948,7 @@ async def test_get_services_for_target(
     mock_load_yaml: Mock,
     hass: HomeAssistant,
     websocket_client: MockHAClientWebSocket,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test get_services_for_target command with mixed target types."""
 
@@ -4047,7 +4060,11 @@ async def test_get_services_for_target(
     )
     await hass.async_block_till_done()
 
-    async def assert_services(target: dict[str, list[str]], expected: list[str]) -> Any:
+    async def assert_services(
+        target: dict[str, list[str]],
+        expected: list[str],
+        expect_lookup_cache: bool = True,
+    ) -> Any:
         """Call the command and assert expected services."""
         await websocket_client.send_json_auto_id(
             {"type": "get_services_for_target", "target": target}
@@ -4058,8 +4075,13 @@ async def test_get_services_for_target(
         assert msg["success"]
         assert sorted(msg["result"]) == sorted(expected)
 
+        assert ("has no cache yet" not in caplog.text) == expect_lookup_cache
+        caplog.clear()
+
     # Test entity target - unknown entity
-    await assert_services({"entity_id": ["light.unknown_entity"]}, [])
+    await assert_services(
+        {"entity_id": ["light.unknown_entity"]}, [], expect_lookup_cache=False
+    )
 
     # Test entity target - entity not in registry
     await assert_services(
@@ -4212,7 +4234,7 @@ async def test_get_services_for_target_caching(
         await call_command()
 
         assert mock_get_components.call_count == 1
-        first_flat_descriptions = mock_get_components.call_args_list[0][0][3]
+        first_flat_descriptions = mock_get_components.call_args_list[0][0][4]
         assert first_flat_descriptions == {
             "light.turn_on": {
                 "fields": {},
@@ -4227,7 +4249,7 @@ async def test_get_services_for_target_caching(
         # Second call: should reuse cached flat descriptions
         await call_command()
         assert mock_get_components.call_count == 2
-        second_flat_descriptions = mock_get_components.call_args_list[1][0][3]
+        second_flat_descriptions = mock_get_components.call_args_list[1][0][4]
         assert first_flat_descriptions is second_flat_descriptions
 
         # Register a new service to invalidate cache
@@ -4237,6 +4259,89 @@ async def test_get_services_for_target_caching(
         # Third call: cache should be rebuilt
         await call_command()
         assert mock_get_components.call_count == 3
-        third_flat_descriptions = mock_get_components.call_args_list[2][0][3]
+        third_flat_descriptions = mock_get_components.call_args_list[2][0][4]
         assert "new_domain.new_service" in third_flat_descriptions
         assert third_flat_descriptions is not first_flat_descriptions
+
+
+async def test_get_automation_component_lookup_table_cache(
+    hass: HomeAssistant,
+) -> None:
+    """Test that _get_automation_component_lookup_table caches and rotates properly."""
+    triggers: dict[str, dict[str, Any] | None] = {
+        "light.turned_on": {"target": {"entity": [{"domain": ["light"]}]}},
+        "switch.turned_on": {"target": {"entity": [{"domain": ["switch"]}]}},
+    }
+    conditions: dict[str, dict[str, Any] | None] = {
+        "light.is_on": {"target": {"entity": [{"domain": ["light"]}]}},
+        "sensor.is_above": {"target": {"entity": [{"domain": ["sensor"]}]}},
+    }
+    services: dict[str, dict[str, Any] | None] = {
+        "light.turn_on": {"target": {"entity": [{"domain": ["light"]}]}},
+        "climate.set_temperature": {"target": {"entity": [{"domain": ["climate"]}]}},
+    }
+
+    # First call with triggers - cache should be created with 1 entry
+    trigger_result1 = _get_automation_component_lookup_table(hass, "triggers", triggers)
+    assert AUTOMATION_COMPONENT_LOOKUP_CACHE in hass.data
+    cache = hass.data[AUTOMATION_COMPONENT_LOOKUP_CACHE]
+    assert len(cache) == 1
+
+    # Second call with same triggers - should return cached result
+    trigger_result2 = _get_automation_component_lookup_table(hass, "triggers", triggers)
+    assert trigger_result1 is trigger_result2
+    assert len(cache) == 1
+
+    # Call with conditions
+    condition_result1 = _get_automation_component_lookup_table(
+        hass, "conditions", conditions
+    )
+    assert condition_result1 is not trigger_result1
+    assert len(cache) == 2
+
+    # Call with services
+    service_result1 = _get_automation_component_lookup_table(hass, "services", services)
+    assert service_result1 is not trigger_result1
+    assert service_result1 is not condition_result1
+    assert len(cache) == 3
+
+    # Verify all 3 return cached results
+    assert (
+        _get_automation_component_lookup_table(hass, "triggers", triggers)
+        is trigger_result1
+    )
+    assert (
+        _get_automation_component_lookup_table(hass, "conditions", conditions)
+        is condition_result1
+    )
+    assert (
+        _get_automation_component_lookup_table(hass, "services", services)
+        is service_result1
+    )
+    assert len(cache) == 3
+
+    # Add a new triggers description dict - replaces previous triggers cache
+    new_triggers: dict[str, dict[str, Any] | None] = {
+        "fan.turned_on": {"target": {"entity": [{"domain": ["fan"]}]}},
+    }
+    _get_automation_component_lookup_table(hass, "triggers", new_triggers)
+    assert len(cache) == 3
+
+    # Initial trigger cache entry should have been replaced
+    trigger_result3 = _get_automation_component_lookup_table(hass, "triggers", triggers)
+    assert trigger_result3 is not trigger_result1
+    assert len(cache) == 3
+
+    # Verify all 3 return cached results again
+    assert (
+        _get_automation_component_lookup_table(hass, "triggers", triggers)
+        is trigger_result3
+    )
+    assert (
+        _get_automation_component_lookup_table(hass, "conditions", conditions)
+        is condition_result1
+    )
+    assert (
+        _get_automation_component_lookup_table(hass, "services", services)
+        is service_result1
+    )

@@ -13,7 +13,7 @@
       "password_auth": {
         "data": {
           "password": "[%key:common::config_flow::data::password%]",
-          "url": "[%key:common::config_flow::data::url%]",
+          "url": "Server region",
           "username": "[%key:common::config_flow::data::username%]"
         },
         "title": "Enter your Growatt login credentials"
@@ -26,7 +26,8 @@
       },
       "token_auth": {
         "data": {
-          "token": "API Token"
+          "token": "API Token",
+          "url": "Server region"
         },
         "description": "Token authentication is only supported for MIN/TLX devices. For other device types, please use username/password authentication.",
         "title": "Enter your API token"
@@ -521,6 +522,67 @@
       "ac_charge": {
         "name": "Charge from grid"
       }
+    }
+  },
+  "selector": {
+    "batt_mode": {
+      "options": {
+        "battery_first": "Battery first",
+        "grid_first": "Grid first",
+        "load_first": "Load first"
+      }
+    },
+    "region": {
+      "options": {
+        "australia_new_zealand": "Australia and New Zealand",
+        "china": "China",
+        "era_server": "Era server (Atess Power)",
+        "north_america": "North America",
+        "other_regions": "Other regions",
+        "smten_server": "SMTEN server"
+      }
+    }
+  },
+  "services": {
+    "read_time_segments": {
+      "description": "Read all time segments from a supported inverter.",
+      "fields": {
+        "device_id": {
+          "description": "The Growatt device to perform the action on.",
+          "name": "Device"
+        }
+      },
+      "name": "Read time segments"
+    },
+    "update_time_segment": {
+      "description": "Update a time segment for supported inverters.",
+      "fields": {
+        "batt_mode": {
+          "description": "Battery operation mode for this time segment.",
+          "name": "Battery mode"
+        },
+        "device_id": {
+          "description": "[%key:component::growatt_server::services::read_time_segments::fields::device_id::description%]",
+          "name": "[%key:component::growatt_server::services::read_time_segments::fields::device_id::name%]"
+        },
+        "enabled": {
+          "description": "Whether this time segment is active.",
+          "name": "Enabled"
+        },
+        "end_time": {
+          "description": "End time for the segment (HH:MM format).",
+          "name": "End time"
+        },
+        "segment_id": {
+          "description": "Time segment ID (1-9).",
+          "name": "Segment ID"
+        },
+        "start_time": {
+          "description": "Start time for the segment (HH:MM format).",
+          "name": "Start time"
+        }
+      },
+      "name": "Update time segment"
     }
   },
   "title": "Growatt Server"

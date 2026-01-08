@@ -1729,7 +1729,7 @@ def advanced_pick_radio(
             user_input={"next_step_id": config_flow.SETUP_STRATEGY_ADVANCED},
         )
 
-        assert advanced_strategy_result["type"] == FlowResultType.MENU
+        assert advanced_strategy_result["type"] is FlowResultType.MENU
         assert advanced_strategy_result["step_id"] == "choose_formation_strategy"
 
         return advanced_strategy_result
