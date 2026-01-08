@@ -2415,7 +2415,7 @@ pysilero-vad==3.0.1
 pyskyqhub==0.1.4
 
 # homeassistant.components.sma
-pysma==1.0.2
+pysma==1.1.0
 
 # homeassistant.components.smappee
 pysmappee==0.2.29
