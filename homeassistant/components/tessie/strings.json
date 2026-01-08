@@ -14,12 +14,18 @@
         "data": {
           "access_token": "[%key:common::config_flow::data::access_token%]"
         },
+        "data_description": {
+          "access_token": "[%key:component::tessie::config::step::user::data_description::access_token%]"
+        },
         "description": "[%key:component::tessie::config::step::user::description%]",
         "title": "[%key:common::config_flow::title::reauth%]"
       },
       "user": {
         "data": {
           "access_token": "[%key:common::config_flow::data::access_token%]"
+        },
+        "data_description": {
+          "access_token": "Visit developer settings and select Generate Access Token."
         },
         "description": "Enter your access token from {url}."
       }
