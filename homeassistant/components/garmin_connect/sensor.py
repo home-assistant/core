@@ -117,7 +117,7 @@ class GarminConnectSensor(
                 self._last_known_value = last_state.state
 
     @property
-    def native_value(self) -> Any:
+    def native_value(self) -> str | int | float | datetime.datetime | None:
         """Return the state of the sensor."""
         if not self.coordinator.data:
             # Only return last known value if preserve_value is enabled
@@ -225,7 +225,7 @@ class GarminConnectGearSensor(CoordinatorEntity[GearCoordinator], SensorEntity):
         return f"{self._gear_name}"
 
     @property
-    def native_value(self) -> Any:
+    def native_value(self) -> float | int | None:
         """Return the state of the sensor (total distance in meters)."""
         if not self.coordinator.data:
             return None
