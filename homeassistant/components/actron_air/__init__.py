@@ -18,7 +18,7 @@ from .coordinator import (
     ActronAirSystemCoordinator,
 )
 
-PLATFORM = [Platform.CLIMATE]
+PLATFORMS = [Platform.CLIMATE, Platform.SWITCH]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ActronAirConfigEntry) -> bool:
@@ -50,10 +50,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ActronAirConfigEntry) ->
         system_coordinators=system_coordinators,
     )
 
-    await hass.config_entries.async_forward_entry_setups(entry, PLATFORM)
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ActronAirConfigEntry) -> bool:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORM)
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)

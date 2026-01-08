@@ -30,6 +30,26 @@
     }
   },
   "entity": {
+    "binary_sensor": {
+      "alarm_door_open": {
+        "name": "Door open during heating alarm"
+      },
+      "alarm_door_sensor": {
+        "name": "Door open too long alarm"
+      },
+      "alarm_internal_temp": {
+        "name": "Internal temperature alarm"
+      },
+      "alarm_temp_sensor_open": {
+        "name": "Temperature sensor disconnected alarm"
+      },
+      "alarm_temp_sensor_short": {
+        "name": "Temperature sensor shorted alarm"
+      },
+      "alarm_thermal_cutoff": {
+        "name": "Thermal cutoff alarm"
+      }
+    },
     "light": {
       "light": {
         "name": "[%key:component::light::title%]"
@@ -48,6 +68,9 @@
   "exceptions": {
     "communication_error": {
       "message": "Communication error: {error}"
+    },
+    "door_open": {
+      "message": "Cannot start sauna session when sauna door is open"
     },
     "session_not_active": {
       "message": "Cannot change fan mode when sauna session is not active"

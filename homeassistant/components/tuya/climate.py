@@ -68,7 +68,7 @@ class _SwingModeWrapper(DeviceWrapper):
     on_off: DPCodeBooleanWrapper | None = None
     horizontal: DPCodeBooleanWrapper | None = None
     vertical: DPCodeBooleanWrapper | None = None
-    modes: list[str]
+    options: list[str]
 
     @classmethod
     def find_dpcode(cls, device: CustomerDevice) -> Self | None:
@@ -83,18 +83,18 @@ class _SwingModeWrapper(DeviceWrapper):
             device, DPCode.SWITCH_VERTICAL, prefer_function=True
         )
         if on_off or horizontal or vertical:
-            modes = [SWING_OFF]
+            options = [SWING_OFF]
             if on_off:
-                modes.append(SWING_ON)
+                options.append(SWING_ON)
             if horizontal:
-                modes.append(SWING_HORIZONTAL)
+                options.append(SWING_HORIZONTAL)
             if vertical:
-                modes.append(SWING_VERTICAL)
+                options.append(SWING_VERTICAL)
             return cls(
                 on_off=on_off,
                 horizontal=horizontal,
                 vertical=vertical,
-                modes=modes,
+                options=options,
             )
         return None
 
@@ -332,14 +332,14 @@ class TuyaClimateEntity(TuyaEntity, ClimateEntity):
         device_manager: Manager,
         description: TuyaClimateEntityDescription,
         *,
-        current_humidity_wrapper: _RoundedIntegerWrapper | None,
-        current_temperature_wrapper: DPCodeIntegerWrapper | None,
-        fan_mode_wrapper: DPCodeEnumWrapper | None,
-        hvac_mode_wrapper: DPCodeEnumWrapper | None,
-        set_temperature_wrapper: DPCodeIntegerWrapper | None,
-        swing_wrapper: _SwingModeWrapper | None,
-        switch_wrapper: DPCodeBooleanWrapper | None,
-        target_humidity_wrapper: _RoundedIntegerWrapper | None,
+        current_humidity_wrapper: DeviceWrapper[int] | None,
+        current_temperature_wrapper: DeviceWrapper[float] | None,
+        fan_mode_wrapper: DeviceWrapper[str] | None,
+        hvac_mode_wrapper: DeviceWrapper[str] | None,
+        set_temperature_wrapper: DeviceWrapper[float] | None,
+        swing_wrapper: DeviceWrapper[str] | None,
+        switch_wrapper: DeviceWrapper[bool] | None,
+        target_humidity_wrapper: DeviceWrapper[int] | None,
         temperature_unit: UnitOfTemperature,
     ) -> None:
         """Determine which values to use."""
@@ -359,11 +359,11 @@ class TuyaClimateEntity(TuyaEntity, ClimateEntity):
 
         # Get integer type data for the dpcode to set temperature, use
         # it to define min, max & step temperatures
-        if self._set_temperature:
+        if set_temperature_wrapper:
             self._attr_supported_features |= ClimateEntityFeature.TARGET_TEMPERATURE
-            self._attr_max_temp = self._set_temperature.max_value
-            self._attr_min_temp = self._set_temperature.min_value
-            self._attr_target_temperature_step = self._set_temperature.value_step
+            self._attr_max_temp = set_temperature_wrapper.max_value
+            self._attr_min_temp = set_temperature_wrapper.min_value
+            self._attr_target_temperature_step = set_temperature_wrapper.value_step
 
         # Determine HVAC modes
         self._attr_hvac_modes: list[HVACMode] = []
@@ -403,7 +403,7 @@ class TuyaClimateEntity(TuyaEntity, ClimateEntity):
         # Determine swing modes
         if swing_wrapper:
             self._attr_supported_features |= ClimateEntityFeature.SWING_MODE
-            self._attr_swing_modes = swing_wrapper.modes
+            self._attr_swing_modes = swing_wrapper.options
 
         if switch_wrapper:
             self._attr_supported_features |= (
