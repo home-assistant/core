@@ -1,0 +1,43 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Connect to Hidromotic",
+        "description": "Enter the IP address of your Hidromotic irrigation controller.",
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]"
+        },
+        "data_description": {
+          "host": "The hostname or IP address of your Hidromotic device."
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    }
+  },
+  "entity": {
+    "switch": {
+      "auto_riego": {
+        "name": "Auto irrigation"
+      }
+    },
+    "binary_sensor": {
+      "tank_full": {
+        "name": "Tank full"
+      },
+      "tank_empty": {
+        "name": "Tank empty"
+      }
+    },
+    "sensor": {
+      "tank_level": {
+        "name": "Tank level"
+      }
+    }
+  }
+}
