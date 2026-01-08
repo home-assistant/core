@@ -86,6 +86,9 @@
     "authentication_failed": {
       "message": "Authentication failed, please reauthenticate."
     },
+    "button_press_failed": {
+      "message": "Failed to press {button} button."
+    },
     "connection_failed": {
       "message": "Failed to communicate with device."
     },
