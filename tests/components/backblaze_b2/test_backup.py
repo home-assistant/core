@@ -1,5 +1,6 @@
 """Backblaze B2 backup agent tests."""
 
+import asyncio
 from collections.abc import AsyncGenerator
 from io import StringIO
 import json
@@ -863,3 +864,94 @@ async def test_metadata_downloads_are_sequential(
     assert response["success"]
     # Verify downloads were sequential (max 1 at a time)
     assert max_concurrent == 1
+
+
+async def test_upload_timeout(
+    hass_client: ClientSessionGenerator,
+    mock_config_entry: MockConfigEntry,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test upload timeout handling."""
+    client = await hass_client()
+
+    mock_file_info = Mock()
+    mock_file_info.delete = Mock()
+
+    with (
+        patch(
+            "homeassistant.components.backup.manager.BackupManager.async_get_backup",
+            return_value=TEST_BACKUP,
+        ),
+        patch(
+            "homeassistant.components.backup.manager.read_backup",
+            return_value=TEST_BACKUP,
+        ),
+        patch("pathlib.Path.open") as mocked_open,
+        patch(
+            "homeassistant.components.backblaze_b2.backup.BackblazeBackupAgent._upload_unbound_stream_sync",
+        ),
+        patch(
+            "homeassistant.components.backblaze_b2.backup.asyncio.wait_for",
+            side_effect=TimeoutError,
+        ),
+        patch.object(
+            BucketSimulator,
+            "get_file_info_by_name",
+            return_value=mock_file_info,
+        ),
+        caplog.at_level(logging.ERROR),
+    ):
+        mocked_open.return_value.read = Mock(side_effect=[b"test", b""])
+        resp = await client.post(
+            f"/api/backup/upload?agent_id={DOMAIN}.{mock_config_entry.entry_id}",
+            data={"file": StringIO("test")},
+        )
+
+    assert resp.status == 201
+    assert any("timed out" in msg for msg in caplog.messages)
+
+
+async def test_upload_cancelled(
+    hass_client: ClientSessionGenerator,
+    mock_config_entry: MockConfigEntry,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test upload cancellation handling."""
+    client = await hass_client()
+
+    mock_file_info = Mock()
+    mock_file_info.delete = Mock()
+
+    with (
+        patch(
+            "homeassistant.components.backup.manager.BackupManager.async_get_backup",
+            return_value=TEST_BACKUP,
+        ),
+        patch(
+            "homeassistant.components.backup.manager.read_backup",
+            return_value=TEST_BACKUP,
+        ),
+        patch("pathlib.Path.open") as mocked_open,
+        patch(
+            "homeassistant.components.backblaze_b2.backup.BackblazeBackupAgent._upload_unbound_stream_sync",
+        ),
+        patch(
+            "homeassistant.components.backblaze_b2.backup.asyncio.wait_for",
+            side_effect=asyncio.CancelledError,
+        ),
+        patch.object(
+            BucketSimulator,
+            "get_file_info_by_name",
+            return_value=mock_file_info,
+        ),
+        caplog.at_level(logging.WARNING),
+    ):
+        mocked_open.return_value.read = Mock(side_effect=[b"test", b""])
+        resp = await client.post(
+            f"/api/backup/upload?agent_id={DOMAIN}.{mock_config_entry.entry_id}",
+            data={"file": StringIO("test")},
+        )
+
+    # CancelledError propagates up and causes a 500 error
+    assert resp.status == 500
+    assert any("cancelled" in msg for msg in caplog.messages)
