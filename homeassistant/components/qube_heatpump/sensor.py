@@ -12,17 +12,14 @@ from homeassistant.components.sensor import (
     SensorEntity,
     SensorStateClass,
 )
-from homeassistant.const import EntityCategory
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
-from homeassistant.loader import async_get_integration, async_get_loaded_integration
 from homeassistant.util import dt as dt_util
 
 from .const import DOMAIN, TARIFF_OPTIONS
 
 if TYPE_CHECKING:
-    from collections.abc import Callable
     from datetime import datetime
 
     from homeassistant.core import HomeAssistant
@@ -74,14 +71,6 @@ async def async_setup_entry(
     apply_label = data.apply_label_in_name
     multi_device = data.multi_device
 
-    base_counts = {
-        "sensor": sum(1 for e in hub.entities if e.platform == "sensor"),
-        "binary_sensor": sum(1 for e in hub.entities if e.platform == "binary_sensor"),
-        "switch": sum(1 for e in hub.entities if e.platform == "switch"),
-    }
-
-    extra_counts = {"sensor": 0, "binary_sensor": 0, "switch": 0}
-
     entities: list[SensorEntity] = []
 
     def _computed_object_base(name: str, use_prefix: bool) -> str:
@@ -96,44 +85,7 @@ async def async_setup_entry(
     def _add_sensor_entity(
         entity: SensorEntity, include_in_sensor_total: bool = True
     ) -> None:
-        if include_in_sensor_total:
-            extra_counts["sensor"] += 1
         entities.append(entity)
-
-    # Use a container for counts to pass to sensors
-    counts_holder: dict[str, dict[str, int] | None] = {"value": None}
-
-    def _get_counts() -> dict[str, int] | None:
-        return counts_holder["value"]
-
-    # Surface the resolved host IP as its own diagnostic sensor
-    _add_sensor_entity(
-        QubeIPAddressSensor(coordinator, hub, apply_label, multi_device, version)
-    )
-
-    # Diagnostic metrics
-    for kind in (
-        "errors_connect",
-        "errors_read",
-        "count_sensors",
-        "count_binary_sensors",
-        "count_switches",
-    ):
-        include = not kind.startswith("count_") or kind == "count_sensors"
-        if kind in ("count_sensors", "count_binary_sensors", "count_switches"):
-            include = False
-        _add_sensor_entity(
-            QubeMetricSensor(
-                coordinator,
-                hub,
-                apply_label,
-                multi_device,
-                version,
-                kind=kind,
-                counts_provider=_get_counts,
-            ),
-            include_in_sensor_total=include,
-        )
 
     for ent in hub.entities:
         if ent.platform != "sensor":
@@ -432,25 +384,6 @@ async def async_setup_entry(
         )
     )
 
-    info_sensor = QubeInfoSensor(
-        coordinator,
-        hub,
-        apply_label,
-        multi_device,
-        version,
-        total_counts=None,
-    )
-    _add_sensor_entity(info_sensor)
-
-    final_counts = {
-        "sensor": base_counts["sensor"] + extra_counts["sensor"],
-        "binary_sensor": base_counts["binary_sensor"],
-        "switch": base_counts["switch"],
-    }
-
-    info_sensor.set_counts(final_counts)
-    counts_holder["value"] = final_counts
-
     async_add_entities(entities)
 
 
@@ -572,268 +505,6 @@ class QubeSensor(CoordinatorEntity, SensorEntity):
             desired = f"{self._label}_{desired}"
         desired_slug = _slugify(str(desired)) if desired else None
         await _async_ensure_entity_id(self.hass, self.entity_id, desired_slug)
-
-
-class QubeInfoSensor(CoordinatorEntity, SensorEntity):
-    """Diagnostic info sensor."""
-
-    _attr_should_poll = False
-    _attr_entity_category = EntityCategory.DIAGNOSTIC
-
-    def __init__(
-        self,
-        coordinator: Any,
-        hub: QubeHub,
-        show_label: bool,
-        multi_device: bool,
-        version: str,
-        total_counts: dict[str, int] | None = None,
-    ) -> None:
-        """Initialize info sensor."""
-        super().__init__(coordinator)
-        self._hub = hub
-        self._multi_device = bool(multi_device)
-        self._show_label = bool(show_label)
-        self._version = str(version) if version else "unknown"
-        self._total_counts = total_counts or {}
-        label = hub.label or "qube1"
-        self._attr_translation_key = "info"
-        self._attr_has_entity_name = True
-        self._attr_unique_id = (
-            f"qube_info_sensor_{hub.entry_id}"
-            if self._multi_device
-            else "qube_info_sensor"
-        )
-        self._state = "ok"
-        self._attr_suggested_object_id = "qube_info"
-        if self._show_label:
-            self._attr_suggested_object_id = _slugify(f"{label}_qube_info")
-
-    def set_counts(self, counts: dict[str, int]) -> None:
-        """Update total entity counts."""
-        self._total_counts = counts
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return device info."""
-        return DeviceInfo(
-            identifiers={(DOMAIN, f"{self._hub.host}:{self._hub.unit}")},
-            name=(self._hub.label or "Qube Heatpump"),
-            manufacturer="Qube",
-            model="Heatpump",
-            sw_version=self._version,
-        )
-
-    @property
-    def native_value(self) -> str:
-        """Return state."""
-        return self._state
-
-    @property
-    def extra_state_attributes(self) -> dict[str, Any]:
-        """Return attributes."""
-        hub = self._hub
-        counts = self._total_counts
-        sensors = counts.get("sensor")
-        bsens = counts.get("binary_sensor")
-        switches = counts.get("switch")
-        if sensors is None or bsens is None or switches is None:
-            sensors = (
-                sensors
-                if sensors is not None
-                else sum(1 for e in hub.entities if e.platform == "sensor")
-            )
-            bsens = (
-                bsens
-                if bsens is not None
-                else sum(1 for e in hub.entities if e.platform == "binary_sensor")
-            )
-            switches = (
-                switches
-                if switches is not None
-                else sum(1 for e in hub.entities if e.platform == "switch")
-            )
-        return {
-            "version": self._version,
-            "label": hub.label,
-            "host": hub.host,
-            "ip_address": hub.resolved_ip,
-            "unit_id": hub.unit,
-            "errors_connect": hub.err_connect,
-            "errors_read": hub.err_read,
-            "count_sensors": sensors,
-            "count_binary_sensors": bsens,
-            "count_switches": switches,
-        }
-
-    async def async_added_to_hass(self) -> None:
-        """Handle entity addition."""
-        await super().async_added_to_hass()
-        desired_obj = self._attr_suggested_object_id or "qube_info"
-        if self._show_label:
-            desired_obj = _slugify(f"{self._hub.label}_qube_info")
-        await _async_ensure_entity_id(self.hass, self.entity_id, desired_obj)
-        # We could add version refresh logic here, but avoiding blind exceptions
-        # requires careful handling. Simplified for now.
-        with contextlib.suppress(Exception):
-            await self._async_refresh_integration_version()
-
-    async def _async_refresh_integration_version(self) -> None:
-        """Refresh version info."""
-        integ = None
-        with contextlib.suppress(Exception):
-            integ = async_get_loaded_integration(self.hass, DOMAIN)
-        if not integ:
-            with contextlib.suppress(Exception):
-                integ = await async_get_integration(self.hass, DOMAIN)
-        if integ and getattr(integ, "version", None):
-            new_version = str(integ.version)
-            if new_version and new_version != self._version:
-                self._version = new_version
-                self.async_write_ha_state()
-
-
-class QubeIPAddressSensor(CoordinatorEntity, SensorEntity):
-    """IP Address Sensor."""
-
-    _attr_should_poll = False
-    _attr_entity_category = EntityCategory.DIAGNOSTIC
-
-    def __init__(
-        self,
-        coordinator: Any,
-        hub: QubeHub,
-        show_label: bool,
-        multi_device: bool,
-        version: str,
-    ) -> None:
-        """Initialize IP sensor."""
-        super().__init__(coordinator)
-        self._hub = hub
-        self._version = str(version) if version else "unknown"
-        self._multi_device = bool(multi_device)
-        self._show_label = bool(show_label)
-        label = hub.label or "qube1"
-        self._attr_translation_key = "ip_address"
-        self._attr_has_entity_name = True
-        base_uid = "qube_ip_address"
-        self._attr_unique_id = (
-            f"{base_uid}_{hub.entry_id}" if self._multi_device else base_uid
-        )
-        self._attr_suggested_object_id = base_uid
-        if self._show_label:
-            self._attr_suggested_object_id = _slugify(f"{label}_{base_uid}")
-        if hasattr(SensorDeviceClass, "IP"):
-            self._attr_device_class = SensorDeviceClass.IP
-        else:
-            self._attr_device_class = None
-        self._attr_icon = "mdi:ip"
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return device info."""
-        return DeviceInfo(
-            identifiers={(DOMAIN, f"{self._hub.host}:{self._hub.unit}")},
-            name=(self._hub.label or "Qube Heatpump"),
-            manufacturer="Qube",
-            model="Heatpump",
-            sw_version=self._version,
-        )
-
-    @property
-    def native_value(self) -> str | None:
-        """Return IP address."""
-        return self._hub.resolved_ip or self._hub.host
-
-    async def async_added_to_hass(self) -> None:
-        """Handle entity addition."""
-        await super().async_added_to_hass()
-        desired_obj = self._attr_suggested_object_id or "qube_ip_address"
-        if self._show_label:
-            desired_obj = _slugify(f"{self._hub.label}_qube_ip_address")
-        await _async_ensure_entity_id(self.hass, self.entity_id, desired_obj)
-
-
-class QubeMetricSensor(CoordinatorEntity, SensorEntity):
-    """Metric sensor."""
-
-    _attr_should_poll = False
-    _attr_entity_category = EntityCategory.DIAGNOSTIC
-
-    def __init__(
-        self,
-        coordinator: Any,
-        hub: QubeHub,
-        show_label: bool,
-        multi_device: bool,
-        version: str,
-        kind: str,
-        counts_provider: Callable[[], dict[str, int] | None] | None = None,
-    ) -> None:
-        """Initialize metric sensor."""
-        super().__init__(coordinator)
-        self._hub = hub
-        self._kind = kind
-        self._multi_device = bool(multi_device)
-        self._show_label = bool(show_label)
-        self._version = version
-        self._counts_provider = counts_provider
-        label = hub.label or "qube1"
-        self._attr_translation_key = f"metric_{kind}"
-        self._attr_has_entity_name = True
-        base_uid = f"qube_metric_{kind}"
-        self._attr_unique_id = (
-            f"{base_uid}_{hub.entry_id}" if self._multi_device else base_uid
-        )
-        self._attr_suggested_object_id = _slugify(base_uid)
-        if self._show_label:
-            self._attr_suggested_object_id = _slugify(f"{label}_{base_uid}")
-        with contextlib.suppress(Exception):
-            self._attr_state_class = SensorStateClass.MEASUREMENT
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return device info."""
-        return DeviceInfo(
-            identifiers={(DOMAIN, f"{self._hub.host}:{self._hub.unit}")},
-            name=(self._hub.label or "Qube Heatpump"),
-            manufacturer="Qube",
-            model="Heatpump",
-            sw_version=self._version,
-        )
-
-    @property
-    def native_value(self) -> int | None:
-        """Return native value."""
-        hub = self._hub
-        if self._kind == "errors_connect":
-            return getattr(hub, "err_connect", None)
-        if self._kind == "errors_read":
-            return getattr(hub, "err_read", None)
-        if self._kind == "count_sensors":
-            counts = self._counts_provider() if self._counts_provider else None
-            if counts:
-                return counts.get("sensor", 0)
-            return sum(1 for e in hub.entities if e.platform == "sensor")
-        if self._kind == "count_binary_sensors":
-            counts = self._counts_provider() if self._counts_provider else None
-            if counts:
-                return counts.get("binary_sensor", 0)
-            return sum(1 for e in hub.entities if e.platform == "binary_sensor")
-        if self._kind == "count_switches":
-            counts = self._counts_provider() if self._counts_provider else None
-            if counts:
-                return counts.get("switch", 0)
-            return sum(1 for e in hub.entities if e.platform == "switch")
-        return None
-
-    async def async_added_to_hass(self) -> None:
-        """Handle entity addition."""
-        await super().async_added_to_hass()
-        desired_obj = self._attr_suggested_object_id or _slugify(
-            f"qube_metric_{self._kind}"
-        )
-        await _async_ensure_entity_id(self.hass, self.entity_id, desired_obj)
 
 
 def _entity_key(ent: EntityDef) -> str:

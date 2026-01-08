@@ -291,29 +291,9 @@
       "id_summerwinter": {
         "name": "Digital input summer mode activated"
       },
-      "info": {
-        "name": "Qube info"
-      },
-      "ip_address": {
-        "name": "Qube IP address"
-      },
+
       "keybonoff": {
         "name": "Heat pump keypad status"
-      },
-      "metric_count_binary_sensors": {
-        "name": "Qube binary sensor count"
-      },
-      "metric_count_sensors": {
-        "name": "Qube sensor count"
-      },
-      "metric_count_switches": {
-        "name": "Qube switch count"
-      },
-      "metric_errors_connect": {
-        "name": "Qube connect errors"
-      },
-      "metric_errors_read": {
-        "name": "Qube read errors"
       },
       "modbus_roomtemp": {
         "name": "Linq room temperature"
