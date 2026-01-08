@@ -36,7 +36,7 @@ from homeassistant.util import dt as dt_util, unit_conversion
 from homeassistant.util.unit_system import METRIC_SYSTEM
 
 from .const import DOMAIN
-from .data import EnergyManager, async_get_manager
+from .data import EnergyManager, PowerConfig, async_get_manager
 from .helpers import generate_power_sensor_entity_id, generate_power_sensor_unique_id
 
 SUPPORTED_STATE_CLASSES = {
@@ -260,7 +260,7 @@ class SensorManager:
                     )
 
     @staticmethod
-    def _needs_power_sensor(power_config: Mapping[str, Any]) -> bool:
+    def _needs_power_sensor(power_config: PowerConfig) -> bool:
         """Check if power_config needs a transform sensor."""
         # Only create sensors for inverted or two-sensor configs
         # Standard stat_rate configs don't need a transform sensor
@@ -271,7 +271,7 @@ class SensorManager:
     def _create_or_keep_power_sensor(
         self,
         source_type: str,
-        power_config: Mapping[str, Any],
+        power_config: PowerConfig,
         to_add: list[EnergyCostSensor | EnergyPowerSensor],
         to_remove: dict[str, EnergyPowerSensor],
     ) -> None:
@@ -593,14 +593,14 @@ class EnergyPowerSensor(SensorEntity):
     def __init__(
         self,
         source_type: str,
-        config: Mapping[str, Any],
+        config: PowerConfig,
         unique_id: str,
         entity_id: str,
     ) -> None:
         """Initialize the sensor."""
         super().__init__()
         self._source_type = source_type
-        self._config = config
+        self._config: PowerConfig = config
         self._attr_unique_id = unique_id
         self.entity_id = entity_id
         self._source_sensors: list[str] = []

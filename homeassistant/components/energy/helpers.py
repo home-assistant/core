@@ -2,11 +2,13 @@
 
 from __future__ import annotations
 
-from collections.abc import Mapping
-from typing import Any
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from .data import PowerConfig
 
 
-def generate_power_sensor_unique_id(source_type: str, config: Mapping[str, Any]) -> str:
+def generate_power_sensor_unique_id(source_type: str, config: PowerConfig) -> str:
     """Generate a unique ID for a power transform sensor."""
     if "stat_rate_inverted" in config:
         sensor_id = config["stat_rate_inverted"].replace(".", "_")
@@ -18,7 +20,7 @@ def generate_power_sensor_unique_id(source_type: str, config: Mapping[str, Any])
     return ""
 
 
-def generate_power_sensor_entity_id(source_type: str, config: Mapping[str, Any]) -> str:
+def generate_power_sensor_entity_id(source_type: str, config: PowerConfig) -> str:
     """Generate an entity ID for a power transform sensor."""
     if "stat_rate_inverted" in config:
         # Use source sensor name with _inverted suffix
