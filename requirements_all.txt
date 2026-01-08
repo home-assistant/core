@@ -277,7 +277,7 @@ aioharmony==0.5.3
 aiohasupervisor==0.3.3
 
 # homeassistant.components.home_connect
-aiohomeconnect==0.26.0
+aiohomeconnect==0.28.0
 
 # homeassistant.components.homekit_controller
 aiohomekit==3.2.20
@@ -782,7 +782,7 @@ debugpy==1.8.17
 decora-wifi==1.4
 
 # homeassistant.components.ecovacs
-deebot-client==17.0.0
+deebot-client==17.0.1
 
 # homeassistant.components.ihc
 # homeassistant.components.namecheapdns
@@ -1213,7 +1213,7 @@ hole==0.9.0
 holidays==0.84
 
 # homeassistant.components.frontend
-home-assistant-frontend==20251229.1
+home-assistant-frontend==20260107.0
 
 # homeassistant.components.conversation
 home-assistant-intents==2026.1.6
@@ -2786,7 +2786,7 @@ rpi-bad-power==0.1.0
 russound==0.2.0
 
 # homeassistant.components.ruuvitag_ble
-ruuvitag-ble==0.3.0
+ruuvitag-ble==0.4.0
 
 # homeassistant.components.yamaha
 rxv==0.7.0
@@ -3280,7 +3280,7 @@ zeroconf==0.148.0
 zeversolar==0.3.2
 
 # homeassistant.components.zha
-zha==0.0.83
+zha==0.0.84
 
 # homeassistant.components.zhong_hong
 zhong-hong-hvac==1.0.13
