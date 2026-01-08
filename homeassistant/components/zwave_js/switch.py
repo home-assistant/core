@@ -9,16 +9,27 @@ from zwave_js_server.const.command_class.barrier_operator import (
     BarrierEventSignalingSubsystemState,
 )
 from zwave_js_server.model.driver import Driver
+from zwave_js_server.util.multicast import async_multicast_set_value
 
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN, SwitchEntity
-from homeassistant.const import EntityCategory
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import SERVICE_TURN_OFF, SERVICE_TURN_ON, EntityCategory
+from homeassistant.core import (
+    EntityServiceResponse,
+    HomeAssistant,
+    ServiceCall,
+    callback,
+)
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DOMAIN
+from .const import DOMAIN, LOGGER
 from .discovery import ZwaveDiscoveryInfo
 from .entity import ZWaveBaseEntity
+from .helpers import ValueDataType
 from .models import ZwaveJSConfigEntry
 
 PARALLEL_UPDATES = 0
@@ -58,6 +69,139 @@ async def async_setup_entry(
             async_add_switch,
         )
     )
+
+    # --- register the batched handler ---
+    entity_component: EntityComponent = hass.data[SWITCH_DOMAIN]
+    entity_component.async_register_batched_handler(
+        name=SERVICE_TURN_ON,
+        config_entry=config_entry,
+        handler=async_batched_zwave_js_on_off,
+    )
+    entity_component.async_register_batched_handler(
+        name=SERVICE_TURN_OFF,
+        config_entry=config_entry,
+        handler=async_batched_zwave_js_on_off,
+    )
+
+
+VALUE_ID_SWITCH_BINARY: str = "targetValue"
+
+
+async def async_batched_zwave_js_on_off(
+    config_entry: ConfigEntry,
+    entities: list[Entity],
+    call: ServiceCall,
+) -> EntityServiceResponse | None:
+    """Batched handler for turn_on and turn_off using virtual multicast."""
+    if not entities:
+        return None
+
+    if call.service == SERVICE_TURN_ON:
+        value: bool = True
+    elif call.service == SERVICE_TURN_OFF:
+        value = False
+    else:
+        raise HomeAssistantError(f"Unsupported service: {call.service}")
+
+    config_param_entities = [
+        e for e in entities if isinstance(e, ZWaveConfigParameterSwitch)
+    ]
+
+    binary_switch_entities = [
+        e
+        for e in entities
+        if isinstance(e, ZWaveSwitch) and not isinstance(e, ZWaveConfigParameterSwitch)
+    ]
+    unsupported_entities = [
+        e
+        for e in entities
+        if not isinstance(e, (ZWaveSwitch, ZWaveConfigParameterSwitch))
+    ]
+
+    if unsupported_entities:
+        LOGGER.warning(
+            "Batched Z-Wave handler received unsupported entities: %s",
+            unsupported_entities,
+        )
+
+    client = None
+    # For regular binary switches
+    if binary_switch_entities:
+        first_binary_switch_entity = binary_switch_entities[0]
+        binary_switch_zwave_value = first_binary_switch_entity.get_zwave_value(
+            TARGET_VALUE_PROPERTY
+        )
+        if binary_switch_zwave_value is None:
+            raise HomeAssistantError(
+                f"Unable to resolve Z-Wave value for entity {first_binary_switch_entity}, node {first_binary_switch_entity.info.node}"
+            )
+
+        binary_switch_value_data: ValueDataType = {
+            "commandClass": binary_switch_zwave_value.command_class,
+            "property": binary_switch_zwave_value.property_,
+        }
+        if binary_switch_zwave_value.endpoint is not None:
+            binary_switch_value_data["endpoint"] = binary_switch_zwave_value.endpoint
+        client = binary_switch_entities[0].driver.client
+
+    # For config parameter switches
+    if config_param_entities:
+        config_entity = config_param_entities[0]
+
+        config_zwave_value = config_entity.get_zwave_value(
+            value_property=VALUE_ID_SWITCH_BINARY
+        )
+        if config_zwave_value is None:
+            raise HomeAssistantError(
+                f"Unable to resolve Z-Wave value for config entity {config_entity}, node {config_entity.info.node}"
+            )
+
+        config_value_data: ValueDataType = {
+            "commandClass": config_zwave_value.command_class,
+            "property": config_zwave_value.property_,
+        }
+        if config_zwave_value.endpoint is not None:
+            config_value_data["endpoint"] = config_zwave_value.endpoint
+        client = config_param_entities[0].driver.client
+
+    if client is None:
+        LOGGER.error("Zwave Switch Multicast had no entities")
+        return None
+
+    # We could probably gather these, but it doesn't seem like that would occur too often
+    # --- multicast for normal switches ---
+    if binary_switch_entities:
+        LOGGER.debug(
+            "Calling Zwave Multicast with value_data %s, value %s for entities %s",
+            binary_switch_value_data,
+            value,
+            binary_switch_entities,
+        )
+        await async_multicast_set_value(
+            client=client,
+            new_value=value,
+            value_data=binary_switch_value_data,
+            nodes=[n.info.node for n in binary_switch_entities],
+            options=None,
+        )
+
+    # --- multicast for config parameter switches ---
+    if config_param_entities:
+        LOGGER.debug(
+            "Calling Zwave Config Parameter Multicast with value_data %s, value %s for entities %s",
+            config_value_data,
+            value,
+            config_param_entities,
+        )
+        await async_multicast_set_value(
+            client=client,
+            new_value=value,
+            value_data=config_value_data,
+            nodes=[n.info.node for n in config_param_entities],
+            options=None,
+        )
+
+    return None
 
 
 class ZWaveSwitch(ZWaveBaseEntity, SwitchEntity):
