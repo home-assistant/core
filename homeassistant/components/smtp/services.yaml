@@ -1,0 +1,91 @@
+send_message:
+  fields:
+    config_entry:
+      required: true
+      selector:
+        config_entry:
+          integration: smtp
+    message:
+      example: "Home Assistant is running version {{ state_attr('update.home_assistant_core_update', 'installed_version') }}"
+      selector:
+        text:
+          multiline: true
+    subject:
+      example: "🏠 Home Assistant Version & Update Status"
+      selector:
+        text:
+    to:
+      example:
+        - "recipient@example.com"
+      selector:
+        text:
+          multiple: true
+    from_name:
+      example: "HomeAssistant"
+      selector:
+        text:
+    html:
+      example: |
+        <!doctype html>
+        <html>
+          <body style="margin:0;padding:16px;font-family:Arial,Helvetica,sans-serif;background:#f6f7f9;">
+            <div style="max-width:520px;margin:0 auto;background:#ffffff;
+                        border:1px solid #e5e7eb;border-radius:12px;padding:18px;">
+
+              <div style="font-size:18px;font-weight:700;margin-bottom:12px;">
+                Home Assistant Core – Update Status
+              </div>
+
+              <table width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;">
+                <tr>
+                  <td style="padding:6px 0;font-weight:600;">Installed Version</td>
+                  <td style="padding:6px 0;text-align:right;">
+                    {{ state_attr('update.home_assistant_core_update', 'installed_version') }}
+                  </td>
+                </tr>
+
+                <tr>
+                  <td style="padding:6px 0;font-weight:600;">Latest Version</td>
+                  <td style="padding:6px 0;text-align:right;">
+                    {{ state_attr('update.home_assistant_core_update', 'latest_version') }}
+                  </td>
+                </tr>
+
+                <tr>
+                  <td style="padding:6px 0;font-weight:600;">Auto Update</td>
+                  <td style="padding:6px 0;text-align:right;">
+                    {{ 'Enabled' if state_attr('update.home_assistant_core_update', 'auto_update') else 'Disabled' }}
+                  </td>
+                </tr>
+
+                <tr>
+                  <td style="padding:6px 0;font-weight:600;">Update In Progress</td>
+                  <td style="padding:6px 0;text-align:right;">
+                    {{ 'Yes' if state_attr('update.home_assistant_core_update', 'in_progress') else 'No' }}
+                  </td>
+                </tr>
+              </table>
+
+              <div style="margin-top:12px;padding-top:10px;border-top:1px solid #f0f0f0;">
+                <a href="{{ state_attr('update.home_assistant_core_update', 'release_url') }}"
+                   style="font-size:13px;color:#2563eb;text-decoration:none;">
+                  View Release Notes
+                </a>
+              </div>
+
+              <div style="margin-top:10px;font-size:12px;color:#6b7280;">
+                Generated: {{ now().strftime('%Y-%m-%d %H:%M:%S') }}
+              </div>
+
+            </div>
+          </body>
+        </html>
+      selector:
+        text:
+          multiline: true
+    images:
+      example:
+        - "/config/www/image.jpg"
+      selector:
+        text:
+          multiple: true
