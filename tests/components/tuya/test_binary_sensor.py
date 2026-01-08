@@ -2,8 +2,10 @@
 
 from __future__ import annotations
 
+from typing import Any
 from unittest.mock import patch
 
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy.assertion import SnapshotAssertion
 from tuya_sharing import CustomerDevice, Manager
@@ -73,3 +75,59 @@ async def test_bitmap(
     assert hass.states.get("binary_sensor.dehumidifier_tank_full").state == tankfull
     assert hass.states.get("binary_sensor.dehumidifier_defrost").state == defrost
     assert hass.states.get("binary_sensor.dehumidifier_wet").state == wet
+
+
+@pytest.mark.parametrize(
+    "mock_device_code",
+    ["mcs_oxslv1c9"],
+)
+@pytest.mark.parametrize(
+    ("updates", "expected_state", "last_reported"),
+    [
+        # Update without dpcode - state should not change, last_reported stays at initial
+        ({"battery_percentage": 80}, "off", "2024-01-01T00:00:00+00:00"),
+        # Update with dpcode - state should change, last_reported advances
+        ({"doorcontact_state": True}, "on", "2024-01-01T00:01:00+00:00"),
+        # Update with multiple properties including dpcode - state should change
+        (
+            {"battery_percentage": 50, "doorcontact_state": True},
+            "on",
+            "2024-01-01T00:01:00+00:00",
+        ),
+    ],
+)
+@patch("homeassistant.components.tuya.PLATFORMS", [Platform.BINARY_SENSOR])
+@pytest.mark.freeze_time("2024-01-01")
+async def test_selective_state_update(
+    hass: HomeAssistant,
+    mock_manager: Manager,
+    mock_config_entry: MockConfigEntry,
+    mock_device: CustomerDevice,
+    mock_listener: MockDeviceListener,
+    freezer: FrozenDateTimeFactory,
+    updates: dict[str, Any],
+    expected_state: str,
+    last_reported: str,
+) -> None:
+    """Test binary sensor only updates when its dpcode is in updated properties.
+
+    This test verifies that when an update event comes with properties that do NOT
+    include the binary sensor's dpcode (e.g., a battery event for a door sensor),
+    the binary sensor state is not changed and last_reported is not updated.
+    """
+    entity_id = "binary_sensor.window_downstairs_door"
+    await initialize_entry(hass, mock_manager, mock_config_entry, mock_device)
+
+    assert hass.states.get(entity_id).state == "off"
+    assert (
+        hass.states.get(entity_id).last_reported.isoformat()
+        == "2024-01-01T00:00:00+00:00"
+    )
+
+    # Force update the dpcode - should be ignored unless event contains the property
+    mock_device.status["doorcontact_state"] = True
+    freezer.tick(60)
+    await mock_listener.async_send_device_update(hass, mock_device, updates)
+
+    assert hass.states.get(entity_id).state == expected_state
+    assert hass.states.get(entity_id).last_reported.isoformat() == last_reported
