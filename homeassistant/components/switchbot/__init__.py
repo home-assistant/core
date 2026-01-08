@@ -43,7 +43,10 @@ PLATFORMS_BY_TYPE = {
         Platform.SENSOR,
     ],
     SupportedModels.HYGROMETER.value: [Platform.SENSOR],
-    SupportedModels.HYGROMETER_CO2.value: [Platform.SENSOR],
+    SupportedModels.HYGROMETER_CO2.value: [
+        Platform.BUTTON,
+        Platform.SENSOR,
+    ],
     SupportedModels.CONTACT.value: [Platform.BINARY_SENSOR, Platform.SENSOR],
     SupportedModels.MOTION.value: [Platform.BINARY_SENSOR, Platform.SENSOR],
     SupportedModels.PRESENCE_SENSOR.value: [Platform.BINARY_SENSOR, Platform.SENSOR],
@@ -150,6 +153,7 @@ CLASS_BY_DEVICE = {
     SupportedModels.GARAGE_DOOR_OPENER.value: switchbot.SwitchbotGarageDoorOpener,
     SupportedModels.SMART_THERMOSTAT_RADIATOR.value: switchbot.SwitchbotSmartThermostatRadiator,
     SupportedModels.ART_FRAME.value: switchbot.SwitchbotArtFrame,
+    SupportedModels.HYGROMETER_CO2.value: switchbot.SwitchbotMeterProCO2,
 }
 
 

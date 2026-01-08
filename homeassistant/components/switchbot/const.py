@@ -102,13 +102,13 @@ CONNECTABLE_SUPPORTED_MODEL_TYPES = {
     SwitchbotModel.CLIMATE_PANEL: SupportedModels.CLIMATE_PANEL,
     SwitchbotModel.SMART_THERMOSTAT_RADIATOR: SupportedModels.SMART_THERMOSTAT_RADIATOR,
     SwitchbotModel.ART_FRAME: SupportedModels.ART_FRAME,
+    SwitchbotModel.METER_PRO_C: SupportedModels.HYGROMETER_CO2,
 }
 
 NON_CONNECTABLE_SUPPORTED_MODEL_TYPES = {
     SwitchbotModel.METER: SupportedModels.HYGROMETER,
     SwitchbotModel.IO_METER: SupportedModels.HYGROMETER,
     SwitchbotModel.METER_PRO: SupportedModels.HYGROMETER,
-    SwitchbotModel.METER_PRO_C: SupportedModels.HYGROMETER_CO2,
     SwitchbotModel.CONTACT_SENSOR: SupportedModels.CONTACT,
     SwitchbotModel.MOTION_SENSOR: SupportedModels.MOTION,
     SwitchbotModel.PRESENCE_SENSOR: SupportedModels.PRESENCE_SENSOR,
