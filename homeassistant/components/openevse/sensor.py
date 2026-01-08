@@ -19,8 +19,6 @@ from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import (
     CONF_HOST,
     CONF_MONITORED_VARIABLES,
-    CONF_PASSWORD,
-    CONF_USERNAME,
     UnitOfEnergy,
     UnitOfTemperature,
     UnitOfTime,
