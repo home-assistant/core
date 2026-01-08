@@ -2,7 +2,7 @@
 
 from datetime import timedelta
 import socket
-from unittest.mock import Mock, patch
+from unittest.mock import Mock, PropertyMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
 from psutil._common import sdiskpart, sdiskusage, shwtemp, snetio, snicaddr
@@ -635,3 +635,44 @@ async def test_no_duplicate_disk_entities(
     assert disk_sensor.state == "60.0"
 
     assert "Platform systemmonitor does not generate unique IDs." not in caplog.text
+
+
+@pytest.mark.parametrize(
+    ("psutil_attr", "exception", "entity_id"),
+    [
+        (
+            "sensors_battery",
+            FileNotFoundError,
+            "sensor.system_monitor_battery",
+        ),
+        (
+            "sensors_battery",
+            AttributeError,
+            "sensor.system_monitor_battery",
+        ),
+        (
+            "sensors_fans",
+            AttributeError,
+            "sensor.system_monitor_cpu_fan_fan_speed",
+        ),
+        (
+            "sensors_temperatures",
+            AttributeError,
+            "sensor.system_monitor_processor_temperature",
+        ),
+    ],
+)
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_sensor_exception(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_psutil: Mock,
+    psutil_attr: str,
+    exception: Exception,
+    entity_id: str,
+) -> None:
+    """Test the sensor."""
+    setattr(mock_psutil, psutil_attr, PropertyMock(side_effect=exception))
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
