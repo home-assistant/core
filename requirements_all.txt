@@ -1184,6 +1184,9 @@ hassil==3.5.0
 # homeassistant.components.jewish_calendar
 hdate[astral]==1.1.2
 
+# homeassistant.components.hdfury
+hdfury==1.3.1
+
 # homeassistant.components.heatmiser
 heatmiserV3==2.0.4
 
@@ -2563,7 +2566,7 @@ python-opensky==1.0.1
 
 # homeassistant.components.otbr
 # homeassistant.components.thread
-python-otbr-api==2.7.0
+python-otbr-api==2.7.1
 
 # homeassistant.components.overseerr
 python-overseerr==0.8.0
