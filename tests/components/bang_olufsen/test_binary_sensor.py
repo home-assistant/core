@@ -41,4 +41,4 @@ async def test_battery_charging(
     await hass.async_block_till_done()
 
     assert (states := hass.states.get(TEST_BATTERY_CHARGING_BINARY_SENSOR_ENTITY_ID))
-    assert states.state == "on"
+    assert states.state == STATE_ON
