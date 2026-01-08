@@ -1,0 +1,186 @@
+# Quality scale rules for Tesla Fleet integration
+# This integration targets Gold tier
+
+rules:
+  # ============================================================================
+  # Bronze tier
+  # ============================================================================
+  
+  action-setup:
+    status: exempt
+    comment: Integration does not register custom service actions in async_setup. Only entity-level services are used.
+  
+  appropriate-polling:
+    status: done
+  
+  brands:
+    status: done
+  
+  common-modules:
+    status: done
+  
+  config-flow-test-coverage:
+    status: done
+  
+  config-flow:
+    status: done
+  
+  dependency-transparency:
+    status: done
+  
+  docs-actions:
+    status: exempt
+    comment: Integration does not provide custom service actions beyond standard entity services.
+  
+  docs-high-level-description:
+    status: done
+  
+  docs-installation-instructions:
+    status: done
+  
+  docs-removal-instructions:
+    status: done
+  
+  entity-event-setup:
+    status: done
+  
+  entity-unique-id:
+    status: done
+  
+  has-entity-name:
+    status: done
+  
+  runtime-data:
+    status: done
+  
+  test-before-configure:
+    status: done
+  
+  test-before-setup:
+    status: done
+  
+  unique-config-entry:
+    status: done
+  
+  # ============================================================================
+  # Silver tier
+  # ============================================================================
+  
+  action-exceptions:
+    status: done
+  
+  config-entry-unloading:
+    status: done
+  
+  docs-configuration-parameters:
+    status: done
+  
+  docs-installation-parameters:
+    status: done
+  
+  entity-unavailable:
+    status: done
+  
+  integration-owner:
+    status: done
+  
+  log-when-unavailable:
+    status: todo
+    comment: Coordinator raises UpdateFailed but does not implement the full log-once pattern (log when becoming unavailable, log when recovering).
+  
+  parallel-updates:
+    status: done
+  
+  reauthentication-flow:
+    status: done
+  
+  test-coverage:
+    status: done
+  
+  # ============================================================================
+  # Gold tier
+  # ============================================================================
+  
+  devices:
+    status: done
+  
+  diagnostics:
+    status: done
+  
+  discovery-update-info:
+    status: exempt
+    comment: Integration does not implement device discovery mechanisms.
+  
+  discovery:
+    status: exempt
+    comment: Tesla Fleet API requires OAuth authentication and cannot be automatically discovered.
+  
+  docs-data-update:
+    status: done
+  
+  docs-examples:
+    status: todo
+    comment: Documentation includes NGINX configuration examples but lacks automation use case examples.
+  
+  docs-known-limitations:
+    status: done
+  
+  docs-supported-devices:
+    status: done
+  
+  docs-supported-functions:
+    status: done
+  
+  docs-troubleshooting:
+    status: done
+  
+  docs-use-cases:
+    status: todo
+    comment: Documentation does not include explicit use case scenarios.
+  
+  dynamic-devices:
+    status: done
+  
+  entity-category:
+    status: done
+  
+  entity-device-class:
+    status: done
+  
+  entity-disabled-by-default:
+    status: done
+  
+  entity-translations:
+    status: done
+  
+  exception-translations:
+    status: done
+  
+  icon-translations:
+    status: done
+  
+  reconfiguration-flow:
+    status: todo
+    comment: Integration does not implement async_step_reconfigure for updating settings without removal.
+  
+  repair-issues:
+    status: exempt
+    comment: Integration does not have scenarios requiring user-actionable repair issues.
+  
+  stale-devices:
+    status: todo
+    comment: Integration does not automatically remove devices that are no longer present in the Tesla account.
+  
+  # ============================================================================
+  # Platinum tier
+  # ============================================================================
+  
+  async-dependency:
+    status: done
+  
+  inject-websession:
+    status: done
+  
+  strict-typing:
+    status: todo
+    comment: Integration is not yet registered in .strict-typing file and needs comprehensive type annotation review.
