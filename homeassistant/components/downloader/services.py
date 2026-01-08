@@ -164,7 +164,9 @@ def async_setup_services(hass: HomeAssistant) -> None:
                 vol.Optional(ATTR_SUBDIR): cv.string,
                 vol.Required(ATTR_URL): cv.url,
                 vol.Optional(ATTR_OVERWRITE, default=False): cv.boolean,
-                vol.Optional(ATTR_HEADERS, default={}): dict,
+                vol.Optional(ATTR_HEADERS, default=dict): vol.Schema(
+                    {cv.string: cv.string}
+                ),
             }
         ),
     )

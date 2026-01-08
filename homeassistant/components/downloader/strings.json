@@ -29,7 +29,7 @@
           "name": "Filename"
         },
         "headers": {
-          "description": "Additional custom HTTP headers",
+          "description": "Additional custom HTTP headers.",
           "name": "Headers"
         },
         "overwrite": {
