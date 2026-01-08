@@ -5,7 +5,11 @@ from dataclasses import dataclass
 
 from hdfury import HDFuryAPI, HDFuryError
 
-from homeassistant.components.button import ButtonEntity, ButtonEntityDescription
+from homeassistant.components.button import (
+    ButtonDeviceClass,
+    ButtonEntity,
+    ButtonEntityDescription,
+)
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -26,7 +30,7 @@ class HDFuryButtonEntityDescription(ButtonEntityDescription):
 BUTTONS: tuple[HDFuryButtonEntityDescription, ...] = (
     HDFuryButtonEntityDescription(
         key="reboot",
-        translation_key="reboot",
+        device_class=ButtonDeviceClass.RESTART,
         entity_category=EntityCategory.CONFIG,
         press_fn=lambda client: client.issue_reboot(),
     ),

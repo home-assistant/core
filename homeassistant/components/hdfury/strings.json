@@ -21,10 +21,7 @@
   "entity": {
     "button": {
       "issue_hotplug": {
-        "name": "Issue Hotplug"
-      },
-      "reboot": {
-        "name": "Reboot"
+        "name": "Issue hotplug"
       }
     },
     "select": {
