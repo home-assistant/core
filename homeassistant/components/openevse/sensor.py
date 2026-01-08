@@ -160,7 +160,6 @@ async def async_setup_entry(
     async_add_entities(
         (
             OpenEVSESensor(
-                config_entry,
                 config_entry.runtime_data,
                 description,
             )
@@ -175,15 +174,11 @@ class OpenEVSESensor(SensorEntity):
 
     def __init__(
         self,
-        config: ConfigEntry,
         charger: OpenEVSE,
         description: SensorEntityDescription,
     ) -> None:
         """Initialize the sensor."""
         self.entity_description = description
-        self.host = config.data.get(CONF_HOST)
-        self.user = config.data.get(CONF_USERNAME)
-        self.password = config.data.get(CONF_PASSWORD)
         self.charger = charger
 
     async def async_update(self) -> None:
