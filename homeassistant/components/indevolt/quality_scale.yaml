@@ -1,0 +1,34 @@
+rules:
+  # Bronze (mandatory for core integrations)
+  action-setup: done
+  appropriate-polling: done
+  brands:
+    status: exempt
+    comment: Need to submit branding assets to https://github.com/home-assistant/brands
+  common-modules: done
+  config-flow-test-coverage:
+    status: exempt
+    comment: Need to add comprehensive config flow tests in tests/components/indevolt/
+  config-flow: done
+  dependency-transparency: done
+  docs-actions:
+    status: exempt
+    comment: Documentation needs to be created at https://www.home-assistant.io/integrations/indevolt
+  docs-high-level-description:
+    status: exempt
+    comment: Documentation needs to be created at https://www.home-assistant.io/integrations/indevolt
+  docs-installation-instructions:
+    status: exempt
+    comment: Documentation needs to be created at https://www.home-assistant.io/integrations/indevolt
+  docs-removal-instructions:
+    status: exempt
+    comment: Documentation needs to be created at https://www.home-assistant.io/integrations/indevolt
+  entity-event-setup:
+    status: exempt
+    comment: Integration does not subscribe to entity events, uses coordinator pattern
+  entity-unique-id: done
+  has-entity-name: done
+  runtime-data: done
+  test-before-configure: done
+  test-before-setup: done
+  unique-config-entry: done

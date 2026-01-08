@@ -1,0 +1,16 @@
+{
+  "services": {
+    "change_mode": {
+      "service": "mdi:swap-horizontal"
+    },
+    "charge": {
+      "service": "mdi:battery-charging"
+    },
+    "discharge": {
+      "service": "mdi:battery-arrow-down"
+    },
+    "stop": {
+      "service": "mdi:battery-off"
+    }
+  }
+}

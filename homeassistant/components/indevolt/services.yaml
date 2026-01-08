@@ -1,0 +1,56 @@
+# Services for Indevolt integration
+
+charge:
+  fields:
+    device_id:
+      required: true
+      selector:
+        device:
+          integration: indevolt
+    power:
+      required: true
+      selector:
+        number:
+          min: 100
+          max: 2400
+          unit_of_measurement: W
+
+discharge:
+  fields:
+    device_id:
+      required: true
+      selector:
+        device:
+          integration: indevolt
+    power:
+      required: true
+      selector:
+        number:
+          min: 0
+          max: 2400
+          unit_of_measurement: W
+
+stop:
+  fields:
+    device_id:
+      required: true
+      selector:
+        device:
+          integration: indevolt
+
+change_mode:
+  fields:
+    device_id:
+      required: true
+      selector:
+        device:
+          integration: indevolt
+    mode:
+      required: true
+      selector:
+        select:
+          options:
+            - self_consumed_prioritized
+            - real_time_control
+            - charge_discharge_schedule
+          translation_key: working_mode
