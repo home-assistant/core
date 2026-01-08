@@ -15,8 +15,7 @@ from .conftest import init_integration
 from tests.common import MockConfigEntry, get_sensor_display_state, snapshot_platform
 
 
-@pytest.mark.usefixtures("classic_vario_mock", "filter_mock")
-async def test_setup_classic_vario(
+async def test_setup(
     hass: HomeAssistant,
     eheimdigital_hub_mock: MagicMock,
     mock_config_entry: MockConfigEntry,
@@ -44,7 +43,6 @@ async def test_setup_classic_vario(
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
 
-@pytest.mark.usefixtures("classic_vario_mock", "filter_mock")
 @pytest.mark.parametrize(
     ("device_name", "entity_list"),
     [

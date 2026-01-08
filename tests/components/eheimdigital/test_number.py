@@ -47,7 +47,6 @@ async def test_setup(
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
 
-@pytest.mark.usefixtures("classic_vario_mock", "heater_mock", "filter_mock")
 @pytest.mark.parametrize(
     ("device_name", "entity_list"),
     [
@@ -151,7 +150,6 @@ async def test_set_value(
         assert calls[-1][1][0][item[2]] == item[3]
 
 
-@pytest.mark.usefixtures("classic_vario_mock", "heater_mock")
 @pytest.mark.parametrize(
     ("device_name", "entity_list"),
     [

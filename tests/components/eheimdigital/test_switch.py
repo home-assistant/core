@@ -20,8 +20,7 @@ from .conftest import init_integration
 from tests.common import MockConfigEntry, snapshot_platform
 
 
-@pytest.mark.usefixtures("classic_vario_mock", "filter_mock")
-async def test_setup_classic_vario(
+async def test_setup(
     hass: HomeAssistant,
     eheimdigital_hub_mock: MagicMock,
     mock_config_entry: MockConfigEntry,

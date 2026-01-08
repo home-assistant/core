@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_setup_classic_vario[sensor.mock_classicvario_current_speed-entry]
+# name: test_setup[sensor.mock_classicvario_current_speed-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -34,7 +34,7 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_setup_classic_vario[sensor.mock_classicvario_current_speed-state]
+# name: test_setup[sensor.mock_classicvario_current_speed-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Mock classicVARIO Current speed',
@@ -48,7 +48,7 @@
     'state': 'unknown',
   })
 # ---
-# name: test_setup_classic_vario[sensor.mock_classicvario_error_code-entry]
+# name: test_setup[sensor.mock_classicvario_error_code-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -89,7 +89,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_setup_classic_vario[sensor.mock_classicvario_error_code-state]
+# name: test_setup[sensor.mock_classicvario_error_code-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'enum',
@@ -108,7 +108,7 @@
     'state': 'unknown',
   })
 # ---
-# name: test_setup_classic_vario[sensor.mock_classicvario_remaining_hours_until_service-entry]
+# name: test_setup[sensor.mock_classicvario_remaining_hours_until_service-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -149,7 +149,7 @@
     'unit_of_measurement': <UnitOfTime.DAYS: 'd'>,
   })
 # ---
-# name: test_setup_classic_vario[sensor.mock_classicvario_remaining_hours_until_service-state]
+# name: test_setup[sensor.mock_classicvario_remaining_hours_until_service-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'duration',
@@ -164,7 +164,7 @@
     'state': 'unknown',
   })
 # ---
-# name: test_setup_classic_vario[sensor.mock_filter_current_speed-entry]
+# name: test_setup[sensor.mock_filter_current_speed-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -202,7 +202,7 @@
     'unit_of_measurement': <UnitOfFrequency.HERTZ: 'Hz'>,
   })
 # ---
-# name: test_setup_classic_vario[sensor.mock_filter_current_speed-state]
+# name: test_setup[sensor.mock_filter_current_speed-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'frequency',
@@ -217,7 +217,7 @@
     'state': 'unknown',
   })
 # ---
-# name: test_setup_classic_vario[sensor.mock_filter_operating_time-entry]
+# name: test_setup[sensor.mock_filter_operating_time-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -258,7 +258,7 @@
     'unit_of_measurement': <UnitOfTime.HOURS: 'h'>,
   })
 # ---
-# name: test_setup_classic_vario[sensor.mock_filter_operating_time-state]
+# name: test_setup[sensor.mock_filter_operating_time-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'duration',
@@ -273,7 +273,7 @@
     'state': 'unknown',
   })
 # ---
-# name: test_setup_classic_vario[sensor.mock_filter_remaining_hours_until_service-entry]
+# name: test_setup[sensor.mock_filter_remaining_hours_until_service-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -314,7 +314,7 @@
     'unit_of_measurement': <UnitOfTime.DAYS: 'd'>,
   })
 # ---
-# name: test_setup_classic_vario[sensor.mock_filter_remaining_hours_until_service-state]
+# name: test_setup[sensor.mock_filter_remaining_hours_until_service-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'duration',
@@ -329,7 +329,7 @@
     'state': 'unknown',
   })
 # ---
-# name: test_setup_classic_vario[sensor.mock_filter_remaining_off_time-entry]
+# name: test_setup[sensor.mock_filter_remaining_off_time-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -367,7 +367,7 @@
     'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
   })
 # ---
-# name: test_setup_classic_vario[sensor.mock_filter_remaining_off_time-state]
+# name: test_setup[sensor.mock_filter_remaining_off_time-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'duration',
@@ -382,7 +382,7 @@
     'state': 'unknown',
   })
 # ---
-# name: test_setup_classic_vario[sensor.mock_filter_remaining_off_time_after_feeding-entry]
+# name: test_setup[sensor.mock_filter_remaining_off_time_after_feeding-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -420,7 +420,7 @@
     'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
   })
 # ---
-# name: test_setup_classic_vario[sensor.mock_filter_remaining_off_time_after_feeding-state]
+# name: test_setup[sensor.mock_filter_remaining_off_time_after_feeding-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'duration',

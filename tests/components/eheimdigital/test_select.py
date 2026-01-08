@@ -20,7 +20,6 @@ from .conftest import init_integration
 from tests.common import MockConfigEntry, snapshot_platform
 
 
-@pytest.mark.usefixtures("classic_vario_mock", "filter_mock")
 async def test_setup(
     hass: HomeAssistant,
     eheimdigital_hub_mock: MagicMock,
@@ -49,7 +48,6 @@ async def test_setup(
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
 
-@pytest.mark.usefixtures("classic_vario_mock", "filter_mock")
 @pytest.mark.parametrize(
     ("device_name", "entity_list"),
     [
@@ -113,7 +111,6 @@ async def test_set_value(
             {ATTR_ENTITY_ID: item[0], ATTR_OPTION: item[1]},
             blocking=True,
         )
-        # await hass.async_block_till_done()
         calls = [call for call in device.hub.mock_calls if call[0] == "send_packet"]
         assert calls[-1][1][0][item[2]] == item[3]
 
