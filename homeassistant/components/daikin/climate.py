@@ -2,11 +2,9 @@
 
 from __future__ import annotations
 
-import asyncio
 from collections.abc import Sequence
 import logging
 from typing import Any
-from urllib.parse import quote
 
 from homeassistant.components.climate import (
     ATTR_FAN_MODE,
@@ -142,96 +140,6 @@ def _zone_temperature_from_list(values: list[str], zone_id: int) -> float | None
         return float(values[zone_id])
     except (TypeError, ValueError):
         return None
-
-
-async def _async_set_zone_temperature(
-    coordinator: DaikinCoordinator, zone_id: int, temperature: float
-) -> None:
-    """Write the requested temperature for a Daikin zone."""
-    device = coordinator.device
-    zones = getattr(device, "zones", None)
-    if not zones:
-        raise _zone_error("zone_parameters_unavailable")
-
-    try:
-        zone = zones[zone_id]
-    except (IndexError, TypeError) as err:
-        raise _zone_error(
-            "zone_missing",
-            {
-                "zone_id": str(zone_id),
-                "max_zone": str(len(zones) - 1),
-            },
-        ) from err
-
-    if not _zone_is_configured(zone):
-        raise _zone_error("zone_inactive", {"zone_id": str(zone_id)})
-
-    target = _system_target_temperature(device)
-    min_temp = target - ZONE_TEMPERATURE_WINDOW
-    max_temp = target + ZONE_TEMPERATURE_WINDOW
-    if not (min_temp <= temperature <= max_temp):
-        raise _zone_error(
-            "temperature_out_of_range",
-            {
-                "temperature": f"{temperature:g}",
-                "min_temp": f"{min_temp:g}",
-                "max_temp": f"{max_temp:g}",
-            },
-        )
-
-    retries = 3
-    for attempt in range(retries):
-        try:
-            current_state = await device._get_resource(  # noqa: SLF001
-                "aircon/get_zone_setting"
-            )
-            if not current_state:
-                raise _zone_error("zone_settings_unavailable")
-            device.values.update(current_state)
-            current_heating, current_cooling = _zone_temperature_lists(device)
-            if (
-                not current_heating
-                or not current_cooling
-                or zone_id >= len(current_heating)
-                or zone_id >= len(current_cooling)
-            ):
-                raise _zone_error("zone_parameters_unavailable")
-
-            current_heating[zone_id] = str(round(temperature))
-            current_cooling[zone_id] = str(round(temperature))
-            device.values["lztemp_h"] = quote(";".join(current_heating)).lower()
-            device.values["lztemp_c"] = quote(";".join(current_cooling)).lower()
-            path = "aircon/set_zone_setting"
-            params = {
-                "zone_name": current_state["zone_name"],
-                "zone_onoff": device.values["zone_onoff"],
-                "lztemp_c": device.values["lztemp_c"],
-                "lztemp_h": device.values["lztemp_h"],
-            }
-            params_str = "&".join(f"{key}={value}" for key, value in params.items())
-            response = await device._get_resource(  # noqa: SLF001
-                f"{path}?{params_str}"
-            )
-            if isinstance(response, str) and "ret=PARAM NG" in response:
-                raise _zone_error("zone_set_failed")
-            await coordinator.async_request_refresh()
-        except HomeAssistantError:
-            raise
-        except (IndexError, KeyError, AttributeError) as err:
-            _LOGGER.error(
-                "Attempt %s: Failed to set zone temperature on device %s: %s",
-                attempt + 1,
-                getattr(device, "mac", "unknown"),
-                err,
-            )
-            if attempt == retries - 1:
-                raise _zone_error(
-                    "zone_set_retries_exceeded", {"retries": str(retries)}
-                ) from err
-            await asyncio.sleep(1)
-        else:
-            return
 
 
 async def async_setup_entry(
@@ -451,8 +359,8 @@ class DaikinClimate(DaikinEntity, ClimateEntity):
 class DaikinZoneClimate(DaikinEntity, ClimateEntity):
     """Representation of a Daikin zone temperature controller."""
 
-    _attr_translation_key = "zone_temperature"
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
+    _attr_has_entity_name = True
     _attr_supported_features = ClimateEntityFeature.TARGET_TEMPERATURE
     _attr_target_temperature_step = 1
 
@@ -461,7 +369,6 @@ class DaikinZoneClimate(DaikinEntity, ClimateEntity):
         super().__init__(coordinator)
         self._zone_id = zone_id
         self._attr_unique_id = f"{self.device.mac}-zone{zone_id}-temperature"
-        self._attr_has_entity_name = True
         try:
             zone_name = self.device.zones[self._zone_id][0]
         except (IndexError, TypeError):
@@ -471,7 +378,7 @@ class DaikinZoneClimate(DaikinEntity, ClimateEntity):
     @property
     def hvac_modes(self) -> list[HVACMode]:
         """Return the hvac modes (mirrors the main unit)."""
-        return list(HA_STATE_TO_DAIKIN)
+        return [self.hvac_mode]
 
     @property
     def hvac_mode(self) -> HVACMode:
@@ -515,9 +422,7 @@ class DaikinZoneClimate(DaikinEntity, ClimateEntity):
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return additional metadata."""
-        attrs = dict(super().extra_state_attributes or {})
-        attrs["zone_id"] = self._zone_id
-        return attrs
+        return {"zone_id": self._zone_id}
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set the zone temperature."""
@@ -526,9 +431,47 @@ class DaikinZoneClimate(DaikinEntity, ClimateEntity):
                 translation_domain=DOMAIN,
                 translation_key="zone_temperature_missing",
             )
-        await _async_set_zone_temperature(
-            self.coordinator, self._zone_id, float(temperature)
-        )
+        device = self.device
+        zones = getattr(device, "zones", None)
+        if not zones or not _supports_zone_temperature_control(device):
+            raise _zone_error("zone_parameters_unavailable")
+
+        try:
+            zone = zones[self._zone_id]
+        except (IndexError, TypeError) as err:
+            raise _zone_error(
+                "zone_missing",
+                {
+                    "zone_id": str(self._zone_id),
+                    "max_zone": str(len(zones) - 1),
+                },
+            ) from err
+
+        if not _zone_is_configured(zone):
+            raise _zone_error("zone_inactive", {"zone_id": str(self._zone_id)})
+
+        temperature_value = float(temperature)
+        target = _system_target_temperature(device)
+        min_temp = target - ZONE_TEMPERATURE_WINDOW
+        max_temp = target + ZONE_TEMPERATURE_WINDOW
+        if not (min_temp <= temperature_value <= max_temp):
+            raise _zone_error(
+                "temperature_out_of_range",
+                {
+                    "temperature": f"{temperature_value:g}",
+                    "min_temp": f"{min_temp:g}",
+                    "max_temp": f"{max_temp:g}",
+                },
+            )
+
+        zone_value = str(round(temperature_value))
+        try:
+            await device.set_zone(self._zone_id, "lztemp_h", zone_value)
+            await device.set_zone(self._zone_id, "lztemp_c", zone_value)
+        except (AttributeError, KeyError, NotImplementedError, TypeError) as err:
+            raise _zone_error("zone_set_failed") from err
+
+        await self.coordinator.async_request_refresh()
 
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Disallow changing HVAC mode via zone climate."""
