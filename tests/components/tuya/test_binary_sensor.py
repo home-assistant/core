@@ -124,6 +124,8 @@ async def test_selective_state_update(
         == "2024-01-01T00:00:00+00:00"
     )
 
+    # Force update the dpcode - should be ignored unless event contains the property
+    mock_device.status["doorcontact_state"] = True
     freezer.tick(60)
     await mock_listener.async_send_device_update(hass, mock_device, updates)
 
