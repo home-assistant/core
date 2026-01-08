@@ -40,7 +40,7 @@
         "python.terminal.activateEnvInCurrentTerminal": true,
         "python.testing.pytestArgs": ["--no-cov"],
         "pylint.importStrategy": "fromEnvironment",
-        "python.analysis.typeCheckingMode": "basic",
+        "python.analysis.typeCheckingMode": "off",
         "editor.formatOnPaste": false,
         "editor.formatOnSave": true,
         "editor.formatOnType": true,
