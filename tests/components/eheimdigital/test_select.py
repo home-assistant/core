@@ -113,7 +113,7 @@ async def test_set_value(
             {ATTR_ENTITY_ID: item[0], ATTR_OPTION: item[1]},
             blocking=True,
         )
-        await hass.async_block_till_done()
+        # await hass.async_block_till_done()
         calls = [call for call in device.hub.mock_calls if call[0] == "send_packet"]
         assert calls[-1][1][0][item[2]] == item[3]
 

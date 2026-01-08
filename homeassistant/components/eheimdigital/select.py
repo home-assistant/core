@@ -2,7 +2,7 @@
 
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
-from typing import Any, override
+from typing import Any, Literal, override
 
 from eheimdigital.classic_vario import EheimDigitalClassicVario
 from eheimdigital.device import EheimDigitalDevice
@@ -27,7 +27,7 @@ class EheimDigitalSelectDescription[_DeviceT: EheimDigitalDevice](
     """Class describing EHEIM Digital select entities."""
 
     options_fn: Callable[[_DeviceT], list[str]] | None = None
-    uom_fn: Callable[[_DeviceT], str] | None = None
+    use_api_unit: Literal[True] | None = None
     value_fn: Callable[[_DeviceT], str | None]
     set_value_fn: Callable[[_DeviceT, str], Awaitable[None] | None]
 
@@ -38,11 +38,7 @@ FILTER_DESCRIPTIONS: tuple[EheimDigitalSelectDescription[EheimDigitalFilter], ..
         translation_key="filter_mode",
         entity_category=EntityCategory.CONFIG,
         options=[item.lower() for item in FilterModeProf._member_names_],
-        value_fn=(
-            lambda device: device.filter_mode.name.lower()
-            if device.filter_mode is not None
-            else None
-        ),
+        value_fn=lambda device: device.filter_mode.name.lower(),
         set_value_fn=lambda device, value: device.set_filter_mode(
             FilterModeProf[value.upper()]
         ),
@@ -52,151 +48,84 @@ FILTER_DESCRIPTIONS: tuple[EheimDigitalSelectDescription[EheimDigitalFilter], ..
         translation_key="manual_speed",
         entity_category=EntityCategory.CONFIG,
         unit_of_measurement=UnitOfFrequency.HERTZ,
-        options_fn=(
-            lambda device: [str(i) for i in device.filter_manual_values]
-            if device.filter_manual_values
-            else []
-        ),
-        value_fn=(
-            lambda device: str(device.manual_speed)
-            if device.manual_speed is not None
-            else None
-        ),
+        options_fn=lambda device: [str(i) for i in device.filter_manual_values],
+        value_fn=lambda device: str(device.manual_speed),
         set_value_fn=lambda device, value: device.set_manual_speed(float(value)),
     ),
     EheimDigitalSelectDescription[EheimDigitalFilter](
         key="const_flow_speed",
         translation_key="const_flow_speed",
         entity_category=EntityCategory.CONFIG,
-        uom_fn=(
-            lambda device: UnitOfVolumeFlowRate.LITERS_PER_HOUR
-            if device.usrdta["unit"] == int(UnitOfMeasurement.METRIC)
-            else UnitOfVolumeFlowRate.GALLONS_PER_HOUR
-        ),
-        options_fn=(
-            lambda device: [str(i) for i in device.filter_const_flow_values]
-            if device.filter_const_flow_values
-            else []
-        ),
-        value_fn=(
-            lambda device: str(device.filter_const_flow_values[device.const_flow])
-            if device.const_flow is not None and device.filter_const_flow_values
-            else None
-        ),
+        use_api_unit=True,
+        unit_of_measurement=UnitOfVolumeFlowRate.LITERS_PER_HOUR,
+        options_fn=lambda device: [str(i) for i in device.filter_const_flow_values],
+        value_fn=lambda device: str(device.filter_const_flow_values[device.const_flow]),
         set_value_fn=(
             lambda device, value: device.set_const_flow(
                 device.filter_const_flow_values.index(int(value))
             )
-            if device.filter_const_flow_values
-            else None
         ),
     ),
     EheimDigitalSelectDescription[EheimDigitalFilter](
         key="day_speed",
         translation_key="day_speed",
         entity_category=EntityCategory.CONFIG,
-        uom_fn=(
-            lambda device: UnitOfVolumeFlowRate.LITERS_PER_HOUR
-            if device.usrdta["unit"] == int(UnitOfMeasurement.METRIC)
-            else UnitOfVolumeFlowRate.GALLONS_PER_HOUR
-        ),
-        options_fn=(
-            lambda device: [str(i) for i in device.filter_const_flow_values]
-            if device.filter_const_flow_values
-            else []
-        ),
-        value_fn=(
-            lambda device: str(device.filter_const_flow_values[device.day_speed])
-            if device.day_speed is not None and device.filter_const_flow_values
-            else None
-        ),
+        use_api_unit=True,
+        unit_of_measurement=UnitOfVolumeFlowRate.LITERS_PER_HOUR,
+        options_fn=lambda device: [str(i) for i in device.filter_const_flow_values],
+        value_fn=lambda device: str(device.filter_const_flow_values[device.day_speed]),
         set_value_fn=(
             lambda device, value: device.set_day_speed(
                 device.filter_const_flow_values.index(int(value))
             )
-            if device.filter_const_flow_values
-            else None
         ),
     ),
     EheimDigitalSelectDescription[EheimDigitalFilter](
         key="night_speed",
         translation_key="night_speed",
         entity_category=EntityCategory.CONFIG,
-        uom_fn=(
-            lambda device: UnitOfVolumeFlowRate.LITERS_PER_HOUR
-            if device.usrdta["unit"] == int(UnitOfMeasurement.METRIC)
-            else UnitOfVolumeFlowRate.GALLONS_PER_HOUR
-        ),
-        options_fn=(
-            lambda device: [str(i) for i in device.filter_const_flow_values]
-            if device.filter_const_flow_values
-            else []
-        ),
-        value_fn=(
-            lambda device: str(device.filter_const_flow_values[device.night_speed])
-            if device.night_speed is not None and device.filter_const_flow_values
-            else None
+        use_api_unit=True,
+        unit_of_measurement=UnitOfVolumeFlowRate.LITERS_PER_HOUR,
+        options_fn=lambda device: [str(i) for i in device.filter_const_flow_values],
+        value_fn=lambda device: str(
+            device.filter_const_flow_values[device.night_speed]
         ),
         set_value_fn=(
             lambda device, value: device.set_night_speed(
                 device.filter_const_flow_values.index(int(value))
             )
-            if device.filter_const_flow_values
-            else None
         ),
     ),
     EheimDigitalSelectDescription[EheimDigitalFilter](
         key="high_pulse_speed",
         translation_key="high_pulse_speed",
         entity_category=EntityCategory.CONFIG,
-        uom_fn=(
-            lambda device: UnitOfVolumeFlowRate.LITERS_PER_HOUR
-            if device.usrdta["unit"] == int(UnitOfMeasurement.METRIC)
-            else UnitOfVolumeFlowRate.GALLONS_PER_HOUR
-        ),
-        options_fn=(
-            lambda device: [str(i) for i in device.filter_const_flow_values]
-            if device.filter_const_flow_values
-            else []
-        ),
-        value_fn=(
-            lambda device: str(device.filter_const_flow_values[device.high_pulse_speed])
-            if device.high_pulse_speed is not None and device.filter_const_flow_values
-            else None
+        use_api_unit=True,
+        unit_of_measurement=UnitOfVolumeFlowRate.LITERS_PER_HOUR,
+        options_fn=lambda device: [str(i) for i in device.filter_const_flow_values],
+        value_fn=lambda device: str(
+            device.filter_const_flow_values[device.high_pulse_speed]
         ),
         set_value_fn=(
             lambda device, value: device.set_high_pulse_speed(
                 device.filter_const_flow_values.index(int(value))
             )
-            if device.filter_const_flow_values
-            else None
         ),
     ),
     EheimDigitalSelectDescription[EheimDigitalFilter](
         key="low_pulse_speed",
         translation_key="low_pulse_speed",
         entity_category=EntityCategory.CONFIG,
-        uom_fn=(
-            lambda device: UnitOfVolumeFlowRate.LITERS_PER_HOUR
-            if device.usrdta["unit"] == int(UnitOfMeasurement.METRIC)
-            else UnitOfVolumeFlowRate.GALLONS_PER_HOUR
-        ),
-        options_fn=(
-            lambda device: [str(i) for i in device.filter_const_flow_values]
-            if device.filter_const_flow_values
-            else []
-        ),
-        value_fn=(
-            lambda device: str(device.filter_const_flow_values[device.low_pulse_speed])
-            if device.low_pulse_speed is not None and device.filter_const_flow_values
-            else None
+        use_api_unit=True,
+        unit_of_measurement=UnitOfVolumeFlowRate.LITERS_PER_HOUR,
+        options_fn=lambda device: [str(i) for i in device.filter_const_flow_values],
+        value_fn=lambda device: str(
+            device.filter_const_flow_values[device.low_pulse_speed]
         ),
         set_value_fn=(
             lambda device, value: device.set_low_pulse_speed(
                 device.filter_const_flow_values.index(int(value))
             )
-            if device.filter_const_flow_values
-            else None
         ),
     ),
 )
@@ -208,11 +137,7 @@ CLASSICVARIO_DESCRIPTIONS: tuple[
     EheimDigitalSelectDescription[EheimDigitalClassicVario](
         key="filter_mode",
         translation_key="filter_mode",
-        value_fn=(
-            lambda device: device.filter_mode.name.lower()
-            if device.filter_mode is not None
-            else None
-        ),
+        value_fn=lambda device: device.filter_mode.name.lower(),
         set_value_fn=(
             lambda device, value: device.set_filter_mode(FilterMode[value.upper()])
         ),
@@ -261,7 +186,7 @@ class EheimDigitalSelect[_DeviceT: EheimDigitalDevice](
 
     entity_description: EheimDigitalSelectDescription[_DeviceT]
 
-    _attr_options: list[str] = []
+    _attr_options: list[str]
 
     def __init__(
         self,
@@ -296,15 +221,6 @@ class EheimDigitalFilterSelect(EheimDigitalSelect[EheimDigitalFilter]):
     entity_description: EheimDigitalSelectDescription[EheimDigitalFilter]
     _attr_native_unit_of_measurement: str | None
 
-    def __init__(
-        self,
-        coordinator: EheimDigitalUpdateCoordinator,
-        device: EheimDigitalFilter,
-        description: EheimDigitalSelectDescription[EheimDigitalFilter],
-    ) -> None:
-        """Initialize an EHEIM Digital Filter select entity."""
-        super().__init__(coordinator, device, description)
-
     @override
     def _async_update_attrs(self) -> None:
         if (
@@ -312,9 +228,17 @@ class EheimDigitalFilterSelect(EheimDigitalSelect[EheimDigitalFilter]):
             and self.entity_description.options_fn is not None
         ):
             self._attr_options = self.entity_description.options_fn(self._device)
-        self._attr_native_unit_of_measurement = (
-            self.entity_description.uom_fn(self._device)
-            if self.entity_description.uom_fn
-            else self.entity_description.unit_of_measurement
-        )
+        if self.entity_description.use_api_unit:
+            if (
+                self.entity_description.unit_of_measurement
+                == UnitOfVolumeFlowRate.LITERS_PER_HOUR
+                and self._device.usrdta["unit"] == int(UnitOfMeasurement.US_CUSTOMARY)
+            ):
+                self._attr_native_unit_of_measurement = (
+                    UnitOfVolumeFlowRate.GALLONS_PER_HOUR
+                )
+        else:
+            self._attr_native_unit_of_measurement = (
+                self.entity_description.unit_of_measurement
+            )
         super()._async_update_attrs()

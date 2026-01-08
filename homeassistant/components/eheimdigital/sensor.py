@@ -45,6 +45,8 @@ FILTER_DESCRIPTIONS: tuple[EheimDigitalSensorDescription[EheimDigitalFilter], ..
         key="current_speed",
         translation_key="current_speed",
         value_fn=lambda device: device.current_speed,
+        device_class=SensorDeviceClass.FREQUENCY,
+        suggested_display_precision=1,
         native_unit_of_measurement=UnitOfFrequency.HERTZ,
     ),
     EheimDigitalSensorDescription[EheimDigitalFilter](

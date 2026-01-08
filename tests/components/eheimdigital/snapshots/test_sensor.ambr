@@ -186,8 +186,11 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
     }),
-    'original_device_class': None,
+    'original_device_class': <SensorDeviceClass.FREQUENCY: 'frequency'>,
     'original_icon': None,
     'original_name': 'Current speed',
     'platform': 'eheimdigital',
@@ -202,6 +205,7 @@
 # name: test_setup_classic_vario[sensor.mock_filter_current_speed-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'device_class': 'frequency',
       'friendly_name': 'Mock filter Current speed',
       'unit_of_measurement': <UnitOfFrequency.HERTZ: 'Hz'>,
     }),

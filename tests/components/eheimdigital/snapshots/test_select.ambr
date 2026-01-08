@@ -108,7 +108,7 @@
     'supported_features': 0,
     'translation_key': 'const_flow_speed',
     'unique_id': '00:00:00:00:00:04_const_flow_speed',
-    'unit_of_measurement': None,
+    'unit_of_measurement': <UnitOfVolumeFlowRate.LITERS_PER_HOUR: 'L/h'>,
   })
 # ---
 # name: test_setup[select.mock_filter_constant_flow_speed-state]
@@ -132,6 +132,7 @@
         '830',
         '860',
       ]),
+      'unit_of_measurement': <UnitOfVolumeFlowRate.LITERS_PER_HOUR: 'L/h'>,
     }),
     'context': <ANY>,
     'entity_id': 'select.mock_filter_constant_flow_speed',
@@ -191,7 +192,7 @@
     'supported_features': 0,
     'translation_key': 'day_speed',
     'unique_id': '00:00:00:00:00:04_day_speed',
-    'unit_of_measurement': None,
+    'unit_of_measurement': <UnitOfVolumeFlowRate.LITERS_PER_HOUR: 'L/h'>,
   })
 # ---
 # name: test_setup[select.mock_filter_day_speed-state]
@@ -215,6 +216,7 @@
         '830',
         '860',
       ]),
+      'unit_of_measurement': <UnitOfVolumeFlowRate.LITERS_PER_HOUR: 'L/h'>,
     }),
     'context': <ANY>,
     'entity_id': 'select.mock_filter_day_speed',
@@ -335,7 +337,7 @@
     'supported_features': 0,
     'translation_key': 'high_pulse_speed',
     'unique_id': '00:00:00:00:00:04_high_pulse_speed',
-    'unit_of_measurement': None,
+    'unit_of_measurement': <UnitOfVolumeFlowRate.LITERS_PER_HOUR: 'L/h'>,
   })
 # ---
 # name: test_setup[select.mock_filter_high_pulse_speed-state]
@@ -359,6 +361,7 @@
         '830',
         '860',
       ]),
+      'unit_of_measurement': <UnitOfVolumeFlowRate.LITERS_PER_HOUR: 'L/h'>,
     }),
     'context': <ANY>,
     'entity_id': 'select.mock_filter_high_pulse_speed',
@@ -418,7 +421,7 @@
     'supported_features': 0,
     'translation_key': 'low_pulse_speed',
     'unique_id': '00:00:00:00:00:04_low_pulse_speed',
-    'unit_of_measurement': None,
+    'unit_of_measurement': <UnitOfVolumeFlowRate.LITERS_PER_HOUR: 'L/h'>,
   })
 # ---
 # name: test_setup[select.mock_filter_low_pulse_speed-state]
@@ -442,6 +445,7 @@
         '830',
         '860',
       ]),
+      'unit_of_measurement': <UnitOfVolumeFlowRate.LITERS_PER_HOUR: 'L/h'>,
     }),
     'context': <ANY>,
     'entity_id': 'select.mock_filter_low_pulse_speed',
@@ -585,7 +589,7 @@
     'supported_features': 0,
     'translation_key': 'night_speed',
     'unique_id': '00:00:00:00:00:04_night_speed',
-    'unit_of_measurement': None,
+    'unit_of_measurement': <UnitOfVolumeFlowRate.LITERS_PER_HOUR: 'L/h'>,
   })
 # ---
 # name: test_setup[select.mock_filter_night_speed-state]
@@ -609,6 +613,7 @@
         '830',
         '860',
       ]),
+      'unit_of_measurement': <UnitOfVolumeFlowRate.LITERS_PER_HOUR: 'L/h'>,
     }),
     'context': <ANY>,
     'entity_id': 'select.mock_filter_night_speed',

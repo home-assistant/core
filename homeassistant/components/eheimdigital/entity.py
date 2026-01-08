@@ -5,7 +5,6 @@ from collections.abc import Callable, Coroutine
 from typing import TYPE_CHECKING, Any, Concatenate
 
 from eheimdigital.device import EheimDigitalDevice
-from eheimdigital.filter import EheimDigitalFilter
 from eheimdigital.types import EheimDigitalClientError
 
 from homeassistant.const import CONF_HOST
@@ -38,7 +37,7 @@ class EheimDigitalEntity[_DeviceT: EheimDigitalDevice](
             name=device.name,
             connections={(CONNECTION_NETWORK_MAC, device.mac_address)},
             manufacturer="EHEIM",
-            model=self._get_model_name(device),
+            model=device.model_name,
             identifiers={(DOMAIN, device.mac_address)},
             suggested_area=device.aquarium_name,
             sw_version=device.sw_version,
@@ -46,14 +45,6 @@ class EheimDigitalEntity[_DeviceT: EheimDigitalDevice](
         )
         self._device = device
         self._device_address = device.mac_address
-
-    @classmethod
-    def _get_model_name(cls, device: EheimDigitalDevice) -> str | None:
-        if isinstance(device, EheimDigitalFilter) and device.filter_model_name:
-            return device.filter_model_name
-        if device.device_type.model_name:
-            return device.device_type.model_name
-        return None
 
     @abstractmethod
     def _async_update_attrs(self) -> None: ...
