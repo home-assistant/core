@@ -58,11 +58,9 @@ class PranaConfigFlow(ConfigFlow, domain=DOMAIN):
             self._host = user_input[CONF_HOST]
             try:
                 self._device_info = await self._validate_device()
-            except ValueError as err:
-                _LOGGER.debug("Error device is invalid %s: %s", self._host, err)
+            except ValueError:
                 return self.async_abort(reason="invalid_device")
-            except PranaApiCommunicationError as err:
-                _LOGGER.debug("Error fetching device info from %s: %s", self._host, err)
+            except PranaApiCommunicationError:
                 return self.async_show_form(
                     step_id="user",
                     data_schema=vol.Schema({vol.Required(CONF_HOST): str}),
