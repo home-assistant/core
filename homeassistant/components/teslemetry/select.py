@@ -284,7 +284,7 @@ class TeslemetryStreamingSelectEntity(
         )
 
         self.async_on_remove(
-            self.vehicle.stream_vehicle.listen_HvacACEnabled(self._climate_callback)
+            self.vehicle.stream_vehicle.listen_HvacPower(self._climate_callback)
         )
 
     def _value_callback(self, value: int | None) -> None:
@@ -295,9 +295,9 @@ class TeslemetryStreamingSelectEntity(
             self._attr_current_option = self.entity_description.options[value]
         self.async_write_ha_state()
 
-    def _climate_callback(self, value: bool | None) -> None:
+    def _climate_callback(self, value: str | None) -> None:
         """Update the value of the entity."""
-        self._climate = bool(value)
+        self._climate = value is not None and value != "Off"
 
 
 class TeslemetryOperationSelectEntity(TeslemetryEnergyInfoEntity, SelectEntity):
