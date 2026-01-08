@@ -39,10 +39,11 @@ from homeassistant.helpers.event import async_track_point_in_time
 from homeassistant.helpers.template import DATE_STR_FORMAT
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import dt as dt_util
-from homeassistant.util.color import RGBColor, color_rgb_to_hex
+from homeassistant.util.color import RGBColor
 from homeassistant.util.json import JsonValueType
 
 from .const import (
+    CONF_COLOR,
     CONF_EVENT,
     DATA_COMPONENT,
     DOMAIN,
@@ -518,11 +519,46 @@ class CalendarEntity(Entity):
     _alarm_unsubs: list[CALLBACK_TYPE] | None = None
 
     _attr_color: RGBColor | None = None
+    _calendar_option_color: RGBColor | None = None
 
     @property
     def color(self) -> RGBColor | None:
-        """Return the color of the calendar entity as RGBColor."""
-        return self._attr_color
+        """Return the color of the calendar entity as RGBColor.
+
+        First checks entity registry options, then falls back to _attr_color.
+        """
+        return self._calendar_option_color or self._attr_color
+
+    async def async_internal_added_to_hass(self) -> None:
+        """Call when the calendar entity is added to hass."""
+        await super().async_internal_added_to_hass()
+        if not self.registry_entry:
+            return
+        self._async_read_entity_options()
+
+    @callback
+    def async_registry_entry_updated(self) -> None:
+        """Run when the entity registry entry has been updated."""
+        self._async_read_entity_options()
+
+    @callback
+    def _async_read_entity_options(self) -> None:
+        """Read entity options from entity registry.
+
+        Called when the entity registry entry has been updated and before the
+        calendar is added to the state machine.
+        """
+        assert self.registry_entry
+        if (
+            (calendar_options := self.registry_entry.options.get(DOMAIN))
+            and (color := calendar_options.get(CONF_COLOR))
+            and isinstance(color, list)
+            and len(color) == 3
+        ):
+            self._calendar_option_color = RGBColor(*color)
+            return
+
+        self._calendar_option_color = None
 
     @property
     def event(self) -> CalendarEvent | None:
@@ -533,13 +569,10 @@ class CalendarEntity(Entity):
     @property
     def state_attributes(self) -> dict[str, Any] | None:
         """Return the entity state attributes."""
-        color_hex_val = f"#{color_rgb_to_hex(*self.color)}" if self.color else None
         if (event := self.event) is None:
-            if color_hex_val is None:
-                return None
-            return {"color": color_hex_val}
+            return None
 
-        attrs = {
+        return {
             "message": event.summary,
             "all_day": event.all_day,
             "start_time": event.start_datetime_local.strftime(DATE_STR_FORMAT),
@@ -547,11 +580,6 @@ class CalendarEntity(Entity):
             "location": event.location or "",
             "description": event.description or "",
         }
-
-        if color_hex_val is not None:
-            attrs["color"] = color_hex_val
-
-        return attrs
 
     @final
     @property

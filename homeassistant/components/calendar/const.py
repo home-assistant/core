@@ -16,6 +16,7 @@ DOMAIN = "calendar"
 DATA_COMPONENT: HassKey[EntityComponent[CalendarEntity]] = HassKey(DOMAIN)
 
 CONF_EVENT = "event"
+CONF_COLOR = "color"
 
 
 class CalendarEntityFeature(IntFlag):
