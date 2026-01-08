@@ -69,7 +69,7 @@
         'media_content_id': 'spotify://01j5tx5a0ff6g5v0qjx6hbc94t/current_user_recently_played',
         'media_content_type': 'spotify://current_user_recently_played',
         'thumbnail': None,
-        'title': 'Recently Played',
+        'title': 'Recently played',
       }),
       dict({
         'can_expand': True,
