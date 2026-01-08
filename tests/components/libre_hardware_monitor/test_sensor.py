@@ -24,6 +24,7 @@ from homeassistant.components.libre_hardware_monitor.const import (
     DEFAULT_SCAN_INTERVAL,
     DOMAIN,
 )
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
@@ -84,14 +85,14 @@ async def test_sensors_go_unavailable_in_case_of_error_and_recover_after_success
     assert all(state.state != STATE_UNAVAILABLE for state in recovered_states)
 
 
-async def test_sensor_invalid_auth(
+async def test_sensor_invalid_auth_after_update(
     hass: HomeAssistant,
     mock_lhm_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
     freezer: FrozenDateTimeFactory,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """Test invalid auth during sensor update."""
+    """Test invalid auth after sensor update."""
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
@@ -103,6 +104,30 @@ async def test_sensor_invalid_auth(
     await hass.async_block_till_done()
 
     assert "Authentication against LibreHardwareMonitor instance failed" in caplog.text
+
+    unavailable_states = hass.states.async_all()
+    assert all(state.state == STATE_UNAVAILABLE for state in unavailable_states)
+
+
+async def test_sensor_invalid_auth_during_startup(
+    hass: HomeAssistant,
+    mock_lhm_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test invalid auth in initial sensor update during integration startup."""
+    mock_lhm_client.get_data.side_effect = LibreHardwareMonitorUnauthorizedError
+
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert "Authentication against LibreHardwareMonitor instance failed" in caplog.text
+    assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
+    assert mock_config_entry.reason == "Authentication failed"
+
+    unavailable_states = hass.states.async_all()
+    assert all(state.state == STATE_UNAVAILABLE for state in unavailable_states)
 
 
 async def test_sensors_are_updated(
