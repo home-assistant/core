@@ -7,7 +7,7 @@
   "python.testing.pytestEnabled": false,
   // https://code.visualstudio.com/docs/python/linting#_general-settings
   "pylint.importStrategy": "fromEnvironment",
-  // Pyright is too pedantic for Home Assistant
+  // Pyright type checking is too not compatible with mypy which Home Assistant uses for type checking
   "python.analysis.typeCheckingMode": "off",
   "[python]": {
     "editor.defaultFormatter": "charliermarsh.ruff",
