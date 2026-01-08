@@ -51,29 +51,40 @@ ATTR_FILENAME = "filename"
 GRP_ATTACHMENT = "attachment"
 MSG_ATTACHMENT = "Only one attachment source is allowed: URL or local file"
 
-SERVICE_PUBLISH_SCHEMA = cv.make_entity_service_schema(
-    {
-        vol.Optional(ATTR_TITLE): cv.string,
-        vol.Optional(ATTR_MESSAGE): cv.string,
-        vol.Optional(ATTR_MARKDOWN): cv.boolean,
-        vol.Optional(ATTR_TAGS): vol.All(cv.ensure_list, [str]),
-        vol.Optional(ATTR_PRIORITY): vol.All(vol.Coerce(int), vol.Range(1, 5)),
-        vol.Optional(ATTR_CLICK): vol.All(vol.Url(), vol.Coerce(URL)),
-        vol.Optional(ATTR_DELAY): vol.All(
-            cv.time_period,
-            vol.Range(min=timedelta(seconds=10), max=timedelta(days=3)),
-        ),
-        vol.Optional(ATTR_EMAIL): vol.Email(),
-        vol.Optional(ATTR_CALL): cv.string,
-        vol.Optional(ATTR_ICON): vol.All(vol.Url(), vol.Coerce(URL)),
-        vol.Exclusive(ATTR_ATTACH, GRP_ATTACHMENT, MSG_ATTACHMENT): vol.All(
-            vol.Url(), vol.Coerce(URL)
-        ),
-        vol.Exclusive(ATTR_ATTACH_FILE, GRP_ATTACHMENT, MSG_ATTACHMENT): MediaSelector(
-            {"accept": ["*/*"]}
-        ),
-        vol.Optional(ATTR_FILENAME): cv.string,
-    }
+
+def validate_filename(params: dict[str, Any]) -> dict[str, Any]:
+    """Validate filename."""
+    if ATTR_FILENAME in params and ATTR_ATTACH_FILE not in params:
+        raise vol.Invalid("Filename only allowed when attachment is provided")
+    return params
+
+
+SERVICE_PUBLISH_SCHEMA = vol.All(
+    cv.make_entity_service_schema(
+        {
+            vol.Optional(ATTR_TITLE): cv.string,
+            vol.Optional(ATTR_MESSAGE): cv.string,
+            vol.Optional(ATTR_MARKDOWN): cv.boolean,
+            vol.Optional(ATTR_TAGS): vol.All(cv.ensure_list, [str]),
+            vol.Optional(ATTR_PRIORITY): vol.All(vol.Coerce(int), vol.Range(1, 5)),
+            vol.Optional(ATTR_CLICK): vol.All(vol.Url(), vol.Coerce(URL)),
+            vol.Optional(ATTR_DELAY): vol.All(
+                cv.time_period,
+                vol.Range(min=timedelta(seconds=10), max=timedelta(days=3)),
+            ),
+            vol.Optional(ATTR_EMAIL): vol.Email(),
+            vol.Optional(ATTR_CALL): cv.string,
+            vol.Optional(ATTR_ICON): vol.All(vol.Url(), vol.Coerce(URL)),
+            vol.Exclusive(ATTR_ATTACH, GRP_ATTACHMENT, MSG_ATTACHMENT): vol.All(
+                vol.Url(), vol.Coerce(URL)
+            ),
+            vol.Exclusive(
+                ATTR_ATTACH_FILE, GRP_ATTACHMENT, MSG_ATTACHMENT
+            ): MediaSelector({"accept": ["*/*"]}),
+            vol.Optional(ATTR_FILENAME): cv.string,
+        }
+    ),
+    validate_filename,
 )
 
 
