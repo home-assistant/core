@@ -13,7 +13,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 
 from .client import HidromoticClient
-from .const import DOMAIN, DEFAULT_HOST
+from .const import DEFAULT_HOST, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -34,6 +34,7 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
 
         # Wait a moment for data to arrive
         import asyncio
+
         await asyncio.sleep(2)
 
         # Get device info

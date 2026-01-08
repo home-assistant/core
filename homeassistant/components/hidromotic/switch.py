@@ -6,12 +6,12 @@ import logging
 from typing import Any
 
 from homeassistant.components.switch import SwitchEntity
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
+from . import HidromoticConfigEntry
 from .const import DOMAIN, STATE_ON
 from .coordinator import HidromoticCoordinator
 
@@ -20,11 +20,11 @@ _LOGGER = logging.getLogger(__name__)
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: HidromoticConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up Hidromotic switches from a config entry."""
-    coordinator: HidromoticCoordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator = entry.runtime_data
 
     # Track which zones we've added
     added_zones: set[int] = set()
@@ -49,9 +49,7 @@ async def async_setup_entry(
     async_add_zone_switches()
 
     # Listen for updates to add new zones dynamically
-    entry.async_on_unload(
-        coordinator.async_add_listener(async_add_zone_switches)
-    )
+    entry.async_on_unload(coordinator.async_add_listener(async_add_zone_switches))
 
     # Add Auto Riego switch
     async_add_entities([HidromoticAutoRiegoSwitch(coordinator, entry)])
@@ -85,7 +83,9 @@ class HidromoticZoneSwitch(CoordinatorEntity[HidromoticCoordinator], SwitchEntit
             identifiers={(DOMAIN, entry.entry_id)},
             name=entry.title,
             manufacturer="Hidromotic",
-            model="CHI Smart Mini" if coordinator.client.data.get("is_mini") else "CHI Smart",
+            model="CHI Smart Mini"
+            if coordinator.client.data.get("is_mini")
+            else "CHI Smart",
         )
 
     @property
@@ -156,7 +156,9 @@ class HidromoticAutoRiegoSwitch(CoordinatorEntity[HidromoticCoordinator], Switch
             identifiers={(DOMAIN, entry.entry_id)},
             name=entry.title,
             manufacturer="Hidromotic",
-            model="CHI Smart Mini" if coordinator.client.data.get("is_mini") else "CHI Smart",
+            model="CHI Smart Mini"
+            if coordinator.client.data.get("is_mini")
+            else "CHI Smart",
         )
 
     @property

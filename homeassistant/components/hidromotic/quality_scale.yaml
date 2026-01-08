@@ -24,13 +24,12 @@ rules:
   docs-removal-instructions: todo
   test-before-setup: done
   docs-high-level-description: todo
-  config-flow-test-coverage: todo
+  config-flow-test-coverage: done
   docs-actions:
     status: exempt
     comment: |
       The integration does not provide any actions.
   runtime-data: done
-
   # Silver
   log-when-unavailable: todo
   config-entry-unloading: done

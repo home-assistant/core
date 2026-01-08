@@ -6,6 +6,7 @@ import asyncio
 import logging
 from typing import Any
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
@@ -20,13 +21,16 @@ SCAN_INTERVAL = 30  # seconds
 class HidromoticCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     """Coordinator for Hidromotic device."""
 
-    def __init__(self, hass: HomeAssistant, client: HidromoticClient) -> None:
+    def __init__(
+        self, hass: HomeAssistant, client: HidromoticClient, config_entry: ConfigEntry
+    ) -> None:
         """Initialize the coordinator."""
         super().__init__(
             hass,
             _LOGGER,
             name=DOMAIN,
             update_interval=None,  # We use push updates via WebSocket
+            config_entry=config_entry,
         )
         self.client = client
         self._remove_callback: callable | None = None

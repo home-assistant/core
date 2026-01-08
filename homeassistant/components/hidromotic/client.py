@@ -3,17 +3,18 @@
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Callable
 import logging
-from typing import Any, Callable
+from typing import Any
 
 import aiohttp
 
 from .const import (
-    OUTPUT_TYPE_ZONA,
     OUTPUT_TYPE_TANQUE,
+    OUTPUT_TYPE_ZONA,
     STATE_DISABLED,
-    TANK_FULL,
     TANK_EMPTY,
+    TANK_FULL,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -70,7 +71,9 @@ class HidromoticClient:
         """Return current device data."""
         return self._data
 
-    def register_callback(self, callback: Callable[[dict[str, Any]], None]) -> Callable[[], None]:
+    def register_callback(
+        self, callback: Callable[[dict[str, Any]], None]
+    ) -> Callable[[], None]:
         """Register a callback for data updates."""
         self._callbacks.append(callback)
         return lambda: self._callbacks.remove(callback)
@@ -159,7 +162,10 @@ class HidromoticClient:
     async def _reconnect(self) -> None:
         """Attempt to reconnect to the device."""
         while self._should_reconnect and not self._connected:
-            _LOGGER.info("Attempting to reconnect to Hidromotic in %d seconds", self.RECONNECT_INTERVAL)
+            _LOGGER.info(
+                "Attempting to reconnect to Hidromotic in %d seconds",
+                self.RECONNECT_INTERVAL,
+            )
             await asyncio.sleep(self.RECONNECT_INTERVAL)
             if not self._should_reconnect:
                 break
@@ -174,9 +180,10 @@ class HidromoticClient:
         """Process text message (JSON)."""
         try:
             import json
+
             parsed = json.loads(data)
             _LOGGER.debug("Received JSON: %s", parsed)
-        except Exception as err:
+        except Exception:
             _LOGGER.debug("Non-JSON text received: %s", data)
 
     async def _process_binary(self, data: bytes) -> None:
@@ -256,7 +263,9 @@ class HidromoticClient:
                         label_len = data[i]
                         if label_len > 0 and i + label_len < len(data):
                             try:
-                                output_data["label"] = data[i + 1:i + 1 + label_len].decode("utf-8", errors="ignore")
+                                output_data["label"] = data[
+                                    i + 1 : i + 1 + label_len
+                                ].decode("utf-8", errors="ignore")
                             except Exception:
                                 pass
                             i += label_len
@@ -299,9 +308,11 @@ class HidromoticClient:
             else:
                 i += 1
 
-        _LOGGER.debug("Parsed data: zones=%s, tanks=%s",
-                     list(self._data["zones"].keys()),
-                     list(self._data["tanks"].keys()))
+        _LOGGER.debug(
+            "Parsed data: zones=%s, tanks=%s",
+            list(self._data["zones"].keys()),
+            list(self._data["tanks"].keys()),
+        )
 
     async def _parse_running_data(self, data: bytes) -> None:
         """Parse running data update (command 'D')."""
@@ -325,9 +336,15 @@ class HidromoticClient:
                             # Update zone/tank estado
                             tipo_upper = tipo & 0xF0
                             tipo_id = (tipo & 0x0F) - 1
-                            if tipo_upper == OUTPUT_TYPE_ZONA and tipo_id in self._data.get("zones", {}):
+                            if (
+                                tipo_upper == OUTPUT_TYPE_ZONA
+                                and tipo_id in self._data.get("zones", {})
+                            ):
                                 self._data["zones"][tipo_id]["estado"] = estado
-                            elif tipo_upper == OUTPUT_TYPE_TANQUE and tipo_id in self._data.get("tanks", {}):
+                            elif (
+                                tipo_upper == OUTPUT_TYPE_TANQUE
+                                and tipo_id in self._data.get("tanks", {})
+                            ):
                                 self._data["tanks"][tipo_id]["estado"] = estado
                                 # Tank also has nivel
                                 if i + 3 < len(data):

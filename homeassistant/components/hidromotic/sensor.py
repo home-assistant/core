@@ -6,13 +6,13 @@ import logging
 from typing import Any
 
 from homeassistant.components.sensor import SensorEntity
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN, PUMP_OFF, PUMP_ON, PUMP_RECOVERY, PUMP_NO_WATER
+from . import HidromoticConfigEntry
+from .const import DOMAIN, PUMP_NO_WATER, PUMP_OFF, PUMP_ON, PUMP_RECOVERY
 from .coordinator import HidromoticCoordinator
 
 _LOGGER = logging.getLogger(__name__)
@@ -20,11 +20,11 @@ _LOGGER = logging.getLogger(__name__)
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: HidromoticConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up Hidromotic sensors from a config entry."""
-    coordinator: HidromoticCoordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator = entry.runtime_data
 
     entities: list[SensorEntity] = []
 
@@ -57,9 +57,7 @@ async def async_setup_entry(
     async_add_tank_sensors()
 
     # Listen for updates to add new tanks dynamically
-    entry.async_on_unload(
-        coordinator.async_add_listener(async_add_tank_sensors)
-    )
+    entry.async_on_unload(coordinator.async_add_listener(async_add_tank_sensors))
 
 
 class HidromoticPumpSensor(CoordinatorEntity[HidromoticCoordinator], SensorEntity):
@@ -84,7 +82,9 @@ class HidromoticPumpSensor(CoordinatorEntity[HidromoticCoordinator], SensorEntit
             identifiers={(DOMAIN, entry.entry_id)},
             name=entry.title,
             manufacturer="Hidromotic",
-            model="CHI Smart Mini" if coordinator.client.data.get("is_mini") else "CHI Smart",
+            model="CHI Smart Mini"
+            if coordinator.client.data.get("is_mini")
+            else "CHI Smart",
         )
 
     @property
@@ -108,7 +108,9 @@ class HidromoticPumpSensor(CoordinatorEntity[HidromoticCoordinator], SensorEntit
         pausa = pump.get("pausa_externa", 0)
         return {
             "paused": pausa != 0,
-            "pause_type": "external" if pausa == 1 else ("failure" if pausa == 2 else "none"),
+            "pause_type": "external"
+            if pausa == 1
+            else ("failure" if pausa == 2 else "none"),
         }
 
 
@@ -138,7 +140,9 @@ class HidromoticTankLevelSensor(CoordinatorEntity[HidromoticCoordinator], Sensor
             identifiers={(DOMAIN, entry.entry_id)},
             name=entry.title,
             manufacturer="Hidromotic",
-            model="CHI Smart Mini" if coordinator.client.data.get("is_mini") else "CHI Smart",
+            model="CHI Smart Mini"
+            if coordinator.client.data.get("is_mini")
+            else "CHI Smart",
         )
 
     @property

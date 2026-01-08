@@ -9,13 +9,13 @@ from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
     BinarySensorEntity,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN, TANK_FULL, TANK_EMPTY
+from . import HidromoticConfigEntry
+from .const import DOMAIN, TANK_EMPTY, TANK_FULL
 from .coordinator import HidromoticCoordinator
 
 _LOGGER = logging.getLogger(__name__)
@@ -23,11 +23,11 @@ _LOGGER = logging.getLogger(__name__)
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: HidromoticConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up Hidromotic binary sensors from a config entry."""
-    coordinator: HidromoticCoordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator = entry.runtime_data
 
     # Track which tanks we've added
     added_tanks: set[int] = set()
@@ -56,12 +56,12 @@ async def async_setup_entry(
     async_add_tank_sensors()
 
     # Listen for updates to add new tanks dynamically
-    entry.async_on_unload(
-        coordinator.async_add_listener(async_add_tank_sensors)
-    )
+    entry.async_on_unload(coordinator.async_add_listener(async_add_tank_sensors))
 
 
-class HidromoticTankFullSensor(CoordinatorEntity[HidromoticCoordinator], BinarySensorEntity):
+class HidromoticTankFullSensor(
+    CoordinatorEntity[HidromoticCoordinator], BinarySensorEntity
+):
     """Binary sensor for tank full status."""
 
     _attr_has_entity_name = True
@@ -87,7 +87,9 @@ class HidromoticTankFullSensor(CoordinatorEntity[HidromoticCoordinator], BinaryS
             identifiers={(DOMAIN, entry.entry_id)},
             name=entry.title,
             manufacturer="Hidromotic",
-            model="CHI Smart Mini" if coordinator.client.data.get("is_mini") else "CHI Smart",
+            model="CHI Smart Mini"
+            if coordinator.client.data.get("is_mini")
+            else "CHI Smart",
         )
 
     @property
@@ -116,7 +118,13 @@ class HidromoticTankFullSensor(CoordinatorEntity[HidromoticCoordinator], BinaryS
         tank = tanks.get(self._tank_id)
         if tank:
             nivel = tank.get("nivel", 0xFF)
-            level_map = {0: "full", 1: "empty", 2: "sensor_fail", 3: "level_fail", 4: "medium"}
+            level_map = {
+                0: "full",
+                1: "empty",
+                2: "sensor_fail",
+                3: "level_fail",
+                4: "medium",
+            }
             return {
                 "level_raw": nivel,
                 "level": level_map.get(nivel, "unknown"),
@@ -124,7 +132,9 @@ class HidromoticTankFullSensor(CoordinatorEntity[HidromoticCoordinator], BinaryS
         return {}
 
 
-class HidromoticTankEmptySensor(CoordinatorEntity[HidromoticCoordinator], BinarySensorEntity):
+class HidromoticTankEmptySensor(
+    CoordinatorEntity[HidromoticCoordinator], BinarySensorEntity
+):
     """Binary sensor for tank empty status."""
 
     _attr_has_entity_name = True
@@ -150,7 +160,9 @@ class HidromoticTankEmptySensor(CoordinatorEntity[HidromoticCoordinator], Binary
             identifiers={(DOMAIN, entry.entry_id)},
             name=entry.title,
             manufacturer="Hidromotic",
-            model="CHI Smart Mini" if coordinator.client.data.get("is_mini") else "CHI Smart",
+            model="CHI Smart Mini"
+            if coordinator.client.data.get("is_mini")
+            else "CHI Smart",
         )
 
     @property
@@ -179,7 +191,13 @@ class HidromoticTankEmptySensor(CoordinatorEntity[HidromoticCoordinator], Binary
         tank = tanks.get(self._tank_id)
         if tank:
             nivel = tank.get("nivel", 0xFF)
-            level_map = {0: "full", 1: "empty", 2: "sensor_fail", 3: "level_fail", 4: "medium"}
+            level_map = {
+                0: "full",
+                1: "empty",
+                2: "sensor_fail",
+                3: "level_fail",
+                4: "medium",
+            }
             return {
                 "level_raw": nivel,
                 "level": level_map.get(nivel, "unknown"),
