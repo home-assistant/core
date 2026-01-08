@@ -6,6 +6,7 @@ import logging
 from typing import Any
 
 from connectlife_cloud.devices import BaseDeviceParser
+
 from homeassistant.exceptions import HomeAssistantError
 
 from .const import DeviceType
