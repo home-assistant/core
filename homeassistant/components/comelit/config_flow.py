@@ -5,7 +5,7 @@ from __future__ import annotations
 from asyncio.exceptions import TimeoutError
 from collections.abc import Mapping
 import re
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from aiocomelit import (
     ComeliteSerialBridgeApi,
@@ -22,7 +22,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv
 
-from .const import _LOGGER, DEFAULT_PORT, DEVICE_TYPE_LIST, DOMAIN
+from .const import _LOGGER, CONF_VEDO_PIN, DEFAULT_PORT, DEVICE_TYPE_LIST, DOMAIN
 from .utils import async_client_session
 
 DEFAULT_HOST = "192.168.1.252"
@@ -34,9 +34,12 @@ USER_SCHEMA = vol.Schema(
         vol.Required(CONF_PORT, default=DEFAULT_PORT): cv.port,
         vol.Optional(CONF_PIN, default=DEFAULT_PIN): cv.string,
         vol.Required(CONF_TYPE, default=BRIDGE): vol.In(DEVICE_TYPE_LIST),
+        vol.Optional(CONF_VEDO_PIN): cv.string,
     }
 )
-STEP_REAUTH_DATA_SCHEMA = vol.Schema({vol.Required(CONF_PIN): cv.string})
+STEP_REAUTH_DATA_SCHEMA = vol.Schema(
+    {vol.Required(CONF_PIN): cv.string, vol.Optional(CONF_VEDO_PIN): cv.string}
+)
 
 
 async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str, str]:
@@ -72,6 +75,18 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
     finally:
         await api.logout()
 
+    # Validate VEDO PIN if provided and device type is BRIDGE
+    if data.get(CONF_VEDO_PIN) and data.get(CONF_TYPE, BRIDGE) == BRIDGE:
+        if not re.fullmatch(r"[0-9]{4,10}", data[CONF_VEDO_PIN]):
+            raise InvalidVedoPin
+
+        if TYPE_CHECKING:
+            assert isinstance(api, ComeliteSerialBridgeApi)
+
+        # Verify VEDO is enabled with the provided PIN
+        if not await api.vedo_enabled(data[CONF_VEDO_PIN]):
+            raise InvalidVedoAuth
+
     return {"title": data[CONF_HOST]}
 
 
@@ -99,6 +114,10 @@ class ComelitConfigFlow(ConfigFlow, domain=DOMAIN):
             errors["base"] = "invalid_auth"
         except InvalidPin:
             errors["base"] = "invalid_pin"
+        except InvalidVedoPin:
+            errors["base"] = "invalid_vedo_pin"
+        except InvalidVedoAuth:
+            errors["base"] = "invalid_vedo_auth"
         except Exception:  # noqa: BLE001
             _LOGGER.exception("Unexpected exception")
             errors["base"] = "unknown"
@@ -182,6 +201,8 @@ class ComelitConfigFlow(ConfigFlow, domain=DOMAIN):
                     CONF_PIN: user_input[CONF_PIN],
                     CONF_TYPE: reconfigure_entry.data.get(CONF_TYPE, BRIDGE),
                 }
+                if CONF_VEDO_PIN in user_input:
+                    data_to_validate[CONF_VEDO_PIN] = user_input[CONF_VEDO_PIN]
                 await validate_input(self.hass, data_to_validate)
             except CannotConnect:
                 errors["base"] = "cannot_connect"
@@ -189,6 +210,10 @@ class ComelitConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "invalid_auth"
             except InvalidPin:
                 errors["base"] = "invalid_pin"
+            except InvalidVedoPin:
+                errors["base"] = "invalid_vedo_pin"
+            except InvalidVedoAuth:
+                errors["base"] = "invalid_vedo_auth"
             except Exception:  # noqa: BLE001
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
@@ -198,6 +223,8 @@ class ComelitConfigFlow(ConfigFlow, domain=DOMAIN):
                     CONF_PORT: user_input[CONF_PORT],
                     CONF_PIN: user_input[CONF_PIN],
                 }
+                if CONF_VEDO_PIN in user_input:
+                    data_updates[CONF_VEDO_PIN] = user_input[CONF_VEDO_PIN]
                 return self.async_update_reload_and_abort(
                     reconfigure_entry, data_updates=data_updates
                 )
@@ -211,6 +238,7 @@ class ComelitConfigFlow(ConfigFlow, domain=DOMAIN):
                     CONF_PORT, default=reconfigure_entry.data[CONF_PORT]
                 ): cv.port,
                 vol.Optional(CONF_PIN): cv.string,
+                vol.Optional(CONF_VEDO_PIN): cv.string,
             }
         )
 
@@ -231,3 +259,11 @@ class InvalidAuth(HomeAssistantError):
 
 class InvalidPin(HomeAssistantError):
     """Error to indicate an invalid pin."""
+
+
+class InvalidVedoPin(HomeAssistantError):
+    """Error to indicate an invalid VEDO pin."""
+
+
+class InvalidVedoAuth(HomeAssistantError):
+    """Error to indicate VEDO authentication failed."""

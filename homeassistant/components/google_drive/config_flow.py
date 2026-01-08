@@ -14,10 +14,9 @@ from homeassistant.helpers import config_entry_oauth2_flow, instance_id
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .api import AsyncConfigFlowAuth, DriveClient
-from .const import DOMAIN
+from .const import DOMAIN, DRIVE_FOLDER_URL_PREFIX
 
 DEFAULT_NAME = "Google Drive"
-DRIVE_FOLDER_URL_PREFIX = "https://drive.google.com/drive/folders/"
 OAUTH2_SCOPES = [
     "https://www.googleapis.com/auth/drive.file",
 ]

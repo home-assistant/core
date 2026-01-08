@@ -16,3 +16,9 @@ def find_device_listener(
     raise AssertionError(
         f"Listener for event type {event_type} not found on device {device.dev_id}"
     )
+
+
+def trigger_availability_callback(device: MagicMock, available: bool) -> None:
+    """Trigger availability callbacks registered on the device mock."""
+    callback = find_device_listener(device, CallbackEventType.ONLINE_STATUS)
+    callback(available)
