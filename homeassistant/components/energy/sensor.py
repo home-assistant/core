@@ -628,6 +628,26 @@ class EnergyPowerSensor(SensorEntity):
             asyncio.get_running_loop().create_future()
         )
 
+    @property
+    def available(self) -> bool:
+        """Return if entity is available."""
+        if self._is_inverted:
+            source = self.hass.states.get(self._source_sensors[0])
+            return source is not None and source.state not in (
+                "unknown",
+                "unavailable",
+            )
+        if self._is_combined:
+            discharge = self.hass.states.get(self._source_sensors[0])
+            charge = self.hass.states.get(self._source_sensors[1])
+            return (
+                discharge is not None
+                and charge is not None
+                and discharge.state not in ("unknown", "unavailable")
+                and charge.state not in ("unknown", "unavailable")
+            )
+        return True
+
     @callback
     def _update_state(self) -> None:
         """Update the sensor state based on source sensors."""

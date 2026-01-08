@@ -1029,3 +1029,220 @@ async def test_power_sensor_device_assignment_combined_second_sensor(
     )
     assert power_sensor_entry is not None
     assert power_sensor_entry.device_id == device_entry.id
+
+
+async def test_power_sensor_inverted_unavailable_when_source_unavailable(
+    hass: HomeAssistant,
+) -> None:
+    """Test inverted power sensor becomes unavailable when source is unavailable."""
+    config: Mapping[str, Any] = {"stat_rate_inverted": "sensor.battery_power"}
+
+    sensor = EnergyPowerSensor(
+        source_type="battery",
+        config=config,
+        unique_id="test_inverted",
+        entity_id="sensor.test_inverted",
+    )
+    sensor.hass = hass
+
+    # Set source sensor as unavailable
+    hass.states.async_set("sensor.battery_power", "unavailable")
+    await hass.async_block_till_done()
+
+    # Sensor should be unavailable
+    assert sensor.available is False
+
+
+async def test_power_sensor_inverted_unavailable_when_source_unknown(
+    hass: HomeAssistant,
+) -> None:
+    """Test inverted power sensor becomes unavailable when source is unknown."""
+    config: Mapping[str, Any] = {"stat_rate_inverted": "sensor.battery_power"}
+
+    sensor = EnergyPowerSensor(
+        source_type="battery",
+        config=config,
+        unique_id="test_inverted",
+        entity_id="sensor.test_inverted",
+    )
+    sensor.hass = hass
+
+    # Set source sensor as unknown
+    hass.states.async_set("sensor.battery_power", "unknown")
+    await hass.async_block_till_done()
+
+    # Sensor should be unavailable
+    assert sensor.available is False
+
+
+async def test_power_sensor_inverted_unavailable_when_source_missing(
+    hass: HomeAssistant,
+) -> None:
+    """Test inverted power sensor becomes unavailable when source doesn't exist."""
+    config: Mapping[str, Any] = {"stat_rate_inverted": "sensor.battery_power"}
+
+    sensor = EnergyPowerSensor(
+        source_type="battery",
+        config=config,
+        unique_id="test_inverted",
+        entity_id="sensor.test_inverted",
+    )
+    sensor.hass = hass
+
+    # Don't set source sensor state (it doesn't exist)
+    await hass.async_block_till_done()
+
+    # Sensor should be unavailable
+    assert sensor.available is False
+
+
+async def test_power_sensor_inverted_available_when_source_available(
+    hass: HomeAssistant,
+) -> None:
+    """Test inverted power sensor is available when source is available."""
+    config: Mapping[str, Any] = {"stat_rate_inverted": "sensor.battery_power"}
+
+    sensor = EnergyPowerSensor(
+        source_type="battery",
+        config=config,
+        unique_id="test_inverted",
+        entity_id="sensor.test_inverted",
+    )
+    sensor.hass = hass
+
+    # Set source sensor with valid value
+    hass.states.async_set("sensor.battery_power", "100.0")
+    await hass.async_block_till_done()
+
+    # Sensor should be available
+    assert sensor.available is True
+
+
+async def test_power_sensor_combined_unavailable_when_first_source_unavailable(
+    hass: HomeAssistant,
+) -> None:
+    """Test combined power sensor becomes unavailable when first source is unavailable."""
+    config: Mapping[str, Any] = {
+        "stat_rate_from": "sensor.battery_discharge",
+        "stat_rate_to": "sensor.battery_charge",
+    }
+
+    sensor = EnergyPowerSensor(
+        source_type="battery",
+        config=config,
+        unique_id="test_combined",
+        entity_id="sensor.test_combined",
+    )
+    sensor.hass = hass
+
+    # Set first sensor as unavailable, second as available
+    hass.states.async_set("sensor.battery_discharge", "unavailable")
+    hass.states.async_set("sensor.battery_charge", "50.0")
+    await hass.async_block_till_done()
+
+    # Sensor should be unavailable
+    assert sensor.available is False
+
+
+async def test_power_sensor_combined_unavailable_when_second_source_unavailable(
+    hass: HomeAssistant,
+) -> None:
+    """Test combined power sensor becomes unavailable when second source is unavailable."""
+    config: Mapping[str, Any] = {
+        "stat_rate_from": "sensor.battery_discharge",
+        "stat_rate_to": "sensor.battery_charge",
+    }
+
+    sensor = EnergyPowerSensor(
+        source_type="battery",
+        config=config,
+        unique_id="test_combined",
+        entity_id="sensor.test_combined",
+    )
+    sensor.hass = hass
+
+    # Set first sensor as available, second as unavailable
+    hass.states.async_set("sensor.battery_discharge", "150.0")
+    hass.states.async_set("sensor.battery_charge", "unavailable")
+    await hass.async_block_till_done()
+
+    # Sensor should be unavailable
+    assert sensor.available is False
+
+
+async def test_power_sensor_combined_unavailable_when_both_sources_unavailable(
+    hass: HomeAssistant,
+) -> None:
+    """Test combined power sensor becomes unavailable when both sources are unavailable."""
+    config: Mapping[str, Any] = {
+        "stat_rate_from": "sensor.battery_discharge",
+        "stat_rate_to": "sensor.battery_charge",
+    }
+
+    sensor = EnergyPowerSensor(
+        source_type="battery",
+        config=config,
+        unique_id="test_combined",
+        entity_id="sensor.test_combined",
+    )
+    sensor.hass = hass
+
+    # Set both sensors as unavailable
+    hass.states.async_set("sensor.battery_discharge", "unavailable")
+    hass.states.async_set("sensor.battery_charge", "unavailable")
+    await hass.async_block_till_done()
+
+    # Sensor should be unavailable
+    assert sensor.available is False
+
+
+async def test_power_sensor_combined_available_when_both_sources_available(
+    hass: HomeAssistant,
+) -> None:
+    """Test combined power sensor is available when both sources are available."""
+    config: Mapping[str, Any] = {
+        "stat_rate_from": "sensor.battery_discharge",
+        "stat_rate_to": "sensor.battery_charge",
+    }
+
+    sensor = EnergyPowerSensor(
+        source_type="battery",
+        config=config,
+        unique_id="test_combined",
+        entity_id="sensor.test_combined",
+    )
+    sensor.hass = hass
+
+    # Set both sensors as available
+    hass.states.async_set("sensor.battery_discharge", "150.0")
+    hass.states.async_set("sensor.battery_charge", "50.0")
+    await hass.async_block_till_done()
+
+    # Sensor should be available
+    assert sensor.available is True
+
+
+async def test_power_sensor_combined_unavailable_when_source_unknown(
+    hass: HomeAssistant,
+) -> None:
+    """Test combined power sensor becomes unavailable when a source is unknown."""
+    config: Mapping[str, Any] = {
+        "stat_rate_from": "sensor.battery_discharge",
+        "stat_rate_to": "sensor.battery_charge",
+    }
+
+    sensor = EnergyPowerSensor(
+        source_type="battery",
+        config=config,
+        unique_id="test_combined",
+        entity_id="sensor.test_combined",
+    )
+    sensor.hass = hass
+
+    # Set first sensor as unknown, second as available
+    hass.states.async_set("sensor.battery_discharge", "unknown")
+    hass.states.async_set("sensor.battery_charge", "50.0")
+    await hass.async_block_till_done()
+
+    # Sensor should be unavailable
+    assert sensor.available is False
