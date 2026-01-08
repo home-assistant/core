@@ -67,7 +67,7 @@ async def test_service_charge(
     await hass.services.async_call(
         DOMAIN,
         "charge",
-        {"device_id": device_entry.id, "power": 1500},
+        {"device_id": device_entry.id, "power": 1500, "target_soc": 92},
         blocking=True,
     )
 
@@ -98,7 +98,7 @@ async def test_service_charge_exceeds_power_limit(
         await hass.services.async_call(
             DOMAIN,
             "charge",
-            {"device_id": device_entry.id, "power": 1500},
+            {"device_id": device_entry.id, "power": 1500, "target_soc": 90},
             blocking=True,
         )
 

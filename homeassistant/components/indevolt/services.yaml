@@ -14,6 +14,14 @@ charge:
           min: 100
           max: 2400
           unit_of_measurement: W
+    target_soc:
+      required: true
+      selector:
+        number:
+          min: 0
+          max: 100
+          step: 1
+          unit_of_measurement: "%"
 
 discharge:
   fields:

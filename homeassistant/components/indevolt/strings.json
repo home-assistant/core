@@ -328,6 +328,10 @@
         "power": {
           "description": "The maximum charging power (top-up power) in watts.",
           "name": "Maximum charging power"
+        },
+        "target_soc": {
+          "description": "The target state of charge (SOC) percentage to charge the battery to.",
+          "name": "Target SOC"
         }
       },
       "name": "Charge battery (real-time mode)"
