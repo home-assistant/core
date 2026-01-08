@@ -688,7 +688,7 @@ class IndevoltSensorEntity(CoordinatorEntity, SensorEntity):
         self._attr_device_info = coordinator.device_info
 
         if description.device_class == SensorDeviceClass.ENUM:
-            self._attr_options = list(set(description.state_mapping.values()))
+            self._attr_options = sorted(set(description.state_mapping.values()))
 
     @property
     def available(self) -> bool:

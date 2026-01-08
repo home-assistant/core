@@ -2,7 +2,9 @@
   "config": {
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
-      "cannot_connect": "Failed to connect (aborted)"
+      "cannot_connect": "Failed to connect (aborted)",
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]",
+      "wrong_device": "This is a different device than the one being reconfigured"
     },
     "error": {
       "cannot_connect": "Failed to connect",
