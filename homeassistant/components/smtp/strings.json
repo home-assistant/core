@@ -1,0 +1,141 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "SMTP Email Setup",
+        "description": "Connect Home Assistant to your email server to send notifications.",
+        "data": {
+          "server": "Mail server",
+          "port": "Port",
+          "encryption": "Security",
+          "username": "Login",
+          "password": "Password",
+          "sender": "From address",
+          "sender_name": "From name",
+          "recipient": "To address",
+          "timeout": "Connection timeout",
+          "verify_ssl": "Verify SSL certificate",
+          "debug": "Enable debug logging"
+        },
+        "data_description": {
+          "server": "e.g. smtp.gmail.com, smtp.office365.com, smtp.mail.yahoo.com",
+          "port": "Common ports: 587 (STARTTLS), 465 (SSL/TLS), 25 (unencrypted)",
+          "encryption": "Security protocol for the connection",
+          "username": "Your email address or account username",
+          "password": "Account password or app-specific password",
+          "sender": "The email address notifications will be sent from",
+          "sender_name": "Friendly name shown in emails. Can be overwritten per service call.",
+          "recipient": "Default recipient. Can be overwritten per service call. Comma-separate multiple.",
+          "timeout": "How long to wait for server response",
+          "verify_ssl": "Ignored when security is set to None. Recommended to keep enabled.",
+          "debug": "Log detailed SMTP communication for troubleshooting"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Cannot connect to mail server. Verify the server address, port, and security settings.",
+      "invalid_auth": "Login failed. Check your username and password."
+    },
+    "abort": {
+      "already_configured": "This sender address is already configured."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Edit SMTP Settings",
+        "description": "Update your email server configuration.",
+        "data": {
+          "server": "Mail server",
+          "port": "Port",
+          "encryption": "Security",
+          "username": "Login",
+          "password": "Password",
+          "sender": "From address",
+          "sender_name": "From name",
+          "recipient": "To address",
+          "timeout": "Connection timeout",
+          "verify_ssl": "Verify SSL certificate",
+          "debug": "Enable debug logging"
+        },
+        "data_description": {
+          "server": "e.g. smtp.gmail.com, smtp.office365.com, smtp.mail.yahoo.com",
+          "port": "Common ports: 587 (STARTTLS), 465 (SSL/TLS), 25 (unencrypted)",
+          "encryption": "Security protocol for the connection",
+          "username": "Your email address or account username",
+          "password": "Leave unchanged to keep current password. Enter new value to change.",
+          "sender": "The email address notifications will be sent from",
+          "sender_name": "Friendly name shown in emails. Can be overwritten per service call.",
+          "recipient": "Default recipient. Can be overwritten per service call. Comma-separate multiple.",
+          "timeout": "How long to wait for server response",
+          "verify_ssl": "Ignored when security is set to None. Recommended to keep enabled.",
+          "debug": "Log detailed SMTP communication for troubleshooting"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Cannot connect to mail server. Verify the server address, port, and security settings.",
+      "invalid_auth": "Login failed. Check your username and password."
+    }
+  },
+  "selector": {
+    "encryption": {
+      "options": {
+        "starttls": "STARTTLS (recommended)",
+        "tls": "SSL/TLS",
+        "none": "None (not secure)"
+      }
+    }
+  },
+  "services": {
+    "send_message": {
+      "name": "Send email",
+      "description": "Send an email message via SMTP.",
+      "fields": {
+        "config_entry": {
+          "name": "Account",
+          "description": "The SMTP account to send from."
+        },
+        "message": {
+          "name": "Message",
+          "description": "Plain text body. Supports templates. Optional if HTML content is provided."
+        },
+        "subject": {
+          "name": "Subject",
+          "description": "Subject line. Supports templates and emojis (🚨 🏠 🔔)."
+        },
+        "to": {
+          "name": "Recipients",
+          "description": "Add one email per line. Leave empty to use default from setup."
+        },
+        "from_name": {
+          "name": "From name",
+          "description": "Leave empty to use the default from name from setup."
+        },
+        "html": {
+          "name": "HTML content",
+          "description": "HTML formatted content. Supports Jinja2 templates for dynamic sensor data."
+        },
+        "images": {
+          "name": "Attachments",
+          "description": "List of image file paths to attach (e.g. /config/www/snapshot.jpg)."
+        }
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "last_error": {
+        "name": "Last error"
+      },
+      "last_sent": {
+        "name": "Last sent"
+      }
+    }
+  },
+  "exceptions": {
+    "remote_path_not_allowed": {
+      "message": "Cannot send email with attachment \"{file_name}\" from directory \"{file_path}\" which is not secure to load data from. Only folders added to `{allow_list}` are accessible. See {url} for more information."
+    }
+  }
+}
