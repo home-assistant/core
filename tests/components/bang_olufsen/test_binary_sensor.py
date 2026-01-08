@@ -32,7 +32,7 @@ async def test_battery_charging(
 
     # Initial state is False
     assert (states := hass.states.get(TEST_BATTERY_CHARGING_BINARY_SENSOR_ENTITY_ID))
-    assert states.state == "off"
+    assert states.state == STATE_OFF
 
     # Check binary sensor reacts as expected to WebSocket events
     battery_callback = mock_mozart_client.get_battery_notifications.call_args[0][0]
