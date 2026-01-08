@@ -82,6 +82,8 @@ class FritzboxDataUpdateCoordinator(DataUpdateCoordinator[FritzboxCoordinatorDat
                 self.fritz.has_triggers
             )
         except HTTPError:
+            # Fritz!OS < 7.39 just don't have this api endpoint
+            # so we need to fetch the HTTPError here and assume no triggers
             self.has_triggers = False
         LOGGER.debug("enable smarthome triggers: %s", self.has_triggers)
 
