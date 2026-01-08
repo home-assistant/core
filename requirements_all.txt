@@ -2409,7 +2409,7 @@ pysiaalarm==3.1.1
 pysignalclirestapi==0.3.24
 
 # homeassistant.components.assist_pipeline
-pysilero-vad==3.0.1
+pysilero-vad==3.1.0
 
 # homeassistant.components.sky_hub
 pyskyqhub==0.1.4
