@@ -7,17 +7,8 @@ rules:
   appropriate-polling: done
   brands: done
   common-modules: done
-  config-flow-test-coverage:
-    status: done
-    comment: |
-      Fix typo in DUMMY_RESPONSE_WARNIGNS
-      Never initialize the flow with data directly
-      Use fixture for mock_setup_entry
-      Use mock config entry in test_step_user_already_configured
-  config-flow:
-    status: done
-    comment: |
-      Fix typo in removed_entites_area
+  config-flow-test-coverage: done
+  config-flow: done
   dependency-transparency: done
   docs-actions:
     status: exempt
