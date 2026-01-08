@@ -274,8 +274,8 @@ def _validate_grid_power_source(val: dict[str, Any]) -> dict[str, Any]:
 GRID_POWER_SOURCE_SCHEMA = vol.All(
     vol.Schema(
         {
-            # Both stat_rate and power_config are optional
-            # If power_config is provided, it takes precedence and stat_rate is overwritten
+            # stat_rate and power_config are both optional schema keys, but the validator
+            # requires that at least one is provided; power_config takes precedence
             vol.Optional("stat_rate"): str,
             vol.Optional("power_config"): POWER_CONFIG_SCHEMA,
         }
