@@ -34,7 +34,6 @@ from .const import (
     DOMAIN,
     MANUFACTURER,
     NETATMO_CREATE_BATTERY,
-    NETATMO_CREATE_BINARY_SENSOR,
     NETATMO_CREATE_BUTTON,
     NETATMO_CREATE_CAMERA,
     NETATMO_CREATE_CAMERA_LIGHT,
@@ -46,6 +45,7 @@ from .const import (
     NETATMO_CREATE_SELECT,
     NETATMO_CREATE_SENSOR,
     NETATMO_CREATE_SWITCH,
+    NETATMO_CREATE_WEATHER_BINARY_SENSOR,
     NETATMO_CREATE_WEATHER_SENSOR,
     PLATFORMS,
     WEBHOOK_ACTIVATION,
@@ -335,7 +335,7 @@ class NetatmoDataHandler:
             if module.device_category is NetatmoDeviceCategory.air_care:
                 async_dispatcher_send(
                     self.hass,
-                    NETATMO_CREATE_BINARY_SENSOR,
+                    NETATMO_CREATE_WEATHER_BINARY_SENSOR,
                     NetatmoDevice(
                         self,
                         module,
@@ -392,7 +392,7 @@ class NetatmoDataHandler:
             if module.device_category is NetatmoDeviceCategory.weather:
                 async_dispatcher_send(
                     self.hass,
-                    NETATMO_CREATE_BINARY_SENSOR,
+                    NETATMO_CREATE_WEATHER_BINARY_SENSOR,
                     NetatmoDevice(
                         self,
                         module,

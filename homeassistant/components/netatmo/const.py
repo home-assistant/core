@@ -42,7 +42,6 @@ API_SCOPES_EXCLUDED_FROM_CLOUD = [
 ]
 
 NETATMO_CREATE_BATTERY = "netatmo_create_battery"
-NETATMO_CREATE_BINARY_SENSOR = "netatmo_create_binary_sensor"
 NETATMO_CREATE_CAMERA = "netatmo_create_camera"
 NETATMO_CREATE_CAMERA_LIGHT = "netatmo_create_camera_light"
 NETATMO_CREATE_CLIMATE = "netatmo_create_climate"
@@ -54,6 +53,7 @@ NETATMO_CREATE_ROOM_SENSOR = "netatmo_create_room_sensor"
 NETATMO_CREATE_SELECT = "netatmo_create_select"
 NETATMO_CREATE_SENSOR = "netatmo_create_sensor"
 NETATMO_CREATE_SWITCH = "netatmo_create_switch"
+NETATMO_CREATE_WEATHER_BINARY_SENSOR = "netatmo_create_weather_binary_sensor"
 NETATMO_CREATE_WEATHER_SENSOR = "netatmo_create_weather_sensor"
 
 CONF_AREA_NAME = "area_name"

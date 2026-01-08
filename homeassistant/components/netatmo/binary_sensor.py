@@ -4,7 +4,6 @@ from dataclasses import dataclass
 import logging
 from typing import Final, cast
 
-from pyatmo.modules.base_class import Place
 from pyatmo.modules.device_types import DeviceCategory as NetatmoDeviceCategory
 
 from homeassistant.components.binary_sensor import (
@@ -13,15 +12,14 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntityDescription,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_LATITUDE, ATTR_LONGITUDE
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
-from .const import CONF_URL_WEATHER, NETATMO_CREATE_BINARY_SENSOR, SIGNAL_NAME
+from .const import CONF_URL_WEATHER, NETATMO_CREATE_WEATHER_BINARY_SENSOR
 from .data_handler import NetatmoDevice
-from .entity import NetatmoModuleEntity
+from .entity import NetatmoWeatherModuleEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -34,7 +32,7 @@ class NetatmoBinarySensorEntityDescription(BinarySensorEntityDescription):
     netatmo_name: str  # The name used by Netatmo API for this sensor
 
 
-NETATMO_BINARY_SENSOR_DESCRIPTIONS: Final[
+NETATMO_WEATHER_BINARY_SENSOR_DESCRIPTIONS: Final[
     list[NetatmoBinarySensorEntityDescription]
 ] = [
     NetatmoBinarySensorEntityDescription(
@@ -56,15 +54,15 @@ async def async_setup_entry(
     entry: ConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Set up Netatmo binary sensors based on a config entry."""
+    """Set up Netatmo weather binary sensors based on a config entry."""
 
     @callback
-    def _create_binary_sensor_entity(netatmo_device: NetatmoDevice) -> None:
-        """Create binary sensor entities for a Netatmo device."""
+    def _create_weather_binary_sensor_entity(netatmo_device: NetatmoDevice) -> None:
+        """Create weather binary sensor entities for a Netatmo weather device."""
 
-        descriptions_to_add = NETATMO_BINARY_SENSOR_DESCRIPTIONS
+        descriptions_to_add = NETATMO_WEATHER_BINARY_SENSOR_DESCRIPTIONS
 
-        entities: list[NetatmoBinarySensor] = []
+        entities: list[NetatmoWeatherBinarySensor] = []
 
         # Create binary sensors for module
         for description in descriptions_to_add:
@@ -72,12 +70,12 @@ async def async_setup_entry(
             feature_check = description.key
             if feature_check in netatmo_device.device.features:
                 _LOGGER.debug(
-                    'Adding "%s" binary sensor for device %s',
+                    'Adding "%s" weather binary sensor for device %s',
                     feature_check,
                     netatmo_device.device.name,
                 )
                 entities.append(
-                    NetatmoBinarySensor(
+                    NetatmoWeatherBinarySensor(
                         netatmo_device,
                         description,
                     )
@@ -88,13 +86,15 @@ async def async_setup_entry(
 
     entry.async_on_unload(
         async_dispatcher_connect(
-            hass, NETATMO_CREATE_BINARY_SENSOR, _create_binary_sensor_entity
+            hass,
+            NETATMO_CREATE_WEATHER_BINARY_SENSOR,
+            _create_weather_binary_sensor_entity,
         )
     )
 
 
-class NetatmoBinarySensor(NetatmoModuleEntity, BinarySensorEntity):
-    """Implementation of a Netatmo binary sensor."""
+class NetatmoWeatherBinarySensor(NetatmoWeatherModuleEntity, BinarySensorEntity):
+    """Implementation of a Netatmo weather binary sensor."""
 
     entity_description: NetatmoBinarySensorEntityDescription
 
@@ -103,7 +103,7 @@ class NetatmoBinarySensor(NetatmoModuleEntity, BinarySensorEntity):
         netatmo_device: NetatmoDevice,
         description: NetatmoBinarySensorEntityDescription,
     ) -> None:
-        """Initialize a Netatmo binary sensor."""
+        """Initialize a Netatmo weather binary sensor."""
 
         if netatmo_device.device.device_category is not None:
             if (
@@ -115,7 +115,7 @@ class NetatmoBinarySensor(NetatmoModuleEntity, BinarySensorEntity):
                 ]
             else:
                 _LOGGER.warning(
-                    "Missing configuration URL for binary_sensor of %s device as category %s. Please report this issue",
+                    "Missing configuration URL for weather binary_sensor of %s device as category %s. Please report this issue",
                     netatmo_device.device.name,
                     netatmo_device.device.device_category,
                 )
@@ -126,36 +126,11 @@ class NetatmoBinarySensor(NetatmoModuleEntity, BinarySensorEntity):
         self.entity_description = description
         self._attr_unique_id = f"{self.device.entity_id}-{description.key}"
 
-        # For historical reasons, entities should have publisher set
-        # as binary_sensors were handled as NETATMO_CREATE_WEATHER_SENSOR earlier
-        assert self.device.device_category
-        category = self.device.device_category.name
-        self._publishers.extend(
-            [
-                {
-                    "name": category,
-                    SIGNAL_NAME: category,
-                },
-            ]
-        )
-
-        # For historical reasons, entities should have location set
-        # as binary_sensors were handled as NETATMO_CREATE_WEATHER_SENSOR earlier
-        if hasattr(netatmo_device.device, "place"):
-            place = cast(Place, netatmo_device.device.place)
-            if hasattr(place, "location") and place.location is not None:
-                self._attr_extra_state_attributes.update(
-                    {
-                        ATTR_LATITUDE: place.location.latitude,
-                        ATTR_LONGITUDE: place.location.longitude,
-                    }
-                )
-
     @callback
     def async_update_callback(self) -> None:
         """Update the entity's state."""
 
-        value: StateType = None
+        value: StateType | None = None
 
         value = getattr(self.device, self.entity_description.netatmo_name, None)
 
