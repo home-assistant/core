@@ -83,7 +83,7 @@ PyRMVtransport==0.3.3
 PySrDaliGateway==0.18.0
 
 # homeassistant.components.switchbot
-PySwitchbot==0.75.0
+PySwitchbot==0.76.0
 
 # homeassistant.components.syncthru
 PySyncThru==0.8.0
@@ -1935,7 +1935,7 @@ pyotgw==2.2.2
 pyotp==2.9.0
 
 # homeassistant.components.overkiz
-pyoverkiz==1.19.3
+pyoverkiz==1.19.4
 
 # homeassistant.components.palazzetti
 pypalazzetti==0.1.20
