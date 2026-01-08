@@ -3,16 +3,14 @@
 from __future__ import annotations
 
 from typing import Any
-from unittest.mock import patch
 
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.nina.const import DOMAIN
-from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
-from . import mocked_request_function
+from . import setup_platform
 
 from tests.common import MockConfigEntry, snapshot_platform
 
@@ -49,21 +47,14 @@ async def test_sensors(
 ) -> None:
     """Test the creation and values of the NINA sensors."""
 
-    with patch(
-        "pynina.baseApi.BaseAPI._makeRequest",
-        wraps=mocked_request_function,
-    ):
-        conf_entry: MockConfigEntry = MockConfigEntry(
-            domain=DOMAIN, title="NINA", data=ENTRY_DATA, version=1, minor_version=3
-        )
-        conf_entry.add_to_hass(hass)
+    conf_entry: MockConfigEntry = MockConfigEntry(
+        domain=DOMAIN, title="NINA", data=ENTRY_DATA, version=1, minor_version=3
+    )
+    conf_entry.add_to_hass(hass)
 
-        await hass.config_entries.async_setup(conf_entry.entry_id)
-        await hass.async_block_till_done()
+    await setup_platform(hass, conf_entry)
 
-        assert conf_entry.state is ConfigEntryState.LOADED
-
-        await snapshot_platform(hass, entity_registry, snapshot, conf_entry.entry_id)
+    await snapshot_platform(hass, entity_registry, snapshot, conf_entry.entry_id)
 
 
 async def test_sensors_without_corona_filter(
@@ -71,25 +62,18 @@ async def test_sensors_without_corona_filter(
 ) -> None:
     """Test the creation and values of the NINA sensors without the corona filter."""
 
-    with patch(
-        "pynina.baseApi.BaseAPI._makeRequest",
-        wraps=mocked_request_function,
-    ):
-        conf_entry: MockConfigEntry = MockConfigEntry(
-            domain=DOMAIN,
-            title="NINA",
-            data=ENTRY_DATA_NO_CORONA,
-            version=1,
-            minor_version=3,
-        )
-        conf_entry.add_to_hass(hass)
+    conf_entry: MockConfigEntry = MockConfigEntry(
+        domain=DOMAIN,
+        title="NINA",
+        data=ENTRY_DATA_NO_CORONA,
+        version=1,
+        minor_version=3,
+    )
+    conf_entry.add_to_hass(hass)
 
-        await hass.config_entries.async_setup(conf_entry.entry_id)
-        await hass.async_block_till_done()
+    await setup_platform(hass, conf_entry)
 
-        assert conf_entry.state is ConfigEntryState.LOADED
-
-        await snapshot_platform(hass, entity_registry, snapshot, conf_entry.entry_id)
+    await snapshot_platform(hass, entity_registry, snapshot, conf_entry.entry_id)
 
 
 async def test_sensors_with_area_filter(
@@ -97,22 +81,15 @@ async def test_sensors_with_area_filter(
 ) -> None:
     """Test the creation and values of the NINA sensors with an area filter."""
 
-    with patch(
-        "pynina.baseApi.BaseAPI._makeRequest",
-        wraps=mocked_request_function,
-    ):
-        conf_entry: MockConfigEntry = MockConfigEntry(
-            domain=DOMAIN,
-            title="NINA",
-            data=ENTRY_DATA_NO_AREA,
-            version=1,
-            minor_version=3,
-        )
-        conf_entry.add_to_hass(hass)
+    conf_entry: MockConfigEntry = MockConfigEntry(
+        domain=DOMAIN,
+        title="NINA",
+        data=ENTRY_DATA_NO_AREA,
+        version=1,
+        minor_version=3,
+    )
+    conf_entry.add_to_hass(hass)
 
-        await hass.config_entries.async_setup(conf_entry.entry_id)
-        await hass.async_block_till_done()
+    await setup_platform(hass, conf_entry)
 
-        assert conf_entry.state is ConfigEntryState.LOADED
-
-        await snapshot_platform(hass, entity_registry, snapshot, conf_entry.entry_id)
+    await snapshot_platform(hass, entity_registry, snapshot, conf_entry.entry_id)

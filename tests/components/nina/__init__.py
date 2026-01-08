@@ -2,8 +2,26 @@
 
 import json
 from typing import Any
+from unittest.mock import patch
 
-from tests.common import load_fixture
+from homeassistant.config_entries import ConfigEntryState
+from homeassistant.core import HomeAssistant
+
+from tests.common import MockConfigEntry, load_fixture
+
+
+async def setup_platform(
+    hass: HomeAssistant, config_entry: MockConfigEntry
+) -> MockConfigEntry:
+    """Set up the NINA platform."""
+    with patch(
+        "pynina.baseApi.BaseAPI._makeRequest",
+        wraps=mocked_request_function,
+    ):
+        await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+        assert config_entry.state is ConfigEntryState.LOADED
 
 
 def mocked_request_function(url: str) -> dict[str, Any]:
