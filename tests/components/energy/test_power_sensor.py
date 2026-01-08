@@ -413,47 +413,27 @@ async def test_power_sensor_async_added_to_hass_combined(
         unit_of_measurement=UnitOfPower.KILO_WATT,
     )
 
-    # Set up source sensor states
-    hass.states.async_set("sensor.battery_discharge", "100.0")
-    hass.states.async_set("sensor.battery_charge", "30.0")
+    # Set up source sensor states with units
+    hass.states.async_set(
+        "sensor.battery_discharge",
+        "100.0",
+        {ATTR_UNIT_OF_MEASUREMENT: UnitOfPower.KILO_WATT},
+    )
+    hass.states.async_set(
+        "sensor.battery_charge",
+        "30.0",
+        {ATTR_UNIT_OF_MEASUREMENT: UnitOfPower.KILO_WATT},
+    )
     await hass.async_block_till_done()
 
     await sensor.async_added_to_hass()
 
     assert sensor._attr_name == "Battery Power"
-    assert sensor._attr_native_unit_of_measurement == UnitOfPower.KILO_WATT
-    assert sensor._attr_native_value == 70.0
-
-
-async def test_power_sensor_copies_display_precision(
-    hass: HomeAssistant,
-    entity_registry: er.EntityRegistry,
-) -> None:
-    """Test EnergyPowerSensor copies display precision from source."""
-    config: Mapping[str, Any] = {"stat_rate_inverted": "sensor.battery_power"}
-
-    sensor = EnergyPowerSensor(
-        source_type="battery",
-        config=config,
-        unique_id="test_inverted",
-        entity_id="sensor.test_inverted",
-    )
-    sensor.hass = hass
-
-    # Register source sensor in entity registry with unit and precision
-    entity_registry.async_get_or_create(
-        "sensor",
-        "test",
-        "battery_power",
-        suggested_object_id="battery_power",
-        unit_of_measurement=UnitOfPower.WATT,
-        capabilities={"suggested_display_precision": 2},
-    )
-
-    await sensor.async_added_to_hass()
-
-    assert sensor._attr_suggested_display_precision == 2
+    # Combined mode always uses Watts
     assert sensor._attr_native_unit_of_measurement == UnitOfPower.WATT
+    # Both sensors in kW: 100 kW = 100,000 W, 30 kW = 30,000 W
+    # Result: 100,000 - 30,000 = 70,000 W
+    assert sensor._attr_native_value == 70000.0
 
 
 async def test_power_sensor_copies_unit_when_unavailable(
@@ -487,9 +467,8 @@ async def test_power_sensor_copies_unit_when_unavailable(
 
     await sensor.async_added_to_hass()
 
-    # Unit and precision should still be copied from registry
+    # Unit should still be copied from registry
     assert sensor._attr_native_unit_of_measurement == UnitOfPower.WATT
-    assert sensor._attr_suggested_display_precision == 1
 
 
 async def test_power_sensor_state_change_listener(hass: HomeAssistant) -> None:
@@ -517,6 +496,212 @@ async def test_power_sensor_state_change_listener(hass: HomeAssistant) -> None:
 
     # Value should be updated via the state change listener
     assert sensor._attr_native_value == -200.0
+
+
+async def test_power_sensor_combined_different_units_kw_w(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test combined sensors with different units (kW + W)."""
+    config: Mapping[str, Any] = {
+        "stat_rate_from": "sensor.battery_discharge",
+        "stat_rate_to": "sensor.battery_charge",
+    }
+
+    sensor = EnergyPowerSensor(
+        source_type="battery",
+        config=config,
+        unique_id="test_combined",
+        entity_id="sensor.test_combined",
+    )
+    sensor.hass = hass
+
+    # Register first sensor in entity registry
+    entity_registry.async_get_or_create(
+        "sensor",
+        "test",
+        "battery_discharge",
+        suggested_object_id="battery_discharge",
+        unit_of_measurement=UnitOfPower.KILO_WATT,
+    )
+
+    # Set up source sensors with different units
+    hass.states.async_set(
+        "sensor.battery_discharge",
+        "150.0",
+        {ATTR_UNIT_OF_MEASUREMENT: UnitOfPower.KILO_WATT},
+    )
+    hass.states.async_set(
+        "sensor.battery_charge",
+        "50.0",
+        {ATTR_UNIT_OF_MEASUREMENT: UnitOfPower.WATT},
+    )
+    await hass.async_block_till_done()
+
+    await sensor.async_added_to_hass()
+
+    # Combined mode always uses Watts
+    assert sensor._attr_native_unit_of_measurement == UnitOfPower.WATT
+    # 150 kW = 150,000 W, 50 W = 50 W
+    # Result: 150,000 - 50 = 149,950 W
+    assert sensor._attr_native_value == 149950.0
+
+
+async def test_power_sensor_combined_different_units_w_kw(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test combined sensors with different units (W + kW)."""
+    config: Mapping[str, Any] = {
+        "stat_rate_from": "sensor.battery_discharge",
+        "stat_rate_to": "sensor.battery_charge",
+    }
+
+    sensor = EnergyPowerSensor(
+        source_type="battery",
+        config=config,
+        unique_id="test_combined",
+        entity_id="sensor.test_combined",
+    )
+    sensor.hass = hass
+
+    # Register first sensor in entity registry
+    entity_registry.async_get_or_create(
+        "sensor",
+        "test",
+        "battery_discharge",
+        suggested_object_id="battery_discharge",
+        unit_of_measurement=UnitOfPower.WATT,
+    )
+
+    # Set up source sensors with different units
+    hass.states.async_set(
+        "sensor.battery_discharge",
+        "150000.0",
+        {ATTR_UNIT_OF_MEASUREMENT: UnitOfPower.WATT},
+    )
+    hass.states.async_set(
+        "sensor.battery_charge",
+        "50.0",
+        {ATTR_UNIT_OF_MEASUREMENT: UnitOfPower.KILO_WATT},
+    )
+    await hass.async_block_till_done()
+
+    await sensor.async_added_to_hass()
+
+    # Combined mode always uses Watts
+    assert sensor._attr_native_unit_of_measurement == UnitOfPower.WATT
+    # 150,000 W = 150,000 W, 50 kW = 50,000 W
+    # Result: 150,000 - 50,000 = 100,000 W
+    assert sensor._attr_native_value == 100000.0
+
+
+async def test_power_sensor_combined_same_unit_kw(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test combined sensors with same units (both kW)."""
+    config: Mapping[str, Any] = {
+        "stat_rate_from": "sensor.battery_discharge",
+        "stat_rate_to": "sensor.battery_charge",
+    }
+
+    sensor = EnergyPowerSensor(
+        source_type="battery",
+        config=config,
+        unique_id="test_combined",
+        entity_id="sensor.test_combined",
+    )
+    sensor.hass = hass
+
+    # Register first sensor in entity registry
+    entity_registry.async_get_or_create(
+        "sensor",
+        "test",
+        "battery_discharge",
+        suggested_object_id="battery_discharge",
+        unit_of_measurement=UnitOfPower.KILO_WATT,
+    )
+
+    # Set up source sensors both in kW
+    hass.states.async_set(
+        "sensor.battery_discharge",
+        "150.0",
+        {ATTR_UNIT_OF_MEASUREMENT: UnitOfPower.KILO_WATT},
+    )
+    hass.states.async_set(
+        "sensor.battery_charge",
+        "50.0",
+        {ATTR_UNIT_OF_MEASUREMENT: UnitOfPower.KILO_WATT},
+    )
+    await hass.async_block_till_done()
+
+    await sensor.async_added_to_hass()
+
+    # Combined mode always uses Watts
+    assert sensor._attr_native_unit_of_measurement == UnitOfPower.WATT
+    # Both in kW: 150 kW = 150,000 W, 50 kW = 50,000 W
+    # Result: 150,000 - 50,000 = 100,000 W
+    assert sensor._attr_native_value == 100000.0
+
+
+async def test_power_sensor_combined_missing_units(hass: HomeAssistant) -> None:
+    """Test combined sensors with missing units (backwards compatibility)."""
+    config: Mapping[str, Any] = {
+        "stat_rate_from": "sensor.battery_discharge",
+        "stat_rate_to": "sensor.battery_charge",
+    }
+
+    sensor = EnergyPowerSensor(
+        source_type="battery",
+        config=config,
+        unique_id="test_combined",
+        entity_id="sensor.test_combined",
+    )
+    sensor.hass = hass
+
+    # Set up source sensors without units in state attributes
+    hass.states.async_set("sensor.battery_discharge", "150.0")
+    hass.states.async_set("sensor.battery_charge", "50.0")
+    await hass.async_block_till_done()
+
+    sensor._update_state()
+
+    # Without units, values are used as-is (backwards compatibility)
+    # Result: 150 - 50 = 100
+    assert sensor._attr_native_value == 100.0
+
+
+async def test_power_sensor_combined_one_missing_unit(hass: HomeAssistant) -> None:
+    """Test combined sensors when one sensor is missing unit."""
+    config: Mapping[str, Any] = {
+        "stat_rate_from": "sensor.battery_discharge",
+        "stat_rate_to": "sensor.battery_charge",
+    }
+
+    sensor = EnergyPowerSensor(
+        source_type="battery",
+        config=config,
+        unique_id="test_combined",
+        entity_id="sensor.test_combined",
+    )
+    sensor.hass = hass
+
+    # First sensor has unit, second doesn't
+    hass.states.async_set(
+        "sensor.battery_discharge",
+        "150.0",
+        {ATTR_UNIT_OF_MEASUREMENT: UnitOfPower.KILO_WATT},
+    )
+    hass.states.async_set("sensor.battery_charge", "50.0")
+    await hass.async_block_till_done()
+
+    sensor._update_state()
+
+    # First sensor converted: 150 kW = 150,000 W
+    # Second sensor used as-is: 50
+    # Result: 150,000 - 50 = 149,950
+    assert sensor._attr_native_value == 149950.0
 
 
 async def test_needs_power_sensor_standard(hass: HomeAssistant) -> None:

@@ -19,7 +19,12 @@ from homeassistant.components.sensor import (
 from homeassistant.components.sensor.recorder import (  # pylint: disable=hass-component-root-import
     reset_detected,
 )
-from homeassistant.const import ATTR_UNIT_OF_MEASUREMENT, UnitOfEnergy, UnitOfVolume
+from homeassistant.const import (
+    ATTR_UNIT_OF_MEASUREMENT,
+    UnitOfEnergy,
+    UnitOfPower,
+    UnitOfVolume,
+)
 from homeassistant.core import (
     HomeAssistant,
     State,
@@ -653,6 +658,23 @@ class EnergyPowerSensor(SensorEntity):
             try:
                 discharge = float(discharge_state.state)
                 charge = float(charge_state.state)
+
+                # Get units from state attributes
+                discharge_unit = discharge_state.attributes.get(
+                    ATTR_UNIT_OF_MEASUREMENT
+                )
+                charge_unit = charge_state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
+
+                # Convert to Watts if units are present
+                if discharge_unit:
+                    discharge = unit_conversion.PowerConverter.convert(
+                        discharge, discharge_unit, UnitOfPower.WATT
+                    )
+                if charge_unit:
+                    charge = unit_conversion.PowerConverter.convert(
+                        charge, charge_unit, UnitOfPower.WATT
+                    )
+
                 self._attr_native_value = discharge - charge
             except ValueError:
                 self._attr_native_value = None
@@ -667,7 +689,13 @@ class EnergyPowerSensor(SensorEntity):
             # Check first sensor
             if source_entry := entity_reg.async_get(self._source_sensors[0]):
                 device_id = source_entry.device_id
-                self._attr_native_unit_of_measurement = source_entry.unit_of_measurement
+                # For combined mode, always use Watts because we may have different source units; for inverted mode, copy source unit
+                if self._is_combined:
+                    self._attr_native_unit_of_measurement = UnitOfPower.WATT
+                else:
+                    self._attr_native_unit_of_measurement = (
+                        source_entry.unit_of_measurement
+                    )
                 # Get source name from registry
                 source_name = source_entry.name or source_entry.original_name
             # If first sensor has no device and we have a second sensor, check it
