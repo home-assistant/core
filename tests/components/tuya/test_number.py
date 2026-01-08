@@ -53,7 +53,7 @@ async def test_platform_setup_and_discovery(
         # Update with multiple properties including dpcode - state should change
         (
             {"switch_alarm_sound": True, "delay_set": 17},
-            "on",
+            "17.0",
             "2024-01-01T00:01:00+00:00",
         ),
     ],
