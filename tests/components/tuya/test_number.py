@@ -52,7 +52,7 @@ async def test_platform_setup_and_discovery(
         ({"delay_set": 17}, "17.0", "2024-01-01T00:01:00+00:00"),
         # Update with multiple properties including dpcode - state should change
         (
-            {"battery_percentage": 50, "doorcontact_state": True},
+            {"switch_alarm_sound": True, "delay_set": 17},
             "on",
             "2024-01-01T00:01:00+00:00",
         ),
