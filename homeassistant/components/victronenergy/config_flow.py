@@ -13,7 +13,6 @@ import logging
 import re
 import ssl
 from typing import Any
-import uuid
 
 import aiohttp
 import paho.mqtt.client as mqtt
@@ -24,6 +23,7 @@ from homeassistant.const import CONF_PASSWORD, CONF_TOKEN, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import AbortFlow
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import instance_id
 from homeassistant.helpers.service_info.ssdp import SsdpServiceInfo
 
 from .const import CONF_BROKER, CONF_PORT, DOMAIN
@@ -38,7 +38,7 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
 
 STEP_PASSWORD_DATA_SCHEMA = vol.Schema(
     {
-        vol.Required(CONF_PASSWORD): str,
+        vol.Optional(CONF_PASSWORD, default=""): str,
     }
 )
 
@@ -50,10 +50,10 @@ def _raise_invalid_auth(message: str) -> None:
     raise InvalidAuth(message)
 
 
-def _generate_ha_device_id() -> str:
-    """Generate a unique Home Assistant device identifier."""
-    # Generate UUID and remove hyphens to make it alphanumeric only
-    return str(uuid.uuid4()).replace("-", "")
+async def _get_ha_device_id(hass: HomeAssistant) -> str:
+    """Get persistent Home Assistant instance identifier for device ID."""
+    ha_uuid = await instance_id.async_get(hass)
+    return ha_uuid.replace("-", "")  # Remove hyphens for alphanumeric format
 
 
 async def _test_basic_mqtt_connection(
@@ -375,7 +375,7 @@ async def validate_secure_mqtt_connection(
     hass: HomeAssistant, broker: str, password: str
 ) -> dict[str, Any]:
     """Validate secure MQTT connection with token authentication."""
-    ha_device_id = _generate_ha_device_id()
+    ha_device_id = await _get_ha_device_id(hass)
     _LOGGER.info("Generated device_id for secure MQTT validation: %s", ha_device_id)
 
     try:
@@ -396,6 +396,58 @@ async def validate_secure_mqtt_connection(
         raise CannotConnect(f"HTTP connection failed: {err}") from err
     except json.JSONDecodeError as err:
         raise InvalidAuth("Invalid response from device") from err
+
+
+async def _handle_password_step(
+    hass: HomeAssistant,
+    broker: str,
+    password: str,
+    *,
+    detect_discovery: bool = True,
+    title_format: str = "GX device ({})",
+    fallback_title: str = "Venus OS Hub",
+) -> dict[str, Any]:
+    """Handle password validation and return config entry data.
+
+    Args:
+        hass: Home Assistant instance
+        broker: MQTT broker address
+        password: Password for authentication
+        detect_discovery: Whether to detect discovery topics for unique_id
+        title_format: Format string for title when unique_id is found
+        fallback_title: Title to use if no unique_id found
+
+    Returns:
+        Dict with title and data for config entry creation
+    """
+    info = await validate_secure_mqtt_connection(hass, broker, password)
+    username = f"token/homeassistant/{info['ha_device_id']}"
+
+    unique_id = None
+    if detect_discovery:
+        # Listen for discovery topics on secure MQTT
+        unique_id = await _detect_discovery_topics(
+            hass, broker, 8883, username, info["token"], True
+        )
+
+        if not unique_id:
+            raise NoDiscoverySupport("Home assistant discovery topics not found")
+
+        title = title_format.format(unique_id)
+    else:
+        title = fallback_title
+
+    return {
+        "title": title,
+        "data": {
+            CONF_BROKER: broker,
+            CONF_PORT: 8883,
+            CONF_USERNAME: username,
+            CONF_TOKEN: info["token"],
+            "ha_device_id": info["ha_device_id"],
+        },
+        "unique_id": unique_id,
+    }
 
 
 class VictronConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -435,34 +487,8 @@ class VictronConfigFlow(ConfigFlow, domain=DOMAIN):
         # Store broker for later use in instance variable
         self._broker = broker
 
-        # Try insecure MQTT connection first (port 1883)
-        _LOGGER.info("Trying insecure MQTT connection to %s:1883", broker)
-        if await _test_basic_mqtt_connection(self.hass, broker):
-            _LOGGER.info(
-                "Insecure MQTT connection successful, detecting discovery topics"
-            )
-
-            # Listen for discovery topics
-            unique_id = await _detect_discovery_topics(self.hass, broker, 1883)
-
-            if unique_id:
-                # Check if already configured - let config flow exceptions propagate
-                await self.async_set_unique_id(unique_id)
-                self._abort_if_unique_id_configured()
-
-                return self.async_create_entry(
-                    title=f"GX device ({unique_id})",
-                    data={
-                        CONF_BROKER: broker,
-                        CONF_PORT: 1883,
-                    },
-                )
-
-            _LOGGER.warning("Home assistant discovery topics not found")
-            return self.async_abort(reason="no_discovery")
-
-        _LOGGER.info("Insecure MQTT connection failed, trying secure connection")
-        # Insecure failed, ask for password for secure connection
+        # Always ask for password and use secure connection
+        _LOGGER.info("Proceeding to secure MQTT connection setup for %s", broker)
         return await self.async_step_password()
 
     async def async_step_password(
@@ -481,47 +507,29 @@ class VictronConfigFlow(ConfigFlow, domain=DOMAIN):
             )
 
         try:
-            # Generate token and test secure connection
-            ha_device_id = _generate_ha_device_id()
             assert broker is not None, "Broker must be set in context"
-            assert isinstance(user_input[CONF_PASSWORD], str), "Password must be string"
-            token = await _generate_victron_token(
-                self.hass, broker, user_input[CONF_PASSWORD], ha_device_id
+            password = user_input[CONF_PASSWORD] or ""
+
+            result = await _handle_password_step(
+                self.hass, broker, password, detect_discovery=True
             )
 
-            if not await _test_secure_mqtt_connection(
-                self.hass, broker, token, ha_device_id
-            ):
-                return self.async_abort(reason="cannot_connect")
-
-            # Listen for discovery topics on secure MQTT
-            username = f"token/homeassistant/{ha_device_id}"
-            unique_id = await _detect_discovery_topics(
-                self.hass, broker, 8883, username, token, True
-            )
-
-            if unique_id:
+            if result["unique_id"]:
                 # Check if already configured - let config flow exceptions propagate
-                await self.async_set_unique_id(unique_id)
+                await self.async_set_unique_id(result["unique_id"])
                 self._abort_if_unique_id_configured()
 
-                return self.async_create_entry(
-                    title=f"GX device ({unique_id})",
-                    data={
-                        CONF_BROKER: broker,
-                        CONF_PORT: 8883,
-                        CONF_USERNAME: username,
-                        CONF_TOKEN: token,
-                        "ha_device_id": ha_device_id,
-                    },
-                )
-
-            _LOGGER.warning("Home assistant discovery topics not found")
-            return self.async_abort(reason="no_discovery")
+            return self.async_create_entry(
+                title=result["title"],
+                data=result["data"],
+            )
 
         except AbortFlow:
             # Propagate AbortFlow exceptions, for example from _abort_if_unique_id_configured
             raise
+        except NoDiscoverySupport:
+            _LOGGER.warning("Home assistant discovery topics not found")
+            return self.async_abort(reason="no_discovery")
         except CannotConnect:
             _LOGGER.warning("Connection failed")
             errors["base"] = "cannot_connect"
@@ -563,20 +571,18 @@ class VictronConfigFlow(ConfigFlow, domain=DOMAIN):
         try:
             assert broker is not None, "Broker must be set in context"
             assert isinstance(user_input[CONF_PASSWORD], str), "Password must be string"
-            info = await validate_secure_mqtt_connection(
-                self.hass, broker, user_input[CONF_PASSWORD]
+
+            result = await _handle_password_step(
+                self.hass,
+                broker,
+                user_input[CONF_PASSWORD],
+                detect_discovery=False,
+                fallback_title=friendly_name,
             )
 
-            # Create entry with secure MQTT config
             return self.async_create_entry(
-                title=friendly_name,
-                data={
-                    CONF_BROKER: broker,
-                    CONF_PORT: 8883,
-                    CONF_USERNAME: f"token/homeassistant/{info['ha_device_id']}",
-                    CONF_TOKEN: info["token"],
-                    "ha_device_id": info["ha_device_id"],
-                },
+                title=result["title"],
+                data=result["data"],
             )
 
         except CannotConnect:
@@ -610,11 +616,6 @@ class VictronConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle user confirmation for SSDP discovered device."""
         _LOGGER.info("SSDP confirm called with input: %s", user_input)
 
-        broker = self.context.get("broker")
-        friendly_name = self.context.get("title_placeholders", {}).get(
-            "name", "Victron Energy"
-        )
-
         if user_input is None:
             return self.async_show_form(
                 step_id="ssdp_confirm",
@@ -622,20 +623,7 @@ class VictronConfigFlow(ConfigFlow, domain=DOMAIN):
                 description_placeholders=self.context.get("title_placeholders", {}),
             )
 
-        # Now test basic MQTT connection after user confirmation
-        broker = getattr(self, "_broker", None)
-        assert broker is not None, "Broker must be set"
-        if await _test_basic_mqtt_connection(self.hass, broker):
-            # Basic MQTT works, create entry with simple config
-            return self.async_create_entry(
-                title=friendly_name,
-                data={
-                    CONF_BROKER: broker,
-                    CONF_PORT: 1883,
-                },
-            )
-
-        # Basic MQTT failed, ask for password for token auth
+        # Always use secure MQTT connection, ask for password
         return await self.async_step_ssdp_password()
 
     async def async_step_ssdp(
