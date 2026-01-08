@@ -26,7 +26,7 @@ class OpenEVSEConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def check_status(
         self, host: str, user: str = "", password: str = ""
-    ) -> dict[str, str]:
+    ) -> dict[str, Any]:
         """Check if we can connect to the OpenEVSE charger."""
 
         charger = OpenEVSE(host, user, password)
