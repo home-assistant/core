@@ -365,7 +365,7 @@ async def test_ssdp(
         assert result["data_schema"] is not None
         assert result["data_schema"]({})[CONF_URL] == url + "/"
 
-    if result["type"] == FlowResultType.ABORT:
+    if result["type"] is FlowResultType.ABORT:
         return
 
     login_requests_mock.request(
@@ -379,7 +379,7 @@ async def test_ssdp(
     )
     await hass.async_block_till_done()
 
-    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == service_info.upnp[ATTR_UPNP_MODEL_NAME]
     assert result["result"].data[CONF_UPNP_UDN] == service_info.upnp[ATTR_UPNP_UDN]
 

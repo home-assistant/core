@@ -368,23 +368,27 @@ DISCOVERY_SCHEMAS = [
     MatterDiscoverySchema(
         platform=Platform.NUMBER,
         entity_description=MatterRangeNumberEntityDescription(
-            key="MicrowaveOvenControlCookTime",
-            translation_key="cook_time",
-            device_class=NumberDeviceClass.DURATION,
-            command=lambda value: clusters.MicrowaveOvenControl.Commands.SetCookingParameters(
-                cookTime=int(value)
+            key="speaker_setpoint",
+            translation_key="speaker_setpoint",
+            native_unit_of_measurement=PERCENTAGE,
+            command=lambda value: clusters.LevelControl.Commands.MoveToLevel(
+                level=int(value)
             ),
-            native_min_value=1,  # 1 second minimum cook time
-            native_step=1,  # 1 second
-            native_unit_of_measurement=UnitOfTime.SECONDS,
-            max_attribute=clusters.MicrowaveOvenControl.Attributes.MaxCookTime,
+            native_min_value=0,
+            native_max_value=100,
+            native_step=1,
+            device_to_ha=lambda x: None if x is None else x,
+            min_attribute=clusters.LevelControl.Attributes.MinLevel,
+            max_attribute=clusters.LevelControl.Attributes.MaxLevel,
             mode=NumberMode.SLIDER,
         ),
         entity_class=MatterRangeNumber,
         required_attributes=(
-            clusters.MicrowaveOvenControl.Attributes.CookTime,
-            clusters.MicrowaveOvenControl.Attributes.MaxCookTime,
+            clusters.LevelControl.Attributes.CurrentLevel,
+            clusters.LevelControl.Attributes.MinLevel,
+            clusters.LevelControl.Attributes.MaxLevel,
         ),
+        device_type=(device_types.Speaker,),
     ),
     MatterDiscoverySchema(
         platform=Platform.NUMBER,

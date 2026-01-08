@@ -28,6 +28,10 @@
   "config": {
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
+      "oauth_error": "[%key:common::config_flow::abort::oauth2_error%]",
+      "oauth_failed": "[%key:common::config_flow::abort::oauth2_failed%]",
+      "oauth_timeout": "[%key:common::config_flow::abort::oauth2_timeout%]",
+      "oauth_unauthorized": "[%key:common::config_flow::abort::oauth2_unauthorized%]",
       "reauth_account_mismatch": "The reauthentication account does not match the original account",
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
     },
@@ -39,17 +43,8 @@
     },
     "step": {
       "reauth_confirm": {
-        "data": {
-          "access_token": "[%key:common::config_flow::data::access_token%]"
-        },
-        "description": "The {name} integration needs to re-authenticate your account, please enter an access token from {url}",
+        "description": "The {name} integration needs to re-authenticate your account",
         "title": "[%key:common::config_flow::title::reauth%]"
-      },
-      "user": {
-        "data": {
-          "access_token": "[%key:common::config_flow::data::access_token%]"
-        },
-        "description": "Enter an access token from {url}."
       }
     }
   },
@@ -1358,7 +1353,7 @@
           "name": "Energy Site"
         },
         "tou_settings": {
-          "description": "See {time_use_url} for details.",
+          "description": "See {time_of_use_url} for details.",
           "name": "Settings"
         }
       },

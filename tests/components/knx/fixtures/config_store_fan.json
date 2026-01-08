@@ -1,0 +1,51 @@
+{
+  "version": 2,
+  "minor_version": 2,
+  "key": "knx/config_store.json",
+  "data": {
+    "entities": {
+      "fan": {
+        "knx_es_01KCK9VB3YE1DZ7X4GDHB8BS05": {
+          "entity": {
+            "name": "test_step_oscillate",
+            "device_info": null,
+            "entity_category": null
+          },
+          "knx": {
+            "speed": {
+              "ga_step": {
+                "write": "1/1/1",
+                "state": "1/1/0",
+                "passive": []
+              },
+              "max_step": 4.0
+            },
+            "sync_state": true,
+            "ga_oscillation": {
+              "write": "1/2/1",
+              "state": "1/2/0",
+              "passive": []
+            }
+          }
+        },
+        "knx_es_01KCK9XHXYBG6AP3CNXV4QX2FW": {
+          "entity": {
+            "name": "test_percent",
+            "device_info": null,
+            "entity_category": null
+          },
+          "knx": {
+            "speed": {
+              "ga_speed": {
+                "write": "2/2/2",
+                "state": "2/2/0",
+                "passive": []
+              }
+            },
+            "sync_state": true
+          }
+        }
+      }
+    }
+  }
+}

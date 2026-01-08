@@ -24,7 +24,7 @@ async def user_flow(hass: HomeAssistant) -> str:
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] is None
     return result["flow_id"]
 
@@ -79,7 +79,7 @@ async def test_form_user_errors(
     )
     await hass.async_block_till_done()
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == SOURCE_USER
     assert result["errors"] == {"base": error_value}
 
