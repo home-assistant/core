@@ -35,7 +35,8 @@ class RotarexConfigFlow(ConfigFlow, domain=DOMAIN):
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "cannot_connect"
             else:
-                self._async_abort_entries_match({CONF_EMAIL: user_input[CONF_EMAIL]})
+                await self.async_set_unique_id(user_input[CONF_EMAIL])
+                self._abort_if_unique_id_configured()
                 return self.async_create_entry(
                     title=user_input[CONF_EMAIL], data=user_input
                 )

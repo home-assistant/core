@@ -137,7 +137,11 @@ class RotarexTankSensor(CoordinatorEntity, SensorEntity):
         )
         synch_datas = tank.get("SynchDatas") if tank else None
         if isinstance(synch_datas, list) and synch_datas:
-            return max(synch_datas, key=lambda x: x.get("SynchDate", ""))
+            valid_synch_datas = [
+                s for s in synch_datas if isinstance(s, dict) and s.get("SynchDate")
+            ]
+            if valid_synch_datas:
+                return max(valid_synch_datas, key=lambda s: s["SynchDate"])
         return None
 
     def _update_state(self) -> None:
