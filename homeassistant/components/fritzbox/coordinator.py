@@ -77,9 +77,12 @@ class FritzboxDataUpdateCoordinator(DataUpdateCoordinator[FritzboxCoordinatorDat
         )
         LOGGER.debug("enable smarthome templates: %s", self.has_templates)
 
-        self.has_triggers = await self.hass.async_add_executor_job(
-            self.fritz.has_triggers
-        )
+        try:
+            self.has_triggers = await self.hass.async_add_executor_job(
+                self.fritz.has_triggers
+            )
+        except HTTPError:
+            self.has_triggers = False
         LOGGER.debug("enable smarthome triggers: %s", self.has_triggers)
 
         self.configuration_url = self.fritz.get_prefixed_host()
