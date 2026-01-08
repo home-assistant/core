@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from copy import deepcopy
-import json
 from typing import Any
 from unittest.mock import AsyncMock, patch
 
@@ -31,11 +30,7 @@ from homeassistant.helpers import entity_registry as er
 from . import mocked_request_function, setup_platform
 from .const import DUMMY_CONFIG_ENTRY, DUMMY_USER_INPUT
 
-from tests.common import MockConfigEntry, load_fixture
-
-DUMMY_RESPONSE_REGIONS: dict[str, Any] = json.loads(
-    load_fixture("sample_regions.json", "nina")
-)
+from tests.common import MockConfigEntry
 
 
 def assert_dummy_entry_created(result: dict[str, Any]) -> None:

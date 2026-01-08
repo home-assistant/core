@@ -10,9 +10,7 @@ from homeassistant.core import HomeAssistant
 from tests.common import MockConfigEntry, load_fixture
 
 
-async def setup_platform(
-    hass: HomeAssistant, config_entry: MockConfigEntry
-) -> MockConfigEntry:
+async def setup_platform(hass: HomeAssistant, config_entry: MockConfigEntry) -> None:
     """Set up the NINA platform."""
     with patch(
         "pynina.baseApi.BaseAPI._makeRequest",
