@@ -50,7 +50,9 @@ rules:
   entity-device-class: done
   entity-disabled-by-default: done
   entity-translations: done
-  exception-translations: done
+  exception-translations:
+    status: todo
+    comment: There is one "unknown error" that cannot be translated
   icon-translations: done
   reconfiguration-flow:
     status: exempt
