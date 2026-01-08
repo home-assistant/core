@@ -4,8 +4,6 @@ from dataclasses import dataclass
 import logging
 from typing import Final, cast
 
-from pyatmo.modules.device_types import DeviceCategory as NetatmoDeviceCategory
-
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
     BinarySensorEntity,
@@ -17,7 +15,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
-from .const import CONF_URL_WEATHER, NETATMO_CREATE_WEATHER_BINARY_SENSOR
+from .const import NETATMO_CREATE_WEATHER_BINARY_SENSOR
 from .data_handler import NetatmoDevice
 from .entity import NetatmoWeatherModuleEntity
 
@@ -42,11 +40,6 @@ NETATMO_WEATHER_BINARY_SENSOR_DESCRIPTIONS: Final[
         device_class=BinarySensorDeviceClass.CONNECTIVITY,
     ),
 ]
-
-DEVICE_CATEGORY_BINARY_URLS: Final[dict[NetatmoDeviceCategory, str]] = {
-    NetatmoDeviceCategory.air_care: CONF_URL_WEATHER,
-    NetatmoDeviceCategory.weather: CONF_URL_WEATHER,
-}
 
 
 async def async_setup_entry(
@@ -104,22 +97,6 @@ class NetatmoWeatherBinarySensor(NetatmoWeatherModuleEntity, BinarySensorEntity)
         description: NetatmoBinarySensorEntityDescription,
     ) -> None:
         """Initialize a Netatmo weather binary sensor."""
-
-        if netatmo_device.device.device_category is not None:
-            if (
-                DEVICE_CATEGORY_BINARY_URLS.get(netatmo_device.device.device_category)
-                is not None
-            ):
-                self._attr_configuration_url = DEVICE_CATEGORY_BINARY_URLS[
-                    netatmo_device.device.device_category
-                ]
-            else:
-                _LOGGER.warning(
-                    "Missing configuration URL for weather binary_sensor of %s device as category %s. Please report this issue",
-                    netatmo_device.device.name,
-                    netatmo_device.device.device_category,
-                )
-                return
 
         super().__init__(netatmo_device)
 
