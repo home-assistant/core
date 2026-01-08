@@ -698,6 +698,13 @@ class EnergyPowerSensor(SensorEntity):
                     )
                 # Get source name from registry
                 source_name = source_entry.name or source_entry.original_name
+            # Assign power sensor to same device as source sensor(s)
+            # Note: We use manual entity registry update instead of _attr_device_info
+            # because device assignment depends on runtime information from the entity
+            # registry (which source sensor has a device). This information isn't
+            # available during __init__, and the entity is already registered before
+            # async_added_to_hass runs, making the standard _attr_device_info pattern
+            # incompatible with this use case.
             # If first sensor has no device and we have a second sensor, check it
             if not device_id and len(self._source_sensors) > 1:
                 if source_entry := entity_reg.async_get(self._source_sensors[1]):
@@ -707,6 +714,8 @@ class EnergyPowerSensor(SensorEntity):
                 entity_reg.async_update_entity(
                     power_entry.entity_id, device_id=device_id
                 )
+            else:
+                self._attr_has_entity_name = False
 
             # Set name for inverted mode
             if self._is_inverted:
