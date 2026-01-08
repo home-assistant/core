@@ -25,11 +25,8 @@ _LOGGER = logging.getLogger(__name__)
 class PranaConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a Prana config flow."""
 
-    def __init__(self) -> None:
-        """Initialize the Prana config flow."""
-        self._host: str | None = None
-        self._device_info: PranaDeviceInfo | None = None
-        self.context = {}
+    _host: str
+    _device_info: PranaDeviceInfo
 
     async def async_step_zeroconf(
         self, discovery_info: ZeroconfServiceInfo
@@ -37,18 +34,15 @@ class PranaConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle Zeroconf discovery of a Prana device."""
         _LOGGER.debug("Discovered device via Zeroconf: %s", discovery_info)
 
-        host = discovery_info.host
         friendly_name = discovery_info.properties.get("label", "")
         self.context["title_placeholders"] = {"name": friendly_name}
-        self._host = host
+        self._host = discovery_info.host
 
         try:
             self._device_info = await self._validate_device()
-        except ValueError as err:
-            _LOGGER.debug("Error device is invalid %s: %s", self._host, err)
+        except ValueError:
             return self.async_abort(reason="invalid_device")
-        except PranaApiCommunicationError as err:
-            _LOGGER.debug("Error fetching device info from %s: %s", self._host, err)
+        except PranaApiCommunicationError:
             return self.async_abort(reason="invalid_device_or_unreachable")
 
         self._set_confirm_only()
@@ -87,14 +81,14 @@ class PranaConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle the user confirming a discovered Prana device."""
         if user_input is not None:
             return self.async_create_entry(
-                title=self._device_info.label,  # type: ignore[union-attr]
+                title=self._device_info.label,
                 data={CONF_HOST: self._host},
             )
         return self.async_show_form(
             step_id="confirm",
             description_placeholders={
-                "name": self._device_info.label,  # type: ignore[union-attr]
-                "host": self._host,  # type: ignore[dict-item]
+                "name": self._device_info.label,
+                "host": self._host,
             },
         )
 

@@ -79,14 +79,10 @@ class PranaSwitch(PranaBaseEntity, SwitchEntity):
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
-        await self._entry.runtime_data.api_client.set_switch(
-            self.entity_description.key, True
-        )
+        await self.coordinator.api_client.set_switch(self.entity_description.key, True)
         await self.coordinator.async_refresh()
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the switch off."""
-        await self._entry.runtime_data.api_client.set_switch(
-            self.entity_description.key, False
-        )
+        await self.coordinator.api_client.set_switch(self.entity_description.key, False)
         await self.coordinator.async_refresh()
