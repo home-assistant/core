@@ -40,7 +40,6 @@ from homeassistant.helpers.trigger import (
     CONF_UPPER_LIMIT,
     DATA_PLUGGABLE_ACTIONS,
     PluggableAction,
-    ThresholdType,
     Trigger,
     TriggerActionRunner,
     _async_get_trigger_platform,
