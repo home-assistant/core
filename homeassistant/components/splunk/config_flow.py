@@ -82,9 +82,7 @@ class SplunkConfigFlow(ConfigFlow, domain=DOMAIN):
         errors = await self._async_validate_input(import_config)
 
         if errors:
-            _LOGGER.error(
-                "Failed to import Splunk configuration from YAML: %s", errors
-            )
+            _LOGGER.error("Failed to import Splunk configuration from YAML: %s", errors)
             return self.async_abort(reason="invalid_config")
 
         return self.async_create_entry(
@@ -123,9 +121,7 @@ class SplunkConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
-    async def _async_validate_input(
-        self, user_input: dict[str, Any]
-    ) -> dict[str, str]:
+    async def _async_validate_input(self, user_input: dict[str, Any]) -> dict[str, str]:
         """Validate user input and return errors if any."""
         errors: dict[str, str] = {}
 

@@ -1,33 +1,9 @@
 {
   "config": {
-    "step": {
-      "user": {
-        "title": "Set up Splunk HTTP Event Collector",
-        "description": "Enter your Splunk HTTP Event Collector (HEC) connection details. You can find the token in your Splunk server under Settings > Data Inputs > HTTP Event Collector.",
-        "data": {
-          "token": "HTTP Event Collector token",
-          "host": "Host",
-          "port": "Port",
-          "ssl": "Use SSL",
-          "verify_ssl": "Verify SSL certificate",
-          "name": "Name"
-        },
-        "data_description": {
-          "token": "The HEC token configured in your Splunk instance",
-          "host": "The hostname or IP address of your Splunk server",
-          "port": "The port number for the HTTP Event Collector (usually 8088)",
-          "ssl": "Enable if your Splunk server uses HTTPS",
-          "verify_ssl": "Verify the SSL certificate when connecting (recommended)",
-          "name": "A name to identify this Home Assistant instance in Splunk events"
-        }
-      },
-      "reauth_confirm": {
-        "title": "Reauthenticate Splunk",
-        "description": "The Splunk token is no longer valid. Please enter a new HTTP Event Collector token.",
-        "data": {
-          "token": "HTTP Event Collector token"
-        }
-      }
+    "abort": {
+      "already_configured": "This Splunk server is already configured.",
+      "invalid_config": "The YAML configuration is invalid and cannot be imported. Please check your configuration.yaml file and set up Splunk through the UI instead.",
+      "reauth_successful": "Re-authentication was successful."
     },
     "error": {
       "cannot_connect": "Unable to connect to the Splunk server. Please verify the host, port, and SSL settings are correct.",
@@ -35,19 +11,44 @@
       "invalid_config": "Failed to import YAML configuration. Please check your configuration.yaml file.",
       "unknown": "An unexpected error occurred. Please check the logs for more details."
     },
-    "abort": {
-      "already_configured": "This Splunk server is already configured.",
-      "invalid_config": "The YAML configuration is invalid and cannot be imported. Please check your configuration.yaml file and set up Splunk through the UI instead."
+    "step": {
+      "reauth_confirm": {
+        "data": {
+          "token": "HTTP Event Collector token"
+        },
+        "description": "The Splunk token is no longer valid. Please enter a new HTTP Event Collector token.",
+        "title": "Reauthenticate Splunk"
+      },
+      "user": {
+        "data": {
+          "host": "Host",
+          "name": "Name",
+          "port": "Port",
+          "ssl": "Use SSL",
+          "token": "HTTP Event Collector token",
+          "verify_ssl": "Verify SSL certificate"
+        },
+        "data_description": {
+          "host": "The hostname or IP address of your Splunk server",
+          "name": "A name to identify this Home Assistant instance in Splunk events",
+          "port": "The port number for the HTTP Event Collector (usually 8088)",
+          "ssl": "Enable if your Splunk server uses HTTPS",
+          "token": "The HEC token configured in your Splunk instance",
+          "verify_ssl": "Verify the SSL certificate when connecting (recommended)"
+        },
+        "description": "Enter your Splunk HTTP Event Collector (HEC) connection details. You can find the token in your Splunk server under Settings > Data Inputs > HTTP Event Collector.",
+        "title": "Set up Splunk HTTP Event Collector"
+      }
     }
   },
   "issues": {
     "deprecated_yaml": {
-      "title": "Splunk YAML configuration is being imported to the UI",
-      "description": "Configuring Splunk using YAML is being removed.\n\nYour YAML configuration has been imported into the UI automatically.\n\nRemove the `splunk` configuration from your configuration.yaml file and restart Home Assistant to fix this issue.\n\nFor more information, see the [documentation]({documentation_url})."
+      "description": "Configuring Splunk using YAML is being removed.\n\nYour YAML configuration has been imported into the UI automatically.\n\nRemove the `splunk` configuration from your configuration.yaml file and restart Home Assistant to fix this issue.\n\nFor more information, see the [documentation]({documentation_url}).",
+      "title": "Splunk YAML configuration is being imported to the UI"
     },
     "deprecated_yaml_with_filter": {
-      "title": "Splunk YAML configuration with entity filter is deprecated",
-      "description": "Configuring Splunk using YAML is being removed. However, your configuration includes an entity filter, which is not supported in the UI configuration.\n\nYour current YAML configuration will continue to work, but you should plan to migrate to the UI configuration and implement filtering using automations or other Home Assistant features instead.\n\nIf you remove the entity filter from your YAML configuration, it will be automatically imported to the UI.\n\nFor more information, see the [documentation]({documentation_url})."
+      "description": "Configuring Splunk using YAML is being removed. However, your configuration includes an entity filter, which is not supported in the UI configuration.\n\nYour current YAML configuration will continue to work, but you should plan to migrate to the UI configuration and implement filtering using automations or other Home Assistant features instead.\n\nIf you remove the entity filter from your YAML configuration, it will be automatically imported to the UI.\n\nFor more information, see the [documentation]({documentation_url}).",
+      "title": "Splunk YAML configuration with entity filter is deprecated"
     }
   }
 }

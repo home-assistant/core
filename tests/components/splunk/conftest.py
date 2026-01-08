@@ -11,7 +11,7 @@ from homeassistant.components.splunk.const import (
     DEFAULT_PORT,
     DOMAIN,
 )
-from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT, CONF_SSL, CONF_TOKEN
+from homeassistant.const import CONF_HOST, CONF_PORT, CONF_SSL, CONF_TOKEN
 
 from tests.common import MockConfigEntry
 
@@ -44,11 +44,14 @@ def mock_config_entry() -> MockConfigEntry:
 @pytest.fixture
 def mock_hass_splunk() -> Generator[MagicMock]:
     """Mock hass_splunk."""
-    with patch(
-        "homeassistant.components.splunk.hass_splunk", autospec=True
-    ) as mock_client_class, patch(
-        "homeassistant.components.splunk.config_flow.hass_splunk", autospec=True
-    ) as mock_config_flow_client_class:
+    with (
+        patch(
+            "homeassistant.components.splunk.hass_splunk", autospec=True
+        ) as mock_client_class,
+        patch(
+            "homeassistant.components.splunk.config_flow.hass_splunk", autospec=True
+        ) as mock_config_flow_client_class,
+    ):
         mock_client = MagicMock()
         mock_client.check = AsyncMock(return_value=True)
         mock_client.queue = AsyncMock()

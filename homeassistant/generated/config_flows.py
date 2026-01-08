@@ -652,6 +652,7 @@ FLOWS = {
         "sonos",
         "soundtouch",
         "speedtestdotnet",
+        "splunk",
         "spotify",
         "sql",
         "squeezebox",
