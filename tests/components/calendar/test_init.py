@@ -609,38 +609,46 @@ async def test_list_events_service_same_dates(
         )
 
 
-async def test_calendar_color_attribute(
+async def test_calendar_color_from_entity_options(
     hass: HomeAssistant, test_entities: list[MockCalendarEntity]
 ) -> None:
-    """Test that the color attribute is exposed in state attributes only."""
+    """Test that the color is read from entity registry options."""
     entity = test_entities[0]
 
+    # Set _attr_color directly - this should be used as fallback
     entity._attr_color = RGBColor(10, 20, 30)
     entity.async_write_ha_state()
     await hass.async_block_till_done()
 
-    state = hass.states.get(entity.entity_id)
-    assert state is not None
-    assert state.attributes["color"] == "#0a141e"
+    # Color should be returned from the color property
+    assert entity.color == RGBColor(10, 20, 30)
 
-    entity._attr_color = None
-    entity.async_write_ha_state()
-    await hass.async_block_till_done()
+    # Color should not be exposed in state attributes anymore
     state = hass.states.get(entity.entity_id)
     assert state is not None
     assert "color" not in state.attributes
 
+    entity._attr_color = None
+    entity.async_write_ha_state()
+    await hass.async_block_till_done()
 
-async def test_calendar_color_with_no_events(
+    # Color should be None when no _attr_color and no entity options
+    assert entity.color is None
+
+
+async def test_calendar_with_no_events(
     hass: HomeAssistant, test_entities: list[MockCalendarEntity]
 ) -> None:
-    """Test calendar with color but no upcoming events."""
+    """Test calendar with no upcoming events."""
     entity = test_entities[2]
 
     state = hass.states.get(entity.entity_id)
     assert state is not None
     assert state.state == STATE_OFF
-    assert state.attributes["color"] == "#ff0000"
+    # Color should be accessible via entity property, not state attributes
+    assert entity.color == RGBColor(255, 0, 0)
+    # Color is no longer in state attributes
+    assert "color" not in state.attributes
     assert "message" not in state.attributes
     assert "start_time" not in state.attributes
     assert "end_time" not in state.attributes
