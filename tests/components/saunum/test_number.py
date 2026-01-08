@@ -134,7 +134,10 @@ async def test_set_value_while_session_active(
     await hass.async_block_till_done()
 
     # Attempt to set value should raise ServiceValidationError
-    with pytest.raises(ServiceValidationError):
+    with pytest.raises(
+        ServiceValidationError,
+        match="Cannot change sauna duration while session is active",
+    ):
         await hass.services.async_call(
             NUMBER_DOMAIN,
             SERVICE_SET_VALUE,

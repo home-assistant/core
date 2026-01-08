@@ -27,7 +27,7 @@
     'name': None,
     'options': dict({
     }),
-    'original_device_class': None,
+    'original_device_class': <NumberDeviceClass.DURATION: 'duration'>,
     'original_icon': None,
     'original_name': 'Fan duration',
     'platform': 'saunum',
@@ -42,6 +42,7 @@
 # name: test_entities[number.saunum_leil_fan_duration-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'device_class': 'duration',
       'friendly_name': 'Saunum Leil Fan duration',
       'max': 30,
       'min': 1,
@@ -85,7 +86,7 @@
     'name': None,
     'options': dict({
     }),
-    'original_device_class': None,
+    'original_device_class': <NumberDeviceClass.DURATION: 'duration'>,
     'original_icon': None,
     'original_name': 'Sauna duration',
     'platform': 'saunum',
@@ -100,6 +101,7 @@
 # name: test_entities[number.saunum_leil_sauna_duration-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'device_class': 'duration',
       'friendly_name': 'Saunum Leil Sauna duration',
       'max': 720,
       'min': 1,

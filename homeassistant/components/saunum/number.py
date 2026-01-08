@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable
+from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
@@ -11,11 +11,16 @@ from pysaunum import (
     MAX_FAN_DURATION,
     MIN_DURATION,
     MIN_FAN_DURATION,
+    SaunumClient,
     SaunumData,
     SaunumException,
 )
 
-from homeassistant.components.number import NumberEntity, NumberEntityDescription
+from homeassistant.components.number import (
+    NumberDeviceClass,
+    NumberEntity,
+    NumberEntityDescription,
+)
 from homeassistant.const import UnitOfTime
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
@@ -40,13 +45,14 @@ class LeilSaunaNumberEntityDescription(NumberEntityDescription):
     """Describes Saunum Leil Sauna number entity."""
 
     value_fn: Callable[[SaunumData], int | float | None]
-    set_value_fn: Callable
+    set_value_fn: Callable[[SaunumClient, float], Awaitable[None]]
 
 
 NUMBERS: tuple[LeilSaunaNumberEntityDescription, ...] = (
     LeilSaunaNumberEntityDescription(
         key="sauna_duration",
         translation_key="sauna_duration",
+        device_class=NumberDeviceClass.DURATION,
         native_unit_of_measurement=UnitOfTime.MINUTES,
         native_min_value=1,
         native_max_value=MAX_DURATION,
@@ -61,6 +67,7 @@ NUMBERS: tuple[LeilSaunaNumberEntityDescription, ...] = (
     LeilSaunaNumberEntityDescription(
         key="fan_duration",
         translation_key="fan_duration",
+        device_class=NumberDeviceClass.DURATION,
         native_unit_of_measurement=UnitOfTime.MINUTES,
         native_min_value=1,
         native_max_value=MAX_FAN_DURATION,
@@ -118,8 +125,7 @@ class LeilSaunaNumber(LeilSaunaEntity, NumberEntity):
         ):
             raise ServiceValidationError(
                 translation_domain=DOMAIN,
-                translation_key="session_active_cannot_change",
-                translation_placeholders={"setting": self.entity_description.key},
+                translation_key=f"session_active_cannot_change_{self.entity_description.key}",
             )
 
         try:
