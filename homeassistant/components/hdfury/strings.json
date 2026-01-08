@@ -19,6 +19,11 @@
     }
   },
   "entity": {
+    "button": {
+      "issue_hotplug": {
+        "name": "Issue hotplug"
+      }
+    },
     "select": {
       "opmode": {
         "name": "Operation mode",
