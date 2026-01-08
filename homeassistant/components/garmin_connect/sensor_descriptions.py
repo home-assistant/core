@@ -1337,7 +1337,7 @@ MENSTRUAL_CYCLE_SENSORS: tuple[GarminConnectSensorEntityDescription, ...] = (
         icon="mdi:calendar-arrow-right",
         device_class=SensorDeviceClass.DATE,
         entity_registry_enabled_default=False,
-        value_fn=lambda data: _menstrual_next_predicted_cycle_start(data),
+        value_fn=_menstrual_next_predicted_cycle_start,
     ),
     GarminConnectSensorEntityDescription(
         key="menstrualFertileWindowStart",
@@ -1345,7 +1345,7 @@ MENSTRUAL_CYCLE_SENSORS: tuple[GarminConnectSensorEntityDescription, ...] = (
         icon="mdi:leaf",
         device_class=SensorDeviceClass.DATE,
         entity_registry_enabled_default=False,
-        value_fn=lambda data: _menstrual_fertile_window_start(data),
+        value_fn=_menstrual_fertile_window_start,
     ),
     GarminConnectSensorEntityDescription(
         key="menstrualFertileWindowEnd",
@@ -1353,7 +1353,7 @@ MENSTRUAL_CYCLE_SENSORS: tuple[GarminConnectSensorEntityDescription, ...] = (
         icon="mdi:leaf-circle",
         device_class=SensorDeviceClass.DATE,
         entity_registry_enabled_default=False,
-        value_fn=lambda data: _menstrual_fertile_window_end(data),
+        value_fn=_menstrual_fertile_window_end,
     ),
     GarminConnectSensorEntityDescription(
         key="menstrualPeriodLength",

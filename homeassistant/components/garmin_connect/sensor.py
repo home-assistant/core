@@ -6,11 +6,10 @@ import datetime
 import logging
 from typing import Any
 
-from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
+from homeassistant.components.sensor import RestoreSensor, SensorDeviceClass, SensorEntity
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import GarminConnectConfigEntry
@@ -84,7 +83,7 @@ async def async_setup_entry(
 
 
 class GarminConnectSensor(
-    CoordinatorEntity[BaseGarminCoordinator], SensorEntity, RestoreEntity
+    CoordinatorEntity[BaseGarminCoordinator], RestoreSensor
 ):
     """Representation of a Garmin Connect sensor."""
 
