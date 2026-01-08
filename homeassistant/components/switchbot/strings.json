@@ -106,6 +106,9 @@
       },
       "previous_image": {
         "name": "Previous image"
+      },
+      "sync_datetime_now": {
+        "name": "Sync Date and Time Now"
       }
     },
     "climate": {
