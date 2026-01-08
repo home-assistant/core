@@ -1229,14 +1229,14 @@ def _menstrual_next_predicted_cycle_start(data: dict[str, Any]) -> str | None:
     for cycle in _menstrual_calendar_summaries(data):
         if cycle.get("predictedCycle") is True:
             start = cycle.get("startDate")
-            if not start or not isinstance(start, str):
+            if not isinstance(start, str):
                 continue
             try:
                 d = datetime.strptime(start, "%Y-%m-%d").date()
             except ValueError:
                 continue
             if d >= today:
-                return start
+                return str(start)
     return None
 
 

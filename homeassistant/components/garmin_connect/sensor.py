@@ -107,7 +107,7 @@ class GarminConnectSensor(
             manufacturer="Garmin",
             entry_type=DeviceEntryType.SERVICE,
         )
-        self._last_known_value: str | int | float | None = None
+        self._last_known_value: str | int | float | datetime.datetime | None = None
 
     async def async_added_to_hass(self) -> None:
         """Restore last known value when added to hass."""
@@ -164,8 +164,13 @@ class GarminConnectSensor(
                 return int(rounded)
             self._last_known_value = rounded
             return rounded
-        self._last_known_value = value
-        return value
+        # For strings and datetime objects, return as-is
+        if isinstance(value, (str, datetime.datetime)):
+            self._last_known_value = value
+            return value
+        # Fallback: return as string
+        self._last_known_value = str(value)
+        return str(value)
 
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
@@ -234,9 +239,10 @@ class GarminConnectGearSensor(CoordinatorEntity[GearCoordinator], SensorEntity):
         for gear_stat in gear_stats:
             if (gear_stat.get("uuid") or gear_stat.get("gearUuid")) == self._gear_uuid:
                 value = gear_stat.get("totalDistance")
-                if isinstance(value, float):
-                    return round(value, 1)
-                return value
+                if isinstance(value, (int, float)):
+                    if isinstance(value, float):
+                        return round(value, 1)
+                    return value
         return None
 
     @property
