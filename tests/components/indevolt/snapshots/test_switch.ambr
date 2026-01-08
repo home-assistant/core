@@ -1,0 +1,49 @@
+# serializer version: 1
+# name: test_switch[2][switch.indevolt_cms_sf2000_grid_charging-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': None,
+    'entity_id': 'switch.indevolt_cms_sf2000_grid_charging',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Grid charging',
+    'platform': 'indevolt',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'grid_charging',
+    'unique_id': 'indevolt_test_gen2_grid_charging',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_switch[2][switch.indevolt_cms_sf2000_grid_charging-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'INDEVOLT CMS-SF2000 Grid charging',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.indevolt_cms_sf2000_grid_charging',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
