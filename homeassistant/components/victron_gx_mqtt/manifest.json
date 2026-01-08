@@ -7,7 +7,7 @@
   "integration_type": "hub",
   "iot_class": "local_push",
   "quality_scale": "silver",
-  "requirements": ["victron-mqtt==2025.12.16"],
+  "requirements": ["victron-mqtt==2026.1.2"],
   "ssdp": [
     {
       "X_MqttOnLan": "1",

@@ -42,7 +42,7 @@
           "port": "[%key:common::config_flow::data::port%]",
           "root_topic_prefix": "Optional root topic prefix",
           "ssl": "[%key:common::config_flow::data::ssl%]",
-          "update_frequency": "Update frequency (seconds)",
+          "update_frequency": "Update frequency",
           "username": "[%key:common::config_flow::data::username%]"
         },
         "data_description": {
@@ -67,7 +67,7 @@
         "name": "Digital input settings invert translation"
       },
       "evcharger_charge": {
-        "name": "EV charger charge"
+        "name": "EV charging"
       },
       "evcharger_connected": {
         "name": "EV charger connected"
@@ -141,6 +141,9 @@
       "switch_output_state": {
         "name": "Switch {output} state"
       },
+      "switchable_output_output_state": {
+        "name": "Switchable output {output} state"
+      },
       "system_dynamicess_active": {
         "name": "Dynamic ESS active"
       },
@@ -149,6 +152,9 @@
       },
       "system_dynamicess_available": {
         "name": "Dynamic ESS available"
+      },
+      "system_ess_battery_use": {
+        "name": "ESS only critical loads from battery"
       },
       "system_ess_schedule_charge_slot_enabled": {
         "name": "ESS BatteryLife schedule charge {slot} enabled"
@@ -160,7 +166,7 @@
         "name": "PV DC overvoltage feed-in"
       },
       "vebus_device_device_number_power_assist_enabled": {
-        "name": "VE.Bus device {device_number} power assist enabled"
+        "name": "VE.Bus device {device_number} PowerAssist enabled"
       },
       "vebus_inverter_connected": {
         "name": "Inverter connected"
@@ -237,6 +243,9 @@
       },
       "generator_gen_id_warm_up_timer": {
         "name": "Generator warm-up timer"
+      },
+      "multi_ess_ac_power_setpoint": {
+        "name": "ESS AC power setpoint"
       },
       "multi_ess_min_soc_limit": {
         "name": "ESS minimum SOC limit"
@@ -536,6 +545,9 @@
       "evcharger_position": {
         "name": "EV charger position"
       },
+      "evcharger_power": {
+        "name": "EV charger power"
+      },
       "evcharger_power_phase": {
         "name": "EV charger power {phase}"
       },
@@ -667,6 +679,12 @@
       },
       "grid_power": {
         "name": "Grid power"
+      },
+      "grid_power_factor": {
+        "name": "Grid power factor"
+      },
+      "grid_power_factor_phase": {
+        "name": "Grid power factor on {phase}"
       },
       "grid_power_phase": {
         "name": "Grid power on {phase}"
@@ -887,6 +905,12 @@
       "solarcharger_time_in_float_today": {
         "name": "Solar charger time in float today"
       },
+      "solarcharger_tracker_tracker_max_power_today": {
+        "name": "Tracker {tracker} max power today"
+      },
+      "solarcharger_tracker_tracker_max_voltage_today": {
+        "name": "Tracker {tracker} max voltage today"
+      },
       "solarcharger_tracker_tracker_name": {
         "name": "PV tracker {tracker} name"
       },
@@ -898,6 +922,9 @@
       },
       "solarcharger_tracker_tracker_voltage": {
         "name": "PV tracker {tracker} voltage"
+      },
+      "solarcharger_tracker_tracker_yield_today": {
+        "name": "Tracker {tracker} yield today"
       },
       "solarcharger_voltage": {
         "name": "PV bus voltage"
@@ -919,6 +946,9 @@
       },
       "switch_output_dimming": {
         "name": "Switch {output} dimming"
+      },
+      "switchable_output_output_custom_name": {
+        "name": "Switchable output {output} custom name"
       },
       "system_ac_active_input_source": {
         "name": "AC active input source"
@@ -1262,7 +1292,7 @@
         "name": "Digital input settings invert translation"
       },
       "evcharger_charge": {
-        "name": "EV charger charge"
+        "name": "EV charging"
       },
       "generator_autorun": {
         "name": "Generator auto-start enabled"
@@ -1300,6 +1330,12 @@
       "switch_output_state": {
         "name": "Switch {output} state"
       },
+      "switchable_output_output_state": {
+        "name": "Switchable output {output} state"
+      },
+      "system_ess_battery_use": {
+        "name": "ESS only critical loads from battery"
+      },
       "system_ess_schedule_charge_slot_enabled": {
         "name": "ESS BatteryLife schedule charge {slot} enabled"
       },
@@ -1310,7 +1346,7 @@
         "name": "PV DC overvoltage feed-in"
       },
       "vebus_device_device_number_power_assist_enabled": {
-        "name": "VE.Bus device {device_number} power assist enabled"
+        "name": "VE.Bus device {device_number} PowerAssist enabled"
       },
       "vebus_inverter_ignoreacin1_onoff_control": {
         "name": "Control ignore AC-in-1"
