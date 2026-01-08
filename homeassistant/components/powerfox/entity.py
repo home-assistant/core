@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Any, Generic, TypeVar
+from typing import Any
 
 from powerfox import Device
 
@@ -12,10 +12,10 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from .const import DOMAIN
 from .coordinator import PowerfoxBaseCoordinator
 
-CoordinatorT = TypeVar("CoordinatorT", bound=PowerfoxBaseCoordinator[Any])
 
-
-class PowerfoxEntity(CoordinatorEntity[CoordinatorT], Generic[CoordinatorT]):
+class PowerfoxEntity[CoordinatorT: PowerfoxBaseCoordinator[Any]](
+    CoordinatorEntity[CoordinatorT]
+):
     """Base entity for Powerfox."""
 
     _attr_has_entity_name = True
