@@ -102,6 +102,93 @@ SensorEntityDescription(
 )
 ```
 
+## Conditional Entity Creation
+
+### supported_fn Pattern
+
+Filter entities based on device capabilities at setup time:
+```python
+from collections.abc import Callable
+from dataclasses import dataclass
+
+@dataclass(frozen=True, kw_only=True)
+class MyEntityDescription(SensorEntityDescription):
+    """Entity description with conditional support."""
+
+    supported_fn: Callable[[MyCoordinator], bool] = lambda _: True
+
+
+ENTITIES = (
+    MyEntityDescription(
+        key="steam_level",
+        supported_fn=lambda coord: coord.device.model in ("Pro", "Premium"),
+    ),
+)
+
+# In async_setup_entry:
+async_add_entities(
+    MyEntity(coordinator, desc)
+    for desc in ENTITIES
+    if desc.supported_fn(coordinator)
+)
+```
+
+### available_fn Pattern
+
+Dynamic availability based on runtime state:
+```python
+@dataclass(frozen=True, kw_only=True)
+class MyEntityDescription(SensorEntityDescription):
+    """Entity description with dynamic availability."""
+
+    available_fn: Callable[[MyCoordinator], bool] = lambda _: True
+
+
+ENTITIES = (
+    MyEntityDescription(
+        key="brewing_time",
+        # Only available when actively brewing
+        available_fn=lambda coord: coord.device.state == "brewing",
+    ),
+)
+
+# In entity class:
+@property
+def available(self) -> bool:
+    """Return if entity is available."""
+    return (
+        super().available
+        and self.entity_description.available_fn(self.coordinator)
+    )
+```
+
+## Typed Value Functions
+
+Define `value_fn` with proper type hints matching the data source:
+
+```python
+from collections.abc import Callable
+from datetime import datetime
+from homeassistant.helpers.typing import StateType
+
+# Pattern 1: Accessing coordinator.data dict
+value_fn: Callable[[dict[str, Any]], StateType | None]
+
+# Pattern 2: Accessing typed library objects
+value_fn: Callable[[MyLibraryDataClass], StateType | datetime | None]
+
+# Pattern 3: Accessing widget/enum-keyed dicts
+value_fn: Callable[[dict[WidgetType, BaseWidget]], StateType | None]
+```
+
+Usage in entity:
+```python
+@property
+def native_value(self) -> StateType | datetime | None:
+    """Return the sensor value."""
+    return self.entity_description.value_fn(self.coordinator.data)
+```
+
 ## Extra State Attributes
 
 - All attribute keys must always be present
@@ -111,9 +198,32 @@ SensorEntityDescription(
 ## Entity Categories
 
 Set `_attr_entity_category` for proper categorization:
+
+| Category | Use Case | Examples |
+|----------|----------|----------|
+| `None` (default) | Primary entity state | Power switch, temperature |
+| `EntityCategory.CONFIG` | User-adjustable settings | Target temperature, mode |
+| `EntityCategory.DIAGNOSTIC` | Device health/status info | Signal strength, uptime, counters |
+
+**Guidelines**:
+- Sensors for internal stats, counters, timers → `DIAGNOSTIC`
+- Sensors for measurements users actively monitor → `None`
+- Settings/configuration entities → `CONFIG`
+
 ```python
+from homeassistant.const import EntityCategory
+
 class MySensor(SensorEntity):
     _attr_entity_category = EntityCategory.DIAGNOSTIC
+```
+
+Or in entity descriptions:
+```python
+MySensorEntityDescription(
+    key="total_operations",
+    entity_category=EntityCategory.DIAGNOSTIC,
+    ...
+)
 ```
 
 ## Device Classes

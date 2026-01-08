@@ -2,6 +2,17 @@
 
 Use this skill when adding new entity types to a Home Assistant integration.
 
+## Pre-Implementation Checklist
+
+Before creating entities, analyze the existing integration and verify:
+
+- [ ] **EntityCategory**: Is this `DIAGNOSTIC` (stats/health/counters) or primary (user-facing measurement)?
+- [ ] **supported_fn**: Does this entity exist on all device models, or only specific ones?
+- [ ] **available_fn**: When should this entity be unavailable beyond coordinator failure?
+- [ ] **value_fn signature**: What data type does the lambda receive? (dict, dataclass, library object)
+- [ ] **Multiple coordinators**: Does this data come from a different update source (config vs statistics)?
+- [ ] **Existing patterns**: Check other entity files in the integration for established patterns
+
 ## Workflow
 
 ### Step 1: Choose entity platform
@@ -209,4 +220,5 @@ MySensorEntityDescription(
 
 ## Reference
 
-For detailed patterns, see `.claude/docs/entity-patterns.md`.
+- Basic patterns: `.claude/docs/entity-patterns.md`
+- Advanced patterns (casting, multi-coordinator): `.claude/docs/advanced-entity-patterns.md`

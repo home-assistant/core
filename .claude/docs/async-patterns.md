@@ -72,6 +72,62 @@ For cookies:
 - aiohttp: Use `async_create_clientsession`
 - httpx: Use `create_async_httpx_client`
 
+## Multiple Coordinators Pattern
+
+When an integration needs different update intervals or data sources:
+
+```python
+from dataclasses import dataclass
+
+@dataclass
+class MyRuntimeData:
+    """Runtime data for the integration."""
+
+    config_coordinator: MyConfigCoordinator      # Fast: websocket/push
+    settings_coordinator: MySettingsCoordinator  # Slow: hourly
+    statistics_coordinator: MyStatsCoordinator   # Medium: 15 min
+
+type MyConfigEntry = ConfigEntry[MyRuntimeData]
+```
+
+Setup all coordinators:
+```python
+async def async_setup_entry(hass: HomeAssistant, entry: MyConfigEntry) -> bool:
+    coordinators = MyRuntimeData(
+        MyConfigCoordinator(hass, entry, client),
+        MySettingsCoordinator(hass, entry, client),
+        MyStatsCoordinator(hass, entry, client),
+    )
+
+    await asyncio.gather(
+        coordinators.config_coordinator.async_config_entry_first_refresh(),
+        coordinators.settings_coordinator.async_config_entry_first_refresh(),
+        coordinators.statistics_coordinator.async_config_entry_first_refresh(),
+    )
+
+    entry.runtime_data = coordinators
+```
+
+Entities choose their coordinator:
+```python
+async def async_setup_entry(
+    hass: HomeAssistant,
+    entry: MyConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
+) -> None:
+    # Config entities use config coordinator
+    entities = [
+        MyConfigSensor(entry.runtime_data.config_coordinator, desc)
+        for desc in CONFIG_SENSORS
+    ]
+    # Statistic entities use statistics coordinator
+    entities.extend(
+        MyStatsSensor(entry.runtime_data.statistics_coordinator, desc)
+        for desc in STATS_SENSORS
+    )
+    async_add_entities(entities)
+```
+
 ## Async Dependencies (Platinum)
 
 All dependencies must use asyncio for efficient task handling without thread context switching.

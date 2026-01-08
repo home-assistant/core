@@ -139,6 +139,7 @@ Detailed patterns available in `.claude/docs/`:
 |----------|---------|
 | `async-patterns.md` | Async programming, executors, coordinators |
 | `entity-patterns.md` | Entity development, availability, lifecycle |
+| `advanced-entity-patterns.md` | Custom descriptions, type casting, multi-coordinator |
 | `config-flow-patterns.md` | Config flow implementation |
 | `discovery-patterns.md` | Zeroconf, SSDP, Bluetooth, DHCP |
 | `testing-patterns.md` | Fixtures, mocks, snapshots |

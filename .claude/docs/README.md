@@ -9,6 +9,7 @@ This directory contains reference documentation for developing Home Assistant in
 |----------|-------------|-------------|
 | [async-patterns.md](async-patterns.md) | Async programming, executors, coordinators | Working with async code, data fetching |
 | [entity-patterns.md](entity-patterns.md) | Entity development, unique IDs, availability | Creating or modifying entities |
+| [advanced-entity-patterns.md](advanced-entity-patterns.md) | Type casting, multi-coordinator, custom descriptions | Complex integrations with typed libraries |
 | [config-flow-patterns.md](config-flow-patterns.md) | Config flow implementation examples | Adding or fixing config flows |
 
 ### Discovery & Connectivity
