@@ -12,21 +12,9 @@ from typing import TYPE_CHECKING, Any
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.config_entries import ConfigFlowResult, OptionsFlow
-from homeassistant.core import callback
-from homeassistant.helpers import device_registry as dr
+from homeassistant.config_entries import ConfigFlowResult
 
-from .const import (
-    CONF_FRIENDLY_NAME_LANGUAGE,
-    CONF_HOST,
-    CONF_LABEL,
-    CONF_PORT,
-    CONF_SHOW_LABEL_IN_NAME,
-    CONF_UNIT_ID,
-    DEFAULT_FRIENDLY_NAME_LANGUAGE,
-    DEFAULT_PORT,
-    DOMAIN,
-)
+from .const import CONF_HOST, CONF_PORT, DEFAULT_PORT, DOMAIN
 
 if TYPE_CHECKING:
     from collections.abc import Iterable
@@ -82,12 +70,6 @@ class QubeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
     _reconfig_entry: config_entries.ConfigEntry | None = None
-
-    @staticmethod
-    @callback
-    def async_get_options_flow(config_entry: config_entries.ConfigEntry) -> OptionsFlow:
-        """Get the options flow handler."""
-        return OptionsFlowHandler(config_entry)
 
     async def _async_has_conflicting_host(
         self, host: str, skip_entry_id: str | None = None
@@ -209,125 +191,3 @@ class QubeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         # Reload
         await self.hass.config_entries.async_reload(self._reconfig_entry.entry_id)
         return self.async_abort(reason="reconfigured")
-
-
-class OptionsFlowHandler(OptionsFlow):
-    """Options flow for Qube Heat Pump."""
-
-    def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
-        """Initialize options flow."""
-        self._entry = config_entry
-
-    async def async_step_init(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Manage the options."""
-        errors: dict[str, str] = {}
-        current_host = str(self._entry.data.get(CONF_HOST, "qube.local")).strip()
-        current_port = int(self._entry.data.get(CONF_PORT, DEFAULT_PORT))
-        # Capture existing entries to support duplicate IP detection
-        entries = [
-            e
-            for e in self.hass.config_entries.async_entries(DOMAIN)
-            if e.entry_id != self._entry.entry_id
-        ]
-
-        current_unit = int(
-            self._entry.options.get(CONF_UNIT_ID, self._entry.data.get(CONF_UNIT_ID, 1))
-        )
-        current_label_option = bool(
-            self._entry.options.get(CONF_SHOW_LABEL_IN_NAME, False)
-        )
-
-        hub_entry = self.hass.data.get(DOMAIN, {}).get(self._entry.entry_id, {})
-        resolved_ip = None
-        hub = hub_entry.get("hub")
-        if hub is not None:
-            resolved_ip = getattr(hub, "resolved_ip", None) or getattr(
-                hub, "host", None
-            )
-        if not resolved_ip:
-            resolved_ip = await _async_resolve_host(current_host)
-
-        if user_input is not None:
-            user_input = dict(user_input)
-            new_host = str(user_input.get(CONF_HOST, current_host)).strip()
-            show_label = bool(user_input.get(CONF_SHOW_LABEL_IN_NAME, False))
-
-            if not new_host:
-                errors[CONF_HOST] = "invalid_host"
-            else:
-                conflict = await _async_find_conflicting_entry(entries, new_host)
-                if conflict:
-                    errors[CONF_HOST] = "duplicate_ip"
-
-            host_changed = new_host != current_host
-            if host_changed and CONF_HOST not in errors:
-                try:
-                    _, writer = await asyncio.wait_for(
-                        asyncio.open_connection(new_host, current_port),
-                        timeout=5,
-                    )
-                    writer.close()
-                    with contextlib.suppress(Exception):
-                        await writer.wait_closed()
-                except (OSError, TimeoutError):
-                    errors[CONF_HOST] = "cannot_connect"
-
-            if not errors:
-                opts = dict(self._entry.options)
-                opts.pop(CONF_UNIT_ID, None)
-                opts[CONF_SHOW_LABEL_IN_NAME] = show_label
-                opts[CONF_LABEL] = user_input.get(CONF_LABEL, "")
-                opts[CONF_FRIENDLY_NAME_LANGUAGE] = user_input.get(
-                    CONF_FRIENDLY_NAME_LANGUAGE, DEFAULT_FRIENDLY_NAME_LANGUAGE
-                )
-
-                update_kwargs: dict[str, Any] = {"options": opts}
-                if host_changed:
-                    new_data = dict(self._entry.data)
-                    new_data[CONF_HOST] = new_host
-                    new_data[CONF_PORT] = current_port
-                    update_kwargs["data"] = new_data
-                    update_kwargs["title"] = f"Qube Heat Pump ({new_host})"
-                    update_kwargs["unique_id"] = f"{DOMAIN}-{new_host}-{current_port}"
-                self.hass.config_entries.async_update_entry(
-                    self._entry, **update_kwargs
-                )
-                if host_changed:
-                    device_registry = dr.async_get(self.hass)
-                    identifiers = {(DOMAIN, f"{current_host}:{current_unit}")}
-                    old_device = device_registry.async_get_device(identifiers)
-                    if old_device:
-                        device_registry.async_remove_device(old_device.id)
-                    await self.hass.config_entries.async_reload(self._entry.entry_id)
-                return self.async_create_entry(title="", data=opts)
-
-        current_label = self._entry.options.get(
-            CONF_LABEL, self._entry.data.get(CONF_LABEL, "")
-        )
-        current_language = self._entry.options.get(
-            CONF_FRIENDLY_NAME_LANGUAGE, DEFAULT_FRIENDLY_NAME_LANGUAGE
-        )
-
-        schema = vol.Schema(
-            {
-                vol.Required(CONF_HOST, default=current_host): str,
-                vol.Optional(CONF_LABEL, default=current_label): str,
-                vol.Optional(
-                    CONF_SHOW_LABEL_IN_NAME, default=current_label_option
-                ): bool,
-                vol.Optional(
-                    CONF_FRIENDLY_NAME_LANGUAGE, default=current_language
-                ): vol.In(["en", "nl"]),
-            }
-        )
-
-        return self.async_show_form(
-            step_id="init",
-            data_schema=schema,
-            errors=errors,
-            description_placeholders={
-                "resolved_ip": resolved_ip or "unknown",
-            },
-        )

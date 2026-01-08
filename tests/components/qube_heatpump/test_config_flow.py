@@ -8,9 +8,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 
-async def test_form(
-    hass: HomeAssistant, mock_setup_entry: MagicMock, mock_hub: MagicMock
-) -> None:
+async def test_form(hass: HomeAssistant, mock_setup_entry: MagicMock) -> None:
     """Test we get the form."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -39,9 +37,8 @@ async def test_form(
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_form_cannot_connect(hass: HomeAssistant, mock_hub: MagicMock) -> None:
+async def test_form_cannot_connect(hass: HomeAssistant) -> None:
     """Test we handle cannot connect error."""
-    mock_hub.async_connect.side_effect = OSError
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
