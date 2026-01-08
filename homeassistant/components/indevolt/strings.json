@@ -71,6 +71,81 @@
       "battery_daily_discharging_energy": {
         "name": "Battery daily discharging energy"
       },
+      "battery_pack_1_current": {
+        "name": "Battery pack 1 current"
+      },
+      "battery_pack_1_serial_number": {
+        "name": "Battery pack 1 SN"
+      },
+      "battery_pack_1_soc": {
+        "name": "Battery pack 1 SOC"
+      },
+      "battery_pack_1_temperature": {
+        "name": "Battery pack 1 temperature"
+      },
+      "battery_pack_1_voltage": {
+        "name": "Battery pack 1 voltage"
+      },
+      "battery_pack_2_current": {
+        "name": "Battery pack 2 current"
+      },
+      "battery_pack_2_serial_number": {
+        "name": "Battery pack 2 SN"
+      },
+      "battery_pack_2_soc": {
+        "name": "Battery pack 2 SOC"
+      },
+      "battery_pack_2_temperature": {
+        "name": "Battery pack 2 temperature"
+      },
+      "battery_pack_2_voltage": {
+        "name": "Battery pack 2 voltage"
+      },
+      "battery_pack_3_current": {
+        "name": "Battery pack 3 current"
+      },
+      "battery_pack_3_serial_number": {
+        "name": "Battery pack 3 SN"
+      },
+      "battery_pack_3_soc": {
+        "name": "Battery pack 3 SOC"
+      },
+      "battery_pack_3_temperature": {
+        "name": "Battery pack 3 temperature"
+      },
+      "battery_pack_3_voltage": {
+        "name": "Battery pack 3 voltage"
+      },
+      "battery_pack_4_current": {
+        "name": "Battery pack 4 current"
+      },
+      "battery_pack_4_serial_number": {
+        "name": "Battery pack 4 SN"
+      },
+      "battery_pack_4_soc": {
+        "name": "Battery pack 4 SOC"
+      },
+      "battery_pack_4_temperature": {
+        "name": "Battery pack 4 temperature"
+      },
+      "battery_pack_4_voltage": {
+        "name": "Battery pack 4 voltage"
+      },
+      "battery_pack_5_current": {
+        "name": "Battery pack 5 current"
+      },
+      "battery_pack_5_serial_number": {
+        "name": "Battery pack 5 SN"
+      },
+      "battery_pack_5_soc": {
+        "name": "Battery pack 5 SOC"
+      },
+      "battery_pack_5_temperature": {
+        "name": "Battery pack 5 temperature"
+      },
+      "battery_pack_5_voltage": {
+        "name": "Battery pack 5 voltage"
+      },
       "battery_power": {
         "name": "Battery power"
       },
@@ -136,6 +211,21 @@
       },
       "grid_voltage": {
         "name": "Grid voltage"
+      },
+      "master_current": {
+        "name": "Master current"
+      },
+      "master_serial_number": {
+        "name": "Master serial number"
+      },
+      "master_soc": {
+        "name": "Master SOC"
+      },
+      "master_temperature": {
+        "name": "Master temperature"
+      },
+      "master_voltage": {
+        "name": "Master voltage"
       },
       "meter_connection_status": {
         "name": "Meter connection status",
