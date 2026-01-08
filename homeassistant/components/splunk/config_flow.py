@@ -73,9 +73,9 @@ class SplunkConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Handle import from YAML configuration."""
         # Set unique ID to prevent duplicate imports
-        await self.async_set_unique_id(
-            f"{import_config.get(CONF_HOST, DEFAULT_HOST)}:{import_config.get(CONF_PORT, DEFAULT_PORT)}"
-        )
+        host = import_config.get(CONF_HOST, DEFAULT_HOST)
+        port = import_config.get(CONF_PORT, DEFAULT_PORT)
+        await self.async_set_unique_id(f"{host}:{port}")
         self._abort_if_unique_id_configured()
 
         # Validate the imported configuration
@@ -140,12 +140,18 @@ class SplunkConfigFlow(ConfigFlow, domain=DOMAIN):
 
         try:
             # First check connectivity
-            if not await event_collector.check(connectivity=True, token=False, busy=False):
+            connectivity_ok = await event_collector.check(
+                connectivity=True, token=False, busy=False
+            )
+            if not connectivity_ok:
                 errors["base"] = "cannot_connect"
                 return errors
 
             # Then check token validity
-            if not await event_collector.check(connectivity=False, token=True, busy=False):
+            token_ok = await event_collector.check(
+                connectivity=False, token=True, busy=False
+            )
+            if not token_ok:
                 errors["base"] = "invalid_auth"
                 return errors
 

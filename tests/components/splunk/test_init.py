@@ -162,7 +162,9 @@ async def test_yaml_import_without_filter(hass: HomeAssistant) -> None:
     assert entries[0].source == SOURCE_IMPORT
 
 
-async def test_yaml_with_filter(hass: HomeAssistant, mock_hass_splunk: AsyncMock) -> None:
+async def test_yaml_with_filter(
+    hass: HomeAssistant, mock_hass_splunk: AsyncMock
+) -> None:
     """Test YAML configuration with filter continues using YAML setup."""
     assert await async_setup_component(
         hass,
