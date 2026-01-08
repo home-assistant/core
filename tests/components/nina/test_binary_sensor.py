@@ -14,15 +14,6 @@ from . import setup_platform
 
 from tests.common import MockConfigEntry, snapshot_platform
 
-ENTRY_DATA: dict[str, Any] = {
-    "slots": 5,
-    "regions": {"083350000000": "Aach, Stadt"},
-    "filters": {
-        "headline_filter": ".*corona.*",
-        "area_filter": ".*",
-    },
-}
-
 ENTRY_DATA_NO_CORONA: dict[str, Any] = {
     "slots": 5,
     "regions": {"083350000000": "Aach, Stadt"},
@@ -43,18 +34,15 @@ ENTRY_DATA_NO_AREA: dict[str, Any] = {
 
 
 async def test_sensors(
-    hass: HomeAssistant, entity_registry: er.EntityRegistry, snapshot: SnapshotAssertion
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_config_entry: MockConfigEntry,
+    snapshot: SnapshotAssertion,
 ) -> None:
     """Test the creation and values of the NINA sensors."""
 
-    conf_entry: MockConfigEntry = MockConfigEntry(
-        domain=DOMAIN, title="NINA", data=ENTRY_DATA, version=1, minor_version=3
-    )
-    conf_entry.add_to_hass(hass)
-
-    await setup_platform(hass, conf_entry)
-
-    await snapshot_platform(hass, entity_registry, snapshot, conf_entry.entry_id)
+    await setup_platform(hass, mock_config_entry)
+    await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
 
 async def test_sensors_without_corona_filter(

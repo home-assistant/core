@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_sensors[binary_sensor.nina_warning_aach_stadt_1-entry]
+# name: test_sensors[binary_sensor.nina_warning_aach_1-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -12,7 +12,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': None,
-    'entity_id': 'binary_sensor.nina_warning_aach_stadt_1',
+    'entity_id': 'binary_sensor.nina_warning_aach_1',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -24,24 +24,24 @@
     }),
     'original_device_class': <BinarySensorDeviceClass.SAFETY: 'safety'>,
     'original_icon': None,
-    'original_name': 'Warning: Aach, Stadt 1',
+    'original_name': 'Warning: Aach 1',
     'platform': 'nina',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': '083350000000-1',
+    'unique_id': '095760000000-1',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensors[binary_sensor.nina_warning_aach_stadt_1-state]
+# name: test_sensors[binary_sensor.nina_warning_aach_1-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'affected_areas': 'Gemeinde Oberreichenbach, Gemeinde Neuweiler, Stadt Nagold, Stadt Neubulach, Gemeinde Schömberg, Gemeinde Simmersfeld, Gemeinde Simmozheim, Gemeinde Rohrdorf, Gemeinde Ostelsheim, Gemeinde Ebhausen, Gemeinde Egenhausen, Gemeinde Dobel, Stadt Bad Liebenzell, Stadt Solingen, Stadt Haiterbach, Stadt Bad Herrenalb, Gemeinde Höfen an der Enz, Gemeinde Gechingen, Gemeinde Enzklösterle, Gemeinde Gutach (Schwarzwaldbahn) und 3392 weitere.',
       'description': 'Es treten Sturmböen mit Geschwindigkeiten zwischen 70 km/h (20m/s, 38kn, Bft 8) und 85 km/h (24m/s, 47kn, Bft 9) aus westlicher Richtung auf. In Schauernähe sowie in exponierten Lagen muss mit schweren Sturmböen bis 90 km/h (25m/s, 48kn, Bft 10) gerechnet werden.',
       'device_class': 'safety',
       'expires': '3021-11-22T05:19:00+01:00',
-      'friendly_name': 'NINA Warning: Aach, Stadt 1',
+      'friendly_name': 'NINA Warning: Aach 1',
       'headline': 'Ausfall Notruf 112',
       'id': 'mow.DE-NW-BN-SE030-20201014-30-000',
       'recommended_actions': '',
@@ -52,14 +52,14 @@
       'web': 'https://www.wettergefahren.de',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.nina_warning_aach_stadt_1',
+    'entity_id': 'binary_sensor.nina_warning_aach_1',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'on',
   })
 # ---
-# name: test_sensors[binary_sensor.nina_warning_aach_stadt_2-entry]
+# name: test_sensors[binary_sensor.nina_warning_aach_2-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -72,7 +72,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': None,
-    'entity_id': 'binary_sensor.nina_warning_aach_stadt_2',
+    'entity_id': 'binary_sensor.nina_warning_aach_2',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -84,31 +84,31 @@
     }),
     'original_device_class': <BinarySensorDeviceClass.SAFETY: 'safety'>,
     'original_icon': None,
-    'original_name': 'Warning: Aach, Stadt 2',
+    'original_name': 'Warning: Aach 2',
     'platform': 'nina',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': '083350000000-2',
+    'unique_id': '095760000000-2',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensors[binary_sensor.nina_warning_aach_stadt_2-state]
+# name: test_sensors[binary_sensor.nina_warning_aach_2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'safety',
-      'friendly_name': 'NINA Warning: Aach, Stadt 2',
+      'friendly_name': 'NINA Warning: Aach 2',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.nina_warning_aach_stadt_2',
+    'entity_id': 'binary_sensor.nina_warning_aach_2',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_sensors[binary_sensor.nina_warning_aach_stadt_3-entry]
+# name: test_sensors[binary_sensor.nina_warning_aach_3-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -121,7 +121,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': None,
-    'entity_id': 'binary_sensor.nina_warning_aach_stadt_3',
+    'entity_id': 'binary_sensor.nina_warning_aach_3',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -133,31 +133,31 @@
     }),
     'original_device_class': <BinarySensorDeviceClass.SAFETY: 'safety'>,
     'original_icon': None,
-    'original_name': 'Warning: Aach, Stadt 3',
+    'original_name': 'Warning: Aach 3',
     'platform': 'nina',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': '083350000000-3',
+    'unique_id': '095760000000-3',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensors[binary_sensor.nina_warning_aach_stadt_3-state]
+# name: test_sensors[binary_sensor.nina_warning_aach_3-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'safety',
-      'friendly_name': 'NINA Warning: Aach, Stadt 3',
+      'friendly_name': 'NINA Warning: Aach 3',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.nina_warning_aach_stadt_3',
+    'entity_id': 'binary_sensor.nina_warning_aach_3',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_sensors[binary_sensor.nina_warning_aach_stadt_4-entry]
+# name: test_sensors[binary_sensor.nina_warning_aach_4-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -170,7 +170,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': None,
-    'entity_id': 'binary_sensor.nina_warning_aach_stadt_4',
+    'entity_id': 'binary_sensor.nina_warning_aach_4',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -182,31 +182,31 @@
     }),
     'original_device_class': <BinarySensorDeviceClass.SAFETY: 'safety'>,
     'original_icon': None,
-    'original_name': 'Warning: Aach, Stadt 4',
+    'original_name': 'Warning: Aach 4',
     'platform': 'nina',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': '083350000000-4',
+    'unique_id': '095760000000-4',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensors[binary_sensor.nina_warning_aach_stadt_4-state]
+# name: test_sensors[binary_sensor.nina_warning_aach_4-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'safety',
-      'friendly_name': 'NINA Warning: Aach, Stadt 4',
+      'friendly_name': 'NINA Warning: Aach 4',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.nina_warning_aach_stadt_4',
+    'entity_id': 'binary_sensor.nina_warning_aach_4',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_sensors[binary_sensor.nina_warning_aach_stadt_5-entry]
+# name: test_sensors[binary_sensor.nina_warning_aach_5-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -219,7 +219,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': None,
-    'entity_id': 'binary_sensor.nina_warning_aach_stadt_5',
+    'entity_id': 'binary_sensor.nina_warning_aach_5',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -231,24 +231,24 @@
     }),
     'original_device_class': <BinarySensorDeviceClass.SAFETY: 'safety'>,
     'original_icon': None,
-    'original_name': 'Warning: Aach, Stadt 5',
+    'original_name': 'Warning: Aach 5',
     'platform': 'nina',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': '083350000000-5',
+    'unique_id': '095760000000-5',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensors[binary_sensor.nina_warning_aach_stadt_5-state]
+# name: test_sensors[binary_sensor.nina_warning_aach_5-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'safety',
-      'friendly_name': 'NINA Warning: Aach, Stadt 5',
+      'friendly_name': 'NINA Warning: Aach 5',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.nina_warning_aach_stadt_5',
+    'entity_id': 'binary_sensor.nina_warning_aach_5',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
