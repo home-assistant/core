@@ -31,7 +31,7 @@ async def test_button_entities(
 @pytest.mark.parametrize(
     ("entity_id", "method"),
     [
-        ("button.hdfury_vrroom_02_reboot", "issue_reboot"),
+        ("button.hdfury_vrroom_02_restart", "issue_reboot"),
         ("button.hdfury_vrroom_02_issue_hotplug", "issue_hotplug"),
     ],
 )
@@ -71,6 +71,6 @@ async def test_button_press_error(
         await hass.services.async_call(
             "button",
             "press",
-            {"entity_id": "button.hdfury_vrroom_02_reboot"},
+            {"entity_id": "button.hdfury_vrroom_02_restart"},
             blocking=True,
         )

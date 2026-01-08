@@ -52,11 +52,9 @@ async def async_setup_entry(
 
     coordinator = entry.runtime_data
 
-    entities: list[HDFuryEntity] = [
+    async_add_entities(
         HDFuryButton(coordinator, description) for description in BUTTONS
-    ]
-
-    async_add_entities(entities)
+    )
 
 
 class HDFuryButton(HDFuryEntity, ButtonEntity):
