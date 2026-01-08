@@ -39,8 +39,8 @@ habluetooth==5.8.0
 hass-nabucasa==1.7.0
 hassil==3.5.0
 home-assistant-bluetooth==1.13.1
-home-assistant-frontend==20251229.0
-home-assistant-intents==2026.1.1
+home-assistant-frontend==20260107.0
+home-assistant-intents==2026.1.6
 httpx==0.28.1
 ifaddr==0.2.0
 Jinja2==3.1.6
@@ -226,3 +226,6 @@ gql<4.0.0
 
 # Pin pytest-rerunfailures to prevent accidental breaks
 pytest-rerunfailures==16.0.1
+
+# Fixes detected blocking call to load_default_certs https://github.com/home-assistant/core/issues/157475
+aiomqtt>=2.5.0
