@@ -135,7 +135,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslemetryConfigEntry) -
             # Remove the protobuff 'cached_data' that we do not use to save memory
             product.pop("cached_data", None)
             vin = product["vin"]
-            api = teslemetry.vehicles.create(vin)  # type: ignore[attr-defined]
+            api = teslemetry.vehicles.create(vin)
             coordinator = TeslemetryVehicleDataCoordinator(hass, entry, api, product)
             device = DeviceInfo(
                 identifiers={(DOMAIN, vin)},
@@ -313,7 +313,7 @@ async def async_migrate_entry(
         # Convert legacy access token to OAuth tokens using migrate endpoint
         try:
             data = await Teslemetry(session, access_token).migrate_to_oauth(
-                CLIENT_ID, access_token, hass.config.location_name
+                CLIENT_ID, hass.config.location_name
             )
         except ClientResponseError as e:
             raise ConfigEntryAuthFailed from e
