@@ -101,3 +101,16 @@ def mock_config_entry() -> MockConfigEntry:
         entry_id="01J0BC4QM2YBRP6H5G933CETI8",
         unique_id=TEST_USER_ID,
     )
+
+
+@pytest.fixture(name="skip_cloud", autouse=True)
+def skip_cloud_fixture():
+    """Skip setting up cloud.
+
+    Cloud already has its own tests for account link.
+
+    We do not need to test it here as we only need to test our
+    usage of the oauth2 helpers.
+    """
+    with patch("homeassistant.components.cloud.async_setup", return_value=True):
+        yield
