@@ -1,7 +1,0 @@
-{
-  "services": {
-    "send_message": {
-      "service": "mdi:at"
-    }
-  }
-}
