@@ -49,9 +49,7 @@ async def handle_vehicle_command(command) -> Any:
             )
         # No response without error (unexpected)
         raise HomeAssistantError(
-            translation_domain=DOMAIN,
-            translation_key="unknown_response",
-            translation_placeholders={"response": str(response)},
+            translation_domain=DOMAIN, translation_key="command_no_response"
         )
     if (result := response.get("result")) is not True:
         if reason := response.get("reason"):
