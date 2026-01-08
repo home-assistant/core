@@ -60,11 +60,15 @@ class EsphomeInfraredEntity(
     @property
     def name(self) -> str:
         """Return the name of the infrared entity."""
-        if self.supported_features & InfraredEntityFeature.TRANSMIT:
+        has_transmit = bool(self.supported_features & InfraredEntityFeature.TRANSMIT)
+        has_receive = bool(self.supported_features & InfraredEntityFeature.RECEIVE)
+        if has_transmit and has_receive:
+            return "IR Transceiver"
+        if has_transmit:
             return "IR Transmitter"
-        if self.supported_features & InfraredEntityFeature.RECEIVE:
+        if has_receive:
             return "IR Receiver"
-        return "IR Transceiver"
+        raise HomeAssistantError("Invalid infrared entity with no supported features.")
 
     async def async_send_command(self, command: InfraredCommand) -> None:
         """Send an IR command.
