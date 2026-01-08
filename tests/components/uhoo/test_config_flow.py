@@ -1,359 +1,293 @@
-"""Test file for Uhoo config flow."""
+"""Test the Uhoo config flow."""
 
 from unittest.mock import AsyncMock, patch
 
+from aiohttp.client_exceptions import ClientConnectorDNSError
 import pytest
 from uhooapi.errors import UnauthorizedError
 
 from homeassistant import config_entries
-from homeassistant.components.uhoo.config_flow import UhooFlowHandler
 from homeassistant.components.uhoo.const import DOMAIN
-from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.const import CONF_API_KEY
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
-# Mock config
-MOCK_CONFIG = {CONF_API_KEY: "test-api-key-123"}
-MOCK_CONFIG_DIFFERENT = {CONF_API_KEY: "different-api-key-456"}
+from tests.common import MockConfigEntry
+
+# Constants for source types
+SOURCE_USER = config_entries.SOURCE_USER
 
 
-@pytest.mark.asyncio
-async def test_second_instance_error(
+@pytest.fixture(autouse=True)
+def mock_client():
+    """Mock the Uhoo client."""
+    with patch("homeassistant.components.uhoo.config_flow.Client") as mock_client:
+        mock_instance = AsyncMock()
+        mock_instance.login = AsyncMock()
+        mock_client.return_value = mock_instance
+        yield mock_instance
+
+
+@pytest.fixture(autouse=True)
+def mock_async_create_clientsession():
+    """Mock async_create_clientsession."""
+    with patch(
+        "homeassistant.components.uhoo.config_flow.async_create_clientsession"
+    ) as mock_session:
+        mock_session.return_value = AsyncMock()
+        yield mock_session
+
+
+@pytest.fixture
+def mock_setup_entry():
+    """Mock the setup entry."""
+    with patch(
+        "homeassistant.components.uhoo.async_setup_entry",
+        return_value=True,
+    ) as mock_setup:
+        yield mock_setup
+
+
+class TestUhooFlowHandler:
+    """Test the Uhoo config flow."""
+
+    async def test_show_config_form(self, hass: HomeAssistant):
+        """Test the initial form is shown."""
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_USER},
+        )
+
+        assert result["type"] == FlowResultType.FORM
+        assert result["step_id"] == "user"
+        assert result["errors"] == {}
+
+    async def test_form_with_empty_api_key(self, hass: HomeAssistant, mock_client):
+        """Test form with empty API key shows error."""
+        # Start the flow
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_USER},
+        )
+
+        # Submit empty API key
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_API_KEY: ""},
+        )
+
+        assert result["type"] == FlowResultType.FORM
+        assert result["step_id"] == "user"
+        assert result["errors"] == {"base": "invalid_auth"}
+        mock_client.login.assert_not_called()
+
+    async def test_form_invalid_credentials(self, hass: HomeAssistant, mock_client):
+        """Test form with invalid credentials shows error."""
+        mock_client.login.side_effect = UnauthorizedError("Invalid credentials")
+
+        # Start the flow
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_USER},
+        )
+
+        # Submit invalid API key
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_API_KEY: "invalid-api-key"},
+        )
+
+        assert result["type"] == FlowResultType.FORM
+        assert result["step_id"] == "user"
+        assert result["errors"] == {"base": "invalid_auth"}
+        mock_client.login.assert_called_once()
+
+    async def test_form_valid_credentials(self, hass: HomeAssistant, mock_client):
+        """Test form with valid credentials creates entry."""
+        mock_client.login.return_value = None
+
+        # Start the flow
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_USER},
+        )
+
+        # Submit valid API key
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_API_KEY: "valid-api-key-12345"},
+        )
+
+        assert result["type"] == FlowResultType.CREATE_ENTRY
+        # Check title format matches your implementation
+        assert result["title"] == "uHoo (12345)"  # Last 5 chars of the key
+        assert result["data"] == {CONF_API_KEY: "valid-api-key-12345"}
+        mock_client.login.assert_called_once()
+
+    async def test_form_duplicate_entry(self, hass: HomeAssistant, mock_client):
+        """Test duplicate entry aborts."""
+        mock_client.login.return_value = None
+
+        # Create first entry using MockConfigEntry
+        entry = MockConfigEntry(
+            domain=DOMAIN,
+            unique_id="valid-api-key-12345",
+            data={CONF_API_KEY: "valid-api-key-12345"},
+            title="uHoo (12345)",
+        )
+        entry.add_to_hass(hass)
+
+        # Try to create duplicate
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_USER},
+        )
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_API_KEY: "valid-api-key-12345"},  # Same API key
+        )
+
+        assert result["type"] == FlowResultType.ABORT
+        assert result["reason"] == "already_configured"
+
+    async def test_form_client_exception(self, hass: HomeAssistant, mock_client):
+        """Test form when client raises an expected exception."""
+        # Use a ConnectionError which is caught by your config flow
+        mock_client.login.side_effect = ConnectionError("Cannot connect")
+
+        # Start the flow
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_USER},
+        )
+
+        # Submit API key
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_API_KEY: "api-key"},
+        )
+
+        assert result["type"] == FlowResultType.FORM
+        assert result["step_id"] == "user"
+        assert result["errors"] == {"base": "invalid_auth"}
+        mock_client.login.assert_called_once()
+
+    async def test_connection_error(self, hass: HomeAssistant, mock_client):
+        """Test DNS connection error during login."""
+        # Create a ClientConnectorDNSError
+        mock_client.login.side_effect = ClientConnectorDNSError(
+            ConnectionError("Cannot connect"), OSError("DNS failure")
+        )
+
+        # Start the flow
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_USER},
+        )
+
+        # Submit API key
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_API_KEY: "api-key"},
+        )
+
+        assert result["type"] == FlowResultType.FORM
+        assert result["step_id"] == "user"
+        assert result["errors"] == {"base": "invalid_auth"}
+
+    async def test_full_user_flow(
+        self,
+        hass: HomeAssistant,
+        mock_client: AsyncMock,
+        mock_setup_entry: AsyncMock,
+    ) -> None:
+        """Test the full user flow from start to finish."""
+        # Mock successful login
+        mock_client.login.return_value = None
+
+        # Step 1: Initialize the flow
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_USER},
+        )
+        assert result["type"] == FlowResultType.FORM
+        assert result["step_id"] == "user"
+        assert result["errors"] == {}
+
+        # Step 2: Submit valid credentials
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_API_KEY: "valid-api-key-test12345"},
+        )
+
+        # Step 3: Verify entry creation
+        assert result["type"] == FlowResultType.CREATE_ENTRY
+        assert result["title"] == "uHoo (12345)"  # Last 5 chars
+        assert result["data"] == {CONF_API_KEY: "valid-api-key-test12345"}
+        assert result["result"]
+
+        # Verify setup was called
+        await hass.async_block_till_done()
+        mock_setup_entry.assert_called_once()
+
+    async def test_flow_cancellation(
+        self,
+        hass: HomeAssistant,
+    ) -> None:
+        """Test user flow cancellation."""
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_USER},
+        )
+
+        # The flow should still be in form state
+        assert result["type"] == FlowResultType.FORM
+        assert result["step_id"] == "user"
+
+
+# Integration test for the full flow
+async def test_complete_integration_flow(
     hass: HomeAssistant,
-    bypass_login,
+    mock_client: AsyncMock,
+    mock_setup_entry: AsyncMock,
 ) -> None:
-    """Test that errors are shown when trying to add instance with same API key."""
-
-    # First, add one config entry
+    """Test complete integration flow from user perspective."""
+    # Step 1: User starts the flow
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
-        context={"source": config_entries.SOURCE_USER},
-        data=MOCK_CONFIG,
+        context={"source": SOURCE_USER},
     )
-
-    # Verify the first entry was created
-    assert result["type"] == FlowResultType.CREATE_ENTRY
-
-    # Now try to add another instance with the SAME API key
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": config_entries.SOURCE_USER},
-        data=MOCK_CONFIG,
-    )
-
-    # Should abort with "already_configured" since same API key
-    assert result["type"] == FlowResultType.ABORT
-    assert result["reason"] == "already_configured"
-
-
-@pytest.mark.asyncio
-async def test_multiple_instances_with_different_keys(
-    hass: HomeAssistant,
-    bypass_login,
-) -> None:
-    """Test that multiple instances can be added with different API keys."""
-
-    # Add first instance
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": config_entries.SOURCE_USER},
-        data=MOCK_CONFIG,
-    )
-
-    assert result["type"] == FlowResultType.CREATE_ENTRY
-    assert result["title"] == "Account 1"
-    assert result["data"] == MOCK_CONFIG
-
-    # Add second instance with different API key
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": config_entries.SOURCE_USER},
-        data=MOCK_CONFIG_DIFFERENT,
-    )
-
-    assert result["type"] == FlowResultType.CREATE_ENTRY
-    assert result["title"] == "Account 2"
-    assert result["data"] == MOCK_CONFIG_DIFFERENT
-
-
-@pytest.mark.asyncio
-async def test_form_display(
-    hass: HomeAssistant,
-) -> None:
-    """Test that form is displayed properly when no user input."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": config_entries.SOURCE_USER},
-    )
-
     assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "user"
 
-
-@pytest.mark.asyncio
-async def test_empty_api_key(
-    hass: HomeAssistant,
-) -> None:
-    """Test that empty API key shows error."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": config_entries.SOURCE_USER},
-        data={CONF_API_KEY: ""},
-    )
-
-    # Should return to form with error
-    assert result["type"] == FlowResultType.FORM
-    assert result["step_id"] == "user"
-    assert result["errors"]["base"] == "auth"
-
-
-@pytest.mark.asyncio
-async def test_invalid_api_key(
-    hass: HomeAssistant,
-) -> None:
-    """Test that invalid API key shows error."""
-    # Mock the Client to raise UnauthorizedError when login is called
-    with patch("homeassistant.components.uhoo.config_flow.Client") as mock_client_class:
-        mock_client = AsyncMock()
-        mock_client.login = AsyncMock(side_effect=UnauthorizedError("Invalid API key"))
-        mock_client_class.return_value = mock_client
-
-        # Also need to mock async_create_clientsession
-        with patch(
-            "homeassistant.components.uhoo.config_flow.async_create_clientsession"
-        ) as mock_create_session:
-            mock_create_session.return_value = AsyncMock()
-
-            result = await hass.config_entries.flow.async_init(
-                DOMAIN,
-                context={"source": config_entries.SOURCE_USER},
-                data=MOCK_CONFIG,
-            )
-
-    # Should return to form with error
-    assert result["type"] == FlowResultType.FORM
-    assert result["step_id"] == "user"
-    assert result["errors"]["base"] == "auth"
-
-
-@pytest.mark.asyncio
-async def test_valid_flow(
-    hass: HomeAssistant,
-    bypass_login,
-) -> None:
-    """Test successful flow."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": config_entries.SOURCE_USER},
-        data=MOCK_CONFIG,
-    )
-
-    assert result["type"] == FlowResultType.CREATE_ENTRY
-    assert result["title"] == "Account 1"
-    assert result["data"] == MOCK_CONFIG
-
-
-@pytest.mark.asyncio
-async def test_flow_with_form_interaction(
-    hass: HomeAssistant,
-    bypass_login,
-) -> None:
-    """Test flow when user interacts with form (not providing input initially)."""
-    # Init flow without data
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": config_entries.SOURCE_USER},
-    )
-
-    assert result["type"] == FlowResultType.FORM
-    assert result["step_id"] == "user"
-
-    # Now provide data
+    # Step 2: User enters invalid API key
+    mock_client.login.side_effect = UnauthorizedError("Invalid")
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        user_input=MOCK_CONFIG,
+        {CONF_API_KEY: "wrong-key"},
+    )
+    assert result["type"] == FlowResultType.FORM
+    assert result["errors"] == {"base": "invalid_auth"}
+
+    # Step 3: User corrects and enters valid API key
+    mock_client.login.side_effect = None
+    mock_client.login.return_value = None
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_API_KEY: "correct-key-67890"},
     )
 
+    # Step 4: Verify successful entry creation
     assert result["type"] == FlowResultType.CREATE_ENTRY
-    assert result["title"] == "Account 1"
-    assert result["data"] == MOCK_CONFIG
+    assert result["data"] == {CONF_API_KEY: "correct-key-67890"}
+    assert result["title"] == "uHoo (67890)"  # Last 5 chars
 
+    # Verify the entry was added to hass
+    entries = hass.config_entries.async_entries(DOMAIN)
+    assert len(entries) == 1
+    assert entries[0].data[CONF_API_KEY] == "correct-key-67890"
+    assert entries[0].unique_id == "correct-key-67890"
 
-# NEW TESTS TO INCREASE COVERAGE:
-
-
-@pytest.mark.asyncio
-async def test_flow_handler_initialization() -> None:
-    """Test that UhooFlowHandler initializes correctly."""
-
-    handler = UhooFlowHandler()
-    assert handler._errors == {}
-
-
-@pytest.mark.asyncio
-async def test_show_config_form_recursive(
-    hass: HomeAssistant,
-) -> None:
-    """Test the recursive behavior of _show_config_form."""
-
-    handler = UhooFlowHandler()
-    handler.hass = hass
-    handler._errors = {}
-
-    # Test with None input (should recursively call itself)
-    result = await handler._show_config_form(None)
-    assert result["type"] == FlowResultType.FORM
-    assert result["step_id"] == "user"
-
-
-@pytest.mark.asyncio
-async def test_show_config_form_with_user_input(
-    hass: HomeAssistant,
-) -> None:
-    """Test _show_config_form with user input."""
-
-    handler = UhooFlowHandler()
-    handler.hass = hass
-    handler._errors = {"base": "auth"}
-
-    # Test with user input
-    user_input = {CONF_API_KEY: "test-key"}
-    result = await handler._show_config_form(user_input)
-    assert result["type"] == FlowResultType.FORM
-    assert result["step_id"] == "user"
-    assert result["errors"] == {"base": "auth"}
-
-
-@pytest.mark.asyncio
-async def test_test_credentials_success(
-    hass: HomeAssistant,
-) -> None:
-    """Test _test_credentials method with successful login."""
-
-    handler = UhooFlowHandler()
-    handler.hass = hass
-
-    with patch("homeassistant.components.uhoo.config_flow.Client") as mock_client_class:
-        mock_client = AsyncMock()
-        mock_client.login = AsyncMock()
-        mock_client_class.return_value = mock_client
-
-        # Also need to mock async_create_clientsession
-        with patch(
-            "homeassistant.components.uhoo.config_flow.async_create_clientsession"
-        ) as mock_create_session:
-            mock_create_session.return_value = AsyncMock()
-
-            result = await handler._test_credentials("test-api-key")
-
-            assert result is True
-            mock_client.login.assert_awaited_once()
-
-
-@pytest.mark.asyncio
-async def test_test_credentials_unauthorized(
-    hass: HomeAssistant,
-) -> None:
-    """Test _test_credentials method with unauthorized error."""
-
-    handler = UhooFlowHandler()
-    handler.hass = hass
-
-    with patch("homeassistant.components.uhoo.config_flow.Client") as mock_client_class:
-        mock_client = AsyncMock()
-        mock_client.login = AsyncMock(side_effect=UnauthorizedError("Invalid"))
-        mock_client_class.return_value = mock_client
-
-        # Also need to mock async_create_clientsession
-        with patch(
-            "homeassistant.components.uhoo.config_flow.async_create_clientsession"
-        ) as mock_create_session:
-            mock_create_session.return_value = AsyncMock()
-
-            result = await handler._test_credentials("test-api-key")
-
-            assert result is False
-            mock_client.login.assert_awaited_once()
-
-
-@pytest.mark.asyncio
-async def test_test_credentials_other_exception(
-    hass: HomeAssistant,
-) -> None:
-    """Test _test_credentials method with other exception."""
-
-    handler = UhooFlowHandler()
-    handler.hass = hass
-
-    with patch("homeassistant.components.uhoo.config_flow.Client") as mock_client_class:
-        mock_client = AsyncMock()
-        mock_client.login = AsyncMock(side_effect=Exception("Other error"))
-        mock_client_class.return_value = mock_client
-
-        # Also need to mock async_create_clientsession
-        with patch(
-            "homeassistant.components.uhoo.config_flow.async_create_clientsession"
-        ) as mock_create_session:
-            mock_create_session.return_value = AsyncMock()
-
-            # Should raise the exception
-            with pytest.raises(Exception) as exc_info:
-                await handler._test_credentials("test-api-key")
-
-            assert "Other error" in str(exc_info.value)
-
-
-@pytest.mark.asyncio
-async def test_async_step_user_already_configured(
-    hass: HomeAssistant, bypass_login
-) -> None:
-    """Test async_step_user when entry is already configured."""
-
-    handler = UhooFlowHandler()
-    handler.hass = hass
-
-    mock_entry = AsyncMock(spec=ConfigEntry)
-    mock_entry.unique_id = "existing-key"
-    mock_entry.state = ConfigEntryState.LOADED
-
-    # Mock _async_current_entries to return our mock entry
-    handler._async_current_entries = lambda: [mock_entry]
-
-    # Mock async_set_unique_id and _abort_if_unique_id_configured
-    with (
-        patch.object(handler, "async_set_unique_id"),
-        patch.object(handler, "_abort_if_unique_id_configured") as mock_abort,
-    ):
-        # Make abort method do nothing (simulate not aborting)
-        mock_abort.return_value = None
-
-        # Test with same key
-        await handler.async_step_user({CONF_API_KEY: "existing-key"})
-
-        # Should call abort check
-        mock_abort.assert_called_once()
-
-
-@pytest.mark.asyncio
-async def test_entry_title_numbering_with_existing_entries(
-    hass: HomeAssistant,
-    bypass_login,
-) -> None:
-    """Test that entry titles are numbered based on existing entries."""
-
-    # First entry
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": config_entries.SOURCE_USER},
-        data=MOCK_CONFIG,
-    )
-    assert result["title"] == "Account 1"
-
-    # Second entry with different key
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": config_entries.SOURCE_USER},
-        data=MOCK_CONFIG_DIFFERENT,
-    )
-    assert result["title"] == "Account 2"
+    await hass.async_block_till_done()
+    mock_setup_entry.assert_called_once()

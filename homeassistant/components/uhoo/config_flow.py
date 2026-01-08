@@ -1,7 +1,9 @@
-"""Imports for config_flow.py."""
+"""Custom uhoo config flow setup."""
 
 from typing import Any
 
+from aiodns.error import DNSError
+from aiohttp.client_exceptions import ClientConnectorDNSError
 from uhooapi import Client
 from uhooapi.errors import UnauthorizedError
 import voluptuous as vol
@@ -50,19 +52,19 @@ class UhooFlowHandler(ConfigFlow, domain=DOMAIN):
         # Set the unique ID for the config flow.
         api_key = user_input[CONF_API_KEY]
         if not api_key:
-            self._errors["base"] = "auth"
+            self._errors["base"] = "invalid_auth"
             return await self._show_config_form(user_input)
 
         await self.async_set_unique_id(api_key)
-        self._abort_if_unique_id_configured()
+        self._async_abort_entries_match()
 
         valid = await self._test_credentials(api_key)
         if not valid:
-            self._errors["base"] = "auth"
+            self._errors["base"] = "invalid_auth"
             return await self._show_config_form(user_input)
 
-        entry_num = len(self._async_current_entries()) + 1
-        return self.async_create_entry(title=f"Account {entry_num}", data=user_input)
+        key_snippet = api_key[-5:]
+        return self.async_create_entry(title=f"uHoo ({key_snippet})", data=user_input)
 
     async def _show_config_form(
         self, user_input: dict[str, Any] | None = None
@@ -89,6 +91,12 @@ class UhooFlowHandler(ConfigFlow, domain=DOMAIN):
             LOGGER.error(
                 f"Error: received a 401 Unauthorized error attempting to login:\n{err}"
             )
+            return False
+        except ConnectionError:
+            LOGGER.error("ConnectionError: cannot connect to uhoo server")
+            return False
+        except (ClientConnectorDNSError, DNSError):
+            LOGGER.error("ClientConnectorDNSError: cannot connect to uhoo server")
             return False
         else:
             return True

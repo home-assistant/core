@@ -1,12 +1,12 @@
 {
   "config": {
     "abort": {
-      "already_configured": "This uHoo account is already configured."
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
     },
     "error": {
-      "auth": "Invalid API key. Please check your credentials and try again.",
-      "cannot_connect": "Cannot connect to uHoo servers. Please check your internet connection and try again.",
-      "unknown": "An unknown error occurred. Please try again."
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "step": {
       "user": {
@@ -24,34 +24,34 @@
   "entity": {
     "sensor": {
       "air_pressure": {
-        "name": "Air pressure"
+        "name": "[%key:component::sensor::entity_component::atmospheric_pressure::name%]"
       },
       "co": {
-        "name": "Carbon monoxide"
+        "name": "[%key:component::sensor::entity_component::carbon_monoxide::name%]"
       },
       "co2": {
-        "name": "Carbon dioxide"
+        "name": "[%key:component::sensor::entity_component::carbon_dioxide::name%]"
       },
       "humidity": {
-        "name": "Humidity"
+        "name": "[%key:component::sensor::entity_component::humidity::name%]"
       },
       "mold_index": {
         "name": "Mold index"
       },
       "no2": {
-        "name": "Nitrogen dioxide"
+        "name": "[%key:component::sensor::entity_component::nitrogen_dioxide::name%]"
       },
       "ozone": {
-        "name": "Ozone"
+        "name": "[%key:component::sensor::entity_component::ozone::name%]"
       },
       "pm25": {
-        "name": "PM2.5"
+        "name": "[%key:component::sensor::entity_component::pm25::name%]"
       },
       "temperature": {
-        "name": "Temperature"
+        "name": "[%key:component::sensor::entity_component::temperature::name%]"
       },
       "tvoc": {
-        "name": "Total volatile organic compounds"
+        "name": "[%key:component::sensor::entity_component::volatile_organic_compounds::name%]"
       },
       "virus_index": {
         "name": "Virus index"

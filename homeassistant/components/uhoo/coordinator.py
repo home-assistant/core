@@ -1,7 +1,8 @@
-"""Imports for coordinator.py."""
+"""Custom uhoo data update coordinator."""
 
 import asyncio
 
+from aiohttp.client_exceptions import ClientConnectorDNSError
 from uhooapi import Client, Device
 from uhooapi.errors import UhooError
 
@@ -33,13 +34,14 @@ class UhooDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Device]]):
                         for device_id in self.client.devices
                     ]
                 )
-            return self.client.get_devices()
         except TimeoutError as error:
-            LOGGER.error("Error communicating with Uhoo API: %s", error)
+            raise UpdateFailed from error
+        except ClientConnectorDNSError as error:
             raise UpdateFailed from error
         except UhooError as error:
-            LOGGER.error("UnauthorizedError occurred: %s", error)
-            raise UpdateFailed from error
+            raise UpdateFailed(f"The device is unavailable: {error}") from error
+        else:
+            return self.client.devices
 
 
 type UhooConfigEntry = ConfigEntry[UhooDataUpdateCoordinator]

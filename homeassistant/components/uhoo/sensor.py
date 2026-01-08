@@ -1,7 +1,7 @@
-"""imports for sensor.py file."""
+"""Custom uhoo sensors setup."""
 
 from collections.abc import Callable
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 
 from uhooapi import Device
 
@@ -11,7 +11,6 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
     CONCENTRATION_PARTS_PER_BILLION,
@@ -42,92 +41,81 @@ from .const import (
     MANUFACTURER,
     MODEL,
 )
-from .coordinator import UhooDataUpdateCoordinator
+from .coordinator import UhooConfigEntry, UhooDataUpdateCoordinator
 
-PARALLEL_UPDATES = True
-
-DeviceValueFunction = Callable[[Device], float | None]
+PARALLEL_UPDATES = 1
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, kw_only=True)
 class UhooSensorEntityDescription(SensorEntityDescription):
     """Extended SensorEntityDescription with a type-safe value function."""
 
-    value_fn: DeviceValueFunction = field(default=lambda _: None)
+    value_fn: Callable[[Device], float | None]
 
 
 SENSOR_TYPES: tuple[UhooSensorEntityDescription, ...] = (
     UhooSensorEntityDescription(
         key=API_CO,
-        translation_key=API_CO,  # This will create "carbon_monoxide" in translations
         device_class=SensorDeviceClass.CO,
         native_unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
         state_class=SensorStateClass.MEASUREMENT,
-        value_fn=lambda data: data.as_dict["co"],
+        value_fn=lambda data: data.co,
     ),
     UhooSensorEntityDescription(
         key=API_CO2,
-        translation_key=API_CO2,
         device_class=SensorDeviceClass.CO2,
         native_unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
         state_class=SensorStateClass.MEASUREMENT,
-        value_fn=lambda data: data.as_dict["co2"],
+        value_fn=lambda data: data.co2,
     ),
     UhooSensorEntityDescription(
         key=API_PM25,
-        translation_key=API_PM25,
         device_class=SensorDeviceClass.PM25,
         native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
         state_class=SensorStateClass.MEASUREMENT,
-        value_fn=lambda data: data.as_dict["pm25"],
+        value_fn=lambda data: data.pm25,
     ),
     UhooSensorEntityDescription(
         key=API_HUMIDITY,
-        translation_key=API_HUMIDITY,
         device_class=SensorDeviceClass.HUMIDITY,
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
-        value_fn=lambda data: data.as_dict["humidity"],
+        value_fn=lambda data: data.humidity,
     ),
     UhooSensorEntityDescription(
         key=API_TEMP,
-        translation_key=API_TEMP,
         device_class=SensorDeviceClass.TEMPERATURE,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,  # Base unit
         state_class=SensorStateClass.MEASUREMENT,
-        value_fn=lambda data: data.as_dict["temperature"],
+        value_fn=lambda data: data.temperature,
     ),
     UhooSensorEntityDescription(
         key=API_PRESSURE,
-        translation_key=API_PRESSURE,
         device_class=SensorDeviceClass.PRESSURE,
         native_unit_of_measurement=UnitOfPressure.HPA,
         state_class=SensorStateClass.MEASUREMENT,
-        value_fn=lambda data: data.as_dict["air_pressure"],
+        value_fn=lambda data: data.air_pressure,
     ),
     UhooSensorEntityDescription(
         key=API_TVOC,
-        translation_key=API_TVOC,
         device_class=SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS,
         native_unit_of_measurement=CONCENTRATION_PARTS_PER_BILLION,
         state_class=SensorStateClass.MEASUREMENT,
-        value_fn=lambda data: data.as_dict["tvoc"],
+        value_fn=lambda data: data.tvoc,
     ),
     UhooSensorEntityDescription(
         key=API_NO2,
-        translation_key=API_NO2,
         device_class=SensorDeviceClass.NITROGEN_DIOXIDE,
         native_unit_of_measurement=CONCENTRATION_PARTS_PER_BILLION,
         state_class=SensorStateClass.MEASUREMENT,
-        value_fn=lambda data: data.as_dict["no2"],
+        value_fn=lambda data: data.no2,
     ),
     UhooSensorEntityDescription(
         key=API_OZONE,
-        translation_key=API_OZONE,
         device_class=SensorDeviceClass.OZONE,
         native_unit_of_measurement=CONCENTRATION_PARTS_PER_BILLION,
         state_class=SensorStateClass.MEASUREMENT,
-        value_fn=lambda data: data.as_dict["ozone"],
+        value_fn=lambda data: data.ozone,
     ),
     UhooSensorEntityDescription(
         key=API_VIRUS,
@@ -135,7 +123,7 @@ SENSOR_TYPES: tuple[UhooSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.AQI,
         native_unit_of_measurement="",
         state_class=SensorStateClass.MEASUREMENT,
-        value_fn=lambda data: data.as_dict["virus_index"],
+        value_fn=lambda data: data.virus_index,
     ),
     UhooSensorEntityDescription(
         key=API_MOLD,
@@ -143,32 +131,29 @@ SENSOR_TYPES: tuple[UhooSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.AQI,
         native_unit_of_measurement="",
         state_class=SensorStateClass.MEASUREMENT,
-        value_fn=lambda data: data.as_dict["mold_index"],
+        value_fn=lambda data: data.mold_index,
     ),
 )
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: UhooConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Setup sensor platform."""
     coordinator = config_entry.runtime_data
-    sensors = [
+    async_add_entities(
         UhooSensorEntity(description, serial_number, coordinator)
         for serial_number in coordinator.data
         for description in SENSOR_TYPES
-    ]
-
-    async_add_entities(sensors, False)
+    )
 
 
 class UhooSensorEntity(CoordinatorEntity[UhooDataUpdateCoordinator], SensorEntity):
     """Uhoo Sensor Object with init and methods."""
 
     entity_description: UhooSensorEntityDescription
-    coordinator: UhooDataUpdateCoordinator
     _attr_has_entity_name = True
 
     def __init__(
@@ -182,50 +167,36 @@ class UhooSensorEntity(CoordinatorEntity[UhooDataUpdateCoordinator], SensorEntit
         self.entity_description = description
         self._serial_number = serial_number
         self._attr_unique_id = f"{serial_number}_{description.key}"
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, serial_number)},
+            name=self.device.device_name,
+            model=MODEL,
+            manufacturer=MANUFACTURER,
+            serial_number=serial_number,
+        )
 
     @property
-    def device(self) -> Device | None:
+    def device(self) -> Device:
         """Return the device object for this sensor's serial number."""
-        return self.coordinator.data.get(self._serial_number)
+        return self.coordinator.data[self._serial_number]
 
     @property
     def available(self) -> bool:
         """Return if entity is available."""
-        if not super().available:
-            return False
-
-        if self._serial_number not in self.coordinator.data:
-            return False
-
-        device = self.device
-        if device is None:
-            return False
-
-        return self.entity_description.value_fn(device) is not None
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return DeviceInfo."""
-        if (device := self.device) is None:
-            return DeviceInfo(
-                identifiers={(DOMAIN, self._serial_number)},
-                name=f"uhoo {self._serial_number}",
-                manufacturer=MANUFACTURER,
-            )
-        return DeviceInfo(
-            identifiers={(DOMAIN, self._serial_number)},
-            name=device.device_name,
-            model=MODEL,
-            manufacturer=MANUFACTURER,
-        )
+        return super().available and self._serial_number in self.coordinator.data
 
     @property
     def native_value(self) -> StateType:
         """State of the sensor."""
         if (device := self.device) is None:
             return None
-        value = self.entity_description.value_fn(device)
-        if value is not None and self.entity_description.key == API_TEMP:
+        return self.entity_description.value_fn(device)
+
+    @property
+    def native_unit_of_measurement(self) -> str | None:
+        """Return unit of measurement."""
+        if self.entity_description.key == API_TEMP:
             if self.coordinator.user_settings_temp == "f":
-                value = (value * 9 / 5) + 32
-        return value
+                return UnitOfTemperature.FAHRENHEIT
+            return UnitOfTemperature.CELSIUS
+        return super().native_unit_of_measurement

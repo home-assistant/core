@@ -3,6 +3,8 @@
 import asyncio
 from unittest.mock import AsyncMock, MagicMock, patch
 
+from aiodns.error import DNSError
+from aiohttp.client_exceptions import ClientConnectionError
 import pytest
 from uhooapi.errors import UhooError, UnauthorizedError
 
@@ -21,7 +23,7 @@ def create_mock_config_entry(data=None):
     mock_entry = MagicMock(spec=ConfigEntry)
     mock_entry.version = 1
     mock_entry.domain = DOMAIN
-    mock_entry.title = "Account 1"
+    mock_entry.title = "uHoo (123)"
     mock_entry.data = data
     mock_entry.source = "user"
     mock_entry.unique_id = (
@@ -37,11 +39,36 @@ def create_mock_config_entry(data=None):
     return mock_entry
 
 
+@pytest.fixture
+def mock_client():
+    """Mock the uhooapi Client."""
+    client = AsyncMock()
+    client.login = AsyncMock()
+    client.setup_devices = AsyncMock()
+    client.devices = {}
+    return client
+
+
+@pytest.fixture
+def mock_coordinator():
+    """Mock the UhooDataUpdateCoordinator."""
+    coordinator = AsyncMock()
+    coordinator.async_config_entry_first_refresh = AsyncMock()
+    return coordinator
+
+
+@pytest.fixture
+def mock_session():
+    """Mock the aiohttp ClientSession."""
+    return MagicMock()
+
+
 @pytest.mark.asyncio
 async def test_async_setup_entry_success(
     hass: HomeAssistant,
     mock_client: MagicMock,
     mock_coordinator: MagicMock,
+    mock_session: MagicMock,
 ) -> None:
     """Test successful setup of a config entry."""
     config_entry = create_mock_config_entry()
@@ -59,11 +86,10 @@ async def test_async_setup_entry_success(
             return_value=mock_coordinator,
         ),
         patch(
-            "homeassistant.components.uhoo.async_get_clientsession"
-        ) as mock_get_session,
+            "homeassistant.components.uhoo.async_get_clientsession",
+            return_value=mock_session,
+        ),
     ):
-        mock_get_session.return_value = AsyncMock()
-
         # Call the setup function
         result = await async_setup_entry(hass, config_entry)
 
@@ -72,7 +98,7 @@ async def test_async_setup_entry_success(
 
         # Verify client was created with correct parameters
         mock_client_class.assert_called_once_with(
-            "test-api-key-123", mock_get_session.return_value, debug=True
+            "test-api-key-123", mock_session, debug=False
         )
 
         # Verify login and setup_devices were called
@@ -93,6 +119,7 @@ async def test_async_setup_entry_success(
 async def test_async_setup_entry_unauthorized_error_on_login(
     hass: HomeAssistant,
     mock_client: MagicMock,
+    mock_session: MagicMock,
 ) -> None:
     """Test setup with invalid API credentials (UnauthorizedError on login)."""
     config_entry = create_mock_config_entry()
@@ -103,11 +130,10 @@ async def test_async_setup_entry_unauthorized_error_on_login(
     with (
         patch("homeassistant.components.uhoo.Client", return_value=mock_client),
         patch(
-            "homeassistant.components.uhoo.async_get_clientsession"
-        ) as mock_get_session,
+            "homeassistant.components.uhoo.async_get_clientsession",
+            return_value=mock_session,
+        ),
     ):
-        mock_get_session.return_value = AsyncMock()
-
         # Should raise ConfigEntryError
         with pytest.raises(ConfigEntryError) as exc_info:
             await async_setup_entry(hass, config_entry)
@@ -125,6 +151,7 @@ async def test_async_setup_entry_unauthorized_error_on_login(
 async def test_async_setup_entry_unauthorized_error_on_setup_devices(
     hass: HomeAssistant,
     mock_client: MagicMock,
+    mock_session: MagicMock,
 ) -> None:
     """Test setup with UnauthorizedError during setup_devices."""
     config_entry = create_mock_config_entry()
@@ -136,11 +163,10 @@ async def test_async_setup_entry_unauthorized_error_on_setup_devices(
     with (
         patch("homeassistant.components.uhoo.Client", return_value=mock_client),
         patch(
-            "homeassistant.components.uhoo.async_get_clientsession"
-        ) as mock_get_session,
+            "homeassistant.components.uhoo.async_get_clientsession",
+            return_value=mock_session,
+        ),
     ):
-        mock_get_session.return_value = AsyncMock()
-
         # Should raise ConfigEntryError
         with pytest.raises(ConfigEntryError) as exc_info:
             await async_setup_entry(hass, config_entry)
@@ -153,29 +179,93 @@ async def test_async_setup_entry_unauthorized_error_on_setup_devices(
 
 
 @pytest.mark.asyncio
+async def test_async_setup_entry_connection_error_on_login(
+    hass: HomeAssistant,
+    mock_client: MagicMock,
+    mock_session: MagicMock,
+) -> None:
+    """Test setup with ClientConnectionError during login."""
+    config_entry = create_mock_config_entry()
+
+    # Simulate ClientConnectionError on login
+    mock_client.login.side_effect = ClientConnectionError("Connection failed")
+
+    with (
+        patch("homeassistant.components.uhoo.Client", return_value=mock_client),
+        patch(
+            "homeassistant.components.uhoo.async_get_clientsession",
+            return_value=mock_session,
+        ),
+    ):
+        # Should raise ConfigEntryNotReady
+        with pytest.raises(ConfigEntryNotReady) as exc_info:
+            await async_setup_entry(hass, config_entry)
+
+        assert "Cannot connect to uHoo servers" in str(exc_info.value)
+
+        # Verify login was attempted
+        mock_client.login.assert_awaited_once()
+
+        # Verify setup_devices was NOT called
+        mock_client.setup_devices.assert_not_called()
+
+
+@pytest.mark.asyncio
+async def test_async_setup_entry_dns_error_on_login(
+    hass: HomeAssistant,
+    mock_client: MagicMock,
+    mock_session: MagicMock,
+) -> None:
+    """Test setup with DNSError during login."""
+    config_entry = create_mock_config_entry()
+
+    # Simulate DNSError on login
+    mock_client.login.side_effect = DNSError("DNS resolution failed")
+
+    with (
+        patch("homeassistant.components.uhoo.Client", return_value=mock_client),
+        patch(
+            "homeassistant.components.uhoo.async_get_clientsession",
+            return_value=mock_session,
+        ),
+    ):
+        # Should raise ConfigEntryNotReady
+        with pytest.raises(ConfigEntryNotReady) as exc_info:
+            await async_setup_entry(hass, config_entry)
+
+        assert "Cannot connect to uHoo servers" in str(exc_info.value)
+
+        # Verify login was attempted
+        mock_client.login.assert_awaited_once()
+
+        # Verify setup_devices was NOT called
+        mock_client.setup_devices.assert_not_called()
+
+
+@pytest.mark.asyncio
 async def test_async_setup_entry_uhoo_error_on_login(
     hass: HomeAssistant,
     mock_client: MagicMock,
+    mock_session: MagicMock,
 ) -> None:
     """Test setup with UhooError during login."""
     config_entry = create_mock_config_entry()
 
     # Simulate UhooError on login
-    mock_client.login.side_effect = UhooError("Connection failed")
+    mock_client.login.side_effect = UhooError("Some uhoo error")
 
     with (
         patch("homeassistant.components.uhoo.Client", return_value=mock_client),
         patch(
-            "homeassistant.components.uhoo.async_get_clientsession"
-        ) as mock_get_session,
+            "homeassistant.components.uhoo.async_get_clientsession",
+            return_value=mock_session,
+        ),
     ):
-        mock_get_session.return_value = AsyncMock()
-
         # Should raise ConfigEntryNotReady
         with pytest.raises(ConfigEntryNotReady) as exc_info:
             await async_setup_entry(hass, config_entry)
 
-        assert "Connection failed" in str(exc_info.value)
+        assert "Some uhoo error" in str(exc_info.value)
 
         # Verify login was attempted
         mock_client.login.assert_awaited_once()
@@ -189,6 +279,7 @@ async def test_async_setup_entry_coordinator_first_refresh_fails(
     hass: HomeAssistant,
     mock_client: MagicMock,
     mock_coordinator: MagicMock,
+    mock_session: MagicMock,
 ) -> None:
     """Test setup where coordinator's first refresh fails."""
     config_entry = create_mock_config_entry()
@@ -208,11 +299,10 @@ async def test_async_setup_entry_coordinator_first_refresh_fails(
             return_value=mock_coordinator,
         ),
         patch(
-            "homeassistant.components.uhoo.async_get_clientsession"
-        ) as mock_get_session,
+            "homeassistant.components.uhoo.async_get_clientsession",
+            return_value=mock_session,
+        ),
     ):
-        mock_get_session.return_value = AsyncMock()
-
         # Should propagate the exception
         with pytest.raises(Exception) as exc_info:
             await async_setup_entry(hass, config_entry)
@@ -229,6 +319,7 @@ async def test_async_setup_entry_platform_setup_error(
     hass: HomeAssistant,
     mock_client: MagicMock,
     mock_coordinator: MagicMock,
+    mock_session: MagicMock,
 ) -> None:
     """Test setup where platform setup fails."""
     config_entry = create_mock_config_entry()
@@ -246,11 +337,10 @@ async def test_async_setup_entry_platform_setup_error(
             return_value=mock_coordinator,
         ),
         patch(
-            "homeassistant.components.uhoo.async_get_clientsession"
-        ) as mock_get_session,
+            "homeassistant.components.uhoo.async_get_clientsession",
+            return_value=mock_session,
+        ),
     ):
-        mock_get_session.return_value = AsyncMock()
-
         # Should propagate the exception
         with pytest.raises(Exception) as exc_info:
             await async_setup_entry(hass, config_entry)
@@ -310,6 +400,7 @@ async def test_async_setup_entry_missing_api_key(
     hass: HomeAssistant,
     mock_client: MagicMock,
     mock_coordinator: MagicMock,
+    mock_session: MagicMock,
 ) -> None:
     """Test setup when API key is missing from config entry data."""
     # Create config entry without API key
@@ -322,19 +413,18 @@ async def test_async_setup_entry_missing_api_key(
             return_value=mock_coordinator,
         ),
         patch(
-            "homeassistant.components.uhoo.async_get_clientsession"
-        ) as mock_get_session,
+            "homeassistant.components.uhoo.async_get_clientsession",
+            return_value=mock_session,
+        ),
+        pytest.raises(KeyError),
     ):
-        mock_get_session.return_value = AsyncMock()
-
-        # Should raise KeyError when trying to access missing api_key
-        with pytest.raises(KeyError):
-            await async_setup_entry(hass, config_entry)
+        await async_setup_entry(hass, config_entry)
 
 
 @pytest.mark.asyncio
 async def test_async_setup_entry_client_creation_fails(
     hass: HomeAssistant,
+    mock_session: MagicMock,
 ) -> None:
     """Test setup when Client creation fails."""
     config_entry = create_mock_config_entry()
@@ -345,11 +435,10 @@ async def test_async_setup_entry_client_creation_fails(
             side_effect=Exception("Client creation failed"),
         ),
         patch(
-            "homeassistant.components.uhoo.async_get_clientsession"
-        ) as mock_get_session,
+            "homeassistant.components.uhoo.async_get_clientsession",
+            return_value=mock_session,
+        ),
     ):
-        mock_get_session.return_value = AsyncMock()
-
         # Should propagate the exception
         with pytest.raises(Exception) as exc_info:
             await async_setup_entry(hass, config_entry)
@@ -361,6 +450,7 @@ async def test_async_setup_entry_client_creation_fails(
 async def test_async_setup_entry_coordinator_creation_fails(
     hass: HomeAssistant,
     mock_client: MagicMock,
+    mock_session: MagicMock,
 ) -> None:
     """Test setup when coordinator creation fails."""
     config_entry = create_mock_config_entry()
@@ -372,11 +462,10 @@ async def test_async_setup_entry_coordinator_creation_fails(
             side_effect=Exception("Coordinator creation failed"),
         ),
         patch(
-            "homeassistant.components.uhoo.async_get_clientsession"
-        ) as mock_get_session,
+            "homeassistant.components.uhoo.async_get_clientsession",
+            return_value=mock_session,
+        ),
     ):
-        mock_get_session.return_value = AsyncMock()
-
         # Should propagate the exception
         with pytest.raises(Exception) as exc_info:
             await async_setup_entry(hass, config_entry)
@@ -392,6 +481,7 @@ async def test_async_setup_entry_with_devices(
     hass: HomeAssistant,
     mock_client: MagicMock,
     mock_coordinator: MagicMock,
+    mock_session: MagicMock,
 ) -> None:
     """Test setup when client has devices."""
     config_entry = create_mock_config_entry()
@@ -409,11 +499,10 @@ async def test_async_setup_entry_with_devices(
             return_value=mock_coordinator,
         ),
         patch(
-            "homeassistant.components.uhoo.async_get_clientsession"
-        ) as mock_get_session,
+            "homeassistant.components.uhoo.async_get_clientsession",
+            return_value=mock_session,
+        ),
     ):
-        mock_get_session.return_value = AsyncMock()
-
         # Call the setup function
         result = await async_setup_entry(hass, config_entry)
 
@@ -430,6 +519,7 @@ async def test_async_setup_entry_with_empty_devices(
     hass: HomeAssistant,
     mock_client: MagicMock,
     mock_coordinator: MagicMock,
+    mock_session: MagicMock,
 ) -> None:
     """Test setup when client has no devices."""
     config_entry = create_mock_config_entry()
@@ -447,11 +537,10 @@ async def test_async_setup_entry_with_empty_devices(
             return_value=mock_coordinator,
         ),
         patch(
-            "homeassistant.components.uhoo.async_get_clientsession"
-        ) as mock_get_session,
+            "homeassistant.components.uhoo.async_get_clientsession",
+            return_value=mock_session,
+        ),
     ):
-        mock_get_session.return_value = AsyncMock()
-
         # Call the setup function
         result = await async_setup_entry(hass, config_entry)
 
