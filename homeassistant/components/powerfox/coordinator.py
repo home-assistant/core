@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from datetime import datetime
-from typing import Generic, TypeVar
 
 from powerfox import (
     Device,
@@ -28,12 +27,8 @@ type PowerfoxCoordinator = (
 )
 type PowerfoxConfigEntry = ConfigEntry[list[PowerfoxCoordinator]]
 
-CoordinatorDataT = TypeVar("CoordinatorDataT")
 
-
-class PowerfoxBaseCoordinator(
-    DataUpdateCoordinator[CoordinatorDataT], Generic[CoordinatorDataT]
-):
+class PowerfoxBaseCoordinator[T](DataUpdateCoordinator[T]):
     """Base coordinator handling shared Powerfox logic."""
 
     config_entry: PowerfoxConfigEntry
@@ -56,7 +51,7 @@ class PowerfoxBaseCoordinator(
         self.client = client
         self.device = device
 
-    async def _async_update_data(self) -> CoordinatorDataT:
+    async def _async_update_data(self) -> T:
         """Fetch data and normalize Powerfox errors."""
         try:
             return await self._async_fetch_data()
@@ -65,7 +60,7 @@ class PowerfoxBaseCoordinator(
         except (PowerfoxConnectionError, PowerfoxNoDataError) as err:
             raise UpdateFailed(err) from err
 
-    async def _async_fetch_data(self) -> CoordinatorDataT:
+    async def _async_fetch_data(self) -> T:
         """Fetch data from the Powerfox API."""
         raise NotImplementedError
 
