@@ -615,6 +615,26 @@ INTENSITY_SENSORS: tuple[GarminConnectSensorEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfTime.MINUTES,
         icon="mdi:target",
     ),
+    GarminConnectSensorEntityDescription(
+        key="totalIntensityMinutes",
+        translation_key="total_intensity_minutes",
+        device_class=SensorDeviceClass.DURATION,
+        state_class=SensorStateClass.TOTAL,
+        native_unit_of_measurement=UnitOfTime.MINUTES,
+        icon="mdi:fire",
+        value_fn=lambda data: (
+            (data.get("moderateIntensityMinutes") or 0)
+            + ((data.get("vigorousIntensityMinutes") or 0) * 2)
+        )
+        if data.get("moderateIntensityMinutes") is not None
+        or data.get("vigorousIntensityMinutes") is not None
+        else None,
+        attributes_fn=lambda data: {
+            "moderate_minutes": data.get("moderateIntensityMinutes"),
+            "vigorous_minutes": data.get("vigorousIntensityMinutes"),
+            "goal": data.get("intensityMinutesGoal"),
+        },
+    ),
 )
 
 # SPO2 & Respiration Sensors

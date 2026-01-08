@@ -218,6 +218,9 @@
       "intensity_goal": {
         "name": "Intensity minutes goal"
       },
+      "total_intensity_minutes": {
+        "name": "Total intensity minutes"
+      },
       "lactate_threshold_hr": {
         "name": "Lactate threshold heart rate"
       },
