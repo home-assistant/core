@@ -48,7 +48,7 @@ class VelbusEntity(Entity):
                 DOMAIN,
                 self._module_address,
             )
-        serial = channel.get_module_serial() or channel.get_module_address()
+        serial = channel.get_module_serial() or str(channel.get_module_address())
         self._attr_unique_id = (
             f"{channel.get_module_type_name()}-{serial}-{channel.get_channel_number()}"
         )
