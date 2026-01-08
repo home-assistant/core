@@ -1124,6 +1124,9 @@
     "no_vehicle_data_for_device": {
       "message": "No vehicle data for device ID: {device_id}"
     },
+    "unknown_response": {
+      "message": "Unknown response: {response}"
+    },
     "wake_up_failed": {
       "message": "Failed to wake up vehicle: {message}"
     },
