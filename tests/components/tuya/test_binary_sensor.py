@@ -14,7 +14,7 @@ from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
-from . import MockDeviceListener, initialize_entry
+from . import MockDeviceListener, check_selective_state_update, initialize_entry
 
 from tests.common import MockConfigEntry, snapshot_platform
 
@@ -67,28 +67,20 @@ async def test_selective_state_update(
     expected_state: str,
     last_reported: str,
 ) -> None:
-    """Test binary sensor only updates when its dpcode is in updated properties.
-
-    This test verifies that when an update event comes with properties that do NOT
-    include the binary sensor's dpcode (e.g., a battery event for a door sensor),
-    the binary sensor state is not changed and last_reported is not updated.
-    """
-    entity_id = "binary_sensor.window_downstairs_door"
+    """Test skip_update/last_reported."""
     await initialize_entry(hass, mock_manager, mock_config_entry, mock_device)
-
-    assert hass.states.get(entity_id).state == "off"
-    assert (
-        hass.states.get(entity_id).last_reported.isoformat()
-        == "2024-01-01T00:00:00+00:00"
+    await check_selective_state_update(
+        hass,
+        mock_device,
+        mock_listener,
+        freezer,
+        entity_id="binary_sensor.window_downstairs_door",
+        dpcode="doorcontact_state",
+        initial_state="off",
+        updates=updates,
+        expected_state=expected_state,
+        last_reported=last_reported,
     )
-
-    # Force update the dpcode - should be ignored unless event contains the property
-    mock_device.status["doorcontact_state"] = True
-    freezer.tick(60)
-    await mock_listener.async_send_device_update(hass, mock_device, updates)
-
-    assert hass.states.get(entity_id).state == expected_state
-    assert hass.states.get(entity_id).last_reported.isoformat() == last_reported
 
 
 @pytest.mark.parametrize(
