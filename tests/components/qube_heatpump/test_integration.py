@@ -44,7 +44,7 @@ async def test_setup_with_entities(
 
     # Still need to mock DNS because conftest doesn't do it
     with patch(
-        "homeassistant.components.qube_heatpump.hub.socket.getaddrinfo",
+        "homeassistant.components.qube_heatpump.client.socket.getaddrinfo",
         return_value=[(socket.AF_INET, socket.SOCK_STREAM, 6, "", ("192.0.2.10", 502))],
     ):
         await hass.config_entries.async_setup(entry.entry_id)

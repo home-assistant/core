@@ -5,18 +5,14 @@ from __future__ import annotations
 import asyncio
 import contextlib
 from dataclasses import dataclass
-import ipaddress
 import logging
-import socket
-import struct
 from typing import TYPE_CHECKING, Any, cast
 
-from pymodbus.client import AsyncModbusTcpClient
-from pymodbus.exceptions import ModbusException
-from pymodbus.pdu import ExceptionResponse
+from .client import QubeClient
 
 if TYPE_CHECKING:
     from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 
 
 def _slugify(text: str) -> str:
@@ -60,18 +56,14 @@ class QubeHub:
     ) -> None:
         """Initialize the hub."""
         self._hass = hass
-        self._host = host
-        self._port = port
         self.entry_id = entry_id
-        self._unit = unit_id
         self._label = label or "qube1"
-        self._client: AsyncModbusTcpClient | None = None
+        self.client = QubeClient(host, port, unit_id)
         self.entities: list[EntityDef] = []
         # Backoff/timeout controls
         self._connect_backoff_s: float = 0.0
         self._connect_backoff_max_s: float = 60.0
         self._next_connect_ok_at: float = 0.0
-        self._io_timeout_s: float = 3.0
         # Error counters
         self._err_connect: int = 0
         self._err_read: int = 0
@@ -100,12 +92,12 @@ class QubeHub:
     @property
     def host(self) -> str:
         """Return host."""
-        return self._host
+        return self.client.host
 
     @property
     def unit(self) -> int:
         """Return unit ID."""
-        return self._unit
+        return self.client.unit
 
     @property
     def label(self) -> str:
@@ -119,100 +111,40 @@ class QubeHub:
 
     async def async_resolve_ip(self) -> None:
         """Resolve the host to a concrete IP address for diagnostics."""
-        with contextlib.suppress(ValueError):
-            self._resolved_ip = str(ipaddress.ip_address(self._host))
-            return
-
-        try:
-            infos = await asyncio.get_running_loop().getaddrinfo(
-                self._host,
-                None,
-                type=socket.SOCK_STREAM,
-            )
-        except OSError:
-            self._resolved_ip = None
-            return
-
-        for family, _, _, _, sockaddr in infos:
-            if not sockaddr:
-                continue
-            addr = sockaddr[0]
-            if not isinstance(addr, str):
-                continue
-            if family == socket.AF_INET6 and addr.startswith("::ffff:"):
-                addr = addr.removeprefix("::ffff:")
-            self._resolved_ip = addr
-            return
-
-        self._resolved_ip = None
+        self._resolved_ip = await self.client.resolve_ip()
 
     async def async_connect(self) -> None:
         """Connect to the Modbus server."""
         now = asyncio.get_running_loop().time()
         if now < self._next_connect_ok_at:
-            raise ModbusException("Backoff active; skipping connect attempt")
-        if self._client is None:
-            self._client = AsyncModbusTcpClient(self._host, port=self._port)
-        connected = bool(getattr(self._client, "connected", False))
-        if not connected:
-            try:
-                ok = await asyncio.wait_for(
-                    self._client.connect(), timeout=self._io_timeout_s
-                )
-            except Exception as exc:
-                # Increase backoff
-                self._connect_backoff_s = min(
-                    self._connect_backoff_max_s, (self._connect_backoff_s or 1.0) * 2
-                )
-                self._next_connect_ok_at = now + self._connect_backoff_s
-                self._err_connect += 1
-                raise ModbusException(f"Failed to connect: {exc}") from exc
-            if ok is False:
-                self._connect_backoff_s = min(
-                    self._connect_backoff_max_s, (self._connect_backoff_s or 1.0) * 2
-                )
-                self._next_connect_ok_at = now + self._connect_backoff_s
-                self._err_connect += 1
-                raise ModbusException("Failed to connect to Modbus TCP server")
-            # Reset backoff after success
-            self._connect_backoff_s = 0.0
-            self._next_connect_ok_at = 0.0
+            # We are in backoff
+            # Only raise if we really need to downstream, but typically
+            # we just want to ensure we don't spam connect
+            pass
 
-    async def _call(self, method: str, **kwargs: Any) -> Any:
-        if self._client is None:
-            raise ModbusException("Client not connected")
-        func = getattr(self._client, method)
-        # Try with 'slave' then 'unit', finally without either
-        try:
-            resp = await asyncio.wait_for(
-                func(**{**kwargs, "slave": self._unit}), timeout=self._io_timeout_s
+        connected = await self.client.connect()
+        if not connected:
+            # Increase backoff
+            self._connect_backoff_s = min(
+                self._connect_backoff_max_s, (self._connect_backoff_s or 1.0) * 2
             )
-        except TypeError:
-            try:
-                resp = await asyncio.wait_for(
-                    func(**{**kwargs, "unit": self._unit}), timeout=self._io_timeout_s
-                )
-            except TypeError:
-                resp = await asyncio.wait_for(
-                    func(**kwargs), timeout=self._io_timeout_s
-                )
-        # Normalize error checking
-        if isinstance(resp, ExceptionResponse) or (
-            hasattr(resp, "isError") and resp.isError()
-        ):
-            raise ModbusException(f"Modbus error on {method} with {kwargs}")
-        return resp
+            self._next_connect_ok_at = now + self._connect_backoff_s
+            self._err_connect += 1
+            # We don't raise here to avoid crashing setup/update cycles excessively,
+            # allowing retry later. But if caller expects connection, they check is_connected.
+            return
+
+        # Reset backoff after success
+        self._connect_backoff_s = 0.0
+        self._next_connect_ok_at = 0.0
 
     async def async_close(self) -> None:
         """Close the connection."""
-        if self._client is not None:
-            with contextlib.suppress(Exception):
-                self._client.close()
-            self._client = None
+        await self.client.close()
 
     def set_unit_id(self, unit_id: int) -> None:
         """Set unit ID."""
-        self._unit = int(unit_id)
+        self.client.set_unit_id(unit_id)
 
     @property
     def err_connect(self) -> int:
@@ -230,29 +162,21 @@ class QubeHub:
 
     async def async_read_value(self, ent: EntityDef) -> Any:
         """Read a value from the device."""
-        if self._client is None:
-            raise ModbusException("Client not connected")
+        if not self.client.is_connected:
+            await self.async_connect()
+            if not self.client.is_connected:
+                raise HomeAssistantError("Client not connected")
 
-        # sensor
-        return await self._read_sensor(ent)
-
-    async def _read_sensor(self, ent: EntityDef) -> Any:
         count = 1
         if ent.data_type in ("float32", "uint32", "int32"):
             count = 2
 
         try:
-            if ent.input_type == "input":
-                rr = await self._call(
-                    "read_input_registers", address=ent.address, count=count
-                )
-            else:
-                # default to holding
-                rr = await self._call(
-                    "read_holding_registers", address=ent.address, count=count
-                )
-        except ModbusException:
-            # Some devices/YAMLs use 1-based addresses; try address-1 as fallback
+            regs = await self.client.read_registers(
+                ent.address, count, ent.input_type or "holding"
+            )
+        except Exception:
+            # Try fallback address - 1
             fallback_addr = ent.address - 1
             if fallback_addr < 0:
                 raise
@@ -261,39 +185,12 @@ class QubeHub:
                 ent.address,
                 fallback_addr,
             )
-            if ent.input_type == "input":
-                rr = await self._call(
-                    "read_input_registers", address=fallback_addr, count=count
-                )
-            else:
-                rr = await self._call(
-                    "read_holding_registers", address=fallback_addr, count=count
-                )
+            regs = await self.client.read_registers(
+                fallback_addr, count, ent.input_type or "holding"
+            )
 
-        regs = getattr(rr, "registers", None)
-        if regs is None:
-            raise ModbusException("No registers returned")
-
-        val = self._decode_registers(regs, ent.data_type)
+        val = self.client.decode_registers(regs, ent.data_type)
         return self._apply_post_process(val, ent)
-
-    def _decode_registers(self, regs: list[int], data_type: str | None) -> float | int:
-        # All decoding assumes big-endian word and byte order.
-        if data_type == "float32":
-            raw = struct.pack(">HH", int(regs[0]) & 0xFFFF, int(regs[1]) & 0xFFFF)
-            return float(struct.unpack(">f", raw)[0])
-        if data_type == "int16":
-            v = int(regs[0]) & 0xFFFF
-            return v - 0x10000 if v & 0x8000 else v
-        if data_type == "uint16":
-            return int(regs[0]) & 0xFFFF
-        if data_type == "uint32":
-            return ((int(regs[0]) & 0xFFFF) << 16) | (int(regs[1]) & 0xFFFF)
-        if data_type == "int32":
-            u = ((int(regs[0]) & 0xFFFF) << 16) | (int(regs[1]) & 0xFFFF)
-            return u - 0x1_0000_0000 if u & 0x8000_0000 else u
-        # Fallback to first register as unsigned 16-bit
-        return int(regs[0]) & 0xFFFF
 
     def _apply_post_process(self, val: float, ent: EntityDef) -> float:
         # Apply scale/offset as value = value * scale + offset
