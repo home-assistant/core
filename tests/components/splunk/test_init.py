@@ -5,19 +5,11 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 from aiohttp import ClientConnectionError, ClientResponseError
 from hass_splunk import SplunkPayloadError
-import pytest
 
 from homeassistant.components.splunk.const import CONF_FILTER, DOMAIN
-from homeassistant.config_entries import ConfigEntryState, SOURCE_IMPORT
-from homeassistant.const import (
-    CONF_HOST,
-    CONF_PORT,
-    CONF_SSL,
-    CONF_TOKEN,
-    EVENT_STATE_CHANGED,
-)
+from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntryState
+from homeassistant.const import CONF_HOST, CONF_PORT, CONF_SSL, CONF_TOKEN
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import issue_registry as ir
 from homeassistant.setup import async_setup_component
 
@@ -49,13 +41,13 @@ async def test_setup_entry_success(
 async def test_setup_entry_connection_error(
     hass: HomeAssistant, mock_hass_splunk: AsyncMock, mock_config_entry: MockConfigEntry
 ) -> None:
-    """Test setup with connection error raises ConfigEntryNotReady."""
+    """Test setup with connection error results in retry state."""
     mock_config_entry.add_to_hass(hass)
 
     mock_hass_splunk.check.return_value = False
 
-    with pytest.raises(ConfigEntryNotReady):
-        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
 
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
 
@@ -63,14 +55,14 @@ async def test_setup_entry_connection_error(
 async def test_setup_entry_auth_error(
     hass: HomeAssistant, mock_hass_splunk: AsyncMock, mock_config_entry: MockConfigEntry
 ) -> None:
-    """Test setup with auth error raises ConfigEntryAuthFailed."""
+    """Test setup with auth error results in setup error state."""
     mock_config_entry.add_to_hass(hass)
 
     # Connectivity ok, but token check fails
     mock_hass_splunk.check.side_effect = [True, False]
 
-    with pytest.raises(ConfigEntryAuthFailed):
-        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
 
     assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
 
@@ -78,25 +70,29 @@ async def test_setup_entry_auth_error(
 async def test_setup_entry_client_connection_error(
     hass: HomeAssistant, mock_hass_splunk: AsyncMock, mock_config_entry: MockConfigEntry
 ) -> None:
-    """Test setup with ClientConnectionError raises ConfigEntryNotReady."""
+    """Test setup with ClientConnectionError results in retry state."""
     mock_config_entry.add_to_hass(hass)
 
     mock_hass_splunk.check.side_effect = ClientConnectionError("Connection failed")
 
-    with pytest.raises(ConfigEntryNotReady):
-        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
 
 
 async def test_setup_entry_timeout_error(
     hass: HomeAssistant, mock_hass_splunk: AsyncMock, mock_config_entry: MockConfigEntry
 ) -> None:
-    """Test setup with timeout raises ConfigEntryNotReady."""
+    """Test setup with timeout results in retry state."""
     mock_config_entry.add_to_hass(hass)
 
     mock_hass_splunk.check.side_effect = TimeoutError()
 
-    with pytest.raises(ConfigEntryNotReady):
-        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
 
 
 async def test_unload_entry(
@@ -125,9 +121,7 @@ async def test_yaml_import_without_filter(hass: HomeAssistant) -> None:
         patch(
             "homeassistant.components.splunk.config_flow.hass_splunk", autospec=True
         ) as mock_config_flow_client_class,
-        patch(
-            "homeassistant.components.splunk.async_setup_entry", return_value=True
-        ),
+        patch("homeassistant.components.splunk.async_setup_entry", return_value=True),
     ):
         mock_client = MagicMock()
         mock_client.check = AsyncMock(return_value=True)
@@ -207,19 +201,17 @@ async def test_event_listener_unauthorized(
     assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
+    # Create a real state first
+    hass.states.async_set("sensor.test", "123")
+    await hass.async_block_till_done()
+
     # Simulate unauthorized error when sending event
     mock_hass_splunk.queue.side_effect = SplunkPayloadError(
-        HTTPStatus.UNAUTHORIZED, "Unauthorized"
+        0, "Unauthorized", HTTPStatus.UNAUTHORIZED
     )
 
-    # Fire a state change event
-    hass.bus.async_fire(
-        EVENT_STATE_CHANGED,
-        {
-            "entity_id": "sensor.test",
-            "new_state": hass.states.async_get("sensor.test") or MagicMock(),
-        },
-    )
+    # Change the state to trigger an event
+    hass.states.async_set("sensor.test", "456")
     await hass.async_block_till_done()
 
     # Verify reauth flow was started
@@ -237,17 +229,15 @@ async def test_event_listener_connection_error(
     assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
+    # Create a real state first
+    hass.states.async_set("sensor.test", "123")
+    await hass.async_block_till_done()
+
     # Simulate connection error when sending event
     mock_hass_splunk.queue.side_effect = ClientConnectionError("Connection failed")
 
-    # Fire a state change event - should not raise
-    hass.bus.async_fire(
-        EVENT_STATE_CHANGED,
-        {
-            "entity_id": "sensor.test",
-            "new_state": hass.states.async_get("sensor.test") or MagicMock(),
-        },
-    )
+    # Change the state to trigger an event - should not raise
+    hass.states.async_set("sensor.test", "456")
     await hass.async_block_till_done()
 
 
@@ -260,17 +250,15 @@ async def test_event_listener_timeout(
     assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
+    # Create a real state first
+    hass.states.async_set("sensor.test", "123")
+    await hass.async_block_till_done()
+
     # Simulate timeout when sending event
     mock_hass_splunk.queue.side_effect = TimeoutError()
 
-    # Fire a state change event - should not raise
-    hass.bus.async_fire(
-        EVENT_STATE_CHANGED,
-        {
-            "entity_id": "sensor.test",
-            "new_state": hass.states.async_get("sensor.test") or MagicMock(),
-        },
-    )
+    # Change the state to trigger an event - should not raise
+    hass.states.async_set("sensor.test", "456")
     await hass.async_block_till_done()
 
 
@@ -283,6 +271,10 @@ async def test_event_listener_response_error(
     assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
+    # Create a real state first
+    hass.states.async_set("sensor.test", "123")
+    await hass.async_block_till_done()
+
     # Simulate response error when sending event
     mock_hass_splunk.queue.side_effect = ClientResponseError(
         request_info=MagicMock(),
@@ -291,12 +283,6 @@ async def test_event_listener_response_error(
         message="Internal Server Error",
     )
 
-    # Fire a state change event - should not raise
-    hass.bus.async_fire(
-        EVENT_STATE_CHANGED,
-        {
-            "entity_id": "sensor.test",
-            "new_state": hass.states.async_get("sensor.test") or MagicMock(),
-        },
-    )
+    # Change the state to trigger an event - should not raise
+    hass.states.async_set("sensor.test", "456")
     await hass.async_block_till_done()

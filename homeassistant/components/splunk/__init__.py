@@ -12,7 +12,7 @@ from aiohttp import ClientConnectionError, ClientResponseError
 from hass_splunk import SplunkPayloadError, hass_splunk
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigEntry, SOURCE_IMPORT
+from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import (
     CONF_HOST,
     CONF_NAME,
@@ -22,7 +22,7 @@ from homeassistant.const import (
     CONF_VERIFY_SSL,
     EVENT_STATE_CHANGED,
 )
-from homeassistant.core import Event, HomeAssistant
+from homeassistant.core import Event, EventStateChangedData, HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import (
     config_validation as cv,
@@ -71,7 +71,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     conf = config[DOMAIN]
 
     # Check if the configuration includes entity filters
-    has_filter = bool(conf.get(CONF_FILTER))
+    # FILTER_SCHEMA returns an EntityFilter object - check empty_filter attribute
+    entity_filter = conf.get(CONF_FILTER)
+    has_filter = entity_filter is not None and not entity_filter.empty_filter
 
     if has_filter:
         # Create a repair issue for configurations with filters
@@ -149,12 +151,13 @@ async def _async_setup_yaml(hass: HomeAssistant, conf: dict[str, Any]) -> bool:
 
     await event_collector.queue(json.dumps(payload, cls=JSONEncoder), send=False)
 
-    async def splunk_event_listener(event: Event) -> None:
+    async def splunk_event_listener(event: Event[EventStateChangedData]) -> None:
         """Listen for new messages on the bus and sends them to Splunk."""
         state = event.data.get("new_state")
         if state is None or not entity_filter(state.entity_id):
             return
 
+        _state: float | str
         try:
             _state = state_helper.state_as_number(state)
         except ValueError:
@@ -211,17 +214,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     # Validate connectivity and token
     try:
         # Check connectivity first
-        if not await event_collector.check(connectivity=True, token=False, busy=False):
-            raise ConfigEntryNotReady(
-                f"Unable to connect to Splunk instance at {host}:{port}"
-            )
-
-        # Then check token validity
-        if not await event_collector.check(connectivity=False, token=True, busy=False):
-            raise ConfigEntryAuthFailed(
-                "Invalid Splunk token - please reauthenticate"
-            )
-
+        connectivity_ok = await event_collector.check(
+            connectivity=True, token=False, busy=False
+        )
+        # Then check token validity (only if connectivity passed)
+        token_ok = connectivity_ok and await event_collector.check(
+            connectivity=False, token=True, busy=False
+        )
     except ClientConnectionError as err:
         raise ConfigEntryNotReady(
             f"Connection error connecting to Splunk at {host}:{port}: {err}"
@@ -236,6 +235,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             f"Unexpected error connecting to Splunk: {err}"
         ) from err
 
+    if not connectivity_ok:
+        raise ConfigEntryNotReady(
+            f"Unable to connect to Splunk instance at {host}:{port}"
+        )
+    if not token_ok:
+        raise ConfigEntryAuthFailed("Invalid Splunk token - please reauthenticate")
+
     # Send startup event
     payload = {
         "time": time.time(),
@@ -248,12 +254,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     await event_collector.queue(json.dumps(payload, cls=JSONEncoder), send=False)
 
-    async def splunk_event_listener(event: Event) -> None:
+    async def splunk_event_listener(event: Event[EventStateChangedData]) -> None:
         """Listen for new messages on the bus and sends them to Splunk."""
         state = event.data.get("new_state")
         if state is None:
             return
 
+        _state: float | str
         try:
             _state = state_helper.state_as_number(state)
         except ValueError:
