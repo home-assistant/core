@@ -22,6 +22,7 @@ type IndevoltConfigEntry = ConfigEntry[IndevoltCoordinator]
 
 _LOGGER = logging.getLogger(__name__)
 
+# The map of Power Modes and associated API data points
 MODE_MAP = {
     "self_consumed_prioritized": 1,
     "real_time_control": 4,

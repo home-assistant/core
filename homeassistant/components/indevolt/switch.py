@@ -63,8 +63,8 @@ class IndevoltSwitchEntity(CoordinatorEntity[IndevoltCoordinator], SwitchEntity)
             return bool(value) if value is not None else None
         return None
 
-    def _get_write_cjson_point(self) -> str:
-        """Get the cJson Point for writing to this entity."""
+    def _get_write_key(self) -> str:
+        """Get the data point (key) for writing to this entity."""
         raise NotImplementedError
 
     def _get_switch_state(self) -> bool:
@@ -74,7 +74,7 @@ class IndevoltSwitchEntity(CoordinatorEntity[IndevoltCoordinator], SwitchEntity)
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
         try:
-            await self.coordinator.async_push_data(self._get_write_cjson_point(), 1)
+            await self.coordinator.async_push_data(self._get_write_key(), 1)
             await self.coordinator.async_request_refresh()
         except Exception as err:
             _LOGGER.error("Failed to turn on %s: %s", self.name, err)
@@ -83,7 +83,7 @@ class IndevoltSwitchEntity(CoordinatorEntity[IndevoltCoordinator], SwitchEntity)
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the switch off."""
         try:
-            await self.coordinator.async_push_data(self._get_write_cjson_point(), 0)
+            await self.coordinator.async_push_data(self._get_write_key(), 0)
             await self.coordinator.async_request_refresh()
         except Exception as err:
             _LOGGER.error("Failed to turn off %s: %s", self.name, err)
@@ -94,10 +94,9 @@ class GridChargingSwitch(IndevoltSwitchEntity):
     """Switch for Grid Charging."""
 
     _attr_translation_key = "grid_charging"
-    _attr_icon = "mdi:transmission-tower"
 
-    def _get_write_cjson_point(self) -> str:
-        """Get the cJson Point for writing Grid Charging state."""
+    def _get_write_key(self) -> str:
+        """Get the data point (key) for writing Grid Charging state."""
         return "1143"
 
     def _get_switch_state(self) -> bool:

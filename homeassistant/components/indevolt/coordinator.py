@@ -73,42 +73,29 @@ class IndevoltCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
         except TimeOutException as err:
             _LOGGER.warning("Device update timed out: %s", err)
-            raise UpdateFailed(f"Update timed out: {err}") from err
+            raise UpdateFailed(f"Device update timed out: {err}") from err
 
         except Exception as err:
-            _LOGGER.exception("Failed to update device data")
-            raise UpdateFailed(f"Update failed: {err}") from err
+            _LOGGER.warning("Failed to update device data: %s", err)
+            raise UpdateFailed(f"Device update failed: {err}") from err
 
         else:
             return data
 
-    async def async_push_data(self, cjson_point: str, value: Any) -> dict[str, Any]:
-        """Push/write data to device.
-
-        Args:
-            cjson_point: cJson Point identifier (e.g., "47015")
-            value: Value to write (will be converted to list if needed)
-
-        Example:
-            await coordinator.async_push_data("47015", [2,700,5])
-            await coordinator.async_push_data("47005", 100)
-        """
+    async def async_push_data(self, key: str, value: Any) -> dict[str, Any]:
+        """Push/write data values to given key to device."""
         try:
-            result = await self.api.set_data(cjson_point, value)
+            result = await self.api.set_data(key, value)
 
         except TimeOutException:
-            _LOGGER.warning(
-                "Device timed out during data push for sensor %s:", cjson_point
-            )
+            _LOGGER.warning("Device timed out during data push for sensor %s:", key)
             raise
 
         except Exception:
-            _LOGGER.exception(
-                "Failed to push data to device for sensor %s", cjson_point
-            )
+            _LOGGER.exception("Failed to push data to device for sensor %s", key)
             raise
 
         else:
-            _LOGGER.info("Data pushed to device %s: %s", cjson_point, value)
-            _LOGGER.info("Result of push: %s", str(result))
+            _LOGGER.info("Data pushed to device %s: %s", key, value)
+            _LOGGER.debug("Result of push: %s", str(result))
             return result
