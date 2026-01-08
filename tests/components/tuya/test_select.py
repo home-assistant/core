@@ -54,7 +54,7 @@ async def test_platform_setup_and_discovery(
         # Update with multiple properties including dpcode - state should change
         (
             {"control": "stop", "control_back_mode": "back"},
-            "on",
+            "back",
             "2024-01-01T00:01:00+00:00",
         ),
     ],
