@@ -1,8 +1,10 @@
 """conftest for the GitHub integration."""
 
+import asyncio
 from collections.abc import Generator
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 
+from aiogithubapi import GitHubLoginDeviceModel, GitHubLoginOauthModel
 import pytest
 
 from homeassistant.components.github.const import CONF_REPOSITORIES, DOMAIN
@@ -11,7 +13,11 @@ from homeassistant.core import HomeAssistant
 
 from .common import MOCK_ACCESS_TOKEN, TEST_REPOSITORY, setup_github_integration
 
-from tests.common import MockConfigEntry
+from tests.common import (
+    MockConfigEntry,
+    async_load_json_object_fixture,
+    load_json_object_fixture,
+)
 from tests.test_util.aiohttp import AiohttpClientMocker
 
 
@@ -31,6 +37,44 @@ def mock_setup_entry() -> Generator[None]:
     """Mock setting up a config entry."""
     with patch("homeassistant.components.github.async_setup_entry", return_value=True):
         yield
+
+
+@pytest.fixture
+def device_activation_event() -> asyncio.Event:
+    """Fixture to provide an asyncio event for device activation."""
+    return asyncio.Event()
+
+
+@pytest.fixture
+def github_device_client(
+    hass: HomeAssistant,
+    device_activation_event: asyncio.Event,
+) -> Generator[AsyncMock]:
+    """Mock GitHub device client."""
+    with patch(
+        "homeassistant.components.github.config_flow.GitHubDeviceAPI",
+        autospec=True,
+    ) as github_client_mock:
+        client = github_client_mock.return_value
+        register_object = AsyncMock()
+        register_object.data = GitHubLoginDeviceModel(
+            load_json_object_fixture("device_register.json", DOMAIN)
+        )
+        client.register.return_value = register_object
+
+        async def mock_api_device_activation(device_code) -> AsyncMock:
+            # Simulate the device activation process
+            await device_activation_event.wait()
+            activate_object = AsyncMock()
+            activate_object.data = GitHubLoginOauthModel(
+                await async_load_json_object_fixture(
+                    hass, "device_activate.json", DOMAIN
+                )
+            )
+            return activate_object
+
+        client.activation = mock_api_device_activation
+        yield client
 
 
 @pytest.fixture

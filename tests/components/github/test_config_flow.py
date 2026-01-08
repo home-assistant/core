@@ -1,5 +1,6 @@
 """Test the GitHub config flow."""
 
+import threading
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from aiogithubapi import GitHubException
@@ -13,6 +14,7 @@ from homeassistant.components.github.const import (
     DEFAULT_REPOSITORIES,
     DOMAIN,
 )
+from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_ACCESS_TOKEN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType, UnknownFlow
@@ -26,48 +28,20 @@ from tests.test_util.aiohttp import AiohttpClientMocker
 async def test_full_user_flow_implementation(
     hass: HomeAssistant,
     mock_setup_entry: None,
-    aioclient_mock: AiohttpClientMocker,
-    freezer: FrozenDateTimeFactory,
+    github_device_client: AsyncMock,
+    device_activation_event: threading.Event,
 ) -> None:
     """Test the full manual user flow from start to finish."""
-    aioclient_mock.post(
-        "https://github.com/login/device/code",
-        json={
-            "device_code": "3584d83530557fdd1f46af8289938c8ef79f9dc5",
-            "user_code": "WDJB-MJHT",
-            "verification_uri": "https://github.com/login/device",
-            "expires_in": 900,
-            "interval": 5,
-        },
-        headers={"Content-Type": "application/json"},
-    )
-    # User has not yet entered the code
-    aioclient_mock.post(
-        "https://github.com/login/oauth/access_token",
-        json={"error": "authorization_pending"},
-        headers={"Content-Type": "application/json"},
-    )
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
-        context={"source": config_entries.SOURCE_USER},
+        context={"source": SOURCE_USER},
     )
 
     assert result["step_id"] == "device"
     assert result["type"] is FlowResultType.SHOW_PROGRESS
 
-    # User enters the code
-    aioclient_mock.clear_requests()
-    aioclient_mock.post(
-        "https://github.com/login/oauth/access_token",
-        json={
-            CONF_ACCESS_TOKEN: MOCK_ACCESS_TOKEN,
-            "token_type": "bearer",
-            "scope": "",
-        },
-        headers={"Content-Type": "application/json"},
-    )
-    freezer.tick(10)
+    device_activation_event.set()
     await hass.async_block_till_done()
 
     result = await hass.config_entries.flow.async_configure(result["flow_id"])
@@ -81,10 +55,8 @@ async def test_full_user_flow_implementation(
 
     assert result["title"] == ""
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert "data" in result
-    assert result["data"][CONF_ACCESS_TOKEN] == MOCK_ACCESS_TOKEN
-    assert "options" in result
-    assert result["options"][CONF_REPOSITORIES] == DEFAULT_REPOSITORIES
+    assert result["data"] == {CONF_ACCESS_TOKEN: MOCK_ACCESS_TOKEN}
+    assert result["options"] == {CONF_REPOSITORIES: DEFAULT_REPOSITORIES}
 
 
 async def test_flow_with_registration_failure(
