@@ -78,6 +78,22 @@ def github_device_client(
 
 
 @pytest.fixture
+def github_client(hass: HomeAssistant) -> Generator[AsyncMock]:
+    """Mock GitHub device client."""
+    with (
+        patch(
+            "homeassistant.components.github.config_flow.GitHubAPI",
+            autospec=True,
+        ) as github_client_mock,
+        patch("homeassistant.components.github.GitHubAPI", new=github_client_mock),
+    ):
+        client = github_client_mock.return_value
+        client.user.return_value.starred.return_value = []
+        client.user.return_value.repos.return_value = []
+        yield client
+
+
+@pytest.fixture
 async def init_integration(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,

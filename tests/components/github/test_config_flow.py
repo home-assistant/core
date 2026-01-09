@@ -1,10 +1,9 @@
 """Test the GitHub config flow."""
 
-import threading
+import asyncio
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from aiogithubapi import GitHubException
-from freezegun.api import FrozenDateTimeFactory
 import pytest
 
 from homeassistant import config_entries
@@ -29,13 +28,12 @@ async def test_full_user_flow_implementation(
     hass: HomeAssistant,
     mock_setup_entry: None,
     github_device_client: AsyncMock,
-    device_activation_event: threading.Event,
+    device_activation_event: asyncio.Event,
 ) -> None:
     """Test the full manual user flow from start to finish."""
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_USER},
+        DOMAIN, context={"source": SOURCE_USER}
     )
 
     assert result["step_id"] == "device"
@@ -61,58 +59,39 @@ async def test_full_user_flow_implementation(
 
 async def test_flow_with_registration_failure(
     hass: HomeAssistant,
-    aioclient_mock: AiohttpClientMocker,
+    github_device_client: AsyncMock,
 ) -> None:
     """Test flow with registration failure of the device."""
-    aioclient_mock.post(
-        "https://github.com/login/device/code",
-        exc=GitHubException("Registration failed"),
-    )
+    github_device_client.register.side_effect = GitHubException("Registration failed")
     result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": config_entries.SOURCE_USER},
+        DOMAIN, context={"source": SOURCE_USER}
     )
     assert result["type"] is FlowResultType.ABORT
-    assert result.get("reason") == "could_not_register"
+    assert result["reason"] == "could_not_register"
 
 
 async def test_flow_with_activation_failure(
     hass: HomeAssistant,
-    aioclient_mock: AiohttpClientMocker,
-    freezer: FrozenDateTimeFactory,
+    github_device_client: AsyncMock,
+    device_activation_event: asyncio.Event,
 ) -> None:
     """Test flow with activation failure of the device."""
-    aioclient_mock.post(
-        "https://github.com/login/device/code",
-        json={
-            "device_code": "3584d83530557fdd1f46af8289938c8ef79f9dc5",
-            "user_code": "WDJB-MJHT",
-            "verification_uri": "https://github.com/login/device",
-            "expires_in": 900,
-            "interval": 5,
-        },
-        headers={"Content-Type": "application/json"},
-    )
-    # User has not yet entered the code
-    aioclient_mock.post(
-        "https://github.com/login/oauth/access_token",
-        json={"error": "authorization_pending"},
-        headers={"Content-Type": "application/json"},
-    )
+
+    async def mock_api_device_activation(device_code) -> None:
+        # Simulate the device activation process
+        await device_activation_event.wait()
+        raise GitHubException("Activation failed")
+
+    github_device_client.activation = mock_api_device_activation
+
     result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": config_entries.SOURCE_USER},
+        DOMAIN, context={"source": SOURCE_USER}
     )
+
     assert result["step_id"] == "device"
     assert result["type"] is FlowResultType.SHOW_PROGRESS
 
-    # Activation fails
-    aioclient_mock.clear_requests()
-    aioclient_mock.post(
-        "https://github.com/login/oauth/access_token",
-        exc=GitHubException("Activation failed"),
-    )
-    freezer.tick(10)
+    device_activation_event.set()
     await hass.async_block_till_done()
 
     result = await hass.config_entries.flow.async_configure(result["flow_id"])
