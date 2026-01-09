@@ -9432,7 +9432,7 @@
                   'suggested_display_precision': 0,
                 }),
               }),
-              'original_device_class': 'energy',
+              'original_device_class': 'energy_storage',
               'original_icon': None,
               'original_name': 'Available battery energy',
               'platform': 'enphase_envoy',
@@ -9445,7 +9445,7 @@
             }),
             'state': dict({
               'attributes': dict({
-                'device_class': 'energy',
+                'device_class': 'energy_storage',
                 'friendly_name': 'Envoy <<envoyserial>> Available battery energy',
                 'state_class': 'measurement',
                 'unit_of_measurement': 'Wh',
@@ -9482,7 +9482,7 @@
                   'suggested_display_precision': 0,
                 }),
               }),
-              'original_device_class': 'energy',
+              'original_device_class': 'energy_storage',
               'original_icon': None,
               'original_name': 'Reserve battery energy',
               'platform': 'enphase_envoy',
@@ -9495,7 +9495,7 @@
             }),
             'state': dict({
               'attributes': dict({
-                'device_class': 'energy',
+                'device_class': 'energy_storage',
                 'friendly_name': 'Envoy <<envoyserial>> Reserve battery energy',
                 'state_class': 'measurement',
                 'unit_of_measurement': 'Wh',
@@ -9530,7 +9530,7 @@
                   'suggested_display_precision': 0,
                 }),
               }),
-              'original_device_class': 'energy',
+              'original_device_class': 'energy_storage',
               'original_icon': None,
               'original_name': 'Battery capacity',
               'platform': 'enphase_envoy',
@@ -9543,7 +9543,7 @@
             }),
             'state': dict({
               'attributes': dict({
-                'device_class': 'energy',
+                'device_class': 'energy_storage',
                 'friendly_name': 'Envoy <<envoyserial>> Battery capacity',
                 'unit_of_measurement': 'Wh',
               }),
