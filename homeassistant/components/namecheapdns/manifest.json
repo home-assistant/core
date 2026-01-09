@@ -1,6 +1,6 @@
 {
   "domain": "namecheapdns",
-  "name": "Namecheap FreeDNS",
+  "name": "Namecheap DynamicDNS",
   "codeowners": [],
   "documentation": "https://www.home-assistant.io/integrations/namecheapdns",
   "iot_class": "cloud_push",
