@@ -58,6 +58,7 @@
         "state": {
           "advanced": "Advanced",
           "gridcompany": "Grid company",
+          "nettleie": "Grid fee",
           "off": "[%key:common::state::off%]",
           "oso": "OSO",
           "smartcompany": "Smart company"
