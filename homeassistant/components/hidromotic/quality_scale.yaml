@@ -20,10 +20,10 @@ rules:
       Integration uses WebSocket for real-time updates.
   unique-config-entry: done
   entity-unique-id: done
-  docs-installation-instructions: todo
-  docs-removal-instructions: todo
+  docs-installation-instructions: done
+  docs-removal-instructions: done
   test-before-setup: done
-  docs-high-level-description: todo
+  docs-high-level-description: done
   config-flow-test-coverage: done
   docs-actions:
     status: exempt

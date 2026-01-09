@@ -70,7 +70,7 @@ class HidromoticTankFullSensor(
     def __init__(
         self,
         coordinator: HidromoticCoordinator,
-        entry: ConfigEntry,
+        entry: HidromoticConfigEntry,
         tank_id: int,
         tank_data: dict[str, Any],
     ) -> None:
@@ -143,7 +143,7 @@ class HidromoticTankEmptySensor(
     def __init__(
         self,
         coordinator: HidromoticCoordinator,
-        entry: ConfigEntry,
+        entry: HidromoticConfigEntry,
         tank_id: int,
         tank_data: dict[str, Any],
     ) -> None:

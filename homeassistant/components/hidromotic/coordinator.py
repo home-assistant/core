@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Callable
 import logging
 from typing import Any
 
@@ -14,8 +15,6 @@ from .client import HidromoticClient
 from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
-
-SCAN_INTERVAL = 30  # seconds
 
 
 class HidromoticCoordinator(DataUpdateCoordinator[dict[str, Any]]):
@@ -33,7 +32,7 @@ class HidromoticCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             config_entry=config_entry,
         )
         self.client = client
-        self._remove_callback: callable | None = None
+        self._remove_callback: Callable[[], None] | None = None
 
     async def async_setup(self) -> bool:
         """Set up the coordinator."""

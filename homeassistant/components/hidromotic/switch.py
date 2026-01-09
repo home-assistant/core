@@ -63,7 +63,7 @@ class HidromoticZoneSwitch(CoordinatorEntity[HidromoticCoordinator], SwitchEntit
     def __init__(
         self,
         coordinator: HidromoticCoordinator,
-        entry: ConfigEntry,
+        entry: HidromoticConfigEntry,
         zone_id: int,
         zone_data: dict[str, Any],
     ) -> None:
@@ -96,7 +96,7 @@ class HidromoticZoneSwitch(CoordinatorEntity[HidromoticCoordinator], SwitchEntit
 
     @property
     def is_on(self) -> bool:
-        """Return true if the zone is flooding."""
+        """Return true if the zone is active."""
         zones = self.coordinator.get_zones()
         zone = zones.get(self._zone_id)
         if zone:
@@ -116,11 +116,11 @@ class HidromoticZoneSwitch(CoordinatorEntity[HidromoticCoordinator], SwitchEntit
         return {}
 
     async def async_turn_on(self, **kwargs: Any) -> None:
-        """Turn on the zone (start flooding)."""
+        """Turn on the zone (start irrigation)."""
         await self.coordinator.async_set_zone_state(self._zone_id, True)
 
     async def async_turn_off(self, **kwargs: Any) -> None:
-        """Turn off the zone (stop flooding)."""
+        """Turn off the zone (stop irrigation)."""
         await self.coordinator.async_set_zone_state(self._zone_id, False)
 
     @callback
@@ -143,7 +143,7 @@ class HidromoticAutoRiegoSwitch(CoordinatorEntity[HidromoticCoordinator], Switch
     def __init__(
         self,
         coordinator: HidromoticCoordinator,
-        entry: ConfigEntry,
+        entry: HidromoticConfigEntry,
     ) -> None:
         """Initialize the switch."""
         super().__init__(coordinator)

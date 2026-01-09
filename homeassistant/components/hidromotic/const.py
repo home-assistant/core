@@ -2,10 +2,6 @@
 
 DOMAIN = "hidromotic"
 
-CONF_HOST = "host"
-DEFAULT_HOST = "192.168.1.250"
-DEFAULT_PORT = 80
-
 # Output types from web.js (tipo & 0xF0)
 OUTPUT_TYPE_MANGUERA = 0x10  # Hose
 OUTPUT_TYPE_TANQUE = 0x20  # Tank

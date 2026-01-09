@@ -69,7 +69,7 @@ class HidromoticPumpSensor(CoordinatorEntity[HidromoticCoordinator], SensorEntit
     def __init__(
         self,
         coordinator: HidromoticCoordinator,
-        entry: ConfigEntry,
+        entry: HidromoticConfigEntry,
     ) -> None:
         """Initialize the sensor."""
         super().__init__(coordinator)
@@ -123,7 +123,7 @@ class HidromoticTankLevelSensor(CoordinatorEntity[HidromoticCoordinator], Sensor
     def __init__(
         self,
         coordinator: HidromoticCoordinator,
-        entry: ConfigEntry,
+        entry: HidromoticConfigEntry,
         tank_id: int,
         tank_data: dict[str, Any],
     ) -> None:
