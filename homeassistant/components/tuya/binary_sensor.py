@@ -463,6 +463,11 @@ class TuyaBinarySensorEntity(TuyaEntity, BinarySensorEntity):
         self._attr_unique_id = f"{super().unique_id}{description.key}"
         self._dpcode_wrapper = dpcode_wrapper
 
+    @property
+    def is_on(self) -> bool | None:
+        """Return true if sensor is on."""
+        return self._read_wrapper(self._dpcode_wrapper)
+
     async def _handle_state_update(
         self,
         updated_status_properties: list[str] | None,
@@ -472,8 +477,3 @@ class TuyaBinarySensorEntity(TuyaEntity, BinarySensorEntity):
         if self._dpcode_wrapper.skip_update(self.device, updated_status_properties):
             return
         self.async_write_ha_state()
-
-    @property
-    def is_on(self) -> bool | None:
-        """Return true if sensor is on."""
-        return self._read_wrapper(self._dpcode_wrapper)
