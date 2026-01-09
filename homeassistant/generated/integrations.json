@@ -4967,6 +4967,12 @@
       "config_flow": true,
       "iot_class": "local_polling"
     },
+    "path_train": {
+      "name": "PATH Train",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "cloud_push"
+    },
     "pcs_lighting": {
       "name": "PCS Lighting",
       "integration_type": "virtual",

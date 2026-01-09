@@ -737,7 +737,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '1970-01-01 00:00:00 0000',
+    'state': '1970-01-01 00:00:00 +0000',
   })
 # ---
 # name: test_sensor[sensor.myups_driver-entry]
@@ -971,7 +971,7 @@
     'name': None,
     'options': dict({
     }),
-    'original_device_class': None,
+    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
     'original_icon': None,
     'original_name': 'Last self-test',
     'platform': 'apcupsd',
@@ -986,6 +986,7 @@
 # name: test_sensor[sensor.myups_last_self_test-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'device_class': 'timestamp',
       'friendly_name': 'MyUPS Last self-test',
     }),
     'context': <ANY>,
@@ -993,7 +994,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '1970-01-01 00:00:00 0000',
+    'state': '1970-01-01T00:00:00+00:00',
   })
 # ---
 # name: test_sensor[sensor.myups_last_transfer-entry]
@@ -1094,6 +1095,55 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '14.0',
+  })
+# ---
+# name: test_sensor[sensor.myups_master_update-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.myups_master_update',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
+    'original_icon': None,
+    'original_name': 'Master update',
+    'platform': 'apcupsd',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'master_update',
+    'unique_id': 'XXXXXXXXXXXX_masterupd',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor[sensor.myups_master_update-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'timestamp',
+      'friendly_name': 'MyUPS Master update',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.myups_master_update',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '1970-01-01T00:00:00+00:00',
   })
 # ---
 # name: test_sensor[sensor.myups_mode-entry]
@@ -1745,6 +1795,55 @@
     'state': '3',
   })
 # ---
+# name: test_sensor[sensor.myups_startup_time-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.myups_startup_time',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
+    'original_icon': None,
+    'original_name': 'Startup time',
+    'platform': 'apcupsd',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'startup_time',
+    'unique_id': 'XXXXXXXXXXXX_starttime',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor[sensor.myups_startup_time-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'timestamp',
+      'friendly_name': 'MyUPS Startup time',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.myups_startup_time',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2009-04-26T14:22:46+00:00',
+  })
+# ---
 # name: test_sensor[sensor.myups_status-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -1886,7 +1985,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '1970-01-01 00:00:00 0000',
+    'state': '1970-01-01 00:00:00 +0000',
   })
 # ---
 # name: test_sensor[sensor.myups_status_flag-entry]
@@ -2179,7 +2278,7 @@
     'name': None,
     'options': dict({
     }),
-    'original_device_class': None,
+    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
     'original_icon': None,
     'original_name': 'Transfer from battery',
     'platform': 'apcupsd',
@@ -2194,6 +2293,7 @@
 # name: test_sensor[sensor.myups_transfer_from_battery-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'device_class': 'timestamp',
       'friendly_name': 'MyUPS Transfer from battery',
     }),
     'context': <ANY>,
@@ -2201,7 +2301,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '1970-01-01 00:00:00 0000',
+    'state': '1970-01-01T00:00:00+00:00',
   })
 # ---
 # name: test_sensor[sensor.myups_transfer_high-entry]
@@ -2333,7 +2433,7 @@
     'name': None,
     'options': dict({
     }),
-    'original_device_class': None,
+    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
     'original_icon': None,
     'original_name': 'Transfer to battery',
     'platform': 'apcupsd',
@@ -2348,6 +2448,7 @@
 # name: test_sensor[sensor.myups_transfer_to_battery-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'device_class': 'timestamp',
       'friendly_name': 'MyUPS Transfer to battery',
     }),
     'context': <ANY>,
@@ -2355,6 +2456,6 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '1970-01-01 00:00:00 0000',
+    'state': '1970-01-01T00:00:00+00:00',
   })
 # ---
