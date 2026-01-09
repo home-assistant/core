@@ -26,6 +26,7 @@ from homeassistant.util.percentage import (
 )
 
 from . import WebControlProConfigEntry
+from .const import DOMAIN
 from .entity import WebControlProGenericEntity
 
 SCAN_INTERVAL = timedelta(seconds=10)
@@ -161,16 +162,19 @@ class WebControlProSlatRotate(WebControlProSlat):
     def current_cover_tilt_position(self) -> int | None:
         """Return current position of cover tilt."""
         action = self._dest.action(self._tilt_action_desc)
-        return ranged_value_to_percentage(
-            (action.minValue, action.maxValue),
-            action["rotation"],
-        )
+        rotation = action["rotation"]
+        if rotation:
+            return ranged_value_to_percentage(
+                (self._min_rotation, self._max_rotation),
+                action["rotation"],
+            )
+        return None
 
     async def async_set_cover_tilt_position(self, **kwargs: Any) -> None:
         """Set the cover tilt position."""
         action = self._dest.action(self._tilt_action_desc)
         rotation = percentage_to_ranged_value(
-            (action.minValue, action.maxValue),
+            (self._min_rotation, self._max_rotation),
             kwargs[ATTR_TILT_POSITION],
         )
         await action(rotation=rotation)
@@ -178,9 +182,29 @@ class WebControlProSlatRotate(WebControlProSlat):
     async def async_open_cover_tilt(self, **kwargs: Any) -> None:
         """Open the cover tilt."""
         action = self._dest.action(self._tilt_action_desc)
-        await action(rotation=action.maxValue)
+        await action(rotation=0)
 
     async def async_close_cover_tilt(self, **kwargs: Any) -> None:
         """Close the cover tilt."""
         action = self._dest.action(self._tilt_action_desc)
         await action(rotation=action.minValue)
+
+    @property
+    def _min_rotation(self) -> float:
+        """Return the minimum rotation value."""
+        number_unique_id = f"{self._attr_unique_id}-rotation-min"
+        if number_unique_id in self.hass.data[DOMAIN]:
+            number_entity = self.hass.data[DOMAIN][number_unique_id]
+            return number_entity.native_value
+        action = self._dest.action(self._tilt_action_desc)
+        return action.minValue
+
+    @property
+    def _max_rotation(self) -> float:
+        """Return the maximum rotation value."""
+        number_unique_id = f"{self._attr_unique_id}-rotation-max"
+        if number_unique_id in self.hass.data[DOMAIN]:
+            number_entity = self.hass.data[DOMAIN][number_unique_id]
+            return number_entity.native_value
+        action = self._dest.action(self._tilt_action_desc)
+        return action.maxValue
