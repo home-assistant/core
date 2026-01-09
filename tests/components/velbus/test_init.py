@@ -101,6 +101,54 @@ async def test_device_identifier_migration(
     assert device_entry.sw_version == "module_sw_version"
 
 
+async def test_entity_unique_id_migration(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test entity unique_id migration."""
+    # Create a device first
+    device_entry = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        identifiers={(DOMAIN, "module_address")},
+        name="Test Module",
+        manufacturer="Velleman",
+        model="VMB4RYLD",
+        sw_version="1.0",
+    )
+
+    # Create an entity with old unique_id format: serial|address-channelNumber
+    old_unique_id = "12345|88-1"
+    expected_new_unique_id = "VMB4RYLD-12345|88-1"
+
+    entity_registry.async_get_or_create(
+        domain="switch",
+        platform=DOMAIN,
+        unique_id=old_unique_id,
+        config_entry=config_entry,
+        device_id=device_entry.id,
+    )
+
+    # Verify the old unique_id exists
+    entity = entity_registry.async_get_entity_id("switch", DOMAIN, old_unique_id)
+    assert entity is not None
+
+    # Setup the config entry to trigger migration
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    # Verify the old unique_id no longer exists
+    entity = entity_registry.async_get_entity_id("switch", DOMAIN, old_unique_id)
+    assert entity is None
+
+    # Verify the new unique_id exists
+    entity = entity_registry.async_get_entity_id(
+        "switch", DOMAIN, expected_new_unique_id
+    )
+    assert entity is not None
+
+
 async def test_migrate_config_entry(
     hass: HomeAssistant,
     controller: MagicMock,
