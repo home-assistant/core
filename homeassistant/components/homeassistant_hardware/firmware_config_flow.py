@@ -28,18 +28,19 @@ from homeassistant.config_entries import (
     OptionsFlow,
 )
 from homeassistant.core import callback
-from homeassistant.data_entry_flow import AbortFlow, progress_step
+from homeassistant.data_entry_flow import AbortFlow
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.hassio import is_hassio
 
-from .const import OTBR_DOMAIN, ZHA_DOMAIN
+from .const import DOMAIN, OTBR_DOMAIN, Z2M_EMBER_DOCS_URL, ZHA_DOMAIN
 from .util import (
     ApplicationType,
     FirmwareInfo,
     OwningAddon,
     OwningIntegration,
     ResetTarget,
+    async_firmware_flashing_context,
     async_flash_silabs_firmware,
     get_otbr_addon_manager,
     guess_firmware_info,
@@ -81,6 +82,7 @@ class BaseFirmwareInstallFlow(ConfigEntryBaseFlow, ABC):
 
     ZIGBEE_BAUDRATE = 115200  # Default, subclasses may override
     BOOTLOADER_RESET_METHODS: list[ResetTarget] = []  # Default, subclasses may override
+    APPLICATION_PROBE_METHODS: list[tuple[ApplicationType, int]] = []
 
     _picked_firmware_type: PickedFirmwareType
     _zigbee_flow_strategy: ZigbeeFlowStrategy = ZigbeeFlowStrategy.RECOMMENDED
@@ -97,6 +99,12 @@ class BaseFirmwareInstallFlow(ConfigEntryBaseFlow, ABC):
         self.addon_uninstall_task: asyncio.Task | None = None
         self.firmware_install_task: asyncio.Task[None] | None = None
         self.installing_firmware_name: str | None = None
+        self._install_otbr_addon_task: asyncio.Task[None] | None = None
+        self._start_otbr_addon_task: asyncio.Task[None] | None = None
+
+        # Progress flow steps cannot abort so we need to store the abort reason and then
+        # re-raise it in a dedicated step
+        self._progress_error: AbortFlow | None = None
 
     def _get_translation_placeholders(self) -> dict[str, str]:
         """Shared translation placeholders."""
@@ -104,6 +112,11 @@ class BaseFirmwareInstallFlow(ConfigEntryBaseFlow, ABC):
             "firmware_type": (
                 self._probed_firmware_info.firmware_type.value
                 if self._probed_firmware_info is not None
+                else "unknown"
+            ),
+            "firmware_name": (
+                self.installing_firmware_name
+                if self.installing_firmware_name is not None
                 else "unknown"
             ),
             "model": self._hardware_name,
@@ -182,22 +195,22 @@ class BaseFirmwareInstallFlow(ConfigEntryBaseFlow, ABC):
             return self.async_show_progress(
                 step_id=step_id,
                 progress_action="install_firmware",
-                description_placeholders={
-                    **self._get_translation_placeholders(),
-                    "firmware_name": firmware_name,
-                },
+                description_placeholders=self._get_translation_placeholders(),
                 progress_task=self.firmware_install_task,
             )
 
         try:
             await self.firmware_install_task
         except AbortFlow as err:
-            return self.async_show_progress_done(
-                next_step_id=err.reason,
-            )
+            self._progress_error = err
+            return self.async_show_progress_done(next_step_id="progress_failed")
         except HomeAssistantError:
             _LOGGER.exception("Failed to flash firmware")
-            return self.async_show_progress_done(next_step_id="firmware_install_failed")
+            self._progress_error = AbortFlow(
+                reason="fw_install_failed",
+                description_placeholders=self._get_translation_placeholders(),
+            )
+            return self.async_show_progress_done(next_step_id="progress_failed")
         finally:
             self.firmware_install_task = None
 
@@ -216,72 +229,95 @@ class BaseFirmwareInstallFlow(ConfigEntryBaseFlow, ABC):
         # Keep track of the firmware we're working with, for error messages
         self.installing_firmware_name = firmware_name
 
-        # Installing new firmware is only truly required if the wrong type is
-        # installed: upgrading to the latest release of the current firmware type
-        # isn't strictly necessary for functionality.
-        self._probed_firmware_info = await probe_silabs_firmware_info(self._device)
-
-        firmware_install_required = self._probed_firmware_info is None or (
-            self._probed_firmware_info.firmware_type != expected_installed_firmware_type
-        )
-
-        session = async_get_clientsession(self.hass)
-        client = FirmwareUpdateClient(fw_update_url, session)
-
-        try:
-            manifest = await client.async_update_data()
-            fw_manifest = next(
-                fw for fw in manifest.firmwares if fw.filename.startswith(fw_type)
+        # For the duration of firmware flashing, hint to other integrations (i.e. ZHA)
+        # that the hardware is in use and should not be accessed. This is separate from
+        # locking the serial port itself, since a momentary release of the port may
+        # still allow for ZHA to reclaim the device.
+        async with async_firmware_flashing_context(self.hass, self._device, DOMAIN):
+            # Installing new firmware is only truly required if the wrong type is
+            # installed: upgrading to the latest release of the current firmware type
+            # isn't strictly necessary for functionality.
+            self._probed_firmware_info = await probe_silabs_firmware_info(
+                self._device,
+                bootloader_reset_methods=self.BOOTLOADER_RESET_METHODS,
+                application_probe_methods=self.APPLICATION_PROBE_METHODS,
             )
-        except (StopIteration, TimeoutError, ClientError, ManifestMissing) as err:
-            _LOGGER.warning("Failed to fetch firmware update manifest", exc_info=True)
 
-            # Not having internet access should not prevent setup
-            if not firmware_install_required:
-                _LOGGER.debug("Skipping firmware upgrade due to index download failure")
-                return
+            firmware_install_required = self._probed_firmware_info is None or (
+                self._probed_firmware_info.firmware_type
+                != expected_installed_firmware_type
+            )
 
-            raise AbortFlow(reason="firmware_download_failed") from err
+            session = async_get_clientsession(self.hass)
+            client = FirmwareUpdateClient(fw_update_url, session)
 
-        if not firmware_install_required:
-            assert self._probed_firmware_info is not None
-
-            # Make sure we do not downgrade the firmware
-            fw_metadata = NabuCasaMetadata.from_json(fw_manifest.metadata)
-            fw_version = fw_metadata.get_public_version()
-            probed_fw_version = Version(self._probed_firmware_info.firmware_version)
-
-            if probed_fw_version >= fw_version:
-                _LOGGER.debug(
-                    "Not downgrading firmware, installed %s is newer than available %s",
-                    probed_fw_version,
-                    fw_version,
+            try:
+                manifest = await client.async_update_data()
+                fw_manifest = next(
+                    fw for fw in manifest.firmwares if fw.filename.startswith(fw_type)
                 )
-                return
+            except (StopIteration, TimeoutError, ClientError, ManifestMissing) as err:
+                _LOGGER.warning(
+                    "Failed to fetch firmware update manifest", exc_info=True
+                )
 
-        try:
-            fw_data = await client.async_fetch_firmware(fw_manifest)
-        except (TimeoutError, ClientError, ValueError) as err:
-            _LOGGER.warning("Failed to fetch firmware update", exc_info=True)
+                # Not having internet access should not prevent setup
+                if not firmware_install_required:
+                    _LOGGER.debug(
+                        "Skipping firmware upgrade due to index download failure"
+                    )
+                    return
 
-            # If we cannot download new firmware, we shouldn't block setup
+                raise AbortFlow(
+                    reason="fw_download_failed",
+                    description_placeholders=self._get_translation_placeholders(),
+                ) from err
+
             if not firmware_install_required:
-                _LOGGER.debug("Skipping firmware upgrade due to image download failure")
-                return
+                assert self._probed_firmware_info is not None
 
-            # Otherwise, fail
-            raise AbortFlow(reason="firmware_download_failed") from err
+                # Make sure we do not downgrade the firmware
+                fw_metadata = NabuCasaMetadata.from_json(fw_manifest.metadata)
+                fw_version = fw_metadata.get_public_version()
+                probed_fw_version = Version(self._probed_firmware_info.firmware_version)
 
-        self._probed_firmware_info = await async_flash_silabs_firmware(
-            hass=self.hass,
-            device=self._device,
-            fw_data=fw_data,
-            expected_installed_firmware_type=expected_installed_firmware_type,
-            bootloader_reset_methods=self.BOOTLOADER_RESET_METHODS,
-            progress_callback=lambda offset, total: self.async_update_progress(
-                offset / total
-            ),
-        )
+                if probed_fw_version >= fw_version:
+                    _LOGGER.debug(
+                        "Not downgrading firmware, installed %s is newer than available %s",
+                        probed_fw_version,
+                        fw_version,
+                    )
+                    return
+
+            try:
+                fw_data = await client.async_fetch_firmware(fw_manifest)
+            except (TimeoutError, ClientError, ValueError) as err:
+                _LOGGER.warning("Failed to fetch firmware update", exc_info=True)
+
+                # If we cannot download new firmware, we shouldn't block setup
+                if not firmware_install_required:
+                    _LOGGER.debug(
+                        "Skipping firmware upgrade due to image download failure"
+                    )
+                    return
+
+                # Otherwise, fail
+                raise AbortFlow(
+                    reason="fw_download_failed",
+                    description_placeholders=self._get_translation_placeholders(),
+                ) from err
+
+            self._probed_firmware_info = await async_flash_silabs_firmware(
+                hass=self.hass,
+                device=self._device,
+                fw_data=fw_data,
+                expected_installed_firmware_type=expected_installed_firmware_type,
+                bootloader_reset_methods=self.BOOTLOADER_RESET_METHODS,
+                application_probe_methods=self.APPLICATION_PROBE_METHODS,
+                progress_callback=lambda offset, total: self.async_update_progress(
+                    offset / total
+                ),
+            )
 
     async def _configure_and_start_otbr_addon(self) -> None:
         """Configure and start the OTBR addon."""
@@ -312,41 +348,6 @@ class BaseFirmwareInstallFlow(ConfigEntryBaseFlow, ABC):
             ) from err
 
         await otbr_manager.async_start_addon_waiting()
-
-    async def async_step_firmware_download_failed(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Abort when firmware download failed."""
-        assert self.installing_firmware_name is not None
-        return self.async_abort(
-            reason="fw_download_failed",
-            description_placeholders={
-                **self._get_translation_placeholders(),
-                "firmware_name": self.installing_firmware_name,
-            },
-        )
-
-    async def async_step_firmware_install_failed(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Abort when firmware install failed."""
-        assert self.installing_firmware_name is not None
-        return self.async_abort(
-            reason="fw_install_failed",
-            description_placeholders={
-                **self._get_translation_placeholders(),
-                "firmware_name": self.installing_firmware_name,
-            },
-        )
-
-    async def async_step_unsupported_firmware(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Abort when unsupported firmware is detected."""
-        return self.async_abort(
-            reason="unsupported_firmware",
-            description_placeholders=self._get_translation_placeholders(),
-        )
 
     async def async_step_zigbee_installation_type(
         self, user_input: dict[str, Any] | None = None
@@ -464,7 +465,7 @@ class BaseFirmwareInstallFlow(ConfigEntryBaseFlow, ABC):
         assert self._hardware_name is not None
 
         if self._zigbee_integration == ZigbeeIntegration.OTHER:
-            return self._async_flow_finished()
+            return await self.async_step_show_z2m_docs_url()
 
         result = await self.hass.config_entries.flow.async_init(
             ZHA_DOMAIN,
@@ -481,6 +482,21 @@ class BaseFirmwareInstallFlow(ConfigEntryBaseFlow, ABC):
             },
         )
         return self._continue_zha_flow(result)
+
+    async def async_step_show_z2m_docs_url(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Show Zigbee2MQTT documentation link."""
+        if user_input is not None:
+            return self._async_flow_finished()
+
+        return self.async_show_form(
+            step_id="show_z2m_docs_url",
+            description_placeholders={
+                **self._get_translation_placeholders(),
+                "z2m_docs_url": Z2M_EMBER_DOCS_URL,
+            },
+        )
 
     @callback
     def _continue_zha_flow(self, zha_result: ConfigFlowResult) -> ConfigFlowResult:
@@ -506,16 +522,15 @@ class BaseFirmwareInstallFlow(ConfigEntryBaseFlow, ABC):
         """Install Thread firmware."""
         raise NotImplementedError
 
-    @progress_step(
-        description_placeholders=lambda self: {
-            **self._get_translation_placeholders(),
-            "addon_name": get_otbr_addon_manager(self.hass).addon_name,
-        }
-    )
-    async def async_step_install_otbr_addon(
+    async def async_step_progress_failed(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Show progress dialog for installing the OTBR addon."""
+        """Abort when progress step failed."""
+        assert self._progress_error is not None
+        raise self._progress_error
+
+    async def _async_install_otbr_addon(self) -> None:
+        """Do the work of installing the OTBR addon."""
         addon_manager = get_otbr_addon_manager(self.hass)
         addon_info = await self._async_get_addon_info(addon_manager)
 
@@ -533,18 +548,39 @@ class BaseFirmwareInstallFlow(ConfigEntryBaseFlow, ABC):
                 },
             ) from err
 
-        return await self.async_step_finish_thread_installation()
-
-    @progress_step(
-        description_placeholders=lambda self: {
-            **self._get_translation_placeholders(),
-            "addon_name": get_otbr_addon_manager(self.hass).addon_name,
-        }
-    )
-    async def async_step_start_otbr_addon(
+    async def async_step_install_otbr_addon(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Configure OTBR to point to the SkyConnect and run the addon."""
+        """Show progress dialog for installing the OTBR addon."""
+        if self._install_otbr_addon_task is None:
+            self._install_otbr_addon_task = self.hass.async_create_task(
+                self._async_install_otbr_addon(),
+                "Install OTBR addon",
+            )
+
+        if not self._install_otbr_addon_task.done():
+            return self.async_show_progress(
+                step_id="install_otbr_addon",
+                progress_action="install_otbr_addon",
+                description_placeholders={
+                    **self._get_translation_placeholders(),
+                    "addon_name": get_otbr_addon_manager(self.hass).addon_name,
+                },
+                progress_task=self._install_otbr_addon_task,
+            )
+
+        try:
+            await self._install_otbr_addon_task
+        except AbortFlow as err:
+            self._progress_error = err
+            return self.async_show_progress_done(next_step_id="progress_failed")
+        finally:
+            self._install_otbr_addon_task = None
+
+        return self.async_show_progress_done(next_step_id="finish_thread_installation")
+
+    async def _async_start_otbr_addon(self) -> None:
+        """Do the work of starting the OTBR addon."""
         try:
             await self._configure_and_start_otbr_addon()
         except AddonError as err:
@@ -557,7 +593,36 @@ class BaseFirmwareInstallFlow(ConfigEntryBaseFlow, ABC):
                 },
             ) from err
 
-        return await self.async_step_pre_confirm_otbr()
+    async def async_step_start_otbr_addon(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Configure OTBR to point to the SkyConnect and run the addon."""
+        if self._start_otbr_addon_task is None:
+            self._start_otbr_addon_task = self.hass.async_create_task(
+                self._async_start_otbr_addon(),
+                "Start OTBR addon",
+            )
+
+        if not self._start_otbr_addon_task.done():
+            return self.async_show_progress(
+                step_id="start_otbr_addon",
+                progress_action="start_otbr_addon",
+                description_placeholders={
+                    **self._get_translation_placeholders(),
+                    "addon_name": get_otbr_addon_manager(self.hass).addon_name,
+                },
+                progress_task=self._start_otbr_addon_task,
+            )
+
+        try:
+            await self._start_otbr_addon_task
+        except AbortFlow as err:
+            self._progress_error = err
+            return self.async_show_progress_done(next_step_id="progress_failed")
+        finally:
+            self._start_otbr_addon_task = None
+
+        return self.async_show_progress_done(next_step_id="pre_confirm_otbr")
 
     async def async_step_pre_confirm_otbr(
         self, user_input: dict[str, Any] | None = None

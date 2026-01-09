@@ -126,7 +126,7 @@
       'media_position': 232,
       'media_position_updated_at': datetime.datetime(2024, 10, 30, 18, 31, 49, 565951, tzinfo=datetime.timezone.utc),
       'media_title': 'November Rain',
-      'repeat': 'all',
+      'repeat': <RepeatMode.ALL: 'all'>,
       'shuffle': True,
       'supported_features': <MediaPlayerEntityFeature: 8320959>,
       'volume_level': 0.06,

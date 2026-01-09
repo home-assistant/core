@@ -22,6 +22,7 @@ from homeassistant.components.cover import (
     SERVICE_CLOSE_COVER,
     SERVICE_OPEN_COVER,
     SERVICE_SET_COVER_POSITION,
+    SERVICE_STOP_COVER,
     CoverDeviceClass,
 )
 from homeassistant.components.http.data_validator import RequestDataValidator
@@ -38,6 +39,7 @@ from homeassistant.components.valve import (
     SERVICE_CLOSE_VALVE,
     SERVICE_OPEN_VALVE,
     SERVICE_SET_VALVE_POSITION,
+    SERVICE_STOP_VALVE,
     ValveDeviceClass,
 )
 from homeassistant.const import (
@@ -143,6 +145,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         NevermindIntentHandler(),
     )
     intent.async_register(hass, SetPositionIntentHandler())
+    intent.async_register(hass, StopMovingIntentHandler())
     intent.async_register(hass, StartTimerIntentHandler())
     intent.async_register(hass, CancelTimerIntentHandler())
     intent.async_register(hass, CancelAllTimersIntentHandler())
@@ -429,6 +432,31 @@ class SetPositionIntentHandler(intent.DynamicServiceIntentHandler):
 
         if state.domain == VALVE_DOMAIN:
             return (VALVE_DOMAIN, SERVICE_SET_VALVE_POSITION)
+
+        raise intent.IntentHandleError(f"Domain not supported: {state.domain}")
+
+
+class StopMovingIntentHandler(intent.DynamicServiceIntentHandler):
+    """Intent handler for stopping covers and valves."""
+
+    def __init__(self) -> None:
+        """Create stop moving handler."""
+        super().__init__(
+            intent.INTENT_STOP_MOVING,
+            description="Stops a moving device or entity",
+            platforms={COVER_DOMAIN, VALVE_DOMAIN},
+            device_classes={CoverDeviceClass, ValveDeviceClass},
+        )
+
+    def get_domain_and_service(
+        self, intent_obj: intent.Intent, state: State
+    ) -> tuple[str, str]:
+        """Get the domain and service name to call."""
+        if state.domain == COVER_DOMAIN:
+            return (COVER_DOMAIN, SERVICE_STOP_COVER)
+
+        if state.domain == VALVE_DOMAIN:
+            return (VALVE_DOMAIN, SERVICE_STOP_VALVE)
 
         raise intent.IntentHandleError(f"Domain not supported: {state.domain}")
 

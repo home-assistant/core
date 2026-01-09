@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from contextlib import suppress
 import os
 import shutil
 from typing import TYPE_CHECKING
@@ -12,7 +11,7 @@ import voluptuous as vol
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_ADDRESS
 from homeassistant.core import HomeAssistant, ServiceCall, callback
-from homeassistant.exceptions import ServiceValidationError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import config_validation as cv, selector
 from homeassistant.helpers.storage import STORAGE_DIR
 
@@ -36,8 +35,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
 
     async def get_config_entry(call: ServiceCall) -> VelbusConfigEntry:
         """Get the config entry for this service call."""
-        if CONF_CONFIG_ENTRY in call.data:
-            entry_id = call.data[CONF_CONFIG_ENTRY]
+        entry_id: str = call.data[CONF_CONFIG_ENTRY]
         if not (entry := hass.config_entries.async_get_entry(entry_id)):
             raise ServiceValidationError(
                 translation_domain=DOMAIN,
@@ -55,26 +53,52 @@ def async_setup_services(hass: HomeAssistant) -> None:
     async def scan(call: ServiceCall) -> None:
         """Handle a scan service call."""
         entry = await get_config_entry(call)
-        await entry.runtime_data.controller.scan()
+        try:
+            await entry.runtime_data.controller.scan()
+        except OSError as exc:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="scan_failed",
+                translation_placeholders={"error": str(exc)},
+            ) from exc
 
     async def syn_clock(call: ServiceCall) -> None:
         """Handle a sync clock service call."""
         entry = await get_config_entry(call)
-        await entry.runtime_data.controller.sync_clock()
+        try:
+            await entry.runtime_data.controller.sync_clock()
+        except OSError as exc:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="sync_clock_failed",
+                translation_placeholders={"error": str(exc)},
+            ) from exc
 
     async def set_memo_text(call: ServiceCall) -> None:
         """Handle Memo Text service call."""
         entry = await get_config_entry(call)
         memo_text = call.data[CONF_MEMO_TEXT]
-        module = entry.runtime_data.controller.get_module(call.data[CONF_ADDRESS])
+        address = call.data[CONF_ADDRESS]
+        module = entry.runtime_data.controller.get_module(address)
         if not module:
-            raise ServiceValidationError("Module not found")
-        await module.set_memo_text(memo_text.async_render())
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="module_not_found",
+                translation_placeholders={"address": str(address)},
+            )
+        try:
+            await module.set_memo_text(memo_text)
+        except OSError as exc:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="set_memo_text_failed",
+                translation_placeholders={"error": str(exc)},
+            ) from exc
 
     async def clear_cache(call: ServiceCall) -> None:
         """Handle a clear cache service call."""
         entry = await get_config_entry(call)
-        with suppress(FileNotFoundError):
+        try:
             if call.data.get(CONF_ADDRESS):
                 await hass.async_add_executor_job(
                     os.unlink,
@@ -88,6 +112,14 @@ def async_setup_services(hass: HomeAssistant) -> None:
                     shutil.rmtree,
                     hass.config.path(STORAGE_DIR, f"velbuscache-{entry.entry_id}/"),
                 )
+        except FileNotFoundError:
+            pass  # It's okay if the file doesn't exist
+        except OSError as exc:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="clear_cache_failed",
+                translation_placeholders={"error": str(exc)},
+            ) from exc
         # call a scan to repopulate
         await scan(call)
 
@@ -135,7 +167,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
                 vol.Required(CONF_ADDRESS): vol.All(
                     vol.Coerce(int), vol.Range(min=0, max=255)
                 ),
-                vol.Optional(CONF_MEMO_TEXT, default=""): cv.template,
+                vol.Optional(CONF_MEMO_TEXT, default=""): cv.string,
             }
         ),
     )

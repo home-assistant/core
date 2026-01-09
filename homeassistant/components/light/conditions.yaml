@@ -1,0 +1,28 @@
+is_off:
+  target:
+    entity:
+      domain: light
+  fields:
+    behavior:
+      required: true
+      default: any
+      selector:
+        select:
+          translation_key: condition_behavior
+          options:
+            - all
+            - any
+is_on:
+  target:
+    entity:
+      domain: light
+  fields:
+    behavior:
+      required: true
+      default: any
+      selector:
+        select:
+          translation_key: condition_behavior
+          options:
+            - all
+            - any
