@@ -22,7 +22,6 @@ from .common import is_fan, is_purifier, rgetattr
 from .const import (
     VS_DEVICES,
     VS_DISCOVERY,
-    VS_FAN_MODE_ADVANCED_SLEEP,
     VS_FAN_MODE_AUTO,
     VS_FAN_MODE_MANUAL,
     VS_FAN_MODE_NORMAL,
@@ -40,7 +39,6 @@ _LOGGER = logging.getLogger(__name__)
 VS_TO_HA_MODE_MAP = {
     VS_FAN_MODE_AUTO: VS_FAN_MODE_AUTO,
     VS_FAN_MODE_SLEEP: VS_FAN_MODE_SLEEP,
-    VS_FAN_MODE_ADVANCED_SLEEP: "advanced_sleep",
     VS_FAN_MODE_TURBO: VS_FAN_MODE_TURBO,
     VS_FAN_MODE_PET: VS_FAN_MODE_PET,
     VS_FAN_MODE_MANUAL: VS_FAN_MODE_MANUAL,
@@ -206,7 +204,7 @@ class VeSyncFanHA(VeSyncBaseEntity, FanEntity):
                 self.device.state.nightlight_status, "value", None
             )
         if hasattr(self.device.state, "mode"):
-            attr["mode"] = self.device.state.mode
+            attr["mode"] = getattr(self.device.state.mode, "value", None)
 
         return attr
 
@@ -270,8 +268,6 @@ class VeSyncFanHA(VeSyncBaseEntity, FanEntity):
             success = await self.device.set_auto_mode()
         elif vs_mode == VS_FAN_MODE_SLEEP:
             success = await self.device.set_sleep_mode()
-        elif vs_mode == VS_FAN_MODE_ADVANCED_SLEEP:
-            success = await self.device.set_advanced_sleep_mode()
         elif vs_mode == VS_FAN_MODE_PET:
             success = await self.device.set_pet_mode()
         elif vs_mode == VS_FAN_MODE_TURBO:
