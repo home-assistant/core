@@ -222,7 +222,9 @@ class LocationSubentryFlowHandler(ConfigSubentryFlow):
             return self.async_abort(reason="entry_not_loaded")
 
         errors: dict[str, str] = {}
-        description_placeholders: dict[str, str] = {}
+        description_placeholders: dict[str, str] = {
+            "air_quality_coverage_url": "https://developers.google.com/maps/documentation/air-quality/coverage"
+        }
         if user_input is not None:
             _LOGGER.debug("User input: %s", user_input)
             if _is_location_already_configured(self.hass, user_input[CONF_LOCATION]):

@@ -69,6 +69,22 @@
             "name": "[%key:component::google_air_quality::config::step::user::data_description::name%]"
           },
           "description": "Select the coordinates for which you want to create an entry.",
+          "sections": {
+            "custom_local_aqi_options": {
+              "data": {
+                "country": "[%key:common::config_flow::data::country%]",
+                "custom_laqi": "Custom local AQI",
+                "enable_custom_laqi": "Enable custom local AQI."
+              },
+              "data_description": {
+                "country": "Country of the location.",
+                "custom_laqi": "The targert air quality index",
+                "enable_custom_laqi": "Select to enable a custom local air quality index"
+              },
+              "description": "Country and custom local AQI must match. You can find the available combinations here: {air_quality_coverage_url}",
+              "name": "Custom local aqi options"
+            }
+          },
           "title": "Air quality data location"
         }
       }
