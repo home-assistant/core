@@ -146,7 +146,15 @@ class WebControlProSlatRotate(WebControlProSlat):
         action_drive = self._dest.action(self._drive_action_desc)
         action_list = action_drive.prep(percentage=0)
         action_tilt = self._dest.action(self._tilt_action_desc)
-        action_list += action_tilt.prep(rotation=0)
+        action_list += action_tilt.prep(rotation=action_tilt.minValue)
+        await action_list()
+
+    async def async_close_cover(self, **kwargs: Any) -> None:
+        """Close the cover and tilt to closed."""
+        action_drive = self._dest.action(self._drive_action_desc)
+        action_list = action_drive.prep(percentage=100)
+        action_tilt = self._dest.action(self._tilt_action_desc)
+        action_list += action_tilt.prep(rotation=action_tilt.maxValue)
         await action_list()
 
     @property
