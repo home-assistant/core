@@ -62,5 +62,13 @@
     ],
     role='model'
   ),
+    Content(
+    parts=[
+      Part(
+        text='Thank you!'
+      ),
+    ],
+    role='user'
+  ),
   ])
 # ---
