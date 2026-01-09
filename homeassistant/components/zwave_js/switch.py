@@ -23,8 +23,10 @@ from homeassistant.core import (
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.entity_component import EntityComponent
-from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.entity_platform import (
+    AddConfigEntryEntitiesCallback,
+    async_register_platform_batched_service,
+)
 
 from .const import DOMAIN, LOGGER
 from .discovery import ZwaveDiscoveryInfo
@@ -71,15 +73,12 @@ async def async_setup_entry(
     )
 
     # --- register the batched handler ---
-    entity_component: EntityComponent = hass.data[SWITCH_DOMAIN]
-    entity_component.async_register_batched_handler(
-        name=SERVICE_TURN_ON,
-        config_entry=config_entry,
+    async_register_platform_batched_service(
+        service_name=SERVICE_TURN_ON,
         handler=async_batched_zwave_js_on_off,
     )
-    entity_component.async_register_batched_handler(
-        name=SERVICE_TURN_OFF,
-        config_entry=config_entry,
+    async_register_platform_batched_service(
+        service_name=SERVICE_TURN_OFF,
         handler=async_batched_zwave_js_on_off,
     )
 
