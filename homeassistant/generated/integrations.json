@@ -4348,7 +4348,7 @@
       "iot_class": "local_polling"
     },
     "namecheapdns": {
-      "name": "Namecheap FreeDNS",
+      "name": "Namecheap DynamicDNS",
       "integration_type": "hub",
       "config_flow": false,
       "iot_class": "cloud_push"
