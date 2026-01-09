@@ -133,7 +133,7 @@ class HidromoticTankLevelSensor(CoordinatorEntity[HidromoticCoordinator], Sensor
         self._entry = entry
 
         self._attr_unique_id = f"{entry.entry_id}_tank_{tank_id}_level"
-        self._attr_translation_key = "level"
+        self._attr_translation_key = "tank_level"
 
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, entry.entry_id)},
