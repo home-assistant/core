@@ -86,17 +86,9 @@ class WaterFurnaceConfigFlow(ConfigFlow, domain=DOMAIN):
 
             gwid = client.gwid
             if not gwid:
-                _LOGGER.error(
-                    "Failed to import WaterFurnace configuration from YAML. "
-                    "No GWID found for device. Please set up the integration via the UI"
-                )
                 # This likely indicates a server-side change, or an implementation bug
                 return self.async_abort(reason="unknown")
         except WFException:
-            _LOGGER.error(
-                "Failed to import WaterFurnace configuration from YAML. "
-                "Please verify your credentials and set up the integration via the UI"
-            )
             return self.async_abort(reason="cannot_connect")
         except Exception:
             _LOGGER.exception("Unexpected error importing WaterFurnace configuration")

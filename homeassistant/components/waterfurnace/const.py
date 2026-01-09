@@ -4,6 +4,7 @@ from datetime import timedelta
 from typing import Final
 
 DOMAIN: Final = "waterfurnace"
+INTEGRATION_TITLE: Final = "WaterFurnace"
 
 # Update intervals
 SCAN_INTERVAL: Final = timedelta(seconds=10)

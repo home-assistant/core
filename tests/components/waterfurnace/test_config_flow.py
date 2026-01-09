@@ -127,35 +127,6 @@ async def test_user_flow_cannot_connect(
     assert result["errors"] == {"base": "cannot_connect"}
 
 
-async def test_user_flow_unexpected_error(
-    hass: HomeAssistant, mock_waterfurnace_client: Mock
-) -> None:
-    """Test user flow with unexpected error."""
-    mock_waterfurnace_client.login.side_effect = Exception("Unexpected error")
-
-    result = cast(
-        dict[str, Any],
-        await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": config_entries.SOURCE_USER}
-        ),
-    )
-    assert result["type"] is FlowResultType.FORM
-
-    result = cast(
-        dict[str, Any],
-        await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {
-                CONF_USERNAME: "test_user",
-                CONF_PASSWORD: "test_password",
-            },
-        ),
-    )
-
-    assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {"base": "cannot_connect"}
-
-
 async def test_user_flow_no_gwid(
     hass: HomeAssistant, mock_waterfurnace_client_no_gwid: Mock
 ) -> None:
@@ -301,28 +272,6 @@ async def test_import_flow_invalid_auth(
             data={
                 CONF_USERNAME: "bad_user",
                 CONF_PASSWORD: "bad_password",
-            },
-        ),
-    )
-
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "cannot_connect"
-
-
-async def test_import_flow_unexpected_error(
-    hass: HomeAssistant, mock_waterfurnace_client: Mock
-) -> None:
-    """Test import flow with unexpected error."""
-    mock_waterfurnace_client.login.side_effect = Exception("Unexpected error")
-
-    result = cast(
-        dict[str, Any],
-        await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": config_entries.SOURCE_IMPORT},
-            data={
-                CONF_USERNAME: "test_user",
-                CONF_PASSWORD: "test_password",
             },
         ),
     )

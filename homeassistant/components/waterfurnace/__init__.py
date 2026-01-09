@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from asyncio import Task
 from datetime import timedelta
 import logging
 import threading
@@ -11,26 +12,27 @@ import voluptuous as vol
 from waterfurnace.waterfurnace import WaterFurnace, WFCredentialError, WFException
 
 from homeassistant.components import persistent_notification
-from homeassistant.config_entries import SOURCE_IMPORT
+from homeassistant.config_entries import SOURCE_IMPORT, ConfigFlowResult
 from homeassistant.const import (
     CONF_PASSWORD,
     CONF_USERNAME,
     EVENT_HOMEASSISTANT_STOP,
     Platform,
 )
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant, callback
+from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
-from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers import config_validation as cv, issue_registry as ir
 from homeassistant.helpers.dispatcher import dispatcher_send
 from homeassistant.helpers.typing import ConfigType
 
+from .const import DOMAIN, INTEGRATION_TITLE
 from .models import WaterFurnaceConfigEntry, WaterFurnaceData as WaterFurnaceConfigData
 
 _LOGGER = logging.getLogger(__name__)
 
 PLATFORMS = [Platform.SENSOR]
 
-DOMAIN = "waterfurnace"
 UPDATE_TOPIC = f"{DOMAIN}_update"
 SCAN_INTERVAL = timedelta(seconds=10)
 ERROR_INTERVAL = timedelta(seconds=300)
@@ -53,13 +55,68 @@ CONFIG_SCHEMA = vol.Schema(
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up WaterFurnace from yaml configuration."""
     if DOMAIN in config:
-        hass.async_create_task(
+
+        def handle_import_result(task: Task[ConfigFlowResult]) -> None:
+            """Handle the result of the import flow."""
+            if task.cancelled():
+                return
+
+            if exception := task.exception():
+                _LOGGER.exception(
+                    "Unexpected error during YAML import", exc_info=exception
+                )
+                return
+
+            result = task.result()
+
+            if (
+                result.get("type") is FlowResultType.ABORT
+                and result.get("reason") != "already_configured"
+            ):
+                # Warn user that the import failed so they can fix it, or
+                # reconfigure manually.
+                ir.async_create_issue(
+                    hass,
+                    DOMAIN,
+                    f"deprecated_yaml_import_issue_{result.get('reason')}",
+                    # Give users ~6 months to fix before removing entirely
+                    breaks_in_ha_version="2026.7.0",
+                    is_fixable=False,
+                    issue_domain=DOMAIN,
+                    severity=ir.IssueSeverity.ERROR,
+                    translation_key=f"deprecated_yaml_import_issue_{result.get('reason')}",
+                    translation_placeholders={
+                        "domain": DOMAIN,
+                        "integration_title": INTEGRATION_TITLE,
+                    },
+                )
+
+        task = hass.async_create_task(
             hass.config_entries.flow.async_init(
                 DOMAIN,
                 context={"source": SOURCE_IMPORT},
                 data=config[DOMAIN],
             )
         )
+        task.add_done_callback(handle_import_result)
+
+        # Warn users that the yaml import will be removed in the future
+        ir.async_create_issue(
+            hass,
+            HOMEASSISTANT_DOMAIN,
+            f"{DOMAIN}_deprecated_yaml",
+            # Give users ~6 months to fix before removing entirely
+            breaks_in_ha_version="2026.7.0",
+            is_fixable=False,
+            issue_domain=DOMAIN,
+            severity=ir.IssueSeverity.WARNING,
+            translation_key="deprecated_yaml",
+            translation_placeholders={
+                "domain": DOMAIN,
+                "integration_title": INTEGRATION_TITLE,
+            },
+        )
+
     return True
 
 
@@ -77,10 +134,6 @@ async def async_setup_entry(
     except WFCredentialError as err:
         raise ConfigEntryAuthFailed(
             "Authentication failed. Please update your credentials."
-        ) from err
-    except Exception as err:
-        raise ConfigEntryNotReady(
-            f"Failed to connect to WaterFurnace service: {err}"
         ) from err
 
     if not client.gwid:
