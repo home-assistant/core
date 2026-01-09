@@ -32,6 +32,7 @@ MODE_MAP = {
 SERVICE_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_DEVICE_ID): cv.string,
+        vol.Required("target_soc"): cv.positive_int,
         vol.Required("power"): cv.positive_int,
     }
 )
@@ -49,7 +50,7 @@ CHANGE_MODE_SERVICE_SCHEMA = vol.Schema(
     }
 )
 
-PLATFORMS: list[Platform] = [Platform.NUMBER, Platform.SENSOR, Platform.SWITCH]
+PLATFORMS: list[Platform] = [Platform.SENSOR]
 
 
 async def _get_coordinator_from_device(
@@ -142,6 +143,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     async def charge(call: ServiceCall) -> None:
         """Handle the service call to start charging."""
         device_id = call.data[CONF_DEVICE_ID]
+        target_soc = call.data["target_soc"]
         power = call.data["power"]
 
         coordinator = await _get_coordinator_from_device(hass, device_id)
@@ -156,8 +158,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
         # Ensure device is in Real-time Control mode
         if await _switch_working_mode(coordinator, 4):
-            target_soc = coordinator.data.get("6002", 10)
-
             _LOGGER.info(
                 "Charging %s with power: %s, target SOC: %s",
                 device_id,

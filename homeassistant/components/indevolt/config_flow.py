@@ -7,7 +7,7 @@ from aiohttp import ClientError
 from indevolt_api import IndevoltAPI
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigEntry, ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
@@ -29,7 +29,6 @@ class IndevoltConfigFlow(ConfigFlow, domain=DOMAIN):
         self._discovered_host: str | None = None
         self._discovered_port: int | None = None
         self._discovered_device_model: str | None = None
-        self._reconfig_entry: ConfigEntry | None = None
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -45,18 +44,6 @@ class IndevoltConfigFlow(ConfigFlow, domain=DOMAIN):
                     f"{device_data['device_model']}_{device_data['sn']}"
                 )
 
-                # Handle reconfigure flow
-                if self._reconfig_entry is not None:
-                    self._abort_if_unique_id_mismatch(reason="wrong_device")
-                    return self.async_update_reload_and_abort(
-                        self._reconfig_entry,
-                        data={
-                            "host": user_input["host"],
-                            "port": user_input["port"],
-                            **device_data,
-                        },
-                    )
-
                 # Handle initial setup
                 self._abort_if_unique_id_configured()
                 return self.async_create_entry(
@@ -68,33 +55,16 @@ class IndevoltConfigFlow(ConfigFlow, domain=DOMAIN):
                     },
                 )
 
-        # Get defaults for reconfigure
-        defaults: dict[str, Any] = {}
-        if self._reconfig_entry is not None:
-            defaults = {
-                "host": self._reconfig_entry.data.get("host"),
-                "port": self._reconfig_entry.data.get("port", DEFAULT_PORT),
-            }
-
         return self.async_show_form(
-            step_id="reconfigure" if self._reconfig_entry else "user",
+            step_id="user",
             data_schema=vol.Schema(
                 {
-                    vol.Required("host", default=defaults.get("host")): str,
-                    vol.Optional(
-                        "port", default=defaults.get("port", DEFAULT_PORT)
-                    ): int,
+                    vol.Required("host"): str,
+                    vol.Optional("port", default=DEFAULT_PORT): int,
                 }
             ),
             errors=errors,
         )
-
-    async def async_step_reconfigure(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Handle a reconfiguration flow initiated by the user."""
-        self._reconfig_entry = self._get_reconfigure_entry()
-        return await self.async_step_user(user_input)
 
     async def async_step_zeroconf(
         self, discovery_info: ZeroconfServiceInfo

@@ -27,7 +27,7 @@ DEVICE_MAPPING = {
     2: {
         "device": "CMS-SF2000",
         "generation": 2,
-        "fixture": "get_2.json",
+        "fixture": "gen_2.json",
         "sn": TEST_DEVICE_SN_GEN2,
     },
 }

@@ -45,6 +45,7 @@ SENSORS: Final = (
         generation=[1, 2],
         translation_key="serial_number",
         entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
     ),
     # System Operating Information
     IndevoltSensorEntityDescription(

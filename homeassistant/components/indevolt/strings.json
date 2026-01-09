@@ -13,18 +13,6 @@
       "wrong_device": "This is a different device than the one being reconfigured"
     },
     "step": {
-      "reconfigure": {
-        "data": {
-          "host": "[%key:common::config_flow::data::host%]",
-          "port": "[%key:common::config_flow::data::port%]"
-        },
-        "data_description": {
-          "host": "[%key:common::config_flow::data::host%]",
-          "port": "[%key:common::config_flow::data::port%]"
-        },
-        "description": "Update the connection details for your Indevolt device.",
-        "title": "Reconfigure Indevolt device"
-      },
       "user": {
         "data": {
           "host": "[%key:common::config_flow::data::host%]",
@@ -44,20 +32,6 @@
     }
   },
   "entity": {
-    "number": {
-      "discharge_limit": {
-        "name": "Discharge limit"
-      },
-      "feedin_power_limit": {
-        "name": "Feed-in power limit"
-      },
-      "inverter_input_limit": {
-        "name": "Inverter input limit"
-      },
-      "max_ac_output_power": {
-        "name": "Max AC output power"
-      }
-    },
     "sensor": {
       "battery_charge_discharge_state": {
         "name": "Battery charge/discharge state",
@@ -274,11 +248,6 @@
           "real_time_control": "Real-time control",
           "self_consumed_prioritized": "Self-consumed prioritized"
         }
-      }
-    },
-    "switch": {
-      "grid_charging": {
-        "name": "Grid charging"
       }
     }
   },

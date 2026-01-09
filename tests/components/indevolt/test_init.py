@@ -123,7 +123,7 @@ async def test_service_discharge(
     await hass.services.async_call(
         DOMAIN,
         "discharge",
-        {"device_id": device_entry.id, "power": 2000},
+        {"device_id": device_entry.id, "power": 2000, "target_soc": 20},
         blocking=True,
     )
 

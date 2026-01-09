@@ -1,25 +1,4 @@
 {
-  "entity": {
-    "number": {
-      "discharge_limit": {
-        "default": "mdi:battery-alert"
-      },
-      "feedin_power_limit": {
-        "default": "mdi:current-dc"
-      },
-      "inverter_input_limit": {
-        "default": "mdi:current-dc"
-      },
-      "max_ac_output_power": {
-        "default": "mdi:lightning-bolt"
-      }
-    },
-    "switch": {
-      "grid_charging": {
-        "default": "mdi:transmission-tower"
-      }
-    }
-  },
   "services": {
     "change_mode": {
       "service": "mdi:swap-horizontal"
