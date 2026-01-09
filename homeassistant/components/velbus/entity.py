@@ -53,6 +53,12 @@ class VelbusEntity(Entity):
             f"{channel.get_module_type_name()}-{serial}-{channel.get_channel_number()}"
         )
 
+    def _get_identifier(self) -> str:
+        """Return the identifier of the entity."""
+        if not self._channel.is_sub_device():
+            return self._module_address
+        return f"{self._module_address}-{self._channel.get_channel_number()}"
+
     async def async_added_to_hass(self) -> None:
         """Add listener for state changes."""
         self._channel.on_status_update(self._on_update)
