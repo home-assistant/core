@@ -48,6 +48,8 @@ async def async_tts_voices(
     list_voices_response = await client.list_voices()
     for voice in list_voices_response.voices:
         language_code = voice.language_codes[0]
+        if not voice.name.startswith(language_code):
+            continue
         if language_code not in voices:
             voices[language_code] = []
         voices[language_code].append(voice.name)

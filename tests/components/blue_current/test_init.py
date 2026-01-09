@@ -12,11 +12,11 @@ from bluecurrent_api.exceptions import (
 import pytest
 from voluptuous import MultipleInvalid
 
-from homeassistant.components.blue_current import (
+from homeassistant.components.blue_current import async_setup_entry
+from homeassistant.components.blue_current.const import (
     CHARGING_CARD_ID,
     DOMAIN,
     SERVICE_START_CHARGE_SESSION,
-    async_setup_entry,
 )
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_DEVICE_ID, Platform

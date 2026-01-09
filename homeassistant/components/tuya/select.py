@@ -13,7 +13,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from . import TuyaConfigEntry
 from .const import TUYA_DISCOVERY_NEW, DeviceCategory, DPCode
 from .entity import TuyaEntity
-from .models import DPCodeEnumWrapper
+from .models import DeviceWrapper, DPCodeEnumWrapper
 
 # All descriptions can be found here. Mostly the Enum data types in the
 # default instructions set of each category end up being a select.
@@ -393,20 +393,30 @@ class TuyaSelectEntity(TuyaEntity, SelectEntity):
         device: CustomerDevice,
         device_manager: Manager,
         description: SelectEntityDescription,
-        dpcode_wrapper: DPCodeEnumWrapper,
+        dpcode_wrapper: DeviceWrapper[str],
     ) -> None:
         """Init Tuya sensor."""
         super().__init__(device, device_manager)
         self.entity_description = description
         self._attr_unique_id = f"{super().unique_id}{description.key}"
         self._dpcode_wrapper = dpcode_wrapper
-        self._attr_options = dpcode_wrapper.type_information.range
+        self._attr_options = dpcode_wrapper.options
 
     @property
     def current_option(self) -> str | None:
         """Return the selected entity option to represent the entity state."""
-        return self._dpcode_wrapper.read_device_status(self.device)
+        return self._read_wrapper(self._dpcode_wrapper)
+
+    async def _handle_state_update(
+        self,
+        updated_status_properties: list[str] | None,
+        dp_timestamps: dict | None = None,
+    ) -> None:
+        """Handle state update, only if this entity's dpcode was actually updated."""
+        if self._dpcode_wrapper.skip_update(self.device, updated_status_properties):
+            return
+        self.async_write_ha_state()
 
     async def async_select_option(self, option: str) -> None:
         """Change the selected option."""
-        await self._async_send_dpcode_update(self._dpcode_wrapper, option)
+        await self._async_send_wrapper_updates(self._dpcode_wrapper, option)

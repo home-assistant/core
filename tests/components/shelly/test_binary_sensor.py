@@ -272,6 +272,34 @@ async def test_rpc_binary_sensor(
     assert entry.unique_id == "123456789ABC-cover:0-overpower"
 
 
+async def test_rpc_binary_sensor_input_custom_name(
+    hass: HomeAssistant,
+    mock_rpc_device: Mock,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Test RPC binary sensor."""
+    monkeypatch.setitem(
+        mock_rpc_device.config,
+        "input:1",
+        {
+            "id": 1,
+            "type": "switch",
+            "invert": False,
+            "factory_reset": True,
+            "name": "test channel",
+        },
+    )
+    monkeypatch.setitem(
+        mock_rpc_device.status,
+        "input:1",
+        {"id": 1, "state": True},
+    )
+    await init_integration(hass, 2)
+
+    assert (state := hass.states.get(f"{BINARY_SENSOR_DOMAIN}.test_name_test_channel"))
+    assert state.state == STATE_ON
+
+
 async def test_rpc_binary_sensor_removal(
     hass: HomeAssistant,
     mock_rpc_device: Mock,

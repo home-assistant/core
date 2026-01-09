@@ -7,7 +7,6 @@ import voluptuous as vol
 from homeassistant.components import websocket_api
 from homeassistant.const import EVENT_HOMEASSISTANT_STARTED
 from homeassistant.core import Event, HomeAssistant, callback
-from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util.hass_dict import HassKey
 
@@ -30,14 +29,36 @@ __all__ = [
     "async_devices_payload",
 ]
 
-CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
+CONF_SNAPSHOTS_URL = "snapshots_url"
+
+CONFIG_SCHEMA = vol.Schema(
+    {
+        DOMAIN: vol.Schema(
+            {
+                vol.Optional(CONF_SNAPSHOTS_URL): vol.Any(str, None),
+            }
+        )
+    },
+    extra=vol.ALLOW_EXTRA,
+)
 
 DATA_COMPONENT: HassKey[Analytics] = HassKey(DOMAIN)
 
 
-async def async_setup(hass: HomeAssistant, _: ConfigType) -> bool:
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the analytics integration."""
-    analytics = Analytics(hass)
+    analytics_config = config.get(DOMAIN, {})
+
+    # For now we want to enable device analytics only if the url option
+    # is explicitly listed in YAML.
+    if CONF_SNAPSHOTS_URL in analytics_config:
+        disable_snapshots = False
+        snapshots_url = analytics_config[CONF_SNAPSHOTS_URL]
+    else:
+        disable_snapshots = True
+        snapshots_url = None
+
+    analytics = Analytics(hass, snapshots_url, disable_snapshots)
 
     # Load stored data
     await analytics.load()
