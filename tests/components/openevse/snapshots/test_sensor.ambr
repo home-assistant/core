@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_entities[sensor.openevse_ambient_temperature-entry]
+# name: test_entities[sensor.mock_title_ambient_temperature-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -14,7 +14,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.openevse_ambient_temperature',
+    'entity_id': 'sensor.mock_title_ambient_temperature',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -39,23 +39,23 @@
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_entities[sensor.openevse_ambient_temperature-state]
+# name: test_entities[sensor.mock_title_ambient_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
-      'friendly_name': 'OpenEVSE Ambient temperature',
+      'friendly_name': 'Mock Title Ambient temperature',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.openevse_ambient_temperature',
+    'entity_id': 'sensor.mock_title_ambient_temperature',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '25.5',
   })
 # ---
-# name: test_entities[sensor.openevse_charge_time_elapsed-entry]
+# name: test_entities[sensor.mock_title_charge_time_elapsed-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -70,7 +70,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.openevse_charge_time_elapsed',
+    'entity_id': 'sensor.mock_title_charge_time_elapsed',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -95,23 +95,23 @@
     'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
   })
 # ---
-# name: test_entities[sensor.openevse_charge_time_elapsed-state]
+# name: test_entities[sensor.mock_title_charge_time_elapsed-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'duration',
-      'friendly_name': 'OpenEVSE Charge time elapsed',
+      'friendly_name': 'Mock Title Charge time elapsed',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.openevse_charge_time_elapsed',
+    'entity_id': 'sensor.mock_title_charge_time_elapsed',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '60.0',
   })
 # ---
-# name: test_entities[sensor.openevse_charging_status-entry]
+# name: test_entities[sensor.mock_title_charging_status-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -124,7 +124,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.openevse_charging_status',
+    'entity_id': 'sensor.mock_title_charging_status',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -146,20 +146,20 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_entities[sensor.openevse_charging_status-state]
+# name: test_entities[sensor.mock_title_charging_status-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'OpenEVSE Charging status',
+      'friendly_name': 'Mock Title Charging status',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.openevse_charging_status',
+    'entity_id': 'sensor.mock_title_charging_status',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'Charging',
   })
 # ---
-# name: test_entities[sensor.openevse_ir_temperature-entry]
+# name: test_entities[sensor.mock_title_ir_temperature-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -174,7 +174,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.openevse_ir_temperature',
+    'entity_id': 'sensor.mock_title_ir_temperature',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -199,23 +199,23 @@
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_entities[sensor.openevse_ir_temperature-state]
+# name: test_entities[sensor.mock_title_ir_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
-      'friendly_name': 'OpenEVSE IR temperature',
+      'friendly_name': 'Mock Title IR temperature',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.openevse_ir_temperature',
+    'entity_id': 'sensor.mock_title_ir_temperature',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '30.2',
   })
 # ---
-# name: test_entities[sensor.openevse_rtc_temperature-entry]
+# name: test_entities[sensor.mock_title_rtc_temperature-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -230,7 +230,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.openevse_rtc_temperature',
+    'entity_id': 'sensor.mock_title_rtc_temperature',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -255,23 +255,23 @@
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_entities[sensor.openevse_rtc_temperature-state]
+# name: test_entities[sensor.mock_title_rtc_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
-      'friendly_name': 'OpenEVSE RTC temperature',
+      'friendly_name': 'Mock Title RTC temperature',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.openevse_rtc_temperature',
+    'entity_id': 'sensor.mock_title_rtc_temperature',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '28.7',
   })
 # ---
-# name: test_entities[sensor.openevse_total_usage-entry]
+# name: test_entities[sensor.mock_title_total_usage-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -286,7 +286,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.openevse_total_usage',
+    'entity_id': 'sensor.mock_title_total_usage',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -311,23 +311,23 @@
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
-# name: test_entities[sensor.openevse_total_usage-state]
+# name: test_entities[sensor.mock_title_total_usage-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
-      'friendly_name': 'OpenEVSE Total usage',
+      'friendly_name': 'Mock Title Total usage',
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.openevse_total_usage',
+    'entity_id': 'sensor.mock_title_total_usage',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '500.0',
   })
 # ---
-# name: test_entities[sensor.openevse_usage_this_session-entry]
+# name: test_entities[sensor.mock_title_usage_this_session-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -342,7 +342,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.openevse_usage_this_session',
+    'entity_id': 'sensor.mock_title_usage_this_session',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -367,16 +367,16 @@
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
-# name: test_entities[sensor.openevse_usage_this_session-state]
+# name: test_entities[sensor.mock_title_usage_this_session-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
-      'friendly_name': 'OpenEVSE Usage this session',
+      'friendly_name': 'Mock Title Usage this session',
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.openevse_usage_this_session',
+    'entity_id': 'sensor.mock_title_usage_this_session',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

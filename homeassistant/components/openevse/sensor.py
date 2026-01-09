@@ -26,7 +26,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import config_validation as cv, issue_registry as ir
-from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
 from homeassistant.helpers.entity_platform import (
     AddConfigEntryEntitiesCallback,
     AddEntitiesCallback,
@@ -159,7 +159,7 @@ async def async_setup_entry(
     async_add_entities(
         (
             OpenEVSESensor(
-                config_entry,
+                config_entry.unique_id,
                 config_entry.runtime_data,
                 description,
             )
@@ -176,7 +176,7 @@ class OpenEVSESensor(SensorEntity):
 
     def __init__(
         self,
-        config_entry: ConfigEntry,
+        unique_id: str | None,
         charger: OpenEVSE,
         description: SensorEntityDescription,
     ) -> None:
@@ -184,13 +184,14 @@ class OpenEVSESensor(SensorEntity):
         self.entity_description = description
         self.charger = charger
 
-        if config_entry.unique_id:
-            self._attr_unique_id = f"{config_entry.unique_id}_{description.key}"
+        if unique_id:
+            self._attr_unique_id = f"{unique_id}_{description.key}"
 
             self._attr_device_info = DeviceInfo(
-                identifiers={(DOMAIN, config_entry.unique_id)},
-                name="OpenEVSE",
+                identifiers={(DOMAIN, unique_id)},
                 manufacturer="OpenEVSE",
+                # unique_id is the mac address
+                connections={(CONNECTION_NETWORK_MAC, unique_id)},
             )
 
     async def async_update(self) -> None:
