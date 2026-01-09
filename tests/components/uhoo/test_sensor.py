@@ -25,7 +25,6 @@ def mock_coordinator():
     """Mock the UhooDataUpdateCoordinator."""
     coordinator = MagicMock()
     coordinator.data = {}
-    coordinator.user_settings_temp = "c"  # Default to Celsius
     return coordinator
 
 
@@ -46,6 +45,7 @@ def mock_device():
     device.mold_index = 1.5
     device.device_name = "Test Device"
     device.serial_number = "23f9239m92m3ffkkdkdd"
+    device.user_settings = {"temp": "c"}  # Add user_settings dictionary
     return device
 
 
@@ -79,6 +79,12 @@ def test_sensor_entity_descriptions() -> None:
     assert temp_desc.native_unit_of_measurement == UnitOfTemperature.CELSIUS
     assert temp_desc.state_class == SensorStateClass.MEASUREMENT
     assert callable(temp_desc.value_fn)
+
+    # Check virus and mold sensors don't have device_class
+    virus_desc = next(d for d in SENSOR_TYPES if d.key == "virus_index")
+    mold_desc = next(d for d in SENSOR_TYPES if d.key == "mold_index")
+    assert virus_desc.device_class is None
+    assert mold_desc.device_class is None
 
 
 async def test_async_setup_entry(
@@ -136,6 +142,7 @@ async def test_async_setup_entry_multiple_devices(
     device2.ozone = 25.0
     device2.virus_index = 1.0
     device2.mold_index = 1.0
+    device2.user_settings = {"temp": "c"}
 
     mock_coordinator.data = {
         "23f9239m92m3ffkkdkdd": device1,
@@ -217,12 +224,12 @@ def test_uhoo_sensor_entity_available_property(
     humidity_desc = next(d for d in SENSOR_TYPES if d.key == "humidity")
     entity = UhooSensorEntity(humidity_desc, serial_number, mock_coordinator)
 
-    # Entity should be available when device is in coordinator data
-    # and parent's available is True
+    # Mock parent's available property
     with patch(
         "homeassistant.helpers.update_coordinator.CoordinatorEntity.available",
         new_callable=lambda: True,
     ):
+        # Entity should be available when device is in coordinator data
         assert entity.available is True
 
         # Remove device from coordinator data
@@ -257,8 +264,8 @@ def test_uhoo_sensor_entity_native_unit_of_measurement_celsius(
 ) -> None:
     """Test native_unit_of_measurement for temperature in Celsius."""
     serial_number = "23f9239m92m3ffkkdkdd"
+    mock_device.user_settings = {"temp": "c"}
     mock_coordinator.data = {serial_number: mock_device}
-    mock_coordinator.user_settings_temp = "c"
 
     temp_desc = next(d for d in SENSOR_TYPES if d.key == "temperature")
     entity = UhooSensorEntity(temp_desc, serial_number, mock_coordinator)
@@ -272,8 +279,8 @@ def test_uhoo_sensor_entity_native_unit_of_measurement_fahrenheit(
 ) -> None:
     """Test native_unit_of_measurement for temperature in Fahrenheit."""
     serial_number = "23f9239m92m3ffkkdkdd"
+    mock_device.user_settings = {"temp": "f"}
     mock_coordinator.data = {serial_number: mock_device}
-    mock_coordinator.user_settings_temp = "f"
 
     temp_desc = next(d for d in SENSOR_TYPES if d.key == "temperature")
     entity = UhooSensorEntity(temp_desc, serial_number, mock_coordinator)
@@ -348,7 +355,7 @@ def test_all_sensor_types_have_value_functions() -> None:
 
 
 @pytest.mark.parametrize(
-    tuple("sensor_key", "expected_device_class"),
+    ("sensor_key", "expected_device_class"),
     [
         ("humidity", SensorDeviceClass.HUMIDITY),
         ("temperature", SensorDeviceClass.TEMPERATURE),
@@ -359,8 +366,8 @@ def test_all_sensor_types_have_value_functions() -> None:
         ("tvoc", SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS),
         ("no2", SensorDeviceClass.NITROGEN_DIOXIDE),
         ("ozone", SensorDeviceClass.OZONE),
-        ("virus_index", SensorDeviceClass.AQI),
-        ("mold_index", SensorDeviceClass.AQI),
+        ("virus_index", None),  # No device class for virus_index
+        ("mold_index", None),  # No device class for mold_index
     ],
 )
 def test_sensor_device_classes(sensor_key, expected_device_class) -> None:
@@ -379,19 +386,23 @@ def test_temperature_sensor_unit_conversion_logic() -> None:
     """Test the logic for temperature unit conversion."""
     serial_number = "23f9239m92m3ffkkdkdd"
 
-    # Create a mock device
-    mock_device = MagicMock()
-    mock_device.device_name = "Test Device"
+    # Create a mock device with Celsius setting
+    mock_device_c = MagicMock()
+    mock_device_c.device_name = "Test Device"
+    mock_device_c.user_settings = {"temp": "c"}
+
+    # Create a mock device with Fahrenheit setting
+    mock_device_f = MagicMock()
+    mock_device_f.device_name = "Test Device"
+    mock_device_f.user_settings = {"temp": "f"}
 
     # Mock coordinator with Celsius setting
     coordinator_c = MagicMock()
-    coordinator_c.data = {serial_number: mock_device}
-    coordinator_c.user_settings_temp = "c"
+    coordinator_c.data = {serial_number: mock_device_c}
 
     # Mock coordinator with Fahrenheit setting
     coordinator_f = MagicMock()
-    coordinator_f.data = {serial_number: mock_device}
-    coordinator_f.user_settings_temp = "f"
+    coordinator_f.data = {serial_number: mock_device_f}
 
     temp_desc = next(d for d in SENSOR_TYPES if d.key == "temperature")
 
@@ -399,15 +410,6 @@ def test_temperature_sensor_unit_conversion_logic() -> None:
     entity_c = UhooSensorEntity(temp_desc, serial_number, coordinator_c)
     entity_f = UhooSensorEntity(temp_desc, serial_number, coordinator_f)
 
-    # The unit should be determined by coordinator.user_settings_temp
-    # Note: We can't directly test the property without mocking,
-    # but we can verify the logic in the entity's property
-
-    # The key is that entity.native_unit_of_measurement checks
-    # self.coordinator.user_settings_temp
-    assert coordinator_c.user_settings_temp == "c"
-    assert coordinator_f.user_settings_temp == "f"
-
-    # Now test the actual property calls
+    # Test the actual property calls
     assert entity_c.native_unit_of_measurement == UnitOfTemperature.CELSIUS
     assert entity_f.native_unit_of_measurement == UnitOfTemperature.FAHRENHEIT

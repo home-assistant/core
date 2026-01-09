@@ -19,9 +19,6 @@ class UhooDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Device]]):
     def __init__(self, hass: HomeAssistant, client: Client) -> None:
         """Initialize DataUpdateCoordinator."""
         self.client = client
-        self.platforms: list[str] = []
-        self.user_settings_temp = None
-
         super().__init__(hass, LOGGER, name=DOMAIN, update_interval=UPDATE_INTERVAL)
 
     async def _async_update_data(self) -> dict[str, Device]:

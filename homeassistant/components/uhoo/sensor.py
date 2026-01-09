@@ -120,16 +120,12 @@ SENSOR_TYPES: tuple[UhooSensorEntityDescription, ...] = (
     UhooSensorEntityDescription(
         key=API_VIRUS,
         translation_key=API_VIRUS,
-        device_class=SensorDeviceClass.AQI,
-        native_unit_of_measurement="",
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda data: data.virus_index,
     ),
     UhooSensorEntityDescription(
         key=API_MOLD,
         translation_key=API_MOLD,
-        device_class=SensorDeviceClass.AQI,
-        native_unit_of_measurement="",
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda data: data.mold_index,
     ),
@@ -188,15 +184,13 @@ class UhooSensorEntity(CoordinatorEntity[UhooDataUpdateCoordinator], SensorEntit
     @property
     def native_value(self) -> StateType:
         """State of the sensor."""
-        if (device := self.device) is None:
-            return None
-        return self.entity_description.value_fn(device)
+        return self.entity_description.value_fn(self.device)
 
     @property
     def native_unit_of_measurement(self) -> str | None:
         """Return unit of measurement."""
         if self.entity_description.key == API_TEMP:
-            if self.coordinator.user_settings_temp == "f":
+            if self.device.user_settings["temp"] == "f":
                 return UnitOfTemperature.FAHRENHEIT
             return UnitOfTemperature.CELSIUS
         return super().native_unit_of_measurement
