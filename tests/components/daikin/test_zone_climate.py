@@ -11,10 +11,7 @@ import pytest
 
 from homeassistant.components.climate import HVACMode
 from homeassistant.components.daikin import climate
-from homeassistant.components.daikin.climate import (
-    HA_STATE_TO_DAIKIN,
-    DaikinZoneClimate,
-)
+from homeassistant.components.daikin.climate import DaikinZoneClimate
 from homeassistant.components.daikin.coordinator import DaikinCoordinator
 from homeassistant.const import ATTR_TEMPERATURE
 from homeassistant.core import HomeAssistant
