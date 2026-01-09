@@ -1051,11 +1051,11 @@ hassil==3.5.0
 # homeassistant.components.jewish_calendar
 hdate[astral]==1.1.2
 
-# homeassistant.components.hegel
-hegel-ip-client==0.1.2
-
 # homeassistant.components.hdfury
 hdfury==1.3.1
+
+# homeassistant.components.hegel
+hegel-ip-client==0.1.4
 
 # homeassistant.components.here_travel_time
 here-routing==1.2.0

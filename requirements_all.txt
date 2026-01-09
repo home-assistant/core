@@ -1191,7 +1191,7 @@ hdfury==1.3.1
 heatmiserV3==2.0.4
 
 # homeassistant.components.hegel
-hegel-ip-client==0.1.2
+hegel-ip-client==0.1.4
 
 # homeassistant.components.here_travel_time
 here-routing==1.2.0

@@ -48,7 +48,6 @@ rules:
     comment: |
       Device uses local IP control without authentication.
   test-coverage: done
-
   # Gold
   devices: done
   diagnostics: todo
