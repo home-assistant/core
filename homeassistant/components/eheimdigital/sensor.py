@@ -14,13 +14,7 @@ from homeassistant.components.sensor import (
     SensorEntity,
     SensorEntityDescription,
 )
-from homeassistant.const import (
-    PERCENTAGE,
-    PRECISION_WHOLE,
-    EntityCategory,
-    UnitOfFrequency,
-    UnitOfTime,
-)
+from homeassistant.const import PERCENTAGE, EntityCategory, UnitOfFrequency, UnitOfTime
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -58,33 +52,6 @@ FILTER_DESCRIPTIONS: tuple[EheimDigitalSensorDescription[EheimDigitalFilter], ..
         suggested_unit_of_measurement=UnitOfTime.DAYS,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
-    EheimDigitalSensorDescription[EheimDigitalFilter](
-        key="operating_time",
-        translation_key="operating_time",
-        value_fn=lambda device: device.operating_time,
-        device_class=SensorDeviceClass.DURATION,
-        native_unit_of_measurement=UnitOfTime.MINUTES,
-        suggested_unit_of_measurement=UnitOfTime.HOURS,
-        entity_category=EntityCategory.DIAGNOSTIC,
-    ),
-    EheimDigitalSensorDescription[EheimDigitalFilter](
-        key="turn_off_time",
-        translation_key="turn_off_time",
-        value_fn=lambda device: device.turn_off_time,
-        device_class=SensorDeviceClass.DURATION,
-        native_unit_of_measurement=UnitOfTime.SECONDS,
-        suggested_display_precision=PRECISION_WHOLE,
-        entity_category=EntityCategory.DIAGNOSTIC,
-    ),
-    EheimDigitalSensorDescription[EheimDigitalFilter](
-        key="turn_feeding_time",
-        translation_key="turn_feeding_time",
-        value_fn=lambda device: device.turn_feeding_time,
-        device_class=SensorDeviceClass.DURATION,
-        native_unit_of_measurement=UnitOfTime.SECONDS,
-        suggested_display_precision=PRECISION_WHOLE,
-        entity_category=EntityCategory.DIAGNOSTIC,
-    ),
 )
 
 
@@ -109,11 +76,7 @@ CLASSICVARIO_DESCRIPTIONS: tuple[
     EheimDigitalSensorDescription[EheimDigitalClassicVario](
         key="error_code",
         translation_key="error_code",
-        value_fn=(
-            lambda device: device.error_code.name.lower()
-            if device.error_code is not None
-            else None
-        ),
+        value_fn=lambda device: device.error_code.name.lower(),
         device_class=SensorDeviceClass.ENUM,
         options=[name.lower() for name in FilterErrorCode._member_names_],
         entity_category=EntityCategory.DIAGNOSTIC,
