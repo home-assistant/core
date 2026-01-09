@@ -26,7 +26,7 @@
         "name": "Tank Empty"
       },
       "tank_full": {
-        "name": "Tank full"
+        "name": "Tank Full"
       }
     },
     "sensor": {
