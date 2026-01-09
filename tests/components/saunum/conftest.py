@@ -2,7 +2,7 @@
 
 from collections.abc import Generator
 from datetime import timedelta
-from unittest.mock import MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 from pysaunum import SaunumData
 import pytest
@@ -52,6 +52,8 @@ def mock_saunum_client() -> Generator[MagicMock]:
     ):
         mock_client = mock_client_class.return_value
         mock_client.is_connected = True
+
+        mock_client_class.create = AsyncMock(return_value=mock_client)
 
         # Create mock data for async_get_data
         mock_data = SaunumData(
