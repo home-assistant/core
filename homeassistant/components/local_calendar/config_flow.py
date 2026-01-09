@@ -21,7 +21,6 @@ from homeassistant.util import slugify
 from .const import (
     ATTR_CREATE_EMPTY,
     ATTR_IMPORT_ICS_FILE,
-    CONF_CALENDAR_COLOR,
     CONF_CALENDAR_NAME,
     CONF_ICS_FILE,
     CONF_IMPORT,
@@ -35,7 +34,6 @@ _LOGGER = logging.getLogger(__name__)
 STEP_USER_DATA_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_CALENDAR_NAME): str,
-        vol.Optional(CONF_CALENDAR_COLOR): selector.ColorRGBSelector(),
         vol.Optional(CONF_IMPORT, default=ATTR_CREATE_EMPTY): selector.SelectSelector(
             selector.SelectSelectorConfig(
                 options=[

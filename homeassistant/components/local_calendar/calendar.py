@@ -16,8 +16,6 @@ from ical.types import Range, Recur
 import voluptuous as vol
 
 from homeassistant.components.calendar import (
-    CONF_COLOR,
-    DOMAIN as CALENDAR_DOMAIN,
     EVENT_END,
     EVENT_RRULE,
     EVENT_START,
@@ -27,12 +25,11 @@ from homeassistant.components.calendar import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import dt as dt_util
 
 from . import LocalCalendarConfigEntry
-from .const import CONF_CALENDAR_COLOR, CONF_CALENDAR_NAME
+from .const import CONF_CALENDAR_NAME
 from .store import LocalCalendarStore
 
 _LOGGER = logging.getLogger(__name__)
@@ -54,16 +51,11 @@ async def async_setup_entry(
     calendar.prodid = PRODID
 
     name = config_entry.data[CONF_CALENDAR_NAME]
-    # Color from config entry is used as initial entity option for migration
-    initial_color = config_entry.options.get(
-        CONF_CALENDAR_COLOR, config_entry.data.get(CONF_CALENDAR_COLOR)
-    )
     entity = LocalCalendarEntity(
         store,
         calendar,
         name,
         unique_id=config_entry.entry_id,
-        initial_color=initial_color,
     )
     async_add_entities([entity], True)
 
@@ -84,7 +76,6 @@ class LocalCalendarEntity(CalendarEntity):
         calendar: Calendar,
         name: str,
         unique_id: str,
-        initial_color: list[int] | None = None,
     ) -> None:
         """Initialize LocalCalendarEntity."""
         self._store = store
@@ -93,19 +84,6 @@ class LocalCalendarEntity(CalendarEntity):
         self._event: CalendarEvent | None = None
         self._attr_name = name
         self._attr_unique_id = unique_id
-        # Store initial color for migration to entity registry options
-        self._initial_color = initial_color
-
-    def get_initial_entity_options(self) -> er.EntityOptionsType | None:
-        """Return initial entity options.
-
-        These options are stored in the entity registry the first time the
-        entity is seen. This is used to migrate the color from config entry
-        to entity registry options.
-        """
-        if self._initial_color is None:
-            return None
-        return {CALENDAR_DOMAIN: {CONF_COLOR: self._initial_color}}
 
     @property
     def event(self) -> CalendarEvent | None:
