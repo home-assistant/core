@@ -19,7 +19,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.entityfilter import FILTER_SCHEMA
+from homeassistant.helpers.entityfilter import FILTER_SCHEMA, EntityFilter
 from homeassistant.helpers.storage import STORAGE_DIR, Store
 from homeassistant.util import dt as dt_util, json as json_util
 
@@ -95,7 +95,7 @@ class GoogleConfig(AbstractConfig):
 
         # Initialize entity filter if configured
         if CONF_FILTER in config and config[CONF_FILTER]:
-            self._entity_filter = FILTER_SCHEMA(config[CONF_FILTER])
+            self._entity_filter = EntityFilter(config[CONF_FILTER])
             self._use_filter = True
         else:
             self._entity_filter = None
