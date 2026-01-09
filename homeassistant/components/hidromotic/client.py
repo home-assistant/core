@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import asyncio
 from collections.abc import Callable
+import json
 import logging
 from typing import Any
 
@@ -179,8 +180,6 @@ class HidromoticClient:
     async def _process_text(self, data: str) -> None:
         """Process text message (JSON)."""
         try:
-            import json
-
             parsed = json.loads(data)
             _LOGGER.debug("Received JSON: %s", parsed)
         except Exception:
