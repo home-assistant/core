@@ -757,12 +757,21 @@ class WaterHeater(HomeAccessory):
         self.char_current_heat_cool = serv_thermostat.configure_char(
             CHAR_CURRENT_HEATING_COOLING, value=1
         )
+        # Must set the value before setting valid_values because
+        # configure_char calls override_properties (which validates)
+        # before set_value — the default value of 0 would fail
+        # validation against HC_HOMEKIT_VALID_MODES_WATER_HEATER.
         self.char_target_heat_cool = serv_thermostat.configure_char(
             CHAR_TARGET_HEATING_COOLING,
             value=1,
             setter_callback=self.set_heat_cool,
-            valid_values=HC_HOMEKIT_VALID_MODES_WATER_HEATER,
         )
+        self.char_target_heat_cool.override_properties(
+            valid_values=HC_HOMEKIT_VALID_MODES_WATER_HEATER
+        )
+        # HomeKit/Siri may send TargetHeatingCoolingState values like
+        # Off (0) or Auto (3) even though they are not valid for a
+        # water heater. Allow them so the setter can handle gracefully.
         self.char_target_heat_cool.allow_invalid_client_values = True
 
         self.char_current_temp = serv_thermostat.configure_char(
