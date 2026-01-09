@@ -116,7 +116,6 @@ RULE_URL = (
 )
 
 INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
-    "path_train",
     "abode",
     "accuweather",
     "acer_projector",
