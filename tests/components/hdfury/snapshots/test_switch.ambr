@@ -24,7 +24,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Auto Switch Inputs',
+    'original_name': 'Auto switch inputs',
     'platform': 'hdfury',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -37,7 +37,7 @@
 # name: test_switch_entities[switch.hdfury_vrroom_02_auto_switch_inputs-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'HDFury VRROOM-02 Auto Switch Inputs',
+      'friendly_name': 'HDFury VRROOM-02 Auto switch inputs',
     }),
     'context': <ANY>,
     'entity_id': 'switch.hdfury_vrroom_02_auto_switch_inputs',
@@ -72,7 +72,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'HTPC Mode RX0',
+    'original_name': 'HTPC mode RX0',
     'platform': 'hdfury',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -85,7 +85,7 @@
 # name: test_switch_entities[switch.hdfury_vrroom_02_htpc_mode_rx0-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'HDFury VRROOM-02 HTPC Mode RX0',
+      'friendly_name': 'HDFury VRROOM-02 HTPC mode RX0',
     }),
     'context': <ANY>,
     'entity_id': 'switch.hdfury_vrroom_02_htpc_mode_rx0',
@@ -120,7 +120,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'HTPC Mode RX1',
+    'original_name': 'HTPC mode RX1',
     'platform': 'hdfury',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -133,7 +133,7 @@
 # name: test_switch_entities[switch.hdfury_vrroom_02_htpc_mode_rx1-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'HDFury VRROOM-02 HTPC Mode RX1',
+      'friendly_name': 'HDFury VRROOM-02 HTPC mode RX1',
     }),
     'context': <ANY>,
     'entity_id': 'switch.hdfury_vrroom_02_htpc_mode_rx1',
@@ -168,7 +168,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'HTPC Mode RX2',
+    'original_name': 'HTPC mode RX2',
     'platform': 'hdfury',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -181,7 +181,7 @@
 # name: test_switch_entities[switch.hdfury_vrroom_02_htpc_mode_rx2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'HDFury VRROOM-02 HTPC Mode RX2',
+      'friendly_name': 'HDFury VRROOM-02 HTPC mode RX2',
     }),
     'context': <ANY>,
     'entity_id': 'switch.hdfury_vrroom_02_htpc_mode_rx2',
@@ -216,7 +216,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'HTPC Mode RX3',
+    'original_name': 'HTPC mode RX3',
     'platform': 'hdfury',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -229,7 +229,7 @@
 # name: test_switch_entities[switch.hdfury_vrroom_02_htpc_mode_rx3-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'HDFury VRROOM-02 HTPC Mode RX3',
+      'friendly_name': 'HDFury VRROOM-02 HTPC mode RX3',
     }),
     'context': <ANY>,
     'entity_id': 'switch.hdfury_vrroom_02_htpc_mode_rx3',
@@ -287,7 +287,7 @@
     'state': 'on',
   })
 # ---
-# name: test_switch_entities[switch.hdfury_vrroom_02_mute_tx0_audio-entry]
+# name: test_switch_entities[switch.hdfury_vrroom_02_mute_audio_tx0-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -300,7 +300,7 @@
     'disabled_by': None,
     'domain': 'switch',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'switch.hdfury_vrroom_02_mute_tx0_audio',
+    'entity_id': 'switch.hdfury_vrroom_02_mute_audio_tx0',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -312,7 +312,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Mute TX0 Audio',
+    'original_name': 'Mute audio TX0',
     'platform': 'hdfury',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -322,20 +322,20 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_switch_entities[switch.hdfury_vrroom_02_mute_tx0_audio-state]
+# name: test_switch_entities[switch.hdfury_vrroom_02_mute_audio_tx0-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'HDFury VRROOM-02 Mute TX0 Audio',
+      'friendly_name': 'HDFury VRROOM-02 Mute audio TX0',
     }),
     'context': <ANY>,
-    'entity_id': 'switch.hdfury_vrroom_02_mute_tx0_audio',
+    'entity_id': 'switch.hdfury_vrroom_02_mute_audio_tx0',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'on',
   })
 # ---
-# name: test_switch_entities[switch.hdfury_vrroom_02_mute_tx1_audio-entry]
+# name: test_switch_entities[switch.hdfury_vrroom_02_mute_audio_tx1-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -348,7 +348,7 @@
     'disabled_by': None,
     'domain': 'switch',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'switch.hdfury_vrroom_02_mute_tx1_audio',
+    'entity_id': 'switch.hdfury_vrroom_02_mute_audio_tx1',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -360,7 +360,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Mute TX1 Audio',
+    'original_name': 'Mute audio TX1',
     'platform': 'hdfury',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -370,13 +370,13 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_switch_entities[switch.hdfury_vrroom_02_mute_tx1_audio-state]
+# name: test_switch_entities[switch.hdfury_vrroom_02_mute_audio_tx1-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'HDFury VRROOM-02 Mute TX1 Audio',
+      'friendly_name': 'HDFury VRROOM-02 Mute audio TX1',
     }),
     'context': <ANY>,
-    'entity_id': 'switch.hdfury_vrroom_02_mute_tx1_audio',
+    'entity_id': 'switch.hdfury_vrroom_02_mute_audio_tx1',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -408,7 +408,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'OLED Display',
+    'original_name': 'OLED display',
     'platform': 'hdfury',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -421,7 +421,7 @@
 # name: test_switch_entities[switch.hdfury_vrroom_02_oled_display-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'HDFury VRROOM-02 OLED Display',
+      'friendly_name': 'HDFury VRROOM-02 OLED display',
     }),
     'context': <ANY>,
     'entity_id': 'switch.hdfury_vrroom_02_oled_display',
