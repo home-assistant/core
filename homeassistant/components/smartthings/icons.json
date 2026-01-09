@@ -93,6 +93,14 @@
           "stop": "mdi:stop"
         }
       },
+      "selected_zone": {
+        "state": {
+          "all": "mdi:card",
+          "lower": "mdi:dock-bottom",
+          "none": "mdi:card-outline",
+          "upper": "mdi:dock-top"
+        }
+      },
       "soil_level": {
         "default": "mdi:liquid-spot"
       },
@@ -101,6 +109,14 @@
       },
       "water_temperature": {
         "default": "mdi:water-thermometer"
+      },
+      "zone_booster": {
+        "state": {
+          "all": "mdi:card",
+          "left": "mdi:dock-left",
+          "none": "mdi:card-outline",
+          "right": "mdi:dock-right"
+        }
       }
     },
     "sensor": {
@@ -197,9 +213,6 @@
       "sanitizing_wash": {
         "default": "mdi:lotion"
       },
-      "selected_zone": {
-        "default": "mdi:dock-bottom"
-      },
       "sound_effect": {
         "default": "mdi:volume-high",
         "state": {
@@ -221,9 +234,6 @@
         "state": {
           "off": "mdi:tumble-dryer-off"
         }
-      },
-      "zone_booster": {
-        "default": "mdi:dock-left"
       }
     }
   }

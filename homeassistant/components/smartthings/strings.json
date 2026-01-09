@@ -213,6 +213,15 @@
           "stop": "[%key:common::state::stopped%]"
         }
       },
+      "selected_zone": {
+        "name": "Selected zone",
+        "state": {
+          "all": "All",
+          "lower": "Lower",
+          "none": "None",
+          "upper": "Upper"
+        }
+      },
       "soil_level": {
         "name": "Soil level",
         "state": {
@@ -276,6 +285,15 @@
           "semi_hot": "Semi Hot",
           "tap_cold": "Tap Cold",
           "warm": "Warm"
+        }
+      },
+      "zone_booster": {
+        "name": "Zone booster",
+        "state": {
+          "all": "All",
+          "left": "Left",
+          "none": "None",
+          "right": "Right"
         }
       }
     },
@@ -799,9 +817,6 @@
       "sanitizing_wash": {
         "name": "Sanitizing wash"
       },
-      "selected_zone": {
-        "name": "Selected zone"
-      },
       "sound_effect": {
         "name": "Sound effect"
       },
@@ -816,9 +831,6 @@
       },
       "wrinkle_prevent": {
         "name": "Wrinkle prevent"
-      },
-      "zone_booster": {
-        "name": "Zone booster"
       }
     }
   },

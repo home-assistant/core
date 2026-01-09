@@ -229,15 +229,6 @@ DISHWASHER_WASHING_OPTIONS_TO_SWITCHES: dict[
         command=Command.SET_SANITIZING_WASH,
         entity_category=EntityCategory.CONFIG,
     ),
-    Attribute.SELECTED_ZONE: SmartThingsDishwasherWashingOptionSwitchEntityDescription(
-        key=Attribute.SELECTED_ZONE,
-        translation_key="selected_zone",
-        status_attribute=Attribute.SELECTED_ZONE,
-        command=Command.SET_SELECTED_ZONE,
-        on_key="lower",
-        off_key="all",
-        entity_category=EntityCategory.CONFIG,
-    ),
     Attribute.SPEED_BOOSTER: SmartThingsDishwasherWashingOptionSwitchEntityDescription(
         key=Attribute.SPEED_BOOSTER,
         translation_key="speed_booster",
@@ -257,15 +248,6 @@ DISHWASHER_WASHING_OPTIONS_TO_SWITCHES: dict[
         translation_key="storm_wash",
         status_attribute=Attribute.STORM_WASH,
         command=Command.SET_STORM_WASH,
-        entity_category=EntityCategory.CONFIG,
-    ),
-    Attribute.ZONE_BOOSTER: SmartThingsDishwasherWashingOptionSwitchEntityDescription(
-        key=Attribute.ZONE_BOOSTER,
-        translation_key="zone_booster",
-        status_attribute=Attribute.ZONE_BOOSTER,
-        command=Command.SET_ZONE_BOOSTER,
-        on_key="left",
-        off_key="none",
         entity_category=EntityCategory.CONFIG,
     ),
 }
