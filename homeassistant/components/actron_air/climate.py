@@ -2,7 +2,7 @@
 
 from typing import Any
 
-from actron_neo_api import ActronAirStatus, ActronAirZone
+from actron_neo_api import ActronAirAPIError, ActronAirStatus, ActronAirZone
 
 from homeassistant.components.climate import (
     FAN_AUTO,
@@ -15,8 +15,10 @@ from homeassistant.components.climate import (
 )
 from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
+from .const import DOMAIN
 from .coordinator import ActronAirConfigEntry, ActronAirSystemCoordinator
 from .entity import ActronAirAcEntity, ActronAirZoneEntity
 
@@ -139,17 +141,38 @@ class ActronSystemClimate(ActronAirAcEntity, ActronAirClimateEntity):
     async def async_set_fan_mode(self, fan_mode: str) -> None:
         """Set a new fan mode."""
         api_fan_mode = FAN_MODE_MAPPING_HA_TO_ACTRONAIR.get(fan_mode)
-        await self._status.user_aircon_settings.set_fan_mode(api_fan_mode)
+        try:
+            await self._status.user_aircon_settings.set_fan_mode(api_fan_mode)
+        except ActronAirAPIError as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="api_error",
+                translation_placeholders={"error": str(err)},
+            ) from err
 
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set the HVAC mode."""
         ac_mode = HVAC_MODE_MAPPING_HA_TO_ACTRONAIR.get(hvac_mode)
-        await self._status.ac_system.set_system_mode(ac_mode)
+        try:
+            await self._status.ac_system.set_system_mode(ac_mode)
+        except ActronAirAPIError as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="api_error",
+                translation_placeholders={"error": str(err)},
+            ) from err
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set the temperature."""
         temp = kwargs.get(ATTR_TEMPERATURE)
-        await self._status.user_aircon_settings.set_temperature(temperature=temp)
+        try:
+            await self._status.user_aircon_settings.set_temperature(temperature=temp)
+        except ActronAirAPIError as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="api_error",
+                translation_placeholders={"error": str(err)},
+            ) from err
 
 
 class ActronZoneClimate(ActronAirZoneEntity, ActronAirClimateEntity):
@@ -212,8 +235,22 @@ class ActronZoneClimate(ActronAirZoneEntity, ActronAirClimateEntity):
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set the HVAC mode."""
         is_enabled = hvac_mode != HVACMode.OFF
-        await self._zone.enable(is_enabled)
+        try:
+            await self._zone.enable(is_enabled)
+        except ActronAirAPIError as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="api_error",
+                translation_placeholders={"error": str(err)},
+            ) from err
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set the temperature."""
-        await self._zone.set_temperature(temperature=kwargs.get(ATTR_TEMPERATURE))
+        try:
+            await self._zone.set_temperature(temperature=kwargs.get(ATTR_TEMPERATURE))
+        except ActronAirAPIError as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="api_error",
+                translation_placeholders={"error": str(err)},
+            ) from err
