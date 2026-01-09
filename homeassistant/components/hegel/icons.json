@@ -1,7 +1,1 @@
-{
-  "services": {
-    "refresh_state": {
-      "service": "mdi:refresh"
-    }
-  }
-}
+{}

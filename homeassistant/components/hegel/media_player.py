@@ -22,8 +22,8 @@ from homeassistant.components.media_player import (
     MediaPlayerEntityFeature,
     MediaPlayerState,
 )
-from homeassistant.const import CONF_HOST, CONF_NAME
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.event import async_track_time_interval
@@ -42,8 +42,6 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Hegel media player from a config entry."""
-    host = entry.data[CONF_HOST]
-    name = entry.data.get(CONF_NAME, f"Hegel {host}")
     model = entry.data.get(CONF_MODEL)
     mac = entry.data.get("mac")
     unique_id = entry.data.get("unique_id")
@@ -56,21 +54,11 @@ async def async_setup_entry(
     # Use the client from the config entry's runtime_data (already connected)
     client = entry.runtime_data
 
-    # initial state container
-    state: dict[str, Any] = {
-        "power": False,
-        "volume": 0.0,
-        "mute": False,
-        "input": None,
-    }
-
     # Create entity
     media = HegelMediaPlayer(
         entry,
-        name,
         client,
         source_map,
-        state,
         mac,
         unique_id,
     )
@@ -82,38 +70,51 @@ class HegelMediaPlayer(MediaPlayerEntity):
     """Hegel amplifier entity."""
 
     _attr_should_poll = False
+    _attr_name = None
+    _attr_has_entity_name = True
+    _attr_supported_features = (
+        MediaPlayerEntityFeature.VOLUME_SET
+        | MediaPlayerEntityFeature.VOLUME_MUTE
+        | MediaPlayerEntityFeature.VOLUME_STEP
+        | MediaPlayerEntityFeature.SELECT_SOURCE
+        | MediaPlayerEntityFeature.TURN_ON
+        | MediaPlayerEntityFeature.TURN_OFF
+    )
 
     def __init__(
         self,
         config_entry: HegelConfigEntry,
-        name: str,
         client: HegelClient,
         source_map: dict[int, str],
-        state: dict[str, Any],
         mac: str | None,
         unique_id: str | None,
     ) -> None:
         """Initialize the Hegel media player entity."""
         self._entry = config_entry
-        self._attr_name = name
         self._client = client
         self._source_map = source_map
-        self._state = state
         self._mac = mac
-        self._unique_id = unique_id
 
-        # supported features
-        self._attr_supported_features = (
-            MediaPlayerEntityFeature.VOLUME_SET
-            | MediaPlayerEntityFeature.VOLUME_MUTE
-            | MediaPlayerEntityFeature.VOLUME_STEP
-            | MediaPlayerEntityFeature.SELECT_SOURCE
-            | MediaPlayerEntityFeature.TURN_ON
-            | MediaPlayerEntityFeature.TURN_OFF
+        # Set unique_id: prefer device-specific identifiers, fallback to entry ID
+        if unique_id:
+            self._attr_unique_id = unique_id
+        elif mac:
+            self._attr_unique_id = f"hegel_{mac.replace(':', '')}"
+        else:
+            self._attr_unique_id = f"hegel_{config_entry.entry_id}"
+
+        # Set device info
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, self._attr_unique_id)},
+            name=config_entry.title,
+            manufacturer="Hegel",
+            model=config_entry.data.get(CONF_MODEL),
         )
+        if mac:
+            self._attr_device_info["connections"] = {(CONNECTION_NETWORK_MAC, mac)}
 
-        # Entity categorization for better organization
-        self._attr_has_entity_name = True
+        # State will be populated by async_update on first connection
+        self._state: dict[str, Any] = {}
 
         # Background tasks
         self._connected_watcher_task: asyncio.Task[None] | None = None
@@ -163,32 +164,6 @@ class HegelMediaPlayer(MediaPlayerEntity):
             )
         except (HegelConnectionError, TimeoutError, OSError) as err:
             _LOGGER.debug("Heartbeat failed: %s", err)
-
-    @property
-    def unique_id(self) -> str | None:
-        """Return a unique ID for this entity."""
-        # Prefer device-specific identifiers over IP-based ones
-        if self._unique_id:
-            return self._unique_id
-        if self._mac:
-            return f"hegel_{self._mac.replace(':', '')}"
-        # Fallback to entry ID for consistency across reboots
-        return f"hegel_{self._entry.entry_id}"
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return device information for this entity."""
-        unique_id = str(self.unique_id)
-
-        info = DeviceInfo(
-            identifiers={(DOMAIN, unique_id)},
-            name=self._attr_name,
-            manufacturer="Hegel",
-            model=self._entry.data.get(CONF_MODEL),
-        )
-        if self._mac:
-            info["connections"] = {(CONNECTION_NETWORK_MAC, self._mac)}
-        return info
 
     async def _async_handle_push(self, msg: str) -> None:
         """Handle incoming push message from client (runs in event loop)."""
@@ -261,12 +236,18 @@ class HegelMediaPlayer(MediaPlayerEntity):
     @property
     def state(self) -> MediaPlayerState | None:
         """Return the current state of the media player."""
-        return MediaPlayerState.ON if self._state.get("power") else MediaPlayerState.OFF
+        power = self._state.get("power")
+        if power is None:
+            return None
+        return MediaPlayerState.ON if power else MediaPlayerState.OFF
 
     @property
     def volume_level(self) -> float | None:
         """Return the volume level."""
-        return float(self._state.get("volume", 0.0))
+        volume = self._state.get("volume")
+        if volume is None:
+            return None
+        return float(volume)
 
     @property
     def is_volume_muted(self) -> bool | None:
@@ -289,14 +270,14 @@ class HegelMediaPlayer(MediaPlayerEntity):
         try:
             await self._client.send(COMMANDS["power_on"], expect_reply=False)
         except (HegelConnectionError, TimeoutError, OSError) as err:
-            _LOGGER.warning("Failed to send power_on: %s", err)
+            raise HomeAssistantError(f"Failed to turn on: {err}") from err
 
     async def async_turn_off(self) -> None:
         """Turn off the media player."""
         try:
             await self._client.send(COMMANDS["power_off"], expect_reply=False)
         except (HegelConnectionError, TimeoutError, OSError) as err:
-            _LOGGER.warning("Failed to send power_off: %s", err)
+            raise HomeAssistantError(f"Failed to turn off: {err}") from err
 
     async def async_set_volume_level(self, volume: float) -> None:
         """Set volume level, range 0..1."""
@@ -305,7 +286,7 @@ class HegelMediaPlayer(MediaPlayerEntity):
         try:
             await self._client.send(COMMANDS["volume_set"](amp_vol), expect_reply=False)
         except (HegelConnectionError, TimeoutError, OSError) as err:
-            _LOGGER.warning("Failed to set volume: %s", err)
+            raise HomeAssistantError(f"Failed to set volume: {err}") from err
 
     async def async_mute_volume(self, mute: bool) -> None:
         """Mute or unmute the volume."""
@@ -314,31 +295,34 @@ class HegelMediaPlayer(MediaPlayerEntity):
                 COMMANDS["mute_on" if mute else "mute_off"], expect_reply=False
             )
         except (HegelConnectionError, TimeoutError, OSError) as err:
-            _LOGGER.warning("Failed to set mute: %s", err)
+            raise HomeAssistantError(f"Failed to set mute: {err}") from err
 
     async def async_volume_up(self) -> None:
         """Increase volume."""
         try:
             await self._client.send(COMMANDS["volume_up"], expect_reply=False)
         except (HegelConnectionError, TimeoutError, OSError) as err:
-            _LOGGER.warning("Failed to increase volume: %s", err)
+            raise HomeAssistantError(f"Failed to increase volume: {err}") from err
 
     async def async_volume_down(self) -> None:
         """Decrease volume."""
         try:
             await self._client.send(COMMANDS["volume_down"], expect_reply=False)
         except (HegelConnectionError, TimeoutError, OSError) as err:
-            _LOGGER.warning("Failed to decrease volume: %s", err)
+            raise HomeAssistantError(f"Failed to decrease volume: {err}") from err
 
     async def async_select_source(self, source: str) -> None:
         """Select input source."""
         inv = {v: k for k, v in self._source_map.items()}
         idx = inv.get(source)
-        if idx is not None:
-            try:
-                await self._client.send(COMMANDS["input_set"](idx), expect_reply=False)
-            except (HegelConnectionError, TimeoutError, OSError) as err:
-                _LOGGER.warning("Failed to select source %s: %s", source, err)
+        if idx is None:
+            raise HomeAssistantError(f"Unknown source: {source}")
+        try:
+            await self._client.send(COMMANDS["input_set"](idx), expect_reply=False)
+        except (HegelConnectionError, TimeoutError, OSError) as err:
+            raise HomeAssistantError(
+                f"Failed to select source {source}: {err}"
+            ) from err
 
     async def async_will_remove_from_hass(self) -> None:
         """Handle entity removal from Home Assistant.
@@ -349,12 +333,9 @@ class HegelMediaPlayer(MediaPlayerEntity):
         """
         await super().async_will_remove_from_hass()
 
-        if self._push_handler and hasattr(self._client, "remove_push_callback"):
-            try:
-                self._client.remove_push_callback(self._push_handler)
-                _LOGGER.debug("Push callback removed")
-            except (AttributeError, ValueError) as err:
-                _LOGGER.debug("Could not remove push callback: %s", err)
+        if self._push_handler:
+            self._client.remove_push_callback(self._push_handler)
+            _LOGGER.debug("Push callback removed")
         self._push_handler = None
 
         # Cancel push task if running (short-lived task, defensive cleanup)

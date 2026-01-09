@@ -5,8 +5,8 @@ from unittest.mock import MagicMock
 from aiohttp import ClientError
 
 from homeassistant import config_entries
-from homeassistant.components.hegel.const import CONF_MODEL, DEFAULT_PORT, DOMAIN
-from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT
+from homeassistant.components.hegel.const import CONF_MODEL, DOMAIN
+from homeassistant.const import CONF_HOST, CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.service_info.ssdp import SsdpServiceInfo
@@ -15,7 +15,6 @@ from tests.common import MockConfigEntry
 from tests.test_util.aiohttp import AiohttpClientMocker
 
 TEST_HOST = "192.168.1.100"
-TEST_PORT = DEFAULT_PORT
 TEST_NAME = "Hegel H190"
 TEST_MODEL = "H190"
 TEST_UNIQUE_ID = "mac:001122334455"
@@ -46,7 +45,6 @@ async def test_user_flow_success(
         result["flow_id"],
         {
             CONF_HOST: TEST_HOST,
-            CONF_PORT: TEST_PORT,
             CONF_MODEL: TEST_MODEL,
         },
     )
@@ -55,7 +53,6 @@ async def test_user_flow_success(
     assert result["title"] == f"Hegel {TEST_MODEL}"
     assert result["data"] == {
         CONF_HOST: TEST_HOST,
-        CONF_PORT: TEST_PORT,
         CONF_MODEL: TEST_MODEL,
     }
 
@@ -76,7 +73,6 @@ async def test_user_flow_cannot_connect(
         result["flow_id"],
         {
             CONF_HOST: TEST_HOST,
-            CONF_PORT: TEST_PORT,
             CONF_MODEL: TEST_MODEL,
         },
     )
@@ -158,7 +154,6 @@ async def test_reconfigure_flow_success(
         unique_id=TEST_UNIQUE_ID,
         data={
             CONF_HOST: TEST_HOST,
-            CONF_PORT: TEST_PORT,
             CONF_MODEL: TEST_MODEL,
         },
         title=TEST_NAME,
@@ -176,7 +171,6 @@ async def test_reconfigure_flow_success(
         result["flow_id"],
         {
             CONF_HOST: new_host,
-            CONF_PORT: TEST_PORT,
             CONF_MODEL: TEST_MODEL,
         },
     )
@@ -196,7 +190,6 @@ async def test_reconfigure_flow_cannot_connect(
         unique_id=TEST_UNIQUE_ID,
         data={
             CONF_HOST: TEST_HOST,
-            CONF_PORT: TEST_PORT,
             CONF_MODEL: TEST_MODEL,
         },
         title=TEST_NAME,
@@ -212,7 +205,6 @@ async def test_reconfigure_flow_cannot_connect(
         result["flow_id"],
         {
             CONF_HOST: "192.168.1.200",
-            CONF_PORT: TEST_PORT,
             CONF_MODEL: TEST_MODEL,
         },
     )
@@ -233,7 +225,6 @@ async def test_reconfigure_flow_default_name(
         unique_id=TEST_UNIQUE_ID,
         data={
             CONF_HOST: TEST_HOST,
-            CONF_PORT: TEST_PORT,
             CONF_MODEL: TEST_MODEL,
         },
         title=TEST_NAME,
@@ -298,7 +289,6 @@ async def test_ssdp_discovery_success(
         result["flow_id"],
         {
             CONF_HOST: TEST_HOST,
-            CONF_PORT: TEST_PORT,
             CONF_MODEL: TEST_MODEL,
         },
     )

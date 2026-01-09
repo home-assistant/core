@@ -8,11 +8,11 @@ from hegel_ip_client import HegelClient
 from hegel_ip_client.exceptions import HegelConnectionError
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_HOST, CONF_PORT, EVENT_HOMEASSISTANT_STOP, Platform
+from homeassistant.const import CONF_HOST, EVENT_HOMEASSISTANT_STOP, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 
-from .const import DOMAIN
+from .const import DEFAULT_PORT
 
 PLATFORMS: list[Platform] = [Platform.MEDIA_PLAYER]
 _LOGGER = logging.getLogger(__name__)
@@ -23,24 +23,22 @@ type HegelConfigEntry = ConfigEntry[HegelClient]
 async def async_setup_entry(hass: HomeAssistant, entry: HegelConfigEntry) -> bool:
     """Set up the Hegel integration."""
     host = entry.data[CONF_HOST]
-    port = entry.data[CONF_PORT]
-
-    # Initialize domain data if not exists
-    hass.data.setdefault(DOMAIN, {})
 
     # Create and test client connection
-    client = HegelClient(host, port)
+    client = HegelClient(host, DEFAULT_PORT)
 
     try:
         # Test connection before proceeding with setup
         await client.start()
         await client.ensure_connected(timeout=10.0)
-        _LOGGER.debug("Successfully connected to Hegel at %s:%s", host, port)
+        _LOGGER.debug("Successfully connected to Hegel at %s:%s", host, DEFAULT_PORT)
     except (HegelConnectionError, TimeoutError, OSError) as err:
-        _LOGGER.error("Failed to connect to Hegel at %s:%s: %s", host, port, err)
+        _LOGGER.error(
+            "Failed to connect to Hegel at %s:%s: %s", host, DEFAULT_PORT, err
+        )
         await client.stop()  # Clean up
         raise ConfigEntryNotReady(
-            f"Unable to connect to Hegel amplifier at {host}:{port}"
+            f"Unable to connect to Hegel amplifier at {host}:{DEFAULT_PORT}"
         ) from err
 
     # Store client in runtime_data
@@ -56,7 +54,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: HegelConfigEntry) -> boo
     # Forward setup to supported platforms
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    _LOGGER.debug("Hegel entry %s setup completed", entry.entry_id)
     return True
 
 
@@ -71,11 +68,5 @@ async def async_unload_entry(hass: HomeAssistant, entry: HegelConfigEntry) -> bo
             await client.stop()
         except (HegelConnectionError, OSError) as err:
             _LOGGER.warning("Error while stopping Hegel client: %s", err)
-
-    # Clean up domain data if no more entries
-    if unload_ok and DOMAIN in hass.data:
-        # If no more entries, clean up completely
-        if not hass.config_entries.async_entries(DOMAIN):
-            hass.data.pop(DOMAIN, None)
 
     return unload_ok

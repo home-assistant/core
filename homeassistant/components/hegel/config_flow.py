@@ -6,13 +6,11 @@ import asyncio
 import logging
 from typing import Any
 
-from aiohttp import ClientError, ClientTimeout
-import defusedxml.ElementTree as ET
 import voluptuous as vol
+from yarl import URL
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
-from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.const import CONF_HOST, CONF_NAME
 from homeassistant.helpers.service_info.ssdp import SsdpServiceInfo
 
 from .const import CONF_MODEL, DEFAULT_PORT, DOMAIN, MODEL_INPUTS
@@ -29,7 +27,6 @@ class HegelConfigFlow(ConfigFlow, domain=DOMAIN):
         """Initialize the config flow."""
         self._discovered_data: dict[str, Any] = {}
         self._host = ""
-        self._port = DEFAULT_PORT
         self._model = ""
         self._errors: dict[str, str] = {}
 
@@ -42,16 +39,14 @@ class HegelConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             entry_data = {**self._discovered_data, **user_input}
 
-            if CONF_PORT not in entry_data:
-                entry_data[CONF_PORT] = DEFAULT_PORT
-
             host = str(entry_data[CONF_HOST])
-            port = int(entry_data[CONF_PORT])
 
             try:
-                await asyncio.wait_for(asyncio.open_connection(host, port), timeout=2.0)
+                await asyncio.wait_for(
+                    asyncio.open_connection(host, DEFAULT_PORT), timeout=2.0
+                )
             except (TimeoutError, OSError, ConnectionRefusedError) as err:
-                _LOGGER.debug("Cannot connect to %s:%s: %s", host, port, err)
+                _LOGGER.debug("Cannot connect to %s:%s: %s", host, DEFAULT_PORT, err)
                 errors[CONF_HOST] = "cannot_connect"
             else:
                 unique_id = entry_data.get("unique_id")
@@ -76,10 +71,6 @@ class HegelConfigFlow(ConfigFlow, domain=DOMAIN):
                     CONF_HOST, default=self._discovered_data.get(CONF_HOST, "")
                 ): str,
                 vol.Optional(
-                    CONF_PORT,
-                    default=self._discovered_data.get(CONF_PORT, DEFAULT_PORT),
-                ): int,
-                vol.Optional(
                     CONF_MODEL, default=self._discovered_data.get(CONF_MODEL)
                 ): vol.In(list(MODEL_INPUTS.keys())),
             }
@@ -95,17 +86,16 @@ class HegelConfigFlow(ConfigFlow, domain=DOMAIN):
 
         if user_input is not None:
             self._host = str(user_input[CONF_HOST])
-            self._port = user_input.get(CONF_PORT, DEFAULT_PORT)
             self._model = str(user_input[CONF_MODEL])
 
             # Test connection
             try:
                 await asyncio.wait_for(
-                    asyncio.open_connection(self._host, self._port), timeout=2.0
+                    asyncio.open_connection(self._host, DEFAULT_PORT), timeout=2.0
                 )
             except (TimeoutError, OSError, ConnectionRefusedError) as err:
                 _LOGGER.debug(
-                    "Cannot connect to %s:%s: %s", self._host, self._port, err
+                    "Cannot connect to %s:%s: %s", self._host, DEFAULT_PORT, err
                 )
                 self._errors[CONF_HOST] = "cannot_connect"
             else:
@@ -117,7 +107,6 @@ class HegelConfigFlow(ConfigFlow, domain=DOMAIN):
                     title=title,
                     data_updates={
                         CONF_HOST: self._host,
-                        CONF_PORT: self._port,
                         CONF_MODEL: self._model,
                     },
                 )
@@ -127,7 +116,6 @@ class HegelConfigFlow(ConfigFlow, domain=DOMAIN):
                 data_schema=vol.Schema(
                     {
                         vol.Required(CONF_HOST, default=self._host): str,
-                        vol.Optional(CONF_PORT, default=self._port): int,
                         vol.Optional(CONF_MODEL, default=self._model): vol.In(
                             list(MODEL_INPUTS.keys())
                         ),
@@ -138,7 +126,6 @@ class HegelConfigFlow(ConfigFlow, domain=DOMAIN):
 
         # Pre-populate with current values
         self._host = reconfigure_entry.data[CONF_HOST]
-        self._port = reconfigure_entry.data.get(CONF_PORT, DEFAULT_PORT)
         self._model = str(reconfigure_entry.data.get(CONF_MODEL, ""))
 
         return self.async_show_form(
@@ -146,7 +133,6 @@ class HegelConfigFlow(ConfigFlow, domain=DOMAIN):
             data_schema=vol.Schema(
                 {
                     vol.Required(CONF_HOST, default=self._host): str,
-                    vol.Optional(CONF_PORT, default=self._port): int,
                     vol.Optional(CONF_MODEL, default=self._model): vol.In(
                         list(MODEL_INPUTS.keys())
                     ),
@@ -158,27 +144,22 @@ class HegelConfigFlow(ConfigFlow, domain=DOMAIN):
         self, discovery_info: SsdpServiceInfo
     ) -> ConfigFlowResult:
         """Handle SSDP discovery and pre-fill the user form."""
-        upnp = getattr(discovery_info, "upnp", {}) or {}
+        upnp = discovery_info.upnp or {}
 
         host = None
         presentation_url = upnp.get("presentationURL")
         if presentation_url:
-            host = presentation_url.split("//")[-1].split("/")[0].split(":")[0]
+            host = URL(presentation_url).host
         else:
-            ssdp_location = getattr(discovery_info, "ssdp_location", "")
+            ssdp_location = discovery_info.ssdp_location or ""
             if ssdp_location:
-                host = ssdp_location.split("//")[-1].split("/")[0].split(":")[0]
+                host = URL(ssdp_location).host
 
         if not host:
             return self.async_abort(reason="no_host_found")
 
-        unique_id, mac = await self._async_get_unique_id_from_description(
-            discovery_info
-        )
-
-        if unique_id:
-            await self.async_set_unique_id(unique_id)
-            self._abort_if_unique_id_configured()
+        await self.async_set_unique_id(discovery_info.ssdp_usn)
+        self._abort_if_unique_id_configured()
 
         friendly_name = upnp.get("friendlyName", f"Hegel {host}")
         suggested_model = upnp.get("modelName") or ""
@@ -191,57 +172,7 @@ class HegelConfigFlow(ConfigFlow, domain=DOMAIN):
             CONF_HOST: host,
             CONF_NAME: friendly_name,
             CONF_MODEL: model_default or list(MODEL_INPUTS.keys())[0],
+            "unique_id": discovery_info.ssdp_usn,
         }
-        if unique_id:
-            self._discovered_data["unique_id"] = unique_id
-        if mac:
-            self._discovered_data["mac"] = mac
 
         return await self.async_step_user()
-
-    async def _async_get_unique_id_from_description(
-        self, discovery_info: SsdpServiceInfo
-    ) -> tuple[str | None, str | None]:
-        """Fetch device description.xml to get MAC, UDN, or serialNumber."""
-        ssdp_location = getattr(discovery_info, "ssdp_location", "")
-        if not ssdp_location:
-            return None, None
-
-        session = async_get_clientsession(self.hass)
-        try:
-            async with session.get(
-                ssdp_location, timeout=ClientTimeout(total=5)
-            ) as resp:
-                text = await resp.text()
-        except (TimeoutError, ClientError, OSError) as err:
-            _LOGGER.debug("Failed to fetch device description: %s", err)
-            return None, None
-
-        # Parse XML for serialNumber or UDN
-        try:
-            root = ET.fromstring(text)
-            serial = next(
-                (
-                    e.text.strip()
-                    for e in root.iter()
-                    if e.tag.lower().endswith("serialnumber") and e.text
-                ),
-                None,
-            )
-            udn = next(
-                (
-                    e.text.strip()
-                    for e in root.iter()
-                    if e.tag.lower().endswith("udn") and e.text
-                ),
-                None,
-            )
-            if serial:
-                return f"serial:{serial}", None
-            if udn:
-                return f"udn:{udn}", None
-
-        except ET.ParseError as err:
-            _LOGGER.debug("Failed to parse device description XML: %s", err)
-
-        return None, None

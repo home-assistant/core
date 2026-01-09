@@ -1,48 +1,37 @@
 {
   "config": {
     "abort": {
-      "already_configured": "This amplifier is already configured",
-      "no_host_found": "Could not determine host from discovery information",
-      "reconfigure_successful": "Configuration updated successfully"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "no_host_found": "[%key:common::config_flow::abort::no_devices_found%]",
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
     },
     "error": {
-      "cannot_connect": "Cannot connect to the amplifier"
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
     },
     "step": {
       "reconfigure": {
         "data": {
-          "host": "Host/IP",
-          "model": "Model",
-          "port": "Port"
+          "host": "[%key:common::config_flow::data::host%]",
+          "model": "[%key:common::generic::model%]"
         },
         "data_description": {
           "host": "The IP address or hostname of your Hegel amplifier",
-          "model": "Select your Hegel amplifier model for proper input mapping",
-          "port": "The TCP port for the amplifier (default: 50001)"
+          "model": "Select your Hegel amplifier model for proper input mapping"
         },
         "description": "Update the connection settings for your Hegel amplifier.",
         "title": "Reconfigure Hegel amplifier"
       },
       "user": {
         "data": {
-          "host": "Host/IP",
-          "model": "Model",
-          "port": "Port"
+          "host": "[%key:common::config_flow::data::host%]",
+          "model": "[%key:common::generic::model%]"
         },
         "data_description": {
           "host": "The IP address or hostname of your Hegel amplifier",
-          "model": "Select your Hegel amplifier model for proper input mapping",
-          "port": "The TCP port for the amplifier (default: 50001)"
+          "model": "Select your Hegel amplifier model for proper input mapping"
         },
         "description": "Enter the host/IP of your Hegel amplifier to set it up.",
         "title": "Connect to Hegel amplifier"
-      }
-    }
-  },
-  "entity": {
-    "media_player": {
-      "hegel": {
-        "name": "Hegel Amplifier"
       }
     }
   }
