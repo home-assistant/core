@@ -7,6 +7,7 @@ from typing import Any
 
 from pypoint import PointSession
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util.dt import parse_datetime
@@ -19,13 +20,16 @@ _LOGGER = logging.getLogger(__name__)
 class PointDataUpdateCoordinator(DataUpdateCoordinator[dict[str, dict[str, Any]]]):
     """Class to manage fetching Point data from the API."""
 
-    def __init__(self, hass: HomeAssistant, point: PointSession) -> None:
+    def __init__(
+        self, hass: HomeAssistant, point: PointSession, config_entry: ConfigEntry
+    ) -> None:
         """Initialize."""
         super().__init__(
             hass,
             _LOGGER,
             name=DOMAIN,
             update_interval=SCAN_INTERVAL,
+            config_entry=config_entry,
         )
         self.point = point
         self.device_updates: dict[str, datetime] = {}
