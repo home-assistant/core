@@ -20,7 +20,13 @@ rules:
   unique-config-entry: done
   # Silver
   action-exceptions: done
-  config-entry-unloading: done
+  config-entry-unloading:
+    status: todo
+    comment: |
+      async_unload_entry must clean up: (1) close TeslemetryStream websocket via
+      stream.close(), (2) call remove_listener() for each vehicle to unsubscribe
+      from stream events, (3) consider using entry.async_on_unload() during setup
+      to register cleanup callbacks automatically.
   docs-configuration-parameters: done
   docs-installation-parameters: done
   entity-unavailable: done
@@ -45,7 +51,13 @@ rules:
   docs-supported-functions: done
   docs-troubleshooting: done
   docs-use-cases: done
-  dynamic-devices: done
+  dynamic-devices:
+    status: todo
+    comment: |
+      New vehicles/energy sites added to user's Tesla account after initial setup
+      are not detected. Need to periodically poll teslemetry.products() and add
+      new TeslemetryVehicleData/TeslemetryEnergyData to runtime_data, then trigger
+      entity creation via coordinator listeners in each platform.
   entity-category: done
   entity-device-class: done
   entity-disabled-by-default: done
@@ -53,7 +65,13 @@ rules:
   exception-translations:
     status: todo
     comment: There is one "unknown error" that cannot be translated
-  icon-translations: done
+  icon-translations:
+    status: todo
+    comment: |
+      number.py:299 uses _attr_icon = icon_for_battery_level() instead of
+      range-based icons in icons.json. Affects backup_reserve_percent and
+      off_grid_vehicle_charging_reserve_percent entities. Remove the dynamic
+      icon assignment and add range-based icon entries to icons.json.
   reconfiguration-flow:
     status: exempt
     comment: Integration is moving to OAuth, so reconfiguring has no value
