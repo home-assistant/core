@@ -116,9 +116,7 @@ class TestHidromoticClient:
     def test_get_pump(self) -> None:
         """Test get_pump returns pump data."""
         client = HidromoticClient("192.168.1.100")
-        client._data = {
-            "pump": {"estado": 1, "pausa_externa": 0}
-        }
+        client._data = {"pump": {"estado": 1, "pausa_externa": 0}}
         pump = client.get_pump()
         assert pump["estado"] == 1
         assert pump["pausa_externa"] == 0
@@ -131,17 +129,13 @@ class TestHidromoticClient:
     def test_is_zone_on_true(self) -> None:
         """Test is_zone_on returns True when zone is on."""
         client = HidromoticClient("192.168.1.100")
-        client._data = {
-            "zones": {0: {"id": 0, "estado": 1}}
-        }
+        client._data = {"zones": {0: {"id": 0, "estado": 1}}}
         assert client.is_zone_on(0) is True
 
     def test_is_zone_on_false(self) -> None:
         """Test is_zone_on returns False when zone is off."""
         client = HidromoticClient("192.168.1.100")
-        client._data = {
-            "zones": {0: {"id": 0, "estado": 0}}
-        }
+        client._data = {"zones": {0: {"id": 0, "estado": 0}}}
         assert client.is_zone_on(0) is False
 
     def test_is_zone_on_not_found(self) -> None:
@@ -211,49 +205,37 @@ class TestHidromoticClient:
     def test_get_tank_level_full(self) -> None:
         """Test get_tank_level returns 'full' for full tank."""
         client = HidromoticClient("192.168.1.100")
-        client._data = {
-            "tanks": {0: {"id": 0, "nivel": 0}}
-        }
+        client._data = {"tanks": {0: {"id": 0, "nivel": 0}}}
         assert client.get_tank_level(0) == "full"
 
     def test_get_tank_level_empty(self) -> None:
         """Test get_tank_level returns 'empty' for empty tank."""
         client = HidromoticClient("192.168.1.100")
-        client._data = {
-            "tanks": {0: {"id": 0, "nivel": 1}}
-        }
+        client._data = {"tanks": {0: {"id": 0, "nivel": 1}}}
         assert client.get_tank_level(0) == "empty"
 
     def test_get_tank_level_sensor_fail(self) -> None:
         """Test get_tank_level returns 'sensor_fail'."""
         client = HidromoticClient("192.168.1.100")
-        client._data = {
-            "tanks": {0: {"id": 0, "nivel": 2}}
-        }
+        client._data = {"tanks": {0: {"id": 0, "nivel": 2}}}
         assert client.get_tank_level(0) == "sensor_fail"
 
     def test_get_tank_level_level_fail(self) -> None:
         """Test get_tank_level returns 'level_fail'."""
         client = HidromoticClient("192.168.1.100")
-        client._data = {
-            "tanks": {0: {"id": 0, "nivel": 3}}
-        }
+        client._data = {"tanks": {0: {"id": 0, "nivel": 3}}}
         assert client.get_tank_level(0) == "level_fail"
 
     def test_get_tank_level_medium(self) -> None:
         """Test get_tank_level returns 'medium'."""
         client = HidromoticClient("192.168.1.100")
-        client._data = {
-            "tanks": {0: {"id": 0, "nivel": 4}}
-        }
+        client._data = {"tanks": {0: {"id": 0, "nivel": 4}}}
         assert client.get_tank_level(0) == "medium"
 
     def test_get_tank_level_unknown(self) -> None:
         """Test get_tank_level returns 'unknown' for unknown level."""
         client = HidromoticClient("192.168.1.100")
-        client._data = {
-            "tanks": {0: {"id": 0, "nivel": 99}}
-        }
+        client._data = {"tanks": {0: {"id": 0, "nivel": 99}}}
         assert client.get_tank_level(0) == "unknown"
 
     def test_get_tank_level_not_found(self) -> None:
@@ -269,9 +251,7 @@ class TestHidromoticClientAsync:
     async def test_set_zone_state_on(self) -> None:
         """Test set_zone_state sends correct command to turn on."""
         client = HidromoticClient("192.168.1.100")
-        client._data = {
-            "zones": {0: {"id": 0, "output_id": 2, "estado": 0}}
-        }
+        client._data = {"zones": {0: {"id": 0, "output_id": 2, "estado": 0}}}
         client._ws = MagicMock()
         client._ws.closed = False
         client._ws.send_str = AsyncMock()
@@ -284,9 +264,7 @@ class TestHidromoticClientAsync:
     async def test_set_zone_state_off(self) -> None:
         """Test set_zone_state sends correct command to turn off."""
         client = HidromoticClient("192.168.1.100")
-        client._data = {
-            "zones": {0: {"id": 0, "output_id": 5, "estado": 1}}
-        }
+        client._data = {"zones": {0: {"id": 0, "output_id": 5, "estado": 1}}}
         client._ws = MagicMock()
         client._ws.closed = False
         client._ws.send_str = AsyncMock()
@@ -299,9 +277,7 @@ class TestHidromoticClientAsync:
     async def test_set_zone_state_hex_output(self) -> None:
         """Test set_zone_state uses hex for output_id >= 10."""
         client = HidromoticClient("192.168.1.100")
-        client._data = {
-            "zones": {0: {"id": 0, "output_id": 10, "estado": 0}}
-        }
+        client._data = {"zones": {0: {"id": 0, "output_id": 10, "estado": 0}}}
         client._ws = MagicMock()
         client._ws.closed = False
         client._ws.send_str = AsyncMock()
