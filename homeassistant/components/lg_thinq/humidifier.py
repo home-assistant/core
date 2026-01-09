@@ -100,7 +100,9 @@ class ThinQHumidifierEntity(ThinQEntity, HumidifierEntity):
             self._attr_max_humidity = self.data.max
         if self.data.min is not None:
             self._attr_min_humidity = self.data.min
-        self._target_humidity_step = self.data.step if self.data.step is not None else 1
+        self._attr_target_humidity_step = (
+            self.data.step if self.data.step is not None else 1
+        )
 
     def _update_status(self) -> None:
         """Update status itself."""
@@ -147,54 +149,23 @@ class ThinQHumidifierEntity(ThinQEntity, HumidifierEntity):
             self.coordinator.api.post(self.entity_description.mode_key, mode)
         )
 
-    def _adjust_target_humidity(
-        self,
-        current_target_humidity: float | None,
-        step: int,
-        requested: int,
-    ) -> int:
-        """Adjust target humidity by device's step."""
-        # current: 55, step: 5
-        # requested: 43, round -> result: 45
-        # requested: 54(-), floor -> result: 50
-        # requested: 56(+), ceil -> result: 60
-        method = (
-            "round"
-            if (
-                current_target_humidity is None
-                or abs(requested - current_target_humidity) > step
-            )
-            else "ceil"
-            if requested > current_target_humidity
-            else "floor"
-        )
-        if method == "round":
-            return round(requested / step) * step
-        if method == "floor":
-            return (requested // step) * step
-        if method == "ceil":
-            return ((requested + step - 1) // step) * step
-        return requested
-
     async def async_set_humidity(self, humidity: int) -> None:
         """Set new target humidity."""
-        if humidity == self.target_humidity:
-            return
-
-        if self._target_humidity_step > 1:
-            _adjusted = self._adjust_target_humidity(
-                self.target_humidity, self._target_humidity_step or 5, humidity
-            )
+        _target_humidity = round(humidity / (self.target_humidity_step or 1)) * (
+            self.target_humidity_step or 1
+        )
         _LOGGER.debug(
-            "[%s:%s] async_set_humidity: %s, adjusted: %s, step: %s",
+            "[%s:%s] async_set_humidity: %s, target_humidity: %s, step: %s",
             self.coordinator.device_name,
             self.property_id,
             humidity,
-            _adjusted,
-            self._target_humidity_step,
+            _target_humidity,
+            self.target_humidity_step,
         )
+        if _target_humidity == self.target_humidity:
+            return
         await self.async_call_api(
-            self.coordinator.api.post(self.property_id, _adjusted or humidity)
+            self.coordinator.api.post(self.property_id, _target_humidity)
         )
 
     async def async_turn_on(self, **kwargs: Any) -> None:
