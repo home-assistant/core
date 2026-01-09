@@ -82,7 +82,7 @@
     'capabilities': dict({
       'hvac_modes': list([
         <HVACMode.OFF: 'off'>,
-        <HVACMode.HEAT_COOL: 'heat_cool'>,
+        <HVACMode.AUTO: 'auto'>,
         <HVACMode.HEAT_COOL: 'heat_cool'>,
         <HVACMode.HEAT: 'heat'>,
       ]),
@@ -128,7 +128,7 @@
       'friendly_name': 'Anbau',
       'hvac_modes': list([
         <HVACMode.OFF: 'off'>,
-        <HVACMode.HEAT_COOL: 'heat_cool'>,
+        <HVACMode.AUTO: 'auto'>,
         <HVACMode.HEAT_COOL: 'heat_cool'>,
         <HVACMode.HEAT: 'heat'>,
       ]),
@@ -156,7 +156,7 @@
     'capabilities': dict({
       'hvac_modes': list([
         <HVACMode.OFF: 'off'>,
-        <HVACMode.HEAT_COOL: 'heat_cool'>,
+        <HVACMode.AUTO: 'auto'>,
         <HVACMode.HEAT_COOL: 'heat_cool'>,
         <HVACMode.HEAT_COOL: 'heat_cool'>,
       ]),
@@ -204,7 +204,7 @@
       'friendly_name': 'Bathroom radiator',
       'hvac_modes': list([
         <HVACMode.OFF: 'off'>,
-        <HVACMode.HEAT_COOL: 'heat_cool'>,
+        <HVACMode.AUTO: 'auto'>,
         <HVACMode.HEAT_COOL: 'heat_cool'>,
         <HVACMode.HEAT_COOL: 'heat_cool'>,
       ]),
@@ -447,7 +447,7 @@
     'capabilities': dict({
       'hvac_modes': list([
         <HVACMode.OFF: 'off'>,
-        <HVACMode.HEAT_COOL: 'heat_cool'>,
+        <HVACMode.AUTO: 'auto'>,
         <HVACMode.HEAT_COOL: 'heat_cool'>,
         <HVACMode.HEAT: 'heat'>,
       ]),
@@ -494,7 +494,7 @@
       'friendly_name': 'Empore',
       'hvac_modes': list([
         <HVACMode.OFF: 'off'>,
-        <HVACMode.HEAT_COOL: 'heat_cool'>,
+        <HVACMode.AUTO: 'auto'>,
         <HVACMode.HEAT_COOL: 'heat_cool'>,
         <HVACMode.HEAT: 'heat'>,
       ]),
@@ -524,7 +524,7 @@
     'capabilities': dict({
       'hvac_modes': list([
         <HVACMode.OFF: 'off'>,
-        <HVACMode.HEAT_COOL: 'heat_cool'>,
+        <HVACMode.AUTO: 'auto'>,
         <HVACMode.HEAT_COOL: 'heat_cool'>,
         <HVACMode.HEAT_COOL: 'heat_cool'>,
       ]),
@@ -571,7 +571,7 @@
       'friendly_name': 'Floor Thermostat Kitchen',
       'hvac_modes': list([
         <HVACMode.OFF: 'off'>,
-        <HVACMode.HEAT_COOL: 'heat_cool'>,
+        <HVACMode.AUTO: 'auto'>,
         <HVACMode.HEAT_COOL: 'heat_cool'>,
         <HVACMode.HEAT_COOL: 'heat_cool'>,
       ]),
@@ -803,7 +803,7 @@
         <HVACMode.HEAT: 'heat'>,
         <HVACMode.DRY: 'dry'>,
         <HVACMode.FAN_ONLY: 'fan_only'>,
-        <HVACMode.HEAT_COOL: 'heat_cool'>,
+        <HVACMode.AUTO: 'auto'>,
       ]),
       'max_temp': 88.0,
       'min_temp': 16.0,
@@ -850,7 +850,7 @@
         <HVACMode.HEAT: 'heat'>,
         <HVACMode.DRY: 'dry'>,
         <HVACMode.FAN_ONLY: 'fan_only'>,
-        <HVACMode.HEAT_COOL: 'heat_cool'>,
+        <HVACMode.AUTO: 'auto'>,
       ]),
       'max_temp': 88.0,
       'min_temp': 16.0,
@@ -878,7 +878,7 @@
         <HVACMode.HEAT: 'heat'>,
         <HVACMode.DRY: 'dry'>,
         <HVACMode.FAN_ONLY: 'fan_only'>,
-        <HVACMode.HEAT_COOL: 'heat_cool'>,
+        <HVACMode.AUTO: 'auto'>,
       ]),
       'max_temp': 90.0,
       'min_temp': 16.0,
@@ -928,7 +928,7 @@
         <HVACMode.HEAT: 'heat'>,
         <HVACMode.DRY: 'dry'>,
         <HVACMode.FAN_ONLY: 'fan_only'>,
-        <HVACMode.HEAT_COOL: 'heat_cool'>,
+        <HVACMode.AUTO: 'auto'>,
       ]),
       'max_temp': 90.0,
       'min_temp': 16.0,
@@ -1091,7 +1091,7 @@
     'capabilities': dict({
       'hvac_modes': list([
         <HVACMode.OFF: 'off'>,
-        <HVACMode.HEAT_COOL: 'heat_cool'>,
+        <HVACMode.AUTO: 'auto'>,
         <HVACMode.HEAT_COOL: 'heat_cool'>,
         <HVACMode.HEAT_COOL: 'heat_cool'>,
       ]),
@@ -1138,7 +1138,7 @@
       'friendly_name': 'Salon',
       'hvac_modes': list([
         <HVACMode.OFF: 'off'>,
-        <HVACMode.HEAT_COOL: 'heat_cool'>,
+        <HVACMode.AUTO: 'auto'>,
         <HVACMode.HEAT_COOL: 'heat_cool'>,
         <HVACMode.HEAT_COOL: 'heat_cool'>,
       ]),
@@ -1168,7 +1168,7 @@
     'capabilities': dict({
       'hvac_modes': list([
         <HVACMode.OFF: 'off'>,
-        <HVACMode.HEAT_COOL: 'heat_cool'>,
+        <HVACMode.AUTO: 'auto'>,
         <HVACMode.HEAT_COOL: 'heat_cool'>,
       ]),
       'max_temp': 90.0,
@@ -1211,7 +1211,7 @@
       'friendly_name': 'smart thermostats',
       'hvac_modes': list([
         <HVACMode.OFF: 'off'>,
-        <HVACMode.HEAT_COOL: 'heat_cool'>,
+        <HVACMode.AUTO: 'auto'>,
         <HVACMode.HEAT_COOL: 'heat_cool'>,
       ]),
       'max_temp': 90.0,
@@ -1377,7 +1377,7 @@
     'capabilities': dict({
       'hvac_modes': list([
         <HVACMode.OFF: 'off'>,
-        <HVACMode.HEAT_COOL: 'heat_cool'>,
+        <HVACMode.AUTO: 'auto'>,
       ]),
       'max_temp': 35.0,
       'min_temp': 5.0,
@@ -1419,7 +1419,7 @@
       'friendly_name': 'WiFi Smart Gas Boiler Thermostat ',
       'hvac_modes': list([
         <HVACMode.OFF: 'off'>,
-        <HVACMode.HEAT_COOL: 'heat_cool'>,
+        <HVACMode.AUTO: 'auto'>,
       ]),
       'max_temp': 35.0,
       'min_temp': 5.0,
@@ -1432,7 +1432,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'heat_cool',
+    'state': 'auto',
   })
 # ---
 # name: test_us_customary_system[climate.air_conditioner]
