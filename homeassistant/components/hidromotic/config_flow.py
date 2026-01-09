@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 import logging
 from typing import Any
 
@@ -33,8 +34,6 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
             raise CannotConnect
 
         # Wait a moment for data to arrive
-        import asyncio
-
         await asyncio.sleep(2)
 
         # Get device info
