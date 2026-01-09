@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable
 import logging
 from typing import Any
 
@@ -22,6 +23,8 @@ from .models import Adapter
 from .util import async_load_adapters, enable_adapters, enable_auto_detected_adapters
 
 _LOGGER = logging.getLogger(__name__)
+
+type NetworkChangeCallback = Callable[[list[Adapter]], None]
 
 DATA_NETWORK: HassKey[Network] = HassKey(DOMAIN)
 
@@ -48,11 +51,13 @@ class Network:
 
     def __init__(self, hass: HomeAssistant) -> None:
         """Initialize the Network class."""
+        self._hass = hass
         self._store = Store[dict[str, list[str]]](
             hass, STORAGE_VERSION, STORAGE_KEY, atomic_writes=True
         )
         self._data: dict[str, list[str]] = {}
         self.adapters: list[Adapter] = []
+        self._change_callbacks: list[NetworkChangeCallback] = []
 
     @property
     def configured_adapters(self) -> list[str]:
@@ -85,3 +90,34 @@ class Network:
     async def _async_save(self) -> None:
         """Save preferences."""
         await self._store.async_save(self._data)
+
+    @callback
+    def async_register_change_callback(
+        self, callback_fn: NetworkChangeCallback
+    ) -> Callable[[], None]:
+        """Register a callback to be called when network adapters change.
+
+        Returns a function to unregister the callback.
+        """
+        self._change_callbacks.append(callback_fn)
+
+        @callback
+        def unregister() -> None:
+            """Unregister the callback."""
+            self._change_callbacks.remove(callback_fn)
+
+        return unregister
+
+    async def async_notify_network_change(self) -> None:
+        """Notify listeners of a network change.
+
+        This reloads network adapters and calls all registered callbacks.
+        """
+        old_adapters = self.adapters
+        self.adapters = await async_load_adapters()
+        self.async_configure()
+
+        if old_adapters != self.adapters:
+            _LOGGER.info("Network adapters changed: %s", self.adapters)
+            for callback_fn in self._change_callbacks:
+                callback_fn(self.adapters)

@@ -22,12 +22,16 @@ from homeassistant.components.hassio import (
 )
 from homeassistant.components.hassio.config import STORAGE_KEY
 from homeassistant.components.hassio.const import (
+    ATTR_WS_EVENT,
+    EVENT_NETWORK_CHANGED,
+    EVENT_SUPERVISOR_EVENT,
     HASSIO_UPDATE_INTERVAL,
     REQUEST_REFRESH_DELAY,
 )
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, issue_registry as ir
+from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.hassio import is_hassio
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
@@ -1388,3 +1392,26 @@ async def test_deprecated_installation_issue_supported_board(
         await hass.async_block_till_done()
 
     assert len(issue_registry.issues) == 0
+
+
+async def test_network_change_event(hass: HomeAssistant) -> None:
+    """Test network change event from supervisor triggers network notification."""
+    with (
+        patch.dict(os.environ, MOCK_ENVIRON),
+        patch(
+            "homeassistant.components.hassio.HassIO.is_connected",
+            return_value=True,
+        ),
+        patch(
+            "homeassistant.components.network.async_notify_network_change"
+        ) as mock_notify,
+    ):
+        assert await async_setup_component(hass, DOMAIN, {})
+        await hass.async_block_till_done()
+
+        async_dispatcher_send(
+            hass, EVENT_SUPERVISOR_EVENT, {ATTR_WS_EVENT: EVENT_NETWORK_CHANGED}
+        )
+        await hass.async_block_till_done()
+
+        mock_notify.assert_called_once_with(hass)

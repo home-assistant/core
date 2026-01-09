@@ -16,7 +16,7 @@ from aiohasupervisor.models import GreenOptions, YellowOptions  # noqa: F401
 import voluptuous as vol
 
 from homeassistant.auth.const import GROUP_ID_ADMIN
-from homeassistant.components import panel_custom
+from homeassistant.components import network, panel_custom
 from homeassistant.components.homeassistant import async_set_stop_handler
 from homeassistant.components.http import StaticPathConfig
 from homeassistant.config_entries import SOURCE_SYSTEM, ConfigEntry
@@ -41,6 +41,7 @@ from homeassistant.helpers import (
     issue_registry as ir,
 )
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.issue_registry import IssueSeverity
 from homeassistant.helpers.typing import ConfigType
@@ -78,6 +79,7 @@ from .const import (
     ATTR_LOCATION,
     ATTR_PASSWORD,
     ATTR_SLUG,
+    ATTR_WS_EVENT,
     DATA_COMPONENT,
     DATA_CONFIG_STORE,
     DATA_CORE_INFO,
@@ -89,6 +91,8 @@ from .const import (
     DATA_STORE,
     DATA_SUPERVISOR_INFO,
     DOMAIN,
+    EVENT_NETWORK_CHANGED,
+    EVENT_SUPERVISOR_EVENT,
     HASSIO_UPDATE_INTERVAL,
 )
 from .coordinator import (
@@ -379,6 +383,16 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
     # Start listening for problems with supervisor and making issues
     hass.data[DATA_KEY_SUPERVISOR_ISSUES] = issues = SupervisorIssues(hass, hassio)
     issues_task = hass.async_create_task(issues.setup(), eager_start=True)
+
+    @callback
+    def _async_handle_supervisor_events(event: dict[str, Any]) -> None:
+        """Handle supervisor events for network changes."""
+        if event.get(ATTR_WS_EVENT) == EVENT_NETWORK_CHANGED:
+            hass.async_create_task(network.async_notify_network_change(hass))
+
+    async_dispatcher_connect(
+        hass, EVENT_SUPERVISOR_EVENT, _async_handle_supervisor_events
+    )
 
     async def async_service_handler(service: ServiceCall) -> None:
         """Handle service calls for Hass.io."""

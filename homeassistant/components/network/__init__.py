@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from ipaddress import IPv4Address, IPv6Address, ip_interface
 import logging
 from pathlib import Path
@@ -22,7 +23,12 @@ from .const import (
     PUBLIC_TARGET_IP,
 )
 from .models import Adapter
-from .network import Network, async_get_loaded_network, async_get_network
+from .network import (
+    Network,
+    NetworkChangeCallback,
+    async_get_loaded_network,
+    async_get_network,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -170,6 +176,32 @@ async def async_get_announce_addresses(hass: HomeAssistant) -> list[str]:
             addresses.remove(default_ip)
         return [default_ip, *addresses]
     return list(addresses)
+
+
+@callback
+def async_register_network_change_callback(
+    hass: HomeAssistant, callback_fn: NetworkChangeCallback
+) -> Callable[[], None]:
+    """Register a callback to be called when network adapters change.
+
+    Returns a function to unregister the callback.
+
+    The callback will be called with the new list of adapters when
+    a network change is detected.
+    """
+    network: Network = async_get_loaded_network(hass)
+    return network.async_register_change_callback(callback_fn)
+
+
+async def async_notify_network_change(hass: HomeAssistant) -> None:
+    """Notify the network integration of a network change.
+
+    This will reload network adapters and notify all registered callbacks.
+    This should be called when external systems (like the supervisor) detect
+    a network change.
+    """
+    network: Network = await async_get_network(hass)
+    await network.async_notify_network_change()
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:

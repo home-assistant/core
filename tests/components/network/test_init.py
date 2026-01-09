@@ -850,3 +850,77 @@ async def test_repair_docker_host_network_without_host_networking(
 
     assert (issue := issue_registry.async_get_issue(DOMAIN, "docker_host_network"))
     assert issue == snapshot
+
+
+@pytest.mark.parametrize(
+    "mock_socket",
+    [
+        [
+            (MDNS_TARGET_IP, _mock_cond_socket(NO_LOOPBACK_IPADDR)),
+        ]
+    ],
+    indirect=True,
+)
+@pytest.mark.usefixtures("mock_socket")
+async def test_network_change_callbacks(hass: HomeAssistant) -> None:
+    """Test network change callbacks are called only when adapters change."""
+    assert await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
+    await hass.async_block_till_done()
+
+    callback_calls = []
+
+    def mock_callback(adapters):
+        """Mock callback to track calls."""
+        callback_calls.append(adapters)
+
+    # Register callback
+    unregister = network.async_register_network_change_callback(hass, mock_callback)
+
+    # Get initial adapters
+    network_obj = hass.data[DOMAIN]
+    initial_adapters = network_obj.adapters
+
+    # Trigger network change with same adapters - callback should NOT be called
+    with patch(
+        "homeassistant.components.network.util.async_load_adapters",
+        return_value=initial_adapters,
+    ):
+        await network.async_notify_network_change(hass)
+        await hass.async_block_till_done()
+
+    assert len(callback_calls) == 0
+
+    # Trigger network change with different adapters - callback SHOULD be called
+    new_adapters = [
+        {
+            "index": 2,
+            "auto": True,
+            "default": True,
+            "enabled": True,
+            "ipv4": [{"address": "192.168.2.10", "network_prefix": 24}],
+            "ipv6": [],
+            "name": "eth1",
+        }
+    ]
+    with patch(
+        "homeassistant.components.network.util.async_load_adapters",
+        return_value=new_adapters,
+    ):
+        await network.async_notify_network_change(hass)
+        await hass.async_block_till_done()
+
+    assert len(callback_calls) == 1
+    assert callback_calls[0] == new_adapters
+
+    # Unregister callback
+    unregister()
+
+    # Trigger another change - callback should NOT be called
+    with patch(
+        "homeassistant.components.network.util.async_load_adapters",
+        return_value=initial_adapters,
+    ):
+        await network.async_notify_network_change(hass)
+        await hass.async_block_till_done()
+
+    assert len(callback_calls) == 1
