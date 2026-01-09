@@ -1684,7 +1684,7 @@ openwrt-luci-rpc==1.1.17
 openwrt-ubus-rpc==0.0.2
 
 # homeassistant.components.opower
-opower==0.16.0
+opower==0.16.1
 
 # homeassistant.components.oralb
 oralb-ble==1.0.2
@@ -2409,13 +2409,13 @@ pysiaalarm==3.1.1
 pysignalclirestapi==0.3.24
 
 # homeassistant.components.assist_pipeline
-pysilero-vad==3.0.1
+pysilero-vad==3.1.0
 
 # homeassistant.components.sky_hub
 pyskyqhub==0.1.4
 
 # homeassistant.components.sma
-pysma==1.0.2
+pysma==1.1.0
 
 # homeassistant.components.smappee
 pysmappee==0.2.29
@@ -2845,7 +2845,7 @@ sentry-sdk==2.48.0
 
 # homeassistant.components.homeassistant_hardware
 # homeassistant.components.zha
-serialx==0.5.0
+serialx==0.6.2
 
 # homeassistant.components.sfr_box
 sfrbox-api==0.1.0
