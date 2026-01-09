@@ -87,7 +87,10 @@ async def test_switch_turn_error(
 
     await setup_integration(hass, mock_config_entry, [Platform.SWITCH])
 
-    with pytest.raises(HomeAssistantError):
+    with pytest.raises(
+        HomeAssistantError,
+        match="An error occurred while communicating with HDFury device",
+    ):
         await hass.services.async_call(
             "switch",
             service,
