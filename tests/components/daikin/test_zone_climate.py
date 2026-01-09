@@ -9,9 +9,15 @@ import urllib.parse
 
 import pytest
 
-from homeassistant.components.climate import HVACMode
+from homeassistant.components.climate import HVACAction, HVACMode
 from homeassistant.components.daikin import climate
-from homeassistant.components.daikin.climate import DaikinZoneClimate
+from homeassistant.components.daikin.climate import (
+    DaikinZoneClimate,
+    _supports_zone_temperature_control,
+    _system_target_temperature,
+    _zone_temperature_from_list,
+    _zone_temperature_lists,
+)
 from homeassistant.components.daikin.coordinator import DaikinCoordinator
 from homeassistant.const import ATTR_TEMPERATURE
 from homeassistant.core import HomeAssistant
@@ -86,6 +92,48 @@ class FakeZoneDevice:
 
     async def update_status(self) -> None:
         """Simulate a status refresh."""
+
+
+def test_zone_temperature_helpers() -> None:
+    """Helpers return expected defaults and fallbacks."""
+
+    class NoRepresent:
+        """Device without represent method."""
+
+    assert _zone_temperature_lists(NoRepresent()) == ([], [])
+    assert _zone_temperature_from_list(["1"], 5) is None
+    assert _zone_temperature_from_list(["bad"], 0) is None
+    assert _zone_temperature_from_list(["21.5"], 0) == 21.5
+
+    class BadTemperature:
+        """Device with invalid target temperature."""
+
+        target_temperature = "bad"
+
+    assert _system_target_temperature(BadTemperature()) == 22.0
+
+
+def test_supports_zone_temperature_control() -> None:
+    """Zone temperature control requires zones and matching lists."""
+
+    class DeviceNoZones:
+        """Device without zones."""
+
+        zones = None
+
+    assert not _supports_zone_temperature_control(DeviceNoZones())
+
+    device_ok = SimpleNamespace(
+        zones=[["Zone 1", "1", 22]],
+        represent=lambda key: (None, ["21"] if key == "lztemp_h" else ["22"]),
+    )
+    assert _supports_zone_temperature_control(device_ok)
+
+    device_short = SimpleNamespace(
+        zones=[["Zone 1", "1", 22], ["Zone 2", "1", 20]],
+        represent=lambda key: (None, ["21"] if key == "lztemp_h" else ["22"]),
+    )
+    assert not _supports_zone_temperature_control(device_short)
 
 
 @pytest.mark.asyncio
@@ -299,3 +347,66 @@ async def test_zone_climate_hvac_modes_read_only(hass: HomeAssistant) -> None:
         await zone.async_set_hvac_mode(HVACMode.COOL)
 
     assert err.value.translation_key == "zone_hvac_read_only"
+
+
+def test_zone_climate_name_fallback(hass: HomeAssistant) -> None:
+    """Fallback to a numbered zone name when the index is missing."""
+    entry = MockConfigEntry(domain="daikin", data={})
+    coordinator = DaikinCoordinator(
+        hass,
+        entry,
+        FakeZoneDevice(zones=[["Living", "1", 22]]),
+    )
+    zone = DaikinZoneClimate(coordinator, 3)
+
+    assert zone.name == "Zone 3 temperature"
+
+
+def test_zone_climate_properties(hass: HomeAssistant) -> None:
+    """Expose zone climate properties for current mode and limits."""
+    entry = MockConfigEntry(domain="daikin", data={})
+    device = FakeZoneDevice(
+        zones=[["Living", "1", 22]],
+        target_temperature=24,
+        mode="cool",
+    )
+    device.values["lztemp_h"] = "20"
+    device.values["lztemp_c"] = "18"
+    coordinator = DaikinCoordinator(hass, entry, device)
+    zone = DaikinZoneClimate(coordinator, 0)
+
+    assert zone.hvac_action == HVACAction.COOLING
+    assert zone.target_temperature == 18.0
+    assert zone.min_temp == 22.0
+    assert zone.max_temp == 26.0
+    assert zone.extra_state_attributes == {"zone_id": 0}
+
+
+def test_zone_climate_target_temperature_fallback(hass: HomeAssistant) -> None:
+    """Fallback to cooling temps when heating values are invalid."""
+    entry = MockConfigEntry(domain="daikin", data={})
+    device = FakeZoneDevice(
+        zones=[["Living", "1", 22]],
+        mode="auto",
+    )
+    device.values["lztemp_h"] = "bad"
+    device.values["lztemp_c"] = "19"
+    coordinator = DaikinCoordinator(hass, entry, device)
+    zone = DaikinZoneClimate(coordinator, 0)
+
+    assert zone.target_temperature == 19.0
+
+
+@pytest.mark.asyncio
+async def test_zone_climate_set_zone_failed(hass: HomeAssistant) -> None:
+    """Surface errors when zone temperature updates fail."""
+    entry = MockConfigEntry(domain="daikin", data={})
+    device = FakeZoneDevice(zones=[["Living", "1", 22]])
+    device.set_zone = AsyncMock(side_effect=NotImplementedError)
+    coordinator = DaikinCoordinator(hass, entry, device)
+    zone = DaikinZoneClimate(coordinator, 0)
+
+    with pytest.raises(HomeAssistantError) as err:
+        await zone.async_set_temperature(**{ATTR_TEMPERATURE: 21})
+
+    assert err.value.translation_key == "zone_set_failed"
