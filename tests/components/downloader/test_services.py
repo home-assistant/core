@@ -4,6 +4,7 @@ import asyncio
 from contextlib import AbstractContextManager, nullcontext as does_not_raise
 
 import pytest
+import voluptuous as vol
 
 from homeassistant.components.downloader.const import DOMAIN
 from homeassistant.core import HomeAssistant
@@ -43,6 +44,56 @@ async def test_download_invalid_subdir(
             {
                 "url": download_url,
                 "subdir": subdir,
+                "filename": "file.txt",
+                "overwrite": True,
+            },
+            blocking=True,
+        )
+        await asyncio.wait((completed, failed), return_when=asyncio.FIRST_COMPLETED)
+
+    with expected_result:
+        await call_service()
+
+
+@pytest.mark.usefixtures("setup_integration")
+@pytest.mark.parametrize(
+    ("headers", "expected_result"),
+    [
+        (1, pytest.raises(vol.error.Invalid)),  # Not a dictionary
+        ({"Accept": "application/json"}, does_not_raise()),
+        ({123: 456.789}, does_not_raise()),  # Convert numbers to strings
+        (
+            {"Accept": ["application/json"]},
+            pytest.raises(vol.error.MultipleInvalid),
+        ),  # Value is not a string
+        ({1: None}, pytest.raises(vol.error.MultipleInvalid)),  # Value is None
+        (
+            {None: "application/json"},
+            pytest.raises(vol.error.MultipleInvalid),
+        ),  # Key is None
+    ],
+)
+async def test_download_headers_schema(
+    hass: HomeAssistant,
+    download_completed: asyncio.Event,
+    download_failed: asyncio.Event,
+    download_url: str,
+    headers: dict[str, str],
+    expected_result: AbstractContextManager,
+) -> None:
+    """Test service with headers."""
+
+    async def call_service() -> None:
+        """Call the download service."""
+        completed = hass.async_create_task(download_completed.wait())
+        failed = hass.async_create_task(download_failed.wait())
+        await hass.services.async_call(
+            DOMAIN,
+            "download_file",
+            {
+                "url": download_url,
+                "headers": headers,
+                "subdir": "test",
                 "filename": "file.txt",
                 "overwrite": True,
             },
