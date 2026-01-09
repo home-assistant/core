@@ -285,13 +285,6 @@ class CoiotConfigureFlow(ShellyBlockRepairsFlow):
 
     async def _async_step_confirm(self) -> data_entry_flow.FlowResult:
         """Handle the confirm step of a fix flow."""
-        return await self.async_step_configure_coiot()
-
-    async def async_step_configure_coiot(
-        self, user_input: dict[str, str] | None = None
-    ) -> data_entry_flow.FlowResult:
-        """Configure CoIoT settings on the device."""
-
         coiot_addr = get_coiot_address(self.hass)
         coiot_port = get_coiot_port(self.hass)
         if coiot_addr is None or coiot_port is None:
