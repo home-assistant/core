@@ -31,7 +31,7 @@
     },
     "sensor": {
       "tank_level": {
-        "name": "Tank level"
+        "name": "Tank Level"
       }
     },
     "switch": {
