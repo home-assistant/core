@@ -37,7 +37,7 @@ class VeSyncBaseEntity(CoordinatorEntity[VeSyncDataCoordinator]):
         # entities under a single device.
         if isinstance(self.device.sub_device_no, int):
             return f"{self.device.cid}{self.device.sub_device_no!s}"
-        return str(self.device.cid)
+        return self.device.cid
 
     @property
     def available(self) -> bool:

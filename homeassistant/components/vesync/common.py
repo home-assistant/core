@@ -13,7 +13,7 @@ from pyvesync.devices.vesyncswitch import VeSyncWallSwitch
 _LOGGER = logging.getLogger(__name__)
 
 
-def rgetattr(obj: object, attr: str) -> str | None | object:
+def rgetattr(obj: object, attr: str) -> str | object | None:
     """Return a string in the form word.1.2.3 and return the item as 3. Note that this last value could be in a dict as well."""
     _this_func = rgetattr
     sp = attr.split(".", 1)
