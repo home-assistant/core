@@ -23,15 +23,15 @@
   "entity": {
     "binary_sensor": {
       "tank_empty": {
-        "name": "Tank empty"
+        "name": "Tank Empty"
       },
       "tank_full": {
-        "name": "Tank full"
+        "name": "Tank Full"
       }
     },
     "sensor": {
       "tank_level": {
-        "name": "Tank level"
+        "name": "Tank Level"
       }
     },
     "switch": {
