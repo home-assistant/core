@@ -19,6 +19,16 @@ def mock_setup_entry() -> Generator[AsyncMock]:
 
 
 @pytest.fixture
+def mock_get_file_stream_from_cloud() -> Generator[AsyncMock]:
+    """Override get_file_stream_from_cloud."""
+    with patch(
+        "homeassistant.components.switchbot_cloud.image.get_file_stream_from_cloud",
+        return_value=b"this is bytes",
+    ) as mock_get_file_stream_from_cloud:
+        yield mock_get_file_stream_from_cloud
+
+
+@pytest.fixture
 def mock_list_devices():
     """Mock list_devices."""
     with patch.object(SwitchBotAPI, "list_devices") as mock_list_devices:

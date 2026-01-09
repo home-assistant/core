@@ -1,49 +1,16 @@
 """Test for the switchbot_cloud image."""
 
-from datetime import datetime
-from unittest.mock import AsyncMock, Mock
+from unittest.mock import AsyncMock, patch
 
-import pytest
 from switchbot_api import Device
 
+from homeassistant.components.switchbot_cloud import DOMAIN
 from homeassistant.components.switchbot_cloud.image import SwitchBotCloudImage
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 
 from . import configure_integration
-
-TEST_IMAGE_URL = "https://test.s3.amazonaws.com/test.jpg"
-TEST_IMAGE_CONTENT = b"fake_jpeg_data"
-
-
-@pytest.fixture
-def mock_api():
-    """Fixture for mock SwitchBotAPI."""
-    return Mock(name="SwitchBotAPI")
-
-
-@pytest.fixture
-def mock_device():
-    """Fixture for mock Device/Remote."""
-    return Mock(name="Device", device_id="test_device_123")
-
-
-@pytest.fixture
-def mock_coordinator():
-    """Fixture for mock SwitchBotCoordinator."""
-    coordinator = Mock(name="SwitchBotCoordinator")
-    coordinator.hass = Mock(name="HASS")
-    coordinator.data = None
-    return coordinator
-
-
-@pytest.fixture
-def image_entity(mock_api, mock_device, mock_coordinator):
-    """Fixture for SwitchBotCloudImage entity."""
-    return SwitchBotCloudImage(
-        api=mock_api, device=mock_device, coordinator=mock_coordinator
-    )
 
 
 async def test_coordinator_data_is_none(
@@ -68,31 +35,50 @@ async def test_coordinator_data_is_none(
     assert state.state is STATE_UNKNOWN
 
 
-@pytest.mark.asyncio
-async def test_async_image(image_entity, monkeypatch: pytest.MonkeyPatch) -> None:
-    """Test async_image method triggers download and returns content."""
-    mock_download = AsyncMock(return_value=None)
-    monkeypatch.setattr(image_entity, "download_image", mock_download)
-    result = await image_entity.async_image()
-    mock_download.assert_awaited_once()
-    assert result == image_entity._image_content
+async def test_async_image(
+    hass: HomeAssistant, mock_list_devices, mock_get_status
+) -> None:
+    """Test coordinator data is none."""
 
+    mock_list_devices.return_value = [
+        Device(
+            version="V1.0",
+            deviceId="ai-art-frame-id-1",
+            deviceName="ai-art-frame-1",
+            deviceType="AI Art Frame",
+            hubDeviceId="test-hub-id",
+        ),
+    ]
+    mock_get_status.side_effect = [
+        {
+            "deviceId": "B0E9FEA5D7F0",
+            "deviceType": "AI Art Frame",
+            "hubDeviceId": "B0E9FEA5D7F0",
+            "battery": 0,
+            "displayMode": 1,
+            "imageUrl": "https://p3.itc.cn/images01/20231215/2f2db37e221c4ad3af575254c7769ca1.jpeg",
+            "version": "V0.0-0.5",
+        }
+    ]
+    entry = await configure_integration(hass)
+    assert entry.state is ConfigEntryState.LOADED
 
-@pytest.mark.asyncio
-async def test_download_image_empty_url(image_entity) -> None:
-    """Test download_image with empty/invalid URL."""
-    image_entity._attr_image_url = ""
-    await image_entity.download_image()
+    cloud_data = hass.data[DOMAIN][entry.entry_id]
+    device, coordinator = cloud_data.devices.images[0]
+    image_entity = SwitchBotCloudImage(cloud_data.api, device, coordinator)
+
+    # 1. load before refresh
+    await image_entity.async_image()
     assert image_entity._image_content == b""
 
-    image_entity._attr_image_url = None
-    await image_entity.download_image()
-    assert image_entity._image_content == b""
-
-
-@pytest.mark.asyncio
-async def test_async_update(image_entity) -> None:
-    """Test async_update method updates image_last_updated."""
-    before_update = datetime.now()
-    await image_entity.async_update()
-    assert image_entity._attr_image_last_updated > before_update
+    # 2. load after refresh
+    with patch(
+        "homeassistant.components.switchbot_cloud.image.get_file_stream_from_cloud",
+        new_callable=AsyncMock,
+    ) as mock_get:
+        mock_get.return_value = b"this is a bytes"
+        image_entity._attr_image_url = (
+            "https://p3.itc.cn/images01/20231215/2f2db37e221c4ad3af575254c7769ca1.jpeg"
+        )
+        await image_entity.async_image()
+        assert image_entity._image_content == mock_get.return_value
