@@ -1357,23 +1357,3 @@ def async_register_platform_entity_service(
         job_type=HassJobType.Coroutinefunction,
         description_placeholders=description_placeholders,
     )
-
-
-@callback
-def async_register_batched_handler(
-    hass: HomeAssistant,
-    domain: str,
-    service: str,
-    config_entry: ConfigEntry,
-    handler: BatchedServiceCallback,
-) -> None:
-    """Register a per-ConfigEntry batched entity handler for a service.
-
-    The handler receives a list of entities the ServiceCall.
-    """
-
-    service_obj = hass.services.async_services_internal().get(domain, {}).get(service)
-    if not service_obj:
-        raise HomeAssistantError(f"Service {domain}.{service} not found")
-
-    service_obj.async_register_batched_handler(config_entry, handler)
