@@ -1782,6 +1782,73 @@ async def test_water_heater(
     assert acc.char_target_heat_cool.value == 1
 
 
+async def test_water_heater_allow_invalid_client_values(
+    hass: HomeAssistant, hk_driver
+) -> None:
+    """Test that invalid client values are handled gracefully for water heater."""
+    entity_id = "water_heater.test"
+
+    hass.states.async_set(entity_id, HVACMode.HEAT)
+    await hass.async_block_till_done()
+    acc = WaterHeater(hass, hk_driver, "WaterHeater", entity_id, 1, None)
+    hk_driver.add_accessory(acc)
+
+    acc.run()
+    await hass.async_block_till_done()
+
+    # Verify allow_invalid_client_values is set
+    assert acc.char_target_heat_cool.allow_invalid_client_values is True
+    assert acc.char_target_heat_cool.value == 1  # Heat
+
+    # Verify valid values only include HEAT for water heater (no OFF)
+    hap = acc.char_target_heat_cool.to_HAP()
+    assert hap["valid-values"] == [HC_HEAT_COOL_HEAT]
+
+    # Verify that set_value with invalid value still raises ValueError
+    with pytest.raises(ValueError):
+        acc.char_target_heat_cool.set_value(HC_HEAT_COOL_COOL)
+    await hass.async_block_till_done()
+    assert acc.char_target_heat_cool.value == 1  # Still Heat
+
+    # Test that hk_driver.set_characteristics with invalid value is handled gracefully
+    # This simulates what happens when Siri sends an unsupported mode
+    char_target_heat_cool_iid = acc.char_target_heat_cool.to_HAP()[HAP_REPR_IID]
+
+    # Send HC_HEAT_COOL_COOL (2) which is not valid for water heater
+    hk_driver.set_characteristics(
+        {
+            HAP_REPR_CHARS: [
+                {
+                    HAP_REPR_AID: acc.aid,
+                    HAP_REPR_IID: char_target_heat_cool_iid,
+                    HAP_REPR_VALUE: HC_HEAT_COOL_COOL,
+                },
+            ]
+        },
+        "mock_addr",
+    )
+    await hass.async_block_till_done()
+    # Value should be reset to Heat since water heater only supports heat
+    assert acc.char_target_heat_cool.value == 1
+
+    # Send HC_HEAT_COOL_AUTO (3) which is also not valid for water heater
+    hk_driver.set_characteristics(
+        {
+            HAP_REPR_CHARS: [
+                {
+                    HAP_REPR_AID: acc.aid,
+                    HAP_REPR_IID: char_target_heat_cool_iid,
+                    HAP_REPR_VALUE: HC_HEAT_COOL_AUTO,
+                },
+            ]
+        },
+        "mock_addr",
+    )
+    await hass.async_block_till_done()
+    # Value should still be Heat
+    assert acc.char_target_heat_cool.value == 1
+
+
 async def test_water_heater_fahrenheit(
     hass: HomeAssistant, hk_driver, events: list[Event]
 ) -> None:
