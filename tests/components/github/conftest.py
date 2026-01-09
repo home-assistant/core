@@ -15,14 +15,13 @@ from homeassistant.components.github.const import CONF_REPOSITORIES, DOMAIN
 from homeassistant.const import CONF_ACCESS_TOKEN
 from homeassistant.core import HomeAssistant
 
-from .common import MOCK_ACCESS_TOKEN, TEST_REPOSITORY, setup_github_integration
+from .const import MOCK_ACCESS_TOKEN, TEST_REPOSITORY
 
 from tests.common import (
     MockConfigEntry,
     async_load_json_object_fixture,
     load_json_object_fixture,
 )
-from tests.test_util.aiohttp import AiohttpClientMocker
 
 
 @pytest.fixture
@@ -134,14 +133,3 @@ def github_client(hass: HomeAssistant) -> Generator[AsyncMock]:
         client.graphql.return_value = graphql_mock
         client.repos.events.subscribe = AsyncMock()
         yield client
-
-
-@pytest.fixture
-async def init_integration(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    aioclient_mock: AiohttpClientMocker,
-) -> MockConfigEntry:
-    """Set up the GitHub integration for testing."""
-    await setup_github_integration(hass, mock_config_entry, aioclient_mock)
-    return mock_config_entry

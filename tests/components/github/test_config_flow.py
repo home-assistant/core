@@ -16,7 +16,7 @@ from homeassistant.const import CONF_ACCESS_TOKEN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType, UnknownFlow
 
-from .common import MOCK_ACCESS_TOKEN
+from .const import MOCK_ACCESS_TOKEN
 
 from tests.common import MockConfigEntry
 
