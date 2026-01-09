@@ -4,7 +4,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 import logging
 
-from google_air_quality_api.model import AirQualityData
+from google_air_quality_api.model import AirQualityCurrentConditionsData
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -33,15 +33,17 @@ PARALLEL_UPDATES = 0
 class AirQualitySensorEntityDescription(SensorEntityDescription):
     """Describes Air Quality sensor entity."""
 
-    exists_fn: Callable[[AirQualityData], bool] = lambda _: True
-    options_fn: Callable[[AirQualityData], list[str] | None] = lambda _: None
-    value_fn: Callable[[AirQualityData], StateType]
-    native_unit_of_measurement_fn: Callable[[AirQualityData], str | None] = (
+    exists_fn: Callable[[AirQualityCurrentConditionsData], bool] = lambda _: True
+    options_fn: Callable[[AirQualityCurrentConditionsData], list[str] | None] = (
         lambda _: None
     )
-    translation_placeholders_fn: Callable[[AirQualityData], dict[str, str]] | None = (
-        None
-    )
+    value_fn: Callable[[AirQualityCurrentConditionsData], StateType]
+    native_unit_of_measurement_fn: Callable[
+        [AirQualityCurrentConditionsData], str | None
+    ] = lambda _: None
+    translation_placeholders_fn: (
+        Callable[[AirQualityCurrentConditionsData], dict[str, str]] | None
+    ) = None
 
 
 AIR_QUALITY_SENSOR_TYPES: tuple[AirQualitySensorEntityDescription, ...] = (

@@ -1967,7 +1967,7 @@
       }),
       dict({
         'description': None,
-        'entry_type': <MealplanEntryType.DINNER: 'dinner'>,
+        'entry_type': <MealplanEntryType.DESSERT: 'dessert'>,
         'group_id': '0bf60b2e-ca89-42a9-94d4-8f67ca72b157',
         'household_id': None,
         'mealplan_date': HAFakeDate(2024, 1, 23),
@@ -2123,7 +2123,7 @@
       }),
       dict({
         'description': None,
-        'entry_type': <MealplanEntryType.DINNER: 'dinner'>,
+        'entry_type': <MealplanEntryType.DRINK: 'drink'>,
         'group_id': '0bf60b2e-ca89-42a9-94d4-8f67ca72b157',
         'household_id': None,
         'mealplan_date': HAFakeDate(2024, 1, 22),
@@ -2175,7 +2175,7 @@
       }),
       dict({
         'description': None,
-        'entry_type': <MealplanEntryType.DINNER: 'dinner'>,
+        'entry_type': <MealplanEntryType.SNACK: 'snack'>,
         'group_id': '0bf60b2e-ca89-42a9-94d4-8f67ca72b157',
         'household_id': None,
         'mealplan_date': HAFakeDate(2024, 1, 22),

@@ -912,7 +912,9 @@ CAPABILITY_TO_SENSORS: dict[
                     if Capability.CUSTOM_OUTING_MODE in status
                     else None
                 ),
-                component_fn=lambda component: component in {"freezer", "cooler"},
+                component_fn=(
+                    lambda component: component in {"freezer", "cooler", "onedoor"}
+                ),
                 component_translation_key={
                     "freezer": "freezer_temperature",
                     "cooler": "cooler_temperature",
@@ -1157,6 +1159,17 @@ CAPABILITY_TO_SENSORS: dict[
             )
         ]
     },
+    Capability.SAMSUNG_CE_HOOD_FILTER: {
+        Attribute.HOOD_FILTER_USAGE: [
+            SmartThingsSensorEntityDescription(
+                key=Attribute.HOOD_FILTER_USAGE,
+                translation_key="hood_filter_usage",
+                state_class=SensorStateClass.MEASUREMENT,
+                native_unit_of_measurement=PERCENTAGE,
+                entity_category=EntityCategory.DIAGNOSTIC,
+            )
+        ]
+    },
 }
 
 
@@ -1288,7 +1301,7 @@ class SmartThingsSensor(SmartThingsEntity, SensorEntity):
             )
         if self.entity_description.component_translation_key and component != MAIN:
             self._attr_translation_key = (
-                self.entity_description.component_translation_key[component]
+                self.entity_description.component_translation_key.get(component)
             )
 
     @property

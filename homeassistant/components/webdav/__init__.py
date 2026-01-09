@@ -13,11 +13,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
 
 from .const import CONF_BACKUP_PATH, DATA_BACKUP_AGENT_LISTENERS, DOMAIN
-from .helpers import (
-    async_create_client,
-    async_ensure_path_exists,
-    async_migrate_wrong_folder_path,
-)
+from .helpers import async_create_client, async_ensure_path_exists
 
 type WebDavConfigEntry = ConfigEntry[Client]
 
@@ -51,7 +47,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: WebDavConfigEntry) -> bo
         )
 
     path = entry.data.get(CONF_BACKUP_PATH, "/")
-    await async_migrate_wrong_folder_path(client, path)
 
     # Ensure the backup directory exists
     if not await async_ensure_path_exists(client, path):

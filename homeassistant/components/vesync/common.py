@@ -4,6 +4,7 @@ import logging
 
 from pyvesync.base_devices import VeSyncHumidifier
 from pyvesync.base_devices.fan_base import VeSyncFanBase
+from pyvesync.base_devices.fryer_base import VeSyncFryer
 from pyvesync.base_devices.outlet_base import VeSyncOutlet
 from pyvesync.base_devices.purifier_base import VeSyncPurifier
 from pyvesync.base_devices.vesyncbasedevice import VeSyncBaseDevice
@@ -62,3 +63,9 @@ def is_purifier(device: VeSyncBaseDevice) -> bool:
     """Check if the device represents an air purifier."""
 
     return isinstance(device, VeSyncPurifier)
+
+
+def is_air_fryer(device: VeSyncBaseDevice) -> bool:
+    """Check if the device represents an air fryer."""
+
+    return isinstance(device, VeSyncFryer)

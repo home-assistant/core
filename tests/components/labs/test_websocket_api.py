@@ -695,3 +695,199 @@ async def test_websocket_backup_timeout_handling(
 
     assert not msg["success"]
     assert msg["error"]["code"] == "unknown_error"
+
+
+async def test_websocket_subscribe_feature(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test subscribing to a specific preview feature."""
+    hass.config.components.add("kitchen_sink")
+    assert await async_setup(hass, {})
+    await hass.async_block_till_done()
+
+    client = await hass_ws_client(hass)
+
+    await client.send_json_auto_id(
+        {
+            "type": "labs/subscribe",
+            "domain": "kitchen_sink",
+            "preview_feature": "special_repair",
+        }
+    )
+    msg = await client.receive_json()
+
+    assert msg["success"]
+    assert msg["result"] is None
+
+    # Initial state is sent as event
+    event_msg = await client.receive_json()
+    assert event_msg["type"] == "event"
+    assert event_msg["event"] == {
+        "preview_feature": "special_repair",
+        "domain": "kitchen_sink",
+        "enabled": False,
+        "is_built_in": True,
+        "feedback_url": ANY,
+        "learn_more_url": ANY,
+        "report_issue_url": ANY,
+    }
+
+
+async def test_websocket_subscribe_feature_receives_updates(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test that subscription receives updates when feature is toggled."""
+    hass.config.components.add("kitchen_sink")
+    assert await async_setup(hass, {})
+    await hass.async_block_till_done()
+
+    client = await hass_ws_client(hass)
+
+    await client.send_json_auto_id(
+        {
+            "type": "labs/subscribe",
+            "domain": "kitchen_sink",
+            "preview_feature": "special_repair",
+        }
+    )
+    subscribe_msg = await client.receive_json()
+    assert subscribe_msg["success"]
+    subscription_id = subscribe_msg["id"]
+
+    # Initial state event
+    initial_event_msg = await client.receive_json()
+    assert initial_event_msg["id"] == subscription_id
+    assert initial_event_msg["type"] == "event"
+    assert initial_event_msg["event"]["enabled"] is False
+
+    await client.send_json_auto_id(
+        {
+            "type": "labs/update",
+            "domain": "kitchen_sink",
+            "preview_feature": "special_repair",
+            "enabled": True,
+        }
+    )
+
+    # Update event arrives before the update result
+    event_msg = await client.receive_json()
+    assert event_msg["id"] == subscription_id
+    assert event_msg["type"] == "event"
+    assert event_msg["event"] == {
+        "preview_feature": "special_repair",
+        "domain": "kitchen_sink",
+        "enabled": True,
+        "is_built_in": True,
+        "feedback_url": ANY,
+        "learn_more_url": ANY,
+        "report_issue_url": ANY,
+    }
+
+    update_msg = await client.receive_json()
+    assert update_msg["success"]
+
+
+async def test_websocket_subscribe_nonexistent_feature(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test subscribing to a preview feature that doesn't exist."""
+    assert await async_setup(hass, {})
+    await hass.async_block_till_done()
+
+    client = await hass_ws_client(hass)
+
+    await client.send_json_auto_id(
+        {
+            "type": "labs/subscribe",
+            "domain": "nonexistent",
+            "preview_feature": "feature",
+        }
+    )
+    msg = await client.receive_json()
+
+    assert not msg["success"]
+    assert msg["error"]["code"] == "not_found"
+    assert "not found" in msg["error"]["message"].lower()
+
+
+async def test_websocket_subscribe_does_not_require_admin(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    hass_admin_user: MockUser,
+) -> None:
+    """Test that subscribe does not require admin privileges."""
+    hass_admin_user.groups = []
+
+    hass.config.components.add("kitchen_sink")
+    assert await async_setup(hass, {})
+    await hass.async_block_till_done()
+
+    client = await hass_ws_client(hass)
+
+    await client.send_json_auto_id(
+        {
+            "type": "labs/subscribe",
+            "domain": "kitchen_sink",
+            "preview_feature": "special_repair",
+        }
+    )
+    msg = await client.receive_json()
+
+    assert msg["success"]
+
+    # Consume initial state event
+    await client.receive_json()
+
+
+async def test_websocket_subscribe_only_receives_subscribed_feature_updates(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test that subscription only receives updates for the subscribed feature."""
+    hass.config.components.add("kitchen_sink")
+    assert await async_setup(hass, {})
+    await hass.async_block_till_done()
+
+    client = await hass_ws_client(hass)
+
+    await client.send_json_auto_id(
+        {
+            "type": "labs/subscribe",
+            "domain": "kitchen_sink",
+            "preview_feature": "special_repair",
+        }
+    )
+    subscribe_msg = await client.receive_json()
+    assert subscribe_msg["success"]
+
+    # Consume initial state event
+    await client.receive_json()
+
+    # Fire an event for a different feature
+    hass.bus.async_fire(
+        EVENT_LABS_UPDATED,
+        {"domain": "other_domain", "preview_feature": "other_feature", "enabled": True},
+    )
+    await hass.async_block_till_done()
+
+    await client.send_json_auto_id(
+        {
+            "type": "labs/update",
+            "domain": "kitchen_sink",
+            "preview_feature": "special_repair",
+            "enabled": True,
+        }
+    )
+
+    # Event message arrives before the update result
+    # Should only receive event for subscribed feature, not the other one
+    event_msg = await client.receive_json()
+    assert event_msg["type"] == "event"
+    assert event_msg["event"]["domain"] == "kitchen_sink"
+    assert event_msg["event"]["preview_feature"] == "special_repair"
+
+    update_msg = await client.receive_json()
+    assert update_msg["success"]

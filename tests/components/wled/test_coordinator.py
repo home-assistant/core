@@ -5,12 +5,14 @@ from collections.abc import Callable
 from copy import deepcopy
 from unittest.mock import MagicMock
 
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 from wled import (
     Device as WLEDDevice,
     WLEDConnectionClosedError,
     WLEDConnectionError,
     WLEDError,
+    WLEDUnsupportedVersionError,
 )
 
 from homeassistant.components.wled.const import SCAN_INTERVAL
@@ -22,7 +24,6 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.util import dt as dt_util
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 
@@ -36,13 +37,18 @@ async def test_not_supporting_websocket(
 
 @pytest.mark.parametrize("device_fixture", ["rgb_websocket"])
 async def test_websocket_already_connected(
-    hass: HomeAssistant, init_integration: MockConfigEntry, mock_wled: MagicMock
+    hass: HomeAssistant,
+    init_integration: MockConfigEntry,
+    mock_wled: MagicMock,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Ensure no a second WebSocket connection is made, if already connected."""
     assert mock_wled.connect.call_count == 1
 
     mock_wled.connected = True
-    async_fire_time_changed(hass, dt_util.utcnow() + SCAN_INTERVAL)
+
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
     assert mock_wled.connect.call_count == 1
@@ -53,13 +59,15 @@ async def test_websocket_connect_error_no_listen(
     hass: HomeAssistant,
     init_integration: MockConfigEntry,
     mock_wled: MagicMock,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Ensure we don't start listening if WebSocket connection failed."""
     assert mock_wled.connect.call_count == 1
     assert mock_wled.listen.call_count == 1
 
     mock_wled.connect.side_effect = WLEDConnectionError
-    async_fire_time_changed(hass, dt_util.utcnow() + SCAN_INTERVAL)
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
     assert mock_wled.connect.call_count == 2
@@ -71,6 +79,7 @@ async def test_websocket(
     hass: HomeAssistant,
     init_integration: MockConfigEntry,
     mock_wled: MagicMock,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test WebSocket connection."""
     state = hass.states.get("light.wled_websocket")
@@ -97,7 +106,8 @@ async def test_websocket(
     hass.bus = mock_bus
 
     # Next refresh it should connect
-    async_fire_time_changed(hass, dt_util.utcnow() + SCAN_INTERVAL)
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
     callback = await connection_connected
 
     # Connected to WebSocket, disconnect not called
@@ -144,6 +154,7 @@ async def test_websocket_error(
     hass: HomeAssistant,
     init_integration: MockConfigEntry,
     mock_wled: MagicMock,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test WebSocket connection erroring out, marking lights unavailable."""
     state = hass.states.get("light.wled_websocket")
@@ -158,7 +169,8 @@ async def test_websocket_error(
         await connection_finished
 
     mock_wled.listen.side_effect = connect
-    async_fire_time_changed(hass, dt_util.utcnow() + SCAN_INTERVAL)
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
     await connection_connected
 
     # Resolve Future with an error.
@@ -176,6 +188,7 @@ async def test_websocket_disconnect_on_home_assistant_stop(
     hass: HomeAssistant,
     init_integration: MockConfigEntry,
     mock_wled: MagicMock,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Ensure WebSocket is disconnected when Home Assistant stops."""
     assert mock_wled.disconnect.call_count == 1
@@ -187,7 +200,8 @@ async def test_websocket_disconnect_on_home_assistant_stop(
         await connection_finished
 
     mock_wled.listen.side_effect = connect
-    async_fire_time_changed(hass, dt_util.utcnow() + SCAN_INTERVAL)
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
     await connection_connected
 
     assert mock_wled.disconnect.call_count == 1
@@ -213,8 +227,34 @@ async def test_fail_when_other_device(
 
     await hass.async_block_till_done()
 
-    assert mock_config_entry.state == ConfigEntryState.SETUP_ERROR
+    assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
     assert mock_config_entry.reason
     assert (
         "MAC address does not match the configured device." in mock_config_entry.reason
     )
+
+
+async def test_fail_when_unsupported_version(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_wled: MagicMock,
+) -> None:
+    """Ensure entry fails to setup when unsupported version."""
+    mock_wled.update.side_effect = WLEDUnsupportedVersionError(
+        "Unsupported firmware version 0.14.0-b1. Minimum required version is 0.14.0. "
+        "Please update your WLED device."
+    )
+
+    mock_config_entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
+    assert mock_config_entry.reason
+    assert (
+        "The WLED device's firmware version is not supported:"
+        in mock_config_entry.reason
+    )
+    assert "0.14.0-b1" in mock_config_entry.reason

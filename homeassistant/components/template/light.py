@@ -635,14 +635,14 @@ class AbstractTemplateLight(AbstractTemplateEntity, LightEntity):
             # Support legacy mireds in template light.
             temperature = int(render)
             if (min_kelvin := self._attr_min_color_temp_kelvin) is not None:
-                min_mireds = color_util.color_temperature_kelvin_to_mired(min_kelvin)
-            else:
-                min_mireds = DEFAULT_MIN_MIREDS
-
-            if (max_kelvin := self._attr_max_color_temp_kelvin) is not None:
-                max_mireds = color_util.color_temperature_kelvin_to_mired(max_kelvin)
+                max_mireds = color_util.color_temperature_kelvin_to_mired(min_kelvin)
             else:
                 max_mireds = DEFAULT_MAX_MIREDS
+
+            if (max_kelvin := self._attr_max_color_temp_kelvin) is not None:
+                min_mireds = color_util.color_temperature_kelvin_to_mired(max_kelvin)
+            else:
+                min_mireds = DEFAULT_MIN_MIREDS
             if min_mireds <= temperature <= max_mireds:
                 self._attr_color_temp_kelvin = (
                     color_util.color_temperature_mired_to_kelvin(temperature)
@@ -856,42 +856,36 @@ class AbstractTemplateLight(AbstractTemplateEntity, LightEntity):
 
         try:
             if render in (None, "None", ""):
-                self._attr_max_mireds = DEFAULT_MAX_MIREDS
-                self._attr_max_color_temp_kelvin = None
+                self._attr_min_color_temp_kelvin = None
                 return
 
-            self._attr_max_mireds = max_mireds = int(render)
-            self._attr_max_color_temp_kelvin = (
-                color_util.color_temperature_mired_to_kelvin(max_mireds)
+            self._attr_min_color_temp_kelvin = (
+                color_util.color_temperature_mired_to_kelvin(int(render))
             )
         except ValueError:
             _LOGGER.exception(
                 "Template must supply an integer temperature within the range for"
                 " this light, or 'None'"
             )
-            self._attr_max_mireds = DEFAULT_MAX_MIREDS
-            self._attr_max_color_temp_kelvin = None
+            self._attr_min_color_temp_kelvin = None
 
     @callback
     def _update_min_mireds(self, render):
         """Update the min mireds from the template."""
         try:
             if render in (None, "None", ""):
-                self._attr_min_mireds = DEFAULT_MIN_MIREDS
-                self._attr_min_color_temp_kelvin = None
+                self._attr_max_color_temp_kelvin = None
                 return
 
-            self._attr_min_mireds = min_mireds = int(render)
-            self._attr_min_color_temp_kelvin = (
-                color_util.color_temperature_mired_to_kelvin(min_mireds)
+            self._attr_max_color_temp_kelvin = (
+                color_util.color_temperature_mired_to_kelvin(int(render))
             )
         except ValueError:
             _LOGGER.exception(
                 "Template must supply an integer temperature within the range for"
                 " this light, or 'None'"
             )
-            self._attr_min_mireds = DEFAULT_MIN_MIREDS
-            self._attr_min_color_temp_kelvin = None
+            self._attr_max_color_temp_kelvin = None
 
     @callback
     def _update_supports_transition(self, render):
