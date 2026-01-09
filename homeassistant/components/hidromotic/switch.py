@@ -169,9 +169,7 @@ class HidromoticAutoRiegoSwitch(CoordinatorEntity[HidromoticCoordinator], Switch
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Enable auto riego."""
         await self.coordinator.client.set_auto_riego(True)
-        self.async_write_ha_state()
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Disable auto riego."""
         await self.coordinator.client.set_auto_riego(False)
-        self.async_write_ha_state()
