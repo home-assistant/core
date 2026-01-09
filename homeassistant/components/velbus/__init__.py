@@ -15,7 +15,11 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PORT, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady, PlatformNotReady
-from homeassistant.helpers import config_validation as cv, device_registry as dr
+from homeassistant.helpers import (
+    config_validation as cv,
+    device_registry as dr,
+    entity_registry as er,
+)
 from homeassistant.helpers.storage import STORAGE_DIR
 from homeassistant.helpers.typing import ConfigType
 
@@ -89,6 +93,36 @@ def _migrate_device_identifiers(hass: HomeAssistant, entry_id: str) -> None:
             dev_reg.async_update_device(device.id, new_identifiers=new_identifier)
 
 
+def _migrate_entity_unique_ids(hass: HomeAssistant, entry_id: str) -> None:
+    """Migrate entity unique_ids.
+
+    Old: serial|address-channelNumber
+    New: moduleType-serial|address-channelNumber
+    """
+    ent_reg = er.async_get(hass)
+    dev_reg = dr.async_get(hass)
+    entities: list[er.RegistryEntry] = er.async_entries_for_config_entry(
+        ent_reg, entry_id
+    )
+
+    for entity in entities:
+        if entity.unique_id and "-" in entity.unique_id:
+            parts = entity.unique_id.split("-")
+            if len(parts) == 2 and entity.device_id:
+                device = dev_reg.async_get(entity.device_id)
+                if device and device.model:
+                    module_type = device.model
+                    new_unique_id = f"{module_type}-{entity.unique_id}"
+                    _LOGGER.debug(
+                        "migrate unique_id '%s' to '%s'",
+                        entity.unique_id,
+                        new_unique_id,
+                    )
+                    ent_reg.async_update_entity(
+                        entity.entity_id, new_unique_id=new_unique_id
+                    )
+
+
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the actions for the Velbus component."""
     async_setup_services(hass)
@@ -114,6 +148,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: VelbusConfigEntry) -> bo
     entry.runtime_data = VelbusData(controller=controller, scan_task=task)
 
     _migrate_device_identifiers(hass, entry.entry_id)
+    _migrate_entity_unique_ids(hass, entry.entry_id)
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
