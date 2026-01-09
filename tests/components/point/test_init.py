@@ -1,6 +1,6 @@
 """Tests for the Point component."""
 
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import MagicMock, patch
 
 from homeassistant.components.point import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
