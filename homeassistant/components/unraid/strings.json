@@ -1,0 +1,139 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "This Unraid server is already configured.",
+      "reauth_failed": "Reauthentication failed.",
+      "reauth_successful": "Reauthentication successful.",
+      "reconfigure_failed": "Reconfiguration failed - entry not found.",
+      "reconfigure_successful": "Reconfiguration successful."
+    },
+    "error": {
+      "already_configured": "This Unraid server is already configured.",
+      "cannot_connect": "Cannot connect. Verify the IP address or hostname is correct and reachable.",
+      "check_port": "Verify the port number matches your Unraid server configuration.",
+      "invalid_auth": "Invalid API key or insufficient permissions. Ensure the key has ADMIN role.",
+      "invalid_hostname": "Invalid hostname or IP address format.",
+      "required": "This field is required.",
+      "unknown": "Unexpected error occurred. Check Home Assistant logs for details.",
+      "unsupported_version": "Unraid version not supported. Minimum required: Unraid 7.2.0 (API v4.21.0)."
+    },
+    "step": {
+      "reauth_confirm": {
+        "data": {
+          "api_key": "API Key"
+        },
+        "data_description": {
+          "api_key": "Generate a new API key in Unraid Settings → Management Access → API Keys"
+        },
+        "description": "The API key for {host} is no longer valid. Please enter a new API key.",
+        "title": "Reauthenticate Unraid"
+      },
+      "reconfigure": {
+        "data": {
+          "api_key": "API Key",
+          "host": "Server IP or Hostname",
+          "http_port": "HTTP Port",
+          "https_port": "HTTPS Port"
+        },
+        "data_description": {
+          "api_key": "API key with ADMIN role permissions",
+          "host": "IP address or hostname of your Unraid server",
+          "http_port": "HTTP port (default: 80). Change only if modified in Unraid Settings → Management Access.",
+          "https_port": "HTTPS port (default: 443). Change only if modified in Unraid Settings → Management Access."
+        },
+        "description": "Update the connection settings for your Unraid server.",
+        "title": "Reconfigure Unraid"
+      },
+      "user": {
+        "data": {
+          "api_key": "API Key",
+          "host": "Server IP or Hostname",
+          "http_port": "HTTP Port",
+          "https_port": "HTTPS Port"
+        },
+        "data_description": {
+          "api_key": "Generate in Unraid Settings → Management Access → API Keys. Requires ADMIN role.",
+          "host": "IP address (e.g., 192.168.1.100) or hostname/domain of your Unraid server",
+          "http_port": "HTTP port (default: 80). Change only if modified in Unraid Settings → Management Access.",
+          "https_port": "HTTPS port (default: 443). Change only if modified in Unraid Settings → Management Access."
+        },
+        "description": "Connect to your Unraid server using the GraphQL API. Requires Unraid {min_version} or newer.",
+        "title": "Connect to Unraid"
+      }
+    }
+  },
+  "exceptions": {
+    "array_start_failed": {
+      "message": "Failed to start array: {error}"
+    },
+    "array_stop_failed": {
+      "message": "Failed to stop array: {error}"
+    },
+    "container_start_failed": {
+      "message": "Failed to start container {name}: {error}"
+    },
+    "container_stop_failed": {
+      "message": "Failed to stop container {name}: {error}"
+    },
+    "disk_spin_down_failed": {
+      "message": "Failed to spin down disk {name}: {error}"
+    },
+    "disk_spin_up_failed": {
+      "message": "Failed to spin up disk {name}: {error}"
+    },
+    "graphql_query_failed": {
+      "message": "GraphQL query failed: {error}"
+    },
+    "parity_check_pause_failed": {
+      "message": "Failed to pause parity check: {error}"
+    },
+    "parity_check_resume_failed": {
+      "message": "Failed to resume parity check: {error}"
+    },
+    "parity_check_start_failed": {
+      "message": "Failed to start parity check: {error}"
+    },
+    "parity_check_stop_failed": {
+      "message": "Failed to stop parity check: {error}"
+    },
+    "vm_start_failed": {
+      "message": "Failed to start VM {name}: {error}"
+    },
+    "vm_stop_failed": {
+      "message": "Failed to stop VM {name}: {error}"
+    }
+  },
+  "issues": {
+    "auth_failed": {
+      "fix_flow": {
+        "step": {
+          "confirm": {
+            "description": "The API key for {host} is no longer valid. Click submit to enter a new API key.",
+            "title": "Reauthenticate Unraid"
+          }
+        }
+      },
+      "title": "Authentication Failed"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "storage_interval": "Storage polling interval (seconds)",
+          "system_interval": "System polling interval (seconds)",
+          "ups_capacity_va": "UPS Capacity (VA)",
+          "ups_nominal_power": "UPS Nominal Power (W)"
+        },
+        "data_description": {
+          "storage_interval": "How often to poll disks and shares (60-3600 seconds). Higher values prevent disk spin-up.",
+          "system_interval": "How often to poll CPU, memory, Docker, VMs (10-300 seconds)",
+          "ups_capacity_va": "Optional. Your UPS VA rating (e.g., 1000 for a 1000VA UPS). Shown in sensor attributes for reference.",
+          "ups_nominal_power": "Required for UPS Power sensor. Enter the Watts value from your UPS specs. If Unraid only shows VA, check your UPS label or estimate using VA × 0.6."
+        },
+        "description": "Adjust polling intervals and UPS settings. Set UPS Nominal Power to enable power consumption tracking for the Energy Dashboard.",
+        "title": "Unraid Options"
+      }
+    }
+  }
+}

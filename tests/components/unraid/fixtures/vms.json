@@ -1,0 +1,7 @@
+{
+  "id": "vm:1",
+  "name": "Ubuntu",
+  "state": "RUNNING",
+  "memory": 2147483648,
+  "vcpu": 4
+}

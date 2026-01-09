@@ -1,0 +1,15 @@
+{
+  "cpu": {
+    "percentTotal": 23.5
+  },
+  "memory": {
+    "total": 17179869184,
+    "used": 8589934592,
+    "free": 8589934592,
+    "available": 8589934592,
+    "percentTotal": 50.0,
+    "swapTotal": 0,
+    "swapUsed": 0,
+    "percentSwapTotal": 0.0
+  }
+}

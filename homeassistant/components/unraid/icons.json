@@ -1,0 +1,114 @@
+{
+  "entity": {
+    "binary_sensor": {
+      "array_started": {
+        "default": "mdi:harddisk"
+      },
+      "disk_health": {
+        "default": "mdi:harddisk"
+      },
+      "parity_check_running": {
+        "default": "mdi:shield-sync"
+      },
+      "parity_status": {
+        "default": "mdi:shield-check"
+      },
+      "parity_valid": {
+        "default": "mdi:shield-check"
+      },
+      "ups_connected": {
+        "default": "mdi:battery"
+      }
+    },
+    "button": {
+      "array_start": {
+        "default": "mdi:play"
+      },
+      "array_stop": {
+        "default": "mdi:stop"
+      },
+      "disk_spin_down": {
+        "default": "mdi:sleep"
+      },
+      "disk_spin_up": {
+        "default": "mdi:rotate-right"
+      },
+      "parity_check_pause": {
+        "default": "mdi:pause"
+      },
+      "parity_check_resume": {
+        "default": "mdi:play"
+      },
+      "parity_check_start": {
+        "default": "mdi:play"
+      },
+      "parity_check_start_correct": {
+        "default": "mdi:play"
+      },
+      "parity_check_stop": {
+        "default": "mdi:stop"
+      }
+    },
+    "sensor": {
+      "active_notifications": {
+        "default": "mdi:bell"
+      },
+      "array_state": {
+        "default": "mdi:harddisk"
+      },
+      "array_usage": {
+        "default": "mdi:database"
+      },
+      "cpu_power": {
+        "default": "mdi:lightning-bolt"
+      },
+      "cpu_temperature": {
+        "default": "mdi:thermometer"
+      },
+      "cpu_usage": {
+        "default": "mdi:cpu-64-bit"
+      },
+      "disk_temperature": {
+        "default": "mdi:thermometer"
+      },
+      "disk_usage": {
+        "default": "mdi:harddisk"
+      },
+      "flash_usage": {
+        "default": "mdi:usb-flash-drive"
+      },
+      "parity_progress": {
+        "default": "mdi:progress-check"
+      },
+      "ram_usage": {
+        "default": "mdi:memory"
+      },
+      "share_usage": {
+        "default": "mdi:folder-network"
+      },
+      "ups_battery": {
+        "default": "mdi:battery"
+      },
+      "ups_load": {
+        "default": "mdi:gauge"
+      },
+      "ups_power": {
+        "default": "mdi:lightning-bolt"
+      },
+      "ups_runtime": {
+        "default": "mdi:timer"
+      },
+      "uptime": {
+        "default": "mdi:clock-outline"
+      }
+    },
+    "switch": {
+      "docker_container": {
+        "default": "mdi:docker"
+      },
+      "virtual_machine": {
+        "default": "mdi:desktop-tower"
+      }
+    }
+  }
+}
