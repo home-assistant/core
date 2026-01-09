@@ -355,10 +355,12 @@
     "step": {
       "init": {
         "data": {
+          "datetime_sync": "Automatic date and time sync",
           "lock_force_nightlatch": "Force Nightlatch operation mode",
           "retry_count": "Retry count"
         },
         "data_description": {
+          "datetime_sync": "Automatically sync the device date and time with Home Assistant",
           "lock_force_nightlatch": "Force Nightlatch operation mode even if Nightlatch is not detected",
           "retry_count": "How many times to retry sending commands to your SwitchBot devices"
         }

@@ -1,6 +1,6 @@
 """Test the switchbot config flow."""
 
-from collections.abc import Generator
+from collections.abc import Callable, Generator
 from unittest.mock import Mock, patch
 
 import pytest
@@ -8,6 +8,7 @@ from switchbot import SwitchbotAccountConnectionError, SwitchbotAuthenticationEr
 
 from homeassistant.components.bluetooth import BluetoothScanningMode
 from homeassistant.components.switchbot.const import (
+    CONF_DATETIME_SYNC,
     CONF_ENCRYPTION_KEY,
     CONF_KEY_ID,
     CONF_LOCK_NIGHTLATCH,
@@ -1540,3 +1541,58 @@ async def test_user_show_menu_when_no_scanners(hass: HomeAssistant) -> None:
         CONF_SENSOR_TYPE: "bot",
     }
     assert len(mock_setup_entry.mock_calls) == 1
+
+
+async def test_options_flow_meter_pro_co2(
+    hass: HomeAssistant,
+    mock_entry_factory: Callable[[str], MockConfigEntry],
+) -> None:
+    """Test updating options for Meter Pro CO2."""
+    entry = mock_entry_factory("hygrometer_co2")
+    entry.add_to_hass(hass)
+
+    # Test datetime_sync should be disabled by default.
+    with patch_async_setup_entry() as mock_setup_entry:
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+        result = await hass.config_entries.options.async_init(entry.entry_id)
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "init"
+        assert result["errors"] is None
+
+        result = await hass.config_entries.options.async_configure(
+            result["flow_id"],
+            user_input={
+                CONF_RETRY_COUNT: 3,
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"][CONF_DATETIME_SYNC] is False
+
+    assert len(mock_setup_entry.mock_calls) == 1
+
+    # Test enabling datetime_sync.
+
+    with patch_async_setup_entry() as mock_setup_entry:
+        result = await hass.config_entries.options.async_init(entry.entry_id)
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "init"
+        assert result["errors"] is None
+
+        result = await hass.config_entries.options.async_configure(
+            result["flow_id"],
+            user_input={
+                CONF_DATETIME_SYNC: True,
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"][CONF_DATETIME_SYNC] is True
+
+    assert len(mock_setup_entry.mock_calls) == 0
+
+    assert entry.options[CONF_DATETIME_SYNC] is True
