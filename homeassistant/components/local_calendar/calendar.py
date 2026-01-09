@@ -51,12 +51,7 @@ async def async_setup_entry(
     calendar.prodid = PRODID
 
     name = config_entry.data[CONF_CALENDAR_NAME]
-    entity = LocalCalendarEntity(
-        store,
-        calendar,
-        name,
-        unique_id=config_entry.entry_id,
-    )
+    entity = LocalCalendarEntity(store, calendar, name, unique_id=config_entry.entry_id)
     async_add_entities([entity], True)
 
 
