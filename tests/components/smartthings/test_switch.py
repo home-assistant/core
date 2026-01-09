@@ -568,3 +568,37 @@ async def test_turn_on_with_wrong_dishwasher_machine_state(
             blocking=True,
         )
     devices.execute_device_command.assert_not_called()
+
+
+@pytest.mark.parametrize("device_fixture", ["da_wm_dw_01011"])
+async def test_turn_on_with_wrong_dishwasher_cycle(
+    hass: HomeAssistant,
+    devices: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test state update."""
+    set_attribute_value(
+        devices,
+        Capability.REMOTE_CONTROL_STATUS,
+        Attribute.REMOTE_CONTROL_ENABLED,
+        "true",
+    )
+    set_attribute_value(
+        devices,
+        Capability.SAMSUNG_CE_DISHWASHER_WASHING_COURSE,
+        Attribute.WASHING_COURSE,
+        "preWash",
+    )
+    await setup_integration(hass, mock_config_entry)
+
+    with pytest.raises(
+        ServiceValidationError,
+        match="Option is not supported by selected cycle",
+    ):
+        await hass.services.async_call(
+            SWITCH_DOMAIN,
+            SERVICE_TURN_ON,
+            {ATTR_ENTITY_ID: "switch.dishwasher_speed_booster"},
+            blocking=True,
+        )
+    devices.execute_device_command.assert_not_called()
