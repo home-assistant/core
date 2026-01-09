@@ -1,5 +1,10 @@
 {
   "entity": {
+    "button": {
+      "issue_hotplug": {
+        "default": "mdi:connection"
+      }
+    },
     "select": {
       "opmode": {
         "default": "mdi:cogs"
