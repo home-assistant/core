@@ -1,6 +1,7 @@
 # serializer version: 1
 # name: test_button_event_creation_a5
   list([
+    'binary_sensor.beosound_a5_44444444_charging',
     'event.beosound_a5_44444444_bluetooth',
     'event.beosound_a5_44444444_next',
     'event.beosound_a5_44444444_play_pause',
