@@ -2,6 +2,9 @@
 
 DOMAIN = "hidromotic"
 
+# Time to wait for device to send initial configuration after WebSocket connection
+INITIAL_DATA_WAIT_SECONDS = 2
+
 # Output types from web.js (tipo & 0xF0)
 OUTPUT_TYPE_MANGUERA = 0x10  # Hose
 OUTPUT_TYPE_TANQUE = 0x20  # Tank

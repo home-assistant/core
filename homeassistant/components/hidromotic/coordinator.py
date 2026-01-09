@@ -12,7 +12,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .client import HidromoticClient
-from .const import DOMAIN
+from .const import DOMAIN, INITIAL_DATA_WAIT_SECONDS
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -44,7 +44,7 @@ class HidromoticCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             return False
 
         # Wait for initial data
-        await asyncio.sleep(2)
+        await asyncio.sleep(INITIAL_DATA_WAIT_SECONDS)
 
         # Set initial data
         self.async_set_updated_data(self.client.data)
