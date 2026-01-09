@@ -23,6 +23,7 @@ class OpenEVSEConfigFlow(ConfigFlow, domain=DOMAIN):
     def __init__(self) -> None:
         """Set up the instance."""
         self.discovery_info: dict[str, Any] = {}
+        self._user_input: dict[str, Any] = {}
 
     async def check_status(
         self, host: str, user: str = "", password: str = ""
@@ -48,11 +49,7 @@ class OpenEVSEConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
         if user_input is not None:
             self._async_abort_entries_match({CONF_HOST: user_input[CONF_HOST]})
-            result = await self.check_status(
-                user_input[CONF_HOST],
-                user_input[CONF_USERNAME],
-                user_input[CONF_PASSWORD],
-            )
+            result = await self.check_status(user_input[CONF_HOST])
 
             if CONF_SERIAL in result:
                 if (serial := result[CONF_SERIAL]) is not None:
@@ -62,11 +59,14 @@ class OpenEVSEConfigFlow(ConfigFlow, domain=DOMAIN):
                     title=f"OpenEVSE {user_input[CONF_HOST]}",
                     data=user_input,
                 )
+            if "base" in result:
+                self._user_input.update(user_input)
+                return await self.async_step_auth()
             errors = result
 
         return self.async_show_form(
             step_id="user",
-            data_schema=_get_schema(user_input, {}),
+            data_schema=_get_schema_user(user_input, {}),
             errors=errors,
         )
 
@@ -116,7 +116,7 @@ class OpenEVSEConfigFlow(ConfigFlow, domain=DOMAIN):
         errors = await self.check_status(self.discovery_info[CONF_HOST])
 
         if CONF_SERIAL not in errors:
-            data_schema = _get_schema(user_input, self.discovery_info)
+            data_schema = _get_schema_auth(user_input, self.discovery_info)
         else:
             errors.pop(CONF_SERIAL)
 
@@ -133,8 +133,35 @@ class OpenEVSEConfigFlow(ConfigFlow, domain=DOMAIN):
             data={CONF_HOST: self.discovery_info[CONF_HOST]},
         )
 
+    async def async_step_auth(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle the authentication step."""
 
-def _get_schema(
+        errors: dict[str, str] = {}
+        if user_input is not None:
+            result = await self.check_status(
+                self._user_input[CONF_HOST],
+                user_input[CONF_USERNAME],
+                user_input[CONF_PASSWORD],
+            )
+
+            if "base" not in result:
+                self._user_input.update(user_input)
+                return self.async_create_entry(
+                    title=f"OpenEVSE {self._user_input[CONF_HOST]}",
+                    data=self._user_input,
+                )
+            errors = result
+
+        return self.async_show_form(
+            step_id="auth",
+            data_schema=_get_schema_auth(user_input, {}),
+            errors=errors,
+        )
+
+
+def _get_schema_user(
     user_input: dict[str, Any] | None,
     default_dict: dict[str, Any],
 ) -> vol.Schema:
@@ -149,11 +176,25 @@ def _get_schema(
     return vol.Schema(
         {
             vol.Required(CONF_HOST, default=_get_default(CONF_HOST)): cv.string,
-            vol.Optional(
-                CONF_USERNAME, default=_get_default(CONF_USERNAME, "")
-            ): cv.string,
-            vol.Optional(
-                CONF_PASSWORD, default=_get_default(CONF_PASSWORD, "")
-            ): cv.string,
+        },
+    )
+
+
+def _get_schema_auth(
+    user_input: dict[str, Any] | None,
+    default_dict: dict[str, Any],
+) -> vol.Schema:
+    """Get a schema using the default_dict as a backup."""
+    if user_input is None:
+        user_input = {}
+
+    def _get_default(key: str, fallback_default: Any = None) -> Any | None:
+        """Get default value for key."""
+        return user_input.get(key, default_dict.get(key, fallback_default))
+
+    return vol.Schema(
+        {
+            vol.Required(CONF_USERNAME, default=_get_default(CONF_USERNAME)): cv.string,
+            vol.Required(CONF_PASSWORD, default=_get_default(CONF_PASSWORD)): cv.string,
         },
     )

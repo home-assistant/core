@@ -34,11 +34,7 @@ async def test_user_flow(
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "OpenEVSE 10.0.0.131"
-    assert result["data"] == {
-        CONF_HOST: "10.0.0.131",
-        CONF_PASSWORD: "",
-        CONF_USERNAME: "",
-    }
+    assert result["data"] == {CONF_HOST: "10.0.0.131"}
     assert result["result"].unique_id == "deadbeeffeed"
 
 
@@ -70,11 +66,7 @@ async def test_user_flow_flaky(
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "OpenEVSE 10.0.0.131"
-    assert result["data"] == {
-        CONF_HOST: "10.0.0.131",
-        CONF_PASSWORD: "",
-        CONF_USERNAME: "",
-    }
+    assert result["data"] == {CONF_HOST: "10.0.0.131"}
     assert result["result"].unique_id == "deadbeeffeed"
 
 
@@ -113,9 +105,7 @@ async def test_import_flow(
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "OpenEVSE 10.0.0.131"
-    assert result["data"] == {
-        CONF_HOST: "10.0.0.131",
-    }
+    assert result["data"] == {CONF_HOST: "10.0.0.131"}
     assert result["result"].unique_id == "deadbeeffeed"
 
 
@@ -323,6 +313,7 @@ async def test_user_flow_with_auth(
     mock_setup_entry: AsyncMock,
 ) -> None:
     """Test user flow create entry with authentication."""
+    mock_charger.test_and_get.side_effect = [AuthenticationError, {}]
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_USER},
@@ -332,12 +323,15 @@ async def test_user_flow_with_auth(
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        {
-            CONF_HOST: "10.0.0.131",
-            CONF_USERNAME: "fakeuser",
-            CONF_PASSWORD: "muchpassword",
-        },
+        {CONF_HOST: "10.0.0.131"},
     )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "auth"
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_USERNAME: "fakeuser", CONF_PASSWORD: "muchpassword"},
+    )
+
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "OpenEVSE 10.0.0.131"
     assert result["data"] == {
@@ -351,7 +345,7 @@ async def test_user_flow_with_auth_error(
     hass: HomeAssistant, mock_charger: MagicMock
 ) -> None:
     """Test user flow create entry with authentication error."""
-    mock_charger.test_and_get.side_effect = AuthenticationError
+    mock_charger.test_and_get.side_effect = [AuthenticationError, AuthenticationError]
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_USER},
@@ -361,12 +355,15 @@ async def test_user_flow_with_auth_error(
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        {
-            CONF_HOST: "10.0.0.131",
-            CONF_USERNAME: "fakeuser",
-            CONF_PASSWORD: "muchpassword",
-        },
+        {CONF_HOST: "10.0.0.131"},
     )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "auth"
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_USERNAME: "fakeuser", CONF_PASSWORD: "muchpassword"},
+    )
+
     assert result["type"] is FlowResultType.FORM
     assert result["errors"]["base"] == "invalid_auth"
 
@@ -375,7 +372,7 @@ async def test_user_flow_with_missing_serial(
     hass: HomeAssistant, mock_charger: MagicMock
 ) -> None:
     """Test user flow create entry with authentication error."""
-    mock_charger.test_and_get.side_effect = MissingSerial
+    mock_charger.test_and_get.side_effect = [AuthenticationError, MissingSerial]
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_USER},
@@ -385,11 +382,13 @@ async def test_user_flow_with_missing_serial(
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        {
-            CONF_HOST: "10.0.0.131",
-            CONF_USERNAME: "fakeuser",
-            CONF_PASSWORD: "muchpassword",
-        },
+        {CONF_HOST: "10.0.0.131"},
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "auth"
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_USERNAME: "fakeuser", CONF_PASSWORD: "muchpassword"},
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "OpenEVSE 10.0.0.131"

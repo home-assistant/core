@@ -6,7 +6,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 
 from homeassistant.components.openevse.const import DOMAIN
-from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
+from homeassistant.const import CONF_HOST
 
 from tests.common import MockConfigEntry
 
@@ -71,7 +71,7 @@ def mock_config_entry(serial_number: str) -> MockConfigEntry:
     return MockConfigEntry(
         title="openevse_mock_config",
         domain=DOMAIN,
-        data={CONF_HOST: "192.168.1.100", CONF_USERNAME: "", CONF_PASSWORD: ""},
+        data={CONF_HOST: "192.168.1.100"},
         entry_id="FAKE",
         unique_id=serial_number,
     )

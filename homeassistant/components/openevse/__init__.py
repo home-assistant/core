@@ -16,7 +16,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: OpenEVSEConfigEntry) -> 
     """Set up openevse from a config entry."""
 
     entry.runtime_data = OpenEVSE(
-        entry.data[CONF_HOST], entry.data[CONF_USERNAME], entry.data[CONF_PASSWORD]
+        entry.data[CONF_HOST],
+        entry.data.get(CONF_USERNAME, None),
+        entry.data.get(CONF_PASSWORD, None),
     )
     try:
         await entry.runtime_data.test_and_get()
