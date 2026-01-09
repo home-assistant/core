@@ -21,7 +21,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: UhooConfigEntry) 
     api_key = config_entry.data[CONF_API_KEY]
     session = async_get_clientsession(hass)
     client = Client(api_key, session, debug=False)
-    coordinator = UhooDataUpdateCoordinator(hass, client=client)
+    coordinator = UhooDataUpdateCoordinator(hass, client=client, entry=config_entry)
 
     try:
         await client.login()

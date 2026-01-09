@@ -12,13 +12,18 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 
 from .const import DOMAIN, LOGGER, UPDATE_INTERVAL
 
+type UhooConfigEntry = ConfigEntry["UhooDataUpdateCoordinator"]
+
 
 class UhooDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Device]]):
     """Class to manage fetching data from the uHoo API."""
 
-    def __init__(self, hass: HomeAssistant, client: Client) -> None:
+    def __init__(
+        self, hass: HomeAssistant, client: Client, entry: UhooConfigEntry
+    ) -> None:
         """Initialize DataUpdateCoordinator."""
         self.client = client
+        self.entry = entry
         super().__init__(hass, LOGGER, name=DOMAIN, update_interval=UPDATE_INTERVAL)
 
     async def _async_update_data(self) -> dict[str, Device]:
@@ -39,6 +44,3 @@ class UhooDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Device]]):
             raise UpdateFailed(f"The device is unavailable: {error}") from error
         else:
             return self.client.devices
-
-
-type UhooConfigEntry = ConfigEntry[UhooDataUpdateCoordinator]
