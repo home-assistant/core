@@ -459,7 +459,12 @@ class SmartThingsDishwasherWashingOptionSwitch(SmartThingsCommandSwitch):
             entity_description,
             Capability.SAMSUNG_CE_DISHWASHER_WASHING_OPTIONS,
             MAIN,
-            {Capability.REMOTE_CONTROL_STATUS, Capability.DISHWASHER_OPERATING_STATE},
+            {
+                Capability.REMOTE_CONTROL_STATUS,
+                Capability.DISHWASHER_OPERATING_STATE,
+                Capability.SAMSUNG_CE_DISHWASHER_WASHING_COURSE,
+                Capability.SAMSUNG_CE_DISHWASHER_WASHING_COURSE_DETAILS,
+            },
         )
 
     def _validate_before_execute(self) -> None:
@@ -482,6 +487,23 @@ class SmartThingsDishwasherWashingOptionSwitch(SmartThingsCommandSwitch):
             raise ServiceValidationError(
                 "Can only be updated when dishwasher machine state is stop"
             )
+        selected_course = self.get_attribute_value(
+            Capability.SAMSUNG_CE_DISHWASHER_WASHING_COURSE, Attribute.WASHING_COURSE
+        )
+        course_details = self.get_attribute_value(
+            Capability.SAMSUNG_CE_DISHWASHER_WASHING_COURSE_DETAILS,
+            Attribute.PREDEFINED_COURSES,
+        )
+        course_settable: list[bool] = next(
+            (
+                detail["options"][self.entity_description.status_attribute]["settable"]
+                for detail in course_details
+                if detail["courseName"] == selected_course
+            ),
+            [],
+        )
+        if not course_settable:
+            raise ServiceValidationError("Option is not supported by selected cycle")
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the switch off."""
