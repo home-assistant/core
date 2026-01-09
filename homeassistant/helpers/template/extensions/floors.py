@@ -42,6 +42,14 @@ class FloorExtension(BaseTemplateExtension):
                     limited_ok=False,
                 ),
                 TemplateFunction(
+                    "floor_icon",
+                    self.floor_icon,
+                    as_global=True,
+                    as_filter=True,
+                    requires_hass=True,
+                    limited_ok=False,
+                ),
+                TemplateFunction(
                     "floor_name",
                     self.floor_name,
                     as_global=True,
@@ -108,6 +116,26 @@ class FloorExtension(BaseTemplateExtension):
                 and (floor := floor_registry.async_get_floor(area.floor_id))
             ):
                 return floor.name
+
+        return None
+
+    def floor_icon(self, lookup_value: str) -> str | None:
+        """Get the floor icon from a floor id."""
+        floor_registry = fr.async_get(self.hass)
+
+        # Check if it's a floor ID
+        if floor := floor_registry.async_get_floor(lookup_value):
+            return floor.icon
+
+        # Resolve to area ID and get floor name from area's floor
+        if aid := resolve_area_id(self.hass, lookup_value):
+            area_reg = ar.async_get(self.hass)
+            if (
+                (area := area_reg.async_get_area(aid))
+                and area.floor_id
+                and (floor := floor_registry.async_get_floor(area.floor_id))
+            ):
+                return floor.icon
 
         return None
 

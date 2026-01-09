@@ -1980,6 +1980,7 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
 
             hass_globals = [
                 "area_id",
+                "area_icon",
                 "area_name",
                 "closest",
                 "distance",
@@ -1994,6 +1995,7 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
             ]
             hass_filters = [
                 "area_id",
+                "area_icon",
                 "area_name",
                 "closest",
                 "expand",
