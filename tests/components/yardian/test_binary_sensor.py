@@ -34,37 +34,13 @@ async def test_all_entities(
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
 
-def test_zone_enabled_value_handles_dataclass() -> None:
-    """_zone_enabled_value returns flag when zones are dataclasses."""
+def test_zone_enabled_value_missing_index() -> None:
+    """Return None when the zone index is out of range."""
     coordinator = SimpleNamespace(
-        data=SimpleNamespace(
-            zones=[
-                YardianZone(name="Zone 1", is_enabled=True),
-                YardianZone(name="Zone 2", is_enabled=False),
-            ]
-        )
+        data=SimpleNamespace(zones=[YardianZone(name="Zone 1", is_enabled=True)])
     )
 
-    assert _zone_enabled_value(coordinator, 0) is True
-    assert _zone_enabled_value(coordinator, 1) is False
-
-
-def test_zone_enabled_value_handles_legacy_sequence() -> None:
-    """_zone_enabled_value gracefully handles legacy tuple/list data."""
-    coordinator = SimpleNamespace(
-        data=SimpleNamespace(
-            zones=[
-                ["Zone 1", 1],
-                ["Zone 2", 0],
-                ["Zone 3"],
-            ]
-        )
-    )
-
-    assert _zone_enabled_value(coordinator, 0) is True
-    assert _zone_enabled_value(coordinator, 1) is False
     assert _zone_enabled_value(coordinator, 2) is None
-    assert _zone_enabled_value(coordinator, 3) is None
 
 
 async def test_zone_enabled_sensors_disabled_by_default(

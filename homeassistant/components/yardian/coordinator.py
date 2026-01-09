@@ -29,7 +29,6 @@ class YardianZone:
 
     name: str
     is_enabled: bool
-    raw: tuple[object, ...] = ()
 
 
 @dataclass
@@ -104,23 +103,23 @@ class YardianUpdateCoordinator(DataUpdateCoordinator[YardianCoordinatorData]):
             _LOGGER.exception("Unexpected error while fetching Yardian data")
             raise UpdateFailed(f"Unexpected error: {type(e).__name__}: {e}") from e
 
-        oper_keys = list(oper_info.keys()) if hasattr(oper_info, "keys") else []
+        oper_keys = list(oper_info.keys())
         _LOGGER.debug(
             "Fetched Yardian data: zones=%s active=%s oper_keys=%s",
-            len(getattr(dev_state, "zones", [])),
-            len(getattr(dev_state, "active_zones", [])),
+            len(dev_state.zones),
+            len(dev_state.active_zones),
             oper_keys,
         )
         zones: list[YardianZone] = []
-        for index, zone_info in enumerate(dev_state.zones):
-            # Zone info comes from the proprietary API as a positional list.
-            name = str(zone_info[0]) if zone_info else f"Zone {index + 1}"
-            is_enabled = (zone_info[1] == 1) if len(zone_info) > 1 else True
+        for zone_info in dev_state.zones:
+            # Zone info comes from the proprietary API as a positional list:
+            # [name, enabled, ...]
+            name = str(zone_info[0])
+            is_enabled = zone_info[1] == 1
             zones.append(
                 YardianZone(
                     name=name,
                     is_enabled=is_enabled,
-                    raw=tuple(zone_info),
                 )
             )
 
