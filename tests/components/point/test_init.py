@@ -3,6 +3,7 @@
 from unittest.mock import MagicMock, patch
 
 from homeassistant.components.point import DOMAIN
+from homeassistant.components.point.coordinator import PointDataUpdateCoordinator
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.config_entry_oauth2_flow import (
@@ -44,8 +45,6 @@ async def test_coordinator_receives_config_entry(
     hass: HomeAssistant,
 ) -> None:
     """Test that coordinator is initialized with config_entry parameter."""
-    from homeassistant.components.point.coordinator import PointDataUpdateCoordinator
-
     config_entry = MockConfigEntry(
         domain=DOMAIN,
         data={
