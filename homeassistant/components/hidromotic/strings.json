@@ -21,19 +21,6 @@
     }
   },
   "entity": {
-    "binary_sensor": {
-      "tank_empty": {
-        "name": "Tank Empty"
-      },
-      "tank_full": {
-        "name": "Tank Full"
-      }
-    },
-    "sensor": {
-      "tank_level": {
-        "name": "Tank Level"
-      }
-    },
     "switch": {
       "auto_riego": {
         "name": "Auto irrigation"

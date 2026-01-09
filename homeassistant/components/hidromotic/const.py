@@ -19,12 +19,3 @@ STATE_DISABLED = 7  # Disconnected/disabled
 # Tank levels (nivel)
 TANK_FULL = 0
 TANK_EMPTY = 1
-TANK_SENSOR_FAIL = 2
-TANK_LEVEL_FAIL = 3
-TANK_MEDIUM = 4
-
-# Pump states
-PUMP_OFF = 0
-PUMP_ON = 1
-PUMP_RECOVERY = 11
-PUMP_NO_WATER = 5
