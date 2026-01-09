@@ -221,7 +221,7 @@ class HidromoticClient:
         self._data["tanks"] = {}
         self._data["pump"] = {}
         self._data["outputs"] = {}
-        self._data.setdefault("auto_riego", True)  # Default to enabled
+        self._data["auto_riego"] = True  # Default to enabled
 
         i = 16
         while i < len(data):
