@@ -2,9 +2,13 @@
 
 import asyncio
 from collections.abc import Generator
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
-from aiogithubapi import GitHubLoginDeviceModel, GitHubLoginOauthModel
+from aiogithubapi import (
+    GitHubLoginDeviceModel,
+    GitHubLoginOauthModel,
+    GitHubRateLimitModel,
+)
 import pytest
 
 from homeassistant.components.github.const import CONF_REPOSITORIES, DOMAIN
@@ -86,10 +90,49 @@ def github_client(hass: HomeAssistant) -> Generator[AsyncMock]:
             autospec=True,
         ) as github_client_mock,
         patch("homeassistant.components.github.GitHubAPI", new=github_client_mock),
+        patch(
+            "homeassistant.components.github.diagnostics.GitHubAPI",
+            new=github_client_mock,
+        ),
     ):
         client = github_client_mock.return_value
-        client.user.return_value.starred.return_value = []
-        client.user.return_value.repos.return_value = []
+        client.user.starred = AsyncMock(
+            side_effect=[
+                MagicMock(
+                    is_last_page=False,
+                    next_page_number=2,
+                    last_page_number=2,
+                    data=[MagicMock(full_name="home-assistant/core")],
+                ),
+                MagicMock(
+                    is_last_page=True,
+                    data=[MagicMock(full_name="home-assistant/frontend")],
+                ),
+            ]
+        )
+        client.user.repos = AsyncMock(
+            side_effect=[
+                MagicMock(
+                    is_last_page=False,
+                    next_page_number=2,
+                    last_page_number=2,
+                    data=[MagicMock(full_name="home-assistant/operating-system")],
+                ),
+                MagicMock(
+                    is_last_page=True,
+                    data=[MagicMock(full_name="esphome/esphome")],
+                ),
+            ]
+        )
+        rate_limit_mock = AsyncMock()
+        rate_limit_mock.data = GitHubRateLimitModel(
+            load_json_object_fixture("rate_limit.json", DOMAIN)
+        )
+        client.rate_limit.return_value = rate_limit_mock
+        graphql_mock = AsyncMock()
+        graphql_mock.data = load_json_object_fixture("graphql.json", DOMAIN)
+        client.graphql.return_value = graphql_mock
+        client.repos.events.subscribe = AsyncMock()
         yield client
 
 
