@@ -302,13 +302,6 @@ def shelly_europe_ltd_qnsh_001p10_state_fixture() -> dict[str, Any]:
     return load_json_object_fixture("shelly_europe_ltd_qnsh_001p10_state.json", DOMAIN)
 
 
-@pytest.fixture(name="qubino_flush_shutter_state", scope="package")
-def qubino_flush_shutter_state_fixture() -> dict[str, Any]:
-    """Load the Qubino Flush Shutter node state fixture data."""
-    return load_json_object_fixture("cover_qubino_shutter_state.json", DOMAIN)
-    # return load_json_object_fixture("cover_qubino_flush_shutter_state.json", DOMAIN)
-
-
 @pytest.fixture(name="touchwand_glass9_state", scope="package")
 def touchwand_glass9_state_fixture() -> dict[str, Any]:
     """Load the Touchwand Glass 9 shutter node state fixture data."""
@@ -1086,14 +1079,6 @@ def shelly_qnsh_001P10_cover_shutter_fixture(
 ) -> Node:
     """Mock a Shelly QNSH 001P10 Shutter node."""
     node = Node(client, copy.deepcopy(shelly_europe_ltd_qnsh_001p10_state))
-    client.driver.controller.nodes[node.node_id] = node
-    return node
-
-
-@pytest.fixture(name="qubino_flush_shutter")
-def qubino_flush_shutter_cover_fixture(client, qubino_flush_shutter_state):
-    """Mock a Qubino Flush Shutter node."""
-    node = Node(client, copy.deepcopy(qubino_flush_shutter_state))
     client.driver.controller.nodes[node.node_id] = node
     return node
 
