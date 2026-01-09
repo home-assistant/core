@@ -784,6 +784,11 @@ ZEROCONF = {
             "domain": "octoprint",
         },
     ],
+    "_openevse._tcp.local.": [
+        {
+            "domain": "openevse",
+        },
+    ],
     "_owserver._tcp.local.": [
         {
             "domain": "onewire",

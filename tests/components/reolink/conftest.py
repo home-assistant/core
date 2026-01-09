@@ -185,6 +185,7 @@ def _init_host_mock(host_mock: MagicMock) -> None:
     host_mock.baichuan.smart_ai_type_list.return_value = ["people"]
     host_mock.baichuan.smart_ai_index.return_value = 1
     host_mock.baichuan.smart_ai_name.return_value = "zone1"
+    host_mock.whiteled_brightness.return_value = None
 
     def ai_detect_type(channel: int, object_type: str) -> str | None:
         if object_type == "people":

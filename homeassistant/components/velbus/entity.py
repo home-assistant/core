@@ -69,6 +69,11 @@ class VelbusEntity(Entity):
         """Handle status updates from the channel."""
         self.async_write_ha_state()
 
+    @property
+    def available(self) -> bool:
+        """Return if entity is available."""
+        return self._channel.is_connected()
+
 
 def api_call[_T: VelbusEntity, **_P](
     func: Callable[Concatenate[_T, _P], Awaitable[None]],
