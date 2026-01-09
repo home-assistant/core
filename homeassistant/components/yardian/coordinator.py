@@ -12,7 +12,7 @@ from pyyardian.typing import OperationInfo
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed
+from homeassistant.exceptions import ConfigEntryError
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
@@ -80,13 +80,13 @@ class YardianUpdateCoordinator(DataUpdateCoordinator[YardianCoordinatorData]):
 
     async def _async_update_data(self) -> YardianCoordinatorData:
         """Fetch data from Yardian device."""
+        _LOGGER.debug(
+            "Fetching Yardian device state for %s (controller=%s)",
+            self._name,
+            type(self.controller).__name__,
+        )
         try:
             async with asyncio.timeout(10):
-                _LOGGER.debug(
-                    "Fetching Yardian device state for %s (controller=%s)",
-                    self._name,
-                    type(self.controller).__name__,
-                )
                 # Fetch device state and operation info; specific exceptions are
                 # handled by the outer block to avoid double-logging.
                 dev_state = await self.controller.fetch_device_state()
@@ -95,36 +95,28 @@ class YardianUpdateCoordinator(DataUpdateCoordinator[YardianCoordinatorData]):
         except TimeoutError as e:
             raise UpdateFailed("Timeout communicating with device") from e
         except NotAuthorizedException as e:
-            # Trigger reauth flow according to HA best practices
-            raise ConfigEntryAuthFailed("Invalid access token") from e
+            raise ConfigEntryError("Invalid access token") from e
         except NetworkException as e:
             raise UpdateFailed("Failed to communicate with device") from e
         except Exception as e:  # safety net for tests to surface failure reason
             _LOGGER.exception("Unexpected error while fetching Yardian data")
             raise UpdateFailed(f"Unexpected error: {type(e).__name__}: {e}") from e
 
-        oper_keys = list(oper_info.keys())
         _LOGGER.debug(
             "Fetched Yardian data: zones=%s active=%s oper_keys=%s",
             len(dev_state.zones),
             len(dev_state.active_zones),
-            oper_keys,
+            list(oper_info.keys()),
         )
-        zones: list[YardianZone] = []
-        for zone_info in dev_state.zones:
-            # Zone info comes from the proprietary API as a positional list:
-            # [name, enabled, ...]
-            name = str(zone_info[0])
-            is_enabled = zone_info[1] == 1
-            zones.append(
-                YardianZone(
-                    name=name,
-                    is_enabled=is_enabled,
-                )
-            )
 
         return YardianCoordinatorData(
-            zones=zones,
+            zones=[
+                YardianZone(
+                    name=str(zone_info[0]),
+                    is_enabled=zone_info[1] == 1,
+                )
+                for zone_info in dev_state.zones
+            ],
             active_zones=set(dev_state.active_zones),
             oper_info=oper_info,
         )
