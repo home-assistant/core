@@ -6,6 +6,7 @@ from homeassistant.core import HomeAssistant
 from .coordinator import HDFuryConfigEntry, HDFuryCoordinator
 
 PLATFORMS = [
+    Platform.BUTTON,
     Platform.SELECT,
 ]
 

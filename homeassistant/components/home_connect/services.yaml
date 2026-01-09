@@ -73,6 +73,7 @@ set_program_and_options:
             - dishcare_dishwasher_program_intensiv_45
             - dishcare_dishwasher_program_auto_half_load
             - dishcare_dishwasher_program_intensiv_power
+            - dishcare_dishwasher_program_intensive_fixed_zone
             - dishcare_dishwasher_program_magic_daily
             - dishcare_dishwasher_program_super_60
             - dishcare_dishwasher_program_kurz_60
