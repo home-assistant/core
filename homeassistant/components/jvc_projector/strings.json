@@ -35,22 +35,18 @@
   },
   "entity": {
     "binary_sensor": {
-      "jvc_power": {
+      "power": {
         "name": "[%key:component::binary_sensor::entity_component::power::name%]"
       }
     },
     "select": {
       "input": {
-        "name": "Input",
-        "state": {
-          "hdmi-1": "HDMI-1",
-          "hdmi-2": "HDMI-2"
-        }
+        "name": "Input"
       }
     },
     "sensor": {
-      "jvc_power_status": {
-        "name": "Power status",
+      "power": {
+        "name": "[%key:component::sensor::entity_component::power::name%]",
         "state": {
           "cooling": "Cooling",
           "error": "[%key:common::state::error%]",

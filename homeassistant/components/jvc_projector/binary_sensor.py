@@ -28,7 +28,7 @@ async def async_setup_entry(
 class JvcBinarySensor(JvcProjectorEntity, BinarySensorEntity):
     """The entity class for JVC Projector Binary Sensor."""
 
-    _attr_translation_key = "jvc_power"
+    _attr_translation_key = "power"
 
     def __init__(
         self,
