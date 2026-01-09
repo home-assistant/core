@@ -20,5 +20,4 @@ async def test_entity_state(
     state = hass.states.get(POWER_ID)
     assert state
     assert entity_registry.async_get(state.entity_id)
-
-    assert state.state == "standby"
+    assert state.state == "on"

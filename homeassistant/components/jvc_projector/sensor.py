@@ -2,33 +2,43 @@
 
 from __future__ import annotations
 
-from jvcprojector import command as cmd
+from dataclasses import dataclass
+
+from jvcprojector import Command, command as cmd
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
 )
-from homeassistant.const import EntityCategory
+from homeassistant.const import EntityCategory, UnitOfTime
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .coordinator import JVCConfigEntry, JvcProjectorDataUpdateCoordinator
 from .entity import JvcProjectorEntity
 
-JVC_SENSORS = (
-    SensorEntityDescription(
-        key="power",
-        translation_key="jvc_power_status",
-        device_class=SensorDeviceClass.ENUM,
+
+@dataclass(frozen=True, kw_only=True)
+class JvcProjectorSensorDescription(SensorEntityDescription):
+    """Describes JVC Projector select entities."""
+
+    command: type[Command]
+
+
+SENSORS: tuple[JvcProjectorSensorDescription, ...] = (
+    JvcProjectorSensorDescription(
+        key="power", command=cmd.Power, device_class=SensorDeviceClass.ENUM, translation_key="status"
+    ),
+    JvcProjectorSensorDescription(
+        key="source", command=cmd.Source, device_class=SensorDeviceClass.ENUM
+    ),
+    JvcProjectorSensorDescription(
+        key="light_time",
+        command=cmd.LightTime,
+        device_class=SensorDeviceClass.DURATION,
+        native_unit_of_measurement=UnitOfTime.HOURS,
         entity_category=EntityCategory.DIAGNOSTIC,
-        options=[
-            cmd.Power.STANDBY,
-            cmd.Power.ON,
-            cmd.Power.WARMING,
-            cmd.Power.COOLING,
-            cmd.Power.ERROR,
-        ],
     ),
 )
 
@@ -42,24 +52,43 @@ async def async_setup_entry(
     coordinator = entry.runtime_data
 
     async_add_entities(
-        JvcSensor(coordinator, description) for description in JVC_SENSORS
+        JvcProjectorSensorEntity(coordinator, description)
+        for description in SENSORS
+        if coordinator.supports(description.command)
     )
 
 
-class JvcSensor(JvcProjectorEntity, SensorEntity):
+class JvcProjectorSensorEntity(JvcProjectorEntity, SensorEntity):
     """The entity class for JVC Projector integration."""
 
     def __init__(
         self,
         coordinator: JvcProjectorDataUpdateCoordinator,
-        description: SensorEntityDescription,
+        description: JvcProjectorSensorDescription,
     ) -> None:
         """Initialize the JVC Projector sensor."""
         super().__init__(coordinator)
+
         self.entity_description = description
-        self._attr_unique_id = f"{coordinator.unique_id}_{description.key}"
+        self.command: type[Command] = description.command
+
+        self._attr_translation_key = description.key
+        self._attr_unique_id = f"{self._attr_unique_id}_{description.key}"
+
+        if self.device_class == SensorDeviceClass.ENUM:
+            self._attr_options = coordinator.get_options(self.command.name)
 
     @property
     def native_value(self) -> str | None:
         """Return the native value."""
-        return self.coordinator.data[self.entity_description.key]
+        return self.coordinator.data.get(self.command.name)
+
+    async def async_added_to_hass(self) -> None:
+        """Register callbacks."""
+        await super().async_added_to_hass()
+        self.coordinator.register(self.command)
+
+    async def async_will_remove_from_hass(self) -> None:
+        """Unregister callbacks."""
+        self.coordinator.unregister(self.command)
+        await super().async_will_remove_from_hass()

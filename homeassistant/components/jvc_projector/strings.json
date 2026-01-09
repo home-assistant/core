@@ -36,20 +36,34 @@
   "entity": {
     "binary_sensor": {
       "power": {
-        "name": "[%key:component::binary_sensor::entity_component::power::name%]"
+        "name": "Power"
       }
     },
     "select": {
+      "clear_motion_drive": {
+        "name": "Clear Motion Drive"
+      },
+      "hdr": {
+        "name": "HDR"
+      },
+      "hdr_processing": {
+        "name": "HDR Processing"
+      },
       "input": {
-        "name": "Input",
-        "state": {
-          "hdmi1": "HDMI 1",
-          "hdmi2": "HDMI 2"
-        }
+        "name": "Input"
+      },
+      "installation_mode": {
+        "name": "Installation Mode"
+      },
+      "low_latency_mode": {
+        "name": "Low Latency Mode"
       }
     },
     "sensor": {
-      "jvc_power_status": {
+      "light_time": {
+        "name": "Light Time"
+      },
+      "power": {
         "name": "Status",
         "state": {
           "cooling": "Cooling",
@@ -58,6 +72,9 @@
           "standby": "[%key:common::state::standby%]",
           "warming": "Warming"
         }
+      },
+      "source": {
+        "name": "Source"
       }
     }
   }

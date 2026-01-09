@@ -3,7 +3,7 @@
 from collections.abc import Generator
 from unittest.mock import MagicMock, patch
 
-from jvcprojector import command as cmd
+from jvcprojector import Command, JvcProjectorTimeoutError, command as cmd
 import pytest
 
 from homeassistant.components.jvc_projector.const import DOMAIN
@@ -15,6 +15,60 @@ from . import MOCK_HOST, MOCK_MAC, MOCK_MODEL, MOCK_PASSWORD, MOCK_PORT
 
 from tests.common import MockConfigEntry
 
+FIXTURES: dict[str, dict[type[Command], str | type[Exception]]] = {
+    "standby": {
+        cmd.MacAddress: MOCK_MAC,
+        cmd.Power: "standby",
+        cmd.Input: "hdmi-1",
+        cmd.Signal: "none",
+        cmd.Source: JvcProjectorTimeoutError,
+        cmd.Hdr: JvcProjectorTimeoutError,
+        cmd.HdrProcessing: JvcProjectorTimeoutError,
+        cmd.LightTime: JvcProjectorTimeoutError,
+    },
+    "on": {
+        cmd.MacAddress: MOCK_MAC,
+        cmd.Power: "on",
+        cmd.Input: "hdmi-1",
+        cmd.Signal: "signal",
+        cmd.Source: "4k",
+        cmd.Hdr: "hdr",
+        cmd.HdrProcessing: "static",
+        cmd.LightTime: "100",
+    },
+}
+
+CAPABILITIES = {
+    cmd.Power.name: {
+        "name": cmd.Power.name,
+        "parameter": {"read": {"0": "standby", "1": "on"}},
+    },
+    cmd.Input.name: {
+        "name": cmd.Input.name,
+        "parameter": {"read": {"6": "hdmi-1", "7": "hdmi-2"}},
+    },
+    cmd.Signal.name: {
+        "name": cmd.Signal.name,
+        "parameter": {"read": {"0": "none", "1": "signal"}},
+    },
+    cmd.Source.name: {
+        "name": cmd.Source.name,
+        "parameter": {"read": {"0": "4k"}},
+    },
+    cmd.Hdr.name: {
+        "name": cmd.Hdr.name,
+        "parameter": {"read": {"0": "sdr", "1": "hdr"}},
+    },
+    cmd.HdrProcessing.name: {
+        "name": cmd.HdrProcessing.name,
+        "parameter": {"read": {"0": "hdr", "1": "static"}},
+    },
+    cmd.LightTime.name: {
+        "name": cmd.LightTime.name,
+        "parameter": "empty",
+    },
+}
+
 
 @pytest.fixture(name="mock_device")
 def fixture_mock_device(
@@ -22,24 +76,26 @@ def fixture_mock_device(
 ) -> Generator[MagicMock]:
     """Return a mocked JVC Projector device."""
     target = "homeassistant.components.jvc_projector.JvcProjector"
-    fixture: dict[str, str] = {
-        "mac": MOCK_MAC,
-        "power": "standby",
-        "input": "hdmi-1",
-    }
+    fixture = FIXTURES["on"].copy()
 
     if hasattr(request, "param"):
         target = request.param.get("target", target)
-        fixture = request.param.get("get", fixture)
+        if "fixture" in request.param:
+            if isinstance(request.param["fixture"], str):
+                fixture = FIXTURES[request.param["fixture"]].copy()
+            else:
+                fixture = request.param["fixture"].copy()
+
+        if "fixture_override" in request.param:
+            fixture.update(request.param["fixture_override"])
 
     async def device_get(command) -> str:
-        if command is cmd.MacAddress:
-            return fixture["mac"]
-        if command is cmd.Power:
-            return fixture["power"]
-        if command is cmd.Input:
-            return fixture["input"]
-        raise ValueError(f"Fixture failure; unexpected command {command}")
+        if command in fixture:
+            value = fixture[command]
+            if isinstance(value, type) and issubclass(value, Exception):
+                raise value
+            return value
+        raise ValueError(f"Test fixture failure; unexpected command {command}")
 
     with patch(target, autospec=True) as mock:
         device = mock.return_value
@@ -47,6 +103,7 @@ def fixture_mock_device(
         device.port = MOCK_PORT
         device.model = MOCK_MODEL
         device.get.side_effect = device_get
+        device.capabilities.return_value = CAPABILITIES
         yield device
 
 

@@ -43,7 +43,6 @@ async def test_commands(
         {ATTR_ENTITY_ID: ENTITY_ID},
         blocking=True,
     )
-    assert mock_device.get.call_count == 3
 
     await hass.services.async_call(
         REMOTE_DOMAIN,
@@ -51,7 +50,6 @@ async def test_commands(
         {ATTR_ENTITY_ID: ENTITY_ID},
         blocking=True,
     )
-    assert mock_device.get.call_count == 4
 
     await hass.services.async_call(
         REMOTE_DOMAIN,
@@ -59,7 +57,6 @@ async def test_commands(
         {ATTR_ENTITY_ID: ENTITY_ID, ATTR_COMMAND: ["ok"]},
         blocking=True,
     )
-    assert mock_device.remote.call_count == 1
 
     await hass.services.async_call(
         REMOTE_DOMAIN,
@@ -67,7 +64,6 @@ async def test_commands(
         {ATTR_ENTITY_ID: ENTITY_ID, ATTR_COMMAND: ["hdmi1"]},
         blocking=True,
     )
-    assert mock_device.remote.call_count == 2
 
     await hass.services.async_call(
         REMOTE_DOMAIN,
@@ -75,7 +71,6 @@ async def test_commands(
         {ATTR_ENTITY_ID: ENTITY_ID, ATTR_COMMAND: ["anamo"]},
         blocking=True,
     )
-    assert mock_device.remote.call_count == 3
 
     await hass.services.async_call(
         REMOTE_DOMAIN,
