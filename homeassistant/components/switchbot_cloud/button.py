@@ -52,6 +52,7 @@ ART_FRAME_PREVIOUS_BUTTON_DESCRIPTION = SwitchbotCloudButtonEntityDescription(
 
 
 BUTTON_DESCRIPTIONS_BY_DEVICE_TYPES = {
+    "Bot": (BOT_BUTTON_DESCRIPTION,),
     "AI Art Frame": (
         ART_FRAME_NEXT_BUTTON_DESCRIPTION,
         ART_FRAME_PREVIOUS_BUTTON_DESCRIPTION,
@@ -68,20 +69,11 @@ async def async_setup_entry(
     data: SwitchbotCloudData = hass.data[DOMAIN][config.entry_id]
     entities: list[SwitchBotCloudBot] = []
     for device, coordinator in data.devices.buttons:
-        description_set = BUTTON_DESCRIPTIONS_BY_DEVICE_TYPES.get(device.device_type)
-        if description_set is None:
+        description_set = BUTTON_DESCRIPTIONS_BY_DEVICE_TYPES[device.device_type]
+        for description in description_set:
             entities.extend(
-                [
-                    _async_make_entity(
-                        data.api, device, coordinator, GENERAL_BUTTON_DESCRIPTION
-                    )
-                ]
+                [_async_make_entity(data.api, device, coordinator, description)]
             )
-        else:
-            for description in description_set:
-                entities.extend(
-                    [_async_make_entity(data.api, device, coordinator, description)]
-                )
     async_add_entities(entities)
 
 

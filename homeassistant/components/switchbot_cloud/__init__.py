@@ -311,7 +311,6 @@ async def make_device_data(
             hass, entry, api, device, coordinators_by_id
         )
         devices_data.buttons.append((device, coordinator))
-        devices_data.binary_sensors.append((device, coordinator))
         devices_data.sensors.append((device, coordinator))
         devices_data.images.append((device, coordinator))
 

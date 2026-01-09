@@ -1,10 +1,5 @@
 {
   "entity": {
-    "binary_sensor": {
-      "art_frame_mode": {
-        "default": "mdi:microsoft-dynamics-365"
-      }
-    },
     "button": {
       "art_frame_next_picture": {
         "default": "mdi:chevron-right-box"
