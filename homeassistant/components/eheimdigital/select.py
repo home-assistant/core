@@ -7,7 +7,11 @@ from typing import Any, Literal, override
 from eheimdigital.classic_vario import EheimDigitalClassicVario
 from eheimdigital.device import EheimDigitalDevice
 from eheimdigital.filter import EheimDigitalFilter
-from eheimdigital.types import FilterMode, FilterModeProf, UnitOfMeasurement
+from eheimdigital.types import (
+    FilterMode,
+    FilterModeProf,
+    UnitOfMeasurement as EheimDigitalUnitOfMeasurement,
+)
 
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
 from homeassistant.const import EntityCategory, UnitOfFrequency, UnitOfVolumeFlowRate
@@ -232,7 +236,8 @@ class EheimDigitalFilterSelect(EheimDigitalSelect[EheimDigitalFilter]):
             if (
                 self.entity_description.unit_of_measurement
                 == UnitOfVolumeFlowRate.LITERS_PER_HOUR
-                and self._device.usrdta["unit"] == int(UnitOfMeasurement.US_CUSTOMARY)
+                and self._device.usrdta["unit"]
+                == int(EheimDigitalUnitOfMeasurement.US_CUSTOMARY)
             ):
                 self._attr_native_unit_of_measurement = (
                     UnitOfVolumeFlowRate.GALLONS_PER_HOUR
