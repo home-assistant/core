@@ -17,6 +17,8 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import (
+    ATTR_CONNECTIONS,
+    ATTR_SERIAL_NUMBER,
     CONF_HOST,
     CONF_MONITORED_VARIABLES,
     UnitOfEnergy,
@@ -159,9 +161,10 @@ async def async_setup_entry(
     async_add_entities(
         (
             OpenEVSESensor(
-                config_entry.unique_id,
                 config_entry.runtime_data,
                 description,
+                config_entry.entry_id,
+                config_entry.unique_id,
             )
             for description in SENSOR_TYPES
         ),
@@ -176,23 +179,27 @@ class OpenEVSESensor(SensorEntity):
 
     def __init__(
         self,
-        unique_id: str | None,
         charger: OpenEVSE,
         description: SensorEntityDescription,
+        entry_id: str,
+        unique_id: str | None,
     ) -> None:
         """Initialize the sensor."""
         self.entity_description = description
         self.charger = charger
 
-        if unique_id:
-            self._attr_unique_id = f"{unique_id}_{description.key}"
+        identifier = unique_id or entry_id
+        self._attr_unique_id = f"{identifier}-{description.key}"
 
-            self._attr_device_info = DeviceInfo(
-                identifiers={(DOMAIN, unique_id)},
-                manufacturer="OpenEVSE",
-                # unique_id is the mac address
-                connections={(CONNECTION_NETWORK_MAC, unique_id)},
-            )
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, identifier)},
+            manufacturer="OpenEVSE",
+        )
+        if unique_id:
+            self._attr_device_info[ATTR_CONNECTIONS] = {
+                (CONNECTION_NETWORK_MAC, unique_id)
+            }
+            self._attr_device_info[ATTR_SERIAL_NUMBER] = unique_id
 
     async def async_update(self) -> None:
         """Get the monitored data from the charger."""

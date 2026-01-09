@@ -35,7 +35,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'ambient_temp',
-    'unique_id': 'deadbeeffeed_ambient_temp',
+    'unique_id': 'deadbeeffeed-ambient_temp',
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
@@ -91,7 +91,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'charge_time',
-    'unique_id': 'deadbeeffeed_charge_time',
+    'unique_id': 'deadbeeffeed-charge_time',
     'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
   })
 # ---
@@ -142,7 +142,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'status',
-    'unique_id': 'deadbeeffeed_status',
+    'unique_id': 'deadbeeffeed-status',
     'unit_of_measurement': None,
   })
 # ---
@@ -195,7 +195,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'ir_temp',
-    'unique_id': 'deadbeeffeed_ir_temp',
+    'unique_id': 'deadbeeffeed-ir_temp',
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
@@ -251,7 +251,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'rtc_temp',
-    'unique_id': 'deadbeeffeed_rtc_temp',
+    'unique_id': 'deadbeeffeed-rtc_temp',
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
@@ -307,7 +307,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'usage_total',
-    'unique_id': 'deadbeeffeed_usage_total',
+    'unique_id': 'deadbeeffeed-usage_total',
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
@@ -363,7 +363,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'usage_session',
-    'unique_id': 'deadbeeffeed_usage_session',
+    'unique_id': 'deadbeeffeed-usage_session',
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
