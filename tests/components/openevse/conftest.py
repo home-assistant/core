@@ -69,6 +69,7 @@ def serial_number(has_serial_number: bool) -> str | None:
 def mock_config_entry(serial_number: str) -> MockConfigEntry:
     """Create a mock config entry."""
     return MockConfigEntry(
+        title="openevse_mock_config",
         domain=DOMAIN,
         data={CONF_HOST: "192.168.1.100", CONF_USERNAME: "", CONF_PASSWORD: ""},
         entry_id="FAKE",
