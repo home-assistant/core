@@ -2,7 +2,6 @@
 
 DOMAIN = "local_calendar"
 
-CONF_CALENDAR_COLOR = "calendar_color"
 CONF_CALENDAR_NAME = "calendar_name"
 CONF_ICS_FILE = "ics_file"
 CONF_IMPORT = "import"

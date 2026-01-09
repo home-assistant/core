@@ -12,7 +12,6 @@ from homeassistant import config_entries
 from homeassistant.components.local_calendar.const import (
     ATTR_CREATE_EMPTY,
     ATTR_IMPORT_ICS_FILE,
-    CONF_CALENDAR_COLOR,
     CONF_CALENDAR_NAME,
     CONF_ICS_FILE,
     CONF_IMPORT,
@@ -80,7 +79,6 @@ async def test_form(hass: HomeAssistant) -> None:
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
-                CONF_CALENDAR_COLOR: [18, 52, 86],
                 CONF_CALENDAR_NAME: "My Calendar",
             },
         )
@@ -92,7 +90,6 @@ async def test_form(hass: HomeAssistant) -> None:
         CONF_CALENDAR_NAME: "My Calendar",
         CONF_IMPORT: ATTR_CREATE_EMPTY,
         CONF_STORAGE_KEY: "my_calendar",
-        CONF_CALENDAR_COLOR: [18, 52, 86],
     }
     assert len(mock_setup_entry.mock_calls) == 1
 

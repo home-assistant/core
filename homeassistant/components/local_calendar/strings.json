@@ -12,7 +12,6 @@
       },
       "user": {
         "data": {
-          "calendar_color": "Calendar color",
           "calendar_name": "Calendar name",
           "import": "Starting data"
         },
