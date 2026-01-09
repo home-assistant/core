@@ -329,8 +329,21 @@ def gen_strings_schema(config: Config, integration: Integration) -> vol.Schema:
                 flow_title=UNDEFINED,
                 require_step_title=False,
             ),
+            vol.Optional("preview_features"): cv.schema_with_slug_keys(
+                {
+                    vol.Required("name"): translation_value_validator,
+                    vol.Required("description"): translation_value_validator,
+                    vol.Optional("enable_confirmation"): translation_value_validator,
+                    vol.Optional("disable_confirmation"): translation_value_validator,
+                },
+                slug_validator=translation_key_validator,
+            ),
             vol.Optional("selector"): cv.schema_with_slug_keys(
                 {
+                    vol.Optional("choices"): cv.schema_with_slug_keys(
+                        translation_value_validator,
+                        slug_validator=translation_key_validator,
+                    ),
                     vol.Optional("options"): cv.schema_with_slug_keys(
                         translation_value_validator,
                         slug_validator=translation_key_validator,
@@ -466,7 +479,6 @@ def gen_strings_schema(config: Config, integration: Integration) -> vol.Schema:
                 {
                     vol.Required("name"): translation_value_validator,
                     vol.Required("description"): translation_value_validator,
-                    vol.Required("description_configured"): translation_value_validator,
                     vol.Optional("fields"): cv.schema_with_slug_keys(
                         {
                             vol.Required("name"): str,
@@ -482,7 +494,6 @@ def gen_strings_schema(config: Config, integration: Integration) -> vol.Schema:
                 {
                     vol.Required("name"): translation_value_validator,
                     vol.Required("description"): translation_value_validator,
-                    vol.Required("description_configured"): translation_value_validator,
                     vol.Optional("fields"): cv.schema_with_slug_keys(
                         {
                             vol.Required("name"): str,

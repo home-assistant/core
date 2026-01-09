@@ -1,0 +1,20 @@
+{
+  "entity": {
+    "button": {
+      "issue_hotplug": {
+        "default": "mdi:connection"
+      }
+    },
+    "select": {
+      "opmode": {
+        "default": "mdi:cogs"
+      },
+      "portseltx0": {
+        "default": "mdi:hdmi-port"
+      },
+      "portseltx1": {
+        "default": "mdi:hdmi-port"
+      }
+    }
+  }
+}

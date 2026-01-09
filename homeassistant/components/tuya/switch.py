@@ -27,7 +27,7 @@ from homeassistant.helpers.issue_registry import (
 from . import TuyaConfigEntry
 from .const import DOMAIN, TUYA_DISCOVERY_NEW, DeviceCategory, DPCode
 from .entity import TuyaEntity
-from .models import DPCodeBooleanWrapper
+from .models import DeviceWrapper, DPCodeBooleanWrapper
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -1027,7 +1027,7 @@ class TuyaSwitchEntity(TuyaEntity, SwitchEntity):
         device: CustomerDevice,
         device_manager: Manager,
         description: SwitchEntityDescription,
-        dpcode_wrapper: DPCodeBooleanWrapper,
+        dpcode_wrapper: DeviceWrapper[bool],
     ) -> None:
         """Init TuyaHaSwitch."""
         super().__init__(device, device_manager)
@@ -1038,12 +1038,22 @@ class TuyaSwitchEntity(TuyaEntity, SwitchEntity):
     @property
     def is_on(self) -> bool | None:
         """Return true if switch is on."""
-        return self._dpcode_wrapper.read_device_status(self.device)
+        return self._read_wrapper(self._dpcode_wrapper)
+
+    async def _handle_state_update(
+        self,
+        updated_status_properties: list[str] | None,
+        dp_timestamps: dict | None = None,
+    ) -> None:
+        """Handle state update, only if this entity's dpcode was actually updated."""
+        if self._dpcode_wrapper.skip_update(self.device, updated_status_properties):
+            return
+        self.async_write_ha_state()
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
-        await self._async_send_dpcode_update(self._dpcode_wrapper, True)
+        await self._async_send_wrapper_updates(self._dpcode_wrapper, True)
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the switch off."""
-        await self._async_send_dpcode_update(self._dpcode_wrapper, False)
+        await self._async_send_wrapper_updates(self._dpcode_wrapper, False)

@@ -34,6 +34,7 @@ ATTR_ISSUES = "issues"
 ATTR_MESSAGE = "message"
 ATTR_METHOD = "method"
 ATTR_PANELS = "panels"
+ATTR_PARAMS = "params"
 ATTR_PASSWORD = "password"
 ATTR_RESULT = "result"
 ATTR_STARTUP = "startup"
@@ -128,6 +129,8 @@ ISSUE_KEY_ADDON_PWNED = "issue_addon_pwned"
 ISSUE_KEY_SYSTEM_FREE_SPACE = "issue_system_free_space"
 ISSUE_KEY_ADDON_DEPRECATED = "issue_addon_deprecated_addon"
 
+ISSUE_MOUNT_MOUNT_FAILED = "issue_mount_mount_failed"
+
 CORE_CONTAINER = "homeassistant"
 SUPERVISOR_CONTAINER = "hassio_supervisor"
 
@@ -159,6 +162,7 @@ EXTRA_PLACEHOLDERS = {
     ISSUE_KEY_ADDON_DETACHED_ADDON_REMOVED: HELP_URLS,
     ISSUE_KEY_SYSTEM_FREE_SPACE: {
         "more_info_free_space": "https://www.home-assistant.io/more-info/free-space",
+        "storage_url": "/config/storage",
     },
     ISSUE_KEY_ADDON_PWNED: {
         "more_info_pwned": "https://www.home-assistant.io/more-info/pwned-passwords",
