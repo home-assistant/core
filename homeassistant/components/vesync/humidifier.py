@@ -189,4 +189,4 @@ class VeSyncHumidifierHA(VeSyncBaseEntity, HumidifierEntity):
     @property
     def is_on(self) -> bool:
         """Return True if device is on."""
-        return bool(self.device.state.device_status == "on")
+        return self.device.state.device_status == "on"
