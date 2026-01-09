@@ -763,6 +763,7 @@ class WaterHeater(HomeAccessory):
             setter_callback=self.set_heat_cool,
             valid_values=HC_HOMEKIT_VALID_MODES_WATER_HEATER,
         )
+        self.char_target_heat_cool.allow_invalid_client_values = True
 
         self.char_current_temp = serv_thermostat.configure_char(
             CHAR_CURRENT_TEMPERATURE, value=50.0
