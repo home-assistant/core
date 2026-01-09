@@ -34,20 +34,6 @@ class YardianSensorEntityDescription(SensorEntityDescription):
     value_fn: Callable[[YardianUpdateCoordinator], StateType]
 
 
-def _rain_delay_value(coordinator: YardianUpdateCoordinator) -> StateType:
-    """Return remaining rain delay in seconds."""
-    val = coordinator.data.oper_info.get("iRainDelay")
-    if not isinstance(val, int):
-        return None
-
-    return max(0, val)
-
-
-def _active_zone_count_value(coordinator: YardianUpdateCoordinator) -> StateType:
-    """Return number of active zones."""
-    return len(coordinator.data.active_zones)
-
-
 def _zone_delay_value(coordinator: YardianUpdateCoordinator) -> StateType:
     """Return zone delay duration in seconds."""
     val = coordinator.data.oper_info.get("iSensorDelay")
@@ -63,37 +49,25 @@ def _zone_delay_value(coordinator: YardianUpdateCoordinator) -> StateType:
     return max(0, delay)
 
 
-def _water_hammer_duration_value(coordinator: YardianUpdateCoordinator) -> StateType:
-    """Return water hammer duration in seconds."""
-    val = coordinator.data.oper_info.get("iWaterHammerDuration")
-    if not isinstance(val, int):
-        return None
-
-    return val
-
-
 SENSOR_DESCRIPTIONS: tuple[YardianSensorEntityDescription, ...] = (
     YardianSensorEntityDescription(
         key="rain_delay",
         translation_key="rain_delay",
-        name="Rain delay",
         device_class=SensorDeviceClass.DURATION,
         native_unit_of_measurement=UnitOfTime.SECONDS,
         state_class=SensorStateClass.MEASUREMENT,
-        value_fn=_rain_delay_value,
+        value_fn=lambda coordinator: coordinator.data.oper_info.get("iRainDelay"),
     ),
     YardianSensorEntityDescription(
         key="active_zone_count",
         translation_key="active_zone_count",
-        name="Active zones",
-        native_unit_of_measurement="Zones",
+        native_unit_of_measurement="zones",
         state_class=SensorStateClass.MEASUREMENT,
-        value_fn=_active_zone_count_value,
+        value_fn=lambda coordinator: len(coordinator.data.active_zones),
     ),
     YardianSensorEntityDescription(
         key="zone_delay",
         translation_key="zone_delay",
-        name="Zone delay",
         device_class=SensorDeviceClass.DURATION,
         native_unit_of_measurement=UnitOfTime.SECONDS,
         entity_category=EntityCategory.DIAGNOSTIC,
@@ -103,12 +77,13 @@ SENSOR_DESCRIPTIONS: tuple[YardianSensorEntityDescription, ...] = (
     YardianSensorEntityDescription(
         key="water_hammer_duration",
         translation_key="water_hammer_duration",
-        name="Water hammer reduction",
         device_class=SensorDeviceClass.DURATION,
         native_unit_of_measurement=UnitOfTime.SECONDS,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
-        value_fn=_water_hammer_duration_value,
+        value_fn=lambda coordinator: coordinator.data.oper_info.get(
+            "iWaterHammerDuration"
+        ),
     ),
 )
 
