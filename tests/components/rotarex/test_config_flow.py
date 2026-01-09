@@ -4,7 +4,7 @@
 from unittest.mock import AsyncMock, patch
 
 import pytest
-from rotarex_api import InvalidAuth
+from rotarex_dimes_srg_api import InvalidAuth
 
 from homeassistant import config_entries
 from homeassistant.components.rotarex.const import DOMAIN

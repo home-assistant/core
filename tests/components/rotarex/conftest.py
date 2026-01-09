@@ -1,10 +1,10 @@
-"""Test stubs for rotarex_api dependency."""
+"""Test stubs for rotarex_dimes_srg_api dependency."""
 
 import sys
 import types
 from typing import Any
 
-mod = types.ModuleType("rotarex_api")
+mod = types.ModuleType("rotarex_dimes_srg_api")
 
 
 class InvalidAuth(Exception):
@@ -23,4 +23,4 @@ mod.InvalidAuth = InvalidAuth
 mod.RotarexApi = RotarexApi
 
 # Inject stub into sys.modules so imports succeed during tests
-sys.modules["rotarex_api"] = mod
+sys.modules["rotarex_dimes_srg_api"] = mod

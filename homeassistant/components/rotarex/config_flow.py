@@ -3,7 +3,7 @@
 import logging
 from typing import Any
 
-from rotarex_api import InvalidAuth, RotarexApi
+from rotarex_dimes_srg_api import InvalidAuth, RotarexApi
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult

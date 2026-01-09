@@ -15,7 +15,8 @@
           "password": "Password"
         },
         "data_description": {
-          "email": "Your Rotarex account email address"
+          "email": "Email",
+          "password": "Password"
         },
         "description": "Enter your Rotarex DIMES SRG account credentials.",
         "title": "Rotarex DIMES SRG Login"

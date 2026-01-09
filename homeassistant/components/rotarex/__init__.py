@@ -3,7 +3,7 @@
 from datetime import timedelta
 import logging
 
-from rotarex_api import InvalidAuth, RotarexApi
+from rotarex_dimes_srg_api import InvalidAuth, RotarexApi
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD, Platform
@@ -24,9 +24,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     email = entry.data[CONF_EMAIL]
     password = entry.data[CONF_PASSWORD]
 
-    # Store credentials in the API object for re-authentication
-    api.set_credentials(email, password)
-
     try:
         await api.login(email, password)
     except InvalidAuth as err:
@@ -38,8 +35,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         try:
             return await api.fetch_tanks()
         except InvalidAuth as err:
-            # This will trigger re-authentication within the API call
             _LOGGER.warning("Token expired, attempting to re-login: %s", err)
+            try:
+                await api.login(email, password)
+            except InvalidAuth as login_err:
+                raise UpdateFailed(
+                    f"Re-authentication failed: {login_err}"
+                ) from login_err
             return await api.fetch_tanks()
         except Exception as err:
             raise UpdateFailed(f"Error communicating with API: {err}") from err
