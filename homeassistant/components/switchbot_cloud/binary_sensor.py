@@ -74,6 +74,7 @@ OPEN_DESCRIPTION = SwitchBotCloudBinarySensorEntityDescription(
     value_fn=lambda data: data.get("openState") in ("open", "timeOutNotClose"),
 )
 
+
 BINARY_SENSOR_DESCRIPTIONS_BY_DEVICE_TYPES = {
     "Smart Lock": (
         CALIBRATION_DESCRIPTION,
