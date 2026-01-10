@@ -74,31 +74,36 @@ def create_knx_exposure(
 @callback
 def create_combined_knx_exposure(
     hass: HomeAssistant, xknx: XKNX, configs: list[ConfigType]
-) -> None:
+) -> list[KnxExposeEntity | KnxExposeTime]:
     """Create exposures from YAML config combined by entity_id."""
-    exposure_map: dict[str, list[KnxExposeOptions]] = {}  # entity_id -> list of options
+    exposures: list[KnxExposeEntity | KnxExposeTime] = []
+    entity_exposure_map: dict[str, list[KnxExposeOptions]] = {}
 
     for config in configs:
         value_type = config[ExposeSchema.CONF_KNX_EXPOSE_TYPE]
         if value_type.lower() in ExposeSchema.EXPOSE_TIME_TYPES:
-            KnxExposeTime(
+            time_exposure = KnxExposeTime(
                 xknx=xknx,
                 config=config,
-            ).async_register()
+            )
+            time_exposure.async_register()
+            exposures.append(time_exposure)
             continue
 
         entity_id = config[CONF_ENTITY_ID]
         option = _yaml_config_to_expose_options(config)
-        exposure_map.setdefault(entity_id, []).append(option)
+        entity_exposure_map.setdefault(entity_id, []).append(option)
 
-    for entity_id, options in exposure_map.items():
-        exposure = KnxExposeEntity(
+    for entity_id, options in entity_exposure_map.items():
+        entity_exposure = KnxExposeEntity(
             hass=hass,
             xknx=xknx,
             entity_id=entity_id,
             options=options,
         )
-        exposure.async_register()
+        entity_exposure.async_register()
+        exposures.append(entity_exposure)
+    return exposures
 
 
 @dataclass(slots=True)
@@ -156,7 +161,7 @@ class KnxExposeEntity:
                 option,
                 ExposeSensor(
                     xknx=self.xknx,
-                    name=f"{self.entity_id}__{option.attribute or 'state'}",
+                    name=f"{self.entity_id} {option.attribute or 'state'}",
                     group_address=option.group_address,
                     respond_to_read=option.respond_to_read,
                     value_type=option.dpt,
@@ -192,7 +197,8 @@ class KnxExposeEntity:
                 xknx_expose.sensor_value.value = state_value
             except ConversionError:
                 _LOGGER.exception(
-                    "Error during sending of expose sensor value for %s",
+                    "Error setting value %s for expose sensor %s",
+                    state_value,
                     xknx_expose.name,
                 )
 

@@ -73,7 +73,7 @@ class KNXModule:
         self.hass = hass
         self.config_yaml = config
         self.connected = False
-        self.exposures: list[KnxExposeEntity | KnxExposeTime] = []
+        self.yaml_exposures: list[KnxExposeEntity | KnxExposeTime] = []
         self.service_exposures: dict[str, KnxExposeEntity | KnxExposeTime] = {}
         self.entry = entry
 
