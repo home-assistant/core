@@ -220,6 +220,38 @@ async def test_prepare_notification_warns_when_duration_exceeds_warning(
 
 
 @pytest.mark.asyncio
+async def test_prepare_notification_regenerates_token_on_collision(
+    hass: HomeAssistant,
+) -> None:
+    """Regenerate tokens when a collision is detected."""
+
+    hass.config.external_url = "https://example.com"
+    manager = await async_get_audio_manager(hass)
+    pcm_bytes = _build_pcm()
+
+    with (
+        patch.object(
+            manager,
+            "_transcode_to_pcm",
+            AsyncMock(return_value=(pcm_bytes, 1.0, False)),
+        ),
+        patch(
+            "homeassistant.components.smartthings.audio.secrets.token_urlsafe",
+            side_effect=["dup", "dup", "unique"],
+        ),
+    ):
+        url1 = await manager.async_prepare_notification(
+            "https://example.com/source.mp3"
+        )
+        url2 = await manager.async_prepare_notification(
+            "https://example.com/source.mp3"
+        )
+
+    assert urlsplit(url1).path.endswith("/dup.pcm")
+    assert urlsplit(url2).path.endswith("/unique.pcm")
+
+
+@pytest.mark.asyncio
 async def test_prepare_notification_schedules_cleanup(
     hass: HomeAssistant,
 ) -> None:
@@ -322,6 +354,42 @@ async def test_transcode_to_pcm_handles_process_failure(
         await manager._transcode_to_pcm("https://example.com/source.mp3")
 
     assert any("FFmpeg failed" in record.message for record in caplog.records)
+
+
+@pytest.mark.asyncio
+async def test_transcode_to_pcm_times_out_and_kills_process(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Kill ffmpeg when the transcode times out."""
+
+    manager = await async_get_audio_manager(hass)
+    fake_process = _FakeProcess(stdout=b"\x00\x00", stderr=b"", returncode=0)
+    caplog.set_level(logging.WARNING)
+
+    with (
+        patch(
+            "homeassistant.components.smartthings.audio.ffmpeg.get_ffmpeg_manager",
+            return_value=SimpleNamespace(binary="ffmpeg"),
+        ),
+        patch(
+            "homeassistant.components.smartthings.audio.asyncio.create_subprocess_exec",
+            AsyncMock(return_value=fake_process),
+        ),
+        patch(
+            "homeassistant.components.smartthings.audio.asyncio.wait_for",
+            side_effect=TimeoutError,
+        ),
+    ):
+        pcm, duration, truncated = await manager._transcode_to_pcm(
+            "https://example.com/source.mp3"
+        )
+
+    assert fake_process.killed is True
+    assert pcm == b"\x00\x00"
+    assert duration == pytest.approx(1 / PCM_SAMPLE_RATE)
+    assert truncated is False
+    assert any("FFmpeg timed out" in record.message for record in caplog.records)
 
 
 @pytest.mark.asyncio
