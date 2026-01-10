@@ -85,7 +85,7 @@ def mock_config_fixture():
         data={
             CONF_USERNAME: "test_user",
             CONF_PASSWORD: "Password",
-            "device_id": "Home Assistant",
+            "hardware_id": "Home Assistant",
             "uid": "BlinkCamera_e1233333e2-0909-09cd-777a-123456789012",
             "token": "A_token",
             "unique_id": "an_email@email.com",
@@ -95,5 +95,5 @@ def mock_config_fixture():
             "account_id": 654321,
         },
         entry_id=str(uuid4()),
-        version=3,
+        version=4,
     )

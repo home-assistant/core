@@ -325,8 +325,7 @@ class ShoppingData:
         )
         return self.items
 
-    @callback
-    def async_reorder(
+    async def async_reorder(
         self, item_ids: list[str], context: Context | None = None
     ) -> None:
         """Reorder items."""
@@ -351,7 +350,7 @@ class ShoppingData:
                 )
             new_items.append(value)
         self.items = new_items
-        self.hass.async_add_executor_job(self.save)
+        await self.hass.async_add_executor_job(self.save)
         self._async_notify()
         self.hass.bus.async_fire(
             EVENT_SHOPPING_LIST_UPDATED,
@@ -388,7 +387,7 @@ class ShoppingData:
     ) -> None:
         """Sort items by name."""
         self.items = sorted(self.items, key=lambda item: item["name"], reverse=reverse)  # type: ignore[arg-type,return-value]
-        self.hass.async_add_executor_job(self.save)
+        await self.hass.async_add_executor_job(self.save)
         self._async_notify()
         self.hass.bus.async_fire(
             EVENT_SHOPPING_LIST_UPDATED,
@@ -591,7 +590,8 @@ async def websocket_handle_clear(
         vol.Required("item_ids"): [str],
     }
 )
-def websocket_handle_reorder(
+@websocket_api.async_response
+async def websocket_handle_reorder(
     hass: HomeAssistant,
     connection: websocket_api.ActiveConnection,
     msg: dict[str, Any],
@@ -599,7 +599,9 @@ def websocket_handle_reorder(
     """Handle reordering shopping_list items."""
     msg_id = msg.pop("id")
     try:
-        hass.data[DOMAIN].async_reorder(msg.pop("item_ids"), connection.context(msg))
+        await hass.data[DOMAIN].async_reorder(
+            msg.pop("item_ids"), connection.context(msg)
+        )
     except NoMatchingShoppingListItem:
         connection.send_error(
             msg_id,

@@ -1,4 +1,8 @@
 {
+  "common": {
+    "trigger_behavior_description": "The behavior of the targeted alarms to trigger on.",
+    "trigger_behavior_name": "Behavior"
+  },
   "device_automation": {
     "action_type": {
       "arm_away": "Arm {entity_name} away",
@@ -69,6 +73,15 @@
   "exceptions": {
     "code_arm_required": {
       "message": "Arming requires a code but none was given for {entity_id}."
+    }
+  },
+  "selector": {
+    "trigger_behavior": {
+      "options": {
+        "any": "Any",
+        "first": "First",
+        "last": "Last"
+      }
     }
   },
   "services": {
@@ -143,5 +156,77 @@
       "name": "Trigger"
     }
   },
-  "title": "Alarm control panel"
+  "title": "Alarm control panel",
+  "triggers": {
+    "armed": {
+      "description": "Triggers after one or more alarms become armed, regardless of the mode.",
+      "fields": {
+        "behavior": {
+          "description": "[%key:component::alarm_control_panel::common::trigger_behavior_description%]",
+          "name": "[%key:component::alarm_control_panel::common::trigger_behavior_name%]"
+        }
+      },
+      "name": "Alarm armed"
+    },
+    "armed_away": {
+      "description": "Triggers after one or more alarms become armed in away mode.",
+      "fields": {
+        "behavior": {
+          "description": "[%key:component::alarm_control_panel::common::trigger_behavior_description%]",
+          "name": "[%key:component::alarm_control_panel::common::trigger_behavior_name%]"
+        }
+      },
+      "name": "Alarm armed away"
+    },
+    "armed_home": {
+      "description": "Triggers after one or more alarms become armed in home mode.",
+      "fields": {
+        "behavior": {
+          "description": "[%key:component::alarm_control_panel::common::trigger_behavior_description%]",
+          "name": "[%key:component::alarm_control_panel::common::trigger_behavior_name%]"
+        }
+      },
+      "name": "Alarm armed home"
+    },
+    "armed_night": {
+      "description": "Triggers after one or more alarms become armed in night mode.",
+      "fields": {
+        "behavior": {
+          "description": "[%key:component::alarm_control_panel::common::trigger_behavior_description%]",
+          "name": "[%key:component::alarm_control_panel::common::trigger_behavior_name%]"
+        }
+      },
+      "name": "Alarm armed night"
+    },
+    "armed_vacation": {
+      "description": "Triggers after one or more alarms become armed in vacation mode.",
+      "fields": {
+        "behavior": {
+          "description": "[%key:component::alarm_control_panel::common::trigger_behavior_description%]",
+          "name": "[%key:component::alarm_control_panel::common::trigger_behavior_name%]"
+        }
+      },
+      "name": "Alarm armed vacation"
+    },
+    "disarmed": {
+      "description": "Triggers after one or more alarms become disarmed.",
+      "fields": {
+        "behavior": {
+          "description": "[%key:component::alarm_control_panel::common::trigger_behavior_description%]",
+          "name": "[%key:component::alarm_control_panel::common::trigger_behavior_name%]"
+        }
+      },
+      "name": "Alarm disarmed"
+    },
+    "triggered": {
+      "description": "Triggers after one or more alarms become triggered.",
+      "fields": {
+        "behavior": {
+          "description": "[%key:component::alarm_control_panel::common::trigger_behavior_description%]",
+          "name": "[%key:component::alarm_control_panel::common::trigger_behavior_name%]"
+        }
+      },
+      "name": "Alarm triggered"
+    }
+  }
 }

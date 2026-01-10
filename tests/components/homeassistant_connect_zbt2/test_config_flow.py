@@ -16,6 +16,7 @@ from homeassistant.components.homeassistant_hardware.helpers import (
 from homeassistant.components.homeassistant_hardware.util import (
     ApplicationType,
     FirmwareInfo,
+    ResetTarget,
 )
 from homeassistant.components.usb import USBDevice
 from homeassistant.config_entries import ConfigFlowResult
@@ -49,9 +50,7 @@ def setup_entry_fixture() -> Generator[AsyncMock]:
         yield mock_setup_entry
 
 
-async def test_config_flow_zigbee(
-    hass: HomeAssistant,
-) -> None:
+async def test_config_flow_zigbee(hass: HomeAssistant) -> None:
     """Test Zigbee config flow for Connect ZBT-2."""
     fw_type = ApplicationType.EZSP
     fw_version = "7.4.4.0 build 0"
@@ -353,7 +352,10 @@ async def test_options_flow(
 
     # Verify async_flash_silabs_firmware was called with ZBT-2's reset methods
     assert flash_mock.call_count == 1
-    assert flash_mock.mock_calls[0].kwargs["bootloader_reset_methods"] == ["rts_dtr"]
+    assert flash_mock.mock_calls[0].kwargs["bootloader_reset_methods"] == [
+        ResetTarget.RTS_DTR,
+        ResetTarget.BAUDRATE,
+    ]
 
     flows = hass.config_entries.flow.async_progress()
 

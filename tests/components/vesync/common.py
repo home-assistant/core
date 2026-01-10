@@ -77,6 +77,20 @@ DEVICE_FIXTURES: dict[str, list[tuple[str, str, str]]] = {
     "Humidifier 6000s": [
         ("post", "/cloud/v2/deviceManaged/bypassV2", "humidifier-6000s-detail.json")
     ],
+    "CS158-AF Air Fryer Standby": [
+        (
+            "post",
+            "/cloud/v1/deviceManaged/bypass",
+            "air-fryer-CS158-AF-detail-standby.json",
+        )
+    ],
+    "CS158-AF Air Fryer Cooking": [
+        (
+            "post",
+            "/cloud/v1/deviceManaged/bypass",
+            "air-fryer-CS158-AF-detail-cooking.json",
+        )
+    ],
 }
 
 
@@ -112,6 +126,7 @@ def mock_devices_response(
             f"https://smartapi.vesync.com{fixture[1]}",
             json=load_json_object_fixture(fixture[2], DOMAIN),
         )
+    mock_firmware(aioclient_mock)
 
 
 def mock_multiple_device_responses(
@@ -148,6 +163,7 @@ def mock_multiple_device_responses(
             f"https://smartapi.vesync.com{fixture[1]}",
             json=load_json_object_fixture(fixture[2], DOMAIN),
         )
+    mock_firmware(aioclient_mock)
 
 
 def mock_device_response(
@@ -176,6 +192,7 @@ def mock_device_response(
             f"https://smartapi.vesync.com{item[1]}",
             json=load_and_merge(item[2]),
         )
+    mock_firmware(aioclient_mock)
 
 
 def mock_outlet_energy_response(
@@ -200,3 +217,11 @@ def mock_outlet_energy_response(
             f"https://smartapi.vesync.com{fixture[1]}",
             json=load_and_merge(fixture[2]),
         )
+
+
+def mock_firmware(aioclient_mock: AiohttpClientMocker):
+    """Always mock the firmware update info endpoint with the same fixture."""
+    aioclient_mock.post(
+        "https://smartapi.vesync.com/cloud/v2/deviceManaged/getFirmwareUpdateInfoList",
+        json=load_json_object_fixture("vesync-firmware.json", DOMAIN),
+    )

@@ -1,0 +1,168 @@
+{
+  "endpoint": "https://apigw.tuyaeu.com",
+  "mqtt_connected": true,
+  "disabled_by": null,
+  "disabled_polling": false,
+  "name": "Floor Thermostat Kitchen",
+  "category": "wk",
+  "product_id": "t94pit6zjbask9qo",
+  "product_name": "WiFi Knob Thermostat",
+  "online": true,
+  "sub": false,
+  "time_zone": "+03:00",
+  "active_time": "2025-10-07T08:19:14+00:00",
+  "create_time": "2025-10-07T08:19:14+00:00",
+  "update_time": "2025-10-07T08:19:14+00:00",
+  "function": {
+    "switch": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "mode": {
+      "type": "Enum",
+      "value": { "range": ["auto", "manual", "off"] }
+    },
+    "temp_set": {
+      "type": "Integer",
+      "value": {
+        "unit": "\u2103",
+        "min": 50,
+        "max": 350,
+        "scale": 1,
+        "step": 10
+      }
+    },
+    "temp_set_f": {
+      "type": "Integer",
+      "value": {
+        "unit": "\u2109",
+        "min": 122,
+        "max": 662,
+        "scale": 1,
+        "step": 10
+      }
+    },
+    "temp_unit_convert": {
+      "type": "Enum",
+      "value": { "range": ["c", "f"] }
+    },
+    "work_days": {
+      "type": "Enum",
+      "value": { "range": ["5_2", "6_1", "7"] }
+    },
+    "factory_reset": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "backlight": {
+      "type": "Integer",
+      "value": { "unit": "%", "min": 0, "max": 100, "scale": 0, "step": 1 }
+    },
+    "sensor_choose": {
+      "type": "Enum",
+      "value": { "range": ["in", "out"] }
+    },
+    "child_lock": {
+      "type": "Boolean",
+      "value": {}
+    }
+  },
+  "status_range": {
+    "switch": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "mode": {
+      "type": "Enum",
+      "value": { "range": ["auto", "manual", "off"] }
+    },
+    "temp_set": {
+      "type": "Integer",
+      "value": {
+        "unit": "\u2103",
+        "min": 50,
+        "max": 350,
+        "scale": 1,
+        "step": 10
+      }
+    },
+    "temp_set_f": {
+      "type": "Integer",
+      "value": {
+        "unit": "\u2109",
+        "min": 122,
+        "max": 662,
+        "scale": 1,
+        "step": 10
+      }
+    },
+    "temp_unit_convert": {
+      "type": "Enum",
+      "value": { "range": ["c", "f"] }
+    },
+    "temp_current": {
+      "type": "Integer",
+      "value": { "unit": "\u2103", "min": 0, "max": 50, "scale": 0, "step": 1 }
+    },
+    "humidity": {
+      "type": "Integer",
+      "value": { "unit": "%", "min": 0, "max": 100, "scale": 0, "step": 1 }
+    },
+    "temp_current_f": {
+      "type": "Integer",
+      "value": {
+        "unit": "\u2109",
+        "min": -4,
+        "max": 122,
+        "scale": 0,
+        "step": 1
+      }
+    },
+    "work_days": {
+      "type": "Enum",
+      "value": { "range": ["5_2", "6_1", "7"] }
+    },
+    "work_state": {
+      "type": "Enum",
+      "value": { "range": ["opened", "closed"] }
+    },
+    "factory_reset": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "backlight": {
+      "type": "Integer",
+      "value": { "unit": "%", "min": 0, "max": 100, "scale": 0, "step": 1 }
+    },
+    "fault": {
+      "type": "Bitmap",
+      "value": { "label": ["e1", "e2", "e3"] }
+    },
+    "sensor_choose": {
+      "type": "Enum",
+      "value": { "range": ["in", "out"] }
+    },
+    "child_lock": {
+      "type": "Boolean",
+      "value": {}
+    }
+  },
+  "status": {
+    "switch": true,
+    "mode": "manual",
+    "temp_set": 23,
+    "temp_set_f": 41,
+    "temp_unit_convert": "c",
+    "temp_current": 20,
+    "humidity": 91,
+    "temp_current_f": -4,
+    "work_days": "5_2",
+    "work_state": "manual",
+    "factory_reset": false,
+    "backlight": 10,
+    "fault": 0,
+    "sensor_choose": "in"
+  },
+  "set_up": true,
+  "support_local": true
+}

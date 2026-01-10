@@ -23,6 +23,7 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import HomeAssistantSkyConnectConfigEntry
+from .config_flow import SkyConnectFirmwareMixin
 from .const import (
     DOMAIN,
     FIRMWARE,
@@ -151,8 +152,8 @@ async def async_setup_entry(
 class FirmwareUpdateEntity(BaseFirmwareUpdateEntity):
     """SkyConnect firmware update entity."""
 
-    # The ZBT-1 does not have a hardware bootloader trigger
-    bootloader_reset_methods = []
+    BOOTLOADER_RESET_METHODS = SkyConnectFirmwareMixin.BOOTLOADER_RESET_METHODS
+    APPLICATION_PROBE_METHODS = SkyConnectFirmwareMixin.APPLICATION_PROBE_METHODS
 
     def __init__(
         self,
