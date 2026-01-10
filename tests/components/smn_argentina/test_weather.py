@@ -284,7 +284,6 @@ async def test_weather_update(
     initial_temp = state.attributes["temperature"]
 
     # Update mock data
-    # Update mock data
     new_weather_data = {
         "temperature": 25.0,  # Different temperature
         "feels_like": 24.0,

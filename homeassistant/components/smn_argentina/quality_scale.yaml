@@ -75,9 +75,9 @@ rules:
     status: exempt
     comment: No known use cases for repair issues or flows, yet
   stale-devices:
-    status: exempt
+    status: todo
     comment: |
-      This integration does not create devices.
+      Implement stale device handling for devices created by this integration.
 
   # Platinum
   async-dependency: done
