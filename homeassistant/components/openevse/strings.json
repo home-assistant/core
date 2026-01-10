@@ -13,8 +13,33 @@
           "host": "[%key:common::config_flow::data::host%]"
         },
         "data_description": {
-          "host": "Enter the IP Address of your openevse. Should match the address you used to set it up."
+          "host": "Enter the IP address of your OpenEVSE. Should match the address you used to set it up."
         }
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "ambient_temp": {
+        "name": "Ambient temperature"
+      },
+      "charge_time": {
+        "name": "Charge time elapsed"
+      },
+      "ir_temp": {
+        "name": "IR temperature"
+      },
+      "rtc_temp": {
+        "name": "RTC temperature"
+      },
+      "status": {
+        "name": "Charging status"
+      },
+      "usage_session": {
+        "name": "Usage this session"
+      },
+      "usage_total": {
+        "name": "Total energy usage"
       }
     }
   },
