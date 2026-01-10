@@ -3,7 +3,7 @@
 from collections.abc import Callable
 from datetime import datetime
 import logging
-from typing import Any
+from typing import Any, TYPE_CHECKING
 
 from pypoint import PointSession
 
@@ -14,14 +14,19 @@ from homeassistant.util.dt import parse_datetime
 
 from .const import DOMAIN, SCAN_INTERVAL
 
+if TYPE_CHECKING:
+    from . import PointConfigEntry
+
 _LOGGER = logging.getLogger(__name__)
 
 
 class PointDataUpdateCoordinator(DataUpdateCoordinator[dict[str, dict[str, Any]]]):
     """Class to manage fetching Point data from the API."""
 
+    config_entry: "PointConfigEntry"
+
     def __init__(
-        self, hass: HomeAssistant, point: PointSession, config_entry: ConfigEntry
+        self, hass: HomeAssistant, point: PointSession, config_entry: "PointConfigEntry"
     ) -> None:
         """Initialize."""
         super().__init__(
