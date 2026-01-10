@@ -101,7 +101,7 @@ class VeSyncHumidifierHA(VeSyncBaseEntity, HumidifierEntity):
     ) -> None:
         """Initialize the VeSyncHumidifierHA device."""
         super().__init__(device, coordinator)
-
+        self.device: VeSyncHumidifier = device
         # 2 Vesync humidifier modes (humidity and auto) maps to the HA mode auto.
         # They are on different devices though. We need to map HA mode to the
         # device specific mode when setting it.
@@ -120,8 +120,8 @@ class VeSyncHumidifierHA(VeSyncBaseEntity, HumidifierEntity):
 
         self._available_modes.sort()
 
-    def _get_vs_mode(self, ha_mode: str) -> str | None:
-        return self._ha_to_vs_mode_map.get(ha_mode)
+    def _get_vs_mode(self, ha_mode: str) -> str:
+        return self._ha_to_vs_mode_map[ha_mode]
 
     @property
     def available_modes(self) -> list[str]:
@@ -129,12 +129,12 @@ class VeSyncHumidifierHA(VeSyncBaseEntity, HumidifierEntity):
         return self._available_modes
 
     @property
-    def current_humidity(self) -> int:
+    def current_humidity(self) -> int | None:
         """Return the current humidity."""
         return self.device.state.humidity
 
     @property
-    def target_humidity(self) -> int:
+    def target_humidity(self) -> int | None:
         """Return the humidity we try to reach."""
         return self.device.state.auto_humidity
 
@@ -150,7 +150,9 @@ class VeSyncHumidifierHA(VeSyncBaseEntity, HumidifierEntity):
     async def async_set_humidity(self, humidity: int) -> None:
         """Set the target humidity of the device."""
         if not await self.device.set_humidity(humidity):
-            raise HomeAssistantError(self.device.last_response.message)
+            if self.device.last_response:
+                raise HomeAssistantError(self.device.last_response.message)
+            raise HomeAssistantError("Failed to set humidity.")
 
     async def async_set_mode(self, mode: str) -> None:
         """Set the mode of the device."""
@@ -158,8 +160,13 @@ class VeSyncHumidifierHA(VeSyncBaseEntity, HumidifierEntity):
             raise HomeAssistantError(
                 f"Invalid mode {mode}. Available modes: {self.available_modes}"
             )
+        set_mode = self._get_vs_mode(mode)
+        if set_mode is None:
+            raise HomeAssistantError(f"Could not map mode {mode} to VeSync mode.")
         if not await self.device.set_mode(self._get_vs_mode(mode)):
-            raise HomeAssistantError(self.device.last_response.message)
+            if self.device.last_response:
+                raise HomeAssistantError(self.device.last_response.message)
+            raise HomeAssistantError("Failed to set mode.")
 
         if mode == MODE_SLEEP:
             # We successfully changed the mode. Consider it a success even if display operation fails.
@@ -175,7 +182,9 @@ class VeSyncHumidifierHA(VeSyncBaseEntity, HumidifierEntity):
         """Turn the device on."""
         success = await self.device.turn_on()
         if not success:
-            raise HomeAssistantError(self.device.last_response.message)
+            if self.device.last_response:
+                raise HomeAssistantError(self.device.last_response.message)
+            raise HomeAssistantError("Failed to turn on humidifier.")
 
         self.async_write_ha_state()
 
@@ -183,7 +192,9 @@ class VeSyncHumidifierHA(VeSyncBaseEntity, HumidifierEntity):
         """Turn the device off."""
         success = await self.device.turn_off()
         if not success:
-            raise HomeAssistantError(self.device.last_response.message)
+            if self.device.last_response:
+                raise HomeAssistantError(self.device.last_response.message)
+            raise HomeAssistantError("Failed to turn off humidifier.")
 
         self.async_write_ha_state()
 
