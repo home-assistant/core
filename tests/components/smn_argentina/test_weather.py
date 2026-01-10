@@ -1,6 +1,6 @@
 """Test the SMN weather entity."""
 
-from unittest.mock import AsyncMock
+from unittest.mock import AsyncMock, patch
 
 from homeassistant.components.smn_argentina.weather import format_condition
 from homeassistant.components.weather import (
@@ -23,26 +23,29 @@ async def test_weather_entity_state(
     mock_token_manager,
 ) -> None:
     """Test weather entity reports correct state."""
-    await init_integration(hass)
+    # Patch is_up to ensure consistent day behavior
+    with patch(
+        "homeassistant.components.smn_argentina.weather.is_up", return_value=True
+    ):
+        await init_integration(hass)
+        # Get weather entity - check all weather entities
+        weather_entities = hass.states.async_entity_ids("weather")
+        assert len(weather_entities) > 0, (
+            f"No weather entities found. All entities: {hass.states.async_entity_ids()}"
+        )
 
-    # Get weather entity - check all weather entities
-    weather_entities = hass.states.async_entity_ids("weather")
-    assert len(weather_entities) > 0, (
-        f"No weather entities found. All entities: {hass.states.async_entity_ids()}"
-    )
-
-    state = hass.states.get(weather_entities[0])
-    assert state is not None
-    assert state.state == ATTR_CONDITION_SUNNY
-    assert state.attributes["temperature"] == 22.5
-    assert state.attributes["humidity"] == 65
-    assert state.attributes["pressure"] == 1013.2
-    assert state.attributes["wind_speed"] == 15.5
-    assert state.attributes["wind_bearing"] == 180
-    assert (
-        state.attributes["attribution"]
-        == "Data provided by Servicio Meteorológico Nacional Argentina"
-    )
+        state = hass.states.get(weather_entities[0])
+        assert state is not None
+        assert state.state == ATTR_CONDITION_SUNNY
+        assert state.attributes["temperature"] == 22.5
+        assert state.attributes["humidity"] == 65
+        assert state.attributes["pressure"] == 1013.2
+        assert state.attributes["wind_speed"] == 15.5
+        assert state.attributes["wind_bearing"] == 180
+        assert (
+            state.attributes["attribution"]
+            == "Data provided by Servicio Meteorológico Nacional Argentina"
+        )
 
 
 async def test_weather_entity_forecast(
