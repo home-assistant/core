@@ -126,7 +126,7 @@
         },
         "step": {
           "confirm": {
-            "description": "The BTHome device **{name}** was configured with encryption but is now broadcasting unencrypted data. Data from this device is being ignored until this is resolved.\n\nIf you disabled encryption on the device, select **Submit** to remove the encryption key and resume receiving data.\n\nIf you did not disable encryption, do not submit this form. Instead, check your device configuration and re-enable encryption.",
+            "description": "The BTHome device **{name}** was configured with encryption but is now broadcasting unencrypted data. Data from this device is being ignored until this is resolved.\n\nIf you disabled encryption on the device, select **Submit** to remove the encryption key and resume receiving data.\n\nIf you did not disable encryption, someone may be attempting to spoof your device. Do not submit this form and the unencrypted data will continue to be ignored.",
             "title": "Remove encryption key for {name}"
           }
         }
