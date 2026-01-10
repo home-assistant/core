@@ -23,6 +23,11 @@
     }
   },
   "entity": {
+    "cover": {
+      "valance": {
+        "name": "Valance"
+      }
+    },
     "number": {
       "rotation": {
         "name": "Rotation"
@@ -32,9 +37,6 @@
       },
       "rotation-min": {
         "name": "Minimum Rotation"
-      },
-      "valance": {
-        "name": "Valance"
       }
     }
   }
