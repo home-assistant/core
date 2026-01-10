@@ -141,6 +141,11 @@ class XboxConsoleBaseEntity(CoordinatorEntity[XboxConsoleStatusCoordinator]):
         """Return coordinator data for this console."""
         return self.coordinator.data[self._console.id]
 
+    @property
+    def available(self) -> bool:
+        """Return if entity is available."""
+        return self.coordinator.data.get(self._console.id) is not None
+
 
 def check_deprecated_entity(
     hass: HomeAssistant,

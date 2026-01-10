@@ -48,6 +48,9 @@
     }
   },
   "exceptions": {
+    "device_communication_error": {
+      "message": "Failed to communicate with Velux device: {error}"
+    },
     "no_gateway_loaded": {
       "message": "No loaded Velux gateway found"
     },
