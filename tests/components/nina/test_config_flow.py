@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from copy import deepcopy
-import json
 from typing import Any
 from unittest.mock import AsyncMock, patch
 
@@ -28,14 +27,10 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import entity_registry as er
 
-from . import mocked_request_function
+from . import mocked_request_function, setup_platform
 from .const import DUMMY_CONFIG_ENTRY, DUMMY_USER_INPUT
 
-from tests.common import MockConfigEntry, load_fixture
-
-DUMMY_RESPONSE_REGIONS: dict[str, Any] = json.loads(
-    load_fixture("sample_regions.json", "nina")
-)
+from tests.common import MockConfigEntry
 
 
 def assert_dummy_entry_created(result: dict[str, Any]) -> None:
@@ -141,15 +136,15 @@ async def test_options_flow_init(
     hass: HomeAssistant, mock_setup_entry: AsyncMock, mock_config_entry: MockConfigEntry
 ) -> None:
     """Test config flow options."""
+
+    await setup_platform(hass, mock_config_entry)
+
     with (
         patch(
             "pynina.baseApi.BaseAPI._makeRequest",
             wraps=mocked_request_function,
         ),
     ):
-        await hass.config_entries.async_setup(mock_config_entry.entry_id)
-        await hass.async_block_till_done()
-
         result = await hass.config_entries.options.async_init(
             mock_config_entry.entry_id
         )
@@ -195,15 +190,15 @@ async def test_options_flow_with_no_selection(
     hass: HomeAssistant, mock_setup_entry: AsyncMock, mock_config_entry: MockConfigEntry
 ) -> None:
     """Test config flow options with no selection."""
+
+    await setup_platform(hass, mock_config_entry)
+
     with (
         patch(
             "pynina.baseApi.BaseAPI._makeRequest",
             wraps=mocked_request_function,
         ),
     ):
-        await hass.config_entries.async_setup(mock_config_entry.entry_id)
-        await hass.async_block_till_done()
-
         result = await hass.config_entries.options.async_init(
             mock_config_entry.entry_id
         )
@@ -264,13 +259,13 @@ async def test_options_flow_connection_error(
     hass: HomeAssistant, mock_setup_entry: AsyncMock, mock_config_entry: MockConfigEntry
 ) -> None:
     """Test config flow options but no connection."""
+
+    await setup_platform(hass, mock_config_entry)
+
     with patch(
         "pynina.baseApi.BaseAPI._makeRequest",
         side_effect=ApiError("Could not connect to Api"),
     ):
-        await hass.config_entries.async_setup(mock_config_entry.entry_id)
-        await hass.async_block_till_done()
-
         result = await hass.config_entries.options.async_init(
             mock_config_entry.entry_id
         )
@@ -283,15 +278,15 @@ async def test_options_flow_unexpected_exception(
     hass: HomeAssistant, mock_setup_entry: AsyncMock, mock_config_entry: MockConfigEntry
 ) -> None:
     """Test config flow options but with an unexpected exception."""
+
+    await setup_platform(hass, mock_config_entry)
+
     with (
         patch(
             "pynina.baseApi.BaseAPI._makeRequest",
             side_effect=Exception("DUMMY"),
         ),
     ):
-        await hass.config_entries.async_setup(mock_config_entry.entry_id)
-        await hass.async_block_till_done()
-
         result = await hass.config_entries.options.async_init(
             mock_config_entry.entry_id
         )
@@ -313,15 +308,14 @@ async def test_options_flow_entity_removal(
     )
     config_entry.add_to_hass(hass)
 
+    await setup_platform(hass, config_entry)
+
     with (
         patch(
             "pynina.baseApi.BaseAPI._makeRequest",
             wraps=mocked_request_function,
         ),
     ):
-        await hass.config_entries.async_setup(config_entry.entry_id)
-        await hass.async_block_till_done()
-
         result = await hass.config_entries.options.async_init(config_entry.entry_id)
 
         result = await hass.config_entries.options.async_configure(
