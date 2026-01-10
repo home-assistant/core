@@ -8,7 +8,6 @@ import logging
 from typing import Any
 
 import aiohttp
-from pydantic import BaseModel, ValidationError
 from unraid_api import UnraidClient
 from unraid_api.exceptions import UnraidAPIError
 
@@ -17,17 +16,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DEFAULT_STORAGE_POLL_INTERVAL, DEFAULT_SYSTEM_POLL_INTERVAL
-from .models import (
-    ArrayCapacity,
-    ArrayDisk,
-    DockerContainer,
-    Metrics,
-    ParityCheck,
-    Share,
-    SystemInfo,
-    UPSDevice,
-    VmDomain,
-)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -39,7 +27,7 @@ class UnraidRuntimeData:
     api_client: UnraidClient
     system_coordinator: UnraidSystemCoordinator
     storage_coordinator: UnraidStorageCoordinator
-    server_info: dict
+    server_info: dict[str, Any]
 
 
 # Type alias for config entries with runtime data
@@ -48,28 +36,29 @@ type UnraidConfigEntry = ConfigEntry[UnraidRuntimeData]
 
 @dataclass
 class UnraidSystemData:
-    """Data class for system coordinator data."""
+    """Data class for system coordinator data - uses raw dict values."""
 
-    info: SystemInfo
-    metrics: Metrics
-    containers: list[DockerContainer] = field(default_factory=list)
-    vms: list[VmDomain] = field(default_factory=list)
-    ups_devices: list[UPSDevice] = field(default_factory=list)
+    # Raw data from API (no pydantic)
+    info: dict[str, Any] = field(default_factory=dict)
+    metrics: dict[str, Any] = field(default_factory=dict)
+    containers: list[dict[str, Any]] = field(default_factory=list)
+    vms: list[dict[str, Any]] = field(default_factory=list)
+    ups_devices: list[dict[str, Any]] = field(default_factory=list)
     notifications_unread: int = 0
 
 
 @dataclass
 class UnraidStorageData:
-    """Data class for storage coordinator data."""
+    """Data class for storage coordinator data - uses raw dict values."""
 
     array_state: str | None = None
-    capacity: ArrayCapacity | None = None
-    parity_status: ParityCheck | None = None
-    boot: ArrayDisk | None = None  # Flash/boot device
-    disks: list[ArrayDisk] = field(default_factory=list)
-    parities: list[ArrayDisk] = field(default_factory=list)
-    caches: list[ArrayDisk] = field(default_factory=list)
-    shares: list[Share] = field(default_factory=list)
+    capacity: dict[str, Any] | None = None
+    parity_status: dict[str, Any] | None = None
+    boot: dict[str, Any] | None = None
+    disks: list[dict[str, Any]] = field(default_factory=list)
+    parities: list[dict[str, Any]] = field(default_factory=list)
+    caches: list[dict[str, Any]] = field(default_factory=list)
+    shares: list[dict[str, Any]] = field(default_factory=list)
 
 
 class UnraidSystemCoordinator(DataUpdateCoordinator[UnraidSystemData]):
@@ -83,16 +72,7 @@ class UnraidSystemCoordinator(DataUpdateCoordinator[UnraidSystemData]):
         server_name: str,
         update_interval: int = DEFAULT_SYSTEM_POLL_INTERVAL,
     ) -> None:
-        """Initialize the system coordinator.
-
-        Args:
-            hass: Home Assistant instance
-            config_entry: Config entry for this coordinator
-            api_client: Unraid API client
-            server_name: Server name for logging
-            update_interval: Polling interval in seconds (default 30s)
-
-        """
+        """Initialize the system coordinator."""
         super().__init__(
             hass,
             logger=_LOGGER,
@@ -104,7 +84,7 @@ class UnraidSystemCoordinator(DataUpdateCoordinator[UnraidSystemData]):
         self._server_name = server_name
         self._previously_unavailable = False
 
-    async def _query_optional_docker(self) -> dict:
+    async def _query_optional_docker(self) -> dict[str, Any]:
         """Query Docker data separately (fails gracefully if Docker not enabled)."""
         try:
             docker_query = """
@@ -119,16 +99,11 @@ class UnraidSystemCoordinator(DataUpdateCoordinator[UnraidSystemData]):
             """
             result = await self.api_client.query(docker_query)
             return result.get("docker") or {"containers": []}
-        except (
-            UnraidAPIError,
-            aiohttp.ClientError,
-            RuntimeError,
-            ValueError,
-        ) as err:
+        except (UnraidAPIError, aiohttp.ClientError, RuntimeError, ValueError) as err:
             _LOGGER.debug("Docker data not available: %s", err)
             return {"containers": []}
 
-    async def _query_optional_vms(self) -> dict:
+    async def _query_optional_vms(self) -> dict[str, Any]:
         """Query VM data separately (fails gracefully if VMs not enabled)."""
         try:
             vms_query = """
@@ -138,16 +113,11 @@ class UnraidSystemCoordinator(DataUpdateCoordinator[UnraidSystemData]):
             """
             result = await self.api_client.query(vms_query)
             return result.get("vms") or {"domain": []}
-        except (
-            UnraidAPIError,
-            aiohttp.ClientError,
-            RuntimeError,
-            ValueError,
-        ) as err:
+        except (UnraidAPIError, aiohttp.ClientError, RuntimeError, ValueError) as err:
             _LOGGER.debug("VM data not available: %s", err)
             return {"domain": []}
 
-    async def _query_optional_ups(self) -> list[dict]:
+    async def _query_optional_ups(self) -> list[dict[str, Any]]:
         """Query UPS data separately (fails gracefully if no UPS configured)."""
         try:
             ups_query = """
@@ -161,25 +131,12 @@ class UnraidSystemCoordinator(DataUpdateCoordinator[UnraidSystemData]):
             """
             result = await self.api_client.query(ups_query)
             return result.get("upsDevices") or []
-        except (
-            UnraidAPIError,
-            aiohttp.ClientError,
-            RuntimeError,
-            ValueError,
-        ) as err:
+        except (UnraidAPIError, aiohttp.ClientError, RuntimeError, ValueError) as err:
             _LOGGER.debug("UPS data not available: %s", err)
             return []
 
     async def _async_update_data(self) -> UnraidSystemData:
-        """Fetch system data from Unraid server.
-
-        Returns:
-            UnraidSystemData containing parsed info, metrics, docker, vms, ups
-
-        Raises:
-            UpdateFailed: If update fails
-
-        """
+        """Fetch system data from Unraid server."""
         _LOGGER.debug("Starting system data update")
         try:
             # Query core system data (must succeed)
@@ -220,72 +177,46 @@ class UnraidSystemCoordinator(DataUpdateCoordinator[UnraidSystemData]):
 
             _LOGGER.debug("System data update completed successfully")
 
-            # Parse raw data into Pydantic models
+            # Parse raw data (simple dict extraction, no pydantic)
             return self._parse_system_data(raw_data)
 
         except aiohttp.ClientResponseError as err:
             self._previously_unavailable = True
             if err.status in (401, 403):
                 msg = f"Authentication failed: {err.message}"
-                _LOGGER.exception("System data update failed: %s", msg)
                 raise UpdateFailed(msg) from err
             msg = f"HTTP error {err.status}: {err.message}"
-            _LOGGER.exception("System data update failed: %s", msg)
             raise UpdateFailed(msg) from err
         except aiohttp.ClientError as err:
             self._previously_unavailable = True
             msg = f"Connection error: {err}"
-            _LOGGER.exception("System data update failed: %s", msg)
             raise UpdateFailed(msg) from err
         except TimeoutError as err:
             self._previously_unavailable = True
-            msg = "Request timeout"
-            _LOGGER.exception("System data update failed: %s", msg)
-            raise UpdateFailed(msg) from err
+            raise UpdateFailed("Request timeout") from err
         except Exception as err:
             self._previously_unavailable = True
             msg = f"Unexpected error: {err}"
-            _LOGGER.exception("System data update failed: %s", msg)
             raise UpdateFailed(msg) from err
 
     def _parse_system_data(self, raw_data: dict[str, Any]) -> UnraidSystemData:
-        """Parse raw API data into typed UnraidSystemData."""
-        # Parse system info
-        info = SystemInfo.model_validate(raw_data.get("info", {}))
-
-        # Parse metrics
-        metrics = Metrics.model_validate(raw_data.get("metrics", {}))
-
-        # Parse Docker containers
-        containers: list[DockerContainer] = []
+        """Parse raw API data into UnraidSystemData (no pydantic)."""
+        # Parse Docker containers - normalize names field
+        containers: list[dict[str, Any]] = []
         docker_data = raw_data.get("docker", {})
         for raw_container in docker_data.get("containers", []):
-            # Handle 'names' field - API returns list, we store as 'name'
-            container_data = dict(raw_container)
-            names = container_data.get("names")
+            container = dict(raw_container)
+            names = container.get("names")
             if names and len(names) > 0:
-                container_data["name"] = names[0].lstrip("/")
-            try:
-                containers.append(DockerContainer.model_validate(container_data))
-            except (ValidationError, TypeError, KeyError) as e:
-                _LOGGER.warning("Failed to parse container: %s - %s", container_data, e)
+                container["name"] = names[0].lstrip("/")
+            containers.append(container)
 
         # Parse VMs
-        vms: list[VmDomain] = []
         vms_data = raw_data.get("vms") or {}
-        for vm_data in vms_data.get("domain", []) or []:
-            try:
-                vms.append(VmDomain.model_validate(vm_data))
-            except (ValidationError, TypeError, KeyError) as e:
-                _LOGGER.warning("Failed to parse VM: %s - %s", vm_data, e)
+        vms = vms_data.get("domain", []) or []
 
         # Parse UPS devices
-        ups_devices: list[UPSDevice] = []
-        for ups_data in raw_data.get("upsDevices", []) or []:
-            try:
-                ups_devices.append(UPSDevice.model_validate(ups_data))
-            except (ValidationError, TypeError, KeyError) as e:
-                _LOGGER.warning("Failed to parse UPS device: %s - %s", ups_data, e)
+        ups_devices = raw_data.get("upsDevices", []) or []
 
         # Parse notifications
         notifications = raw_data.get("notifications", {})
@@ -294,8 +225,8 @@ class UnraidSystemCoordinator(DataUpdateCoordinator[UnraidSystemData]):
         notifications_unread = unread.get("total", 0) or 0
 
         return UnraidSystemData(
-            info=info,
-            metrics=metrics,
+            info=raw_data.get("info", {}),
+            metrics=raw_data.get("metrics", {}),
             containers=containers,
             vms=vms,
             ups_devices=ups_devices,
@@ -314,16 +245,7 @@ class UnraidStorageCoordinator(DataUpdateCoordinator[UnraidStorageData]):
         server_name: str,
         update_interval: int = DEFAULT_STORAGE_POLL_INTERVAL,
     ) -> None:
-        """Initialize the storage coordinator.
-
-        Args:
-            hass: Home Assistant instance
-            config_entry: Config entry for this coordinator
-            api_client: Unraid API client
-            server_name: Server name for logging
-            update_interval: Polling interval in seconds (default 300s)
-
-        """
+        """Initialize the storage coordinator."""
         super().__init__(
             hass,
             logger=_LOGGER,
@@ -335,14 +257,8 @@ class UnraidStorageCoordinator(DataUpdateCoordinator[UnraidStorageData]):
         self._server_name = server_name
         self._previously_unavailable = False
 
-    async def _query_optional_shares(self) -> list[dict]:
-        """Query shares separately to handle servers with problematic shares.
-
-        Some Unraid servers have shares where the GraphQL API returns null for
-        the 'id' field, causing the entire shares query to fail. By querying
-        shares separately, we can gracefully handle this and still return
-        array/disk data even if shares fail.
-        """
+    async def _query_optional_shares(self) -> list[dict[str, Any]]:
+        """Query shares separately to handle servers with problematic shares."""
         try:
             shares_query = """
                 query {
@@ -351,43 +267,15 @@ class UnraidStorageCoordinator(DataUpdateCoordinator[UnraidStorageData]):
             """
             result = await self.api_client.query(shares_query)
             return result.get("shares", []) or []
-        except (
-            UnraidAPIError,
-            aiohttp.ClientError,
-            RuntimeError,
-            ValueError,
-        ) as err:
-            # Log at debug level - shares are optional/nice-to-have
+        except (UnraidAPIError, aiohttp.ClientError, RuntimeError, ValueError) as err:
             _LOGGER.debug(
                 "Shares query failed (will continue without share data): %s", err
             )
             return []
 
     async def _async_update_data(self) -> UnraidStorageData:
-        """Fetch storage data from Unraid server.
-
-        Returns:
-            UnraidStorageData containing parsed array, disks data
-
-        Raises:
-            UpdateFailed: If update fails
-
-        """
+        """Fetch storage data from Unraid server."""
         try:
-            # Build query for array/disk data (shares queried separately)
-            # Note: isSpinning is included to track disk standby state
-            # This field is returned by the API without waking the disk
-            #
-            # IMPORTANT: We do NOT query the physical 'disks' endpoint for
-            # temperature or smartStatus because those queries WAKE UP
-            # sleeping disks. The array.disks already provides temp data
-            # for spinning disks (returns null/0 for standby disks).
-            # SMART status is a "nice to have" but not worth waking disks.
-            #
-            # NOTE: Shares are queried separately via _query_optional_shares()
-            # because some Unraid servers have shares with null IDs that cause
-            # the GraphQL query to fail entirely. By separating them, we can
-            # still get array/disk data even if shares fail.
             query = """
                 query {
                     array {
@@ -412,11 +300,8 @@ class UnraidStorageCoordinator(DataUpdateCoordinator[UnraidStorageData]):
             """
 
             raw_data = await self.api_client.query(query)
-
-            # Query shares separately (gracefully handles failure)
             shares_data = await self._query_optional_shares()
 
-            # Log recovery if previously unavailable
             if self._previously_unavailable:
                 _LOGGER.info(
                     "Connection restored to Unraid server %s (storage)",
@@ -441,89 +326,43 @@ class UnraidStorageCoordinator(DataUpdateCoordinator[UnraidStorageData]):
             self._previously_unavailable = True
             raise UpdateFailed(f"Unexpected error: {err}") from err
 
-    def _parse_model[T: BaseModel](
-        self, data: dict[str, Any] | None, model_class: type[T], name: str
-    ) -> T | None:
-        """Parse a single model from data, returning None on failure."""
-        if not data:
-            return None
-        try:
-            return model_class.model_validate(data)
-        except (ValidationError, TypeError, KeyError) as e:
-            _LOGGER.warning("Failed to parse %s: %s - %s", name, data, e)
-            return None
-
-    def _parse_model_list[T: BaseModel](
-        self, data_list: list[dict[str, Any]], model_class: type[T], name: str
-    ) -> list[T]:
-        """Parse a list of models from data, skipping failures."""
-        results: list[T] = []
-        for item in data_list:
-            try:
-                results.append(model_class.model_validate(item))
-            except (ValidationError, TypeError, KeyError) as e:
-                _LOGGER.warning("Failed to parse %s: %s - %s", name, item, e)
-        return results
-
-    def _parse_disks_with_type(
-        self,
-        data_list: list[dict[str, Any]],
-        default_type: str,
-        name: str,
-    ) -> list[ArrayDisk]:
-        """Parse disk list, setting default type BEFORE validation to avoid mutation."""
-        results: list[ArrayDisk] = []
-        for item in data_list:
-            try:
-                # Set type before validation if not already present
-                disk_data = {**item, "type": item.get("type") or default_type}
-                results.append(ArrayDisk.model_validate(disk_data))
-            except (ValidationError, TypeError, KeyError) as e:
-                _LOGGER.warning("Failed to parse %s: %s - %s", name, item, e)
-        return results
-
     def _parse_storage_data(
         self, raw_data: dict[str, Any], shares_data: list[dict[str, Any]]
     ) -> UnraidStorageData:
-        """Parse raw API data into typed UnraidStorageData.
-
-        Args:
-            raw_data: Raw array/disk data from GraphQL query
-            shares_data: Shares data from separate optional query
-
-        Returns:
-            Parsed storage data
-
-        """
+        """Parse raw API data into UnraidStorageData (no pydantic)."""
         array_data = raw_data.get("array", {})
 
-        # Parse disks with default type set BEFORE validation (not after)
-        disks = self._parse_disks_with_type(array_data.get("disks", []), "DATA", "disk")
-        parities = self._parse_disks_with_type(
-            array_data.get("parities", []), "PARITY", "parity disk"
-        )
-        caches = self._parse_disks_with_type(
-            array_data.get("caches", []), "CACHE", "cache disk"
-        )
+        # Set default type for disks if not present
+        disks = []
+        for disk in array_data.get("disks", []):
+            d = dict(disk)
+            d.setdefault("type", "DATA")
+            disks.append(d)
 
-        # Parse boot device with type set before validation
-        boot_data = array_data.get("boot")
-        boot = None
-        if boot_data:
-            boot_with_type = {**boot_data, "type": boot_data.get("type") or "FLASH"}
-            boot = self._parse_model(boot_with_type, ArrayDisk, "boot device")
+        parities = []
+        for disk in array_data.get("parities", []):
+            d = dict(disk)
+            d.setdefault("type", "PARITY")
+            parities.append(d)
+
+        caches = []
+        for disk in array_data.get("caches", []):
+            d = dict(disk)
+            d.setdefault("type", "CACHE")
+            caches.append(d)
+
+        boot = array_data.get("boot")
+        if boot:
+            boot = dict(boot)
+            boot.setdefault("type", "FLASH")
 
         return UnraidStorageData(
             array_state=array_data.get("state"),
-            capacity=self._parse_model(
-                array_data.get("capacity"), ArrayCapacity, "capacity"
-            ),
-            parity_status=self._parse_model(
-                array_data.get("parityCheckStatus"), ParityCheck, "parity status"
-            ),
+            capacity=array_data.get("capacity"),
+            parity_status=array_data.get("parityCheckStatus"),
             boot=boot,
             disks=disks,
             parities=parities,
             caches=caches,
-            shares=self._parse_model_list(shares_data, Share, "share"),
+            shares=shares_data,
         )

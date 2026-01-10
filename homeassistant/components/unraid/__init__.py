@@ -18,7 +18,6 @@ from unraid_api.exceptions import (
 
 from homeassistant.const import CONF_API_KEY, CONF_HOST, CONF_VERIFY_SSL, Platform
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
-from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .config_flow import (
@@ -33,7 +32,6 @@ from .const import (
     DEFAULT_STORAGE_POLL_INTERVAL,
     DEFAULT_SYSTEM_POLL_INTERVAL,
     DOMAIN,
-    REPAIR_AUTH_FAILED,
 )
 from .coordinator import (
     UnraidConfigEntry,
@@ -163,21 +161,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: UnraidConfigEntry) -> bo
             }
             """
         )
-        # Clear any previous auth repair issues on successful connection
-        ir.async_delete_issue(hass, DOMAIN, REPAIR_AUTH_FAILED)
     except UnraidAuthenticationError as err:
         await api_client.close()
-        # Create repair issue for auth failure
-        ir.async_create_issue(
-            hass,
-            DOMAIN,
-            REPAIR_AUTH_FAILED,
-            is_fixable=True,
-            is_persistent=True,
-            severity=ir.IssueSeverity.ERROR,
-            translation_key="auth_failed",
-            translation_placeholders={"host": host},
-        )
         msg = f"Authentication failed for Unraid server {host}"
         raise ConfigEntryAuthFailed(msg) from err
     except (UnraidConnectionError, UnraidAPIError) as err:

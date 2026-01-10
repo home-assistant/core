@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from collections.abc import Mapping
 import logging
 from typing import TYPE_CHECKING, Any
 
@@ -14,7 +13,6 @@ import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.const import CONF_API_KEY, CONF_HOST, CONF_VERIFY_SSL
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import issue_registry as ir
 
 from .const import (
     CONF_STORAGE_INTERVAL,
@@ -26,7 +24,6 @@ from .const import (
     DEFAULT_UPS_CAPACITY_VA,
     DEFAULT_UPS_NOMINAL_POWER,
     DOMAIN,
-    REPAIR_AUTH_FAILED,
 )
 
 if TYPE_CHECKING:
@@ -56,7 +53,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     def __init__(self) -> None:
         """Initialize the config flow."""
-        self._reauth_entry: config_entries.ConfigEntry | None = None
         self._server_uuid: str | None = None
         self._server_hostname: str | None = None
         self._verify_ssl: bool = True  # Track SSL verification setting
@@ -327,66 +323,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             )
             return True
         return current >= minimum
-
-    async def async_step_reauth(
-        self,
-        entry_data: Mapping[str, Any],
-    ) -> ConfigFlowResult:
-        """Handle reauth when API key becomes invalid."""
-        self._reauth_entry = self.hass.config_entries.async_get_entry(
-            self.context.get("entry_id", "")
-        )
-        return await self.async_step_reauth_confirm()
-
-    async def async_step_reauth_confirm(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Handle reauth confirmation - prompt for new API key."""
-        errors: dict[str, str] = {}
-
-        if user_input is not None:
-            if self._reauth_entry is None:
-                return self.async_abort(reason="reauth_failed")
-
-            # Test the new API key
-            test_input = {
-                CONF_HOST: self._reauth_entry.data[CONF_HOST],
-                CONF_API_KEY: user_input[CONF_API_KEY],
-            }
-
-            try:
-                await self._test_connection(test_input)
-
-                # Update config entry with new API key
-                self.hass.config_entries.async_update_entry(
-                    self._reauth_entry,
-                    data={**self._reauth_entry.data, **user_input},
-                )
-
-                # Clear auth repair issue
-                ir.async_delete_issue(self.hass, DOMAIN, REPAIR_AUTH_FAILED)
-
-                await self.hass.config_entries.async_reload(self._reauth_entry.entry_id)
-                return self.async_abort(reason="reauth_successful")
-
-            except InvalidAuthError:
-                errors["base"] = "invalid_auth"
-            except CannotConnectError:
-                errors["base"] = "cannot_connect"
-            except UnsupportedVersionError:
-                errors["base"] = "unsupported_version"
-            except Exception:  # pylint: disable=broad-except
-                _LOGGER.exception("Unexpected error during reauth")
-                errors["base"] = "unknown"
-
-        return self.async_show_form(
-            step_id="reauth_confirm",
-            data_schema=vol.Schema({vol.Required(CONF_API_KEY): str}),
-            errors=errors,
-            description_placeholders={
-                "host": self._reauth_entry.data[CONF_HOST] if self._reauth_entry else ""
-            },
-        )
 
     async def async_step_reconfigure(
         self, user_input: dict[str, Any] | None = None

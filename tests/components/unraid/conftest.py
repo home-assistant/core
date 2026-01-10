@@ -15,23 +15,6 @@ from homeassistant.components.unraid.coordinator import (
     UnraidStorageData,
     UnraidSystemData,
 )
-from homeassistant.components.unraid.models import (
-    ArrayCapacity,
-    ArrayDisk,
-    CapacityKilobytes,
-    CpuPackages,
-    CpuUtilization,
-    DockerContainer,
-    InfoCpu,
-    InfoOs,
-    MemoryUtilization,
-    Metrics,
-    ParityCheck,
-    Share,
-    SystemInfo,
-    UPSDevice,
-    VmDomain,
-)
 
 from tests.common import MockConfigEntry
 
@@ -52,27 +35,25 @@ def make_system_data(
     cpu_temps: list[float] | None = None,
     cpu_power: float | None = None,
     uptime: datetime | None = None,
-    ups_devices: list[UPSDevice] | None = None,
-    containers: list[DockerContainer] | None = None,
-    vms: list[VmDomain] | None = None,
+    ups_devices: list[dict[str, Any]] | None = None,
+    containers: list[dict[str, Any]] | None = None,
+    vms: list[dict[str, Any]] | None = None,
     notifications_unread: int = 0,
 ) -> UnraidSystemData:
-    """Create a UnraidSystemData instance for testing."""
+    """Create a UnraidSystemData instance for testing using raw dicts."""
     return UnraidSystemData(
-        info=SystemInfo(
-            cpu=InfoCpu(
-                packages=CpuPackages(temp=cpu_temps or [], total_power=cpu_power)
-            ),
-            os=InfoOs(uptime=uptime),
-        ),
-        metrics=Metrics(
-            cpu=CpuUtilization(percent_total=cpu_percent),
-            memory=MemoryUtilization(
-                total=memory_total,
-                used=memory_used,
-                percent_total=memory_percent,
-            ),
-        ),
+        info={
+            "cpu": {"packages": {"temp": cpu_temps or [], "totalPower": cpu_power}},
+            "os": {"uptime": uptime.isoformat() if uptime else None},
+        },
+        metrics={
+            "cpu": {"percentTotal": cpu_percent},
+            "memory": {
+                "total": memory_total,
+                "used": memory_used,
+                "percentTotal": memory_percent,
+            },
+        },
         ups_devices=ups_devices or [],
         containers=containers or [],
         vms=vms or [],
@@ -82,20 +63,18 @@ def make_system_data(
 
 def make_storage_data(
     array_state: str | None = None,
-    capacity: ArrayCapacity | None = None,
-    parity_status: ParityCheck | None = None,
-    disks: list[ArrayDisk] | None = None,
-    parities: list[ArrayDisk] | None = None,
-    caches: list[ArrayDisk] | None = None,
-    shares: list[Share] | None = None,
-    boot: ArrayDisk | None = None,
+    capacity: dict[str, Any] | None = None,
+    parity_status: dict[str, Any] | None = None,
+    disks: list[dict[str, Any]] | None = None,
+    parities: list[dict[str, Any]] | None = None,
+    caches: list[dict[str, Any]] | None = None,
+    shares: list[dict[str, Any]] | None = None,
+    boot: dict[str, Any] | None = None,
 ) -> UnraidStorageData:
-    """Create a UnraidStorageData instance for testing."""
+    """Create a UnraidStorageData instance for testing using raw dicts."""
     # Provide default capacity if not specified and array_state is set
     if capacity is None and array_state is not None:
-        capacity = ArrayCapacity(
-            kilobytes=CapacityKilobytes(total=1000, used=500, free=500)
-        )
+        capacity = {"kilobytes": {"total": 1000, "used": 500, "free": 500}}
     return UnraidStorageData(
         array_state=array_state,
         capacity=capacity,

@@ -26,8 +26,6 @@ from homeassistant.components.unraid.const import (
     DEFAULT_UPS_NOMINAL_POWER,
     DOMAIN,
 )
-from homeassistant.components.unraid.models import UPSDevice
-from homeassistant.config_entries import UnknownEntry
 from homeassistant.const import CONF_API_KEY, CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -562,250 +560,6 @@ class TestConfigFlow:
             )
 
 
-class TestReauthFlow:
-    """Test Unraid reauth flow."""
-
-    async def test_reauth_flow_shows_form(
-        self, hass: HomeAssistant, mock_setup_entry: None
-    ) -> None:
-        """Test reauth flow shows form for new API key."""
-        # Create initial config entry
-        entry = MockConfigEntry(
-            domain=DOMAIN,
-            title="tower",
-            data={CONF_HOST: "unraid.local", CONF_API_KEY: "old-key"},
-            options={},
-            unique_id="test-uuid",
-        )
-        entry.add_to_hass(hass)
-
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={
-                "source": config_entries.SOURCE_REAUTH,
-                "entry_id": entry.entry_id,
-            },
-            data={CONF_HOST: "unraid.local"},
-        )
-
-        assert result["type"] == FlowResultType.FORM
-        assert result["step_id"] == "reauth_confirm"
-
-    async def test_reauth_flow_success(
-        self, hass: HomeAssistant, mock_setup_entry: None
-    ) -> None:
-        """Test successful reauth updates the config entry."""
-        # Create initial config entry
-        entry = MockConfigEntry(
-            domain=DOMAIN,
-            title="tower",
-            data={CONF_HOST: "unraid.local", CONF_API_KEY: "old-key"},
-            options={},
-            unique_id="test-uuid",
-        )
-        entry.add_to_hass(hass)
-
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={
-                "source": config_entries.SOURCE_REAUTH,
-                "entry_id": entry.entry_id,
-            },
-            data={CONF_HOST: "unraid.local"},
-        )
-
-        with patch(
-            "homeassistant.components.unraid.config_flow.UnraidClient"
-        ) as MockAPIClient:
-            MockAPIClient.return_value = _mock_api_client()
-
-            result2 = await hass.config_entries.flow.async_configure(
-                result["flow_id"],
-                {CONF_API_KEY: "new-api-key"},
-            )
-
-        assert result2["type"] == FlowResultType.ABORT
-        assert result2["reason"] == "reauth_successful"
-        assert entry.data[CONF_API_KEY] == "new-api-key"
-
-    async def test_reauth_flow_invalid_key(
-        self, hass: HomeAssistant, mock_setup_entry: None
-    ) -> None:
-        """Test reauth with invalid API key shows error."""
-        entry = MockConfigEntry(
-            domain=DOMAIN,
-            title="tower",
-            data={CONF_HOST: "unraid.local", CONF_API_KEY: "old-key"},
-            options={},
-            unique_id="test-uuid",
-        )
-        entry.add_to_hass(hass)
-
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={
-                "source": config_entries.SOURCE_REAUTH,
-                "entry_id": entry.entry_id,
-            },
-            data={CONF_HOST: "unraid.local"},
-        )
-
-        with patch(
-            "homeassistant.components.unraid.config_flow.UnraidClient"
-        ) as MockAPIClient:
-            mock_api = AsyncMock()
-            mock_api.test_connection = AsyncMock(
-                side_effect=Exception("401: Unauthorized")
-            )
-            mock_api.close = AsyncMock()
-            MockAPIClient.return_value = mock_api
-
-            result2 = await hass.config_entries.flow.async_configure(
-                result["flow_id"],
-                {CONF_API_KEY: "invalid-key"},
-            )
-
-        assert result2["type"] == FlowResultType.FORM
-        assert result2["errors"]["base"] == "invalid_auth"
-
-    async def test_reauth_flow_missing_entry(
-        self, hass: HomeAssistant, mock_setup_entry: None
-    ) -> None:
-        """Test reauth flow raises UnknownEntry when entry doesn't exist."""
-
-        # When reauth is initiated with a nonexistent entry_id, Home Assistant
-        # raises UnknownEntry during form display (when accessing _get_reauth_entry())
-        with pytest.raises(UnknownEntry):
-            await hass.config_entries.flow.async_init(
-                DOMAIN,
-                context={
-                    "source": config_entries.SOURCE_REAUTH,
-                    "entry_id": "nonexistent-entry-id",
-                },
-                data={CONF_HOST: "unraid.local", CONF_API_KEY: "old-key"},
-            )
-
-    async def test_reauth_flow_cannot_connect_error(
-        self, hass: HomeAssistant, mock_setup_entry: None
-    ) -> None:
-        """Test reauth flow shows connection error."""
-        entry = MockConfigEntry(
-            domain=DOMAIN,
-            title="tower",
-            data={CONF_HOST: "unraid.local", CONF_API_KEY: "old-key"},
-            options={},
-            unique_id="test-uuid",
-        )
-        entry.add_to_hass(hass)
-
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={
-                "source": config_entries.SOURCE_REAUTH,
-                "entry_id": entry.entry_id,
-            },
-            data=entry.data,
-        )
-
-        with patch(
-            "homeassistant.components.unraid.config_flow.UnraidClient"
-        ) as MockAPIClient:
-            mock_api = AsyncMock()
-            mock_api.test_connection = AsyncMock(
-                side_effect=aiohttp.ClientError("Connection refused")
-            )
-            mock_api.close = AsyncMock()
-            MockAPIClient.return_value = mock_api
-
-            result2 = await hass.config_entries.flow.async_configure(
-                result["flow_id"],
-                {CONF_API_KEY: "new-api-key"},
-            )
-
-        assert result2["type"] == FlowResultType.FORM
-        assert result2["errors"]["base"] == "cannot_connect"
-
-    async def test_reauth_flow_unsupported_version_error(
-        self, hass: HomeAssistant, mock_setup_entry: None
-    ) -> None:
-        """Test reauth flow shows unsupported version error."""
-        entry = MockConfigEntry(
-            domain=DOMAIN,
-            title="tower",
-            data={CONF_HOST: "unraid.local", CONF_API_KEY: "old-key"},
-            options={},
-            unique_id="test-uuid",
-        )
-        entry.add_to_hass(hass)
-
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={
-                "source": config_entries.SOURCE_REAUTH,
-                "entry_id": entry.entry_id,
-            },
-            data=entry.data,
-        )
-
-        with patch(
-            "homeassistant.components.unraid.config_flow.UnraidClient"
-        ) as MockAPIClient:
-            mock_api = AsyncMock()
-            mock_api.test_connection = AsyncMock()
-            mock_api.get_version = AsyncMock(
-                return_value={"api": "0.0.1", "unraid": "6.0.0"}  # Old version
-            )
-            mock_api.close = AsyncMock()
-            MockAPIClient.return_value = mock_api
-
-            result2 = await hass.config_entries.flow.async_configure(
-                result["flow_id"],
-                {CONF_API_KEY: "new-api-key"},
-            )
-
-        assert result2["type"] == FlowResultType.FORM
-        assert result2["errors"]["base"] == "unsupported_version"
-
-    async def test_reauth_flow_unknown_error(
-        self, hass: HomeAssistant, mock_setup_entry: None
-    ) -> None:
-        """Test reauth flow wraps unexpected exceptions as cannot_connect."""
-        entry = MockConfigEntry(
-            domain=DOMAIN,
-            title="tower",
-            data={CONF_HOST: "unraid.local", CONF_API_KEY: "old-key"},
-            options={},
-            unique_id="test-uuid",
-        )
-        entry.add_to_hass(hass)
-
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={
-                "source": config_entries.SOURCE_REAUTH,
-                "entry_id": entry.entry_id,
-            },
-            data=entry.data,
-        )
-
-        with patch(
-            "homeassistant.components.unraid.config_flow.UnraidClient"
-        ) as MockAPIClient:
-            mock_api = AsyncMock()
-            mock_api.test_connection = AsyncMock(side_effect=RuntimeError("Unexpected"))
-            mock_api.close = AsyncMock()
-            MockAPIClient.return_value = mock_api
-
-            result2 = await hass.config_entries.flow.async_configure(
-                result["flow_id"],
-                {CONF_API_KEY: "new-api-key"},
-            )
-
-        # RuntimeError gets wrapped as CannotConnectError by _handle_generic_error
-        assert result2["type"] == FlowResultType.FORM
-        assert result2["errors"]["base"] == "cannot_connect"
-
-
 class TestOptionsFlow:
     """Test Unraid options flow."""
 
@@ -855,7 +609,7 @@ class TestOptionsFlow:
         )
         entry.add_to_hass(hass)
 
-        # Mock runtime_data with UPS device
+        # Mock runtime_data with UPS device (using raw dict as in new coordinator)
         @dataclass
         class MockSystemData:
             ups_devices: list
@@ -866,7 +620,7 @@ class TestOptionsFlow:
 
         mock_coordinator = MagicMock()
         mock_coordinator.data = MockSystemData(
-            ups_devices=[UPSDevice(id="ups:1", name="APC")]
+            ups_devices=[{"id": "ups:1", "name": "APC"}]
         )
         entry.runtime_data = MockRuntimeData(system_coordinator=mock_coordinator)
 
@@ -929,7 +683,7 @@ class TestOptionsFlow:
         )
         entry.add_to_hass(hass)
 
-        # Mock runtime_data with UPS device
+        # Mock runtime_data with UPS device (using raw dict as in new coordinator)
         @dataclass
         class MockSystemData:
             ups_devices: list
@@ -940,7 +694,7 @@ class TestOptionsFlow:
 
         mock_coordinator = MagicMock()
         mock_coordinator.data = MockSystemData(
-            ups_devices=[UPSDevice(id="ups:1", name="APC")]
+            ups_devices=[{"id": "ups:1", "name": "APC"}]
         )
         entry.runtime_data = MockRuntimeData(system_coordinator=mock_coordinator)
 

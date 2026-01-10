@@ -362,7 +362,4 @@ class TestPlatforms:
         """Test that all expected platforms are defined."""
 
         assert Platform.SENSOR in PLATFORMS
-        assert Platform.BINARY_SENSOR in PLATFORMS
-        assert Platform.SWITCH in PLATFORMS
-        assert Platform.BUTTON in PLATFORMS
-        assert len(PLATFORMS) == 4
+        assert len(PLATFORMS) == 1

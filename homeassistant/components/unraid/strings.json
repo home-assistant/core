@@ -2,8 +2,6 @@
   "config": {
     "abort": {
       "already_configured": "This Unraid server is already configured.",
-      "reauth_failed": "Reauthentication failed.",
-      "reauth_successful": "Reauthentication successful.",
       "reconfigure_failed": "Reconfiguration failed - entry not found.",
       "reconfigure_successful": "Reconfiguration successful."
     },
@@ -18,16 +16,6 @@
       "unsupported_version": "Unraid version not supported. Minimum required: Unraid 7.2.0 (API v4.21.0)."
     },
     "step": {
-      "reauth_confirm": {
-        "data": {
-          "api_key": "API Key"
-        },
-        "data_description": {
-          "api_key": "Generate a new API key in Unraid Settings → Management Access → API Keys"
-        },
-        "description": "The API key for {host} is no longer valid. Please enter a new API key.",
-        "title": "Reauthenticate Unraid"
-      },
       "reconfigure": {
         "data": {
           "api_key": "API Key",
@@ -53,7 +41,7 @@
         },
         "data_description": {
           "api_key": "Generate in Unraid Settings → Management Access → API Keys. Requires ADMIN role.",
-          "host": "IP address (e.g., 192.168.1.100) or hostname/domain of your Unraid server",
+          "host": "IP address (for example, 192.168.1.100) or hostname/domain of your Unraid server",
           "http_port": "HTTP port (default: 80). Change only if modified in Unraid Settings → Management Access.",
           "https_port": "HTTPS port (default: 443). Change only if modified in Unraid Settings → Management Access."
         },
@@ -62,58 +50,68 @@
       }
     }
   },
-  "exceptions": {
-    "array_start_failed": {
-      "message": "Failed to start array: {error}"
-    },
-    "array_stop_failed": {
-      "message": "Failed to stop array: {error}"
-    },
-    "container_start_failed": {
-      "message": "Failed to start container {name}: {error}"
-    },
-    "container_stop_failed": {
-      "message": "Failed to stop container {name}: {error}"
-    },
-    "disk_spin_down_failed": {
-      "message": "Failed to spin down disk {name}: {error}"
-    },
-    "disk_spin_up_failed": {
-      "message": "Failed to spin up disk {name}: {error}"
-    },
-    "graphql_query_failed": {
-      "message": "GraphQL query failed: {error}"
-    },
-    "parity_check_pause_failed": {
-      "message": "Failed to pause parity check: {error}"
-    },
-    "parity_check_resume_failed": {
-      "message": "Failed to resume parity check: {error}"
-    },
-    "parity_check_start_failed": {
-      "message": "Failed to start parity check: {error}"
-    },
-    "parity_check_stop_failed": {
-      "message": "Failed to stop parity check: {error}"
-    },
-    "vm_start_failed": {
-      "message": "Failed to start VM {name}: {error}"
-    },
-    "vm_stop_failed": {
-      "message": "Failed to stop VM {name}: {error}"
-    }
-  },
-  "issues": {
-    "auth_failed": {
-      "fix_flow": {
-        "step": {
-          "confirm": {
-            "description": "The API key for {host} is no longer valid. Click submit to enter a new API key.",
-            "title": "Reauthenticate Unraid"
-          }
-        }
+  "entity": {
+    "sensor": {
+      "array_state": {
+        "name": "Array state"
       },
-      "title": "Authentication Failed"
+      "array_total": {
+        "name": "Array total"
+      },
+      "array_usage": {
+        "name": "Array usage"
+      },
+      "array_used": {
+        "name": "Array used"
+      },
+      "cpu_temp": {
+        "name": "CPU temperature"
+      },
+      "cpu_usage": {
+        "name": "CPU usage"
+      },
+      "disk_temp": {
+        "name": "Disk {disk_name} temperature"
+      },
+      "disk_usage": {
+        "name": "Disk {disk_name} usage"
+      },
+      "disk_used": {
+        "name": "Disk {disk_name} used"
+      },
+      "notifications": {
+        "name": "Notifications"
+      },
+      "parity_progress": {
+        "name": "Parity check progress"
+      },
+      "ram_total": {
+        "name": "RAM total"
+      },
+      "ram_usage": {
+        "name": "RAM usage"
+      },
+      "ram_used": {
+        "name": "RAM used"
+      },
+      "share_usage": {
+        "name": "Share {share_name} usage"
+      },
+      "share_used": {
+        "name": "Share {share_name} used"
+      },
+      "ups_battery": {
+        "name": "UPS {ups_name} battery"
+      },
+      "ups_load": {
+        "name": "UPS {ups_name} load"
+      },
+      "ups_runtime": {
+        "name": "UPS {ups_name} runtime"
+      },
+      "uptime": {
+        "name": "Uptime"
+      }
     }
   },
   "options": {
@@ -128,7 +126,7 @@
         "data_description": {
           "storage_interval": "How often to poll disks and shares (60-3600 seconds). Higher values prevent disk spin-up.",
           "system_interval": "How often to poll CPU, memory, Docker, VMs (10-300 seconds)",
-          "ups_capacity_va": "Optional. Your UPS VA rating (e.g., 1000 for a 1000VA UPS). Shown in sensor attributes for reference.",
+          "ups_capacity_va": "Optional. Your UPS VA rating (for example, 1000 for a 1000VA UPS). Shown in sensor attributes for reference.",
           "ups_nominal_power": "Required for UPS Power sensor. Enter the Watts value from your UPS specs. If Unraid only shows VA, check your UPS label or estimate using VA × 0.6."
         },
         "description": "Adjust polling intervals and UPS settings. Set UPS Nominal Power to enable power consumption tracking for the Energy Dashboard.",

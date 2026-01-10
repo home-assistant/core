@@ -99,7 +99,11 @@ rules:
   parallel-updates: done
 
   # Reauthentication needs to be available via the UI
-  reauthentication-flow: done
+  reauthentication-flow:
+    status: exempt
+    comment: |
+      Removed per reviewer feedback to reduce PR scope.
+      Can be added in a follow-up PR.
 
   # Above 95% test coverage for all integration modules
   test-coverage: done
@@ -112,7 +116,11 @@ rules:
   devices: done
 
   # Implements diagnostics
-  diagnostics: done
+  diagnostics:
+    status: exempt
+    comment: |
+      Removed per reviewer feedback to reduce PR scope.
+      Can be added in a follow-up PR.
 
   # Integration uses discovery info to update network information
   discovery-update-info:
