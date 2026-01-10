@@ -83,7 +83,9 @@ class SmartThingsAudioManager(HomeAssistantView):
                 WARNING_DURATION_SECONDS,
             )
 
-        token = secrets.token_urlsafe(16)
+        token = secrets.token_urlsafe(
+            16
+        )  # Shorter tokens avoid playback issues in some devices.
         now = self.hass.loop.time()
         entry = _AudioEntry(
             pcm=pcm,
