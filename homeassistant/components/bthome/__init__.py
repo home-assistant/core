@@ -36,7 +36,7 @@ PLATFORMS: list[Platform] = [Platform.BINARY_SENSOR, Platform.EVENT, Platform.SE
 _LOGGER = logging.getLogger(__name__)
 
 
-def _get_encryption_issue_id(entry_id: str) -> str:
+def get_encryption_issue_id(entry_id: str) -> str:
     """Return the repair issue id for encryption removal."""
     return f"encryption_removed_{entry_id}"
 
@@ -51,7 +51,7 @@ def process_service_info(
     coordinator = entry.runtime_data
     data = coordinator.device_data
     issue_registry = ir.async_get(hass)
-    issue_id = _get_encryption_issue_id(entry.entry_id)
+    issue_id = get_encryption_issue_id(entry.entry_id)
     update = data.update(service_info)
 
     # Block unencrypted payloads for devices that were previously verified as encrypted.
@@ -194,3 +194,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: BTHomeConfigEntry) -> bo
 async def async_unload_entry(hass: HomeAssistant, entry: BTHomeConfigEntry) -> bool:
     """Unload a config entry."""
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+
+
+async def async_remove_entry(hass: HomeAssistant, entry: BTHomeConfigEntry) -> None:
+    """Remove a config entry."""
+    ir.async_delete_issue(hass, DOMAIN, get_encryption_issue_id(entry.entry_id))

@@ -9,6 +9,7 @@ from homeassistant.components.repairs import RepairsFlow
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import issue_registry as ir
 
+from . import get_encryption_issue_id
 from .const import CONF_BINDKEY, DOMAIN
 
 
@@ -32,15 +33,17 @@ class EncryptionRemovedRepairFlow(RepairsFlow):
         """Handle confirmation, remove the bindkey, and reload the entry."""
         if user_input is not None:
             entry = self.hass.config_entries.async_get_entry(self._entry_id)
-            if entry:
-                new_data = {k: v for k, v in entry.data.items() if k != CONF_BINDKEY}
-                self.hass.config_entries.async_update_entry(entry, data=new_data)
+            if not entry:
+                return self.async_abort(reason="entry_removed")
 
-                ir.async_delete_issue(
-                    self.hass, DOMAIN, f"encryption_removed_{self._entry_id}"
-                )
+            new_data = {k: v for k, v in entry.data.items() if k != CONF_BINDKEY}
+            self.hass.config_entries.async_update_entry(entry, data=new_data)
 
-                await self.hass.config_entries.async_reload(self._entry_id)
+            ir.async_delete_issue(
+                self.hass, DOMAIN, get_encryption_issue_id(self._entry_id)
+            )
+
+            await self.hass.config_entries.async_reload(self._entry_id)
 
             return self.async_create_entry(data={})
 

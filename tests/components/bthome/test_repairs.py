@@ -6,6 +6,7 @@ from collections.abc import Callable
 from unittest.mock import AsyncMock, patch
 
 from homeassistant.components.bluetooth import BluetoothChange
+from homeassistant.components.bthome import get_encryption_issue_id
 from homeassistant.components.bthome.const import CONF_BINDKEY, DOMAIN
 import homeassistant.components.bthome.repairs as bthome_repairs
 from homeassistant.core import HomeAssistant
@@ -176,3 +177,45 @@ async def test_repair_flow_removes_bindkey_and_reloads_entry(
     assert CONF_BINDKEY not in entry.data
     assert issue_registry.async_get_issue(DOMAIN, issue_id) is None
     reload_mock.assert_awaited_once_with(entry.entry_id)
+
+
+async def test_repair_flow_aborts_when_entry_removed(
+    hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test the repair flow aborts gracefully when entry is removed."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="54:48:E6:8F:80:A5",
+        title="Test Device",
+        data={CONF_BINDKEY: BINDKEY},
+    )
+    entry.add_to_hass(hass)
+
+    issue_id = get_encryption_issue_id(entry.entry_id)
+    ir.async_create_issue(
+        hass,
+        DOMAIN,
+        issue_id,
+        is_fixable=True,
+        is_persistent=True,
+        severity=ir.IssueSeverity.WARNING,
+        translation_key="encryption_removed",
+        translation_placeholders={"name": entry.title},
+        data={"entry_id": entry.entry_id},
+    )
+
+    flow = await bthome_repairs.async_create_fix_flow(
+        hass, issue_id, {"entry_id": entry.entry_id}
+    )
+    flow.hass = hass
+
+    # Remove entry before confirming
+    await hass.config_entries.async_remove(entry.entry_id)
+
+    result = await flow.async_step_init()
+    assert result["type"] == FlowResultType.FORM
+
+    result = await flow.async_step_confirm(user_input={})
+    assert result["type"] == FlowResultType.ABORT
+    assert result["reason"] == "entry_removed"
