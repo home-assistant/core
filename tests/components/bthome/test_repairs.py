@@ -50,20 +50,21 @@ async def _setup_entry(
     return entry, saved_callback
 
 
-async def test_encryption_downgrade_blocks_data_and_creates_issue(
+async def test_encryption_downgrade_creates_issue(
     hass: HomeAssistant,
     issue_registry: ir.IssueRegistry,
 ) -> None:
-    """Test unencrypted payloads trigger an issue and stop updates."""
+    """Test unencrypted payloads create a repair issue."""
     entry, callback = await _setup_entry(hass)
+    issue_id = get_encryption_issue_id(entry.entry_id)
 
+    # Send encrypted data first to establish the device
     callback(TEMP_HUMI_ENCRYPTED_SERVICE_INFO, BluetoothChange.ADVERTISEMENT)
     await hass.async_block_till_done()
 
-    issue_id = f"encryption_removed_{entry.entry_id}"
     assert issue_registry.async_get_issue(DOMAIN, issue_id) is None
-    assert entry.runtime_data.encryption_downgrade_logged is False
 
+    # Send unencrypted data - should create issue
     callback(PRST_SERVICE_INFO, BluetoothChange.ADVERTISEMENT)
     await hass.async_block_till_done()
 
@@ -72,67 +73,52 @@ async def test_encryption_downgrade_blocks_data_and_creates_issue(
     assert issue.data is not None
     assert issue.data["entry_id"] == entry.entry_id
     assert issue.is_fixable is True
-    assert entry.runtime_data.encryption_downgrade_logged is True
 
 
-async def test_blocking_persists_when_issue_already_exists(
+async def test_encryption_downgrade_warning_only_logged_once(
     hass: HomeAssistant,
     issue_registry: ir.IssueRegistry,
 ) -> None:
-    """Test we keep blocking without spamming warnings when issue already exists."""
-    entry, callback = await _setup_entry(hass)
+    """Test warning is only logged once per session."""
+    _, callback = await _setup_entry(hass)
 
-    issue_id = f"encryption_removed_{entry.entry_id}"
-    ir.async_create_issue(
-        hass,
-        DOMAIN,
-        issue_id,
-        is_fixable=True,
-        is_persistent=True,
-        severity=ir.IssueSeverity.WARNING,
-        translation_key="encryption_removed",
-        translation_placeholders={"name": entry.title},
-        data={"entry_id": entry.entry_id},
-    )
-    entry.runtime_data.encryption_downgrade_logged = False
+    # Send encrypted data first
+    callback(TEMP_HUMI_ENCRYPTED_SERVICE_INFO, BluetoothChange.ADVERTISEMENT)
+    await hass.async_block_till_done()
 
     with patch("homeassistant.components.bthome._LOGGER.warning") as mock_warning:
+        # First unencrypted - should warn
         callback(PRST_SERVICE_INFO, BluetoothChange.ADVERTISEMENT)
         await hass.async_block_till_done()
-        mock_warning.assert_not_called()
+        assert mock_warning.call_count == 1
 
-    assert issue_registry.async_get_issue(DOMAIN, issue_id) is not None
-    assert entry.runtime_data.encryption_downgrade_logged is True
+        # Second unencrypted - should not warn again
+        callback(PRST_SERVICE_INFO, BluetoothChange.ADVERTISEMENT)
+        await hass.async_block_till_done()
+        assert mock_warning.call_count == 1
 
 
-async def test_auto_clear_issue_when_encryption_resumes(
+async def test_issue_cleared_when_encryption_resumes(
     hass: HomeAssistant,
     issue_registry: ir.IssueRegistry,
 ) -> None:
-    """Test encrypted payloads delete the repair issue and reset flags."""
+    """Test issue is cleared when encrypted data resumes."""
     entry, callback = await _setup_entry(hass)
+    issue_id = get_encryption_issue_id(entry.entry_id)
 
-    issue_id = f"encryption_removed_{entry.entry_id}"
-    ir.async_create_issue(
-        hass,
-        DOMAIN,
-        issue_id,
-        is_fixable=True,
-        is_persistent=True,
-        severity=ir.IssueSeverity.WARNING,
-        translation_key="encryption_removed",
-        translation_placeholders={"name": entry.title},
-        data={"entry_id": entry.entry_id},
-    )
-    entry.runtime_data.encryption_downgrade_logged = True
+    # Send encrypted, then unencrypted to create the issue
+    callback(TEMP_HUMI_ENCRYPTED_SERVICE_INFO, BluetoothChange.ADVERTISEMENT)
+    await hass.async_block_till_done()
+    callback(PRST_SERVICE_INFO, BluetoothChange.ADVERTISEMENT)
+    await hass.async_block_till_done()
 
-    with patch("homeassistant.components.bthome._LOGGER.info") as mock_info:
-        callback(TEMP_HUMI_ENCRYPTED_SERVICE_INFO, BluetoothChange.ADVERTISEMENT)
-        await hass.async_block_till_done()
-        mock_info.assert_called_once()
+    assert issue_registry.async_get_issue(DOMAIN, issue_id) is not None
+
+    # Send encrypted data again - should clear issue
+    callback(TEMP_HUMI_ENCRYPTED_SERVICE_INFO, BluetoothChange.ADVERTISEMENT)
+    await hass.async_block_till_done()
 
     assert issue_registry.async_get_issue(DOMAIN, issue_id) is None
-    assert entry.runtime_data.encryption_downgrade_logged is False
 
 
 async def test_repair_flow_removes_bindkey_and_reloads_entry(
@@ -148,7 +134,7 @@ async def test_repair_flow_removes_bindkey_and_reloads_entry(
     )
     entry.add_to_hass(hass)
 
-    issue_id = f"encryption_removed_{entry.entry_id}"
+    issue_id = get_encryption_issue_id(entry.entry_id)
     ir.async_create_issue(
         hass,
         DOMAIN,
