@@ -1,0 +1,15 @@
+add_password:
+  target:
+    entity:
+      integration: switchbot
+  fields:
+    password:
+      required: true
+      example: "123456"
+      selector:
+        text:
+          type: password
+get_password_count:
+  target:
+    entity:
+      integration: switchbot

@@ -141,5 +141,13 @@
         }
       }
     }
+  },
+  "services": {
+    "add_password": {
+      "service": "mdi:key-plus"
+    },
+    "get_password_count": {
+      "service": "mdi:counter"
+    }
   }
 }
