@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import asyncio
 import base64
+import binascii
 from datetime import datetime, timedelta
 import json
 import logging
@@ -54,7 +55,7 @@ class SMNTokenManager:
 
             decoded = base64.urlsafe_b64decode(payload)
             return json.loads(decoded)
-        except Exception as err:  # noqa: BLE001
+        except (ValueError, json.JSONDecodeError, binascii.Error) as err:
             _LOGGER.error("Error decoding JWT: %s", err)
             return {}
 
