@@ -634,3 +634,81 @@ async def test_ssdp_discovery_no_host_no_location(hass: HomeAssistant) -> None:
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "no_host_found"
+
+
+async def test_ssdp_discovery_multiple_services_same_device(
+    hass: HomeAssistant,
+    mock_connection_success: MagicMock,
+) -> None:
+    """Test that multiple SSDP discoveries from same device (different services) result in single discovery.
+
+    A MediaRenderer device advertises multiple SSDP services (RenderingControl,
+    AVTransport, ConnectionManager) each with different USN but same UDN.
+    This test verifies that only one discovery entry is created.
+    """
+    # First discovery - RenderingControl service
+    result1 = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_SSDP},
+        data=SsdpServiceInfo(
+            ssdp_usn=f"{TEST_UDN}::urn:schemas-upnp-org:service:RenderingControl:1",
+            ssdp_st="urn:schemas-upnp-org:service:RenderingControl:1",
+            ssdp_udn=TEST_UDN,
+            ssdp_location=TEST_SSDP_LOCATION,
+            upnp={
+                "presentationURL": f"http://{TEST_HOST}/",
+                "friendlyName": TEST_NAME,
+                "modelName": TEST_MODEL,
+            },
+        ),
+    )
+
+    assert result1["type"] is FlowResultType.FORM
+    assert result1["step_id"] == "user"
+    flow_id = result1["flow_id"]
+
+    # Second discovery - AVTransport service (different USN, same UDN)
+    result2 = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_SSDP},
+        data=SsdpServiceInfo(
+            ssdp_usn=f"{TEST_UDN}::urn:schemas-upnp-org:service:AVTransport:1",
+            ssdp_st="urn:schemas-upnp-org:service:AVTransport:1",
+            ssdp_udn=TEST_UDN,
+            ssdp_location=TEST_SSDP_LOCATION,
+            upnp={
+                "presentationURL": f"http://{TEST_HOST}/",
+                "friendlyName": TEST_NAME,
+                "modelName": TEST_MODEL,
+            },
+        ),
+    )
+
+    # Second discovery should abort since same UDN is already in progress
+    assert result2["type"] is FlowResultType.ABORT
+    assert result2["reason"] == "already_in_progress"
+
+    # Third discovery - ConnectionManager service (different USN, same UDN)
+    result3 = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_SSDP},
+        data=SsdpServiceInfo(
+            ssdp_usn=f"{TEST_UDN}::urn:schemas-upnp-org:service:ConnectionManager:1",
+            ssdp_st="urn:schemas-upnp-org:service:ConnectionManager:1",
+            ssdp_udn=TEST_UDN,
+            ssdp_location=TEST_SSDP_LOCATION,
+            upnp={
+                "presentationURL": f"http://{TEST_HOST}/",
+                "friendlyName": TEST_NAME,
+                "modelName": TEST_MODEL,
+            },
+        ),
+    )
+
+    # Third discovery should also abort
+    assert result3["type"] is FlowResultType.ABORT
+    assert result3["reason"] == "already_in_progress"
+
+    # Original flow should still be available
+    flows = hass.config_entries.flow.async_progress()
+    assert len([f for f in flows if f["flow_id"] == flow_id]) == 1

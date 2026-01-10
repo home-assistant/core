@@ -158,8 +158,10 @@ class HegelConfigFlow(ConfigFlow, domain=DOMAIN):
         if not host:
             return self.async_abort(reason="no_host_found")
 
-        await self.async_set_unique_id(discovery_info.ssdp_usn)
-        self._abort_if_unique_id_configured()
+        # Use UDN (device UUID) instead of USN to avoid duplicates from multiple services
+        unique_id = discovery_info.ssdp_udn or discovery_info.ssdp_usn
+        await self.async_set_unique_id(unique_id)
+        self._abort_if_unique_id_configured(updates={CONF_HOST: host})
 
         friendly_name = upnp.get("friendlyName", f"Hegel {host}")
         suggested_model = upnp.get("modelName") or ""
@@ -172,7 +174,7 @@ class HegelConfigFlow(ConfigFlow, domain=DOMAIN):
             CONF_HOST: host,
             CONF_NAME: friendly_name,
             CONF_MODEL: model_default or list(MODEL_INPUTS.keys())[0],
-            "unique_id": discovery_info.ssdp_usn,
+            "unique_id": unique_id,
         }
 
         return await self.async_step_user()
