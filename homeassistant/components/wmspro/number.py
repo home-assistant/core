@@ -34,7 +34,9 @@ async def async_setup_entry(
         if d.hasAction(ACTION_DESC.SlatDrive) and d.hasAction(ACTION_DESC.SlatRotate):
             entities.append(WebControlProSlatRange(config_entry.entry_id, d, min))
             entities.append(WebControlProSlatRange(config_entry.entry_id, d, max))
+        if d.hasAction(ACTION_DESC.SlatRotate):
             entities.append(WebControlProSlatRotation(config_entry.entry_id, d))
+
     async_add_entities(entities)
 
 
