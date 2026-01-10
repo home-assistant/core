@@ -126,7 +126,7 @@
         },
         "step": {
           "confirm": {
-            "description": "The BTHome device **{name}** was configured with encryption but is now broadcasting unencrypted data.\n\n**Data from this device is currently being ignored** to protect against potential spoofing attacks.\n\nThis could mean:\n1. Encryption was intentionally disabled on the device\n2. A potential spoofing attempt by a malicious actor\n\n**If you intentionally disabled encryption on the device**, select **Submit** to remove the encryption key from Home Assistant and resume receiving data.\n\n**If you did NOT disable encryption**, cancel this flow and re-enable encryption on your device immediately.",
+            "description": "The BTHome device **{name}** was configured with encryption but is now broadcasting unencrypted data. Data from this device is being ignored until this is resolved.\n\nIf you disabled encryption on the device, select **Submit** to remove the encryption key and resume receiving data.\n\nIf you did not disable encryption, do not submit this form. Instead, check your device configuration and re-enable encryption.",
             "title": "Remove encryption key for {name}"
           }
         }
