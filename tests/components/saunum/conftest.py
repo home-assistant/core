@@ -42,8 +42,8 @@ def mock_config_entry() -> MockConfigEntry:
 
 
 @pytest.fixture
-def mock_saunum_client() -> Generator[MagicMock]:
-    """Return a mocked Saunum client for config flow and integration tests."""
+def mock_saunum_client_class() -> Generator[MagicMock]:
+    """Return a mocked Saunum client class for config flow and integration tests."""
     with (
         patch(
             "homeassistant.components.saunum.config_flow.SaunumClient", autospec=True
@@ -78,7 +78,13 @@ def mock_saunum_client() -> Generator[MagicMock]:
 
         mock_client.async_get_data.return_value = mock_data
 
-        yield mock_client
+        yield mock_client_class
+
+
+@pytest.fixture
+def mock_saunum_client(mock_saunum_client_class: MagicMock) -> MagicMock:
+    """Return a mocked Saunum client instance."""
+    return mock_saunum_client_class.return_value
 
 
 @pytest.fixture

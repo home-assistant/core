@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock
 
 from pysaunum import SaunumConnectionError, SaunumException
 import pytest
@@ -49,29 +49,27 @@ async def test_full_flow(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> No
 )
 async def test_form_errors(
     hass: HomeAssistant,
-    mock_saunum_client,
+    mock_saunum_client_class,
     side_effect: Exception,
     error_base: str,
     mock_setup_entry: AsyncMock,
 ) -> None:
     """Test error handling and recovery."""
-    with patch(
-        "homeassistant.components.saunum.config_flow.SaunumClient.create",
-        side_effect=side_effect,
-    ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_USER}
-        )
+    mock_saunum_client_class.create.side_effect = side_effect
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
 
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            TEST_USER_INPUT,
-        )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        TEST_USER_INPUT,
+    )
 
-        assert result["type"] is FlowResultType.FORM
-        assert result["errors"] == {"base": error_base}
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": error_base}
 
     # Test recovery - try again without the error
+    mock_saunum_client_class.create.side_effect = None
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -140,7 +138,7 @@ async def test_reconfigure_flow(
 async def test_reconfigure_errors(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_saunum_client,
+    mock_saunum_client_class,
     side_effect: Exception,
     error_base: str,
     mock_setup_entry: AsyncMock,
@@ -153,19 +151,17 @@ async def test_reconfigure_errors(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
 
-    with patch(
-        "homeassistant.components.saunum.config_flow.SaunumClient.create",
-        side_effect=side_effect,
-    ):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            TEST_RECONFIGURE_INPUT,
-        )
+    mock_saunum_client_class.create.side_effect = side_effect
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        TEST_RECONFIGURE_INPUT,
+    )
 
-        assert result["type"] is FlowResultType.FORM
-        assert result["errors"] == {"base": error_base}
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": error_base}
 
     # Test recovery - try again without the error
+    mock_saunum_client_class.create.side_effect = None
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
