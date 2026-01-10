@@ -16,7 +16,6 @@ from homeassistant.components.http import HomeAssistantView
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.network import NoURLAvailableError, get_url
-from homeassistant.util import dt as dt_util
 
 from .const import DOMAIN
 
@@ -85,7 +84,7 @@ class SmartThingsAudioManager(HomeAssistantView):
             )
 
         token = secrets.token_urlsafe(16)
-        now = dt_util.utcnow().timestamp()
+        now = self.hass.loop.time()
         entry = _AudioEntry(
             pcm=pcm,
             created=now,
@@ -93,6 +92,8 @@ class SmartThingsAudioManager(HomeAssistantView):
         )
 
         self._cleanup(now)
+        while token in self._entries:
+            token = secrets.token_urlsafe(16)
         self._entries[token] = entry
         while len(self._entries) > MAX_STORED_ENTRIES:
             dropped_token = next(iter(self._entries))
@@ -110,7 +111,7 @@ class SmartThingsAudioManager(HomeAssistantView):
                 allow_internal=True,
                 allow_external=True,
                 allow_cloud=True,
-                prefer_external=False,  # Prevent NAT loopback failures; may break non-local access.
+                prefer_external=False,  # Prevent NAT loopback failures; may break non-local access for devices outside the LAN.
                 prefer_cloud=True,
             )
         except NoURLAvailableError as err:
@@ -126,7 +127,7 @@ class SmartThingsAudioManager(HomeAssistantView):
         """Serve a PCM audio response."""
         token = token.removesuffix(PCM_EXTENSION)
 
-        now = dt_util.utcnow().timestamp()
+        now = self.hass.loop.time()
         self._cleanup(now)
         self._schedule_cleanup()
         entry = self._entries.get(token)
@@ -232,14 +233,14 @@ class SmartThingsAudioManager(HomeAssistantView):
         if not self._entries:
             return
         next_expiry = min(entry.expires for entry in self._entries.values())
-        delay = max(0.0, next_expiry - dt_util.utcnow().timestamp())
+        delay = max(0.0, next_expiry - self.hass.loop.time())
         self._cleanup_handle = self.hass.loop.call_later(delay, self._cleanup_callback)
 
     @callback
     def _cleanup_callback(self) -> None:
         """Run a cleanup pass."""
         self._cleanup_handle = None
-        now = dt_util.utcnow().timestamp()
+        now = self.hass.loop.time()
         self._cleanup(now)
         self._schedule_cleanup()
 
