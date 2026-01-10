@@ -64,6 +64,17 @@ def _async_create_encryption_downgrade_issue(
     )
 
 
+def _async_clear_encryption_downgrade_issue(
+    hass: HomeAssistant, entry: BTHomeConfigEntry, issue_id: str
+) -> None:
+    """Clear the encryption downgrade repair issue."""
+    ir.async_delete_issue(hass, DOMAIN, issue_id)
+    _LOGGER.info(
+        "BTHome device %s is now sending encrypted data again. Resuming normal operation",
+        entry.title,
+    )
+
+
 def process_service_info(
     hass: HomeAssistant,
     entry: BTHomeConfigEntry,
@@ -91,11 +102,7 @@ def process_service_info(
     ):
         coordinator.encryption_downgrade_logged = False
         if existing_issue:
-            ir.async_delete_issue(hass, DOMAIN, issue_id)
-            _LOGGER.info(
-                "BTHome device %s is now sending encrypted data again. Resuming normal operation",
-                entry.title,
-            )
+            _async_clear_encryption_downgrade_issue(hass, entry, issue_id)
 
     discovered_event_classes = coordinator.discovered_event_classes
     if entry.data.get(CONF_SLEEPY_DEVICE, False) != data.sleepy_device:
