@@ -19,6 +19,11 @@
     }
   },
   "entity": {
+    "button": {
+      "issue_hotplug": {
+        "name": "Issue hotplug"
+      }
+    },
     "select": {
       "opmode": {
         "name": "Operation mode",
@@ -50,6 +55,38 @@
           "3": "Input 3",
           "4": "Copy TX0"
         }
+      }
+    },
+    "switch": {
+      "autosw": {
+        "name": "Auto switch inputs"
+      },
+      "htpcmode0": {
+        "name": "HTPC mode RX0"
+      },
+      "htpcmode1": {
+        "name": "HTPC mode RX1"
+      },
+      "htpcmode2": {
+        "name": "HTPC mode RX2"
+      },
+      "htpcmode3": {
+        "name": "HTPC mode RX3"
+      },
+      "iractive": {
+        "name": "Infrared"
+      },
+      "mutetx0": {
+        "name": "Mute audio TX0"
+      },
+      "mutetx1": {
+        "name": "Mute audio TX1"
+      },
+      "oled": {
+        "name": "OLED display"
+      },
+      "relay": {
+        "name": "Relay"
       }
     }
   },
