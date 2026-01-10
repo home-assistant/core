@@ -17,7 +17,7 @@ from homeassistant.components.climate import (
     HVACAction,
     HVACMode,
 )
-from homeassistant.const import ATTR_TEMPERATURE, PRECISION_WHOLE, UnitOfTemperature
+from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -57,8 +57,6 @@ class LeilSaunaClimate(LeilSaunaEntity, ClimateEntity):
         ClimateEntityFeature.TARGET_TEMPERATURE | ClimateEntityFeature.FAN_MODE
     )
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
-    _attr_precision = PRECISION_WHOLE
-    _attr_target_temperature_step = 1.0
     _attr_min_temp = MIN_TEMPERATURE
     _attr_max_temp = MAX_TEMPERATURE
     _attr_fan_modes = [FAN_OFF, FAN_LOW, FAN_MEDIUM, FAN_HIGH]
@@ -145,6 +143,7 @@ class LeilSaunaClimate(LeilSaunaEntity, ClimateEntity):
         """Set new fan mode."""
         if not self.coordinator.data.session_active:
             raise ServiceValidationError(
+                "Cannot change fan mode when sauna session is not active",
                 translation_domain=DOMAIN,
                 translation_key="session_not_active",
             )

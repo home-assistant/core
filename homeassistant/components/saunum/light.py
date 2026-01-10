@@ -38,6 +38,7 @@ class LeilSaunaLight(LeilSaunaEntity, LightEntity):
     def __init__(self, coordinator) -> None:
         """Initialize the light entity."""
         super().__init__(coordinator)
+        # Override unique_id to differentiate from climate entity
         self._attr_unique_id = f"{coordinator.config_entry.entry_id}_light"
 
     @property
