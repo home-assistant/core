@@ -683,7 +683,7 @@ NUMERICAL_ATTRIBUTE_CROSSED_THRESHOLD_SCHEMA = ENTITY_STATE_TRIGGER_SCHEMA.exten
                 ),
                 vol.Optional(CONF_LOWER_LIMIT): _number_or_entity,
                 vol.Optional(CONF_UPPER_LIMIT): _number_or_entity,
-                vol.Required(CONF_THRESHOLD_TYPE): ThresholdType,
+                vol.Required(CONF_THRESHOLD_TYPE): vol.Coerce(ThresholdType),
             },
             _validate_range(CONF_LOWER_LIMIT, CONF_UPPER_LIMIT),
             _validate_limits_for_threshold_type,

@@ -96,7 +96,7 @@ PyTransportNSW==0.1.1
 PyTurboJPEG==1.8.0
 
 # homeassistant.components.vicare
-PyViCare==2.55.0
+PyViCare==2.55.1
 
 # homeassistant.components.xiaomi_aqara
 PyXiaomiGateway==0.14.3
@@ -981,7 +981,7 @@ google-nest-sdm==9.1.2
 google-photos-library-api==0.12.1
 
 # homeassistant.components.google_air_quality
-google_air_quality_api==2.0.2
+google_air_quality_api==2.1.2
 
 # homeassistant.components.slide
 # homeassistant.components.slide_local
@@ -1458,7 +1458,7 @@ openrgb-python==0.3.6
 openwebifpy==4.3.1
 
 # homeassistant.components.opower
-opower==0.16.0
+opower==0.16.1
 
 # homeassistant.components.oralb
 oralb-ble==1.0.2
@@ -1891,7 +1891,7 @@ pynina==0.3.6
 pynintendoauth==1.0.2
 
 # homeassistant.components.nintendo_parental_controls
-pynintendoparental==2.3.0
+pynintendoparental==2.3.2
 
 # homeassistant.components.nobo_hub
 pynobo==1.8.1
@@ -2038,7 +2038,7 @@ pysignalclirestapi==0.3.24
 pysilero-vad==3.1.0
 
 # homeassistant.components.sma
-pysma==1.0.2
+pysma==1.1.0
 
 # homeassistant.components.smappee
 pysmappee==0.2.29
