@@ -41,6 +41,29 @@ def get_encryption_issue_id(entry_id: str) -> str:
     return f"encryption_removed_{entry_id}"
 
 
+def _async_create_encryption_downgrade_issue(
+    hass: HomeAssistant, entry: BTHomeConfigEntry, issue_id: str
+) -> None:
+    """Create a repair issue for encryption downgrade."""
+    _LOGGER.warning(
+        "BTHome device %s was previously encrypted but is now sending "
+        "unencrypted data. This could be a spoofing attempt. "
+        "Data will be ignored until resolved",
+        entry.title,
+    )
+    ir.async_create_issue(
+        hass,
+        DOMAIN,
+        issue_id,
+        is_fixable=True,
+        is_persistent=True,
+        severity=ir.IssueSeverity.WARNING,
+        translation_key="encryption_removed",
+        translation_placeholders={"name": entry.title},
+        data={"entry_id": entry.entry_id},
+    )
+
+
 def process_service_info(
     hass: HomeAssistant,
     entry: BTHomeConfigEntry,
@@ -58,24 +81,8 @@ def process_service_info(
     if entry.data.get(CONF_BINDKEY) and data.downgrade_detected:
         if not coordinator.encryption_downgrade_logged:
             coordinator.encryption_downgrade_logged = True
-            if not (existing_issue := issue_registry.async_get_issue(DOMAIN, issue_id)):
-                _LOGGER.warning(
-                    "BTHome device %s was previously encrypted but is now sending "
-                    "unencrypted data. This could be a spoofing attempt. "
-                    "Data will be ignored until resolved",
-                    entry.title,
-                )
-                ir.async_create_issue(
-                    hass,
-                    DOMAIN,
-                    issue_id,
-                    is_fixable=True,
-                    is_persistent=True,
-                    severity=ir.IssueSeverity.WARNING,
-                    translation_key="encryption_removed",
-                    translation_placeholders={"name": entry.title},
-                    data={"entry_id": entry.entry_id},
-                )
+            if not issue_registry.async_get_issue(DOMAIN, issue_id):
+                _async_create_encryption_downgrade_issue(hass, entry, issue_id)
         return SensorUpdate(title=None, devices={})
 
     if data.bindkey_verified and (
