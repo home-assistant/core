@@ -171,6 +171,8 @@ def main() -> int:
         integrations = {}
 
         for int_path in config.specific_integrations:
+            # allow importlib to find the integration module by its plain name
+            sys.path.append(int_path.parent.as_posix())
             integration = Integration(int_path, config)
             integration.load_manifest()
             integrations[integration.domain] = integration

@@ -85,7 +85,15 @@ def _entity_feature_flag(domain: str, enum_name: str, feature_name: str) -> int:
     This will import a module from disk and is run from an executor when
     loading the services schema files.
     """
-    module = importlib.import_module(f"homeassistant.components.{domain}")
+    try:
+        module = importlib.import_module(f"homeassistant.components.{domain}")
+    except ModuleNotFoundError:
+        try:
+            # If the module is not found in core, check in custom_components
+            module = importlib.import_module(f"custom_components.{domain}")
+        except ModuleNotFoundError:
+            # Finally, check in root for a specific integration check (e.g. by hassfest)
+            module = importlib.import_module(domain)
     enum = getattr(module, enum_name)
     feature = getattr(enum, feature_name)
     return cast(int, feature.value)
