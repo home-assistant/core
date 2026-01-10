@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_all_button_entities_snapshot[button.focused_einstein_restart_container-entry]
+# name: test_all_button_entities_snapshot[button.my_environment_focused_einstein_restart_container-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -12,7 +12,7 @@
     'disabled_by': None,
     'domain': 'button',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'button.focused_einstein_restart_container',
+    'entity_id': 'button.my_environment_focused_einstein_restart_container',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -30,25 +30,25 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'restart_container',
-    'unique_id': 'portainer_test_entry_123_focused_einstein_restart',
+    'unique_id': 'portainer_test_entry_123_1_focused_einstein_restart',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_button_entities_snapshot[button.focused_einstein_restart_container-state]
+# name: test_all_button_entities_snapshot[button.my_environment_focused_einstein_restart_container-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'restart',
-      'friendly_name': 'focused_einstein Restart container',
+      'friendly_name': 'my-environment - focused_einstein Restart container',
     }),
     'context': <ANY>,
-    'entity_id': 'button.focused_einstein_restart_container',
+    'entity_id': 'button.my_environment_focused_einstein_restart_container',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
 # ---
-# name: test_all_button_entities_snapshot[button.funny_chatelet_restart_container-entry]
+# name: test_all_button_entities_snapshot[button.my_environment_funny_chatelet_restart_container-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -61,7 +61,7 @@
     'disabled_by': None,
     'domain': 'button',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'button.funny_chatelet_restart_container',
+    'entity_id': 'button.my_environment_funny_chatelet_restart_container',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -79,18 +79,67 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'restart_container',
-    'unique_id': 'portainer_test_entry_123_funny_chatelet_restart',
+    'unique_id': 'portainer_test_entry_123_1_funny_chatelet_restart',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_button_entities_snapshot[button.funny_chatelet_restart_container-state]
+# name: test_all_button_entities_snapshot[button.my_environment_funny_chatelet_restart_container-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'restart',
-      'friendly_name': 'funny_chatelet Restart container',
+      'friendly_name': 'my-environment - funny_chatelet Restart container',
     }),
     'context': <ANY>,
-    'entity_id': 'button.funny_chatelet_restart_container',
+    'entity_id': 'button.my_environment_funny_chatelet_restart_container',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_all_button_entities_snapshot[button.my_environment_practical_morse_restart_container-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'button.my_environment_practical_morse_restart_container',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <ButtonDeviceClass.RESTART: 'restart'>,
+    'original_icon': None,
+    'original_name': 'Restart container',
+    'platform': 'portainer',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'restart_container',
+    'unique_id': 'portainer_test_entry_123_1_practical_morse_restart',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_button_entities_snapshot[button.my_environment_practical_morse_restart_container-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'restart',
+      'friendly_name': 'my-environment - practical_morse Restart container',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.my_environment_practical_morse_restart_container',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -146,7 +195,7 @@
     'state': 'unknown',
   })
 # ---
-# name: test_all_button_entities_snapshot[button.practical_morse_restart_container-entry]
+# name: test_all_button_entities_snapshot[button.my_environment_serene_banach_restart_container-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -159,7 +208,7 @@
     'disabled_by': None,
     'domain': 'button',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'button.practical_morse_restart_container',
+    'entity_id': 'button.my_environment_serene_banach_restart_container',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -177,25 +226,25 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'restart_container',
-    'unique_id': 'portainer_test_entry_123_practical_morse_restart',
+    'unique_id': 'portainer_test_entry_123_1_serene_banach_restart',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_button_entities_snapshot[button.practical_morse_restart_container-state]
+# name: test_all_button_entities_snapshot[button.my_environment_serene_banach_restart_container-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'restart',
-      'friendly_name': 'practical_morse Restart container',
+      'friendly_name': 'my-environment - serene_banach Restart container',
     }),
     'context': <ANY>,
-    'entity_id': 'button.practical_morse_restart_container',
+    'entity_id': 'button.my_environment_serene_banach_restart_container',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
 # ---
-# name: test_all_button_entities_snapshot[button.serene_banach_restart_container-entry]
+# name: test_all_button_entities_snapshot[button.my_environment_stoic_turing_restart_container-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -208,7 +257,7 @@
     'disabled_by': None,
     'domain': 'button',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'button.serene_banach_restart_container',
+    'entity_id': 'button.my_environment_stoic_turing_restart_container',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -226,67 +275,18 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'restart_container',
-    'unique_id': 'portainer_test_entry_123_serene_banach_restart',
+    'unique_id': 'portainer_test_entry_123_1_stoic_turing_restart',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_button_entities_snapshot[button.serene_banach_restart_container-state]
+# name: test_all_button_entities_snapshot[button.my_environment_stoic_turing_restart_container-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'restart',
-      'friendly_name': 'serene_banach Restart container',
+      'friendly_name': 'my-environment - stoic_turing Restart container',
     }),
     'context': <ANY>,
-    'entity_id': 'button.serene_banach_restart_container',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'unknown',
-  })
-# ---
-# name: test_all_button_entities_snapshot[button.stoic_turing_restart_container-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'button',
-    'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'button.stoic_turing_restart_container',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': <ButtonDeviceClass.RESTART: 'restart'>,
-    'original_icon': None,
-    'original_name': 'Restart container',
-    'platform': 'portainer',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'restart_container',
-    'unique_id': 'portainer_test_entry_123_stoic_turing_restart',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_all_button_entities_snapshot[button.stoic_turing_restart_container-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'restart',
-      'friendly_name': 'stoic_turing Restart container',
-    }),
-    'context': <ANY>,
-    'entity_id': 'button.stoic_turing_restart_container',
+    'entity_id': 'button.my_environment_stoic_turing_restart_container',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
