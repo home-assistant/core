@@ -3,19 +3,24 @@
 from __future__ import annotations
 
 from collections.abc import Callable
-from unittest.mock import AsyncMock, patch
+from unittest.mock import patch
 
 from homeassistant.components.bluetooth import BluetoothChange
 from homeassistant.components.bthome import get_encryption_issue_id
 from homeassistant.components.bthome.const import CONF_BINDKEY, DOMAIN
-import homeassistant.components.bthome.repairs as bthome_repairs
 from homeassistant.core import HomeAssistant
-from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import issue_registry as ir
+from homeassistant.setup import async_setup_component
 
 from . import PRST_SERVICE_INFO, TEMP_HUMI_ENCRYPTED_SERVICE_INFO
 
 from tests.common import MockConfigEntry
+from tests.components.repairs import (
+    async_process_repairs_platforms,
+    process_repair_fix_flow,
+    start_repair_fix_flow,
+)
+from tests.typing import ClientSessionGenerator
 
 BINDKEY = "231d39c1d7cc1ab1aee224cd096db932"
 
@@ -123,85 +128,70 @@ async def test_issue_cleared_when_encryption_resumes(
 
 async def test_repair_flow_removes_bindkey_and_reloads_entry(
     hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
     issue_registry: ir.IssueRegistry,
 ) -> None:
     """Test the repair flow clears the bindkey and reloads the entry."""
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        unique_id="54:48:E6:8F:80:A5",
-        title="Test Device",
-        data={CONF_BINDKEY: BINDKEY},
-    )
-    entry.add_to_hass(hass)
-
+    entry, callback = await _setup_entry(hass)
     issue_id = get_encryption_issue_id(entry.entry_id)
-    ir.async_create_issue(
-        hass,
-        DOMAIN,
-        issue_id,
-        is_fixable=True,
-        is_persistent=True,
-        severity=ir.IssueSeverity.WARNING,
-        translation_key="encryption_removed",
-        translation_placeholders={"name": entry.title},
-        data={"entry_id": entry.entry_id},
-    )
 
-    reload_mock = AsyncMock()
-    with patch.object(hass.config_entries, "async_reload", reload_mock):
-        flow = await bthome_repairs.async_create_fix_flow(
-            hass, issue_id, {"entry_id": entry.entry_id}
-        )
-        flow.hass = hass
-        result = await flow.async_step_init()
-        assert result["type"] is FlowResultType.FORM
-        assert result["step_id"] == "confirm"
+    # Send encrypted, then unencrypted to create the issue
+    callback(TEMP_HUMI_ENCRYPTED_SERVICE_INFO, BluetoothChange.ADVERTISEMENT)
+    await hass.async_block_till_done()
+    callback(PRST_SERVICE_INFO, BluetoothChange.ADVERTISEMENT)
+    await hass.async_block_till_done()
 
-        result = await flow.async_step_confirm(user_input={})
-        assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert issue_registry.async_get_issue(DOMAIN, issue_id) is not None
 
+    assert await async_setup_component(hass, "repairs", {})
+    await async_process_repairs_platforms(hass)
+    http_client = await hass_client()
+
+    # Start the repair flow
+    data = await start_repair_fix_flow(http_client, DOMAIN, issue_id)
+    flow_id = data["flow_id"]
+    assert data["step_id"] == "confirm"
+
+    # Confirm the repair
+    data = await process_repair_fix_flow(http_client, flow_id, {})
+    assert data["type"] == "create_entry"
+
+    # Verify bindkey was removed and issue cleared
     assert CONF_BINDKEY not in entry.data
     assert issue_registry.async_get_issue(DOMAIN, issue_id) is None
-    reload_mock.assert_awaited_once_with(entry.entry_id)
 
 
 async def test_repair_flow_aborts_when_entry_removed(
     hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
     issue_registry: ir.IssueRegistry,
 ) -> None:
     """Test the repair flow aborts gracefully when entry is removed."""
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        unique_id="54:48:E6:8F:80:A5",
-        title="Test Device",
-        data={CONF_BINDKEY: BINDKEY},
-    )
-    entry.add_to_hass(hass)
-
+    entry, callback = await _setup_entry(hass)
     issue_id = get_encryption_issue_id(entry.entry_id)
-    ir.async_create_issue(
-        hass,
-        DOMAIN,
-        issue_id,
-        is_fixable=True,
-        is_persistent=True,
-        severity=ir.IssueSeverity.WARNING,
-        translation_key="encryption_removed",
-        translation_placeholders={"name": entry.title},
-        data={"entry_id": entry.entry_id},
-    )
 
-    flow = await bthome_repairs.async_create_fix_flow(
-        hass, issue_id, {"entry_id": entry.entry_id}
-    )
-    flow.hass = hass
+    # Send encrypted, then unencrypted to create the issue
+    callback(TEMP_HUMI_ENCRYPTED_SERVICE_INFO, BluetoothChange.ADVERTISEMENT)
+    await hass.async_block_till_done()
+    callback(PRST_SERVICE_INFO, BluetoothChange.ADVERTISEMENT)
+    await hass.async_block_till_done()
+
+    assert issue_registry.async_get_issue(DOMAIN, issue_id) is not None
+
+    assert await async_setup_component(hass, "repairs", {})
+    await async_process_repairs_platforms(hass)
+    http_client = await hass_client()
+
+    # Start the repair flow
+    data = await start_repair_fix_flow(http_client, DOMAIN, issue_id)
+    flow_id = data["flow_id"]
+    assert data["step_id"] == "confirm"
 
     # Remove entry before confirming
     await hass.config_entries.async_remove(entry.entry_id)
+    await hass.async_block_till_done()
 
-    result = await flow.async_step_init()
-    assert result["type"] is FlowResultType.FORM
-
-    result = await flow.async_step_confirm(user_input={})
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "entry_removed"
+    # Confirm the repair - should abort
+    data = await process_repair_fix_flow(http_client, flow_id, {})
+    assert data["type"] == "abort"
+    assert data["reason"] == "entry_removed"
