@@ -1,6 +1,6 @@
 """Tests for miele climate module."""
 
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, Mock
 
 from aiohttp import ClientResponseError
 import pytest
@@ -108,7 +108,7 @@ async def test_api_failure(
 ) -> None:
     """Test handling of exception from API."""
     mock_miele_client.set_target_temperature.side_effect = ClientResponseError(
-        "test", "Test"
+        Mock(), Mock()
     )
 
     with pytest.raises(

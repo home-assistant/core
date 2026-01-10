@@ -2,6 +2,7 @@
 
 from itertools import chain
 import logging
+from typing import Any
 from unittest.mock import AsyncMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
@@ -12,6 +13,7 @@ from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.enphase_envoy.const import Platform
 from homeassistant.components.enphase_envoy.coordinator import SCAN_INTERVAL
+from homeassistant.components.sensor import SensorStateClass
 from homeassistant.const import STATE_UNKNOWN, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
@@ -905,14 +907,23 @@ async def test_sensor_encharge_aggregate_data(
     data = mock_envoy.data.encharge_aggregate
 
     for target in (
-        ("battery", data.state_of_charge),
-        ("reserve_battery_level", data.reserve_state_of_charge),
-        ("available_battery_energy", data.available_energy),
-        ("reserve_battery_energy", data.backup_reserve),
-        ("battery_capacity", data.max_available_capacity),
+        ("battery", data.state_of_charge, SensorStateClass.MEASUREMENT),
+        (
+            "reserve_battery_level",
+            data.reserve_state_of_charge,
+            SensorStateClass.MEASUREMENT,
+        ),
+        (
+            "available_battery_energy",
+            data.available_energy,
+            SensorStateClass.MEASUREMENT,
+        ),
+        ("reserve_battery_energy", data.backup_reserve, SensorStateClass.MEASUREMENT),
+        ("battery_capacity", data.max_available_capacity, None),
     ):
         assert (entity_state := hass.states.get(f"{ENTITY_BASE}_{target[0]}"))
         assert float(entity_state.state) == target[1]
+        assert entity_state.attributes.get("state_class") == target[2]
 
 
 @pytest.mark.parametrize(
@@ -947,10 +958,12 @@ async def test_sensor_encharge_enpower_data(
         )
         == mock_envoy.data.enpower.temperature
     )
+    assert entity_state.attributes["state_class"] == SensorStateClass.MEASUREMENT
     assert (entity_state := hass.states.get(f"{ENTITY_BASE}_{sn}_last_reported"))
     assert dt_util.parse_datetime(entity_state.state) == dt_util.utc_from_timestamp(
         mock_envoy.data.enpower.last_report_date
     )
+    assert entity_state.attributes.get("state_class") is None
 
 
 @pytest.mark.parametrize(
@@ -994,6 +1007,9 @@ async def test_sensor_encharge_power_data(
         for name, target in list(zip(ENCHARGE_POWER_NAMES, sn_target, strict=False)):
             assert (entity_state := hass.states.get(f"{ENTITY_BASE}_{sn}_{name}"))
             assert float(entity_state.state) == target
+            assert (
+                entity_state.attributes["state_class"] == SensorStateClass.MEASUREMENT
+            )
 
     for sn, encharge_inventory in mock_envoy.data.encharge_inventory.items():
         assert (entity_state := hass.states.get(f"{ENTITY_BASE}_{sn}_temperature"))
@@ -1013,6 +1029,7 @@ async def test_sensor_encharge_power_data(
         assert dt_util.parse_datetime(entity_state.state) == dt_util.utc_from_timestamp(
             encharge_inventory.last_report_date
         )
+        assert entity_state.attributes.get("state_class") is None
 
 
 ACB_POWER_INT_NAMES: tuple[str, ...] = (
@@ -1053,12 +1070,14 @@ async def test_sensor_acb_power_data(
     ):
         assert (entity_state := hass.states.get(f"{ENTITY_BASE}_{name}"))
         assert int(entity_state.state) == target
+        assert entity_state.attributes["state_class"] == SensorStateClass.MEASUREMENT
 
     for name, target in list(
         zip(ACB_POWER_STR_NAMES, ACB_POWER_STR_TARGETS, strict=False)
     ):
         assert (entity_state := hass.states.get(f"{ENTITY_BASE}_{name}"))
         assert entity_state.state == target
+        assert entity_state.attributes.get("state_class") is None
 
 
 AGGREGATED_BATTERY_NAMES: tuple[str, ...] = (
@@ -1089,17 +1108,18 @@ async def test_sensor_aggegated_battery_data(
     ENTITY_BASE: str = f"{Platform.SENSOR}.envoy_{sn}"
 
     data = mock_envoy.data.battery_aggregate
-    AGGREGATED_TARGETS: tuple[int, ...] = (
-        data.state_of_charge,
-        data.available_energy,
-        data.max_available_capacity,
+    AGGREGATED_TARGETS: tuple[tuple[Any, ...], ...] = (
+        (data.state_of_charge, SensorStateClass.MEASUREMENT),
+        (data.available_energy, SensorStateClass.MEASUREMENT),
+        (data.max_available_capacity, None),
     )
 
     for name, target in list(
         zip(AGGREGATED_BATTERY_NAMES, AGGREGATED_TARGETS, strict=False)
     ):
         assert (entity_state := hass.states.get(f"{ENTITY_BASE}_{name}"))
-        assert int(entity_state.state) == target
+        assert int(entity_state.state) == target[0]
+        assert entity_state.attributes.get("state_class") == target[1]
 
     data = mock_envoy.data.acb_power
     AGGREGATED_ACB_TARGETS: tuple[int, ...] = (data.charge_wh,)
@@ -1108,6 +1128,9 @@ async def test_sensor_aggegated_battery_data(
     ):
         assert (entity_state := hass.states.get(f"{ENTITY_BASE}_{name}"))
         assert int(entity_state.state) == target
+        assert (
+            entity_state.attributes.get("state_class") == SensorStateClass.MEASUREMENT
+        )
 
 
 def integration_disabled_entities(
@@ -1241,3 +1264,35 @@ async def test_fw_update(
 
     assert "firmware changed from: " in caplog.text
     assert "to: 0.0.0, reloading enphase envoy integration" in caplog.text
+
+
+@pytest.mark.parametrize(
+    ("mock_envoy"),
+    [
+        "envoy",
+        "envoy_1p_metered",
+        "envoy_eu_batt",
+        "envoy_metered_batt_relay",
+        "envoy_nobatt_metered_3p",
+        "envoy_tot_cons_metered",
+        "envoy_acb_batt",
+    ],
+    indirect=["mock_envoy"],
+)
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_no_state_class_warnings(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    mock_envoy: AsyncMock,
+    entity_registry: er.EntityRegistry,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test enphase_envoy sensor creation does not result in deviceclass/state_class warnings."""
+    logging.getLogger("homeassistant.components.enphase_envoy").setLevel(logging.DEBUG)
+    with patch("homeassistant.components.enphase_envoy.PLATFORMS", [Platform.SENSOR]):
+        await setup_integration(hass, config_entry)
+
+    # Simple test to verify no sensor device class / state class mismatch warning is reported
+    #
+    # assert "which is impossible considering" not in caplog.text
+    assert "create a bug report at" not in caplog.text

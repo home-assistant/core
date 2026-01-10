@@ -53,6 +53,17 @@
         }
       }
     },
+    "fan": {
+      "hood": {
+        "state_attributes": {
+          "preset_mode": {
+            "state": {
+              "smart": "mdi:brain"
+            }
+          }
+        }
+      }
+    },
     "number": {
       "freezer_temperature": {
         "default": "mdi:snowflake-thermometer"
@@ -82,8 +93,14 @@
           "stop": "mdi:stop"
         }
       },
+      "soil_level": {
+        "default": "mdi:liquid-spot"
+      },
       "spin_level": {
         "default": "mdi:rotate-right"
+      },
+      "water_temperature": {
+        "default": "mdi:water-thermometer"
       }
     },
     "sensor": {

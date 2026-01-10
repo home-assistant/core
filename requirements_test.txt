@@ -10,7 +10,6 @@
 astroid==4.0.1
 coverage==7.10.6
 freezegun==1.5.2
-go2rtc-client==0.2.1
 # librt is an internal mypy dependency
 librt==0.2.1
 license-expression==30.4.3
@@ -52,4 +51,4 @@ types-python-slugify==8.0.2.20240310
 types-pytz==2025.2.0.20250809
 types-PyYAML==6.0.12.20250915
 types-requests==2.32.4.20250913
-types-xmltodict==0.13.0.3
+types-xmltodict==1.0.1.20250920
