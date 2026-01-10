@@ -367,16 +367,16 @@ async def test_preset_mode_validation_error(
     """Test preset mode validation error when session is active."""
     mock_saunum_client.async_get_data.return_value.session_active = True
 
-    with pytest.raises(
-        ServiceValidationError,
-        match="Cannot change preset mode when sauna session is active",
-    ):
+    with pytest.raises(ServiceValidationError) as exc_info:
         await hass.services.async_call(
             CLIMATE_DOMAIN,
             SERVICE_SET_PRESET_MODE,
             {ATTR_ENTITY_ID: "climate.saunum_leil", ATTR_PRESET_MODE: "Sauna Type 2"},
             blocking=True,
         )
+
+    assert exc_info.value.translation_key == "preset_session_active"
+    assert exc_info.value.translation_domain == "saunum"
 
 
 @pytest.mark.parametrize(
