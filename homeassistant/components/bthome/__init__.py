@@ -56,10 +56,9 @@ def process_service_info(
 
     # Block unencrypted payloads for devices that were previously verified as encrypted.
     if entry.data.get(CONF_BINDKEY) and data.downgrade_detected:
-        existing_issue = issue_registry.async_get_issue(DOMAIN, issue_id)
         if not coordinator.encryption_downgrade_logged:
             coordinator.encryption_downgrade_logged = True
-            if not existing_issue:
+            if not (existing_issue := issue_registry.async_get_issue(DOMAIN, issue_id)):
                 _LOGGER.warning(
                     "BTHome device %s was previously encrypted but is now sending "
                     "unencrypted data. This could be a spoofing attempt. "
@@ -79,16 +78,17 @@ def process_service_info(
                 )
         return SensorUpdate(title=None, devices={})
 
-    if data.bindkey_verified:
-        existing_issue = issue_registry.async_get_issue(DOMAIN, issue_id)
-        if existing_issue or coordinator.encryption_downgrade_logged:
-            coordinator.encryption_downgrade_logged = False
-            if existing_issue:
-                ir.async_delete_issue(hass, DOMAIN, issue_id)
-                _LOGGER.info(
-                    "BTHome device %s is now sending encrypted data again. Resuming normal operation",
-                    entry.title,
-                )
+    if data.bindkey_verified and (
+        (existing_issue := issue_registry.async_get_issue(DOMAIN, issue_id))
+        or coordinator.encryption_downgrade_logged
+    ):
+        coordinator.encryption_downgrade_logged = False
+        if existing_issue:
+            ir.async_delete_issue(hass, DOMAIN, issue_id)
+            _LOGGER.info(
+                "BTHome device %s is now sending encrypted data again. Resuming normal operation",
+                entry.title,
+            )
 
     discovered_event_classes = coordinator.discovered_event_classes
     if entry.data.get(CONF_SLEEPY_DEVICE, False) != data.sleepy_device:
