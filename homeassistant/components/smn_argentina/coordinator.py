@@ -300,8 +300,10 @@ class ArgentinaSMNDataUpdateCoordinator(DataUpdateCoordinator[ArgentinaSMNData])
                 _LOGGER.debug("Token refreshed successfully")
                 # Schedule next refresh
                 self._schedule_token_refresh()
-            except Exception as err:  # noqa: BLE001
+            except UpdateFailed as err:
                 _LOGGER.error("Failed to refresh token: %s", err)
+            except Exception:
+                _LOGGER.exception("Unexpected error refreshing token")
 
         self._token_refresh_unsub = async_call_later(
             self.hass, seconds_until_refresh, _refresh_token
