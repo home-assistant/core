@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import asyncio
-from collections import OrderedDict
 import contextlib
 from dataclasses import dataclass
 from datetime import timedelta
@@ -63,7 +62,7 @@ class SmartThingsAudioManager(HomeAssistantView):
     def __init__(self, hass: HomeAssistant) -> None:
         """Initialize the manager."""
         self.hass = hass
-        self._entries: OrderedDict[str, _AudioEntry] = OrderedDict()
+        self._entries: dict[str, _AudioEntry] = {}
         self._lock = asyncio.Lock()
 
     async def async_prepare_notification(self, source_url: str) -> str:
@@ -96,9 +95,9 @@ class SmartThingsAudioManager(HomeAssistantView):
         async with self._lock:
             self._cleanup(now)
             self._entries[token] = entry
-            self._entries.move_to_end(token)
             while len(self._entries) > MAX_STORED_ENTRIES:
-                dropped_token, _ = self._entries.popitem(last=False)
+                dropped_token = next(iter(self._entries))
+                self._entries.pop(dropped_token, None)
                 _LOGGER.debug(
                     "Dropped expired SmartThings audio token %s", dropped_token
                 )
