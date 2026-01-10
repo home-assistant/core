@@ -15,7 +15,11 @@ from plugwise.exceptions import (
 )
 import pytest
 
-from homeassistant.components.plugwise.const import DOMAIN
+from homeassistant.components.plugwise.const import (
+    DEFAULT_UPDATE_INTERVAL,
+    DOMAIN,
+    P1_UPDATE_INTERVAL,
+)
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
@@ -364,3 +368,51 @@ async def test_delete_removed_device(
     for device_entry in device_registry.devices.values():
         item_list.extend(x[1] for x in device_entry.identifiers)
     assert "14df5c4dc8cb4ba69f9d1ac0eaf7c5c6" not in item_list
+
+
+@pytest.mark.parametrize("chosen_env", ["m_adam_heating"], indirect=True)
+@pytest.mark.parametrize("cooling_present", [False], indirect=True)
+async def test_update_interval_adam(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_smile_adam_heat_cool: MagicMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test Adam update interval."""
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+    assert mock_smile_adam_heat_cool.async_update.call_count == 1
+
+    freezer.tick(DEFAULT_UPDATE_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert mock_smile_adam_heat_cool.async_update.call_count == 2
+
+
+@pytest.mark.parametrize("chosen_env", ["p1v4_442_single"], indirect=True)
+@pytest.mark.parametrize(
+    "gateway_id", ["a455b61e52394b2db5081ce025a430f3"], indirect=True
+)
+async def test_update_interval_p1(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_smile_p1: MagicMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test Smile P1 update interval."""
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+    assert mock_smile_p1.async_update.call_count == 1
+
+    freezer.tick(P1_UPDATE_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert mock_smile_p1.async_update.call_count == 2

@@ -3,6 +3,7 @@
   "name": "Teslemetry",
   "codeowners": ["@Bre77"],
   "config_flow": true,
+  "dependencies": ["application_credentials"],
   "documentation": "https://www.home-assistant.io/integrations/teslemetry",
   "integration_type": "hub",
   "iot_class": "cloud_polling",
