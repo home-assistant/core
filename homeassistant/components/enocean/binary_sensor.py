@@ -40,7 +40,7 @@ async def async_setup_entry(
 
 
 class EnOceanBinarySensor(EnOceanEntity, BinarySensorEntity):
-    """Representation of EnOcean binary sensors such as wall switches."""
+    """Representation of EnOcean binary sensors."""
 
     def __init__(
         self,

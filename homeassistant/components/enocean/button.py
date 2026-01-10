@@ -34,7 +34,7 @@ async def async_setup_entry(
 
 
 class EnOceanButton(EnOceanEntity, ButtonEntity):
-    """Representation of EnOcean binary sensors such as wall switches."""
+    """Representation of EnOcean buttons."""
 
     def __init__(
         self,
@@ -42,7 +42,7 @@ class EnOceanButton(EnOceanEntity, ButtonEntity):
         gateway: EnOceanHomeAssistantGateway,
         entity_category: str | None = None,
     ) -> None:
-        """Initialize the EnOcean binary sensor."""
+        """Initialize the EnOcean button."""
         super().__init__(
             enocean_entity_id=entity_id,
             gateway=gateway,
@@ -50,5 +50,5 @@ class EnOceanButton(EnOceanEntity, ButtonEntity):
         )
 
     def press(self) -> None:
-        """Press the button."""
+        """Press the EnOcean button."""
         self.gateway.press_button(self.enocean_entity_id)

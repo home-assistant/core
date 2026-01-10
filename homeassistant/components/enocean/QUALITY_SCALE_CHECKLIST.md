@@ -17,7 +17,7 @@ see https://developers.home-assistant.io/docs/core/integration-quality-scale/che
 - [ ] `docs-high-level-description` - The documentation includes a high-level description of the integration brand, product, or service
 - [ ] `docs-installation-instructions` - The documentation provides step-by-step installation instructions for the integration, including, if needed, prerequisites
 - [ ] `docs-removal-instructions` - The documentation provides removal instructions
-- [ ] `entity-event-setup` - Entity events are subscribed in the correct lifecycle methods
+- [x] `entity-event-setup` - Entity events are subscribed in the correct lifecycle methods
 - [x] `entity-unique-id` - Entities have a unique ID
 - [x] `has-entity-name` - Entities use has_entity_name = True
 - [x] `runtime-data` - Use ConfigEntry.runtime_data to store runtime data
