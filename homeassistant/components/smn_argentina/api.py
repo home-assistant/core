@@ -77,29 +77,12 @@ class SMNTokenManager:
                 match = re.search(pattern, html)
 
                 if not match:
-                    # Log HTML snippet for debugging
-                    lines = html.split("\n")
-                    relevant_lines = [line for line in lines if "token" in line.lower()]
-                    _LOGGER.error(
-                        "Could not find token in HTML. Lines containing 'token' (%d found):",
-                        len(relevant_lines),
-                    )
-                    for line in relevant_lines[:5]:  # Log first 5 matches
-                        _LOGGER.error("  %s", line.strip()[:200])
-
                     raise UpdateFailed(  # noqa: TRY301
                         "Could not find token in HTML. Check logs for details"
                     )
 
                 token = match.group(1)
                 _LOGGER.info("Found token (length: %d)", len(token))
-
-                # Validate token format (JWT should start with eyJ)
-                if not token.startswith("eyJ"):
-                    _LOGGER.warning(
-                        "Token doesn't look like a JWT (doesn't start with 'eyJ'): %s",
-                        token[:20],
-                    )
 
                 # Decode token to get expiration
                 payload = self._decode_jwt_payload(token)
