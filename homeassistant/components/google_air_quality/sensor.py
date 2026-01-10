@@ -3,6 +3,7 @@
 from collections.abc import Callable
 from dataclasses import dataclass
 import logging
+from typing import TYPE_CHECKING
 
 from google_air_quality_api.model import AirQualityCurrentConditionsData, Index
 
@@ -29,75 +30,16 @@ _LOGGER = logging.getLogger(__name__)
 PARALLEL_UPDATES = 0
 
 
-def _uaqi(data: AirQualityCurrentConditionsData) -> Index | None:
+def _uaqi(data: AirQualityCurrentConditionsData) -> Index:
+    if TYPE_CHECKING:
+        assert data.indexes.uaqi is not None
     return data.indexes.uaqi
 
 
-def _laqi(data: AirQualityCurrentConditionsData) -> Index | None:
+def _laqi(data: AirQualityCurrentConditionsData) -> Index:
+    if TYPE_CHECKING:
+        assert data.indexes.laqi is not None
     return data.indexes.laqi
-
-
-def _uaqi_aqi(data: AirQualityCurrentConditionsData) -> int | None:
-    idx = _uaqi(data)
-    return idx.aqi if idx is not None else None
-
-
-def _uaqi_category(data: AirQualityCurrentConditionsData) -> str | None:
-    idx = _uaqi(data)
-    return idx.category if idx is not None else None
-
-
-def _uaqi_category_options(
-    data: AirQualityCurrentConditionsData,
-) -> list[str] | None:
-    idx = _uaqi(data)
-    return idx.category_options if idx is not None else None
-
-
-def _uaqi_dominant_pollutant(data: AirQualityCurrentConditionsData) -> str | None:
-    idx = _uaqi(data)
-    return idx.dominant_pollutant if idx is not None else None
-
-
-def _uaqi_pollutant_options(
-    data: AirQualityCurrentConditionsData,
-) -> list[str] | None:
-    idx = _uaqi(data)
-    return idx.pollutant_options if idx is not None else None
-
-
-def _laqi_aqi(data: AirQualityCurrentConditionsData) -> int | None:
-    idx = _laqi(data)
-    return idx.aqi if idx is not None else None
-
-
-def _laqi_category(data: AirQualityCurrentConditionsData) -> str | None:
-    idx = _laqi(data)
-    return idx.category if idx is not None else None
-
-
-def _laqi_category_options(
-    data: AirQualityCurrentConditionsData,
-) -> list[str] | None:
-    idx = _laqi(data)
-    return idx.category_options if idx is not None else None
-
-
-def _laqi_dominant_pollutant(data: AirQualityCurrentConditionsData) -> str | None:
-    idx = _laqi(data)
-    return idx.dominant_pollutant if idx is not None else None
-
-
-def _laqi_pollutant_options(
-    data: AirQualityCurrentConditionsData,
-) -> list[str] | None:
-    idx = _laqi(data)
-    return idx.pollutant_options if idx is not None else None
-
-
-def _laqi_translation(data: AirQualityCurrentConditionsData) -> dict[str, str]:
-    idx = _laqi(data)
-    return {"local_aqi": idx.display_name} if idx is not None else {}
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -123,14 +65,14 @@ AIR_QUALITY_SENSOR_TYPES: tuple[AirQualitySensorEntityDescription, ...] = (
         translation_key="uaqi",
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.AQI,
-        value_fn=_uaqi_aqi,
+        value_fn=lambda x: _uaqi(x).aqi,
     ),
     AirQualitySensorEntityDescription(
         key="uaqi_category",
         translation_key="uaqi_category",
         device_class=SensorDeviceClass.ENUM,
-        value_fn=_uaqi_category,
-        options_fn=_uaqi_category_options,
+        value_fn=lambda x: _uaqi(x).category,
+        options_fn=lambda x: _uaqi(x).category_options,
     ),
     AirQualitySensorEntityDescription(
         key="local_aqi",
@@ -138,31 +80,31 @@ AIR_QUALITY_SENSOR_TYPES: tuple[AirQualitySensorEntityDescription, ...] = (
         exists_fn=lambda x: (idx := _laqi(x)) is not None and idx.aqi is not None,
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.AQI,
-        value_fn=_laqi_aqi,
-        translation_placeholders_fn=_laqi_translation,
+        value_fn=lambda x: _laqi(x).aqi,
+        translation_placeholders_fn=lambda x: {"local_aqi": _laqi(x).display_name},
     ),
     AirQualitySensorEntityDescription(
         key="local_category",
         translation_key="local_category",
         device_class=SensorDeviceClass.ENUM,
-        value_fn=_laqi_category,
-        options_fn=_laqi_category_options,
-        translation_placeholders_fn=_laqi_translation,
+        value_fn=lambda x: _laqi(x).category,
+        options_fn=lambda x: _laqi(x).category_options,
+        translation_placeholders_fn=lambda x: {"local_aqi": _laqi(x).display_name},
     ),
     AirQualitySensorEntityDescription(
         key="uaqi_dominant_pollutant",
         translation_key="uaqi_dominant_pollutant",
         device_class=SensorDeviceClass.ENUM,
-        value_fn=_uaqi_dominant_pollutant,
-        options_fn=_uaqi_pollutant_options,
+        value_fn=lambda x: _uaqi(x).dominant_pollutant,
+        options_fn=lambda x: _uaqi(x).pollutant_options,
     ),
     AirQualitySensorEntityDescription(
         key="local_dominant_pollutant",
         translation_key="local_dominant_pollutant",
         device_class=SensorDeviceClass.ENUM,
-        value_fn=_laqi_dominant_pollutant,
-        options_fn=_laqi_pollutant_options,
-        translation_placeholders_fn=_laqi_translation,
+        value_fn=lambda x: _laqi(x).dominant_pollutant,
+        options_fn=lambda x: _laqi(x).pollutant_options,
+        translation_placeholders_fn=lambda x: {"local_aqi": _laqi(x).display_name},
     ),
     AirQualitySensorEntityDescription(
         key="co",
