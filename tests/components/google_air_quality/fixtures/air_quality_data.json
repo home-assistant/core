@@ -81,6 +81,15 @@
         "value": 1.2,
         "units": "PARTS_PER_BILLION"
       }
+    },
+    {
+      "code": "nh3",
+      "displayName": "NH3",
+      "fullName": "Ammonia",
+      "concentration": {
+        "value": 81.41,
+        "units": "PARTS_PER_BILLION"
+      }
     }
   ]
 }

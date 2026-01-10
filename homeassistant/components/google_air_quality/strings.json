@@ -76,6 +76,9 @@
   },
   "entity": {
     "sensor": {
+      "ammonia": {
+        "name": "Ammonia"
+      },
       "local_aqi": {
         "name": "{local_aqi} AQI"
       },
@@ -189,6 +192,7 @@
         "name": "{local_aqi} dominant pollutant",
         "state": {
           "co": "[%key:component::sensor::entity_component::carbon_monoxide::name%]",
+          "nh3": "Ammonia",
           "no2": "[%key:component::sensor::entity_component::nitrogen_dioxide::name%]",
           "o3": "[%key:component::sensor::entity_component::ozone::name%]",
           "pm10": "[%key:component::sensor::entity_component::pm10::name%]",
