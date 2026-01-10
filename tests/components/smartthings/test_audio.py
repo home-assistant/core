@@ -220,11 +220,38 @@ async def test_prepare_notification_warns_when_duration_exceeds_warning(
 
 
 @pytest.mark.asyncio
-async def test_prepare_notification_evicts_old_entries(
+async def test_prepare_notification_schedules_cleanup(
+    hass: HomeAssistant,
+) -> None:
+    """Ensure cached entries are scheduled for cleanup."""
+
+    hass.config.external_url = "https://example.com"
+    manager = await async_get_audio_manager(hass)
+
+    pcm_bytes = _build_pcm()
+
+    with patch.object(
+        manager,
+        "_transcode_to_pcm",
+        AsyncMock(return_value=(pcm_bytes, 1.0, False)),
+    ):
+        await manager.async_prepare_notification("https://example.com/source.mp3")
+
+    assert manager._cleanup_handle is not None
+    for entry in manager._entries.values():
+        entry.expires = 0
+
+    manager._cleanup_callback()
+
+    assert not manager._entries
+
+
+@pytest.mark.asyncio
+async def test_prepare_notification_caps_entry_count(
     hass: HomeAssistant,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """Ensure cached entries are evicted when exceeding the maximum."""
+    """Ensure cached entries are capped."""
 
     hass.config.external_url = "https://example.com"
     manager = await async_get_audio_manager(hass)
@@ -242,7 +269,7 @@ async def test_prepare_notification_evicts_old_entries(
 
     assert len(manager._entries) == MAX_STORED_ENTRIES
     assert any(
-        "Dropped expired SmartThings audio token" in record.message
+        "Dropped oldest SmartThings audio token" in record.message
         for record in caplog.records
     )
 

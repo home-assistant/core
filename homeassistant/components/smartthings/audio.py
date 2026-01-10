@@ -9,11 +9,11 @@ from datetime import timedelta
 import logging
 import secrets
 
-from aiohttp import web
+from aiohttp import hdrs, web
 
 from homeassistant.components import ffmpeg
 from homeassistant.components.http import HomeAssistantView
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.network import NoURLAvailableError, get_url
 from homeassistant.util import dt as dt_util
@@ -32,7 +32,7 @@ FFMPEG_MAX_DURATION_SECONDS = 10 * 60
 TRANSCODE_TIMEOUT_SECONDS = WARNING_DURATION_SECONDS + 10
 _TRUNCATION_EPSILON = 1 / PCM_SAMPLE_RATE
 ENTRY_TTL = timedelta(minutes=5)
-MAX_STORED_ENTRIES = 8
+MAX_STORED_ENTRIES = 4  # Limit the number of cached notifications.
 
 PCM_FRAME_BYTES = PCM_SAMPLE_WIDTH * PCM_CHANNELS
 
@@ -63,7 +63,7 @@ class SmartThingsAudioManager(HomeAssistantView):
         """Initialize the manager."""
         self.hass = hass
         self._entries: dict[str, _AudioEntry] = {}
-        self._lock = asyncio.Lock()
+        self._cleanup_handle: asyncio.TimerHandle | None = None
 
     async def async_prepare_notification(self, source_url: str) -> str:
         """Generate an externally accessible PCM URL for SmartThings."""
@@ -92,15 +92,16 @@ class SmartThingsAudioManager(HomeAssistantView):
             expires=now + ENTRY_TTL.total_seconds(),
         )
 
-        async with self._lock:
-            self._cleanup(now)
-            self._entries[token] = entry
-            while len(self._entries) > MAX_STORED_ENTRIES:
-                dropped_token = next(iter(self._entries))
-                self._entries.pop(dropped_token, None)
-                _LOGGER.debug(
-                    "Dropped expired SmartThings audio token %s", dropped_token
-                )
+        self._cleanup(now)
+        self._entries[token] = entry
+        while len(self._entries) > MAX_STORED_ENTRIES:
+            dropped_token = next(iter(self._entries))
+            self._entries.pop(dropped_token, None)
+            _LOGGER.debug(
+                "Dropped oldest SmartThings audio token %s to cap cache",
+                dropped_token,
+            )
+        self._schedule_cleanup()
 
         path = f"/api/smartthings/audio/{token}{PCM_EXTENSION}"
         try:
@@ -113,8 +114,8 @@ class SmartThingsAudioManager(HomeAssistantView):
                 prefer_cloud=True,
             )
         except NoURLAvailableError as err:
-            async with self._lock:
-                self._entries.pop(token, None)
+            self._entries.pop(token, None)
+            self._schedule_cleanup()
             raise SmartThingsAudioError(
                 "SmartThings audio notifications require an accessible Home Assistant URL"
             ) from err
@@ -125,10 +126,10 @@ class SmartThingsAudioManager(HomeAssistantView):
         """Serve a PCM audio response."""
         token = token.removesuffix(PCM_EXTENSION)
 
-        async with self._lock:
-            now = dt_util.utcnow().timestamp()
-            self._cleanup(now)
-            entry = self._entries.get(token)
+        now = dt_util.utcnow().timestamp()
+        self._cleanup(now)
+        self._schedule_cleanup()
+        entry = self._entries.get(token)
 
         if entry is None:
             raise web.HTTPNotFound
@@ -136,9 +137,9 @@ class SmartThingsAudioManager(HomeAssistantView):
         _LOGGER.debug("Serving SmartThings audio token=%s to %s", token, request.remote)
 
         response = web.Response(body=entry.pcm, content_type=PCM_MIME)
-        response.headers["Cache-Control"] = "no-store"
-        response.headers["Accept-Ranges"] = "none"
-        response.headers["Content-Disposition"] = (
+        response.headers[hdrs.CACHE_CONTROL] = "no-store"
+        response.headers[hdrs.ACCEPT_RANGES] = "none"
+        response.headers[hdrs.CONTENT_DISPOSITION] = (
             f'inline; filename="{token}{PCM_EXTENSION}"'
         )
         return response
@@ -221,6 +222,26 @@ class SmartThingsAudioManager(HomeAssistantView):
         duration = frame_count / PCM_SAMPLE_RATE
         truncated = duration >= (FFMPEG_MAX_DURATION_SECONDS - _TRUNCATION_EPSILON)
         return stdout, duration, truncated
+
+    @callback
+    def _schedule_cleanup(self) -> None:
+        """Schedule the next cleanup based on entry expiry."""
+        if self._cleanup_handle is not None:
+            self._cleanup_handle.cancel()
+            self._cleanup_handle = None
+        if not self._entries:
+            return
+        next_expiry = min(entry.expires for entry in self._entries.values())
+        delay = max(0.0, next_expiry - dt_util.utcnow().timestamp())
+        self._cleanup_handle = self.hass.loop.call_later(delay, self._cleanup_callback)
+
+    @callback
+    def _cleanup_callback(self) -> None:
+        """Run a cleanup pass."""
+        self._cleanup_handle = None
+        now = dt_util.utcnow().timestamp()
+        self._cleanup(now)
+        self._schedule_cleanup()
 
     def _cleanup(self, now: float) -> None:
         """Remove expired entries."""
