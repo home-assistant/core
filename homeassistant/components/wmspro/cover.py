@@ -162,7 +162,7 @@ class WebControlProSlatRotate(WebControlProSlat):
         action = self._dest.action(self._tilt_action_desc)
         rotation = action["rotation"]
         if rotation:
-            return ranged_value_to_percentage(
+            return 100 - ranged_value_to_percentage(
                 (self._min_rotation, self._max_rotation),
                 action["rotation"],
             )
@@ -171,7 +171,7 @@ class WebControlProSlatRotate(WebControlProSlat):
     async def async_set_cover_tilt_position(self, **kwargs: Any) -> None:
         """Set the cover tilt position."""
         action = self._dest.action(self._tilt_action_desc)
-        rotation = percentage_to_ranged_value(
+        rotation = 100 - percentage_to_ranged_value(
             (self._min_rotation, self._max_rotation),
             kwargs[ATTR_TILT_POSITION],
         )
@@ -185,7 +185,7 @@ class WebControlProSlatRotate(WebControlProSlat):
     async def async_close_cover_tilt(self, **kwargs: Any) -> None:
         """Close the cover tilt."""
         action = self._dest.action(self._tilt_action_desc)
-        await action(rotation=self._min_rotation)
+        await action(rotation=self._max_rotation)
 
     @property
     def _min_rotation(self) -> float:
