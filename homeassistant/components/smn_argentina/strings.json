@@ -24,49 +24,7 @@
       }
     }
   },
-  "entity": {
-    "binary_sensor": {
-      "alert_altas_temperaturas": {
-        "name": "High temperature alert"
-      },
-      "alert_bajas_temperaturas": {
-        "name": "Low temperature alert"
-      },
-      "alert_ceniza_volcanica": {
-        "name": "Volcanic ash alert"
-      },
-      "alert_humo": {
-        "name": "Smoke alert"
-      },
-      "alert_lluvia": {
-        "name": "Rain alert"
-      },
-      "alert_nevada": {
-        "name": "Snow alert"
-      },
-      "alert_niebla": {
-        "name": "Fog alert"
-      },
-      "alert_polvo": {
-        "name": "Dust alert"
-      },
-      "alert_tormenta": {
-        "name": "Thunderstorm alert"
-      },
-      "alert_viento": {
-        "name": "Wind alert"
-      },
-      "alert_viento_zonda": {
-        "name": "Zonda wind alert"
-      },
-      "short_term_alert": {
-        "name": "Short-term alert"
-      },
-      "weather_alert": {
-        "name": "Weather alert"
-      }
-    }
-  },
+
   "options": {
     "step": {
       "init": {
