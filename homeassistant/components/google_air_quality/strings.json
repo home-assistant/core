@@ -88,15 +88,15 @@
               "data": {
                 "country": "[%key:common::config_flow::data::country%]",
                 "custom_laqi": "[%key:component::google_air_quality::config::step::user::sections::custom_local_aqi_options::data::custom_laqi%]",
-                "enable_custom_laqi": "Enable custom local AQI."
+                "enable_custom_laqi": "[%key:component::google_air_quality::config::step::user::sections::custom_local_aqi_options::data::enable_custom_laqi%]"
               },
               "data_description": {
-                "country": "Country of the location.",
-                "custom_laqi": "The target air quality index",
-                "enable_custom_laqi": "Select to enable a custom local air quality index"
+                "country": "[%key:component::google_air_quality::config::step::user::sections::custom_local_aqi_options::data_description::country%]",
+                "custom_laqi": "[%key:component::google_air_quality::config::step::user::sections::custom_local_aqi_options::data_description::custom_laqi%]",
+                "enable_custom_laqi": "[%key:component::google_air_quality::config::step::user::sections::custom_local_aqi_options::data_description::enable_custom_laqi%]"
               },
-              "description": "Country and custom local AQI must match. You can find the available combinations here: {air_quality_coverage_url}",
-              "name": "Custom local aqi options"
+              "description": "[%key:component::google_air_quality::config::step::user::sections::custom_local_aqi_options::description%]",
+              "name": "[%key:component::google_air_quality::config::step::user::sections::custom_local_aqi_options::name%]"
             }
           },
           "title": "Air quality data location"

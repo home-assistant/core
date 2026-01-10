@@ -46,6 +46,9 @@ from .const import (
 )
 
 _LOGGER = logging.getLogger(__name__)
+AIR_QUALITY_COVERAGE_URL = (
+    "https://developers.google.com/maps/documentation/air-quality/coverage"
+)
 
 STEP_USER_DATA_SCHEMA = vol.Schema(
     {
@@ -160,6 +163,7 @@ class GoogleAirQualityConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
         description_placeholders: dict[str, str] = {
             "api_key_url": "https://developers.google.com/maps/documentation/air-quality/get-api-key",
+            "air_quality_coverage_url": AIR_QUALITY_COVERAGE_URL,
             "restricting_api_keys_url": "https://developers.google.com/maps/api-security-best-practices#restricting-api-keys",
         }
         if user_input is not None:
@@ -223,7 +227,7 @@ class LocationSubentryFlowHandler(ConfigSubentryFlow):
 
         errors: dict[str, str] = {}
         description_placeholders: dict[str, str] = {
-            "air_quality_coverage_url": "https://developers.google.com/maps/documentation/air-quality/coverage"
+            "air_quality_coverage_url": AIR_QUALITY_COVERAGE_URL
         }
         if user_input is not None:
             _LOGGER.debug("User input: %s", user_input)
