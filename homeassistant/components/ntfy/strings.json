@@ -260,9 +260,6 @@
     }
   },
   "exceptions": {
-    "attach_url_xor_local": {
-      "message": "Only one attachment source is allowed: URL or local file"
-    },
     "authentication_error": {
       "message": "Failed to authenticate with ntfy service. Please verify your credentials"
     },
