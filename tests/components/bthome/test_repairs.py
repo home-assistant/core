@@ -154,11 +154,11 @@ async def test_repair_flow_removes_bindkey_and_reloads_entry(
         )
         flow.hass = hass
         result = await flow.async_step_init()
-        assert result["type"] == FlowResultType.FORM
+        assert result["type"] is FlowResultType.FORM
         assert result["step_id"] == "confirm"
 
         result = await flow.async_step_confirm(user_input={})
-        assert result["type"] == FlowResultType.CREATE_ENTRY
+        assert result["type"] is FlowResultType.CREATE_ENTRY
 
     assert CONF_BINDKEY not in entry.data
     assert issue_registry.async_get_issue(DOMAIN, issue_id) is None
@@ -200,8 +200,8 @@ async def test_repair_flow_aborts_when_entry_removed(
     await hass.config_entries.async_remove(entry.entry_id)
 
     result = await flow.async_step_init()
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
 
     result = await flow.async_step_confirm(user_input={})
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "entry_removed"
