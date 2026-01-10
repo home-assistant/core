@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Any
+from typing import Any, cast
 
 from zwave_js_server.const import TARGET_VALUE_PROPERTY
 from zwave_js_server.const.command_class.barrier_operator import (
@@ -94,7 +94,7 @@ async def async_batched_zwave_js_on_off(
     """Batched handler for turn_on and turn_off using virtual multicast."""
     if not entities:
         return None
-
+    client = cast(ZwaveJSConfigEntry, config_entry).runtime_data.client
     if call.service == SERVICE_TURN_ON:
         value: bool = True
     elif call.service == SERVICE_TURN_OFF:
@@ -117,13 +117,13 @@ async def async_batched_zwave_js_on_off(
         if not isinstance(e, (ZWaveSwitch, ZWaveConfigParameterSwitch))
     ]
 
+    # this should never happen, but just in case
     if unsupported_entities:
         LOGGER.warning(
             "Batched Z-Wave handler received unsupported entities: %s",
             unsupported_entities,
         )
 
-    client = None
     # For regular binary switches
     if binary_switch_entities:
         first_binary_switch_entity = binary_switch_entities[0]
@@ -141,7 +141,6 @@ async def async_batched_zwave_js_on_off(
         }
         if binary_switch_zwave_value.endpoint is not None:
             binary_switch_value_data["endpoint"] = binary_switch_zwave_value.endpoint
-        client = binary_switch_entities[0].driver.client
 
     # For config parameter switches
     if config_param_entities:
@@ -161,11 +160,6 @@ async def async_batched_zwave_js_on_off(
         }
         if config_zwave_value.endpoint is not None:
             config_value_data["endpoint"] = config_zwave_value.endpoint
-        client = config_param_entities[0].driver.client
-
-    if client is None:
-        LOGGER.error("Zwave Switch Multicast had no entities")
-        return None
 
     # We could probably gather these, but it doesn't seem like that would occur too often
     # --- multicast for normal switches ---
