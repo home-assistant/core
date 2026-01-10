@@ -178,7 +178,7 @@ aioairq==0.4.7
 aioairzone-cloud==0.7.2
 
 # homeassistant.components.airzone
-aioairzone==1.0.4
+aioairzone==1.0.5
 
 # homeassistant.components.alexa_devices
 aioamazondevices==11.0.2
@@ -633,7 +633,7 @@ brottsplatskartan==1.0.5
 brunt==1.2.0
 
 # homeassistant.components.bthome
-bthome-ble==3.17.0
+bthome-ble==3.16.0
 
 # homeassistant.components.buienradar
 buienradar==1.0.6
@@ -1000,7 +1000,7 @@ govee-local-api==2.3.0
 gps3==0.33.3
 
 # homeassistant.components.gree
-greeclimate==2.1.0
+greeclimate==2.1.1
 
 # homeassistant.components.greeneye_monitor
 greeneye_monitor==3.0.3
@@ -2035,7 +2035,7 @@ pysiaalarm==3.1.1
 pysignalclirestapi==0.3.24
 
 # homeassistant.components.assist_pipeline
-pysilero-vad==3.1.0
+pysilero-vad==3.2.0
 
 # homeassistant.components.sma
 pysma==1.1.0
