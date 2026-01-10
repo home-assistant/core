@@ -5,8 +5,6 @@ from typing import Any
 
 from pyvesync.base_devices.bulb_base import VeSyncBulb
 from pyvesync.base_devices.switch_base import VeSyncSwitch
-from pyvesync.base_devices.vesyncbasedevice import VeSyncBaseDevice
-from pyvesync.device_container import DeviceContainer
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
@@ -40,7 +38,7 @@ async def async_setup_entry(
     coordinator = config_entry.runtime_data
 
     @callback
-    def discover(devices: list[VeSyncBaseDevice]) -> None:
+    def discover(devices: list[VeSyncBulb | VeSyncSwitch]) -> None:
         """Add new devices to platform."""
         _setup_entities(devices, async_add_entities, coordinator)
 
@@ -49,13 +47,16 @@ async def async_setup_entry(
     )
 
     _setup_entities(
-        config_entry.runtime_data.manager.devices, async_add_entities, coordinator
+        config_entry.runtime_data.manager.devices.bulbs
+        + config_entry.runtime_data.manager.devices.switches,
+        async_add_entities,
+        coordinator,
     )
 
 
 @callback
 def _setup_entities(
-    devices: DeviceContainer | list[VeSyncBaseDevice],
+    devices: list[VeSyncBulb | VeSyncSwitch],
     async_add_entities: AddConfigEntryEntitiesCallback,
     coordinator: VeSyncDataCoordinator,
 ) -> None:
@@ -73,7 +74,7 @@ def _setup_entities(
     async_add_entities(entities, update_before_add=True)
 
 
-class VeSyncBaseLightHA(VeSyncBaseEntity, LightEntity):
+class VeSyncBaseLightHA(VeSyncBaseEntity[VeSyncSwitch | VeSyncBulb], LightEntity):
     """Base class for VeSync Light Devices Representations."""
 
     device: VeSyncBulb | VeSyncSwitch
@@ -170,6 +171,9 @@ class VeSyncTunableWhiteLightHA(VeSyncBaseLightHA, LightEntity):
     @property
     def color_temp_kelvin(self) -> int | None:
         """Return the color temperature value in Kelvin."""
+        if hasattr(self.device.state, "color_temp") is False:
+            return None
+
         # pyvesync v3 provides BulbState.color_temp_kelvin() - possible to use that instead?
         if self.device.state.color_temp is None:
             _LOGGER.debug(

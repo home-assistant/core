@@ -4,7 +4,6 @@ import logging
 from typing import Any
 
 from pyvesync.base_devices.humidifier_base import VeSyncHumidifier
-from pyvesync.base_devices.vesyncbasedevice import VeSyncBaseDevice
 
 from homeassistant.components.humidifier import (
     MODE_AUTO,
@@ -52,7 +51,7 @@ async def async_setup_entry(
     coordinator = config_entry.runtime_data
 
     @callback
-    def discover(devices: list[VeSyncBaseDevice]) -> None:
+    def discover(devices: list[VeSyncHumidifier]) -> None:
         """Add new devices to platform."""
         _setup_entities(devices, async_add_entities, coordinator)
 
@@ -84,7 +83,7 @@ def _get_ha_mode(vs_mode: str) -> str | None:
     return ha_mode
 
 
-class VeSyncHumidifierHA(VeSyncBaseEntity, HumidifierEntity):
+class VeSyncHumidifierHA(VeSyncBaseEntity[VeSyncHumidifier], HumidifierEntity):
     """Representation of a VeSync humidifier."""
 
     # The base VeSyncBaseEntity has _attr_has_entity_name and this is to follow the device name

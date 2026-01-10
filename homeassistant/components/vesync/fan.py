@@ -5,8 +5,7 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-from pyvesync.base_devices.vesyncbasedevice import VeSyncBaseDevice
-from pyvesync.device_container import DeviceContainer
+from pyvesync.base_devices import VeSyncFanBase, VeSyncPurifier
 
 from homeassistant.components.fan import FanEntity, FanEntityFeature
 from homeassistant.core import HomeAssistant, callback
@@ -58,7 +57,7 @@ async def async_setup_entry(
     coordinator = config_entry.runtime_data
 
     @callback
-    def discover(devices: list[VeSyncBaseDevice]) -> None:
+    def discover(devices: list[VeSyncFanBase | VeSyncPurifier]) -> None:
         """Add new devices to platform."""
         _setup_entities(devices, async_add_entities, coordinator)
 
@@ -67,17 +66,20 @@ async def async_setup_entry(
     )
 
     _setup_entities(
-        config_entry.runtime_data.manager.devices, async_add_entities, coordinator
+        config_entry.runtime_data.manager.devices.air_purifiers
+        + config_entry.runtime_data.manager.devices.fans,
+        async_add_entities,
+        coordinator,
     )
 
 
 @callback
 def _setup_entities(
-    devices: DeviceContainer | list[VeSyncBaseDevice],
+    devices: list[VeSyncFanBase | VeSyncPurifier],
     async_add_entities: AddConfigEntryEntitiesCallback,
     coordinator: VeSyncDataCoordinator,
 ) -> None:
-    """Check if device is fan and add entity."""
+    """Check if device is fan or purifier and add entity."""
 
     async_add_entities(
         VeSyncFanHA(dev, coordinator)
@@ -93,7 +95,7 @@ def _get_ha_mode(vs_mode: str) -> str | None:
     return ha_mode
 
 
-class VeSyncFanHA(VeSyncBaseEntity, FanEntity):
+class VeSyncFanHA(VeSyncBaseEntity[VeSyncFanBase | VeSyncPurifier], FanEntity):
     """Representation of a VeSync fan."""
 
     _attr_supported_features = (
@@ -107,7 +109,7 @@ class VeSyncFanHA(VeSyncBaseEntity, FanEntity):
 
     def __init__(
         self,
-        device: VeSyncBaseDevice,
+        device: VeSyncFanBase | VeSyncPurifier,
         coordinator: VeSyncDataCoordinator,
     ) -> None:
         """Initialize the fan."""
@@ -194,7 +196,10 @@ class VeSyncFanHA(VeSyncBaseEntity, FanEntity):
             hasattr(self.device.state, "child_lock")
             and self.device.state.child_lock is not None
         ):
-            attr["child_lock"] = self.device.state.child_lock
+            if isinstance(self.device.state.child_lock, bool):
+                attr["child_lock"] = int(self.device.state.child_lock)
+            else:
+                attr["child_lock"] = 0 if self.device.state.child_lock == "off" else 1
 
         if (
             hasattr(self.device.state, "nightlight_status")
@@ -217,37 +222,47 @@ class VeSyncFanHA(VeSyncBaseEntity, FanEntity):
         if percentage == 0:
             # Turning off is a special case: do not set speed or mode
             if not await self.device.turn_off():
-                raise HomeAssistantError(
-                    "An error occurred while turning off: "
-                    + self.device.last_response.message
-                )
+                if self.device.last_response:
+                    raise HomeAssistantError(
+                        "An error occurred while turning off: "
+                        + self.device.last_response.message
+                    )
+                raise HomeAssistantError("Failed to turn off fan, no response found.")
             self.async_write_ha_state()
             return
 
         # If the fan is off, turn it on first
         if not self.device.is_on:
             if not await self.device.turn_on():
-                raise HomeAssistantError(
-                    "An error occurred while turning on: "
-                    + self.device.last_response.message
-                )
+                if self.device.last_response:
+                    raise HomeAssistantError(
+                        "An error occurred while turning on: "
+                        + self.device.last_response.message
+                    )
+                raise HomeAssistantError("Failed to turn on fan, no response found.")
 
         # Switch to manual mode if not already set
         if self.device.state.mode not in (VS_FAN_MODE_MANUAL, VS_FAN_MODE_NORMAL):
             if not await self.device.set_manual_mode():
+                if self.device.last_response:
+                    raise HomeAssistantError(
+                        "An error occurred while setting manual mode."
+                        + self.device.last_response.message
+                    )
                 raise HomeAssistantError(
-                    "An error occurred while setting manual mode."
-                    + self.device.last_response.message
+                    "Failed to set manual mode, no response found."
                 )
 
         # Calculate the speed level and set it
         if not await self.device.set_fan_speed(
             percentage_to_ordered_list_item(self.device.fan_levels, percentage)
         ):
-            raise HomeAssistantError(
-                "An error occurred while changing fan speed: "
-                + self.device.last_response.message
-            )
+            if self.device.last_response:
+                raise HomeAssistantError(
+                    "An error occurred while changing fan speed: "
+                    + self.device.last_response.message
+                )
+            raise HomeAssistantError("Failed to set fan speed, no response found.")
 
         self.async_write_ha_state()
 
@@ -276,7 +291,9 @@ class VeSyncFanHA(VeSyncBaseEntity, FanEntity):
             success = await self.device.set_normal_mode()
 
         if not success:
-            raise HomeAssistantError(self.device.last_response.message)
+            if self.device.last_response:
+                raise HomeAssistantError(self.device.last_response.message)
+            raise HomeAssistantError("Failed to set preset mode, no response found.")
 
         self.async_write_ha_state()
 
@@ -293,7 +310,9 @@ class VeSyncFanHA(VeSyncBaseEntity, FanEntity):
         if percentage is None:
             success = await self.device.turn_on()
             if not success:
-                raise HomeAssistantError(self.device.last_response.message)
+                if self.device.last_response:
+                    raise HomeAssistantError(self.device.last_response.message)
+                raise HomeAssistantError("Failed to turn on fan, no response found.")
             self.async_write_ha_state()
         else:
             await self.async_set_percentage(percentage)
@@ -302,12 +321,16 @@ class VeSyncFanHA(VeSyncBaseEntity, FanEntity):
         """Turn the device off."""
         success = await self.device.turn_off()
         if not success:
-            raise HomeAssistantError(self.device.last_response.message)
+            if self.device.last_response:
+                raise HomeAssistantError(self.device.last_response.message)
+            raise HomeAssistantError("Failed to turn off fan, no response found.")
         self.async_write_ha_state()
 
     async def async_oscillate(self, oscillating: bool) -> None:
         """Set oscillation."""
         success = await self.device.toggle_oscillation(oscillating)
         if not success:
-            raise HomeAssistantError(self.device.last_response.message)
+            if self.device.last_response:
+                raise HomeAssistantError(self.device.last_response.message)
+            raise HomeAssistantError("Failed to set oscillation, no response found.")
         self.async_write_ha_state()
