@@ -3,7 +3,10 @@
 from __future__ import annotations
 
 from collections.abc import Callable
+import logging
 from unittest.mock import patch
+
+import pytest
 
 from homeassistant.components.bluetooth import BluetoothChange
 from homeassistant.components.bthome import get_encryption_issue_id
@@ -83,6 +86,7 @@ async def test_encryption_downgrade_creates_issue(
 async def test_encryption_downgrade_warning_only_logged_once(
     hass: HomeAssistant,
     issue_registry: ir.IssueRegistry,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test warning is only logged once per session."""
     _, callback = await _setup_entry(hass)
@@ -91,16 +95,28 @@ async def test_encryption_downgrade_warning_only_logged_once(
     callback(TEMP_HUMI_ENCRYPTED_SERVICE_INFO, BluetoothChange.ADVERTISEMENT)
     await hass.async_block_till_done()
 
-    with patch("homeassistant.components.bthome._LOGGER.warning") as mock_warning:
-        # First unencrypted - should warn
-        callback(PRST_SERVICE_INFO, BluetoothChange.ADVERTISEMENT)
-        await hass.async_block_till_done()
-        assert mock_warning.call_count == 1
+    caplog.clear()
+    # First unencrypted - should warn
+    callback(PRST_SERVICE_INFO, BluetoothChange.ADVERTISEMENT)
+    await hass.async_block_till_done()
 
-        # Second unencrypted - should not warn again
-        callback(PRST_SERVICE_INFO, BluetoothChange.ADVERTISEMENT)
-        await hass.async_block_till_done()
-        assert mock_warning.call_count == 1
+    assert (
+        sum(
+            record.levelno == logging.WARNING and "unencrypted" in record.message
+            for record in caplog.records
+        )
+        == 1
+    )
+
+    caplog.clear()
+    # Second unencrypted - should not warn again
+    callback(PRST_SERVICE_INFO, BluetoothChange.ADVERTISEMENT)
+    await hass.async_block_till_done()
+
+    assert not any(
+        record.levelno == logging.WARNING and "unencrypted" in record.message
+        for record in caplog.records
+    )
 
 
 async def test_issue_cleared_when_encryption_resumes(
