@@ -9,9 +9,6 @@ from homeassistant.exceptions import HomeAssistantError
 
 from . import init_integration
 
-# ...
-
-
 async def test_setup_entry(
     hass: HomeAssistant,
     mock_smn_api_client,
