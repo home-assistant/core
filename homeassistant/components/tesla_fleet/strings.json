@@ -593,6 +593,9 @@
     "command_no_reason": {
       "message": "Command was unsuccessful but did not return a reason why."
     },
+    "command_no_response": {
+      "message": "Command had no response"
+    },
     "command_reason": {
       "message": "Command was unsuccessful: {reason}"
     },

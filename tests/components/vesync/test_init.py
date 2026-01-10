@@ -2,15 +2,19 @@
 
 from unittest.mock import AsyncMock, patch
 
+import pytest
 from pyvesync import VeSync
-from pyvesync.utils.errors import VeSyncLoginError
+from pyvesync.utils.errors import (
+    VeSyncAPIResponseError,
+    VeSyncLoginError,
+    VeSyncServerError,
+)
 
 from homeassistant.components.vesync import (
-    SERVICE_UPDATE_DEVS,
     async_remove_config_entry_device,
     async_setup_entry,
 )
-from homeassistant.components.vesync.const import DOMAIN, VS_MANAGER
+from homeassistant.components.vesync.const import DOMAIN
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
@@ -19,21 +23,30 @@ from homeassistant.helpers import device_registry as dr, entity_registry as er
 from tests.common import MockConfigEntry
 
 
-async def test_async_setup_entry__not_login(
+@pytest.mark.parametrize(
+    ("exception", "expected_state"),
+    [
+        (VeSyncLoginError("Mock login failed"), ConfigEntryState.SETUP_ERROR),
+        (VeSyncAPIResponseError("Mock login failed"), ConfigEntryState.SETUP_RETRY),
+        (VeSyncServerError("Mock login failed"), ConfigEntryState.SETUP_RETRY),
+    ],
+)
+async def test_async_setup_entry_login_errors(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
     manager: VeSync,
+    exception: Exception,
+    expected_state: ConfigEntryState,
 ) -> None:
-    """Test setup does not create config entry when not logged in."""
-    manager.login = AsyncMock(side_effect=VeSyncLoginError("Mock login failed"))
+    """Test setup handles different login errors appropriately."""
+    manager.login = AsyncMock(side_effect=exception)
 
     assert not await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
     assert manager.login.call_count == 1
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
-    assert config_entry.state is ConfigEntryState.SETUP_ERROR
-    assert not hass.data.get(DOMAIN)
+    assert config_entry.state is expected_state
 
 
 async def test_async_setup_entry__no_devices(
@@ -59,8 +72,6 @@ async def test_async_setup_entry__no_devices(
         ]
 
     assert manager.login.call_count == 1
-    assert hass.data[DOMAIN][VS_MANAGER] == manager
-    assert not hass.data[DOMAIN][VS_MANAGER].devices
 
 
 async def test_async_setup_entry__loads_fans(
@@ -87,36 +98,6 @@ async def test_async_setup_entry__loads_fans(
             Platform.UPDATE,
         ]
     assert manager.login.call_count == 1
-    assert hass.data[DOMAIN][VS_MANAGER] == manager
-    assert list(hass.data[DOMAIN][VS_MANAGER].devices) == [fan]
-
-
-async def test_async_new_device_discovery(
-    hass: HomeAssistant, config_entry: ConfigEntry, manager: VeSync, fan, humidifier
-) -> None:
-    """Test new device discovery."""
-
-    assert await hass.config_entries.async_setup(config_entry.entry_id)
-    # Assert platforms loaded
-    await hass.async_block_till_done()
-    assert config_entry.state is ConfigEntryState.LOADED
-    assert not hass.data[DOMAIN][VS_MANAGER].devices
-
-    # Mock discovery of new fan which would get added to VS_DEVICES.
-    manager._dev_list["fans"].append(fan)
-    await hass.services.async_call(DOMAIN, SERVICE_UPDATE_DEVS, {}, blocking=True)
-
-    assert manager.get_devices.call_count == 1
-    assert hass.data[DOMAIN][VS_MANAGER] == manager
-    assert list(hass.data[DOMAIN][VS_MANAGER].devices) == [fan]
-
-    # Mock discovery of new humidifier which would invoke discovery in all platforms.
-    manager._dev_list["humidifiers"].append(humidifier)
-    await hass.services.async_call(DOMAIN, SERVICE_UPDATE_DEVS, {}, blocking=True)
-
-    assert manager.get_devices.call_count == 2
-    assert hass.data[DOMAIN][VS_MANAGER] == manager
-    assert list(hass.data[DOMAIN][VS_MANAGER].devices) == [fan, humidifier]
 
 
 async def test_migrate_config_entry(
@@ -133,17 +114,17 @@ async def test_migrate_config_entry(
         suggested_object_id="switch",
     )
 
-    humidifer: er.RegistryEntry = entity_registry.async_get_or_create(
-        domain="humidifer",
+    humidifier: er.RegistryEntry = entity_registry.async_get_or_create(
+        domain="humidifier",
         platform="vesync",
-        unique_id="humidifer",
+        unique_id="humidifier",
         config_entry=switch_old_id_config_entry,
-        suggested_object_id="humidifer",
+        suggested_object_id="humidifier",
     )
 
     assert switch.unique_id == "switch"
     assert switch_old_id_config_entry.minor_version == 1
-    assert humidifer.unique_id == "humidifer"
+    assert humidifier.unique_id == "humidifier"
 
     await hass.config_entries.async_setup(switch_old_id_config_entry.entry_id)
     await hass.async_block_till_done()
@@ -154,21 +135,21 @@ async def test_migrate_config_entry(
     assert migrated_switch is not None
     assert migrated_switch.entity_id.startswith("switch")
     assert migrated_switch.unique_id == "switch-device_status"
-    # Confirm humidifer was not impacted
-    migrated_humidifer = entity_registry.async_get(humidifer.entity_id)
-    assert migrated_humidifer is not None
-    assert migrated_humidifer.unique_id == "humidifer"
+    # Confirm humidifier was not impacted
+    migrated_humidifier = entity_registry.async_get(humidifier.entity_id)
+    assert migrated_humidifier is not None
+    assert migrated_humidifier.unique_id == "humidifier"
 
     # Assert that entity exists in the switch domain
     switch_entities = [
         e for e in entity_registry.entities.values() if e.domain == "switch"
     ]
-    assert len(switch_entities) == 2
+    assert len(switch_entities) == 3
 
-    humidifer_entities = [
-        e for e in entity_registry.entities.values() if e.domain == "humidifer"
+    humidifier_entities = [
+        e for e in entity_registry.entities.values() if e.domain == "humidifier"
     ]
-    assert len(humidifer_entities) == 1
+    assert len(humidifier_entities) == 2
 
 
 async def test_async_remove_config_entry_device_positive(

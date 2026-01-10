@@ -41,9 +41,17 @@
       "description": "Use `button.{name}_clear_sleep_timer` instead.\n\nPlease replace this action and adjust your automations and scripts.",
       "title": "Detected use of deprecated action bluesound.clear_sleep_timer"
     },
+    "deprecated_service_join": {
+      "description": "Use the `media_player.join` action instead.\n\nPlease replace this action and adjust your automations and scripts.",
+      "title": "Detected use of deprecated action bluesound.join"
+    },
     "deprecated_service_set_sleep_timer": {
       "description": "Use `button.{name}_set_sleep_timer` instead.\n\nPlease replace this action and adjust your automations and scripts.",
       "title": "Detected use of deprecated action bluesound.set_sleep_timer"
+    },
+    "deprecated_service_unjoin": {
+      "description": "Use the `media_player.unjoin` action instead.\n\nPlease replace this action and adjust your automations and scripts.",
+      "title": "Detected use of deprecated action bluesound.unjoin"
     }
   },
   "services": {

@@ -42,7 +42,7 @@ async def test_create_entry(
     mock_config_entry = result["result"]
     assert (
         mock_config_entry.title
-        == f"{VALID_CONFIG[CONF_HOST]}:{VALID_CONFIG[CONF_PORT]}"
+        == f"GAMING-PC ({VALID_CONFIG[CONF_HOST]}:{VALID_CONFIG[CONF_PORT]})"
     )
     assert mock_config_entry.data == VALID_CONFIG
 

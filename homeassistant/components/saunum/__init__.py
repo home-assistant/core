@@ -12,8 +12,10 @@ from homeassistant.exceptions import ConfigEntryNotReady
 from .coordinator import LeilSaunaCoordinator
 
 PLATFORMS: list[Platform] = [
+    Platform.BINARY_SENSOR,
     Platform.CLIMATE,
     Platform.LIGHT,
+    Platform.NUMBER,
     Platform.SENSOR,
 ]
 

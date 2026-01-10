@@ -4,6 +4,7 @@ import asyncio
 from collections.abc import Callable
 from typing import Final
 
+from aiohttp import ClientResponseError
 from tesla_fleet_api.const import Scope
 from tesla_fleet_api.exceptions import (
     Forbidden,
@@ -14,16 +15,24 @@ from tesla_fleet_api.exceptions import (
 from tesla_fleet_api.teslemetry import Teslemetry
 from teslemetry_stream import TeslemetryStream
 
+from homeassistant.components.application_credentials import (
+    ClientCredential,
+    async_import_client_credential,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ACCESS_TOKEN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.config_entry_oauth2_flow import (
+    OAuth2Session,
+    async_get_config_entry_implementation,
+)
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.typing import ConfigType
 
-from .const import DOMAIN, LOGGER
+from .const import CLIENT_ID, DOMAIN, LOGGER
 from .coordinator import (
     TeslemetryEnergyHistoryCoordinator,
     TeslemetryEnergySiteInfoCoordinator,
@@ -56,6 +65,11 @@ CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Telemetry integration."""
+    await async_import_client_credential(
+        hass,
+        DOMAIN,
+        ClientCredential(CLIENT_ID, "", name="Teslemetry"),
+    )
     async_setup_services(hass)
     return True
 
@@ -63,13 +77,25 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 async def async_setup_entry(hass: HomeAssistant, entry: TeslemetryConfigEntry) -> bool:
     """Set up Teslemetry config."""
 
-    access_token = entry.data[CONF_ACCESS_TOKEN]
     session = async_get_clientsession(hass)
+
+    implementation = await async_get_config_entry_implementation(hass, entry)
+    oauth_session = OAuth2Session(hass, entry, implementation)
+
+    async def _get_access_token() -> str:
+        try:
+            await oauth_session.async_ensure_token_valid()
+        except ClientResponseError as e:
+            if e.status == 401:
+                raise ConfigEntryAuthFailed from e
+            raise ConfigEntryNotReady from e
+        token: str = oauth_session.token[CONF_ACCESS_TOKEN]
+        return token
 
     # Create API connection
     teslemetry = Teslemetry(
         session=session,
-        access_token=access_token,
+        access_token=_get_access_token,
     )
     try:
         calls = await asyncio.gather(
@@ -125,7 +151,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslemetryConfigEntry) -
             if not stream:
                 stream = TeslemetryStream(
                     session,
-                    access_token,
+                    _get_access_token,
                     server=f"{region.lower()}.teslemetry.com",
                     parse_timestamp=True,
                     manual=True,
@@ -276,23 +302,29 @@ async def async_migrate_entry(
     hass: HomeAssistant, config_entry: TeslemetryConfigEntry
 ) -> bool:
     """Migrate config entry."""
-    if config_entry.version > 1:
+    if config_entry.version > 2:
+        # This means the user has downgraded from a future version
         return False
 
-    if config_entry.version == 1 and config_entry.minor_version < 2:
-        # Add unique_id to existing entry
-        teslemetry = Teslemetry(
-            session=async_get_clientsession(hass),
-            access_token=config_entry.data[CONF_ACCESS_TOKEN],
-        )
-        try:
-            metadata = await teslemetry.metadata()
-        except TeslaFleetError as e:
-            LOGGER.error(e.message)
-            return False
+    if config_entry.version == 1:
+        access_token = config_entry.data[CONF_ACCESS_TOKEN]
+        session = async_get_clientsession(hass)
 
-        hass.config_entries.async_update_entry(
-            config_entry, unique_id=metadata["uid"], version=1, minor_version=2
+        # Convert legacy access token to OAuth tokens using migrate endpoint
+        try:
+            data = await Teslemetry(session, access_token).migrate_to_oauth(
+                CLIENT_ID, access_token, hass.config.location_name
+            )
+        except ClientResponseError as e:
+            raise ConfigEntryAuthFailed from e
+
+        # Add auth_implementation for OAuth2 flow compatibility
+        data["auth_implementation"] = DOMAIN
+
+        return hass.config_entries.async_update_entry(
+            config_entry,
+            data=data,
+            version=2,
         )
     return True
 

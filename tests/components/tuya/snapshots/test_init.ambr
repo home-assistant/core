@@ -7284,6 +7284,37 @@
     'via_device_id': None,
   })
 # ---
+# name: test_device_registry[sxa4ealyi9cotiugzc]
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
+    'configuration_url': None,
+    'connections': set({
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'tuya',
+        'sxa4ealyi9cotiugzc',
+      ),
+    }),
+    'labels': set({
+    }),
+    'manufacturer': 'Tuya',
+    'model': '10A Metering Socket',
+    'model_id': 'guitoc9iylae4axs',
+    'name': 'HA Socket Delta Test',
+    'name_by_user': None,
+    'primary_config_entry': <ANY>,
+    'serial_number': None,
+    'sw_version': None,
+    'via_device_id': None,
+  })
+# ---
 # name: test_device_registry[t5zosev6h6wmwyrajbwy]
   DeviceRegistryEntrySnapshot({
     'area_id': None,

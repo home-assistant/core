@@ -4,5 +4,6 @@
   "codeowners": ["@tr4nt0r"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/duckdns",
+  "integration_type": "service",
   "iot_class": "cloud_polling"
 }

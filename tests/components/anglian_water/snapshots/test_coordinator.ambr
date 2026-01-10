@@ -1,7 +1,7 @@
 # serializer version: 1
 # name: test_coordinator_first_run
   defaultdict({
-    'anglian_water:12345678_testsn_usage': list([
+    'anglian_water:171266493_testsn_usage': list([
       dict({
         'end': 1717243200.0,
         'start': 1717239600.0,
@@ -25,7 +25,7 @@
 # ---
 # name: test_coordinator_subsequent_run
   defaultdict({
-    'anglian_water:12345678_testsn_usage': list([
+    'anglian_water:171266493_testsn_usage': list([
       dict({
         'end': 1717243200.0,
         'start': 1717239600.0,

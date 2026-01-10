@@ -18,17 +18,33 @@ from .type_information import (
 )
 
 
-class DeviceWrapper:
+class DeviceWrapper[T]:
     """Base device wrapper."""
 
-    options: list[str] | None = None
+    native_unit: str | None = None
+    suggested_unit: str | None = None
 
-    def read_device_status(self, device: CustomerDevice) -> Any | None:
+    max_value: float
+    min_value: float
+    value_step: float
+
+    options: list[str]
+
+    def skip_update(
+        self, device: CustomerDevice, updated_status_properties: list[str] | None
+    ) -> bool:
+        """Determine if the wrapper should skip an update.
+
+        The default is to always skip, unless overridden in subclasses.
+        """
+        return True
+
+    def read_device_status(self, device: CustomerDevice) -> T | None:
         """Read device status and convert to a Home Assistant value."""
         raise NotImplementedError
 
     def get_update_commands(
-        self, device: CustomerDevice, value: Any
+        self, device: CustomerDevice, value: T
     ) -> list[dict[str, Any]]:
         """Generate update commands for a Home Assistant action."""
         raise NotImplementedError
@@ -41,12 +57,22 @@ class DPCodeWrapper(DeviceWrapper):
     access read conversion routines.
     """
 
-    native_unit: str | None = None
-    suggested_unit: str | None = None
-
     def __init__(self, dpcode: str) -> None:
         """Init DPCodeWrapper."""
         self.dpcode = dpcode
+
+    def skip_update(
+        self, device: CustomerDevice, updated_status_properties: list[str] | None
+    ) -> bool:
+        """Determine if the wrapper should skip an update.
+
+        By default, skip if updated_status_properties is given and
+        does not include this dpcode.
+        """
+        return (
+            updated_status_properties is None
+            or self.dpcode not in updated_status_properties
+        )
 
     def _convert_value_to_raw_value(self, device: CustomerDevice, value: Any) -> Any:
         """Convert a Home Assistant value back to a raw device value.
@@ -135,7 +161,6 @@ class DPCodeEnumWrapper(DPCodeTypeInformationWrapper[EnumTypeInformation]):
     """Simple wrapper for EnumTypeInformation values."""
 
     _DPTYPE = EnumTypeInformation
-    options: list[str]
 
     def __init__(self, dpcode: str, type_information: EnumTypeInformation) -> None:
         """Init DPCodeEnumWrapper."""

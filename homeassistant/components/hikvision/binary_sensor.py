@@ -24,7 +24,7 @@ from homeassistant.const import (
     CONF_SSL,
     CONF_USERNAME,
 )
-from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant, callback
+from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import config_validation as cv, issue_registry as ir
 from homeassistant.helpers.device_registry import DeviceInfo
@@ -227,7 +227,10 @@ class HikvisionBinarySensor(BinarySensorEntity):
         # Register callback with pyhik
         self._camera.add_update_callback(self._update_callback, self._callback_id)
 
-    @callback
     def _update_callback(self, msg: str) -> None:
-        """Update the sensor's state when callback is triggered."""
-        self.async_write_ha_state()
+        """Update the sensor's state when callback is triggered.
+
+        This is called from pyhik's event stream thread, so we use
+        schedule_update_ha_state which is thread-safe.
+        """
+        self.schedule_update_ha_state()

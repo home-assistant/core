@@ -100,6 +100,14 @@
         "name": "Unlocked alarm"
       }
     },
+    "button": {
+      "next_image": {
+        "name": "Next image"
+      },
+      "previous_image": {
+        "name": "Previous image"
+      }
+    },
     "climate": {
       "climate": {
         "state_attributes": {

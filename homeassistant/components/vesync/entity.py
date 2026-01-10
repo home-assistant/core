@@ -30,7 +30,7 @@ class VeSyncBaseEntity(CoordinatorEntity[VeSyncDataCoordinator]):
         )
 
     @property
-    def base_unique_id(self):
+    def base_unique_id(self) -> str:
         """Return the ID of this device."""
         # The unique_id property may be overridden in subclasses, such as in
         # sensors. Maintaining base_unique_id allows us to group related
@@ -42,4 +42,4 @@ class VeSyncBaseEntity(CoordinatorEntity[VeSyncDataCoordinator]):
     @property
     def available(self) -> bool:
         """Return True if device is available."""
-        return self.device.state.connection_status == "online"
+        return super().available and self.device.state.connection_status == "online"

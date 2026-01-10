@@ -34,7 +34,12 @@ class BeoData:
 
 type BeoConfigEntry = ConfigEntry[BeoData]
 
-PLATFORMS = [Platform.EVENT, Platform.MEDIA_PLAYER]
+PLATFORMS = [
+    Platform.BINARY_SENSOR,
+    Platform.EVENT,
+    Platform.MEDIA_PLAYER,
+    Platform.SENSOR,
+]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: BeoConfigEntry) -> bool:

@@ -9315,7 +9315,9 @@
               'aliases': list([
               ]),
               'area_id': None,
-              'capabilities': None,
+              'capabilities': dict({
+                'state_class': 'measurement',
+              }),
               'categories': dict({
               }),
               'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
@@ -9348,6 +9350,7 @@
               'attributes': dict({
                 'device_class': 'battery',
                 'friendly_name': 'Envoy <<envoyserial>> Battery',
+                'state_class': 'measurement',
                 'unit_of_measurement': '%',
               }),
               'entity_id': 'sensor.envoy_<<envoyserial>>_battery',
@@ -9359,7 +9362,9 @@
               'aliases': list([
               ]),
               'area_id': None,
-              'capabilities': None,
+              'capabilities': dict({
+                'state_class': 'measurement',
+              }),
               'categories': dict({
               }),
               'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
@@ -9392,6 +9397,7 @@
               'attributes': dict({
                 'device_class': 'battery',
                 'friendly_name': 'Envoy <<envoyserial>> Reserve battery level',
+                'state_class': 'measurement',
                 'unit_of_measurement': '%',
               }),
               'entity_id': 'sensor.envoy_<<envoyserial>>_reserve_battery_level',
@@ -9403,7 +9409,9 @@
               'aliases': list([
               ]),
               'area_id': None,
-              'capabilities': None,
+              'capabilities': dict({
+                'state_class': 'measurement',
+              }),
               'categories': dict({
               }),
               'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
@@ -9424,7 +9432,7 @@
                   'suggested_display_precision': 0,
                 }),
               }),
-              'original_device_class': 'energy',
+              'original_device_class': 'energy_storage',
               'original_icon': None,
               'original_name': 'Available battery energy',
               'platform': 'enphase_envoy',
@@ -9437,8 +9445,9 @@
             }),
             'state': dict({
               'attributes': dict({
-                'device_class': 'energy',
+                'device_class': 'energy_storage',
                 'friendly_name': 'Envoy <<envoyserial>> Available battery energy',
+                'state_class': 'measurement',
                 'unit_of_measurement': 'Wh',
               }),
               'entity_id': 'sensor.envoy_<<envoyserial>>_available_battery_energy',
@@ -9450,7 +9459,9 @@
               'aliases': list([
               ]),
               'area_id': None,
-              'capabilities': None,
+              'capabilities': dict({
+                'state_class': 'measurement',
+              }),
               'categories': dict({
               }),
               'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
@@ -9471,7 +9482,7 @@
                   'suggested_display_precision': 0,
                 }),
               }),
-              'original_device_class': 'energy',
+              'original_device_class': 'energy_storage',
               'original_icon': None,
               'original_name': 'Reserve battery energy',
               'platform': 'enphase_envoy',
@@ -9484,8 +9495,9 @@
             }),
             'state': dict({
               'attributes': dict({
-                'device_class': 'energy',
+                'device_class': 'energy_storage',
                 'friendly_name': 'Envoy <<envoyserial>> Reserve battery energy',
+                'state_class': 'measurement',
                 'unit_of_measurement': 'Wh',
               }),
               'entity_id': 'sensor.envoy_<<envoyserial>>_reserve_battery_energy',
@@ -9518,7 +9530,7 @@
                   'suggested_display_precision': 0,
                 }),
               }),
-              'original_device_class': 'energy',
+              'original_device_class': 'energy_storage',
               'original_icon': None,
               'original_name': 'Battery capacity',
               'platform': 'enphase_envoy',
@@ -9531,7 +9543,7 @@
             }),
             'state': dict({
               'attributes': dict({
-                'device_class': 'energy',
+                'device_class': 'energy_storage',
                 'friendly_name': 'Envoy <<envoyserial>> Battery capacity',
                 'unit_of_measurement': 'Wh',
               }),
@@ -9666,7 +9678,9 @@
               'aliases': list([
               ]),
               'area_id': None,
-              'capabilities': None,
+              'capabilities': dict({
+                'state_class': 'measurement',
+              }),
               'categories': dict({
               }),
               'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
@@ -9702,6 +9716,7 @@
               'attributes': dict({
                 'device_class': 'temperature',
                 'friendly_name': 'Encharge <<envoyserial>>56 Temperature',
+                'state_class': 'measurement',
                 'unit_of_measurement': '°C',
               }),
               'entity_id': 'sensor.encharge_<<envoyserial>>56_temperature',
@@ -9756,7 +9771,9 @@
               'aliases': list([
               ]),
               'area_id': None,
-              'capabilities': None,
+              'capabilities': dict({
+                'state_class': 'measurement',
+              }),
               'categories': dict({
               }),
               'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
@@ -9789,6 +9806,7 @@
               'attributes': dict({
                 'device_class': 'battery',
                 'friendly_name': 'Encharge <<envoyserial>>56 Battery',
+                'state_class': 'measurement',
                 'unit_of_measurement': '%',
               }),
               'entity_id': 'sensor.encharge_<<envoyserial>>56_battery',
@@ -9800,7 +9818,9 @@
               'aliases': list([
               ]),
               'area_id': None,
-              'capabilities': None,
+              'capabilities': dict({
+                'state_class': 'measurement',
+              }),
               'categories': dict({
               }),
               'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
@@ -9836,6 +9856,7 @@
               'attributes': dict({
                 'device_class': 'apparent_power',
                 'friendly_name': 'Encharge <<envoyserial>>56 Apparent power',
+                'state_class': 'measurement',
                 'unit_of_measurement': 'VA',
               }),
               'entity_id': 'sensor.encharge_<<envoyserial>>56_apparent_power',
@@ -9847,7 +9868,9 @@
               'aliases': list([
               ]),
               'area_id': None,
-              'capabilities': None,
+              'capabilities': dict({
+                'state_class': 'measurement',
+              }),
               'categories': dict({
               }),
               'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
@@ -9883,6 +9906,7 @@
               'attributes': dict({
                 'device_class': 'power',
                 'friendly_name': 'Encharge <<envoyserial>>56 Power',
+                'state_class': 'measurement',
                 'unit_of_measurement': 'W',
               }),
               'entity_id': 'sensor.encharge_<<envoyserial>>56_power',
@@ -10122,7 +10146,9 @@
               'aliases': list([
               ]),
               'area_id': None,
-              'capabilities': None,
+              'capabilities': dict({
+                'state_class': 'measurement',
+              }),
               'categories': dict({
               }),
               'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
@@ -10158,6 +10184,7 @@
               'attributes': dict({
                 'device_class': 'temperature',
                 'friendly_name': 'Enpower 654321 Temperature',
+                'state_class': 'measurement',
                 'unit_of_measurement': '°C',
               }),
               'entity_id': 'sensor.enpower_654321_temperature',
@@ -10376,7 +10403,9 @@
               'aliases': list([
               ]),
               'area_id': None,
-              'capabilities': None,
+              'capabilities': dict({
+                'state_class': 'measurement',
+              }),
               'categories': dict({
               }),
               'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
@@ -10412,6 +10441,7 @@
               'attributes': dict({
                 'device_class': 'temperature',
                 'friendly_name': 'Collar 482520020939 Temperature',
+                'state_class': 'measurement',
                 'unit_of_measurement': '°C',
               }),
               'entity_id': 'sensor.collar_482520020939_temperature',

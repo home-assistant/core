@@ -1,11 +1,19 @@
 """Test init of Tractive integration."""
 
+from typing import Any
 from unittest.mock import AsyncMock, patch
 
 from aiotractive.exceptions import TractiveError, UnauthorizedError
 import pytest
 
-from homeassistant.components.tractive.const import DOMAIN
+from homeassistant.components.tractive.const import (
+    ATTR_DAILY_GOAL,
+    ATTR_MINUTES_ACTIVE,
+    ATTR_MINUTES_DAY_SLEEP,
+    ATTR_MINUTES_NIGHT_SLEEP,
+    ATTR_MINUTES_REST,
+    DOMAIN,
+)
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
@@ -161,3 +169,50 @@ async def test_server_unavailable(
     await hass.async_block_till_done()
 
     assert hass.states.get(entity_id).state != STATE_UNAVAILABLE
+
+
+@pytest.mark.parametrize(("sleep_data"), [None, {}, {"unexpected": 123}])
+async def test_missing_sleep_data(
+    hass: HomeAssistant,
+    mock_tractive_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    sleep_data: dict[str, Any] | None,
+) -> None:
+    """Test for missing sleep data."""
+    event = {"petId": "pet_id_123", "sleep": sleep_data}
+
+    await init_integration(hass, mock_config_entry)
+
+    with patch(
+        "homeassistant.components.tractive.async_dispatcher_send"
+    ) as async_dispatcher_send_mock:
+        mock_tractive_client.send_health_overview_event(mock_config_entry, event)
+
+    assert async_dispatcher_send_mock.call_count == 1
+    payload = async_dispatcher_send_mock.mock_calls[0][1][2]
+    assert payload[ATTR_MINUTES_DAY_SLEEP] is None
+    assert payload[ATTR_MINUTES_NIGHT_SLEEP] is None
+    assert payload[ATTR_MINUTES_REST] is None
+
+
+@pytest.mark.parametrize(("activity_data"), [None, {}, {"unexpected": 123}])
+async def test_missing_activity_data(
+    hass: HomeAssistant,
+    mock_tractive_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    activity_data: dict[str, Any] | None,
+) -> None:
+    """Test for missing activity data."""
+    event = {"petId": "pet_id_123", "activity": activity_data}
+
+    await init_integration(hass, mock_config_entry)
+
+    with patch(
+        "homeassistant.components.tractive.async_dispatcher_send"
+    ) as async_dispatcher_send_mock:
+        mock_tractive_client.send_health_overview_event(mock_config_entry, event)
+
+    assert async_dispatcher_send_mock.call_count == 1
+    payload = async_dispatcher_send_mock.mock_calls[0][1][2]
+    assert payload[ATTR_DAILY_GOAL] is None
+    assert payload[ATTR_MINUTES_ACTIVE] is None
