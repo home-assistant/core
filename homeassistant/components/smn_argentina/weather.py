@@ -83,7 +83,9 @@ async def async_setup_entry(
 class SMNWeather(CoordinatorEntity[ArgentinaSMNDataUpdateCoordinator], WeatherEntity):
     """Implementation of an SMN weather entity."""
 
-    _attr_attribution = "Data provided by Servicio Meteorológico Nacional Argentina"
+    _attr_attribution = (
+        "Data provided by Servicio Meteorológico Nacional de Argentina (SMN)"
+    )
     _attr_has_entity_name = True
     _attr_native_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_native_pressure_unit = UnitOfPressure.HPA
@@ -110,7 +112,7 @@ class SMNWeather(CoordinatorEntity[ArgentinaSMNDataUpdateCoordinator], WeatherEn
         device_info_dict = {
             "identifiers": {(DOMAIN, self._config_entry.entry_id)},
             "name": self._attr_name,
-            "manufacturer": "Servicio Meteorológico Nacional Argentina",
+            "manufacturer": "Servicio Meteorológico Nacional de Argentina (SMN)",
             "entry_type": DeviceEntryType.SERVICE,
         }
 

@@ -44,7 +44,7 @@ async def test_weather_entity_state(
         assert state.attributes["wind_bearing"] == 180
         assert (
             state.attributes["attribution"]
-            == "Data provided by Servicio Meteorológico Nacional Argentina"
+            == "Data provided by Servicio Meteorológico Nacional de Argentina (SMN)"
         )
 
 

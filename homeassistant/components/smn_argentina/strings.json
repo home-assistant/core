@@ -19,7 +19,7 @@
           "longitude": "Longitude of the location",
           "name": "Name for this weather location"
         },
-        "description": "Set up the Servicio Meteorológico Nacional (SMN) weather integration.",
+        "description": "Set up the Servicio Meteorológico Nacional de Argentina (SMN) weather integration.",
         "title": "Configure SMN Weather"
       }
     }

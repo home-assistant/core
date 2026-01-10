@@ -1,6 +1,6 @@
 {
   "domain": "smn_argentina",
-  "name": "SMN - Servicio Meteorológico Nacional",
+  "name": "Servicio Meteorológico Nacional de Argentina (SMN)",
   "codeowners": ["@catastrophicode"],
   "config_flow": true,
   "dependencies": [],
