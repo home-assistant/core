@@ -5,13 +5,22 @@ from __future__ import annotations
 from collections.abc import Callable
 from dataclasses import dataclass
 
-from velbusaio.channels import ButtonCounter, LightSensor, SensorNumber, Temperature
+from velbusaio.channels import ButtonCounter, SensorNumber, Temperature
+from velbusaio.properties import LightValue
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
     SensorStateClass,
+)
+from homeassistant.const import (
+    LIGHT_LUX,
+    PERCENTAGE,
+    EntityCategory,
+    UnitOfElectricCurrent,
+    UnitOfElectricPotential,
+    UnitOfPower,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -21,7 +30,7 @@ from .entity import VelbusEntity
 
 PARALLEL_UPDATES = 0
 
-type VelbusSensorChannel = ButtonCounter | Temperature | LightSensor | SensorNumber
+type VelbusSensorChannel = ButtonCounter | Temperature | LightValue | SensorNumber
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -35,6 +44,7 @@ class VelbusSensorEntityDescription(SensorEntityDescription):
         lambda channel: channel.get_unit()
     )
     unique_id_suffix: str = ""
+    entity_category: str | None = None
 
 
 SENSOR_DESCRIPTIONS: dict[str, VelbusSensorEntityDescription] = {
@@ -61,6 +71,41 @@ SENSOR_DESCRIPTIONS: dict[str, VelbusSensorEntityDescription] = {
         unit_fn=lambda channel: channel.get_counter_unit(),
         unique_id_suffix="-counter",
     ),
+    "PSULoad": VelbusSensorEntityDescription(
+        key="psuload",
+        device_class=SensorDeviceClass.POWER_FACTOR,
+        state_class=SensorStateClass.MEASUREMENT,
+        unit_fn=lambda channel: PERCENTAGE,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    "PSUPower": VelbusSensorEntityDescription(
+        key="psuwatt",
+        device_class=SensorDeviceClass.POWER,
+        state_class=SensorStateClass.MEASUREMENT,
+        unit_fn=lambda channel: UnitOfPower.WATT,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    "PSUVoltage": VelbusSensorEntityDescription(
+        key="psuvolt",
+        device_class=SensorDeviceClass.VOLTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
+        unit_fn=lambda channel: UnitOfElectricPotential.VOLT,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    "PSUCurrent": VelbusSensorEntityDescription(
+        key="psuampere",
+        device_class=SensorDeviceClass.CURRENT,
+        state_class=SensorStateClass.MEASUREMENT,
+        unit_fn=lambda channel: UnitOfElectricCurrent.AMPERE,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    "LightValue": VelbusSensorEntityDescription(
+        key="lightvalue",
+        device_class=SensorDeviceClass.ILLUMINANCE,
+        state_class=SensorStateClass.MEASUREMENT,
+        unit_fn=lambda channel: LIGHT_LUX,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
 }
 
 
@@ -73,18 +118,15 @@ async def async_setup_entry(
     await entry.runtime_data.scan_task
     entities: list[VelbusSensor] = []
     for channel in entry.runtime_data.controller.get_all_sensor():
-        # Determine which description to use for the main sensor
-        if channel.is_counter_channel():
-            description = SENSOR_DESCRIPTIONS["power"]
-        elif channel.is_temperature():
-            description = SENSOR_DESCRIPTIONS["temperature"]
+        # Determine which description to use for the sensor
+        if channel.get_sensor_type() in SENSOR_DESCRIPTIONS:
+            description = SENSOR_DESCRIPTIONS[channel.get_sensor_type()]
         else:
             description = SENSOR_DESCRIPTIONS["measurement"]
-
         entities.append(VelbusSensor(channel, description))
 
         # Add counter entity if applicable
-        if channel.is_counter_channel():
+        if channel.get_sensor_type() == "counter":
             entities.append(
                 VelbusSensor(channel, SENSOR_DESCRIPTIONS["counter"], is_counter=True)
             )
@@ -110,6 +152,7 @@ class VelbusSensor(VelbusEntity, SensorEntity):
         self._is_counter = is_counter
         self._attr_native_unit_of_measurement = description.unit_fn(channel)
         self._attr_unique_id = f"{self._attr_unique_id}{description.unique_id_suffix}"
+        self._attr_entity_category = description.entity_category
 
         # Modify name for counter entities
         if is_counter:

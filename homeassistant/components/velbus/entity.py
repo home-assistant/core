@@ -34,7 +34,7 @@ class VelbusEntity(Entity):
         self._attr_name = channel.get_name()
         self._attr_device_info = DeviceInfo(
             identifiers={
-                (DOMAIN, self._get_identifier()),
+                (DOMAIN, channel.get_identifier()),
             },
             manufacturer="Velleman",
             model=channel.get_module_type_name(),
@@ -49,7 +49,10 @@ class VelbusEntity(Entity):
                 self._module_address,
             )
         serial = channel.get_module_serial() or self._module_address
-        self._attr_unique_id = f"{serial}-{channel.get_channel_number()}"
+        if channel.get_channel_number():
+            self._attr_unique_id = f"{serial}-{channel.get_channel_number()}"
+        else:
+            self._attr_unique_id = f"{serial}-{channel.get_name()}"
 
     def _get_identifier(self) -> str:
         """Return the identifier of the entity."""

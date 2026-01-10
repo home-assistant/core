@@ -52,7 +52,7 @@ rules:
     comment: |
       Dynamic devices are discovered, but no entities are created for them
   entity-category: done
-  entity-device-class: todo
+  entity-device-class: done
   entity-disabled-by-default: done
   entity-translations: todo
   exception-translations: done
