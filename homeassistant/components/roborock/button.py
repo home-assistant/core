@@ -23,6 +23,7 @@ from .coordinator import (
     RoborockConfigEntry,
     RoborockDataUpdateCoordinator,
     RoborockDataUpdateCoordinatorA01,
+    RoborockWashingMachineUpdateCoordinator,
 )
 from .entity import RoborockCoordinatedEntityA01, RoborockEntity, RoborockEntityV1
 
@@ -77,7 +78,7 @@ class RoborockButtonDescriptionA01(ButtonEntityDescription):
     data_protocol: RoborockZeoProtocol
 
 
-A01_BUTTON_DESCRIPTIONS = [
+ZEO_BUTTON_DESCRIPTIONS = [
     RoborockButtonDescriptionA01(
         key="start",
         data_protocol=RoborockZeoProtocol.START,
@@ -135,7 +136,8 @@ async def async_setup_entry(
                     description,
                 )
                 for coordinator in config_entry.runtime_data.a01
-                for description in A01_BUTTON_DESCRIPTIONS
+                if isinstance(coordinator, RoborockWashingMachineUpdateCoordinator)
+                for description in ZEO_BUTTON_DESCRIPTIONS
             ),
         )
     )
