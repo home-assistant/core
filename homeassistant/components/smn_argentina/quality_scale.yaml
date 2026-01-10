@@ -43,10 +43,7 @@ rules:
       This integration does not require authentication.
   test-coverage: done
   # Gold
-  devices:
-    status: exempt
-    comment: |
-      This integration does not create devices.
+  devices: done
   diagnostics: todo
   discovery-update-info: todo
   discovery:
@@ -63,7 +60,7 @@ rules:
   dynamic-devices:
     status: exempt
     comment: |
-      This integration does not create devices.
+      The integration connects to a single service per configuration entry.
   entity-category: done
   entity-device-class: done
   entity-disabled-by-default: todo
@@ -77,7 +74,7 @@ rules:
   stale-devices:
     status: exempt
     comment: |
-      This integration does not create devices.
+      Devices are tied to config entries and removed when entry is removed.
 
   # Platinum
   async-dependency: done

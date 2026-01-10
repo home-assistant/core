@@ -102,7 +102,7 @@ class SMNWeather(CoordinatorEntity[ArgentinaSMNDataUpdateCoordinator], WeatherEn
         """Initialize the weather entity."""
         super().__init__(coordinator)
         self._config_entry = config_entry
-        self._attr_name = config_entry.data.get(CONF_NAME, "SMN Weather")
+        self._attr_name = None
         self._attr_unique_id = f"{config_entry.entry_id}"
 
     @property
@@ -111,7 +111,7 @@ class SMNWeather(CoordinatorEntity[ArgentinaSMNDataUpdateCoordinator], WeatherEn
         location_id = self.coordinator.data.location_id
         device_info_dict = {
             "identifiers": {(DOMAIN, self._config_entry.entry_id)},
-            "name": self._attr_name,
+            "name": self._config_entry.data.get(CONF_NAME, "SMN Weather"),
             "manufacturer": "Servicio Meteorológico Nacional de Argentina (SMN)",
             "entry_type": DeviceEntryType.SERVICE,
         }

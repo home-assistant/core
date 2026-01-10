@@ -48,22 +48,6 @@ async def test_weather_entity_state(
         )
 
 
-async def test_weather_entity_forecast(
-    hass: HomeAssistant,
-    mock_smn_api_client,
-    mock_token_manager,
-) -> None:
-    """Test weather entity returns forecast."""
-    await init_integration(hass)
-
-    # Get weather entity
-    weather_entities = hass.states.async_entity_ids("weather")
-    assert len(weather_entities) > 0
-    state = hass.states.get(weather_entities[0])
-    assert state is not None
-    # Forecast is accessed via service call in modern HA
-
-
 async def test_weather_daily_forecast(
     hass: HomeAssistant,
     mock_smn_api_client,
@@ -283,7 +267,6 @@ async def test_weather_update(
     assert state is not None
     initial_temp = state.attributes["temperature"]
 
-    # Update mock data
     # Update mock data
     new_weather_data = {
         "temperature": 25.0,  # Different temperature

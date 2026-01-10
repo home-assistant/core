@@ -3,14 +3,13 @@
 from __future__ import annotations
 
 import asyncio
-import base64
 from datetime import datetime, timedelta
-import json
 import logging
 import re
 from typing import Any
 
 import aiohttp
+import jwt
 
 from homeassistant.helpers.update_coordinator import UpdateFailed
 from homeassistant.util import dt as dt_util
@@ -36,27 +35,6 @@ class SMNTokenManager:
         self._session = session
         self._token: str | None = None
         self._token_expiration: datetime | None = None
-
-    def _decode_jwt_payload(self, token: str) -> dict[str, Any]:
-        """Decode JWT payload without verification."""
-        try:
-            # Split the JWT into parts
-            parts = token.split(".")
-            if len(parts) != 3:
-                raise ValueError("Invalid JWT format")  # noqa: TRY301
-
-            # Decode the payload (second part)
-            # Add padding if needed
-            payload = parts[1]
-            padding = 4 - len(payload) % 4
-            if padding != 4:
-                payload += "=" * padding
-
-            decoded = base64.urlsafe_b64decode(payload)
-            return json.loads(decoded)
-        except Exception as err:  # noqa: BLE001
-            _LOGGER.error("Error decoding JWT: %s", err)
-            return {}
 
     async def fetch_token(self) -> str:
         """Fetch JWT token from SMN website."""
@@ -85,16 +63,19 @@ class SMNTokenManager:
                 _LOGGER.info("Found token (length: %d)", len(token))
 
                 # Decode token to get expiration
-                payload = self._decode_jwt_payload(token)
-                if "exp" in payload:
-                    self._token_expiration = datetime.fromtimestamp(
-                        payload["exp"], tz=dt_util.UTC
-                    )
-                    _LOGGER.info(
-                        "Token expires at: %s", self._token_expiration.isoformat()
-                    )
-                else:
-                    _LOGGER.warning("Token does not contain expiration field")
+                try:
+                    payload = jwt.decode(token, options={"verify_signature": False})
+                    if "exp" in payload:
+                        self._token_expiration = datetime.fromtimestamp(
+                            payload["exp"], tz=dt_util.UTC
+                        )
+                        _LOGGER.info(
+                            "Token expires at: %s", self._token_expiration.isoformat()
+                        )
+                    else:
+                        _LOGGER.warning("Token does not contain expiration field")
+                except jwt.PyJWTError as err:
+                    _LOGGER.error("Error decoding JWT: %s", err)
 
                 self._token = token
                 return token

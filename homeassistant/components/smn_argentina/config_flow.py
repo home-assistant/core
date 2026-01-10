@@ -36,7 +36,6 @@ async def async_validate_location(
         return {"base": "invalid_longitude"}
 
     # Optional: Check if coordinates are roughly in Argentina
-    # Optional: Check if coordinates are roughly in Argentina
     if not (ARGENTINA_MIN_LATITUDE <= latitude <= ARGENTINA_MAX_LATITUDE):
         _LOGGER.warning(
             "Latitude %s is outside Argentina bounds (approx. %s to %s)",

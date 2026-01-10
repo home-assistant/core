@@ -1,4 +1,4 @@
-"""Fix2tures for SMN integration tests."""
+"""Fixtures for SMN integration tests."""
 
 from collections.abc import Generator
 from datetime import UTC, datetime, timedelta
