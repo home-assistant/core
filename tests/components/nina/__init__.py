@@ -7,7 +7,7 @@ from unittest.mock import patch
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 
-from tests.common import MockConfigEntry, load_fixture
+from tests.common import MockConfigEntry, load_fixture, load_json_object_fixture
 
 
 async def setup_platform(hass: HomeAssistant, config_entry: MockConfigEntry) -> None:
@@ -24,20 +24,20 @@ async def setup_platform(hass: HomeAssistant, config_entry: MockConfigEntry) -> 
 
 def mocked_request_function(url: str) -> dict[str, Any]:
     """Mock of the request function."""
-    dummy_response: dict[str, Any] = json.loads(
+    dummy_response: list[dict[str, Any]] = json.loads(
         load_fixture("sample_warnings.json", "nina")
     )
 
-    dummy_response_details: dict[str, Any] = json.loads(
-        load_fixture("sample_warning_details.json", "nina")
+    dummy_response_details: dict[str, Any] = load_json_object_fixture(
+        "sample_warning_details.json", "nina"
     )
 
-    dummy_response_regions: dict[str, Any] = json.loads(
-        load_fixture("sample_regions.json", "nina")
+    dummy_response_regions: dict[str, Any] = load_json_object_fixture(
+        "sample_regions.json", "nina"
     )
 
-    dummy_response_labels: dict[str, Any] = json.loads(
-        load_fixture("sample_labels.json", "nina")
+    dummy_response_labels: dict[str, Any] = load_json_object_fixture(
+        "sample_labels.json", "nina"
     )
 
     if "https://warnung.bund.de/api31/dashboard/" in url:  # codespell:ignore bund
