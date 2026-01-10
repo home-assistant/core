@@ -17,6 +17,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
+from .common import is_humidifier
 from .const import (
     VS_DEVICES,
     VS_DISCOVERY,
@@ -53,14 +54,22 @@ async def async_setup_entry(
     @callback
     def discover(devices: list[VeSyncHumidifier]) -> None:
         """Add new devices to platform."""
-        _setup_entities(devices, async_add_entities, coordinator)
+        _setup_entities(
+            [dev for dev in devices if is_humidifier(dev)],
+            async_add_entities,
+            coordinator,
+        )
 
     config_entry.async_on_unload(
         async_dispatcher_connect(hass, VS_DISCOVERY.format(VS_DEVICES), discover)
     )
 
     _setup_entities(
-        config_entry.runtime_data.manager.devices.humidifiers,
+        [
+            dev
+            for dev in config_entry.runtime_data.manager.devices.humidifiers
+            if is_humidifier(dev)
+        ],
         async_add_entities,
         coordinator,
     )

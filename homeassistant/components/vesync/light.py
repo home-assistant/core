@@ -101,8 +101,11 @@ class VeSyncBaseLightHA(VeSyncBaseEntity[VeSyncSwitch | VeSyncBulb], LightEntity
         """Turn the device on."""
         attribute_adjustment_only = False
         # set white temperature
-        if self.color_mode == ColorMode.COLOR_TEMP and ATTR_COLOR_TEMP_KELVIN in kwargs:
-            self.device: VeSyncBulb
+        if (
+            self.color_mode == ColorMode.COLOR_TEMP
+            and ATTR_COLOR_TEMP_KELVIN in kwargs
+            and hasattr(self.device, "set_color_temp")
+        ):
             # get white temperature from HA data
             color_temp = color_util.color_temperature_kelvin_to_mired(
                 kwargs[ATTR_COLOR_TEMP_KELVIN]

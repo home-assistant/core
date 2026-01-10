@@ -59,7 +59,11 @@ async def async_setup_entry(
     @callback
     def discover(devices: list[VeSyncFanBase | VeSyncPurifier]) -> None:
         """Add new devices to platform."""
-        _setup_entities(devices, async_add_entities, coordinator)
+        _setup_entities(
+            [dev for dev in devices if is_fan(dev) or is_purifier(dev)],
+            async_add_entities,
+            coordinator,
+        )
 
     config_entry.async_on_unload(
         async_dispatcher_connect(hass, VS_DISCOVERY.format(VS_DEVICES), discover)
@@ -197,9 +201,9 @@ class VeSyncFanHA(VeSyncBaseEntity[VeSyncFanBase | VeSyncPurifier], FanEntity):
             and self.device.state.child_lock is not None
         ):
             if isinstance(self.device.state.child_lock, bool):
-                attr["child_lock"] = int(self.device.state.child_lock)
+                attr["child_lock"] = self.device.state.child_lock
             else:
-                attr["child_lock"] = 0 if self.device.state.child_lock == "off" else 1
+                attr["child_lock"] = self.device.state.child_lock != "off"
 
         if (
             hasattr(self.device.state, "nightlight_status")
@@ -284,11 +288,13 @@ class VeSyncFanHA(VeSyncBaseEntity[VeSyncFanBase | VeSyncPurifier], FanEntity):
         elif vs_mode == VS_FAN_MODE_SLEEP:
             success = await self.device.set_sleep_mode()
         elif vs_mode == VS_FAN_MODE_PET:
-            success = await self.device.set_pet_mode()
+            if hasattr(self.device, "set_pet_mode"):
+                success = await self.device.set_pet_mode()
         elif vs_mode == VS_FAN_MODE_TURBO:
             success = await self.device.set_turbo_mode()
         elif vs_mode == VS_FAN_MODE_NORMAL:
-            success = await self.device.set_normal_mode()
+            if hasattr(self.device, "set_normal_mode"):
+                success = await self.device.set_normal_mode()
 
         if not success:
             if self.device.last_response:
@@ -328,9 +334,14 @@ class VeSyncFanHA(VeSyncBaseEntity[VeSyncFanBase | VeSyncPurifier], FanEntity):
 
     async def async_oscillate(self, oscillating: bool) -> None:
         """Set oscillation."""
-        success = await self.device.toggle_oscillation(oscillating)
-        if not success:
-            if self.device.last_response:
-                raise HomeAssistantError(self.device.last_response.message)
-            raise HomeAssistantError("Failed to set oscillation, no response found.")
-        self.async_write_ha_state()
+        if hasattr(self.device, "toggle_oscillation"):
+            success = await self.device.toggle_oscillation(oscillating)
+            if not success:
+                if self.device.last_response:
+                    raise HomeAssistantError(self.device.last_response.message)
+                raise HomeAssistantError(
+                    "Failed to set oscillation, no response found."
+                )
+            self.async_write_ha_state()
+        else:
+            raise HomeAssistantError("Oscillation not supported by this device.")
