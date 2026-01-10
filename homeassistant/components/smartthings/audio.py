@@ -110,7 +110,7 @@ class SmartThingsAudioManager(HomeAssistantView):
                 allow_internal=True,
                 allow_external=True,
                 allow_cloud=True,
-                prefer_external=True,
+                prefer_external=False,  # Prevent NAT loopback failures; may break non-local access.
                 prefer_cloud=True,
             )
         except NoURLAvailableError as err:
