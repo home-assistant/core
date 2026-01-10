@@ -4,17 +4,13 @@ from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 from typing import Any
 
-from actron_neo_api import ActronAirAPIError
-
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DOMAIN
 from .coordinator import ActronAirConfigEntry, ActronAirSystemCoordinator
-from .entity import ActronAirAcEntity
+from .entity import ActronAirAcEntity, handle_actron_api_errors
 
 PARALLEL_UPDATES = 0
 
@@ -97,24 +93,12 @@ class ActronAirSwitch(ActronAirAcEntity, SwitchEntity):
         """Return true if the switch is on."""
         return self.entity_description.is_on_fn(self.coordinator)
 
+    @handle_actron_api_errors
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
-        try:
-            await self.entity_description.set_fn(self.coordinator, True)
-        except ActronAirAPIError as err:
-            raise HomeAssistantError(
-                translation_domain=DOMAIN,
-                translation_key="api_error",
-                translation_placeholders={"error": str(err)},
-            ) from err
+        await self.entity_description.set_fn(self.coordinator, True)
 
+    @handle_actron_api_errors
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the switch off."""
-        try:
-            await self.entity_description.set_fn(self.coordinator, False)
-        except ActronAirAPIError as err:
-            raise HomeAssistantError(
-                translation_domain=DOMAIN,
-                translation_key="api_error",
-                translation_placeholders={"error": str(err)},
-            ) from err
+        await self.entity_description.set_fn(self.coordinator, False)
