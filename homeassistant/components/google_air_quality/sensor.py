@@ -77,7 +77,7 @@ AIR_QUALITY_SENSOR_TYPES: tuple[AirQualitySensorEntityDescription, ...] = (
     AirQualitySensorEntityDescription(
         key="local_aqi",
         translation_key="local_aqi",
-        exists_fn=lambda x: (idx := _laqi(x)) is not None and idx.aqi is not None,
+        exists_fn=lambda x: _laqi(x) is not None,
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.AQI,
         value_fn=lambda x: _laqi(x).aqi,
