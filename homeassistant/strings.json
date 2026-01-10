@@ -74,7 +74,8 @@
       },
       "description": {
         "confirm_setup": "Do you want to start setup?",
-        "implementation": "The credentials you want to use to authenticate."
+        "implementation": "The credentials you want to use to authenticate.",
+        "verify_ssl": "Verify the server`s SSL certificate against trusted certificate authorities."
       },
       "error": {
         "cannot_connect": "Failed to connect",
