@@ -40,10 +40,23 @@ def make_system_data(
     vms: list[dict[str, Any]] | None = None,
     notifications_unread: int = 0,
 ) -> UnraidSystemData:
-    """Create a UnraidSystemData instance for testing using raw dicts."""
+    """Create a UnraidSystemData instance for testing using raw dicts.
+
+    Note: API returns: cpu { packages { temp, totalPower } } where packages is
+    a dict like {'temp': [38, 40], 'totalPower': 1.63}.
+    - temp: array of per-package temperatures
+    - totalPower: single float for total CPU power
+    """
+    # Build packages dict matching API structure
+    packages: dict[str, Any] = {}
+    if cpu_temps is not None:
+        packages["temp"] = cpu_temps
+    if cpu_power is not None:
+        packages["totalPower"] = cpu_power
+
     return UnraidSystemData(
         info={
-            "cpu": {"packages": {"temp": cpu_temps or [], "totalPower": cpu_power}},
+            "cpu": {"packages": packages},
             "os": {"uptime": uptime.isoformat() if uptime else None},
         },
         metrics={

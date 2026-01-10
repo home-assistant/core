@@ -64,6 +64,9 @@
       "array_used": {
         "name": "Array used"
       },
+      "cpu_power": {
+        "name": "CPU power"
+      },
       "cpu_temp": {
         "name": "CPU temperature"
       },
@@ -79,8 +82,14 @@
       "disk_used": {
         "name": "Disk {disk_name} used"
       },
+      "flash_usage": {
+        "name": "Flash device usage"
+      },
+      "flash_used": {
+        "name": "Flash device used"
+      },
       "notifications": {
-        "name": "Notifications"
+        "name": "Active notifications"
       },
       "parity_progress": {
         "name": "Parity check progress"
@@ -105,6 +114,9 @@
       },
       "ups_load": {
         "name": "UPS {ups_name} load"
+      },
+      "ups_power": {
+        "name": "UPS {ups_name} power"
       },
       "ups_runtime": {
         "name": "UPS {ups_name} runtime"

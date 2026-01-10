@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 from unittest.mock import MagicMock
 
 from homeassistant.components.sensor import SensorDeviceClass, SensorStateClass
@@ -16,13 +16,14 @@ from homeassistant.components.unraid.sensor import (
     UnraidDiskSensorEntity,
     UnraidShareSensorEntity,
     UnraidSystemSensorEntity,
+    UnraidUPSPowerSensorEntity,
     UnraidUPSSensorEntity,
+    _format_duration,
     _get_nested,
     _parse_uptime,
 )
-from homeassistant.const import UnitOfInformation, UnitOfTemperature, UnitOfTime
+from homeassistant.const import UnitOfInformation, UnitOfTemperature
 from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.entity import EntityCategory
 
 from .conftest import make_storage_data, make_system_data
 
@@ -55,6 +56,45 @@ class TestGetNested:
         assert _get_nested(data, "a", "b") is None
 
 
+class TestFormatDuration:
+    """Test _format_duration helper function."""
+
+    def test_format_duration_none(self) -> None:
+        """Test _format_duration with None input."""
+        assert _format_duration(None) is None
+
+    def test_format_duration_negative(self) -> None:
+        """Test _format_duration with negative input."""
+        assert _format_duration(-1) is None
+
+    def test_format_duration_zero(self) -> None:
+        """Test _format_duration with zero seconds."""
+        assert _format_duration(0) == "0 seconds"
+
+    def test_format_duration_seconds_only(self) -> None:
+        """Test _format_duration with seconds only."""
+        assert _format_duration(45) == "45 seconds"
+        assert _format_duration(1) == "1 second"
+
+    def test_format_duration_minutes_and_seconds(self) -> None:
+        """Test _format_duration with minutes and seconds."""
+        assert _format_duration(90) == "1 minute, 30 seconds"
+        assert _format_duration(125) == "2 minutes, 5 seconds"
+
+    def test_format_duration_hours_minutes_seconds(self) -> None:
+        """Test _format_duration with hours, minutes, seconds."""
+        assert _format_duration(3661) == "1 hour, 1 minute, 1 second"
+        assert _format_duration(7325) == "2 hours, 2 minutes, 5 seconds"
+
+    def test_format_duration_days(self) -> None:
+        """Test _format_duration with days."""
+        assert _format_duration(86400) == "1 day"
+        assert (
+            _format_duration(172800 + 3600 + 60 + 1)
+            == "2 days, 1 hour, 1 minute, 1 second"
+        )
+
+
 class TestParseUptime:
     """Test _parse_uptime helper function."""
 
@@ -62,15 +102,26 @@ class TestParseUptime:
         """Test _parse_uptime with None input."""
         assert _parse_uptime(None) is None
 
-    def test_parse_uptime_iso_format(self) -> None:
-        """Test _parse_uptime with ISO format string."""
-        result = _parse_uptime("2024-01-15T10:30:00+00:00")
-        assert result == datetime(2024, 1, 15, 10, 30, 0, tzinfo=UTC)
+    def test_parse_uptime_returns_formatted_string(self) -> None:
+        """Test _parse_uptime returns formatted duration string."""
+        # Boot time 1 hour, 30 minutes, 45 seconds ago
+        boot_time = datetime.now(UTC) - timedelta(hours=1, minutes=30, seconds=45)
+        boot_str = boot_time.isoformat()
+        result = _parse_uptime(boot_str)
+        # Should return formatted string like "1 hour, 30 minutes, 45 seconds"
+        assert result is not None
+        assert "hour" in result
+        assert "minute" in result
 
     def test_parse_uptime_z_suffix(self) -> None:
         """Test _parse_uptime with Z suffix."""
-        result = _parse_uptime("2024-01-15T10:30:00Z")
-        assert result == datetime(2024, 1, 15, 10, 30, 0, tzinfo=UTC)
+        # Boot time 2 hours ago with Z suffix
+        boot_time = datetime.now(UTC) - timedelta(hours=2)
+        boot_str = boot_time.strftime("%Y-%m-%dT%H:%M:%SZ")
+        result = _parse_uptime(boot_str)
+        # Should return formatted string containing "2 hours"
+        assert result is not None
+        assert "2 hours" in result
 
     def test_parse_uptime_invalid(self) -> None:
         """Test _parse_uptime with invalid string."""
@@ -104,7 +155,6 @@ class TestSystemSensorDescriptions:
         assert desc.device_class == SensorDeviceClass.DATA_SIZE
         assert desc.native_unit_of_measurement == UnitOfInformation.BYTES
         assert desc.suggested_unit_of_measurement == UnitOfInformation.GIBIBYTES
-        assert desc.entity_category == EntityCategory.DIAGNOSTIC
 
     def test_cpu_temp_sensor_description(self) -> None:
         """Test CPU temperature sensor description."""
@@ -115,14 +165,14 @@ class TestSystemSensorDescriptions:
     def test_uptime_sensor_description(self) -> None:
         """Test uptime sensor description."""
         desc = next(s for s in SYSTEM_SENSORS if s.key == "uptime")
-        assert desc.device_class == SensorDeviceClass.TIMESTAMP
-        assert desc.entity_category == EntityCategory.DIAGNOSTIC
+        # Uptime returns formatted string, no device_class or unit
+        assert desc.device_class is None
+        assert desc.native_unit_of_measurement is None
 
     def test_notifications_sensor_description(self) -> None:
         """Test notifications sensor description."""
         desc = next(s for s in SYSTEM_SENSORS if s.key == "notifications")
         assert desc.state_class == SensorStateClass.MEASUREMENT
-        assert desc.entity_category == EntityCategory.DIAGNOSTIC
 
 
 class TestStorageSensorDescriptions:
@@ -150,7 +200,6 @@ class TestStorageSensorDescriptions:
         """Test parity progress sensor description."""
         desc = next(s for s in STORAGE_SENSORS if s.key == "parity_progress")
         assert desc.native_unit_of_measurement == "%"
-        assert desc.entity_category == EntityCategory.DIAGNOSTIC
 
 
 class TestDiskSensorDescriptions:
@@ -201,8 +250,9 @@ class TestUPSSensorDescriptions:
     def test_ups_runtime_sensor_description(self) -> None:
         """Test UPS runtime sensor description."""
         desc = next(s for s in UPS_SENSORS if s.key == "runtime")
-        assert desc.device_class == SensorDeviceClass.DURATION
-        assert desc.native_unit_of_measurement == UnitOfTime.SECONDS
+        # Runtime returns formatted string, no device_class or unit
+        assert desc.device_class is None
+        assert desc.native_unit_of_measurement is None
 
 
 # =============================================================================
@@ -325,10 +375,20 @@ class TestShareSensorValueFunctions:
     """Test share sensor value functions."""
 
     def test_share_usage_value_fn(self) -> None:
-        """Test share usage value function."""
-        share = {"id": "share1", "size": 1000, "used": 250}
+        """Test share usage value function.
+
+        Note: API returns size=0, so we calculate total from used + free.
+        """
+        # 250 used, 750 free = 1000 total, 25% usage
+        share = {"id": "share1", "size": 0, "used": 250, "free": 750}
         desc = next(s for s in SHARE_SENSORS if s.key == "usage")
         assert desc.value_fn(share) == 25.0
+
+    def test_share_usage_value_fn_no_data(self) -> None:
+        """Test share usage value function with no data."""
+        share = {"id": "share1", "size": 0, "used": 0, "free": 0}
+        desc = next(s for s in SHARE_SENSORS if s.key == "usage")
+        assert desc.value_fn(share) is None
 
     def test_share_used_value_fn(self) -> None:
         """Test share used value function."""
@@ -353,10 +413,11 @@ class TestUPSSensorValueFunctions:
         assert desc.value_fn(ups) == 45.5
 
     def test_ups_runtime_value_fn(self) -> None:
-        """Test UPS runtime value function (returns seconds)."""
-        ups = {"id": "ups1", "battery": {"estimatedRuntime": 3600}}
+        """Test UPS runtime value function (returns formatted string)."""
+        ups = {"id": "ups1", "battery": {"estimatedRuntime": 3661}}
         desc = next(s for s in UPS_SENSORS if s.key == "runtime")
-        assert desc.value_fn(ups) == 3600
+        # 3661 seconds = 1 hour, 1 minute, 1 second
+        assert desc.value_fn(ups) == "1 hour, 1 minute, 1 second"
 
 
 # =============================================================================
@@ -442,8 +503,12 @@ class TestUnraidShareSensorEntity:
     """Test UnraidShareSensorEntity class."""
 
     def test_share_entity_creation(self) -> None:
-        """Test share sensor entity creation."""
-        share = {"id": "share1", "name": "Media", "size": 1000, "used": 250}
+        """Test share sensor entity creation.
+
+        Note: API returns size=0, so we calculate total from used + free.
+        250 used + 750 free = 1000 total = 25% usage.
+        """
+        share = {"id": "share1", "name": "Media", "size": 0, "used": 250, "free": 750}
         coordinator = MagicMock()
         coordinator.data = make_storage_data(shares=[share])
         coordinator.last_update_success = True
@@ -492,3 +557,60 @@ class TestUnraidUPSSensorEntity:
         assert entity.unique_id == "test-uuid_ups_ups1_battery"
         assert entity.native_value == 85
         assert entity._attr_translation_placeholders == {"ups_name": "APC"}
+
+
+class TestUnraidUPSPowerSensorEntity:
+    """Test UnraidUPSPowerSensorEntity class."""
+
+    def test_ups_power_entity_creation(self) -> None:
+        """Test UPS power sensor entity creation.
+
+        Power = load_percentage * nominal_power / 100
+        12% load * 800W nominal = 96W
+        """
+        ups = {
+            "id": "ups1",
+            "name": "APC",
+            "power": {"loadPercentage": 12.0},
+        }
+        coordinator = MagicMock()
+        coordinator.data = make_system_data(ups_devices=[ups])
+        coordinator.last_update_success = True
+
+        device_info = DeviceInfo(
+            identifiers={(DOMAIN, "test-uuid")}, name="Test Server"
+        )
+
+        entity = UnraidUPSPowerSensorEntity(
+            coordinator=coordinator,
+            ups=ups,
+            server_uuid="test-uuid",
+            device_info=device_info,
+            nominal_power=800,
+        )
+
+        assert entity.unique_id == "test-uuid_ups_ups1_power"
+        assert entity.native_value == 96.0
+        assert entity._attr_translation_placeholders == {"ups_name": "APC"}
+        assert entity.device_class == SensorDeviceClass.POWER
+
+    def test_ups_power_entity_no_load(self) -> None:
+        """Test UPS power sensor returns None when load is unavailable."""
+        ups = {"id": "ups1", "name": "APC", "power": {}}
+        coordinator = MagicMock()
+        coordinator.data = make_system_data(ups_devices=[ups])
+        coordinator.last_update_success = True
+
+        device_info = DeviceInfo(
+            identifiers={(DOMAIN, "test-uuid")}, name="Test Server"
+        )
+
+        entity = UnraidUPSPowerSensorEntity(
+            coordinator=coordinator,
+            ups=ups,
+            server_uuid="test-uuid",
+            device_info=device_info,
+            nominal_power=800,
+        )
+
+        assert entity.native_value is None

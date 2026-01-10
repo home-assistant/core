@@ -14,18 +14,13 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.const import (
-    EntityCategory,
-    UnitOfInformation,
-    UnitOfTemperature,
-    UnitOfTime,
-)
+from homeassistant.const import UnitOfInformation, UnitOfPower, UnitOfTemperature
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN
+from .const import CONF_UPS_NOMINAL_POWER, DEFAULT_UPS_NOMINAL_POWER, DOMAIN
 from .coordinator import (
     UnraidStorageCoordinator,
     UnraidStorageData,
@@ -56,8 +51,98 @@ def _get_nested(data: dict[str, Any] | None, *keys: str, default: Any = None) ->
     return current
 
 
-def _parse_uptime(uptime_str: str | None) -> datetime | None:
-    """Parse uptime datetime from string."""
+def _get_package_temps(data: dict[str, Any] | None) -> list[float]:
+    """Extract CPU package temperatures.
+
+    API returns: packages = {'temp': [38, 40], 'totalPower': 1.63}
+    Returns: [38.0, 40.0]
+    """
+    packages = _get_nested(data, "cpu", "packages", default={})
+    if not isinstance(packages, dict):
+        return []
+    temps = packages.get("temp")
+    if not isinstance(temps, list):
+        return []
+    return [_to_float(t) for t in temps if t is not None]
+
+
+def _get_package_power(data: dict[str, Any] | None) -> float | None:
+    """Extract CPU package total power.
+
+    API returns: packages = {'temp': [38], 'totalPower': 1.63}
+    Returns: 1.63
+    """
+    packages = _get_nested(data, "cpu", "packages", default={})
+    if not isinstance(packages, dict):
+        return None
+    power = packages.get("totalPower")
+    return _to_float_or_none(power)
+
+
+def _to_float(value: Any, default: float = 0.0) -> float:
+    """Safely convert a value to float (API sometimes returns strings)."""
+    if value is None:
+        return default
+    try:
+        return float(value)
+    except (ValueError, TypeError):
+        return default
+
+
+def _to_float_or_none(value: Any) -> float | None:
+    """Safely convert a value to float, returning None if value is None."""
+    if value is None:
+        return None
+    try:
+        return float(value)
+    except (ValueError, TypeError):
+        return None
+
+
+def _to_int(value: Any, default: int = 0) -> int:
+    """Safely convert a value to int (API sometimes returns strings)."""
+    if value is None:
+        return default
+    try:
+        return int(float(value))  # Handle "123.0" strings
+    except (ValueError, TypeError):
+        return default
+
+
+def _to_int_or_none(value: Any) -> int | None:
+    """Safely convert a value to int, returning None if value is None."""
+    if value is None:
+        return None
+    try:
+        return int(float(value))
+    except (ValueError, TypeError):
+        return None
+
+
+def _format_duration(total_seconds: int | None) -> str | None:
+    """Format seconds as human-readable duration string."""
+    if total_seconds is None or total_seconds < 0:
+        return None
+
+    days, remainder = divmod(total_seconds, 86400)
+    hours, remainder = divmod(remainder, 3600)
+    minutes, seconds = divmod(remainder, 60)
+
+    parts = []
+    if days > 0:
+        parts.append(f"{days} day" if days == 1 else f"{days} days")
+    if hours > 0:
+        parts.append(f"{hours} hour" if hours == 1 else f"{hours} hours")
+    if minutes > 0:
+        parts.append(f"{minutes} minute" if minutes == 1 else f"{minutes} minutes")
+    if seconds > 0 or not parts:
+        parts.append(f"{seconds} second" if seconds == 1 else f"{seconds} seconds")
+
+    return ", ".join(parts)
+
+
+def _parse_uptime(uptime_str: str | None) -> str | None:
+    """Parse uptime and return formatted duration string."""
     if uptime_str is None:
         return None
     # Normalize ISO format
@@ -65,16 +150,25 @@ def _parse_uptime(uptime_str: str | None) -> datetime | None:
         uptime_str.replace("Z", "+00:00") if uptime_str.endswith("Z") else uptime_str
     )
     try:
-        return datetime.fromisoformat(normalized)
+        boot_time = datetime.fromisoformat(normalized)
+        now = datetime.now(boot_time.tzinfo)
+        total_seconds = int((now - boot_time).total_seconds())
+        return _format_duration(total_seconds)
     except ValueError:
         return None
+
+
+def _format_ups_runtime(ups: dict[str, Any]) -> str | None:
+    """Format UPS runtime as human-readable duration."""
+    runtime_seconds = _to_int_or_none(_get_nested(ups, "battery", "estimatedRuntime"))
+    return _format_duration(runtime_seconds)
 
 
 @dataclass(frozen=True, kw_only=True)
 class UnraidSystemSensorEntityDescription(SensorEntityDescription):
     """Describes an Unraid system sensor entity."""
 
-    value_fn: Callable[[UnraidSystemData], StateType | datetime]
+    value_fn: Callable[[UnraidSystemData], StateType]
     available_fn: Callable[[UnraidSystemData], bool] = lambda _: True
 
 
@@ -94,7 +188,9 @@ SYSTEM_SENSORS: tuple[UnraidSystemSensorEntityDescription, ...] = (
         native_unit_of_measurement="%",
         state_class=SensorStateClass.MEASUREMENT,
         suggested_display_precision=1,
-        value_fn=lambda data: _get_nested(data.metrics, "cpu", "percentTotal"),
+        value_fn=lambda data: _to_float_or_none(
+            _get_nested(data.metrics, "cpu", "percentTotal")
+        ),
     ),
     UnraidSystemSensorEntityDescription(
         key="ram_usage",
@@ -102,7 +198,9 @@ SYSTEM_SENSORS: tuple[UnraidSystemSensorEntityDescription, ...] = (
         native_unit_of_measurement="%",
         state_class=SensorStateClass.MEASUREMENT,
         suggested_display_precision=1,
-        value_fn=lambda data: _get_nested(data.metrics, "memory", "percentTotal"),
+        value_fn=lambda data: _to_float_or_none(
+            _get_nested(data.metrics, "memory", "percentTotal")
+        ),
     ),
     UnraidSystemSensorEntityDescription(
         key="ram_used",
@@ -111,8 +209,9 @@ SYSTEM_SENSORS: tuple[UnraidSystemSensorEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfInformation.BYTES,
         state_class=SensorStateClass.MEASUREMENT,
         suggested_unit_of_measurement=UnitOfInformation.GIBIBYTES,
-        entity_category=EntityCategory.DIAGNOSTIC,
-        value_fn=lambda data: _get_nested(data.metrics, "memory", "used"),
+        value_fn=lambda data: _to_int_or_none(
+            _get_nested(data.metrics, "memory", "used")
+        ),
     ),
     UnraidSystemSensorEntityDescription(
         key="ram_total",
@@ -121,9 +220,10 @@ SYSTEM_SENSORS: tuple[UnraidSystemSensorEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfInformation.BYTES,
         state_class=SensorStateClass.MEASUREMENT,
         suggested_unit_of_measurement=UnitOfInformation.GIBIBYTES,
-        entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
-        value_fn=lambda data: _get_nested(data.metrics, "memory", "total"),
+        value_fn=lambda data: _to_int_or_none(
+            _get_nested(data.metrics, "memory", "total")
+        ),
     ),
     UnraidSystemSensorEntityDescription(
         key="cpu_temp",
@@ -133,25 +233,29 @@ SYSTEM_SENSORS: tuple[UnraidSystemSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda data: (
             sum(temps) / len(temps)
-            if (temps := _get_nested(data.info, "cpu", "packages", "temp", default=[]))
+            if (temps := _get_package_temps(data.info))
             else None
         ),
-        available_fn=lambda data: bool(
-            _get_nested(data.info, "cpu", "packages", "temp", default=[])
-        ),
+        available_fn=lambda data: bool(_get_package_temps(data.info)),
+    ),
+    UnraidSystemSensorEntityDescription(
+        key="cpu_power",
+        translation_key="cpu_power",
+        device_class=SensorDeviceClass.POWER,
+        native_unit_of_measurement="W",
+        state_class=SensorStateClass.MEASUREMENT,
+        value_fn=lambda data: _get_package_power(data.info),
+        available_fn=lambda data: _get_package_power(data.info) is not None,
     ),
     UnraidSystemSensorEntityDescription(
         key="uptime",
         translation_key="uptime",
-        device_class=SensorDeviceClass.TIMESTAMP,
-        entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda data: _parse_uptime(_get_nested(data.info, "os", "uptime")),
     ),
     UnraidSystemSensorEntityDescription(
         key="notifications",
         translation_key="notifications",
         state_class=SensorStateClass.MEASUREMENT,
-        entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda data: data.notifications_unread,
     ),
 )
@@ -172,8 +276,8 @@ STORAGE_SENSORS: tuple[UnraidStorageSensorEntityDescription, ...] = (
         suggested_display_precision=1,
         value_fn=lambda data: (
             (
-                _get_nested(data.capacity, "kilobytes", "used", default=0)
-                / _get_nested(data.capacity, "kilobytes", "total", default=1)
+                _to_float(_get_nested(data.capacity, "kilobytes", "used"))
+                / _to_float(_get_nested(data.capacity, "kilobytes", "total"), 1.0)
                 * 100
             )
             if data.capacity and _get_nested(data.capacity, "kilobytes", "total")
@@ -188,8 +292,11 @@ STORAGE_SENSORS: tuple[UnraidStorageSensorEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfInformation.KIBIBYTES,
         state_class=SensorStateClass.MEASUREMENT,
         suggested_unit_of_measurement=UnitOfInformation.TEBIBYTES,
-        entity_category=EntityCategory.DIAGNOSTIC,
-        value_fn=lambda data: _get_nested(data.capacity, "kilobytes", "used"),
+        value_fn=lambda data: (
+            _to_int(_get_nested(data.capacity, "kilobytes", "used"))
+            if data.capacity
+            else None
+        ),
         available_fn=lambda data: data.capacity is not None,
     ),
     UnraidStorageSensorEntityDescription(
@@ -199,9 +306,12 @@ STORAGE_SENSORS: tuple[UnraidStorageSensorEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfInformation.KIBIBYTES,
         state_class=SensorStateClass.MEASUREMENT,
         suggested_unit_of_measurement=UnitOfInformation.TEBIBYTES,
-        entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
-        value_fn=lambda data: _get_nested(data.capacity, "kilobytes", "total"),
+        value_fn=lambda data: (
+            _to_int(_get_nested(data.capacity, "kilobytes", "total"))
+            if data.capacity
+            else None
+        ),
         available_fn=lambda data: data.capacity is not None,
     ),
     UnraidStorageSensorEntityDescription(
@@ -209,7 +319,6 @@ STORAGE_SENSORS: tuple[UnraidStorageSensorEntityDescription, ...] = (
         translation_key="parity_progress",
         native_unit_of_measurement="%",
         state_class=SensorStateClass.MEASUREMENT,
-        entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda data: (
             _get_nested(data.parity_status, "progress")
             if data.parity_status is not None
@@ -219,6 +328,36 @@ STORAGE_SENSORS: tuple[UnraidStorageSensorEntityDescription, ...] = (
             data.parity_status is not None
             and _get_nested(data.parity_status, "status") not in (None, "idle", "IDLE")
         ),
+    ),
+    UnraidStorageSensorEntityDescription(
+        key="flash_usage",
+        translation_key="flash_usage",
+        native_unit_of_measurement="%",
+        state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=1,
+        value_fn=lambda data: (
+            (
+                _to_float(data.boot.get("fsUsed"))
+                / _to_float(data.boot.get("fsSize"), 1.0)
+                * 100
+            )
+            if data.boot and data.boot.get("fsSize")
+            else None
+        ),
+        available_fn=lambda data: (
+            data.boot is not None and bool(data.boot.get("fsSize"))
+        ),
+    ),
+    UnraidStorageSensorEntityDescription(
+        key="flash_used",
+        translation_key="flash_used",
+        device_class=SensorDeviceClass.DATA_SIZE,
+        native_unit_of_measurement=UnitOfInformation.KIBIBYTES,
+        state_class=SensorStateClass.MEASUREMENT,
+        suggested_unit_of_measurement=UnitOfInformation.MEBIBYTES,
+        suggested_display_precision=2,
+        value_fn=lambda data: (_to_int(data.boot.get("fsUsed")) if data.boot else None),
+        available_fn=lambda data: data.boot is not None,
     ),
 )
 
@@ -308,7 +447,7 @@ DISK_SENSORS: tuple[UnraidDiskSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         suggested_display_precision=1,
         value_fn=lambda disk: (
-            (disk.get("fsUsed", 0) / disk.get("fsSize", 1) * 100)
+            (_to_float(disk.get("fsUsed")) / _to_float(disk.get("fsSize"), 1.0) * 100)
             if disk.get("fsSize")
             else None
         ),
@@ -321,8 +460,9 @@ DISK_SENSORS: tuple[UnraidDiskSensorEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfInformation.KIBIBYTES,
         state_class=SensorStateClass.MEASUREMENT,
         suggested_unit_of_measurement=UnitOfInformation.GIBIBYTES,
-        entity_category=EntityCategory.DIAGNOSTIC,
-        value_fn=lambda disk: disk.get("fsUsed"),
+        value_fn=lambda disk: _to_int(disk.get("fsUsed"))
+        if disk.get("fsUsed")
+        else None,
         available_fn=lambda disk: disk.get("fsUsed") is not None,
     ),
     UnraidDiskSensorEntityDescription(
@@ -331,7 +471,9 @@ DISK_SENSORS: tuple[UnraidDiskSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.TEMPERATURE,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         state_class=SensorStateClass.MEASUREMENT,
-        value_fn=lambda disk: disk.get("temp"),
+        value_fn=lambda disk: (
+            _to_float(disk.get("temp")) if disk.get("temp") is not None else None
+        ),
         available_fn=lambda disk: disk.get("temp") is not None,
     ),
 )
@@ -394,6 +536,19 @@ class UnraidShareSensorEntityDescription(SensorEntityDescription):
     value_fn: Callable[[dict[str, Any]], StateType]
 
 
+def _share_usage_percent(share: dict[str, Any]) -> float | None:
+    """Calculate share usage percentage.
+
+    API returns size=0, so calculate total from used + free.
+    """
+    used = _to_float(share.get("used"), 0)
+    free = _to_float(share.get("free"), 0)
+    total = used + free
+    if total <= 0:
+        return None
+    return (used / total) * 100
+
+
 # Share sensor descriptions (created per-share)
 SHARE_SENSORS: tuple[UnraidShareSensorEntityDescription, ...] = (
     UnraidShareSensorEntityDescription(
@@ -402,11 +557,7 @@ SHARE_SENSORS: tuple[UnraidShareSensorEntityDescription, ...] = (
         native_unit_of_measurement="%",
         state_class=SensorStateClass.MEASUREMENT,
         suggested_display_precision=1,
-        value_fn=lambda share: (
-            (share.get("used", 0) / share.get("size", 1) * 100)
-            if share.get("size")
-            else None
-        ),
+        value_fn=_share_usage_percent,
     ),
     UnraidShareSensorEntityDescription(
         key="used",
@@ -415,8 +566,9 @@ SHARE_SENSORS: tuple[UnraidShareSensorEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfInformation.KIBIBYTES,
         state_class=SensorStateClass.MEASUREMENT,
         suggested_unit_of_measurement=UnitOfInformation.GIBIBYTES,
-        entity_category=EntityCategory.DIAGNOSTIC,
-        value_fn=lambda share: share.get("used"),
+        value_fn=lambda share: (
+            _to_int_or_none(share.get("used")) if share.get("used") else None
+        ),
     ),
 )
 
@@ -483,7 +635,9 @@ UPS_SENSORS: tuple[UnraidUPSSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.BATTERY,
         native_unit_of_measurement="%",
         state_class=SensorStateClass.MEASUREMENT,
-        value_fn=lambda ups: _get_nested(ups, "battery", "chargeLevel"),
+        value_fn=lambda ups: _to_float_or_none(
+            _get_nested(ups, "battery", "chargeLevel")
+        ),
     ),
     UnraidUPSSensorEntityDescription(
         key="load",
@@ -491,16 +645,14 @@ UPS_SENSORS: tuple[UnraidUPSSensorEntityDescription, ...] = (
         native_unit_of_measurement="%",
         state_class=SensorStateClass.MEASUREMENT,
         suggested_display_precision=1,
-        value_fn=lambda ups: _get_nested(ups, "power", "loadPercentage"),
+        value_fn=lambda ups: _to_float_or_none(
+            _get_nested(ups, "power", "loadPercentage")
+        ),
     ),
     UnraidUPSSensorEntityDescription(
         key="runtime",
         translation_key="ups_runtime",
-        device_class=SensorDeviceClass.DURATION,
-        native_unit_of_measurement=UnitOfTime.SECONDS,
-        state_class=SensorStateClass.MEASUREMENT,
-        suggested_unit_of_measurement=UnitOfTime.MINUTES,
-        value_fn=lambda ups: _get_nested(ups, "battery", "estimatedRuntime"),
+        value_fn=_format_ups_runtime,
     ),
 )
 
@@ -552,6 +704,64 @@ class UnraidUPSSensorEntity(CoordinatorEntity[UnraidSystemCoordinator], SensorEn
         if ups is None:
             return False
         return self.entity_description.available_fn(ups)
+
+
+class UnraidUPSPowerSensorEntity(
+    CoordinatorEntity[UnraidSystemCoordinator], SensorEntity
+):
+    """Sensor entity for calculated UPS power consumption.
+
+    Calculates power in Watts from: load_percentage * nominal_power / 100
+    Only created when nominal_power is configured > 0.
+    """
+
+    _attr_has_entity_name = True
+    _attr_device_class = SensorDeviceClass.POWER
+    _attr_native_unit_of_measurement = UnitOfPower.WATT
+    _attr_state_class = SensorStateClass.MEASUREMENT
+    _attr_translation_key = "ups_power"
+
+    def __init__(
+        self,
+        coordinator: UnraidSystemCoordinator,
+        ups: dict[str, Any],
+        server_uuid: str,
+        device_info: DeviceInfo,
+        nominal_power: int,
+    ) -> None:
+        """Initialize the UPS power sensor."""
+        super().__init__(coordinator)
+        self._ups_id = ups.get("id", "unknown")
+        self._ups_name = ups.get("name", "unknown")
+        self._nominal_power = nominal_power
+        self._attr_unique_id = f"{server_uuid}_ups_{self._ups_id}_power"
+        self._attr_device_info = device_info
+        self._attr_translation_placeholders = {"ups_name": self._ups_name}
+
+    def _get_ups(self) -> dict[str, Any] | None:
+        """Get current UPS from coordinator data."""
+        for ups in self.coordinator.data.ups_devices:
+            if ups.get("id") == self._ups_id:
+                return ups
+        return None
+
+    @property
+    def native_value(self) -> StateType:
+        """Return calculated power consumption in Watts."""
+        ups = self._get_ups()
+        if ups is None:
+            return None
+        load = _to_float_or_none(_get_nested(ups, "power", "loadPercentage"))
+        if load is None:
+            return None
+        return round(load * self._nominal_power / 100, 1)
+
+    @property
+    def available(self) -> bool:
+        """Return if entity is available."""
+        if not self.coordinator.last_update_success:
+            return False
+        return self._get_ups() is not None
 
 
 async def async_setup_entry(
@@ -629,6 +839,19 @@ async def async_setup_entry(
             for ups in system_coordinator.data.ups_devices
             for description in UPS_SENSORS
         )
+
+        # UPS Power sensor (calculated from load% * nominal_power)
+        # Only created if nominal_power is configured > 0
+        nominal_power = entry.options.get(
+            CONF_UPS_NOMINAL_POWER, DEFAULT_UPS_NOMINAL_POWER
+        )
+        if nominal_power > 0:
+            entities.extend(
+                UnraidUPSPowerSensorEntity(
+                    system_coordinator, ups, server_uuid, device_info, nominal_power
+                )
+                for ups in system_coordinator.data.ups_devices
+            )
 
     _LOGGER.debug("Adding %d sensor entities", len(entities))
     async_add_entities(entities)
