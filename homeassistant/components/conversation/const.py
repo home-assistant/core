@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from enum import IntFlag
+from enum import IntFlag, StrEnum
 from typing import TYPE_CHECKING
 
 from homeassistant.util.hass_dict import HassKey
@@ -34,3 +34,13 @@ class ConversationEntityFeature(IntFlag):
 
 METADATA_CUSTOM_SENTENCE = "hass_custom_sentence"
 METADATA_CUSTOM_FILE = "hass_custom_file"
+
+
+class ChatLogEventType(StrEnum):
+    """Chat log event type."""
+
+    INITIAL_STATE = "initial_state"
+    CREATED = "created"
+    UPDATED = "updated"
+    DELETED = "deleted"
+    CONTENT_ADDED = "content_added"

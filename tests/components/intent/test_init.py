@@ -1,11 +1,25 @@
 """Tests for Intent component."""
 
+from typing import Any
+
 import pytest
 
 from homeassistant.components.button import SERVICE_PRESS
-from homeassistant.components.cover import SERVICE_CLOSE_COVER, SERVICE_OPEN_COVER
+from homeassistant.components.cover import (
+    DOMAIN as COVER_DOMAIN,
+    SERVICE_CLOSE_COVER,
+    SERVICE_OPEN_COVER,
+    SERVICE_STOP_COVER,
+    CoverState,
+)
 from homeassistant.components.lock import SERVICE_LOCK, SERVICE_UNLOCK
-from homeassistant.components.valve import SERVICE_CLOSE_VALVE, SERVICE_OPEN_VALVE
+from homeassistant.components.valve import (
+    DOMAIN as VALVE_DOMAIN,
+    SERVICE_CLOSE_VALVE,
+    SERVICE_OPEN_VALVE,
+    SERVICE_STOP_VALVE,
+    ValveState,
+)
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     ATTR_FRIENDLY_NAME,
@@ -594,3 +608,66 @@ async def test_intents_respond_intent(hass: HomeAssistant) -> None:
         hass, "test", intent.INTENT_RESPOND, {"response": {"value": "Hello World"}}
     )
     assert response.speech["plain"]["speech"] == "Hello World"
+
+
+async def test_stop_moving_valve(hass: HomeAssistant) -> None:
+    """Test HassStopMoving intent for valves."""
+    assert await async_setup_component(hass, "intent", {})
+
+    entity_id = f"{VALVE_DOMAIN}.test_valve"
+    hass.states.async_set(entity_id, ValveState.OPEN)
+    calls = async_mock_service(hass, VALVE_DOMAIN, SERVICE_STOP_VALVE)
+
+    response = await intent.async_handle(
+        hass, "test", intent.INTENT_STOP_MOVING, {"name": {"value": "test valve"}}
+    )
+    await hass.async_block_till_done()
+
+    assert response.response_type == intent.IntentResponseType.ACTION_DONE
+    assert len(calls) == 1
+    call = calls[0]
+    assert call.domain == VALVE_DOMAIN
+    assert call.service == SERVICE_STOP_VALVE
+    assert call.data == {"entity_id": entity_id}
+
+
+@pytest.mark.parametrize(
+    ("slots"),
+    [
+        ({"name": {"value": "test cover"}}),
+        ({"device_class": {"value": "shade"}}),
+    ],
+)
+async def test_stop_moving_cover(hass: HomeAssistant, slots: dict[str, Any]) -> None:
+    """Test HassStopMoving intent for covers."""
+    assert await async_setup_component(hass, "intent", {})
+
+    entity_id = f"{COVER_DOMAIN}.test_cover"
+    hass.states.async_set(
+        entity_id, CoverState.OPEN, attributes={"device_class": "shade"}
+    )
+    calls = async_mock_service(hass, COVER_DOMAIN, SERVICE_STOP_COVER)
+
+    response = await intent.async_handle(hass, "test", intent.INTENT_STOP_MOVING, slots)
+    await hass.async_block_till_done()
+
+    assert response.response_type == intent.IntentResponseType.ACTION_DONE
+    assert len(calls) == 1
+    call = calls[0]
+    assert call.domain == COVER_DOMAIN
+    assert call.service == SERVICE_STOP_COVER
+    assert call.data == {"entity_id": entity_id}
+
+
+async def test_stop_moving_intent_unsupported_domain(hass: HomeAssistant) -> None:
+    """Test that HassStopMoving intent fails with unsupported domain."""
+    assert await async_setup_component(hass, "homeassistant", {})
+    assert await async_setup_component(hass, "intent", {})
+
+    # Can't stop lights
+    hass.states.async_set("light.test_light", "on")
+
+    with pytest.raises(intent.IntentHandleError):
+        await intent.async_handle(
+            hass, "test", intent.INTENT_STOP_MOVING, {"name": {"value": "test light"}}
+        )

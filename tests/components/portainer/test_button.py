@@ -49,7 +49,7 @@ async def test_all_button_entities_snapshot(
         ("restart", "restart_container"),
     ],
 )
-async def test_buttons(
+async def test_buttons_containers(
     hass: HomeAssistant,
     mock_portainer_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
@@ -81,7 +81,7 @@ async def test_buttons(
         (PortainerTimeoutError("timeout"), "restart_container"),
     ],
 )
-async def test_buttons_exceptions(
+async def test_buttons_containers_exceptions(
     hass: HomeAssistant,
     mock_portainer_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
@@ -102,5 +102,65 @@ async def test_buttons_exceptions(
             BUTTON_DOMAIN,
             SERVICE_PRESS,
             {ATTR_ENTITY_ID: entity_id},
+            blocking=True,
+        )
+
+
+@pytest.mark.parametrize(
+    ("action", "client_method"),
+    [
+        ("prune", "images_prune"),
+    ],
+)
+async def test_buttons_endpoint(
+    hass: HomeAssistant,
+    mock_portainer_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    action: str,
+    client_method: str,
+) -> None:
+    """Test pressing a Portainer endpoint action button triggers client call. Click, click!"""
+    await setup_integration(hass, mock_config_entry)
+
+    entity_id = f"button.my_environment_{action}_unused_images"
+    method_mock = getattr(mock_portainer_client, client_method)
+    pre_calls = len(method_mock.mock_calls)
+
+    await hass.services.async_call(
+        BUTTON_DOMAIN,
+        SERVICE_PRESS,
+        {ATTR_ENTITY_ID: entity_id},
+        blocking=True,
+    )
+
+    assert len(method_mock.mock_calls) == pre_calls + 1
+
+
+@pytest.mark.parametrize(
+    ("exception", "client_method"),
+    [
+        (PortainerAuthenticationError("auth"), "images_prune"),
+        (PortainerConnectionError("conn"), "images_prune"),
+        (PortainerTimeoutError("timeout"), "images_prune"),
+    ],
+)
+async def test_buttons_endpoints_exceptions(
+    hass: HomeAssistant,
+    mock_portainer_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    exception: Exception,
+    client_method: str,
+) -> None:
+    """Test that Portainer buttons, but this time when they will do boom for sure."""
+    await setup_integration(hass, mock_config_entry)
+
+    method_mock = getattr(mock_portainer_client, client_method)
+    method_mock.side_effect = exception
+
+    with pytest.raises(HomeAssistantError):
+        await hass.services.async_call(
+            BUTTON_DOMAIN,
+            SERVICE_PRESS,
+            {ATTR_ENTITY_ID: "button.my_environment_prune_unused_images"},
             blocking=True,
         )
