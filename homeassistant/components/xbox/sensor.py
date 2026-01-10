@@ -303,6 +303,7 @@ async def async_setup_entry(
                 ]
             )
             devices_added |= new_devices
+        devices_added &= set(consoles.data)
 
     config_entry.async_on_unload(consoles.async_add_listener(add_entities))
     add_entities()

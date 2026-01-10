@@ -22,6 +22,8 @@ from pythonxbox.api.provider.titlehub.models import Title
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers.device_registry import DeviceEntryType
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DOMAIN
@@ -114,6 +116,20 @@ class XboxConsolesCoordinator(XboxBaseCoordinator[dict[str, SmartglassConsole]])
         _LOGGER.debug(
             "Found %d consoles: %s", len(consoles.result), consoles.model_dump()
         )
+
+        device_reg = dr.async_get(self.hass)
+        identifiers = {(DOMAIN, console.id) for console in consoles.result}
+        for device in dr.async_entries_for_config_entry(
+            device_reg, self.config_entry.entry_id
+        ):
+            if (
+                device.entry_type is not DeviceEntryType.SERVICE
+                and not set(device.identifiers) & identifiers
+            ):
+                _LOGGER.debug("Removing stale device %s", device.name)
+                device_reg.async_update_device(
+                    device.id, remove_config_entry_id=self.config_entry.entry_id
+                )
 
         return {console.id: console for console in consoles.result}
 

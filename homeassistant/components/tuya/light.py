@@ -706,7 +706,6 @@ class TuyaLightEntity(TuyaEntity, LightEntity):
         elif (
             color_supported(color_modes)
             and color_mode_wrapper is not None
-            and color_mode_wrapper.options
             and WorkMode.WHITE in color_mode_wrapper.options
         ):
             color_modes.add(ColorMode.WHITE)
