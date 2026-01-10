@@ -76,6 +76,40 @@ async def test_update_time_segment_charge_mode(
     mock_growatt_v1_api.min_write_time_segment.assert_called_once()
 
 
+async def test_update_time_segment_hyphenated_mode(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_growatt_v1_api,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test updating time segment with hyphenated mode format (UI compatibility)."""
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    # Get the device registry ID
+    device_entry = device_registry.async_get_device(identifiers={(DOMAIN, "MIN123456")})
+    assert device_entry is not None
+
+    # Test with hyphenated format (as sent by UI)
+    await hass.services.async_call(
+        DOMAIN,
+        "update_time_segment",
+        {
+            "device_id": device_entry.id,
+            "segment_id": 1,
+            "start_time": "09:00",
+            "end_time": "11:00",
+            "batt_mode": "battery-first",  # Hyphenated format
+            "enabled": True,
+        },
+        blocking=True,
+    )
+
+    # Verify the API was called (hyphenated format should be accepted)
+    mock_growatt_v1_api.min_write_time_segment.assert_called_once()
+
+
 async def test_update_time_segment_discharge_mode(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,

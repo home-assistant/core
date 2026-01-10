@@ -97,16 +97,19 @@ async def async_register_services(hass: HomeAssistant) -> None:
             )
 
         # Validate and convert batt_mode string to integer
+        # Normalize hyphenated format to underscore format for compatibility
+        batt_mode_normalized = batt_mode_str.replace("-", "_")
+
         valid_modes = {
             "load_first": BATT_MODE_LOAD_FIRST,
             "battery_first": BATT_MODE_BATTERY_FIRST,
             "grid_first": BATT_MODE_GRID_FIRST,
         }
-        if batt_mode_str not in valid_modes:
+        if batt_mode_normalized not in valid_modes:
             raise ServiceValidationError(
                 f"batt_mode must be one of {list(valid_modes.keys())}, got '{batt_mode_str}'"
             )
-        batt_mode: int = valid_modes[batt_mode_str]
+        batt_mode: int = valid_modes[batt_mode_normalized]
 
         # Convert time strings to datetime.time objects
         # UI time selector sends HH:MM:SS, but we only need HH:MM (strip seconds)
