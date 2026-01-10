@@ -93,3 +93,19 @@ async def test_restart_button_connection_errors(
     )
 
     mock_airobot_client.reboot_thermostat.assert_called_once()
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_recalibrate_co2_button(
+    hass: HomeAssistant,
+    mock_airobot_client: AsyncMock,
+) -> None:
+    """Test recalibrate CO2 sensor button."""
+    await hass.services.async_call(
+        BUTTON_DOMAIN,
+        SERVICE_PRESS,
+        {ATTR_ENTITY_ID: "button.test_thermostat_recalibrate_co2_sensor"},
+        blocking=True,
+    )
+
+    mock_airobot_client.recalibrate_co2_sensor.assert_called_once()
