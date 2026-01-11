@@ -79,7 +79,7 @@ SENSORS: Final = (
     IndevoltSensorEntityDescription(
         key="2101",
         generation=[1, 2],
-        translation_key="total_ac_input_power",
+        translation_key="ac_input_power",
         native_unit_of_measurement=UnitOfPower.WATT,
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
@@ -87,7 +87,7 @@ SENSORS: Final = (
     IndevoltSensorEntityDescription(
         key="2108",
         generation=[1, 2],
-        translation_key="total_ac_output_power",
+        translation_key="ac_output_power",
         native_unit_of_measurement=UnitOfPower.WATT,
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
@@ -244,7 +244,7 @@ SENSORS: Final = (
     IndevoltSensorEntityDescription(
         key="1501",
         generation=[1, 2],
-        translation_key="total_dc_output_power",
+        translation_key="dc_output_power",
         native_unit_of_measurement=UnitOfPower.WATT,
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,

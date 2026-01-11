@@ -33,6 +33,12 @@
   },
   "entity": {
     "sensor": {
+      "ac_input_power": {
+        "name": "AC input power"
+      },
+      "ac_output_power": {
+        "name": "AC output power"
+      },
       "battery_charge_discharge_state": {
         "name": "Battery charge/discharge state",
         "state": {
@@ -182,6 +188,9 @@
       "dc_input_voltage_4": {
         "name": "DC input voltage 4"
       },
+      "dc_output_power": {
+        "name": "DC output power"
+      },
       "grid_frequency": {
         "name": "Grid frequency"
       },
@@ -228,17 +237,8 @@
       "total_ac_input_energy_gen1": {
         "name": "Total AC input energy"
       },
-      "total_ac_input_power": {
-        "name": "Total AC input power"
-      },
       "total_ac_output_energy": {
         "name": "Total AC output energy"
-      },
-      "total_ac_output_power": {
-        "name": "Total AC output power"
-      },
-      "total_dc_output_power": {
-        "name": "Total DC output power"
       },
       "working_mode": {
         "name": "Working mode",
