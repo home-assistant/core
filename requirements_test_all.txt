@@ -1803,7 +1803,7 @@ pyisy==3.4.1
 pyituran==0.1.5
 
 # homeassistant.components.jvc_projector
-pyjvcprojector==2.0.0b6
+pyjvcprojector==2.0.0b7
 
 # homeassistant.components.kaleidescape
 pykaleidescape==1.0.2
