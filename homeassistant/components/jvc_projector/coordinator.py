@@ -54,7 +54,9 @@ class JvcProjectorDataUpdateCoordinator(DataUpdateCoordinator[dict[str, str]]):
         try:
             self.unique_id = format_mac(await self.device.get(cmd.MacAddress))
         except JvcProjectorTimeoutError as err:
-            raise ConfigEntryNotReady(f"Unable to connect to {self.device.ip}") from err
+            raise ConfigEntryNotReady(
+                f"Unable to connect to {self.device.host}"
+            ) from err
         except JvcProjectorAuthError as err:
             raise ConfigEntryAuthFailed("Password authentication failed") from err
 
@@ -72,7 +74,7 @@ class JvcProjectorDataUpdateCoordinator(DataUpdateCoordinator[dict[str, str]]):
                 state[INPUT] = await self.device.get(cmd.Input)
 
         except JvcProjectorTimeoutError as err:
-            raise UpdateFailed(f"Unable to connect to {self.device.ip}") from err
+            raise UpdateFailed(f"Unable to connect to {self.device.host}") from err
         except JvcProjectorAuthError as err:
             raise ConfigEntryAuthFailed("Password authentication failed") from err
 
