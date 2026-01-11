@@ -137,16 +137,10 @@ def _tibber_patches() -> AsyncGenerator[tuple[MagicMock, MagicMock]]:
     unique_user_id = "unique_user_id"
     title = "title"
 
-    with (
-        patch(
-            "tibber.Tibber",
-            autospec=True,
-        ) as mock_tibber,
-        patch(
-            "tibber.data_api.TibberDataAPI",
-            autospec=True,
-        ) as mock_data_api_client,
-    ):
+    with patch(
+        "tibber.Tibber",
+        autospec=True,
+    ) as mock_tibber:
         tibber_mock = mock_tibber.return_value
         tibber_mock.update_info = AsyncMock(return_value=True)
         tibber_mock.user_id = unique_user_id
@@ -154,12 +148,15 @@ def _tibber_patches() -> AsyncGenerator[tuple[MagicMock, MagicMock]]:
         tibber_mock.send_notification = AsyncMock()
         tibber_mock.rt_disconnect = AsyncMock()
         tibber_mock.get_homes = MagicMock(return_value=[])
+        tibber_mock.set_access_token = MagicMock()
 
-        data_api_client_mock = mock_data_api_client.return_value
-        data_api_client_mock.get_all_devices = AsyncMock(return_value={})
-        data_api_client_mock.update_devices = AsyncMock(return_value={})
+        data_api_mock = MagicMock()
+        data_api_mock.get_all_devices = AsyncMock(return_value={})
+        data_api_mock.update_devices = AsyncMock(return_value={})
+        data_api_mock.get_userinfo = AsyncMock()
+        tibber_mock.data_api = data_api_mock
 
-        yield tibber_mock, data_api_client_mock
+        yield tibber_mock, data_api_mock
 
 
 @pytest.fixture
