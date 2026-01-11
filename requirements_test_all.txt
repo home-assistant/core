@@ -222,7 +222,7 @@ aiodhcpwatcher==1.2.1
 aiodiscover==2.7.1
 
 # homeassistant.components.dnsip
-aiodns==3.6.1
+aiodns==4.0.0
 
 # homeassistant.components.duke_energy
 aiodukeenergy==0.3.0
@@ -2007,7 +2007,7 @@ pyrympro==0.0.9
 pysabnzbd==1.1.1
 
 # homeassistant.components.saunum
-pysaunum==0.1.0
+pysaunum==0.2.0
 
 # homeassistant.components.schlage
 pyschlage==2025.9.0
