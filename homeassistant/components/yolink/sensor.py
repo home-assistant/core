@@ -252,9 +252,11 @@ SENSOR_TYPES: tuple[YoLinkSensorEntityDescription, ...] = (
     # mcu temperature
     YoLinkSensorEntityDescription(
         key="devTemperature",
+        translation_key="device_temperature",
         device_class=SensorDeviceClass.TEMPERATURE,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
         exists_fn=lambda device: device.device_type in MCU_DEV_TEMPERATURE_SENSOR,
         should_update_entity=lambda value: value is not None,
         value=lambda device, data: data.get("devTemperature"),
