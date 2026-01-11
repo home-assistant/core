@@ -184,18 +184,10 @@ class SmaConfigFlow(ConfigFlow, domain=DOMAIN):
             data_schema=self.add_suggested_values_to_schema(
                 data_schema=vol.Schema(
                     {
-                        vol.Required(
-                            CONF_HOST, default=self._data[CONF_HOST]
-                        ): cv.string,
-                        vol.Optional(
-                            CONF_SSL, default=self._data[CONF_SSL]
-                        ): cv.boolean,
-                        vol.Optional(
-                            CONF_VERIFY_SSL, default=self._data[CONF_VERIFY_SSL]
-                        ): cv.boolean,
-                        vol.Optional(
-                            CONF_GROUP, default=self._data[CONF_GROUP]
-                        ): vol.In(GROUPS),
+                        vol.Required(CONF_HOST): cv.string,
+                        vol.Optional(CONF_SSL): cv.boolean,
+                        vol.Optional(CONF_VERIFY_SSL): cv.boolean,
+                        vol.Optional(CONF_GROUP): vol.In(GROUPS),
                     }
                 ),
                 suggested_values=user_input or suggested_values,
