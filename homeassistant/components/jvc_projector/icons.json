@@ -1,7 +1,7 @@
 {
   "entity": {
     "binary_sensor": {
-      "jvc_power": {
+      "power": {
         "default": "mdi:projector-off",
         "state": {
           "on": "mdi:projector"
@@ -9,19 +9,52 @@
       }
     },
     "select": {
+      "anamorphic": {
+        "default": "mdi:fit-to-screen-outline"
+      },
+      "clear_motion_drive": {
+        "default": "mdi:blur"
+      },
+      "eshift": {
+        "default": "mdi:blur-linear"
+      },
+      "hdr": {
+        "default": "mdi:image-filter-hdr-outline"
+      },
+      "hdr_processing": {
+        "default": "mdi:image-filter-hdr-outline"
+      },
       "input": {
         "default": "mdi:hdmi-port"
+      },
+      "installation_mode": {
+        "default": "mdi:aspect-ratio"
+      },
+      "low_latency_mode": {
+        "default": "mdi:gamepad-round-outline"
       }
     },
     "sensor": {
-      "jvc_power_status": {
-        "default": "mdi:power-plug-off",
+      "color_depth": {
+        "default": "mdi:palette-outline"
+      },
+      "color_space": {
+        "default": "mdi:palette-outline"
+      },
+      "model": {
+        "default": "mdi:card-text-outline"
+      },
+      "power": {
+        "default": "mdi:power-settings",
         "state": {
           "cooling": "mdi:snowflake",
           "error": "mdi:alert-circle",
-          "on": "mdi:power-plug",
+          "on": "mdi:power-settings",
           "warming": "mdi:heat-wave"
         }
+      },
+      "source": {
+        "default": "mdi:relative-scale"
       }
     }
   }

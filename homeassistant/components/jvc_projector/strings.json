@@ -40,8 +40,14 @@
       }
     },
     "select": {
+      "anamorphic": {
+        "name": "Anamorphic"
+      },
       "clear_motion_drive": {
         "name": "Clear Motion Drive"
+      },
+      "eshift": {
+        "name": "E-Shift"
       },
       "hdr": {
         "name": "HDR"
@@ -60,8 +66,17 @@
       }
     },
     "sensor": {
+      "color_depth": {
+        "name": "Color Depth"
+      },
+      "color_space": {
+        "name": "Color Space"
+      },
       "light_time": {
         "name": "Light Time"
+      },
+      "model": {
+        "name": "Model"
       },
       "power": {
         "name": "Status",

@@ -30,7 +30,9 @@ SELECTS: Final[tuple[JvcProjectorSelectDescription, ...]] = (
         entity_registry_enabled_default=False,
     ),
     JvcProjectorSelectDescription(
-        key="hdr", command=cmd.Hdr, entity_registry_enabled_default=False
+        key="hdr",
+        command=cmd.Hdr,
+        entity_registry_enabled_default=False,
     ),
     JvcProjectorSelectDescription(
         key="hdr_processing",
@@ -45,6 +47,16 @@ SELECTS: Final[tuple[JvcProjectorSelectDescription, ...]] = (
     JvcProjectorSelectDescription(
         key="clear_motion_drive",
         command=cmd.ClearMotionDrive,
+        entity_registry_enabled_default=False,
+    ),
+    JvcProjectorSelectDescription(
+        key="anamorphic",
+        command=cmd.Anamorphic,
+        entity_registry_enabled_default=False,
+    ),
+    JvcProjectorSelectDescription(
+        key="eshift",
+        command=cmd.EShift,
         entity_registry_enabled_default=False,
     ),
 )

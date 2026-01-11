@@ -36,6 +36,7 @@ class JvcBinarySensor(JvcProjectorEntity, BinarySensorEntity):
         """Initialize the JVC Projector sensor."""
         super().__init__(coordinator)
         self._attr_unique_id = f"{coordinator.unique_id}_power"
+        self.icon = "mdi:power"
 
     @property
     def is_on(self) -> bool:

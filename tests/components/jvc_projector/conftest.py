@@ -21,20 +21,20 @@ FIXTURES: dict[str, dict[type[Command], str | type[Exception]]] = {
         cmd.Power: "standby",
         cmd.Input: "hdmi-1",
         cmd.Signal: "none",
+        cmd.LightTime: "100",
         cmd.Source: JvcProjectorTimeoutError,
         cmd.Hdr: JvcProjectorTimeoutError,
         cmd.HdrProcessing: JvcProjectorTimeoutError,
-        cmd.LightTime: JvcProjectorTimeoutError,
     },
     "on": {
         cmd.MacAddress: MOCK_MAC,
         cmd.Power: "on",
         cmd.Input: "hdmi-1",
         cmd.Signal: "signal",
+        cmd.LightTime: "100",
         cmd.Source: "4k",
         cmd.Hdr: "hdr",
         cmd.HdrProcessing: "static",
-        cmd.LightTime: "100",
     },
 }
 
@@ -99,8 +99,10 @@ def fixture_mock_device(
 
     with patch(target, autospec=True) as mock:
         device = mock.return_value
+        device.ip = MOCK_HOST
         device.host = MOCK_HOST
         device.port = MOCK_PORT
+        device.mac = MOCK_MAC
         device.model = MOCK_MODEL
         device.get.side_effect = device_get
         device.capabilities.return_value = CAPABILITIES

@@ -28,10 +28,19 @@ class JvcProjectorSensorDescription(SensorEntityDescription):
 
 SENSORS: tuple[JvcProjectorSensorDescription, ...] = (
     JvcProjectorSensorDescription(
-        key="power", command=cmd.Power, device_class=SensorDeviceClass.ENUM, translation_key="status"
+        key="model",
+        command=cmd.ModelName,
+        entity_category=EntityCategory.DIAGNOSTIC,
     ),
     JvcProjectorSensorDescription(
-        key="source", command=cmd.Source, device_class=SensorDeviceClass.ENUM
+        key="power",
+        command=cmd.Power,
+        device_class=SensorDeviceClass.ENUM,
+    ),
+    JvcProjectorSensorDescription(
+        key="source",
+        command=cmd.Source,
+        device_class=SensorDeviceClass.ENUM,
     ),
     JvcProjectorSensorDescription(
         key="light_time",
@@ -39,6 +48,18 @@ SENSORS: tuple[JvcProjectorSensorDescription, ...] = (
         device_class=SensorDeviceClass.DURATION,
         native_unit_of_measurement=UnitOfTime.HOURS,
         entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    JvcProjectorSensorDescription(
+        key="color_depth",
+        command=cmd.ColorDepth,
+        device_class=SensorDeviceClass.ENUM,
+        entity_registry_enabled_default=False,
+    ),
+    JvcProjectorSensorDescription(
+        key="color_space",
+        command=cmd.ColorSpace,
+        device_class=SensorDeviceClass.ENUM,
+        entity_registry_enabled_default=False,
     ),
 )
 
