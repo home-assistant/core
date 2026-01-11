@@ -403,7 +403,7 @@ def parse_time_expression(parameter: Any, min_value: int, max_value: int) -> lis
             res = list(range(start, end + 1))
         elif parameter.startswith("/"):
             parameter = int(parameter[1:])
-            if not (0 < parameter < max_value):
+            if not (0 < parameter <= max_value):
                 raise ValueError("{parameter} must be between 1 and {max_value}")
             res = list(
                 range(min_value + (-min_value % parameter), max_value + 1, parameter)
