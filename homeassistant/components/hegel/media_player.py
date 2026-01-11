@@ -23,8 +23,8 @@ from homeassistant.components.media_player import (
     MediaPlayerState,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.event import async_track_time_interval
 
@@ -42,9 +42,8 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Hegel media player from a config entry."""
-    model = entry.data.get(CONF_MODEL)
-    mac = entry.data.get("mac")
-    unique_id = entry.data.get("unique_id")
+    model = entry.data[CONF_MODEL]
+    unique_id = entry.data["unique_id"]
 
     # map inputs (source_map)
     source_map: dict[int, str] = (
@@ -59,7 +58,6 @@ async def async_setup_entry(
         entry,
         client,
         source_map,
-        mac,
         unique_id,
     )
 
@@ -86,32 +84,23 @@ class HegelMediaPlayer(MediaPlayerEntity):
         config_entry: HegelConfigEntry,
         client: HegelClient,
         source_map: dict[int, str],
-        mac: str | None,
-        unique_id: str | None,
+        unique_id: str,
     ) -> None:
         """Initialize the Hegel media player entity."""
         self._entry = config_entry
         self._client = client
         self._source_map = source_map
-        self._mac = mac
 
-        # Set unique_id: prefer device-specific identifiers, fallback to entry ID
-        if unique_id:
-            self._attr_unique_id = unique_id
-        elif mac:
-            self._attr_unique_id = f"hegel_{mac.replace(':', '')}"
-        else:
-            self._attr_unique_id = f"hegel_{config_entry.entry_id}"
+        # Set unique_id from config entry
+        self._attr_unique_id = unique_id
 
         # Set device info
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, self._attr_unique_id)},
             name=config_entry.title,
             manufacturer="Hegel",
-            model=config_entry.data.get(CONF_MODEL),
+            model=config_entry.data[CONF_MODEL],
         )
-        if mac:
-            self._attr_device_info["connections"] = {(CONNECTION_NETWORK_MAC, mac)}
 
         # State will be populated by async_update on first connection
         self._state: dict[str, Any] = {}
@@ -134,7 +123,22 @@ class HegelMediaPlayer(MediaPlayerEntity):
         self._push_handler = push_handler
         self._client.add_push_callback(push_handler)
 
-        # Start a watcher task to refresh state on reconnect
+        # Register cleanup for push handler using async_on_remove
+        def cleanup_push_handler() -> None:
+            if self._push_handler:
+                self._client.remove_push_callback(self._push_handler)
+                _LOGGER.debug("Push callback removed")
+            self._push_handler = None
+
+        self.async_on_remove(cleanup_push_handler)
+
+        # Perform initial state fetch if already connected
+        # The watcher handles reconnections, but we need to fetch state on first setup
+        if self._client.is_connected():
+            _LOGGER.debug("Client already connected, performing initial state fetch")
+            await self.async_update()
+
+        # Start a watcher task
         # Use config_entry.async_create_background_task for automatic cleanup on unload
         self._connected_watcher_task = self._entry.async_create_background_task(
             self.hass,
@@ -177,31 +181,30 @@ class HegelMediaPlayer(MediaPlayerEntity):
             _LOGGER.exception("Failed to handle push message")
 
     async def _connected_watcher(self) -> None:
-        """Watch the client's connected_event and refresh when it becomes set."""
-        # Defensive: if client doesn't expose the event, skip watcher
+        """Watch the client's connection events and update state accordingly."""
         conn_event = self._client.connected_event
+        disconn_event = self._client.disconnected_event
         _LOGGER.debug("Connected watcher started")
 
         try:
             while True:
-                # wait for connection
+                # Wait for connection
                 _LOGGER.debug("Watcher: waiting for connection")
                 await conn_event.wait()
                 _LOGGER.debug("Watcher: connected, refreshing state")
-                # immediately notify HA that we're available again
-                self.async_write_ha_state()
-                # do an immediate refresh (best-effort)
-                try:
-                    await self.async_update()
-                except (HegelConnectionError, TimeoutError, OSError) as err:
-                    _LOGGER.debug("Refresh after reconnect failed: %s", err)
 
-                # wait until disconnected before looping (to avoid spamming refresh)
+                # Immediately notify HA that we're available again
+                self.async_write_ha_state()
+
+                # Schedule a state refresh through HA
+                self.async_schedule_update_ha_state(force_refresh=True)
+
+                # Wait for disconnection using event (no polling!)
                 _LOGGER.debug("Watcher: waiting for disconnection")
-                while conn_event.is_set():
-                    await asyncio.sleep(0.5)
+                await disconn_event.wait()
                 _LOGGER.debug("Watcher: disconnected")
-                # when disconnected, notify HA that we're unavailable
+
+                # Notify HA that we're unavailable
                 self.async_write_ha_state()
 
         except asyncio.CancelledError:
@@ -316,7 +319,7 @@ class HegelMediaPlayer(MediaPlayerEntity):
         inv = {v: k for k, v in self._source_map.items()}
         idx = inv.get(source)
         if idx is None:
-            raise HomeAssistantError(f"Unknown source: {source}")
+            raise ServiceValidationError(f"Unknown source: {source}")
         try:
             await self._client.send(COMMANDS["input_set"](idx), expect_reply=False)
         except (HegelConnectionError, TimeoutError, OSError) as err:
@@ -327,16 +330,11 @@ class HegelMediaPlayer(MediaPlayerEntity):
     async def async_will_remove_from_hass(self) -> None:
         """Handle entity removal from Home Assistant.
 
-        Removes the push callback from the client and cancels the push task.
-        Note: _connected_watcher_task cleanup is handled automatically by
+        Note: Push callback cleanup is handled by async_on_remove.
+        _connected_watcher_task cleanup is handled automatically by
         entry.async_create_background_task when the config entry is unloaded.
         """
         await super().async_will_remove_from_hass()
-
-        if self._push_handler:
-            self._client.remove_push_callback(self._push_handler)
-            _LOGGER.debug("Push callback removed")
-        self._push_handler = None
 
         # Cancel push task if running (short-lived task, defensive cleanup)
         if self._push_task and not self._push_task.done():

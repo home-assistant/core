@@ -30,15 +30,14 @@ class HegelConfigFlow(ConfigFlow, domain=DOMAIN):
         self._model = ""
         self._errors: dict[str, str] = {}
 
-    async def async_step_user(
+    async def async_step_discovery_confirm(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Manual setup or after discovery confirmation."""
+        """Handle discovery confirmation - only model can be changed."""
         errors: dict[str, str] = {}
 
         if user_input is not None:
             entry_data = {**self._discovered_data, **user_input}
-
             host = str(entry_data[CONF_HOST])
 
             try:
@@ -47,15 +46,14 @@ class HegelConfigFlow(ConfigFlow, domain=DOMAIN):
                 )
             except (TimeoutError, OSError, ConnectionRefusedError) as err:
                 _LOGGER.debug("Cannot connect to %s:%s: %s", host, DEFAULT_PORT, err)
-                errors[CONF_HOST] = "cannot_connect"
+                errors["base"] = "cannot_connect"
             else:
-                unique_id = entry_data.get("unique_id")
-                if unique_id:
-                    await self.async_set_unique_id(unique_id)
-                    self._abort_if_unique_id_configured()
+                unique_id = entry_data.get("unique_id") or host
+                await self.async_set_unique_id(unique_id)
+                self._abort_if_unique_id_configured()
+                entry_data["unique_id"] = unique_id
 
-                # Determine recognizable title: prefer discovered name, then model, then generic
-                title = entry_data.get(CONF_NAME)  # From SSDP discovery
+                title = entry_data.get(CONF_NAME)
                 if not title:
                     model = entry_data.get(CONF_MODEL)
                     title = f"Hegel {model}" if model else "Hegel Amplifier"
@@ -68,15 +66,20 @@ class HegelConfigFlow(ConfigFlow, domain=DOMAIN):
         schema = vol.Schema(
             {
                 vol.Required(
-                    CONF_HOST, default=self._discovered_data.get(CONF_HOST, "")
-                ): str,
-                vol.Optional(
                     CONF_MODEL, default=self._discovered_data.get(CONF_MODEL)
                 ): vol.In(list(MODEL_INPUTS.keys())),
             }
         )
 
-        return self.async_show_form(step_id="user", data_schema=schema, errors=errors)
+        return self.async_show_form(
+            step_id="discovery_confirm",
+            data_schema=schema,
+            errors=errors,
+            description_placeholders={
+                "host": self._discovered_data.get(CONF_HOST, ""),
+                "name": self._discovered_data.get(CONF_NAME, ""),
+            },
+        )
 
     async def async_step_reconfigure(
         self, user_input: dict[str, Any] | None = None
@@ -116,7 +119,7 @@ class HegelConfigFlow(ConfigFlow, domain=DOMAIN):
                 data_schema=vol.Schema(
                     {
                         vol.Required(CONF_HOST, default=self._host): str,
-                        vol.Optional(CONF_MODEL, default=self._model): vol.In(
+                        vol.Required(CONF_MODEL, default=self._model): vol.In(
                             list(MODEL_INPUTS.keys())
                         ),
                     }
@@ -133,7 +136,7 @@ class HegelConfigFlow(ConfigFlow, domain=DOMAIN):
             data_schema=vol.Schema(
                 {
                     vol.Required(CONF_HOST, default=self._host): str,
-                    vol.Optional(CONF_MODEL, default=self._model): vol.In(
+                    vol.Required(CONF_MODEL, default=self._model): vol.In(
                         list(MODEL_INPUTS.keys())
                     ),
                 }
@@ -177,4 +180,4 @@ class HegelConfigFlow(ConfigFlow, domain=DOMAIN):
             "unique_id": unique_id,
         }
 
-        return await self.async_step_user()
+        return await self.async_step_discovery_confirm()

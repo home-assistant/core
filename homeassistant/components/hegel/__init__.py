@@ -61,10 +61,10 @@ async def async_unload_entry(hass: HomeAssistant, entry: HegelConfigEntry) -> bo
     """Unload a Hegel config entry and stop active client connection."""
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
-    if unload_ok and entry.runtime_data:
+    if unload_ok:
         client = entry.runtime_data
+        _LOGGER.debug("Stopping Hegel client for %s", entry.title)
         try:
-            _LOGGER.debug("Stopping Hegel client for %s", entry.title)
             await client.stop()
         except (HegelConnectionError, OSError) as err:
             _LOGGER.warning("Error while stopping Hegel client: %s", err)

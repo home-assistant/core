@@ -2,6 +2,7 @@
   "config": {
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]",
       "no_host_found": "[%key:common::config_flow::abort::no_devices_found%]",
       "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
     },
@@ -9,6 +10,16 @@
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
     },
     "step": {
+      "discovery_confirm": {
+        "data": {
+          "model": "[%key:common::generic::model%]"
+        },
+        "data_description": {
+          "model": "Select your Hegel amplifier model for proper input mapping"
+        },
+        "description": "Discovered Hegel amplifier **{name}** at `{host}`. Confirm the model to complete setup.",
+        "title": "Confirm Hegel amplifier"
+      },
       "reconfigure": {
         "data": {
           "host": "[%key:common::config_flow::data::host%]",
@@ -20,18 +31,6 @@
         },
         "description": "Update the connection settings for your Hegel amplifier.",
         "title": "Reconfigure Hegel amplifier"
-      },
-      "user": {
-        "data": {
-          "host": "[%key:common::config_flow::data::host%]",
-          "model": "[%key:common::generic::model%]"
-        },
-        "data_description": {
-          "host": "The IP address or hostname of your Hegel amplifier",
-          "model": "Select your Hegel amplifier model for proper input mapping"
-        },
-        "description": "Enter the host/IP of your Hegel amplifier to set it up.",
-        "title": "Connect to Hegel amplifier"
       }
     }
   }

@@ -24,122 +24,6 @@ TEST_UDN = "uuid:12345678-1234-1234-1234-123456789abc"
 TEST_SSDP_LOCATION = f"http://{TEST_HOST}:8080/description.xml"
 
 
-# User Flow Tests
-
-
-async def test_user_flow_success(
-    hass: HomeAssistant,
-    mock_setup_entry: MagicMock,
-    mock_connection_success: MagicMock,
-) -> None:
-    """Test successful manual user flow."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "user"
-    assert result["errors"] == {}
-
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {
-            CONF_HOST: TEST_HOST,
-            CONF_MODEL: TEST_MODEL,
-        },
-    )
-
-    assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == f"Hegel {TEST_MODEL}"
-    assert result["data"] == {
-        CONF_HOST: TEST_HOST,
-        CONF_MODEL: TEST_MODEL,
-    }
-
-
-async def test_user_flow_cannot_connect(
-    hass: HomeAssistant,
-    mock_connection_error: MagicMock,
-) -> None:
-    """Test user flow with connection error."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "user"
-
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {
-            CONF_HOST: TEST_HOST,
-            CONF_MODEL: TEST_MODEL,
-        },
-    )
-
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "user"
-    assert result["errors"] == {CONF_HOST: "cannot_connect"}
-
-
-async def test_user_flow_already_configured_via_ssdp(
-    hass: HomeAssistant,
-    mock_connection_success: MagicMock,
-    aioclient_mock: AiohttpClientMocker,
-) -> None:
-    """Test user flow aborts when device discovered via SSDP is already configured."""
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        unique_id=f"serial:{TEST_SERIAL}",
-        data={CONF_HOST: TEST_HOST, CONF_NAME: TEST_NAME, CONF_MODEL: TEST_MODEL},
-    )
-    entry.add_to_hass(hass)
-
-    aioclient_mock.get(
-        TEST_SSDP_LOCATION,
-        text=f"""<?xml version="1.0"?>
-        <root><device><serialNumber>{TEST_SERIAL}</serialNumber></device></root>""",
-    )
-
-    # Start via SSDP discovery which sets _discovered_data with unique_id
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": config_entries.SOURCE_SSDP},
-        data=SsdpServiceInfo(
-            ssdp_usn="mock_usn",
-            ssdp_st="mock_st",
-            ssdp_location=TEST_SSDP_LOCATION,
-            upnp={
-                "presentationURL": f"http://{TEST_HOST}/",
-                "friendlyName": TEST_NAME,
-                "modelName": TEST_MODEL,
-            },
-        ),
-    )
-
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "already_configured"
-
-
-async def test_user_flow_default_name(
-    hass: HomeAssistant,
-    mock_setup_entry: MagicMock,
-    mock_connection_success: MagicMock,
-) -> None:
-    """Test user flow uses default name when model not provided."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {CONF_HOST: TEST_HOST, CONF_MODEL: TEST_MODEL},
-    )
-
-    assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == f"Hegel {TEST_MODEL}"
-
-
 # Reconfigure Flow Tests
 
 
@@ -283,12 +167,11 @@ async def test_ssdp_discovery_success(
     )
 
     assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "user"
+    assert result["step_id"] == "discovery_confirm"
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {
-            CONF_HOST: TEST_HOST,
             CONF_MODEL: TEST_MODEL,
         },
     )
@@ -320,7 +203,7 @@ async def test_ssdp_discovery_from_ssdp_location(
     )
 
     assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "user"
+    assert result["step_id"] == "discovery_confirm"
 
 
 async def test_ssdp_discovery_no_host(hass: HomeAssistant) -> None:
@@ -410,7 +293,7 @@ async def test_ssdp_discovery_with_serial_number(
     )
 
     assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "user"
+    assert result["step_id"] == "discovery_confirm"
 
 
 async def test_ssdp_discovery_with_udn(
@@ -447,7 +330,7 @@ async def test_ssdp_discovery_with_udn(
     )
 
     assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "user"
+    assert result["step_id"] == "discovery_confirm"
 
 
 async def test_ssdp_discovery_no_ssdp_location_for_description(
@@ -470,7 +353,7 @@ async def test_ssdp_discovery_no_ssdp_location_for_description(
     )
 
     assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "user"
+    assert result["step_id"] == "discovery_confirm"
 
 
 async def test_ssdp_discovery_description_fetch_error(
@@ -497,7 +380,7 @@ async def test_ssdp_discovery_description_fetch_error(
     )
 
     assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "user"
+    assert result["step_id"] == "discovery_confirm"
 
 
 async def test_ssdp_discovery_invalid_xml(
@@ -524,7 +407,7 @@ async def test_ssdp_discovery_invalid_xml(
     )
 
     assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "user"
+    assert result["step_id"] == "discovery_confirm"
 
 
 async def test_ssdp_discovery_no_unique_id_info(
@@ -560,7 +443,7 @@ async def test_ssdp_discovery_no_unique_id_info(
     )
 
     assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "user"
+    assert result["step_id"] == "discovery_confirm"
 
 
 async def test_ssdp_discovery_unknown_model(
@@ -590,7 +473,7 @@ async def test_ssdp_discovery_unknown_model(
     )
 
     assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "user"
+    assert result["step_id"] == "discovery_confirm"
 
 
 async def test_ssdp_discovery_with_empty_upnp(
@@ -614,9 +497,9 @@ async def test_ssdp_discovery_with_empty_upnp(
         ),
     )
 
-    # Host is extracted from ssdp_location, so flow proceeds to user step
+    # Host is extracted from ssdp_location, so flow proceeds to discovery_confirm step
     assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "user"
+    assert result["step_id"] == "discovery_confirm"
 
 
 async def test_ssdp_discovery_no_host_no_location(hass: HomeAssistant) -> None:
@@ -664,7 +547,7 @@ async def test_ssdp_discovery_multiple_services_same_device(
     )
 
     assert result1["type"] is FlowResultType.FORM
-    assert result1["step_id"] == "user"
+    assert result1["step_id"] == "discovery_confirm"
     flow_id = result1["flow_id"]
 
     # Second discovery - AVTransport service (different USN, same UDN)
