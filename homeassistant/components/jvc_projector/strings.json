@@ -46,20 +46,20 @@
       "clear_motion_drive": {
         "name": "Clear Motion Drive"
       },
+      "dynamic_control": {
+        "name": "Dynamic Control"
+      },
       "eshift": {
         "name": "E-Shift"
-      },
-      "hdr": {
-        "name": "HDR"
-      },
-      "hdr_processing": {
-        "name": "HDR Processing"
       },
       "input": {
         "name": "Input"
       },
       "installation_mode": {
         "name": "Installation Mode"
+      },
+      "light_power": {
+        "name": "Light Power"
       },
       "low_latency_mode": {
         "name": "Low Latency Mode"
@@ -72,11 +72,20 @@
       "color_space": {
         "name": "Color Space"
       },
+      "hdr": {
+        "name": "HDR"
+      },
+      "hdr_processing": {
+        "name": "HDR Processing"
+      },
       "light_time": {
         "name": "Light Time"
       },
       "model": {
         "name": "Model"
+      },
+      "picture_mode": {
+        "name": "Picture Mode"
       },
       "power": {
         "name": "Status",

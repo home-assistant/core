@@ -30,13 +30,13 @@ SELECTS: Final[tuple[JvcProjectorSelectDescription, ...]] = (
         entity_registry_enabled_default=False,
     ),
     JvcProjectorSelectDescription(
-        key="hdr",
-        command=cmd.Hdr,
+        key="light_power",
+        command=cmd.LightPower,
         entity_registry_enabled_default=False,
     ),
     JvcProjectorSelectDescription(
-        key="hdr_processing",
-        command=cmd.HdrProcessing,
+        key="dynamic_control",
+        command=cmd.DynamicControl,
         entity_registry_enabled_default=False,
     ),
     JvcProjectorSelectDescription(

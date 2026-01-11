@@ -15,20 +15,20 @@
       "clear_motion_drive": {
         "default": "mdi:blur"
       },
+      "dynamic_control": {
+        "default": "mdi:lightbulb-on-outline"
+      },
       "eshift": {
         "default": "mdi:blur-linear"
-      },
-      "hdr": {
-        "default": "mdi:image-filter-hdr-outline"
-      },
-      "hdr_processing": {
-        "default": "mdi:image-filter-hdr-outline"
       },
       "input": {
         "default": "mdi:hdmi-port"
       },
       "installation_mode": {
         "default": "mdi:aspect-ratio"
+      },
+      "light_power": {
+        "default": "mdi:lightbulb-on-outline"
       },
       "low_latency_mode": {
         "default": "mdi:gamepad-round-outline"
@@ -41,8 +41,17 @@
       "color_space": {
         "default": "mdi:palette-outline"
       },
+      "hdr": {
+        "default": "mdi:image-filter-hdr-outline"
+      },
+      "hdr_processing": {
+        "default": "mdi:image-filter-hdr-outline"
+      },
       "model": {
         "default": "mdi:card-text-outline"
+      },
+      "picture_mode": {
+        "default": "mdi:movie-roll"
       },
       "power": {
         "default": "mdi:power-settings",

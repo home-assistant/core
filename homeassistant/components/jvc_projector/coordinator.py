@@ -69,6 +69,7 @@ class JvcProjectorDataUpdateCoordinator(DataUpdateCoordinator[dict[str, str]]):
         self.registered_commands: set[type[Command]] = set()
 
     async def _async_setup(self) -> None:
+        """Set up the coordinator."""
         try:
             self.unique_id = format_mac(await self.device.get(cmd.MacAddress))
             self.capabilities = self.device.capabilities()
@@ -88,11 +89,11 @@ class JvcProjectorDataUpdateCoordinator(DataUpdateCoordinator[dict[str, str]]):
 
         try:
             power = await self._update(cmd.Power, new_state)
-            await self._update(cmd.LightTime, new_state)
 
             if power == cmd.Power.ON:
                 signal = await self._update(cmd.Signal, new_state)
                 await self._update(cmd.Input, new_state)
+                await self._update(cmd.LightTime, new_state)
 
                 if signal == cmd.Signal.SIGNAL:
                     for command in self.registered_commands:
