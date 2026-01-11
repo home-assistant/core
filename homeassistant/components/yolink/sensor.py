@@ -212,6 +212,7 @@ SENSOR_TYPES: tuple[YoLinkSensorEntityDescription, ...] = (
         key="battery",
         device_class=SensorDeviceClass.BATTERY,
         native_unit_of_measurement=PERCENTAGE,
+        entity_category=EntityCategory.DIAGNOSTIC,
         state_class=SensorStateClass.MEASUREMENT,
         exists_fn=lambda device: device.device_type in BATTERY_POWER_SENSOR,
         should_update_entity=lambda value: value is not None,
