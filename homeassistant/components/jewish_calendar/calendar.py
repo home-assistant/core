@@ -111,7 +111,7 @@ def _create_yearly_event(
         return CalendarEvent(
             start=target_date,
             end=target_date,
-            summary=f"{info.omer}",
+            summary=str(info.omer),
             description=f"Sefirat HaOmer: {info.omer.count_str()}",
         )
 
@@ -158,20 +158,17 @@ def _create_learning_event(
 CALENDARS = (
     JewishCalendarCalendarEntityDescription(
         key=CONF_DAILY_EVENTS,
-        name="Daily Events",
-        icon="mdi:calendar",
+        translation_key=CONF_DAILY_EVENTS,
         set_value_fn=_create_daily_event,
     ),
     JewishCalendarCalendarEntityDescription(
         key=CONF_LEARNING_SCHEDULE,
-        name="Learning Schedule",
-        icon="mdi:book-open",
+        translation_key=CONF_LEARNING_SCHEDULE,
         set_value_fn=_create_learning_event,
     ),
     JewishCalendarCalendarEntityDescription(
         key=CONF_YEARLY_EVENTS,
-        name="Yearly Events",
-        icon="mdi:calendar",
+        translation_key=CONF_YEARLY_EVENTS,
         set_value_fn=_create_yearly_event,
     ),
 )

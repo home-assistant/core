@@ -62,13 +62,13 @@
     },
     "calendar": {
       "daily_events": {
-        "name": "Daily Events"
+        "name": "Daily events"
       },
       "learning_schedule": {
-        "name": "Learning Schedule"
+        "name": "Learning schedule"
       },
       "yearly_events": {
-        "name": "Yearly Events"
+        "name": "Yearly events"
       }
     },
     "sensor": {
@@ -163,10 +163,10 @@
     "step": {
       "init": {
         "data": {
+          "calendar_events": "Calendar events to display",
           "candle_lighting_minutes_before_sunset": "Minutes before sunset for candle lighting",
           "daily_events": "Daily events to display",
           "havdalah_minutes_after_sunset": "Minutes after sunset for Havdalah",
-          "calendar_events": "Calendar events to display",
           "learning_schedule": "Learning schedule to display",
           "yearly_events": "Yearly events to display"
         },
