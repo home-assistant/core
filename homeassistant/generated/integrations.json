@@ -1472,7 +1472,7 @@
     },
     "duckdns": {
       "name": "Duck DNS",
-      "integration_type": "hub",
+      "integration_type": "service",
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
@@ -2009,6 +2009,12 @@
       "integration_type": "hub",
       "config_flow": false,
       "iot_class": "local_push"
+    },
+    "fish_audio": {
+      "name": "Fish Audio",
+      "integration_type": "service",
+      "config_flow": true,
+      "iot_class": "cloud_polling"
     },
     "fitbit": {
       "name": "Fitbit",
@@ -2670,6 +2676,12 @@
       "name": "hddtemp",
       "integration_type": "hub",
       "config_flow": false,
+      "iot_class": "local_polling"
+    },
+    "hdfury": {
+      "name": "HDFury",
+      "integration_type": "device",
+      "config_flow": true,
       "iot_class": "local_polling"
     },
     "hdmi_cec": {
@@ -4330,7 +4342,7 @@
       "iot_class": "local_polling"
     },
     "namecheapdns": {
-      "name": "Namecheap FreeDNS",
+      "name": "Namecheap DynamicDNS",
       "integration_type": "hub",
       "config_flow": false,
       "iot_class": "cloud_push"
@@ -4578,7 +4590,7 @@
     },
     "nuheat": {
       "name": "NuHeat",
-      "integration_type": "hub",
+      "integration_type": "device",
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
@@ -4755,8 +4767,8 @@
     },
     "openevse": {
       "name": "OpenEVSE",
-      "integration_type": "hub",
-      "config_flow": false,
+      "integration_type": "device",
+      "config_flow": true,
       "iot_class": "local_polling"
     },
     "openexchangerates": {
@@ -5008,7 +5020,7 @@
     },
     "permobil": {
       "name": "MyPermobil",
-      "integration_type": "hub",
+      "integration_type": "device",
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
@@ -5146,13 +5158,13 @@
     },
     "pooldose": {
       "name": "SEKO PoolDose",
-      "integration_type": "hub",
+      "integration_type": "device",
       "config_flow": true,
       "iot_class": "local_polling"
     },
     "poolsense": {
       "name": "PoolSense",
-      "integration_type": "hub",
+      "integration_type": "device",
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
@@ -7462,7 +7474,7 @@
     },
     "waterfurnace": {
       "name": "WaterFurnace",
-      "integration_type": "hub",
+      "integration_type": "device",
       "config_flow": false,
       "iot_class": "cloud_polling"
     },
@@ -7632,8 +7644,8 @@
     },
     "wsdot": {
       "name": "Washington State Department of Transportation (WSDOT)",
-      "integration_type": "hub",
-      "config_flow": false,
+      "integration_type": "service",
+      "config_flow": true,
       "iot_class": "cloud_polling"
     },
     "wyoming": {
