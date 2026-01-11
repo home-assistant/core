@@ -85,6 +85,7 @@ class TibberConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
         await self.async_set_unique_id(tibber_connection.user_id)
 
         if self.source == SOURCE_REAUTH:
+            self._abort_if_unique_id_mismatch(reason="wrong_account")
             reauth_entry = self._get_reauth_entry()
             return self.async_update_reload_and_abort(
                 reauth_entry,
