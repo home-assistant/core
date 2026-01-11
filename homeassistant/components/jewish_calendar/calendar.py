@@ -30,17 +30,26 @@ _LOGGER = logging.getLogger(__name__)
 PARALLEL_UPDATES = 0
 
 
+type JewishCalendarEventType = (
+    DailyCalendarEventType | LearningScheduleEventType | YearlyCalendarEventType
+)
+
+
 @dataclass(frozen=True, kw_only=True)
 class JewishCalendarCalendarEntityDescription(CalendarEntityDescription):
     """Jewish Calendar calendar entity description."""
 
     set_value_fn: Callable[
-        [str, date, HDateInfo, Zmanim], list[CalendarEvent] | CalendarEvent | None
+        [JewishCalendarEventType, date, HDateInfo, Zmanim],
+        list[CalendarEvent] | CalendarEvent | None,
     ]
 
 
 def _create_daily_event(
-    event_type: str, target_date: date, info: HDateInfo, zmanim: Zmanim
+    event_type: JewishCalendarEventType,
+    target_date: date,
+    info: HDateInfo,
+    zmanim: Zmanim,
 ) -> CalendarEvent | None:
     """Create a daily calendar event."""
     # Hebrew date
@@ -68,7 +77,10 @@ def _create_daily_event(
 
 
 def _create_yearly_event(
-    event_type: str, target_date: date, info: HDateInfo, zmanim: Zmanim
+    event_type: JewishCalendarEventType,
+    target_date: date,
+    info: HDateInfo,
+    zmanim: Zmanim,
 ) -> list[CalendarEvent] | CalendarEvent | None:
     """Create a yearly calendar event."""
     # Holidays
@@ -125,7 +137,10 @@ def _create_yearly_event(
 
 
 def _create_learning_event(
-    event_type: str, target_date: date, info: HDateInfo, zmanim: Zmanim
+    event_type: JewishCalendarEventType,
+    target_date: date,
+    info: HDateInfo,
+    zmanim: Zmanim,
 ) -> CalendarEvent | None:
     """Create a learning schedule event."""
     # Daf Yomi
