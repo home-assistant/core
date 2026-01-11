@@ -147,6 +147,7 @@ AIR_QUALITY_SENSOR_TYPES: tuple[AirQualitySensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement_fn=lambda x: x.pollutants.nh3.concentration.units,
         value_fn=lambda x: x.pollutants.nh3.concentration.value,
+        exists_fn=lambda x: "nh3" in {p.code for p in x.pollutants},
     ),
 )
 
