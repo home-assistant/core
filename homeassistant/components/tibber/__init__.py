@@ -8,7 +8,6 @@ import logging
 import aiohttp
 from aiohttp.client_exceptions import ClientError, ClientResponseError
 import tibber
-from tibber import data_api as tibber_data_api
 
 from homeassistant.const import CONF_ACCESS_TOKEN, EVENT_HOMEASSISTANT_STOP, Platform
 from homeassistant.core import Event, HomeAssistant
@@ -23,13 +22,7 @@ from homeassistant.helpers.config_entry_oauth2_flow import (
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import dt as dt_util, ssl as ssl_util
 
-from .const import (
-    AUTH_IMPLEMENTATION,
-    CONF_LEGACY_ACCESS_TOKEN,
-    DATA_HASS_CONFIG,
-    DOMAIN,
-    TibberConfigEntry,
-)
+from .const import AUTH_IMPLEMENTATION, DATA_HASS_CONFIG, DOMAIN, TibberConfigEntry
 from .coordinator import TibberDataAPICoordinator
 from .services import async_setup_services
 
@@ -44,24 +37,23 @@ _LOGGER = logging.getLogger(__name__)
 class TibberRuntimeData:
     """Runtime data for Tibber API entries."""
 
-    tibber_connection: tibber.Tibber
     session: OAuth2Session
     data_api_coordinator: TibberDataAPICoordinator | None = field(default=None)
-    _client: tibber_data_api.TibberDataAPI | None = None
+    _client: tibber.Tibber | None = None
 
-    async def async_get_client(
-        self, hass: HomeAssistant
-    ) -> tibber_data_api.TibberDataAPI:
-        """Return an authenticated Tibber Data API client."""
+    async def async_get_client(self, hass: HomeAssistant) -> tibber.Tibber:
+        """Return an authenticated Tibber client."""
         await self.session.async_ensure_token_valid()
         token = self.session.token
         access_token = token.get(CONF_ACCESS_TOKEN)
         if not access_token:
             raise ConfigEntryAuthFailed("Access token missing from OAuth session")
         if self._client is None:
-            self._client = tibber_data_api.TibberDataAPI(
-                access_token,
+            self._client = tibber.Tibber(
+                access_token=access_token,
                 websession=async_get_clientsession(hass),
+                time_zone=dt_util.get_default_time_zone(),
+                ssl=ssl_util.get_default_context(),
             )
         self._client.set_access_token(access_token)
         return self._client
@@ -88,12 +80,30 @@ async def async_setup_entry(hass: HomeAssistant, entry: TibberConfigEntry) -> bo
             translation_key="data_api_reauth_required",
         )
 
-    tibber_connection = tibber.Tibber(
-        access_token=entry.data[CONF_LEGACY_ACCESS_TOKEN],
-        websession=async_get_clientsession(hass),
-        time_zone=dt_util.get_default_time_zone(),
-        ssl=ssl_util.get_default_context(),
+    try:
+        implementation = await async_get_config_entry_implementation(hass, entry)
+    except ImplementationUnavailableError as err:
+        raise ConfigEntryNotReady(
+            translation_domain=DOMAIN,
+            translation_key="oauth2_implementation_unavailable",
+        ) from err
+    session = OAuth2Session(hass, entry, implementation)
+    try:
+        await session.async_ensure_token_valid()
+    except ClientResponseError as err:
+        if 400 <= err.status < 500:
+            raise ConfigEntryAuthFailed(
+                "OAuth session is not valid, reauthentication required"
+            ) from err
+        raise ConfigEntryNotReady from err
+    except ClientError as err:
+        raise ConfigEntryNotReady from err
+
+    entry.runtime_data = TibberRuntimeData(
+        session=session,
     )
+
+    tibber_connection = await entry.runtime_data.async_get_client(hass)
 
     async def _close(event: Event) -> None:
         await tibber_connection.rt_disconnect()
@@ -114,31 +124,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: TibberConfigEntry) -> bo
     except tibber.FatalHttpExceptionError:
         return False
 
-    try:
-        implementation = await async_get_config_entry_implementation(hass, entry)
-    except ImplementationUnavailableError as err:
-        raise ConfigEntryNotReady(
-            translation_domain=DOMAIN,
-            translation_key="oauth2_implementation_unavailable",
-        ) from err
-
-    session = OAuth2Session(hass, entry, implementation)
-    try:
-        await session.async_ensure_token_valid()
-    except ClientResponseError as err:
-        if 400 <= err.status < 500:
-            raise ConfigEntryAuthFailed(
-                "OAuth session is not valid, reauthentication required"
-            ) from err
-        raise ConfigEntryNotReady from err
-    except ClientError as err:
-        raise ConfigEntryNotReady from err
-
-    entry.runtime_data = TibberRuntimeData(
-        tibber_connection=tibber_connection,
-        session=session,
-    )
-
     coordinator = TibberDataAPICoordinator(hass, entry)
     await coordinator.async_config_entry_first_refresh()
     entry.runtime_data.data_api_coordinator = coordinator
@@ -154,5 +139,6 @@ async def async_unload_entry(
     if unload_ok := await hass.config_entries.async_unload_platforms(
         config_entry, PLATFORMS
     ):
-        await config_entry.runtime_data.tibber_connection.rt_disconnect()
+        tibber_connection = await config_entry.runtime_data.async_get_client(hass)
+        await tibber_connection.rt_disconnect()
     return unload_ok
