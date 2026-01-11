@@ -2,8 +2,9 @@
 
 from __future__ import annotations
 
-import datetime
 import logging
+
+import dateutil
 
 from homeassistant.components.automation import automations_with_entity
 from homeassistant.components.script import scripts_with_entity
@@ -539,7 +540,7 @@ class APCUPSdSensor(APCUPSdEntity, SensorEntity):
         data = self.coordinator.data[key]
 
         if self.entity_description.device_class == SensorDeviceClass.TIMESTAMP:
-            self._attr_native_value = datetime.datetime.fromisoformat(data)
+            self._attr_native_value = dateutil.parser.parse(data)
             return
 
         self._attr_native_value, inferred_unit = infer_unit(data)

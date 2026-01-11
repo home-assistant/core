@@ -1,9 +1,9 @@
 """Test sensors of APCUPSd integration."""
 
-import datetime
 from datetime import timedelta
 from unittest.mock import AsyncMock
 
+import dateutil.parser
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
@@ -161,7 +161,7 @@ async def test_sensor_unknown(
     await hass.async_block_till_done()
     assert (
         hass.states.get(last_self_test_id).state
-        == datetime.datetime.fromisoformat(last_self_test_value).isoformat()
+        == dateutil.parser.parse(last_self_test_value).isoformat()
     )
 
     # Simulate another event (e.g., daemon restart) such that "LASTSTEST" is no longer reported.
