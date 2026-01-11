@@ -231,7 +231,7 @@ aiodhcpwatcher==1.2.1
 aiodiscover==2.7.1
 
 # homeassistant.components.dnsip
-aiodns==3.6.1
+aiodns==4.0.0
 
 # homeassistant.components.duke_energy
 aiodukeenergy==0.3.0
@@ -842,7 +842,7 @@ dynalite-panel==0.0.4
 eagle100==0.1.1
 
 # homeassistant.components.easyenergy
-easyenergy==2.1.2
+easyenergy==2.2.0
 
 # homeassistant.components.ebusd
 ebusdpy==0.0.17
@@ -1867,7 +1867,7 @@ pyRFXtrx==0.31.1
 pySDCP==1
 
 # homeassistant.components.tibber
-pyTibber==0.34.1
+pyTibber==0.34.4
 
 # homeassistant.components.dlink
 pyW215==0.8.0
@@ -2375,7 +2375,7 @@ pysabnzbd==1.1.1
 pysaj==0.0.16
 
 # homeassistant.components.saunum
-pysaunum==0.1.0
+pysaunum==0.2.0
 
 # homeassistant.components.schlage
 pyschlage==2025.9.0
@@ -2596,7 +2596,7 @@ python-snoo==0.8.3
 python-songpal==0.16.2
 
 # homeassistant.components.tado
-python-tado==0.18.15
+python-tado==0.18.16
 
 # homeassistant.components.technove
 python-technove==2.0.0
