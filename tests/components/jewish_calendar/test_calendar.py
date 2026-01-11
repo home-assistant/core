@@ -27,17 +27,17 @@ async def test_three_calendar_entities_created(hass: HomeAssistant) -> None:
     # Check daily events calendar
     state = hass.states.get(CALENDAR_DAILY_EVENTS)
     assert state is not None
-    assert state.attributes["friendly_name"] == "Jewish Calendar Daily Events"
+    assert state.attributes["friendly_name"] == "Jewish Calendar Daily events"
 
     # Check learning schedule calendar
     state = hass.states.get(CALENDAR_LEARNING_SCHEDULE)
     assert state is not None
-    assert state.attributes["friendly_name"] == "Jewish Calendar Learning Schedule"
+    assert state.attributes["friendly_name"] == "Jewish Calendar Learning schedule"
 
     # Check yearly events calendar
     state = hass.states.get(CALENDAR_YEARLY_EVENTS)
     assert state is not None
-    assert state.attributes["friendly_name"] == "Jewish Calendar Yearly Events"
+    assert state.attributes["friendly_name"] == "Jewish Calendar Yearly events"
 
 
 @pytest.mark.freeze_time("2024-01-15 12:00:00")
