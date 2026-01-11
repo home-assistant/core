@@ -5,6 +5,7 @@ from collections.abc import Callable
 from typing import Final
 
 from aiohttp import ClientResponseError
+from aiohttp.client_exceptions import ClientError
 from tesla_fleet_api.const import Scope
 from tesla_fleet_api.exceptions import (
     Forbidden,
@@ -315,7 +316,7 @@ async def async_migrate_entry(
             data = await Teslemetry(session, access_token).migrate_to_oauth(
                 CLIENT_ID, access_token, hass.config.location_name
             )
-        except Exception as e:
+        except (ClientError, TypeError) as e:
             raise ConfigEntryAuthFailed from e
 
         # Add auth_implementation for OAuth2 flow compatibility
