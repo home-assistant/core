@@ -109,6 +109,7 @@ def _migrate_entity_unique_ids(hass: HomeAssistant, entry_id: str) -> None:
         if entity.unique_id and "-" in entity.unique_id:
             parts = entity.unique_id.split("-")
             if len(parts) == 2 and entity.device_id:
+                # Get module type from device registry
                 device = dev_reg.async_get(entity.device_id)
                 if device and device.model:
                     module_type = device.model
@@ -148,7 +149,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: VelbusConfigEntry) -> bo
     entry.runtime_data = VelbusData(controller=controller, scan_task=task)
 
     _migrate_device_identifiers(hass, entry.entry_id)
-    _migrate_entity_unique_ids(hass, entry.entry_id)
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
@@ -201,8 +201,13 @@ async def async_migrate_entry(
         if len(parts) == 4:
             hass.config_entries.async_update_entry(config_entry, unique_id=parts[1])
 
+    # this is the config entry migration updating the entities unique ids
+    # migrate from 2.2 to 2.3
+    if config_entry.version < 3 and config_entry.minor_version == 2:
+        _migrate_entity_unique_ids(hass, config_entry.entry_id)
+
     # update the config entry
-    hass.config_entries.async_update_entry(config_entry, version=2, minor_version=2)
+    hass.config_entries.async_update_entry(config_entry, version=2, minor_version=3)
 
     _LOGGER.error(
         "Migration to version %s.%s successful",
