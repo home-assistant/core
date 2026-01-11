@@ -227,18 +227,13 @@ async def test_ssdp_discovery_already_configured(
     hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
 ) -> None:
     """Test SSDP discovery aborts when device is already configured."""
+    # The config flow uses ssdp_udn or ssdp_usn as unique_id
     entry = MockConfigEntry(
         domain=DOMAIN,
-        unique_id=f"serial:{TEST_SERIAL}",
+        unique_id="mock_usn",
         data={CONF_HOST: TEST_HOST, CONF_NAME: TEST_NAME, CONF_MODEL: TEST_MODEL},
     )
     entry.add_to_hass(hass)
-
-    aioclient_mock.get(
-        TEST_SSDP_LOCATION,
-        text=f"""<?xml version="1.0"?>
-        <root><device><serialNumber>{TEST_SERIAL}</serialNumber></device></root>""",
-    )
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
