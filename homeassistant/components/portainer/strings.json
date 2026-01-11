@@ -61,6 +61,14 @@
         "name": "Status"
       }
     },
+    "button": {
+      "images_prune": {
+        "name": "Prune unused images"
+      },
+      "restart_container": {
+        "name": "Restart container"
+      }
+    },
     "sensor": {
       "api_version": {
         "name": "API version"
@@ -138,11 +146,20 @@
     "cannot_connect": {
       "message": "An error occurred while trying to connect to the Portainer instance: {error}"
     },
+    "cannot_connect_no_details": {
+      "message": "An error occurred while trying to connect to the Portainer instance."
+    },
     "invalid_auth": {
       "message": "An error occurred while trying to authenticate: {error}"
     },
+    "invalid_auth_no_details": {
+      "message": "An error occurred while trying to authenticate."
+    },
     "timeout_connect": {
       "message": "A timeout occurred while trying to connect to the Portainer instance: {error}"
+    },
+    "timeout_connect_no_details": {
+      "message": "A timeout occurred while trying to connect to the Portainer instance."
     }
   }
 }
