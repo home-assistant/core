@@ -17,7 +17,32 @@
           "username": "[%key:common::config_flow::data::username%]"
         },
         "description": "You will need to obtain your thermostat\u2019s numeric serial number or ID by logging into {nuheat_url} and selecting your thermostat(s).",
-        "title": "Connect to the NuHeat"
+        "title": "Connect to Nuheat"
+      }
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "description": "The Nuheat API only reports energy usage if you have configured watt density in the Nuheat app. If you haven't done that, you can enter your floor specifications here to calculate energy from heating time instead.",
+        "data": {
+          "floor_area": "Heated floor area (square feet)",
+          "watt_density": "Watt density (watts per square foot)"
+        },
+        "data_description": {
+          "floor_area": "The total area covered by your heated floor mat. Check your installation documentation or measure the heated area.",
+          "watt_density": "Power output per square foot. Most Nuheat mats are 12 watts/sqft. Check your mat's specifications if unsure."
+        }
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "energy": {
+        "name": "Energy"
+      },
+      "heating_time": {
+        "name": "Heating time"
       }
     }
   }
