@@ -8,12 +8,18 @@ import logging
 from typing import Any, TypeVar
 
 from propcache.api import cached_property
+from roborock import B01Props
 from roborock.data import HomeDataScene
 from roborock.devices.device import RoborockDevice
 from roborock.devices.traits.a01 import DyadApi, ZeoApi
+from roborock.devices.traits.b01 import Q7PropertiesApi
 from roborock.devices.traits.v1 import PropertiesApi
 from roborock.exceptions import RoborockDeviceBusy, RoborockException
-from roborock.roborock_message import RoborockDyadDataProtocol, RoborockZeoProtocol
+from roborock.roborock_message import (
+    RoborockB01Props,
+    RoborockDyadDataProtocol,
+    RoborockZeoProtocol,
+)
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_CONNECTIONS
@@ -58,12 +64,17 @@ class RoborockCoordinators:
 
     v1: list[RoborockDataUpdateCoordinator]
     a01: list[RoborockDataUpdateCoordinatorA01]
+    b01: list[RoborockDataUpdateCoordinatorB01]
 
     def values(
         self,
-    ) -> list[RoborockDataUpdateCoordinator | RoborockDataUpdateCoordinatorA01]:
+    ) -> list[
+        RoborockDataUpdateCoordinator
+        | RoborockDataUpdateCoordinatorA01
+        | RoborockDataUpdateCoordinatorB01
+    ]:
         """Return all coordinators."""
-        return self.v1 + self.a01
+        return self.v1 + self.a01 + self.b01
 
 
 type RoborockConfigEntry = ConfigEntry[RoborockCoordinators]
@@ -111,6 +122,7 @@ class RoborockDataUpdateCoordinator(DataUpdateCoordinator[DeviceState]):
         # Tracks the last successful update to control when we report failure
         # to the base class. This is reset on successful data update.
         self._last_update_success_time: datetime | None = None
+        self._has_connected_locally: bool = False
 
     @cached_property
     def dock_device_info(self) -> DeviceInfo:
@@ -180,7 +192,8 @@ class RoborockDataUpdateCoordinator(DataUpdateCoordinator[DeviceState]):
     async def _verify_api(self) -> None:
         """Verify that the api is reachable."""
         if self._device.is_connected:
-            if self._device.is_local_connected:
+            self._has_connected_locally |= self._device.is_local_connected
+            if self._has_connected_locally:
                 async_delete_issue(
                     self.hass, DOMAIN, f"cloud_api_used_{self.duid_slug}"
                 )
@@ -223,6 +236,7 @@ class RoborockDataUpdateCoordinator(DataUpdateCoordinator[DeviceState]):
 
     async def _async_update_data(self) -> DeviceState:
         """Update data via library."""
+        await self._verify_api()
         try:
             # Update device props and standard api information
             await self._update_device_prop()
@@ -469,3 +483,92 @@ class RoborockWetDryVacUpdateCoordinator(
                 translation_domain=DOMAIN,
                 translation_key="update_data_fail",
             ) from ex
+
+
+class RoborockDataUpdateCoordinatorB01(DataUpdateCoordinator[B01Props]):
+    """Class to manage fetching data from the API for B01 devices."""
+
+    config_entry: RoborockConfigEntry
+
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        config_entry: RoborockConfigEntry,
+        device: RoborockDevice,
+    ) -> None:
+        """Initialize."""
+        super().__init__(
+            hass,
+            _LOGGER,
+            config_entry=config_entry,
+            name=DOMAIN,
+            update_interval=A01_UPDATE_INTERVAL,
+        )
+        self._device = device
+        self.device_info = DeviceInfo(
+            name=device.name,
+            identifiers={(DOMAIN, device.duid)},
+            manufacturer="Roborock",
+            model=device.product.model,
+            sw_version=device.device_info.fv,
+        )
+
+    @cached_property
+    def duid(self) -> str:
+        """Get the unique id of the device as specified by Roborock."""
+        return self._device.duid
+
+    @cached_property
+    def duid_slug(self) -> str:
+        """Get the slug of the duid."""
+        return slugify(self.duid)
+
+    @property
+    def device(self) -> RoborockDevice:
+        """Get the RoborockDevice."""
+        return self._device
+
+
+class RoborockB01Q7UpdateCoordinator(RoborockDataUpdateCoordinatorB01):
+    """Coordinator for B01 Q7 devices."""
+
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        config_entry: RoborockConfigEntry,
+        device: RoborockDevice,
+        api: Q7PropertiesApi,
+    ) -> None:
+        """Initialize."""
+        super().__init__(hass, config_entry, device)
+        self.api = api
+        self.request_protocols: list[RoborockB01Props] = [
+            RoborockB01Props.STATUS,
+            RoborockB01Props.MAIN_BRUSH,
+            RoborockB01Props.SIDE_BRUSH,
+            RoborockB01Props.DUST_BAG_USED,
+            RoborockB01Props.MOP_LIFE,
+            RoborockB01Props.MAIN_SENSOR,
+            RoborockB01Props.CLEANING_TIME,
+            RoborockB01Props.REAL_CLEAN_TIME,
+            RoborockB01Props.HYPA,
+            RoborockB01Props.WIND,
+        ]
+
+    async def _async_update_data(
+        self,
+    ) -> B01Props:
+        try:
+            data = await self.api.query_values(self.request_protocols)
+        except RoborockException as ex:
+            _LOGGER.debug("Failed to update Q7 data: %s", ex)
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="update_data_fail",
+            ) from ex
+        if data is None:
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="update_data_fail",
+            )
+        return data

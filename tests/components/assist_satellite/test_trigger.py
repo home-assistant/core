@@ -1,6 +1,7 @@
 """Test assist satellite triggers."""
 
 from collections.abc import Generator
+from typing import Any
 from unittest.mock import patch
 
 import pytest
@@ -69,7 +70,7 @@ async def test_assist_satellite_triggers_gated_by_labs_flag(
     parametrize_target_entities("assist_satellite"),
 )
 @pytest.mark.parametrize(
-    ("trigger", "states"),
+    ("trigger", "trigger_options", "states"),
     [
         *parametrize_trigger_states(
             trigger="assist_satellite.idle",
@@ -101,6 +102,7 @@ async def test_assist_satellite_state_trigger_behavior_any(
     entity_id: str,
     entities_in_target: int,
     trigger: str,
+    trigger_options: dict[str, Any],
     states: list[StateDescription],
 ) -> None:
     """Test that the assist satellite state trigger fires when any assist satellite state changes to a specific state."""
@@ -136,7 +138,7 @@ async def test_assist_satellite_state_trigger_behavior_any(
     parametrize_target_entities("assist_satellite"),
 )
 @pytest.mark.parametrize(
-    ("trigger", "states"),
+    ("trigger", "trigger_options", "states"),
     [
         *parametrize_trigger_states(
             trigger="assist_satellite.idle",
@@ -168,6 +170,7 @@ async def test_assist_satellite_state_trigger_behavior_first(
     entity_id: str,
     entities_in_target: int,
     trigger: str,
+    trigger_options: dict[str, Any],
     states: list[StateDescription],
 ) -> None:
     """Test that the assist satellite state trigger fires when the first assist satellite changes to a specific state."""
@@ -202,7 +205,7 @@ async def test_assist_satellite_state_trigger_behavior_first(
     parametrize_target_entities("assist_satellite"),
 )
 @pytest.mark.parametrize(
-    ("trigger", "states"),
+    ("trigger", "trigger_options", "states"),
     [
         *parametrize_trigger_states(
             trigger="assist_satellite.idle",
@@ -234,6 +237,7 @@ async def test_assist_satellite_state_trigger_behavior_last(
     entity_id: str,
     entities_in_target: int,
     trigger: str,
+    trigger_options: dict[str, Any],
     states: list[StateDescription],
 ) -> None:
     """Test that the assist_satellite state trigger fires when the last assist_satellite changes to a specific state."""

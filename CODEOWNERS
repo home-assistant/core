@@ -516,6 +516,8 @@ build.json @home-assistant/supervisor
 /tests/components/fireservicerota/ @cyberjunky
 /homeassistant/components/firmata/ @DaAwesomeP
 /tests/components/firmata/ @DaAwesomeP
+/homeassistant/components/fish_audio/ @noambav
+/tests/components/fish_audio/ @noambav
 /homeassistant/components/fitbit/ @allenporter
 /tests/components/fitbit/ @allenporter
 /homeassistant/components/fivem/ @Sander0542
@@ -530,6 +532,8 @@ build.json @home-assistant/supervisor
 /tests/components/flo/ @dmulcahey
 /homeassistant/components/flume/ @ChrisMandich @bdraco @jeeftor
 /tests/components/flume/ @ChrisMandich @bdraco @jeeftor
+/homeassistant/components/fluss/ @fluss
+/tests/components/fluss/ @fluss
 /homeassistant/components/flux_led/ @icemanch
 /tests/components/flux_led/ @icemanch
 /homeassistant/components/forecast_solar/ @klaasnicolaas @frenck
@@ -657,6 +661,8 @@ build.json @home-assistant/supervisor
 /tests/components/harmony/ @ehendrix23 @bdraco @mkeesey @Aohzan
 /homeassistant/components/hassio/ @home-assistant/supervisor
 /tests/components/hassio/ @home-assistant/supervisor
+/homeassistant/components/hdfury/ @glenndehaan
+/tests/components/hdfury/ @glenndehaan
 /homeassistant/components/hdmi_cec/ @inytar
 /tests/components/hdmi_cec/ @inytar
 /homeassistant/components/heatmiser/ @andylockran
@@ -664,7 +670,8 @@ build.json @home-assistant/supervisor
 /tests/components/heos/ @andrewsayre
 /homeassistant/components/here_travel_time/ @eifinger
 /tests/components/here_travel_time/ @eifinger
-/homeassistant/components/hikvision/ @mezz64
+/homeassistant/components/hikvision/ @mezz64 @ptarjan
+/tests/components/hikvision/ @mezz64 @ptarjan
 /homeassistant/components/hikvisioncam/ @fbradyirl
 /homeassistant/components/hisense_aehw4a1/ @bannhead
 /tests/components/hisense_aehw4a1/ @bannhead
@@ -793,6 +800,8 @@ build.json @home-assistant/supervisor
 /tests/components/intellifire/ @jeeftor
 /homeassistant/components/intent/ @home-assistant/core @synesthesiam @arturpragacz
 /tests/components/intent/ @home-assistant/core @synesthesiam @arturpragacz
+/homeassistant/components/intent_script/ @arturpragacz
+/tests/components/intent_script/ @arturpragacz
 /homeassistant/components/intesishome/ @jnimmo
 /homeassistant/components/iometer/ @jukrebs
 /tests/components/iometer/ @jukrebs
@@ -1163,6 +1172,8 @@ build.json @home-assistant/supervisor
 /tests/components/open_router/ @joostlek
 /homeassistant/components/openerz/ @misialq
 /tests/components/openerz/ @misialq
+/homeassistant/components/openevse/ @c00w @firstof9
+/tests/components/openevse/ @c00w @firstof9
 /homeassistant/components/openexchangerates/ @MartinHjelmare
 /tests/components/openexchangerates/ @MartinHjelmare
 /homeassistant/components/opengarage/ @danielhiversen
@@ -1194,8 +1205,8 @@ build.json @home-assistant/supervisor
 /tests/components/ourgroceries/ @OnFreund
 /homeassistant/components/overkiz/ @imicknl
 /tests/components/overkiz/ @imicknl
-/homeassistant/components/overseerr/ @joostlek
-/tests/components/overseerr/ @joostlek
+/homeassistant/components/overseerr/ @joostlek @AmGarera
+/tests/components/overseerr/ @joostlek @AmGarera
 /homeassistant/components/ovo_energy/ @timmo001
 /tests/components/ovo_energy/ @timmo001
 /homeassistant/components/p1_monitor/ @klaasnicolaas
@@ -1692,8 +1703,8 @@ build.json @home-assistant/supervisor
 /tests/components/trafikverket_train/ @gjohansson-ST
 /homeassistant/components/trafikverket_weatherstation/ @gjohansson-ST
 /tests/components/trafikverket_weatherstation/ @gjohansson-ST
-/homeassistant/components/transmission/ @engrbm87 @JPHutchins
-/tests/components/transmission/ @engrbm87 @JPHutchins
+/homeassistant/components/transmission/ @engrbm87 @JPHutchins @andrew-codechimp
+/tests/components/transmission/ @engrbm87 @JPHutchins @andrew-codechimp
 /homeassistant/components/trend/ @jpbede
 /tests/components/trend/ @jpbede
 /homeassistant/components/triggercmd/ @rvmey
@@ -1794,9 +1805,12 @@ build.json @home-assistant/supervisor
 /tests/components/waqi/ @joostlek
 /homeassistant/components/water_heater/ @home-assistant/core
 /tests/components/water_heater/ @home-assistant/core
+/homeassistant/components/waterfurnace/ @sdague @masterkoppa
 /homeassistant/components/watergate/ @adam-the-hero
 /tests/components/watergate/ @adam-the-hero
 /homeassistant/components/watson_tts/ @rutkai
+/homeassistant/components/watts/ @theobld-ww @devender-verma-ww @ssi-spyro
+/tests/components/watts/ @theobld-ww @devender-verma-ww @ssi-spyro
 /homeassistant/components/watttime/ @bachya
 /tests/components/watttime/ @bachya
 /homeassistant/components/waze_travel_time/ @eifinger

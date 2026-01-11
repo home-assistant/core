@@ -83,7 +83,7 @@ def _async_device_entities(
                     _LOGGER.debug(
                         "Adding %s entity %s for %s",
                         klass.__name__,
-                        description.name,
+                        description.key,
                         device.display_name,
                     )
             continue
@@ -111,7 +111,7 @@ def _async_device_entities(
             _LOGGER.debug(
                 "Adding %s entity %s for %s",
                 klass.__name__,
-                description.name,
+                description.key,
                 device.display_name,
             )
 
@@ -252,16 +252,11 @@ class BaseProtectEntity(Entity):
 
         if changed:
             if _LOGGER.isEnabledFor(logging.DEBUG):
-                device_name = device.name or ""
-                if hasattr(self, "entity_description") and self.entity_description.name:
-                    device_name += f" {self.entity_description.name}"
-
                 _LOGGER.debug(
-                    "Updating state [%s (%s)] %s -> %s",
-                    device_name,
-                    device.mac,
+                    "Updating state [%s] %s -> %s",
+                    self.entity_id,
                     previous_attrs,
-                    tuple((getattr(self, attr)) for attr in self._state_attrs),
+                    tuple(getter() for getter in self._state_getters),
                 )
             self.async_write_ha_state()
 
