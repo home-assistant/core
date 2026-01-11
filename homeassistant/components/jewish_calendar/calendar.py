@@ -34,7 +34,7 @@ PARALLEL_UPDATES = 0
 class JewishCalendarCalendarEntityDescription(CalendarEntityDescription):
     """Jewish Calendar calendar entity description."""
 
-    create_event_fn: Callable[
+    set_value_fn: Callable[
         [str, date, HDateInfo, Zmanim], list[CalendarEvent] | CalendarEvent | None
     ]
 
@@ -145,19 +145,19 @@ CALENDARS = (
         key=CONF_DAILY_EVENTS,
         name="Daily Events",
         icon="mdi:calendar",
-        create_event_fn=_create_daily_event,
+        set_value_fn=_create_daily_event,
     ),
     JewishCalendarCalendarEntityDescription(
         key=CONF_LEARNING_SCHEDULE,
         name="Learning Schedule",
         icon="mdi:book-open",
-        create_event_fn=_create_learning_event,
+        set_value_fn=_create_learning_event,
     ),
     JewishCalendarCalendarEntityDescription(
         key=CONF_YEARLY_EVENTS,
         name="Yearly Events",
         icon="mdi:calendar",
-        create_event_fn=_create_yearly_event,
+        set_value_fn=_create_yearly_event,
     ),
 )
 
@@ -234,7 +234,7 @@ class JewishCalendar(JewishCalendarEntity, CalendarEntity):
         zmanim = self.coordinator.make_zmanim(target_date)
 
         for event_type in self._events_config:
-            if _events := self.entity_description.create_event_fn(
+            if _events := self.entity_description.set_value_fn(
                 event_type, target_date, info, zmanim
             ):
                 events.extend(_events if isinstance(_events, list) else [_events])
