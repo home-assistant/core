@@ -839,7 +839,7 @@
     'state': '20.65',
   })
 # ---
-# name: test_entities[sensor.home_name_api_limit_remaining-entry]
+# name: test_entities[sensor.home_name_api_calls_remaining-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -854,7 +854,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.home_name_api_limit_remaining',
+    'entity_id': 'sensor.home_name_api_calls_remaining',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -866,7 +866,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'API limit remaining',
+    'original_name': 'API calls remaining',
     'platform': 'tado',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -876,14 +876,14 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_entities[sensor.home_name_api_limit_remaining-state]
+# name: test_entities[sensor.home_name_api_calls_remaining-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'home name API limit remaining',
+      'friendly_name': 'home name API calls remaining',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.home_name_api_limit_remaining',
+    'entity_id': 'sensor.home_name_api_calls_remaining',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

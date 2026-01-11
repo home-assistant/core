@@ -43,7 +43,7 @@ class TadoRateLimit:
     remaining: int
 
 
-class TadoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, dict]]):
+class TadoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     """Class to manage API calls from and to Tado via PyTado."""
 
     tado: Tado
@@ -77,11 +77,12 @@ class TadoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, dict]]):
         self.home_name: str
         self.zones: list[dict[Any, Any]] = []
         self.devices: list[dict[Any, Any]] = []
-        self.data: dict[str, dict] = {
+        self.data: dict[str, Any] = {
             "device": {},
             "weather": {},
             "geofence": {},
             "zone": {},
+            "rate_limit": TadoRateLimit(limit=0, remaining=0),
         }
 
         self.rate_limit: TadoRateLimit | None = None
@@ -91,7 +92,7 @@ class TadoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, dict]]):
         """Return fallback flag to Smart Schedule."""
         return self._fallback
 
-    async def _async_update_data(self) -> dict[str, dict]:
+    async def _async_update_data(self) -> dict[str, Any]:
         """Fetch the (initial) latest data from Tado."""
 
         try:
@@ -127,10 +128,10 @@ class TadoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, dict]]):
         self.data["zone"] = zones
         self.data["weather"] = home["weather"]
         self.data["geofence"] = home["geofence"]
-        self.data["rate_limit"] = {
-            "limit": self.rate_limit.limit,
-            "remaining": self.rate_limit.remaining,
-        }
+        self.data["rate_limit"] = TadoRateLimit(
+            limit=self.rate_limit.limit,
+            remaining=self.rate_limit.remaining,
+        )
 
         refresh_token = await self.hass.async_add_executor_job(
             self._tado.get_refresh_token

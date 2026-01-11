@@ -110,9 +110,6 @@ async def init_integration(hass: HomeAssistant):
             return_value={"per-day": 1000, "remaining": 100},
         ),
     ):
-        # Provide a deterministic rate limit response from the PyTado client
-        # so the coordinator can parse and log it during refresh.
-
         m.post(
             "https://auth.tado.com/oauth/token",
             text=await async_load_fixture(hass, token_fixture, DOMAIN),

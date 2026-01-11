@@ -68,7 +68,7 @@
         "name": "API rate limit"
       },
       "rate_limit_remaining": {
-        "name": "API limit remaining"
+        "name": "API calls remaining"
       },
       "solar_percentage": {
         "name": "Solar percentage"

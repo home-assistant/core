@@ -136,7 +136,7 @@ HOME_SENSORS = [
     TadoSensorEntityDescription(
         key="rate_limit_remaining",
         translation_key="rate_limit_remaining",
-        state_fn=lambda data: data["remaining"],
+        state_fn=lambda data: data.remaining,
         data_category=SENSOR_DATA_CATEGORY_RATE_LIMIT,
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
@@ -144,7 +144,7 @@ HOME_SENSORS = [
     TadoSensorEntityDescription(
         key="rate_limit",
         translation_key="rate_limit",
-        state_fn=lambda data: data["limit"],
+        state_fn=lambda data: data.limit,
         data_category=SENSOR_DATA_CATEGORY_RATE_LIMIT,
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,

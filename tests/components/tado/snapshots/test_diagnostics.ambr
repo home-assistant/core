@@ -63,8 +63,8 @@
         'presenceLocked': False,
       }),
       'rate_limit': dict({
-        'limit': 1000,
-        'remaining': 100,
+        '__type': "<class 'homeassistant.components.tado.coordinator.TadoRateLimit'>",
+        'repr': 'TadoRateLimit(limit=1000, remaining=100)',
       }),
       'weather': dict({
         'outsideTemperature': dict({
