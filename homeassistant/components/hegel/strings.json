@@ -11,9 +11,9 @@
     },
     "step": {
       "discovery_confirm": {
-          "data": {
-            "model": "Model"
-          },
+        "data": {
+          "model": "Model"
+        },
         "data_description": {
           "model": "Select your Hegel amplifier model for proper input mapping"
         },
