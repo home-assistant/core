@@ -1,6 +1,9 @@
 {
   "entity": {
     "sensor": {
+      "ammonia": {
+        "default": "mdi:molecule"
+      },
       "nitrogen_dioxide": {
         "default": "mdi:molecule"
       },
