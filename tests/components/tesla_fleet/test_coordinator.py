@@ -274,7 +274,7 @@ async def test_coordinator_handles_invalid_data(
     mock_config_entry.add_to_hass(hass)
 
     mock_energy_site.energy_history.return_value = {
-        "response": {
+        "not_response": {
             "period": "day",
         }
     }
@@ -285,6 +285,61 @@ async def test_coordinator_handles_invalid_data(
 
     with pytest.raises(UpdateFailed, match="Received invalid data"):
         await coordinator._async_update_data()
+
+
+async def test_coordinator_normalizes_timestamps_to_hour(
+    recorder_mock: Recorder,
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_energy_site: AsyncMock,
+) -> None:
+    """Test the coordinator normalizes timestamps to the top of the hour."""
+    mock_config_entry.add_to_hass(hass)
+
+    raw_timestamp = "2023-06-01T08:12:34-07:00"
+    expected_start = dt_util.parse_datetime(raw_timestamp)
+    assert expected_start is not None
+    expected_start = expected_start.replace(minute=0, second=0, microsecond=0)
+
+    mock_energy_site.energy_history.return_value = {
+        "response": {
+            "period": "day",
+            "time_series": [
+                {
+                    "timestamp": raw_timestamp,
+                    "solar_energy_exported": 1234,
+                },
+            ],
+        }
+    }
+
+    with patch(
+        "homeassistant.components.tesla_fleet.coordinator.get_instance"
+    ) as mock_get_instance:
+        mock_get_instance.return_value = recorder_mock
+        coordinator = TeslaFleetEnergySiteHistoryCoordinator(
+            hass, mock_config_entry, mock_energy_site
+        )
+        await coordinator._async_update_data()
+
+    await async_wait_recording_done(hass)
+
+    stats = await hass.async_add_executor_job(
+        statistics_during_period,
+        hass,
+        dt_util.utc_from_timestamp(0),
+        None,
+        {"tesla_fleet:123456_solar_energy_exported"},
+        "hour",
+        None,
+        STATISTIC_TYPES,
+    )
+
+    assert len(stats["tesla_fleet:123456_solar_energy_exported"]) == 1
+    stat = stats["tesla_fleet:123456_solar_energy_exported"][0]
+    assert stat["start"] == dt_util.as_utc(expected_start).timestamp()
+    assert stat["state"] == 1234.0
+    assert stat["sum"] == 1234.0
 
 
 async def test_coordinator_handles_rate_limiting(

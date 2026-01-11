@@ -30,7 +30,7 @@ from homeassistant.components.recorder.statistics import (
 )
 from homeassistant.const import UnitOfEnergy
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed
+from homeassistant.exceptions import ConfigEntryAuthFailed, HomeAssistantError
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import dt as dt_util
 from homeassistant.util.unit_conversion import EnergyConverter
@@ -238,7 +238,10 @@ class TeslaFleetEnergySiteHistoryCoordinator(DataUpdateCoordinator[dict[str, Any
 
     async def async_config_entry_first_refresh(self) -> None:
         """Set up the data coordinator."""
-        await super().async_config_entry_first_refresh()
+        # Energy history is optional for some sites/users. We still want to set up
+        # the coordinator (and schedule future refreshes) even if the first refresh
+        # fails.
+        await self.async_refresh()
 
         # Calculate seconds until next 5 minute period plus a random delay
         delta = randint(310, 330) - (int(time()) % 300)
@@ -250,7 +253,7 @@ class TeslaFleetEnergySiteHistoryCoordinator(DataUpdateCoordinator[dict[str, Any
     async def _async_update_data(self) -> dict[str, Any]:
         """Update energy site history data using Tesla Fleet API."""
         try:
-            data = (await self.api.energy_history(TeslaEnergyPeriod.DAY))["response"]
+            response = await self.api.energy_history(TeslaEnergyPeriod.DAY)
         except RateLimited as e:
             LOGGER.warning(
                 "%s rate limited, will retry in %s seconds",
@@ -265,10 +268,15 @@ class TeslaFleetEnergySiteHistoryCoordinator(DataUpdateCoordinator[dict[str, Any
         except TeslaFleetError as e:
             raise UpdateFailed(e.message) from e
 
-        if not data or not isinstance(data.get("time_series"), list):
+        data = response.get("response") if isinstance(response, dict) else None
+        if not isinstance(data, dict):
             raise UpdateFailed("Received invalid data")
 
-        time_series = data.get("time_series", [])
+        time_series = data.get("time_series")
+        if time_series is None:
+            time_series = []
+        elif not isinstance(time_series, list):
+            raise UpdateFailed("Received invalid data")
 
         # Insert external statistics with historical timestamps
         await self._insert_statistics(time_series)
@@ -324,18 +332,27 @@ class TeslaFleetEnergySiteHistoryCoordinator(DataUpdateCoordinator[dict[str, Any
                 running_sum = cast(float, last_stat[statistic_id][0].get("sum", 0.0))
 
             statistics: list[StatisticData] = []
+            seen_starts: set[float] = set()
 
             for period in time_series:
                 timestamp_str = period.get("timestamp")
                 if not timestamp_str:
                     continue
 
-                start = dt_util.parse_datetime(timestamp_str)
-                if start is None:
+                parsed_time = dt_util.parse_datetime(timestamp_str)
+                if parsed_time is None:
                     continue
 
+                # Normalize to top of the hour (statistics require minutes=0, seconds=0)
+                start = parsed_time.replace(minute=0, second=0, microsecond=0)
+
+                start_ts = start.timestamp()
+                if start_ts in seen_starts:
+                    continue
+                seen_starts.add(start_ts)
+
                 # Skip if we already have this statistic
-                if last_stats_time is not None and start.timestamp() <= last_stats_time:
+                if last_stats_time is not None and start_ts <= last_stats_time:
                     continue
 
                 value = period.get(key)
@@ -355,7 +372,14 @@ class TeslaFleetEnergySiteHistoryCoordinator(DataUpdateCoordinator[dict[str, Any
                     len(statistics),
                     statistic_id,
                 )
-                async_add_external_statistics(self.hass, metadata, statistics)
+                try:
+                    async_add_external_statistics(self.hass, metadata, statistics)
+                except HomeAssistantError as err:
+                    LOGGER.debug(
+                        "Unable to add external statistics for %s: %s",
+                        statistic_id,
+                        err,
+                    )
 
 
 class TeslaFleetEnergySiteInfoCoordinator(DataUpdateCoordinator[dict[str, Any]]):
