@@ -52,11 +52,7 @@ class TibberConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Confirm reauthentication by reusing the user step."""
-        if user_input is None:
-            return self.async_show_form(
-                step_id="reauth_confirm",
-            )
-        return await self.async_step_user()
+        return await self.async_step_pick_implementation(user_input)
 
     async def async_oauth_create_entry(self, data: dict) -> ConfigFlowResult:
         """Finalize the OAuth flow and create the config entry."""
@@ -65,27 +61,13 @@ class TibberConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
             access_token=access_token,
             websession=async_get_clientsession(self.hass),
         )
-        errors: dict[str, str] = {}
+
         try:
-            await tibber_connection.update_info()
-        except TimeoutError:
-            errors["base"] = ERR_TIMEOUT
-        except tibber.InvalidLoginError:
-            errors["base"] = ERR_TOKEN
-        except (
-            aiohttp.ClientError,
-            tibber.RetryableHttpExceptionError,
-            tibber.FatalHttpExceptionError,
-        ):
-            errors["base"] = ERR_CLIENT
-
-        if errors:
-            return self.async_abort(reason=errors["base"])
-
-        await self.async_set_unique_id(tibber_connection.user_id)
+            await tibber_connection.data_api.get_userinfo()
+        except (aiohttp.ClientError, TimeoutError):
+            return self.async_abort(reason="cannot_connect")
 
         if self.source == SOURCE_REAUTH:
-            self._abort_if_unique_id_mismatch(reason="wrong_account")
             reauth_entry = self._get_reauth_entry()
             return self.async_update_reload_and_abort(
                 reauth_entry,
