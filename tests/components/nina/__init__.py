@@ -1,13 +1,16 @@
 """Tests for the Nina integration."""
 
-import json
 from typing import Any
 from unittest.mock import patch
 
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 
-from tests.common import MockConfigEntry, load_fixture, load_json_object_fixture
+from tests.common import (
+    MockConfigEntry,
+    load_json_array_fixture,
+    load_json_object_fixture,
+)
 
 
 async def setup_platform(hass: HomeAssistant, config_entry: MockConfigEntry) -> None:
@@ -24,8 +27,8 @@ async def setup_platform(hass: HomeAssistant, config_entry: MockConfigEntry) -> 
 
 def mocked_request_function(url: str) -> dict[str, Any]:
     """Mock of the request function."""
-    dummy_response: list[dict[str, Any]] = json.loads(
-        load_fixture("sample_warnings.json", "nina")
+    dummy_response: list[dict[str, Any]] = load_json_array_fixture(
+        "sample_warnings.json", "nina"
     )
 
     dummy_response_details: dict[str, Any] = load_json_object_fixture(
