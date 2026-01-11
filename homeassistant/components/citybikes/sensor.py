@@ -5,13 +5,15 @@ from __future__ import annotations
 import asyncio
 from datetime import timedelta
 import logging
-import typing
 import sys
 
 import aiohttp
 from citybikes import __version__ as CITYBIKES_CLIENT_VERSION
 from citybikes.asyncio import Client as CitybikesClient
-import voluptuous as vol
+from citybikes.model import (
+    Network as CitybikesNetworkModel,
+    Station as CitybikesStationModel,
+)
 
 from homeassistant.components.sensor import ENTITY_ID_FORMAT, SensorEntity
 from homeassistant.config_entries import ConfigEntry
@@ -27,7 +29,6 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import PlatformNotReady
-from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity import async_generate_entity_id
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.event import async_track_time_interval
@@ -83,7 +84,7 @@ async def async_setup_entry(
     latitude = config_entry.data.get(CONF_LATITUDE, hass.config.latitude)
     longitude = config_entry.data.get(CONF_LONGITUDE, hass.config.longitude)
     network_id = config_entry.data[CONF_NETWORK]
-    stations_list = set(config_entry.data.get(CONF_STATIONS_LIST, []))
+    stations_list = set(config_entry.data.get(CONF_STATIONS_LIST, []) or [])
     radius = config_entry.data.get(CONF_RADIUS, 0)
     name = config_entry.data.get(CONF_NAME)
     if hass.config.units is US_CUSTOMARY_SYSTEM:
@@ -100,11 +101,14 @@ async def async_setup_entry(
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_CLOSE, _async_close_client)
 
     # Create a single instance of CityBikesNetworks.
-    networks = hass.data.setdefault(CITYBIKES_NETWORKS, CityBikesNetworks(hass))
+    networks: CityBikesNetworks = hass.data.setdefault(
+        CITYBIKES_NETWORKS, CityBikesNetworks(hass)
+    )
 
     if not network_id:
         network_id = await networks.get_closest_network_id(latitude, longitude)
 
+    network: CityBikesNetwork
     if network_id not in hass.data[PLATFORM][MONITORED_NETWORKS]:
         network = CityBikesNetwork(hass, network_id)
         hass.data[PLATFORM][MONITORED_NETWORKS][network_id] = network
@@ -159,12 +163,12 @@ class CityBikesNetworks:
             self.networks_loading.release()
         return self.networks
 
-    async def get_closest_network_id(self, latitude, longitude):
+    async def get_closest_network_id(self, latitude, longitude) -> str:
         """Return the id of the network closest to provided location."""
         await self.load_networks()
         if self.networks is None:
             raise PlatformNotReady
-        result = None
+        result: str | None = None
         minimum_dist = None
         for network in self.networks:
             network_latitude = network.location.latitude
@@ -175,6 +179,14 @@ class CityBikesNetworks:
             if dist is not None and (minimum_dist is None or dist < minimum_dist):
                 minimum_dist = dist
                 result = network.id
+        # should not be possible, but this satisfies the type checker
+        if result is None:
+            _LOGGER.error(
+                "Unable to find a CityBikes network close to the provided location lat=%s, lon=%s",
+                str(latitude),
+                str(longitude),
+            )
+            raise ValueError("No CityBikes networks found")
         return result
 
 
@@ -185,15 +197,17 @@ class CityBikesNetwork:
         """Initialize the network object."""
         self.hass = hass
         self.network_id = network_id
-        self.stations: list[dict[str, typing.Any]] = []
+        self.stations: list[CitybikesStationModel] = []
         self.ready = asyncio.Event()
-        self.client = hass.data[PLATFORM][DATA_CLIENT]
+        self.client: CitybikesClient = hass.data[PLATFORM][DATA_CLIENT]
 
     async def async_refresh(self, now=None) -> None:
         """Refresh the state of the network."""
         _LOGGER.debug("Refreshing CityBikes network %s", self.network_id)
         try:
-            network = await self.client.network(uid=self.network_id).fetch()
+            network: CitybikesNetworkModel = await self.client.network(
+                uid=self.network_id
+            ).fetch()
         except aiohttp.ClientError as err:
             if now is None:
                 raise PlatformNotReady from err
