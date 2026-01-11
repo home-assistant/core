@@ -9,6 +9,7 @@ from aiontfy.exceptions import (
     NtfyUnauthorizedAuthenticationError,
 )
 import pytest
+import voluptuous as vol
 from yarl import URL
 
 from homeassistant.components import camera, image, media_source
@@ -137,15 +138,35 @@ async def test_send_message_exception(
 
 
 @pytest.mark.parametrize(
-    ("payload", "error_msg"),
+    ("exception", "payload", "error_msg"),
     [
         (
+            ServiceValidationError,
             {ATTR_DELAY: {"days": 1, "seconds": 30}, ATTR_CALL: "1234567890"},
             "Delayed call notifications are not supported",
         ),
         (
+            ServiceValidationError,
             {ATTR_DELAY: {"days": 1, "seconds": 30}, ATTR_EMAIL: "mail@example.org"},
             "Delayed email notifications are not supported",
+        ),
+        (
+            vol.MultipleInvalid,
+            {
+                ATTR_ATTACH: "https://example.com/Epic Sax Guy 10 Hours.mp4",
+                ATTR_ATTACH_FILE: {
+                    "media_content_id": "media-source://media_source/local/Epic Sax Guy 10 Hours.mp4",
+                    "media_content_type": "video/mp4",
+                },
+            },
+            "Only one attachment source is allowed: URL or local file",
+        ),
+        (
+            vol.MultipleInvalid,
+            {
+                ATTR_FILENAME: "Epic Sax Guy 10 Hours.mp4",
+            },
+            "Filename only allowed when attachment is provided",
         ),
     ],
 )
@@ -155,16 +176,17 @@ async def test_send_message_validation_errors(
     mock_aiontfy: AsyncMock,
     payload: dict[str, Any],
     error_msg: str,
+    exception: type[Exception],
 ) -> None:
     """Test publish message service validation errors."""
-
+    assert await async_setup_component(hass, "media_source", {})
     config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
     assert config_entry.state is ConfigEntryState.LOADED
 
-    with pytest.raises(ServiceValidationError, match=error_msg):
+    with pytest.raises(exception, match=error_msg):
         await hass.services.async_call(
             DOMAIN,
             SERVICE_PUBLISH,
