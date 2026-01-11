@@ -203,7 +203,7 @@ async def async_migrate_entry(
 
     # this is the config entry migration updating the entities unique ids
     # migrate from 2.2 to 2.3
-    if config_entry.version < 3 and config_entry.minor_version == 2:
+    if config_entry.version < 3 and config_entry.minor_version < 3:
         _migrate_entity_unique_ids(hass, config_entry.entry_id)
 
     # update the config entry

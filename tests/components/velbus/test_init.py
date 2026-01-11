@@ -147,18 +147,39 @@ async def test_migrate_config_entry_unique_id(
 
 async def test_migrate_entity_unique_id(
     hass: HomeAssistant,
-    config_entry: MockConfigEntry,
     entity_registry: er.EntityRegistry,
+    device_registry: dr.DeviceRegistry,
+    controller: MagicMock,
 ) -> None:
     """Test the migration of entity unique ids."""
     old_unique_id = "qwerty123-55"
     new_unique_id = "VMB4RYNO-qwerty123-55"
 
+    # Create config entry with version that needs migration
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_PORT: PORT_TCP, CONF_NAME: "velbus home"},
+        version=2,
+        minor_version=2,
+    )
+    config_entry.add_to_hass(hass)
+
+    # Create device with model type
+    device_entry = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        identifiers={(DOMAIN, "qwerty123")},
+        name="Test Device",
+        manufacturer="Velleman",
+        model="VMB4RYNO",
+    )
+
+    # Create entity associated with device
     entity_registry.async_get_or_create(
         SWITCH_DOMAIN,
         DOMAIN,
         old_unique_id,
         config_entry=config_entry,
+        device_id=device_entry.id,
         original_name="Living Room RelayName",
     )
 
