@@ -144,6 +144,65 @@ class SmaConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle reconfiguration of the integration."""
+        errors: dict[str, str] = {}
+        reconf_entry = self._get_reconfigure_entry()
+        suggested_values = {
+            CONF_HOST: reconf_entry.data[CONF_HOST],
+            CONF_SSL: reconf_entry.data[CONF_SSL],
+            CONF_VERIFY_SSL: reconf_entry.data[CONF_VERIFY_SSL],
+            CONF_GROUP: reconf_entry.data[CONF_GROUP],
+        }
+
+        if user_input is not None:
+            # The password is not changed during reconfiguration, that is only triggered during reauth
+            # Note to reviewer: I left out the abort if unique id configured here, since that's based on the serial
+            # number. See comments in PR for my thoughts on a potential solution.
+            errors, _ = await self._handle_user_input(
+                user_input={
+                    **reconf_entry.data,
+                    **user_input,
+                }
+            )
+
+            if not errors:
+                return self.async_update_reload_and_abort(
+                    reconf_entry,
+                    data_updates={
+                        CONF_HOST: user_input[CONF_HOST],
+                        CONF_SSL: user_input[CONF_SSL],
+                        CONF_VERIFY_SSL: user_input[CONF_VERIFY_SSL],
+                        CONF_GROUP: user_input[CONF_GROUP],
+                    },
+                )
+
+        return self.async_show_form(
+            step_id="reconfigure",
+            data_schema=self.add_suggested_values_to_schema(
+                data_schema=vol.Schema(
+                    {
+                        vol.Required(
+                            CONF_HOST, default=self._data[CONF_HOST]
+                        ): cv.string,
+                        vol.Optional(
+                            CONF_SSL, default=self._data[CONF_SSL]
+                        ): cv.boolean,
+                        vol.Optional(
+                            CONF_VERIFY_SSL, default=self._data[CONF_VERIFY_SSL]
+                        ): cv.boolean,
+                        vol.Optional(
+                            CONF_GROUP, default=self._data[CONF_GROUP]
+                        ): vol.In(GROUPS),
+                    }
+                ),
+                suggested_values=user_input or suggested_values,
+            ),
+            errors=errors,
+        )
+
     async def async_step_reauth(
         self, entry_data: Mapping[str, Any]
     ) -> ConfigFlowResult:
