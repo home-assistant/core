@@ -103,16 +103,8 @@ SENSORS: Final = (
     # Electrical Energy Information
     IndevoltSensorEntityDescription(
         key="2107",
-        generation=[1],
-        translation_key="total_ac_input_energy_gen1",
-        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
-        device_class=SensorDeviceClass.ENERGY,
-        state_class=SensorStateClass.TOTAL_INCREASING,
-    ),
-    IndevoltSensorEntityDescription(
-        key="2107",
-        generation=[2],
-        translation_key="total_ac_output_energy",
+        generation=[1, 2],
+        translation_key="total_ac_input_energy",
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
@@ -120,7 +112,7 @@ SENSORS: Final = (
     IndevoltSensorEntityDescription(
         key="2104",
         generation=[2],
-        translation_key="total_ac_input_energy",
+        translation_key="total_ac_output_energy",
         native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,

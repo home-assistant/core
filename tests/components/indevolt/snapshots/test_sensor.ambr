@@ -813,7 +813,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'total_ac_input_energy_gen1',
+    'translation_key': 'total_ac_input_energy',
     'unique_id': 'indevolt_indevolt_test_gen1_2107',
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
@@ -4322,7 +4322,7 @@
     'name': None,
     'options': dict({
       'sensor': dict({
-        'suggested_display_precision': 0,
+        'suggested_display_precision': 2,
       }),
     }),
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
@@ -4333,8 +4333,8 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'total_ac_input_energy',
-    'unique_id': 'indevolt_indevolt_test_gen2_2104',
-    'unit_of_measurement': <UnitOfEnergy.WATT_HOUR: 'Wh'>,
+    'unique_id': 'indevolt_indevolt_test_gen2_2107',
+    'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
 # name: test_sensor[2][sensor.indevolt_cms_sf2000_total_ac_input_energy-state]
@@ -4343,14 +4343,14 @@
       'device_class': 'energy',
       'friendly_name': 'INDEVOLT CMS-SF2000 Total AC input energy',
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfEnergy.WATT_HOUR: 'Wh'>,
+      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.indevolt_cms_sf2000_total_ac_input_energy',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '1500.0',
+    'state': '289.97',
   })
 # ---
 # name: test_sensor[2][sensor.indevolt_cms_sf2000_total_ac_output_energy-entry]
@@ -4378,7 +4378,7 @@
     'name': None,
     'options': dict({
       'sensor': dict({
-        'suggested_display_precision': 2,
+        'suggested_display_precision': 0,
       }),
     }),
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
@@ -4389,8 +4389,8 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'total_ac_output_energy',
-    'unique_id': 'indevolt_indevolt_test_gen2_2107',
-    'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+    'unique_id': 'indevolt_indevolt_test_gen2_2104',
+    'unit_of_measurement': <UnitOfEnergy.WATT_HOUR: 'Wh'>,
   })
 # ---
 # name: test_sensor[2][sensor.indevolt_cms_sf2000_total_ac_output_energy-state]
@@ -4399,14 +4399,14 @@
       'device_class': 'energy',
       'friendly_name': 'INDEVOLT CMS-SF2000 Total AC output energy',
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+      'unit_of_measurement': <UnitOfEnergy.WATT_HOUR: 'Wh'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.indevolt_cms_sf2000_total_ac_output_energy',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '289.97',
+    'state': '1500.0',
   })
 # ---
 # name: test_sensor[2][sensor.indevolt_cms_sf2000_working_mode-entry]
