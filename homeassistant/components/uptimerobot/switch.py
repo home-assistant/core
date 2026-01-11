@@ -4,7 +4,11 @@ from __future__ import annotations
 
 from typing import Any
 
-from pyuptimerobot import UptimeRobotAuthenticationException, UptimeRobotException
+from pyuptimerobot import (
+    UptimeRobotAuthenticationException,
+    UptimeRobotException,
+    UptimeRobotMonitor,
+)
 
 from homeassistant.components.switch import (
     SwitchDeviceClass,
@@ -18,6 +22,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from .const import API_ATTR_OK, DOMAIN
 from .coordinator import UptimeRobotConfigEntry
 from .entity import UptimeRobotEntity
+from .utils import new_device_listener
 
 # Limit the number of parallel updates to 1
 PARALLEL_UPDATES = 1
@@ -31,28 +36,23 @@ async def async_setup_entry(
     """Set up the UptimeRobot switches."""
     coordinator = entry.runtime_data
 
-    known_devices: set[int] = set()
-
-    def _check_device() -> None:
-        current_devices = {monitor.id for monitor in coordinator.data}
-        new_devices = current_devices - known_devices
-        if new_devices:
-            known_devices.update(new_devices)
-            async_add_entities(
-                UptimeRobotSwitch(
-                    coordinator,
-                    SwitchEntityDescription(
-                        key=str(monitor.id),
-                        device_class=SwitchDeviceClass.SWITCH,
-                    ),
-                    monitor=monitor,
-                )
-                for monitor in coordinator.data
-                if monitor.id in new_devices
+    def _add_new_entities(new_monitors: list[UptimeRobotMonitor]) -> None:
+        """Add entities for new monitors."""
+        entities = [
+            UptimeRobotSwitch(
+                coordinator,
+                SwitchEntityDescription(
+                    key=str(monitor.id),
+                    device_class=SwitchDeviceClass.SWITCH,
+                ),
+                monitor=monitor,
             )
+            for monitor in new_monitors
+        ]
+        if entities:
+            async_add_entities(entities)
 
-    _check_device()
-    entry.async_on_unload(coordinator.async_add_listener(_check_device))
+    entry.async_on_unload(new_device_listener(coordinator, _add_new_entities))
 
 
 class UptimeRobotSwitch(UptimeRobotEntity, SwitchEntity):

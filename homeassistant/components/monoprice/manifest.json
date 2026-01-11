@@ -4,7 +4,8 @@
   "codeowners": ["@etsinko", "@OnFreund"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/monoprice",
+  "integration_type": "hub",
   "iot_class": "local_polling",
   "loggers": ["pymonoprice"],
-  "requirements": ["pymonoprice==0.4"]
+  "requirements": ["pymonoprice==0.5"]
 }

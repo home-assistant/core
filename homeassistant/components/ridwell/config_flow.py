@@ -9,11 +9,16 @@ from aioridwell import async_get_client
 from aioridwell.errors import InvalidCredentialsError, RidwellError
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import ConfigEntry, ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
-from homeassistant.helpers import aiohttp_client, config_validation as cv
+from homeassistant.core import callback
+from homeassistant.helpers import aiohttp_client, config_validation as cv, selector
+from homeassistant.helpers.schema_config_entry_flow import (
+    SchemaFlowFormStep,
+    SchemaOptionsFlowHandler,
+)
 
-from .const import DOMAIN, LOGGER
+from .const import CALENDAR_TITLE_OPTIONS, CONF_CALENDAR_TITLE, DOMAIN, LOGGER
 
 STEP_REAUTH_CONFIRM_DATA_SCHEMA = vol.Schema(
     {
@@ -27,6 +32,24 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
         vol.Required(CONF_PASSWORD): cv.string,
     }
 )
+
+OPTIONS_SCHEMA = vol.Schema(
+    {
+        vol.Optional(CONF_CALENDAR_TITLE): selector.SelectSelector(
+            selector.SelectSelectorConfig(
+                options=CALENDAR_TITLE_OPTIONS,
+                multiple=False,
+                mode=selector.SelectSelectorMode.LIST,
+                translation_key=CONF_CALENDAR_TITLE,
+            ),
+        )
+    }
+)
+
+
+OPTIONS_FLOW = {
+    "init": SchemaFlowFormStep(OPTIONS_SCHEMA),
+}
 
 
 class RidwellConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -80,6 +103,23 @@ class RidwellConfigFlow(ConfigFlow, domain=DOMAIN):
             title=self._username,
             data={CONF_USERNAME: self._username, CONF_PASSWORD: self._password},
         )
+
+    @staticmethod
+    @callback
+    def async_get_options_flow(
+        config_entry: ConfigEntry,
+    ) -> SchemaOptionsFlowHandler:
+        """Get options flow for this handler."""
+        try:
+            schema_options_flow_handler = SchemaOptionsFlowHandler(
+                config_entry, OPTIONS_FLOW
+            )
+        except SystemError as err:
+            LOGGER.error("Unknown System error: %s", err)
+        except RidwellError as err:
+            LOGGER.error("Unknown Ridwell error: %s", err)
+
+        return schema_options_flow_handler
 
     async def async_step_reauth(
         self, entry_data: Mapping[str, Any]

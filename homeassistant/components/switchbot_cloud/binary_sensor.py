@@ -52,6 +52,7 @@ MOVE_DETECTED_DESCRIPTION = SwitchBotCloudBinarySensorEntityDescription(
     value_fn=(
         lambda data: data.get("moveDetected") is True
         or data.get("detectionState") == "DETECTED"
+        or data.get("detected") is True
     ),
 )
 
@@ -108,6 +109,7 @@ BINARY_SENSOR_DESCRIPTIONS_BY_DEVICE_TYPES = {
         IS_LIGHT_DESCRIPTION,
         MOVE_DETECTED_DESCRIPTION,
     ),
+    "Presence Sensor": (MOVE_DETECTED_DESCRIPTION,),
 }
 
 
@@ -145,16 +147,16 @@ class SwitchBotCloudBinarySensor(SwitchBotCloudEntity, BinarySensorEntity):
         self.entity_description = description
         self._attr_unique_id = f"{device.device_id}_{description.key}"
 
-    @property
-    def is_on(self) -> bool | None:
+    def _set_attributes(self) -> None:
         """Set attributes from coordinator data."""
         if not self.coordinator.data:
-            return None
+            return
 
         if self.entity_description.value_fn:
-            return self.entity_description.value_fn(self.coordinator.data)
+            self._attr_is_on = self.entity_description.value_fn(self.coordinator.data)
+            return
 
-        return (
+        self._attr_is_on = (
             self.coordinator.data.get(self.entity_description.key)
             == self.entity_description.on_value
         )

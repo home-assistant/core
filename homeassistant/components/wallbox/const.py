@@ -3,7 +3,7 @@
 from enum import StrEnum
 
 DOMAIN = "wallbox"
-UPDATE_INTERVAL = 60
+UPDATE_INTERVAL = 90
 
 BIDIRECTIONAL_MODEL_PREFIXES = ["QS"]
 
@@ -47,6 +47,12 @@ CHARGER_CONNECTIONS = "connections"
 CHARGER_ECO_SMART_KEY = "ecosmart"
 CHARGER_ECO_SMART_STATUS_KEY = "enabled"
 CHARGER_ECO_SMART_MODE_KEY = "mode"
+CHARGER_WALLBOX_OBJECT_KEY = "wallbox"
+
+CHARGER_JWT_TOKEN = "jwtToken"
+CHARGER_JWT_REFRESH_TOKEN = "jwtRefreshToken"
+CHARGER_JWT_TTL = "jwtTokenTtl"
+CHARGER_JWT_REFRESH_TTL = "jwtRefreshTokenTtl"
 
 
 class ChargerStatus(StrEnum):

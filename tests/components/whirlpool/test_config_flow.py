@@ -210,6 +210,7 @@ async def test_no_appliances_flow(
     mock_appliances_manager_api.return_value.aircons = []
     mock_appliances_manager_api.return_value.washers = []
     mock_appliances_manager_api.return_value.dryers = []
+    mock_appliances_manager_api.return_value.ovens = []
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], CONFIG_INPUT | {CONF_REGION: region[0], CONF_BRAND: brand[0]}
     )

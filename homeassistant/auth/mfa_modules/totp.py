@@ -34,6 +34,9 @@ INPUT_FIELD_CODE = "code"
 
 DUMMY_SECRET = "FPPTH34D4E3MI2HG"
 
+GOOGLE_AUTHENTICATOR_URL = "https://support.google.com/accounts/answer/1066447"
+AUTHY_URL = "https://authy.com/"
+
 
 def _generate_qr_code(data: str) -> str:
     """Generate a base64 PNG string represent QR Code image of data."""
@@ -229,6 +232,8 @@ class TotpSetupFlow(SetupFlow[TotpAuthModule]):
                 "code": self._ota_secret,
                 "url": self._url,
                 "qr_code": self._image,
+                "google_authenticator_url": GOOGLE_AUTHENTICATOR_URL,
+                "authy_url": AUTHY_URL,
             },
             errors=errors,
         )

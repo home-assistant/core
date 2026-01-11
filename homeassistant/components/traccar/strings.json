@@ -1,11 +1,5 @@
 {
   "config": {
-    "step": {
-      "user": {
-        "title": "Set up Traccar Client",
-        "description": "Are you sure you want to set up Traccar Client?"
-      }
-    },
     "abort": {
       "cloud_not_connected": "[%key:common::config_flow::abort::cloud_not_connected%]",
       "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]",
@@ -13,6 +7,12 @@
     },
     "create_entry": {
       "default": "To send events to Home Assistant, you will need to set up the webhook feature in Traccar Client.\n\nUse the following URL: `{webhook_url}`\n\nSee [the documentation]({docs_url}) for further details."
+    },
+    "step": {
+      "user": {
+        "description": "Are you sure you want to set up Traccar Client?",
+        "title": "Set up Traccar Client"
+      }
     }
   }
 }

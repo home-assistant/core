@@ -6,6 +6,7 @@ from syrupy.assertion import SnapshotAssertion
 from tuya_sharing import CustomerDevice, Manager
 
 from homeassistant.components.tuya.const import DOMAIN
+from homeassistant.components.tuya.diagnostics import _REDACTED_DPCODES
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
@@ -65,3 +66,11 @@ async def test_fixtures_valid(hass: HomeAssistant) -> None:
             assert key not in details, (
                 f"Please remove data[`'{key}']` from {device_code}.json"
             )
+        if "status" in details:
+            statuses = details["status"]
+            for key in statuses:
+                if key in _REDACTED_DPCODES:
+                    assert statuses[key] == "**REDACTED**", (
+                        f"Please mark `data['status']['{key}']` as `**REDACTED**`"
+                        f" in {device_code}.json"
+                    )

@@ -1,6 +1,6 @@
 """The climate tests for the tado platform."""
 
-from collections.abc import AsyncGenerator
+from collections.abc import Generator
 from unittest.mock import patch
 
 from PyTado.interface.api.my_tado import TadoZone
@@ -19,45 +19,37 @@ from homeassistant.const import ATTR_ENTITY_ID, ATTR_TEMPERATURE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
-from .util import async_init_integration
-
 from tests.common import MockConfigEntry, snapshot_platform
 
 
 @pytest.fixture(autouse=True)
-def setup_platforms() -> AsyncGenerator[None]:
+def setup_platforms() -> Generator[None]:
     """Set up the platforms for the tests."""
     with patch("homeassistant.components.tado.PLATFORMS", [Platform.CLIMATE]):
         yield
 
 
+@pytest.mark.usefixtures("init_integration")
 async def test_entities(
     hass: HomeAssistant, entity_registry: er.EntityRegistry, snapshot: SnapshotAssertion
 ) -> None:
     """Test creation of climate entities."""
-
-    await async_init_integration(hass)
 
     config_entry: MockConfigEntry = hass.config_entries.async_entries(DOMAIN)[0]
 
     await snapshot_platform(hass, entity_registry, snapshot, config_entry.entry_id)
 
 
+@pytest.mark.usefixtures("init_integration")
 async def test_heater_set_temperature(
     hass: HomeAssistant, snapshot: SnapshotAssertion
 ) -> None:
     """Test the set temperature of the heater."""
 
-    await async_init_integration(hass)
-
     with (
         patch(
             "homeassistant.components.tado.PyTado.interface.api.Tado.set_zone_overlay"
         ) as mock_set_state,
-        patch(
-            "homeassistant.components.tado.PyTado.interface.api.Tado.get_zone_state",
-            return_value={"setting": {"temperature": {"celsius": 22.0}}},
-        ),
     ):
         await hass.services.async_call(
             CLIMATE_DOMAIN,
@@ -80,6 +72,7 @@ async def test_heater_set_temperature(
         (HVACMode.OFF, "OFF"),
     ],
 )
+@pytest.mark.usefixtures("init_integration")
 async def test_aircon_set_hvac_mode(
     hass: HomeAssistant,
     snapshot: SnapshotAssertion,
@@ -88,14 +81,12 @@ async def test_aircon_set_hvac_mode(
 ) -> None:
     """Test the set hvac mode of the air conditioning."""
 
-    await async_init_integration(hass)
-
     with (
         patch(
-            "homeassistant.components.tado.__init__.PyTado.interface.api.Tado.set_zone_overlay"
+            "homeassistant.components.tado.PyTado.interface.api.Tado.set_zone_overlay"
         ) as mock_set_state,
         patch(
-            "homeassistant.components.tado.__init__.PyTado.interface.api.Tado.get_zone_state",
+            "homeassistant.components.tado.PyTado.interface.api.Tado.get_zone_state",
             return_value=TadoZone(
                 zone_id=1,
                 current_temp=18.7,

@@ -1,8 +1,7 @@
 set_text_overlay:
   target:
-    device:
-      integration: motioneye
     entity:
+      domain: camera
       integration: motioneye
   fields:
     left_text:
@@ -48,9 +47,8 @@ set_text_overlay:
 
 action:
   target:
-    device:
-      integration: motioneye
     entity:
+      domain: camera
       integration: motioneye
   fields:
     action:
@@ -88,7 +86,6 @@ action:
 
 snapshot:
   target:
-    device:
-      integration: motioneye
     entity:
+      domain: camera
       integration: motioneye
