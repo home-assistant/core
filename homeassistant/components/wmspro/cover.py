@@ -171,9 +171,9 @@ class WebControlProSlatRotate(WebControlProSlat):
     async def async_set_cover_tilt_position(self, **kwargs: Any) -> None:
         """Set the cover tilt position."""
         action = self._dest.action(self._tilt_action_desc)
-        rotation = 100 - percentage_to_ranged_value(
+        rotation = percentage_to_ranged_value(
             (self._min_rotation, self._max_rotation),
-            kwargs[ATTR_TILT_POSITION],
+            100 - kwargs[ATTR_TILT_POSITION],
         )
         await action(rotation=rotation)
 
