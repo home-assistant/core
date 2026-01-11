@@ -2,14 +2,15 @@
 
 from collections.abc import AsyncIterator, Callable, Coroutine
 import json
-from typing import Any, cast
+from typing import Any
 
-from aiohttp import ClientSession
 from python_dropbox_api import (
     AccountInfo,
     Auth,
     DropboxAPIClient,
+    DropboxAuthException,
     DropboxFileOrFolderNotFoundException,
+    DropboxUnknownException,
     PropertyField,
     PropertyFieldValue,
     PropertyGroup,
@@ -18,50 +19,12 @@ from python_dropbox_api import (
 
 from homeassistant.components.backup import (
     AgentBackup,
+    BackupAgentError,
     BackupNotFound,
     suggested_filename,
 )
-from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import config_entry_oauth2_flow
 
-
-class AsyncConfigEntryAuth(Auth):
-    """Provide Dropbox authentication tied to an OAuth2 based config entry."""
-
-    def __init__(
-        self,
-        websession: ClientSession,
-        oauth_session: config_entry_oauth2_flow.OAuth2Session,
-    ) -> None:
-        """Initialize AsyncConfigEntryAuth."""
-        super().__init__(websession)
-        self._oauth_session = oauth_session
-
-    async def async_get_access_token(self) -> str:
-        """Return a valid access token."""
-        await self._oauth_session.async_ensure_token_valid()
-
-        return cast(str, self._oauth_session.token["access_token"])
-
-
-class AsyncConfigFlowAuth(Auth):
-    """Provide authentication tied to a fixed token for the config flow."""
-
-    def __init__(
-        self,
-        websession: ClientSession,
-        token: str,
-    ) -> None:
-        """Initialize AsyncConfigFlowAuth."""
-        super().__init__(websession)
-        self._token = token
-
-    async def async_get_access_token(self) -> str:
-        """Return the fixed access token."""
-        return self._token
-
-
-FOLDER_NAME = "Home Assistant"
+FOLDER_PATH = "/Home Assistant"
 
 PROPERTY_TEMPLATE_NAME = "Home Assistant Backups"
 PROPERTY_TEMPLATE_DESCRIPTION = "Metadata about a Home Assistant backup."
@@ -117,13 +80,22 @@ class DropboxClient:
     async def _async_ensure_folder_exists(self) -> None:
         """Ensure the folder exists."""
         try:
-            metadata = await self._api.get_metadata(f"/{FOLDER_NAME}")
+            metadata = await self._api.get_metadata(FOLDER_PATH)
         except DropboxFileOrFolderNotFoundException:
-            await self._api.create_folder(f"/{FOLDER_NAME}")
+            try:
+                await self._api.create_folder(FOLDER_PATH)
+            except (
+                DropboxAuthException,
+                DropboxFileOrFolderNotFoundException,
+                DropboxUnknownException,
+            ) as ex:
+                raise BackupAgentError(
+                    f"Failed to create folder 'Home Assistant' in Dropbox: {ex}"
+                ) from ex
             return
 
         if not metadata.is_folder:
-            raise HomeAssistantError(
+            raise BackupAgentError(
                 "The path 'Home Assistant' exists as a file in Dropbox, but a folder is required."
             )
 
@@ -132,7 +104,7 @@ class DropboxClient:
         property_template_id = await self.async_get_property_template_id()
 
         files = await self._api.list_folder(
-            f"/{FOLDER_NAME}", include_property_groups=[property_template_id]
+            FOLDER_PATH, include_property_groups=[property_template_id]
         )
 
         backups: list[tuple[AgentBackup, str]] = []
@@ -182,7 +154,7 @@ class DropboxClient:
         file_stream = await open_stream()
 
         await self._api.upload_file(
-            f"/{FOLDER_NAME}/{filename}", file_stream, [property_group]
+            f"{FOLDER_PATH}/{filename}", file_stream, [property_group]
         )
 
     async def async_download_backup(self, backup_id: str) -> AsyncIterator[bytes]:
@@ -192,7 +164,7 @@ class DropboxClient:
         backups = await self._async_get_backups()
         for backup, filename in backups:
             if backup.backup_id == backup_id:
-                return self._api.download_file(f"/{FOLDER_NAME}/{filename}")
+                return self._api.download_file(f"{FOLDER_PATH}/{filename}")
 
         raise BackupNotFound(f"Backup {backup_id} not found")
 
@@ -203,7 +175,7 @@ class DropboxClient:
         backups = await self._async_get_backups()
         for backup, filename in backups:
             if backup.backup_id == backup_id:
-                await self._api.delete_file(f"/{FOLDER_NAME}/{filename}")
+                await self._api.delete_file(f"{FOLDER_PATH}/{filename}")
                 return
 
         raise BackupNotFound(f"Backup {backup_id} not found")

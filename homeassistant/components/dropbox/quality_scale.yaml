@@ -41,9 +41,7 @@ rules:
   docs-configuration-parameters:
     status: exempt
     comment: Integration does not have any configuration parameters.
-  docs-installation-parameters:
-    status: exempt
-    comment: Integration does not have any installation parameters.
+  docs-installation-parameters: done
   entity-unavailable:
     status: exempt
     comment: Integration does not have any entities.
@@ -64,10 +62,10 @@ rules:
     comment: Integration does not have any data to diagnose.
   discovery-update-info:
     status: exempt
-    comment: Integration does not use discovery.
+    comment: Integration is a service.
   discovery:
     status: exempt
-    comment: Integration does not use discovery.
+    comment: Integration is a service.
   docs-data-update:
     status: exempt
     comment: Integration does not update any data.

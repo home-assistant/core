@@ -9,7 +9,8 @@ from homeassistant.const import CONF_ACCESS_TOKEN, CONF_TOKEN
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.config_entry_oauth2_flow import AbstractOAuth2FlowHandler
 
-from .api import AsyncConfigFlowAuth, DropboxClient
+from .api import DropboxClient
+from .auth import AsyncConfigFlowAuth
 from .const import DOMAIN
 
 

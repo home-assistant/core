@@ -1,6 +1,7 @@
 """Backup platform for the Dropbox integration."""
 
 from collections.abc import AsyncIterator, Callable, Coroutine
+import logging
 from typing import Any
 
 from python_dropbox_api import (
@@ -19,6 +20,8 @@ from homeassistant.core import HomeAssistant, callback
 
 from . import DropboxConfigEntry
 from .const import DATA_BACKUP_AGENT_LISTENERS, DOMAIN
+
+_LOGGER = logging.getLogger(__name__)
 
 
 async def async_get_backup_agents(
