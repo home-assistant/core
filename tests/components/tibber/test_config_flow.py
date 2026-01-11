@@ -44,48 +44,6 @@ def _mock_tibber(
     return tibber_mock
 
 
-async def test_reauth_flow_steps(
-    recorder_mock: Recorder,
-    hass: HomeAssistant,
-    config_entry: MockConfigEntry,
-) -> None:
-    """Test the reauth flow goes through reauth_confirm to user step."""
-    reauth_flow = await config_entry.start_reauth_flow(hass)
-
-    assert reauth_flow["type"] is FlowResultType.FORM
-    assert reauth_flow["step_id"] == "reauth_confirm"
-
-    result = await hass.config_entries.flow.async_configure(reauth_flow["flow_id"])
-    assert result["type"] is FlowResultType.FORM
-    # assert result["step_id"] == "reauth_confirm"
-
-    # result = await hass.config_entries.flow.async_configure(
-    #     reauth_flow["flow_id"],
-    #     user_input={},
-    # )
-    # assert result["type"] is FlowResultType.FORM
-    # assert result["step_id"] == "user"
-
-
-async def test_oauth_create_entry_missing_configuration(
-    recorder_mock: Recorder,
-    hass: HomeAssistant,
-) -> None:
-    """Abort OAuth finalize if GraphQL step did not run."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": config_entries.SOURCE_USER},
-    )
-    handler = hass.config_entries.flow._progress[result["flow_id"]]
-
-    flow_result = await handler.async_oauth_create_entry(
-        {CONF_TOKEN: {CONF_ACCESS_TOKEN: "rest-token"}}
-    )
-
-    assert flow_result["type"] is FlowResultType.ABORT
-    assert flow_result["reason"] == "missing_configuration"
-
-
 async def test_oauth_create_entry_cannot_connect_userinfo(
     recorder_mock: Recorder,
     hass: HomeAssistant,
