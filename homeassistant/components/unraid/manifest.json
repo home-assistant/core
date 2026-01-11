@@ -7,6 +7,6 @@
   "integration_type": "hub",
   "iot_class": "local_polling",
   "loggers": ["unraid_api"],
-  "quality_scale": "platinum",
-  "requirements": ["unraid-api==1.2.0"]
+  "quality_scale": "bronze",
+  "requirements": ["unraid-api==1.3.1"]
 }

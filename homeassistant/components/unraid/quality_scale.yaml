@@ -100,9 +100,9 @@ rules:
 
   # Reauthentication needs to be available via the UI
   reauthentication-flow:
-    status: exempt
+    status: todo
     comment: |
-      Removed per reviewer feedback to reduce PR scope.
+      Deferred per reviewer feedback to reduce PR scope.
       Can be added in a follow-up PR.
 
   # Above 95% test coverage for all integration modules
@@ -181,7 +181,11 @@ rules:
       All entity classes use _attr_translation_key to map to icons.
 
   # Integrations should have a reconfigure flow
-  reconfiguration-flow: done
+  reconfiguration-flow:
+    status: todo
+    comment: |
+      Deferred per reviewer feedback to reduce PR scope.
+      Can be added in a follow-up PR.
 
   # Repair issues and repair flows are used when user intervention is needed
   repair-issues: done

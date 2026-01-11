@@ -5,6 +5,8 @@ from __future__ import annotations
 from datetime import UTC, datetime, timedelta
 from unittest.mock import MagicMock
 
+from unraid_api.models import ArrayDisk, Share, UPSBattery, UPSDevice, UPSPower
+
 from homeassistant.components.sensor import SensorDeviceClass, SensorStateClass
 from homeassistant.components.unraid.const import DOMAIN
 from homeassistant.components.unraid.sensor import (
@@ -19,10 +21,9 @@ from homeassistant.components.unraid.sensor import (
     UnraidUPSPowerSensorEntity,
     UnraidUPSSensorEntity,
     _format_duration,
-    _get_nested,
     _parse_uptime,
 )
-from homeassistant.const import UnitOfInformation, UnitOfTemperature
+from homeassistant.const import UnitOfInformation
 from homeassistant.helpers.device_registry import DeviceInfo
 
 from .conftest import make_storage_data, make_system_data
@@ -30,30 +31,6 @@ from .conftest import make_storage_data, make_system_data
 # =============================================================================
 # Helper Function Tests
 # =============================================================================
-
-
-class TestGetNested:
-    """Test _get_nested helper function."""
-
-    def test_get_nested_simple(self) -> None:
-        """Test _get_nested with simple path."""
-        data = {"a": {"b": {"c": 42}}}
-        assert _get_nested(data, "a", "b", "c") == 42
-
-    def test_get_nested_missing(self) -> None:
-        """Test _get_nested with missing key."""
-        data = {"a": {"b": {}}}
-        assert _get_nested(data, "a", "b", "c") is None
-
-    def test_get_nested_with_default(self) -> None:
-        """Test _get_nested with default value."""
-        data = {"a": {}}
-        assert _get_nested(data, "a", "b", "c", default="default") == "default"
-
-    def test_get_nested_not_dict(self) -> None:
-        """Test _get_nested when value is not a dict."""
-        data = {"a": 123}
-        assert _get_nested(data, "a", "b") is None
 
 
 class TestFormatDuration:
@@ -106,26 +83,20 @@ class TestParseUptime:
         """Test _parse_uptime returns formatted duration string."""
         # Boot time 1 hour, 30 minutes, 45 seconds ago
         boot_time = datetime.now(UTC) - timedelta(hours=1, minutes=30, seconds=45)
-        boot_str = boot_time.isoformat()
-        result = _parse_uptime(boot_str)
+        result = _parse_uptime(boot_time)
         # Should return formatted string like "1 hour, 30 minutes, 45 seconds"
         assert result is not None
         assert "hour" in result
         assert "minute" in result
 
-    def test_parse_uptime_z_suffix(self) -> None:
-        """Test _parse_uptime with Z suffix."""
-        # Boot time 2 hours ago with Z suffix
+    def test_parse_uptime_2_hours(self) -> None:
+        """Test _parse_uptime with 2 hours ago."""
+        # Boot time 2 hours ago
         boot_time = datetime.now(UTC) - timedelta(hours=2)
-        boot_str = boot_time.strftime("%Y-%m-%dT%H:%M:%SZ")
-        result = _parse_uptime(boot_str)
+        result = _parse_uptime(boot_time)
         # Should return formatted string containing "2 hours"
         assert result is not None
         assert "2 hours" in result
-
-    def test_parse_uptime_invalid(self) -> None:
-        """Test _parse_uptime with invalid string."""
-        assert _parse_uptime("not-a-date") is None
 
 
 # =============================================================================
@@ -155,12 +126,6 @@ class TestSystemSensorDescriptions:
         assert desc.device_class == SensorDeviceClass.DATA_SIZE
         assert desc.native_unit_of_measurement == UnitOfInformation.BYTES
         assert desc.suggested_unit_of_measurement == UnitOfInformation.GIBIBYTES
-
-    def test_cpu_temp_sensor_description(self) -> None:
-        """Test CPU temperature sensor description."""
-        desc = next(s for s in SYSTEM_SENSORS if s.key == "cpu_temp")
-        assert desc.device_class == SensorDeviceClass.TEMPERATURE
-        assert desc.native_unit_of_measurement == UnitOfTemperature.CELSIUS
 
     def test_uptime_sensor_description(self) -> None:
         """Test uptime sensor description."""
@@ -287,21 +252,6 @@ class TestSystemSensorValueFunctions:
         desc = next(s for s in SYSTEM_SENSORS if s.key == "ram_used")
         assert desc.value_fn(data) == 8589934592
 
-    def test_cpu_temp_value_fn(self) -> None:
-        """Test CPU temperature value function (average of packages)."""
-        data = make_system_data(cpu_temps=[45.0, 47.0, 49.0])
-        desc = next(s for s in SYSTEM_SENSORS if s.key == "cpu_temp")
-        result = desc.value_fn(data)
-        assert result is not None
-        assert isinstance(result, (int, float))
-        assert abs(float(result) - 47.0) < 0.01  # Average of 45, 47, 49
-
-    def test_cpu_temp_value_fn_empty(self) -> None:
-        """Test CPU temperature value function with empty temps."""
-        data = make_system_data(cpu_temps=[])
-        desc = next(s for s in SYSTEM_SENSORS if s.key == "cpu_temp")
-        assert desc.value_fn(data) is None
-
     def test_notifications_value_fn(self) -> None:
         """Test notifications value function."""
         data = make_system_data(notifications_unread=5)
@@ -328,7 +278,9 @@ class TestStorageSensorValueFunctions:
         """Test array usage value function."""
         data = make_storage_data(
             array_state="STARTED",
-            capacity={"kilobytes": {"total": 1000, "used": 500, "free": 500}},
+            capacity_total=1000,
+            capacity_used=500,
+            capacity_free=500,
         )
         desc = next(s for s in STORAGE_SENSORS if s.key == "array_usage")
         assert desc.value_fn(data) == 50.0
@@ -337,7 +289,9 @@ class TestStorageSensorValueFunctions:
         """Test array used value function (returns kilobytes)."""
         data = make_storage_data(
             array_state="STARTED",
-            capacity={"kilobytes": {"total": 1000000, "used": 500000, "free": 500000}},
+            capacity_total=1000000,
+            capacity_used=500000,
+            capacity_free=500000,
         )
         desc = next(s for s in STORAGE_SENSORS if s.key == "array_used")
         assert desc.value_fn(data) == 500000
@@ -348,25 +302,25 @@ class TestDiskSensorValueFunctions:
 
     def test_disk_usage_value_fn(self) -> None:
         """Test disk usage value function."""
-        disk = {"id": "disk1", "fsSize": 1000, "fsUsed": 500}
+        disk = ArrayDisk(id="disk1", fsSize=1000, fsUsed=500)
         desc = next(s for s in DISK_SENSORS if s.key == "usage")
         assert desc.value_fn(disk) == 50.0
 
     def test_disk_usage_value_fn_no_size(self) -> None:
         """Test disk usage value function with no size."""
-        disk = {"id": "disk1", "fsSize": 0, "fsUsed": 0}
+        disk = ArrayDisk(id="disk1", fsSize=0, fsUsed=0)
         desc = next(s for s in DISK_SENSORS if s.key == "usage")
         assert desc.value_fn(disk) is None
 
     def test_disk_used_value_fn(self) -> None:
         """Test disk used value function."""
-        disk = {"id": "disk1", "fsUsed": 500000}
+        disk = ArrayDisk(id="disk1", fsUsed=500000)
         desc = next(s for s in DISK_SENSORS if s.key == "used")
         assert desc.value_fn(disk) == 500000
 
     def test_disk_temp_value_fn(self) -> None:
         """Test disk temperature value function."""
-        disk = {"id": "disk1", "temp": 35}
+        disk = ArrayDisk(id="disk1", temp=35)
         desc = next(s for s in DISK_SENSORS if s.key == "temp")
         assert desc.value_fn(disk) == 35
 
@@ -375,24 +329,21 @@ class TestShareSensorValueFunctions:
     """Test share sensor value functions."""
 
     def test_share_usage_value_fn(self) -> None:
-        """Test share usage value function.
-
-        Note: API returns size=0, so we calculate total from used + free.
-        """
+        """Test share usage value function."""
         # 250 used, 750 free = 1000 total, 25% usage
-        share = {"id": "share1", "size": 0, "used": 250, "free": 750}
+        share = Share(id="share1", name="Test", used=250, free=750)
         desc = next(s for s in SHARE_SENSORS if s.key == "usage")
         assert desc.value_fn(share) == 25.0
 
     def test_share_usage_value_fn_no_data(self) -> None:
         """Test share usage value function with no data."""
-        share = {"id": "share1", "size": 0, "used": 0, "free": 0}
+        share = Share(id="share1", name="Test", used=0, free=0)
         desc = next(s for s in SHARE_SENSORS if s.key == "usage")
         assert desc.value_fn(share) is None
 
     def test_share_used_value_fn(self) -> None:
         """Test share used value function."""
-        share = {"id": "share1", "used": 250000}
+        share = Share(id="share1", name="Test", used=250000)
         desc = next(s for s in SHARE_SENSORS if s.key == "used")
         assert desc.value_fn(share) == 250000
 
@@ -402,19 +353,21 @@ class TestUPSSensorValueFunctions:
 
     def test_ups_battery_value_fn(self) -> None:
         """Test UPS battery value function."""
-        ups = {"id": "ups1", "battery": {"chargeLevel": 85}}
+        ups = UPSDevice(id="ups1", name="UPS", battery=UPSBattery(chargeLevel=85))
         desc = next(s for s in UPS_SENSORS if s.key == "battery")
         assert desc.value_fn(ups) == 85
 
     def test_ups_load_value_fn(self) -> None:
         """Test UPS load value function."""
-        ups = {"id": "ups1", "power": {"loadPercentage": 45.5}}
+        ups = UPSDevice(id="ups1", name="UPS", power=UPSPower(loadPercentage=45.5))
         desc = next(s for s in UPS_SENSORS if s.key == "load")
         assert desc.value_fn(ups) == 45.5
 
     def test_ups_runtime_value_fn(self) -> None:
         """Test UPS runtime value function (returns formatted string)."""
-        ups = {"id": "ups1", "battery": {"estimatedRuntime": 3661}}
+        ups = UPSDevice(
+            id="ups1", name="UPS", battery=UPSBattery(estimatedRuntime=3661)
+        )
         desc = next(s for s in UPS_SENSORS if s.key == "runtime")
         # 3661 seconds = 1 hour, 1 minute, 1 second
         assert desc.value_fn(ups) == "1 hour, 1 minute, 1 second"
@@ -476,7 +429,7 @@ class TestUnraidDiskSensorEntity:
 
     def test_disk_entity_creation(self) -> None:
         """Test disk sensor entity creation."""
-        disk = {"id": "disk1", "name": "Disk 1", "fsSize": 1000, "fsUsed": 500}
+        disk = ArrayDisk(id="disk1", name="Disk 1", fsSize=1000, fsUsed=500)
         coordinator = MagicMock()
         coordinator.data = make_storage_data(disks=[disk])
         coordinator.last_update_success = True
@@ -505,10 +458,9 @@ class TestUnraidShareSensorEntity:
     def test_share_entity_creation(self) -> None:
         """Test share sensor entity creation.
 
-        Note: API returns size=0, so we calculate total from used + free.
         250 used + 750 free = 1000 total = 25% usage.
         """
-        share = {"id": "share1", "name": "Media", "size": 0, "used": 250, "free": 750}
+        share = Share(id="share1", name="Media", used=250, free=750)
         coordinator = MagicMock()
         coordinator.data = make_storage_data(shares=[share])
         coordinator.last_update_success = True
@@ -536,7 +488,7 @@ class TestUnraidUPSSensorEntity:
 
     def test_ups_entity_creation(self) -> None:
         """Test UPS sensor entity creation."""
-        ups = {"id": "ups1", "name": "APC", "battery": {"chargeLevel": 85}}
+        ups = UPSDevice(id="ups1", name="APC", battery=UPSBattery(chargeLevel=85))
         coordinator = MagicMock()
         coordinator.data = make_system_data(ups_devices=[ups])
         coordinator.last_update_success = True
@@ -568,11 +520,7 @@ class TestUnraidUPSPowerSensorEntity:
         Power = load_percentage * nominal_power / 100
         12% load * 800W nominal = 96W
         """
-        ups = {
-            "id": "ups1",
-            "name": "APC",
-            "power": {"loadPercentage": 12.0},
-        }
+        ups = UPSDevice(id="ups1", name="APC", power=UPSPower(loadPercentage=12.0))
         coordinator = MagicMock()
         coordinator.data = make_system_data(ups_devices=[ups])
         coordinator.last_update_success = True
@@ -596,7 +544,7 @@ class TestUnraidUPSPowerSensorEntity:
 
     def test_ups_power_entity_no_load(self) -> None:
         """Test UPS power sensor returns None when load is unavailable."""
-        ups = {"id": "ups1", "name": "APC", "power": {}}
+        ups = UPSDevice(id="ups1", name="APC", power=UPSPower())
         coordinator = MagicMock()
         coordinator.data = make_system_data(ups_devices=[ups])
         coordinator.last_update_success = True

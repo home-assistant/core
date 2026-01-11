@@ -1,37 +1,18 @@
 {
   "config": {
     "abort": {
-      "already_configured": "This Unraid server is already configured.",
-      "reconfigure_failed": "Reconfiguration failed - entry not found.",
-      "reconfigure_successful": "Reconfiguration successful."
+      "already_configured": "This Unraid server is already configured."
     },
     "error": {
       "already_configured": "This Unraid server is already configured.",
       "cannot_connect": "Cannot connect. Verify the IP address or hostname is correct and reachable.",
       "check_port": "Verify the port number matches your Unraid server configuration.",
       "invalid_auth": "Invalid API key or insufficient permissions. Ensure the key has ADMIN role.",
-      "invalid_hostname": "Invalid hostname or IP address format.",
-      "required": "This field is required.",
+      "no_server_uuid": "Could not retrieve server UUID. Ensure your Unraid server is properly configured.",
       "unknown": "Unexpected error occurred. Check Home Assistant logs for details.",
       "unsupported_version": "Unraid version not supported. Minimum required: Unraid 7.2.0 (API v4.21.0)."
     },
     "step": {
-      "reconfigure": {
-        "data": {
-          "api_key": "API Key",
-          "host": "Server IP or Hostname",
-          "http_port": "HTTP Port",
-          "https_port": "HTTPS Port"
-        },
-        "data_description": {
-          "api_key": "API key with ADMIN role permissions",
-          "host": "IP address or hostname of your Unraid server",
-          "http_port": "HTTP port (default: 80). Change only if modified in Unraid Settings → Management Access.",
-          "https_port": "HTTPS port (default: 443). Change only if modified in Unraid Settings → Management Access."
-        },
-        "description": "Update the connection settings for your Unraid server.",
-        "title": "Reconfigure Unraid"
-      },
       "user": {
         "data": {
           "api_key": "API Key",
@@ -52,6 +33,12 @@
   },
   "entity": {
     "sensor": {
+      "array_disks": {
+        "name": "Array disks"
+      },
+      "array_free": {
+        "name": "Array free"
+      },
       "array_state": {
         "name": "Array state"
       },
@@ -64,6 +51,9 @@
       "array_used": {
         "name": "Array used"
       },
+      "cache_disks": {
+        "name": "Cache disks"
+      },
       "cpu_power": {
         "name": "CPU power"
       },
@@ -73,14 +63,29 @@
       "cpu_usage": {
         "name": "CPU usage"
       },
+      "disk_free": {
+        "name": "Disk {disk_name} free"
+      },
       "disk_temp": {
         "name": "Disk {disk_name} temperature"
+      },
+      "disk_total": {
+        "name": "Disk {disk_name} total"
       },
       "disk_usage": {
         "name": "Disk {disk_name} usage"
       },
       "disk_used": {
         "name": "Disk {disk_name} used"
+      },
+      "docker_containers": {
+        "name": "Docker containers"
+      },
+      "docker_containers_running": {
+        "name": "Docker containers running"
+      },
+      "flash_total": {
+        "name": "Flash device total"
       },
       "flash_usage": {
         "name": "Flash device usage"
@@ -91,8 +96,29 @@
       "notifications": {
         "name": "Active notifications"
       },
+      "notifications_alert": {
+        "name": "Alert notifications"
+      },
+      "notifications_warning": {
+        "name": "Warning notifications"
+      },
+      "parity_disks": {
+        "name": "Parity disks"
+      },
+      "parity_errors": {
+        "name": "Parity check errors"
+      },
       "parity_progress": {
         "name": "Parity check progress"
+      },
+      "parity_speed": {
+        "name": "Parity check speed"
+      },
+      "ram_available": {
+        "name": "RAM available"
+      },
+      "ram_free": {
+        "name": "RAM free"
       },
       "ram_total": {
         "name": "RAM total"
@@ -109,11 +135,29 @@
       "share_used": {
         "name": "Share {share_name} used"
       },
+      "shares": {
+        "name": "User shares"
+      },
+      "swap_total": {
+        "name": "Swap total"
+      },
+      "swap_usage": {
+        "name": "Swap usage"
+      },
+      "swap_used": {
+        "name": "Swap used"
+      },
       "ups_battery": {
         "name": "UPS {ups_name} battery"
       },
+      "ups_input_voltage": {
+        "name": "UPS {ups_name} input voltage"
+      },
       "ups_load": {
         "name": "UPS {ups_name} load"
+      },
+      "ups_output_voltage": {
+        "name": "UPS {ups_name} output voltage"
       },
       "ups_power": {
         "name": "UPS {ups_name} power"
@@ -123,26 +167,12 @@
       },
       "uptime": {
         "name": "Uptime"
-      }
-    }
-  },
-  "options": {
-    "step": {
-      "init": {
-        "data": {
-          "storage_interval": "Storage polling interval (seconds)",
-          "system_interval": "System polling interval (seconds)",
-          "ups_capacity_va": "UPS Capacity (VA)",
-          "ups_nominal_power": "UPS Nominal Power (W)"
-        },
-        "data_description": {
-          "storage_interval": "How often to poll disks and shares (60-3600 seconds). Higher values prevent disk spin-up.",
-          "system_interval": "How often to poll CPU, memory, Docker, VMs (10-300 seconds)",
-          "ups_capacity_va": "Optional. Your UPS VA rating (for example, 1000 for a 1000VA UPS). Shown in sensor attributes for reference.",
-          "ups_nominal_power": "Required for UPS Power sensor. Enter the Watts value from your UPS specs. If Unraid only shows VA, check your UPS label or estimate using VA × 0.6."
-        },
-        "description": "Adjust polling intervals and UPS settings. Set UPS Nominal Power to enable power consumption tracking for the Energy Dashboard.",
-        "title": "Unraid Options"
+      },
+      "vms": {
+        "name": "Virtual machines"
+      },
+      "vms_running": {
+        "name": "Virtual machines running"
       }
     }
   }

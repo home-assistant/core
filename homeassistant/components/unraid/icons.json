@@ -53,11 +53,26 @@
       "active_notifications": {
         "default": "mdi:bell"
       },
+      "array_disks": {
+        "default": "mdi:harddisk"
+      },
+      "array_free": {
+        "default": "mdi:database"
+      },
       "array_state": {
         "default": "mdi:harddisk"
       },
+      "array_total": {
+        "default": "mdi:database"
+      },
       "array_usage": {
         "default": "mdi:database"
+      },
+      "array_used": {
+        "default": "mdi:database"
+      },
+      "cache_disks": {
+        "default": "mdi:harddisk"
       },
       "cpu_power": {
         "default": "mdi:lightning-bolt"
@@ -68,29 +83,101 @@
       "cpu_usage": {
         "default": "mdi:cpu-64-bit"
       },
+      "disk_free": {
+        "default": "mdi:harddisk"
+      },
       "disk_temperature": {
         "default": "mdi:thermometer"
+      },
+      "disk_total": {
+        "default": "mdi:harddisk"
       },
       "disk_usage": {
         "default": "mdi:harddisk"
       },
+      "disk_used": {
+        "default": "mdi:harddisk"
+      },
+      "docker_containers": {
+        "default": "mdi:docker"
+      },
+      "docker_containers_running": {
+        "default": "mdi:docker"
+      },
+      "flash_total": {
+        "default": "mdi:usb-flash-drive"
+      },
       "flash_usage": {
         "default": "mdi:usb-flash-drive"
+      },
+      "flash_used": {
+        "default": "mdi:usb-flash-drive"
+      },
+      "notifications": {
+        "default": "mdi:bell"
+      },
+      "notifications_alert": {
+        "default": "mdi:bell-alert"
+      },
+      "notifications_warning": {
+        "default": "mdi:bell-ring"
+      },
+      "parity_disks": {
+        "default": "mdi:shield-check"
+      },
+      "parity_errors": {
+        "default": "mdi:alert-circle"
       },
       "parity_progress": {
         "default": "mdi:progress-check"
       },
+      "parity_speed": {
+        "default": "mdi:speedometer"
+      },
+      "ram_available": {
+        "default": "mdi:memory"
+      },
+      "ram_free": {
+        "default": "mdi:memory"
+      },
+      "ram_total": {
+        "default": "mdi:memory"
+      },
       "ram_usage": {
+        "default": "mdi:memory"
+      },
+      "ram_used": {
         "default": "mdi:memory"
       },
       "share_usage": {
         "default": "mdi:folder-network"
       },
+      "share_used": {
+        "default": "mdi:folder-network"
+      },
+      "shares": {
+        "default": "mdi:folder-network"
+      },
+      "swap_total": {
+        "default": "mdi:swap-horizontal"
+      },
+      "swap_usage": {
+        "default": "mdi:swap-horizontal"
+      },
+      "swap_used": {
+        "default": "mdi:swap-horizontal"
+      },
       "ups_battery": {
         "default": "mdi:battery"
       },
+      "ups_input_voltage": {
+        "default": "mdi:flash"
+      },
       "ups_load": {
         "default": "mdi:gauge"
+      },
+      "ups_output_voltage": {
+        "default": "mdi:flash"
       },
       "ups_power": {
         "default": "mdi:lightning-bolt"
@@ -100,6 +187,12 @@
       },
       "uptime": {
         "default": "mdi:clock-outline"
+      },
+      "vms": {
+        "default": "mdi:desktop-tower"
+      },
+      "vms_running": {
+        "default": "mdi:desktop-tower"
       }
     },
     "switch": {

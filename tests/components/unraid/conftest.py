@@ -9,6 +9,20 @@ from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+from unraid_api.models import (
+    ArrayCapacity,
+    ArrayDisk,
+    CapacityKilobytes,
+    DockerContainer,
+    NotificationOverview,
+    NotificationOverviewCounts,
+    ParityCheck,
+    Share,
+    SystemMetrics,
+    UnraidArray,
+    UPSDevice,
+    VmDomain,
+)
 
 from homeassistant.components.unraid.const import DOMAIN
 from homeassistant.components.unraid.coordinator import (
@@ -32,71 +46,64 @@ def make_system_data(
     memory_used: int | None = None,
     memory_total: int | None = None,
     memory_percent: float | None = None,
-    cpu_temps: list[float] | None = None,
-    cpu_power: float | None = None,
     uptime: datetime | None = None,
-    ups_devices: list[dict[str, Any]] | None = None,
-    containers: list[dict[str, Any]] | None = None,
-    vms: list[dict[str, Any]] | None = None,
+    ups_devices: list[UPSDevice] | None = None,
+    containers: list[DockerContainer] | None = None,
+    vms: list[VmDomain] | None = None,
     notifications_unread: int = 0,
 ) -> UnraidSystemData:
-    """Create a UnraidSystemData instance for testing using raw dicts.
-
-    Note: API returns: cpu { packages { temp, totalPower } } where packages is
-    a dict like {'temp': [38, 40], 'totalPower': 1.63}.
-    - temp: array of per-package temperatures
-    - totalPower: single float for total CPU power
-    """
-    # Build packages dict matching API structure
-    packages: dict[str, Any] = {}
-    if cpu_temps is not None:
-        packages["temp"] = cpu_temps
-    if cpu_power is not None:
-        packages["totalPower"] = cpu_power
-
+    """Create a UnraidSystemData instance for testing using Pydantic models."""
     return UnraidSystemData(
-        info={
-            "cpu": {"packages": packages},
-            "os": {"uptime": uptime.isoformat() if uptime else None},
-        },
-        metrics={
-            "cpu": {"percentTotal": cpu_percent},
-            "memory": {
-                "total": memory_total,
-                "used": memory_used,
-                "percentTotal": memory_percent,
-            },
-        },
-        ups_devices=ups_devices or [],
+        metrics=SystemMetrics(
+            cpu_percent=cpu_percent,
+            memory_percent=memory_percent,
+            memory_total=memory_total,
+            memory_used=memory_used,
+            uptime=uptime,
+        ),
         containers=containers or [],
         vms=vms or [],
-        notifications_unread=notifications_unread,
+        ups_devices=ups_devices or [],
+        notifications=NotificationOverview(
+            unread=NotificationOverviewCounts(total=notifications_unread),
+        ),
     )
 
 
 def make_storage_data(
     array_state: str | None = None,
-    capacity: dict[str, Any] | None = None,
-    parity_status: dict[str, Any] | None = None,
-    disks: list[dict[str, Any]] | None = None,
-    parities: list[dict[str, Any]] | None = None,
-    caches: list[dict[str, Any]] | None = None,
-    shares: list[dict[str, Any]] | None = None,
-    boot: dict[str, Any] | None = None,
+    capacity_total: int = 0,
+    capacity_used: int = 0,
+    capacity_free: int = 0,
+    parity_status: str | None = None,
+    parity_progress: float | None = None,
+    disks: list[ArrayDisk] | None = None,
+    parities: list[ArrayDisk] | None = None,
+    caches: list[ArrayDisk] | None = None,
+    shares: list[Share] | None = None,
+    boot: ArrayDisk | None = None,
 ) -> UnraidStorageData:
-    """Create a UnraidStorageData instance for testing using raw dicts."""
-    # Provide default capacity if not specified and array_state is set
-    if capacity is None and array_state is not None:
-        capacity = {"kilobytes": {"total": 1000, "used": 500, "free": 500}}
+    """Create a UnraidStorageData instance for testing using Pydantic models."""
     return UnraidStorageData(
-        array_state=array_state,
-        capacity=capacity,
-        parity_status=parity_status,
-        disks=disks or [],
-        parities=parities or [],
-        caches=caches or [],
+        array=UnraidArray(
+            state=array_state,
+            capacity=ArrayCapacity(
+                kilobytes=CapacityKilobytes(
+                    total=capacity_total,
+                    used=capacity_used,
+                    free=capacity_free,
+                )
+            ),
+            parityCheckStatus=ParityCheck(
+                status=parity_status,
+                progress=parity_progress,
+            ),
+            disks=disks or [],
+            parities=parities or [],
+            caches=caches or [],
+            boot=boot,
+        ),
         shares=shares or [],
-        boot=boot,
     )
 
 

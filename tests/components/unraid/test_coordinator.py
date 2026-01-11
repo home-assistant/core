@@ -2,11 +2,27 @@
 
 from __future__ import annotations
 
-from datetime import timedelta
+from datetime import UTC, datetime, timedelta
 from unittest.mock import AsyncMock, MagicMock
 
-import aiohttp
 import pytest
+from unraid_api.exceptions import (
+    UnraidAPIError,
+    UnraidAuthenticationError,
+    UnraidConnectionError,
+)
+from unraid_api.models import (
+    ArrayCapacity,
+    ArrayDisk,
+    CapacityKilobytes,
+    DockerContainer,
+    NotificationOverview,
+    NotificationOverviewCounts,
+    ParityCheck,
+    Share,
+    SystemMetrics,
+    UnraidArray,
+)
 
 from homeassistant.components.unraid.const import DOMAIN
 from homeassistant.components.unraid.coordinator import (
@@ -23,9 +39,16 @@ from tests.common import MockConfigEntry
 
 @pytest.fixture
 def mock_api_client():
-    """Create a mock API client."""
+    """Create a mock API client with typed methods."""
     client = MagicMock()
-    client.query = AsyncMock()
+    # Mock the typed methods that the coordinator now uses
+    client.get_system_metrics = AsyncMock()
+    client.get_notification_overview = AsyncMock()
+    client.typed_get_containers = AsyncMock()
+    client.typed_get_vms = AsyncMock()
+    client.typed_get_ups_devices = AsyncMock()
+    client.typed_get_array = AsyncMock()
+    client.typed_get_shares = AsyncMock()
     client.close = AsyncMock()
     return client
 
@@ -82,24 +105,21 @@ async def test_storage_coordinator_initialization(
 async def test_system_coordinator_fetch_success(
     hass: HomeAssistant, mock_config_entry, mock_api_client
 ) -> None:
-    """Test system coordinator successfully fetches data."""
-    mock_api_client.query.return_value = {
-        "info": {
-            "time": "2025-12-23T10:30:00Z",
-            "system": {"uuid": "abc-123"},
-            "cpu": {"brand": "AMD Ryzen", "packages": {"temp": [45.2]}},
-            "os": {"hostname": "tower"},
-            "versions": {"core": {"unraid": "7.2.0", "api": "4.29.2"}},
-        },
-        "metrics": {
-            "cpu": {"percentTotal": 25.5},
-            "memory": {"total": 17179869184, "used": 8589934592, "percentTotal": 50.0},
-        },
-        "docker": {"containers": []},
-        "vms": {"domain": []},
-        "upsDevices": [],
-        "notifications": {"overview": {"unread": {"total": 0}}},
-    }
+    """Test system coordinator successfully fetches data using typed methods."""
+    # Set up mock return values for typed library methods
+    mock_api_client.get_system_metrics.return_value = SystemMetrics(
+        cpu_percent=25.5,
+        memory_total=17179869184,
+        memory_used=8589934592,
+        memory_percent=50.0,
+        uptime=datetime(2025, 12, 23, 10, 30, 0, tzinfo=UTC),
+    )
+    mock_api_client.get_notification_overview.return_value = NotificationOverview(
+        unread=NotificationOverviewCounts(total=3),
+    )
+    mock_api_client.typed_get_containers.return_value = []
+    mock_api_client.typed_get_vms.return_value = []
+    mock_api_client.typed_get_ups_devices.return_value = []
 
     coordinator = UnraidSystemCoordinator(
         hass, mock_config_entry, mock_api_client, "tower"
@@ -108,30 +128,31 @@ async def test_system_coordinator_fetch_success(
 
     assert data is not None
     assert isinstance(data, UnraidSystemData)
-    # Data is now raw dicts
-    assert data.info["system"]["uuid"] == "abc-123"
-    assert data.metrics["cpu"]["percentTotal"] == 25.5
+    # Data now uses Pydantic models
+    assert data.metrics.cpu_percent == 25.5
+    assert data.metrics.memory_percent == 50.0
+    assert data.notifications.unread.total == 3
 
 
 @pytest.mark.asyncio
 async def test_storage_coordinator_fetch_success(
     hass: HomeAssistant, mock_config_entry, mock_api_client
 ) -> None:
-    """Test storage coordinator successfully fetches data."""
-    mock_api_client.query.return_value = {
-        "array": {
-            "state": "STARTED",
-            "capacity": {
-                "kilobytes": {"total": 1000000, "used": 500000, "free": 500000}
-            },
-            "parityCheckStatus": {"status": "idle"},
-            "boot": {"id": "flash", "name": "Flash", "device": "sda"},
-            "disks": [{"id": "disk1", "name": "Disk 1", "device": "sdb"}],
-            "parities": [],
-            "caches": [],
-        },
-        "shares": [{"id": "share1", "name": "appdata", "size": 100000, "used": 50000}],
-    }
+    """Test storage coordinator successfully fetches data using typed methods."""
+    mock_api_client.typed_get_array.return_value = UnraidArray(
+        state="STARTED",
+        capacity=ArrayCapacity(
+            kilobytes=CapacityKilobytes(total=1000000, used=500000, free=500000)
+        ),
+        parityCheckStatus=ParityCheck(status="idle"),
+        boot=ArrayDisk(id="flash", name="Flash"),
+        disks=[ArrayDisk(id="disk1", name="Disk 1")],
+        parities=[],
+        caches=[],
+    )
+    mock_api_client.typed_get_shares.return_value = [
+        Share(id="share1", name="appdata", used=50000, free=50000),
+    ]
 
     coordinator = UnraidStorageCoordinator(
         hass, mock_config_entry, mock_api_client, "tower"
@@ -140,9 +161,9 @@ async def test_storage_coordinator_fetch_success(
 
     assert data is not None
     assert isinstance(data, UnraidStorageData)
-    assert data.array_state == "STARTED"
-    assert data.capacity is not None
-    assert data.capacity["kilobytes"]["total"] == 1000000
+    assert data.array.state == "STARTED"
+    assert data.array.capacity.kilobytes.total == 1000000
+    assert len(data.shares) == 1
 
 
 @pytest.mark.asyncio
@@ -150,7 +171,9 @@ async def test_system_coordinator_handles_connection_error(
     hass: HomeAssistant, mock_config_entry, mock_api_client
 ) -> None:
     """Test system coordinator raises UpdateFailed on connection error."""
-    mock_api_client.query.side_effect = aiohttp.ClientError("Connection refused")
+    mock_api_client.get_system_metrics.side_effect = UnraidConnectionError(
+        "Connection refused"
+    )
 
     coordinator = UnraidSystemCoordinator(
         hass, mock_config_entry, mock_api_client, "tower"
@@ -167,7 +190,9 @@ async def test_storage_coordinator_handles_connection_error(
     hass: HomeAssistant, mock_config_entry, mock_api_client
 ) -> None:
     """Test storage coordinator raises UpdateFailed on connection error."""
-    mock_api_client.query.side_effect = aiohttp.ClientError("Connection refused")
+    mock_api_client.typed_get_array.side_effect = UnraidConnectionError(
+        "Connection refused"
+    )
 
     coordinator = UnraidStorageCoordinator(
         hass, mock_config_entry, mock_api_client, "tower"
@@ -183,12 +208,9 @@ async def test_storage_coordinator_handles_connection_error(
 async def test_system_coordinator_handles_auth_error(
     hass: HomeAssistant, mock_config_entry, mock_api_client
 ) -> None:
-    """Test system coordinator raises UpdateFailed on 401 error."""
-    mock_api_client.query.side_effect = aiohttp.ClientResponseError(
-        request_info=MagicMock(),
-        history=(),
-        status=401,
-        message="Unauthorized",
+    """Test system coordinator raises UpdateFailed on auth error."""
+    mock_api_client.get_system_metrics.side_effect = UnraidAuthenticationError(
+        "Invalid credentials"
     )
 
     coordinator = UnraidSystemCoordinator(
@@ -202,11 +224,11 @@ async def test_system_coordinator_handles_auth_error(
 
 
 @pytest.mark.asyncio
-async def test_system_coordinator_handles_timeout(
+async def test_system_coordinator_handles_api_error(
     hass: HomeAssistant, mock_config_entry, mock_api_client
 ) -> None:
-    """Test system coordinator raises UpdateFailed on timeout."""
-    mock_api_client.query.side_effect = TimeoutError("Request timed out")
+    """Test system coordinator raises UpdateFailed on API error."""
+    mock_api_client.get_system_metrics.side_effect = UnraidAPIError("API error")
 
     coordinator = UnraidSystemCoordinator(
         hass, mock_config_entry, mock_api_client, "tower"
@@ -215,7 +237,7 @@ async def test_system_coordinator_handles_timeout(
     with pytest.raises(UpdateFailed) as exc_info:
         await coordinator._async_update_data()
 
-    assert "timeout" in str(exc_info.value).lower()
+    assert "API error" in str(exc_info.value)
 
 
 @pytest.mark.asyncio
@@ -223,28 +245,13 @@ async def test_system_coordinator_parses_docker_containers(
     hass: HomeAssistant, mock_config_entry, mock_api_client
 ) -> None:
     """Test system coordinator parses Docker container data."""
-    mock_api_client.query.return_value = {
-        "info": {
-            "system": {},
-            "cpu": {"packages": {}},
-            "os": {},
-            "versions": {"core": {}},
-        },
-        "metrics": {"cpu": {}, "memory": {}},
-        "docker": {
-            "containers": [
-                {
-                    "id": "abc123",
-                    "names": ["/plex"],
-                    "state": "running",
-                    "image": "plexinc/pms",
-                },
-            ]
-        },
-        "vms": {"domain": []},
-        "upsDevices": [],
-        "notifications": {"overview": {"unread": {"total": 0}}},
-    }
+    mock_api_client.get_system_metrics.return_value = SystemMetrics()
+    mock_api_client.get_notification_overview.return_value = NotificationOverview()
+    mock_api_client.typed_get_containers.return_value = [
+        DockerContainer(id="abc123", name="plex", state="running", image="plexinc/pms"),
+    ]
+    mock_api_client.typed_get_vms.return_value = []
+    mock_api_client.typed_get_ups_devices.return_value = []
 
     coordinator = UnraidSystemCoordinator(
         hass, mock_config_entry, mock_api_client, "tower"
@@ -252,7 +259,8 @@ async def test_system_coordinator_parses_docker_containers(
     data = await coordinator._async_update_data()
 
     assert len(data.containers) == 1
-    assert data.containers[0]["name"] == "plex"  # Normalized name (stripped leading /)
+    assert data.containers[0].name == "plex"
+    assert data.containers[0].state == "running"
 
 
 @pytest.mark.asyncio
@@ -260,54 +268,42 @@ async def test_storage_coordinator_parses_disks(
     hass: HomeAssistant, mock_config_entry, mock_api_client
 ) -> None:
     """Test storage coordinator parses disk data."""
-    mock_api_client.query.return_value = {
-        "array": {
-            "state": "STARTED",
-            "capacity": {
-                "kilobytes": {"total": 1000000, "used": 500000, "free": 500000}
-            },
-            "parityCheckStatus": None,
-            "boot": None,
-            "disks": [
-                {
-                    "id": "disk1",
-                    "name": "Disk 1",
-                    "fsSize": 1000000,
-                    "fsUsed": 500000,
-                    "temp": 35,
-                },
-                {
-                    "id": "disk2",
-                    "name": "Disk 2",
-                    "fsSize": 2000000,
-                    "fsUsed": 1000000,
-                    "temp": 38,
-                },
-            ],
-            "parities": [
-                {"id": "parity1", "name": "Parity", "size": 4000000},
-            ],
-            "caches": [
-                {"id": "cache1", "name": "Cache", "fsSize": 500000, "fsUsed": 250000},
-            ],
-        },
-        "shares": [],
-    }
+    mock_api_client.typed_get_array.return_value = UnraidArray(
+        state="STARTED",
+        capacity=ArrayCapacity(
+            kilobytes=CapacityKilobytes(total=1000000, used=500000, free=500000)
+        ),
+        disks=[
+            ArrayDisk(
+                id="disk1", name="Disk 1", fsSize=1000000, fsUsed=500000, temp=35
+            ),
+            ArrayDisk(
+                id="disk2", name="Disk 2", fsSize=2000000, fsUsed=1000000, temp=38
+            ),
+        ],
+        parities=[
+            ArrayDisk(id="parity1", name="Parity", size=4000000),
+        ],
+        caches=[
+            ArrayDisk(id="cache1", name="Cache", fsSize=500000, fsUsed=250000),
+        ],
+    )
+    mock_api_client.typed_get_shares.return_value = []
 
     coordinator = UnraidStorageCoordinator(
         hass, mock_config_entry, mock_api_client, "tower"
     )
     data = await coordinator._async_update_data()
 
-    assert len(data.disks) == 2
-    assert data.disks[0]["name"] == "Disk 1"
-    assert data.disks[0]["type"] == "DATA"  # Default type set by coordinator
+    assert len(data.array.disks) == 2
+    assert data.array.disks[0].name == "Disk 1"
+    assert data.array.disks[0].temp == 35
 
-    assert len(data.parities) == 1
-    assert data.parities[0]["type"] == "PARITY"
+    assert len(data.array.parities) == 1
+    assert data.array.parities[0].name == "Parity"
 
-    assert len(data.caches) == 1
-    assert data.caches[0]["type"] == "CACHE"
+    assert len(data.array.caches) == 1
+    assert data.array.caches[0].name == "Cache"
 
 
 @pytest.mark.asyncio
@@ -319,7 +315,9 @@ async def test_system_coordinator_logs_recovery(
 ) -> None:
     """Test system coordinator logs when connection recovers."""
     # First call fails
-    mock_api_client.query.side_effect = aiohttp.ClientError("Connection refused")
+    mock_api_client.get_system_metrics.side_effect = UnraidConnectionError(
+        "Connection refused"
+    )
 
     coordinator = UnraidSystemCoordinator(
         hass, mock_config_entry, mock_api_client, "tower"
@@ -329,20 +327,12 @@ async def test_system_coordinator_logs_recovery(
         await coordinator._async_update_data()
 
     # Second call succeeds
-    mock_api_client.query.side_effect = None
-    mock_api_client.query.return_value = {
-        "info": {
-            "system": {},
-            "cpu": {"packages": {}},
-            "os": {},
-            "versions": {"core": {}},
-        },
-        "metrics": {"cpu": {}, "memory": {}},
-        "docker": {"containers": []},
-        "vms": {"domain": []},
-        "upsDevices": [],
-        "notifications": {"overview": {"unread": {"total": 0}}},
-    }
+    mock_api_client.get_system_metrics.side_effect = None
+    mock_api_client.get_system_metrics.return_value = SystemMetrics()
+    mock_api_client.get_notification_overview.return_value = NotificationOverview()
+    mock_api_client.typed_get_containers.return_value = []
+    mock_api_client.typed_get_vms.return_value = []
+    mock_api_client.typed_get_ups_devices.return_value = []
 
     await coordinator._async_update_data()
 
@@ -379,3 +369,28 @@ async def test_storage_coordinator_custom_interval(
     )
 
     assert coordinator.update_interval == timedelta(seconds=600)
+
+
+@pytest.mark.asyncio
+async def test_system_coordinator_optional_services_fail_gracefully(
+    hass: HomeAssistant, mock_config_entry, mock_api_client
+) -> None:
+    """Test optional services (Docker, VMs, UPS) fail gracefully."""
+    mock_api_client.get_system_metrics.return_value = SystemMetrics(cpu_percent=50.0)
+    mock_api_client.get_notification_overview.return_value = NotificationOverview()
+    # Simulate Docker/VMs/UPS not enabled or failing
+    mock_api_client.typed_get_containers.side_effect = UnraidAPIError("Docker disabled")
+    mock_api_client.typed_get_vms.side_effect = UnraidAPIError("VMs disabled")
+    mock_api_client.typed_get_ups_devices.side_effect = UnraidAPIError("No UPS found")
+
+    coordinator = UnraidSystemCoordinator(
+        hass, mock_config_entry, mock_api_client, "tower"
+    )
+    data = await coordinator._async_update_data()
+
+    # Should succeed with empty lists for optional services
+    assert data is not None
+    assert data.metrics.cpu_percent == 50.0
+    assert data.containers == []
+    assert data.vms == []
+    assert data.ups_devices == []
