@@ -3129,6 +3129,9 @@ velbus-aio==2026.1.1
 # homeassistant.components.venstar
 venstarcolortouch==0.21
 
+# homeassistant.components.viaggiatreno
+viaggiatreno_ha==0.2.3
+
 # homeassistant.components.victron_ble
 victron-ble-ha-parser==0.4.9
 
