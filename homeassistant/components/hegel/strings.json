@@ -11,9 +11,9 @@
     },
     "step": {
       "discovery_confirm": {
-        "data": {
-          "model": "[%key:common::generic::model%]"
-        },
+          "data": {
+            "model": "Model"
+          },
         "data_description": {
           "model": "Select your Hegel amplifier model for proper input mapping"
         },
@@ -23,7 +23,7 @@
       "reconfigure": {
         "data": {
           "host": "[%key:common::config_flow::data::host%]",
-          "model": "[%key:common::generic::model%]"
+          "model": "Model"
         },
         "data_description": {
           "host": "The IP address or hostname of your Hegel amplifier",
