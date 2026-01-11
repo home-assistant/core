@@ -34,7 +34,7 @@
     'SELFTEST': 'NO',
     'SENSE': 'Medium',
     'SERIALNO': '**REDACTED**',
-    'STARTTIME': 'Sun Apr 26 10:22:46 EDT 2009',
+    'STARTTIME': '2006-01-01 00:00:00 +0500',
     'STATFLAG': '0x05000008',
     'STATUS': 'ONLINE',
     'STESTI': '7 days',

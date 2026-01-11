@@ -1841,7 +1841,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '2009-04-26T14:22:46+00:00',
+    'state': '2005-12-31T19:00:00+00:00',
   })
 # ---
 # name: test_sensor[sensor.myups_status-entry]

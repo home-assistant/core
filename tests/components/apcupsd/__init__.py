@@ -19,9 +19,7 @@ MOCK_STATUS: Final = {
     "APCMODEL": "Back-UPS ES 600",
     "MODEL": "Back-UPS ES 600",
     "STATUS": "ONLINE",
-    # APCUPSD's manual indicates that the following non-ISO format is possible, although the code
-    # indicates otherwise. It might have existed in older versions of APCUPSd. Here we test it anyway.
-    "STARTTIME": "Sun Apr 26 10:22:46 EDT 2009",
+    "STARTTIME": "2006-01-01 00:00:00 +0500",
     "LINEV": "124.0 Volts",
     "LOADPCT": "14.0 Percent",
     "BCHARGE": "100.0 Percent",
