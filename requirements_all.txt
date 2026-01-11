@@ -187,7 +187,7 @@ aioairq==0.4.7
 aioairzone-cloud==0.7.2
 
 # homeassistant.components.airzone
-aioairzone==1.0.4
+aioairzone==1.0.5
 
 # homeassistant.components.alexa_devices
 aioamazondevices==11.0.2
@@ -703,7 +703,7 @@ brottsplatskartan==1.0.5
 brunt==1.2.0
 
 # homeassistant.components.bthome
-bthome-ble==3.17.0
+bthome-ble==3.16.0
 
 # homeassistant.components.bt_home_hub_5
 bthomehub5-devicelist==0.1.1
@@ -842,7 +842,7 @@ dynalite-panel==0.0.4
 eagle100==0.1.1
 
 # homeassistant.components.easyenergy
-easyenergy==2.1.2
+easyenergy==2.2.0
 
 # homeassistant.components.ebusd
 ebusdpy==0.0.17
@@ -1127,7 +1127,7 @@ gpiozero==1.6.2
 gps3==0.33.3
 
 # homeassistant.components.gree
-greeclimate==2.1.0
+greeclimate==2.1.1
 
 # homeassistant.components.greeneye_monitor
 greeneye_monitor==3.0.3
@@ -1858,7 +1858,7 @@ pyElectra==1.2.4
 pyEmby==1.10
 
 # homeassistant.components.hikvision
-pyHik==0.3.4
+pyHik==0.4.0
 
 # homeassistant.components.homee
 pyHomee==1.3.8
@@ -1870,7 +1870,7 @@ pyRFXtrx==0.31.1
 pySDCP==1
 
 # homeassistant.components.tibber
-pyTibber==0.34.1
+pyTibber==0.34.4
 
 # homeassistant.components.dlink
 pyW215==0.8.0
@@ -2241,7 +2241,7 @@ pynina==0.3.6
 pynintendoauth==1.0.2
 
 # homeassistant.components.nintendo_parental_controls
-pynintendoparental==2.3.0
+pynintendoparental==2.3.2
 
 # homeassistant.components.nobo_hub
 pynobo==1.8.1
@@ -2412,7 +2412,7 @@ pysiaalarm==3.1.1
 pysignalclirestapi==0.3.24
 
 # homeassistant.components.assist_pipeline
-pysilero-vad==3.1.0
+pysilero-vad==3.2.0
 
 # homeassistant.components.sky_hub
 pyskyqhub==0.1.4
@@ -2599,7 +2599,7 @@ python-snoo==0.8.3
 python-songpal==0.16.2
 
 # homeassistant.components.tado
-python-tado==0.18.15
+python-tado==0.18.16
 
 # homeassistant.components.technove
 python-technove==2.0.0
@@ -2959,7 +2959,7 @@ surepy==0.9.0
 swisshydrodata==0.1.0
 
 # homeassistant.components.switchbot_cloud
-switchbot-api==2.9.0
+switchbot-api==2.10.0
 
 # homeassistant.components.synology_srm
 synology-srm==0.2.0
