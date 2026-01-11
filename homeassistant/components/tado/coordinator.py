@@ -95,19 +95,23 @@ class TadoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     async def _async_update_data(self) -> dict[str, Any]:
         """Fetch the (initial) latest data from Tado."""
 
-        try:
-            _LOGGER.debug("Preloading home data")
-            tado_home_call = await self.hass.async_add_executor_job(self._tado.get_me)
-            _LOGGER.debug("Preloading zones and devices")
-            self.zones = await self.hass.async_add_executor_job(self._tado.get_zones)
-            self.devices = await self.hass.async_add_executor_job(
-                self._tado.get_devices
+        def _load_tado_data() -> tuple[dict, list, list, dict[str, str]]:
+            """Load Tado data in one call."""
+            _LOGGER.debug("Preloading Tado data")
+            return (
+                self._tado.get_me(),
+                self._tado.get_zones(),
+                self._tado.get_devices(),
+                self._tado.rate_limit_info(),
             )
 
-            rate_limit_info = await self.hass.async_add_executor_job(
-                self._tado.rate_limit_info
-            )
-            _LOGGER.debug("Tado rate limit info fetched: %s", rate_limit_info)
+        try:
+            (
+                tado_home_call,
+                self.zones,
+                self.devices,
+                rate_limit_info,
+            ) = await self.hass.async_add_executor_job(_load_tado_data)
         except RequestException as err:
             raise UpdateFailed(f"Error during Tado setup: {err}") from err
 
