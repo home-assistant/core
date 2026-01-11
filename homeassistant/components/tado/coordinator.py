@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from dataclasses import dataclass
 from datetime import datetime, timedelta
 import logging
 from typing import TYPE_CHECKING, Any
@@ -32,6 +33,14 @@ _LOGGER = logging.getLogger(__name__)
 MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=4)
 SCAN_INTERVAL = timedelta(minutes=5)
 SCAN_MOBILE_DEVICE_INTERVAL = timedelta(minutes=5)
+
+
+@dataclass
+class TadoRateLimit:
+    """Class to hold Tado rate limit information."""
+
+    limit: int
+    remaining: int
 
 
 class TadoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, dict]]):
@@ -75,6 +84,8 @@ class TadoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, dict]]):
             "zone": {},
         }
 
+        self.rate_limit: TadoRateLimit | None = None
+
     @property
     def fallback(self) -> str:
         """Return fallback flag to Smart Schedule."""
@@ -91,8 +102,18 @@ class TadoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, dict]]):
             self.devices = await self.hass.async_add_executor_job(
                 self._tado.get_devices
             )
+
+            rate_limit_info = await self.hass.async_add_executor_job(
+                self._tado.rate_limit_info
+            )
+            _LOGGER.debug("Tado rate limit info fetched: %s", rate_limit_info)
         except RequestException as err:
             raise UpdateFailed(f"Error during Tado setup: {err}") from err
+
+        self.rate_limit = TadoRateLimit(
+            limit=int(rate_limit_info.get("per-day") or 0),
+            remaining=int(rate_limit_info.get("remaining") or 0),
+        )
 
         tado_home = tado_home_call["homes"][0]
         self.home_id = tado_home["id"]
@@ -106,6 +127,10 @@ class TadoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, dict]]):
         self.data["zone"] = zones
         self.data["weather"] = home["weather"]
         self.data["geofence"] = home["geofence"]
+        self.data["rate_limit"] = {
+            "limit": self.rate_limit.limit,
+            "remaining": self.rate_limit.remaining,
+        }
 
         refresh_token = await self.hass.async_add_executor_job(
             self._tado.get_refresh_token

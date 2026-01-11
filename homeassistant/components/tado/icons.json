@@ -1,5 +1,13 @@
 {
   "entity": {
+    "sensor": {
+      "rate_limit": {
+        "default": "mdi:api"
+      },
+      "rate_limit_remaining": {
+        "default": "mdi:car-speed-limiter"
+      }
+    },
     "switch": {
       "child_lock": {
         "default": "mdi:lock-open-variant",
