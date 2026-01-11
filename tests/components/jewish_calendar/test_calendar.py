@@ -227,7 +227,7 @@ async def test_all_daily_event_types_present(
         "Hebrew date",
         "Halachic dawn",
         "Halachic sunrise",
-        "Latest time for Shema",
+        "Latest time for Shema",  # codespell:ignore shema
         "Latest time for Tefilla",
         "Halachic midday",
         "Earliest time for Mincha",
