@@ -18,6 +18,14 @@ from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry
+from tests.typing import RecorderInstanceContextManager
+
+
+@pytest.fixture
+async def mock_recorder_before_hass(
+    async_test_recorder: RecorderInstanceContextManager,
+) -> None:
+    """Set up recorder."""
 
 
 def create_tibber_device(
