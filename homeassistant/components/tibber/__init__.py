@@ -119,11 +119,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: TibberConfigEntry) -> bo
         tibber.RetryableHttpExceptionError,
     ) as err:
         raise ConfigEntryNotReady("Unable to connect") from err
-    except tibber.InvalidLoginError as exp:
-        _LOGGER.error("Failed to login. %s", exp)
-        return False
-    except tibber.FatalHttpExceptionError:
-        return False
 
     coordinator = TibberDataAPICoordinator(hass, entry)
     await coordinator.async_config_entry_first_refresh()
