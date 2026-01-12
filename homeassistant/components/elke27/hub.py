@@ -14,6 +14,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 
 from .const import READY_TIMEOUT
+from .identity import build_client_identity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -29,6 +30,7 @@ class Elke27Hub:
         host: str,
         port: int,
         link_keys_json: str,
+        integration_serial: str,
         pin: str | None,
         panel_name: str | None,
     ) -> None:
@@ -37,6 +39,7 @@ class Elke27Hub:
         self._host = host
         self._port = port
         self._link_keys_json = link_keys_json
+        self._integration_serial = integration_serial
         self._pin = pin
         self._panel_name = panel_name
         self._client: Elke27Client | None = None
@@ -126,6 +129,11 @@ class Elke27Hub:
         """Connect the client, then await readiness."""
         link_keys = LinkKeys.from_json(self._link_keys_json)
         client = Elke27Client(ClientConfig())
+        client_identity = build_client_identity(self._integration_serial)
+        # Elke27Client v2 does not expose a public identity setter yet.
+        coerce_identity = getattr(client, "_coerce_identity", None)
+        if callable(coerce_identity):
+            client._v2_client_identity = coerce_identity(client_identity)
         self._client = client
         try:
             await client.async_connect(self._host, self._port, link_keys)

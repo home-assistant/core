@@ -12,7 +12,7 @@ from homeassistant.components import network
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import format_mac
 
-from .const import INTEGRATION_SERIAL_LENGTH
+from .const import INTEGRATION_SERIAL_LENGTH, MANUFACTURER_NUMBER
 
 
 async def async_get_integration_serial(
@@ -78,3 +78,11 @@ def _generate_serial_number() -> str:
 def _normalize_serial(serial: str) -> str:
     """Return a digits-only serial string for provisioning."""
     return "".join(ch for ch in serial if ch.isalnum()).lower()
+
+
+def build_client_identity(integration_serial: str) -> dict[str, str]:
+    """Return the client identity mapping for provisioning and session setup."""
+    return {
+        "mn": str(MANUFACTURER_NUMBER),
+        "sn": integration_serial,
+    }

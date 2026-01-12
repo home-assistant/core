@@ -37,7 +37,7 @@ from .const import (
     DOMAIN,
     READY_TIMEOUT,
 )
-from .identity import async_get_integration_serial
+from .identity import async_get_integration_serial, build_client_identity
 
 CONF_ACCESS_CODE = "access_code"
 CONF_PASSPHRASE = "passphrase"
@@ -175,6 +175,7 @@ class Elke27ConfigFlow(ConfigFlow, domain=DOMAIN):
             host,
             entry.data.get(CONF_INTEGRATION_SERIAL) if entry is not None else None,
         )
+        client_identity = build_client_identity(integration_serial)
         client = _create_client()
         link_keys: LinkKeys | None = None
         panel_info: dict[str, Any] = {}
@@ -185,6 +186,7 @@ class Elke27ConfigFlow(ConfigFlow, domain=DOMAIN):
                 port=port,
                 access_code=access_code,
                 passphrase=passphrase,
+                client_identity=client_identity,
             )
             await client.async_connect(host=host, port=port, link_keys=link_keys)
             if pin:

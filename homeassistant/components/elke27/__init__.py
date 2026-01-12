@@ -46,7 +46,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     panel_name = _panel_name_from_entry(entry.data.get(CONF_PANEL))
     if not link_keys_json:
         raise ConfigEntryAuthFailed("Link keys are missing; relink required")
-    if not entry.data.get(CONF_INTEGRATION_SERIAL):
+    integration_serial = entry.data.get(CONF_INTEGRATION_SERIAL)
+    if not integration_serial:
         integration_serial = await async_get_integration_serial(hass, host)
         hass.config_entries.async_update_entry(
             entry,
@@ -54,7 +55,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         )
     if panel_name:
         _LOGGER.debug("Discovered panel name: %s", panel_name)
-    hub = Elke27Hub(hass, host, port, link_keys_json, pin, panel_name)
+    hub = Elke27Hub(
+        hass,
+        host,
+        port,
+        link_keys_json,
+        integration_serial,
+        pin,
+        panel_name,
+    )
     try:
         await hub.async_start()
     except Elke27LinkRequiredError as err:
