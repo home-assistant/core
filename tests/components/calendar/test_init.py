@@ -621,7 +621,6 @@ async def test_calendar_color_from_entity_options(
 
     # Initially no color is set
     assert entity.color is None
-    assert entity._calendar_option_color is None
 
     # Set color via entity registry options
     entity_registry.async_update_entity_options(
@@ -629,8 +628,12 @@ async def test_calendar_color_from_entity_options(
     )
     await hass.async_block_till_done()
 
-    # Color should be read from entity registry options
-    assert entity._calendar_option_color == RGBColor(10, 20, 30)
+    # Verify color is stored in entity registry options
+    entry = entity_registry.async_get(entity.entity_id)
+    assert entry is not None
+    assert entry.options.get(DOMAIN, {}).get(CONF_COLOR) == [10, 20, 30]
+
+    # Color should be accessible via the public property
     assert entity.color == RGBColor(10, 20, 30)
 
     # Color should not be exposed in state attributes
@@ -642,8 +645,12 @@ async def test_calendar_color_from_entity_options(
     entity_registry.async_update_entity_options(entity.entity_id, DOMAIN, {})
     await hass.async_block_till_done()
 
+    # Verify color is cleared in entity registry options
+    entry = entity_registry.async_get(entity.entity_id)
+    assert entry is not None
+    assert entry.options.get(DOMAIN, {}).get(CONF_COLOR) is None
+
     # Color should be None when entity options are cleared
-    assert entity._calendar_option_color is None
     assert entity.color is None
 
 
