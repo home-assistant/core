@@ -9,6 +9,7 @@ import logging
 from typing import Any, Callable
 
 from elke27_lib import ClientConfig, Elke27Client, LinkKeys
+from elke27_lib.errors import Elke27PinRequiredError
 
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
@@ -208,6 +209,27 @@ class Elke27Hub:
         else:
             result = await self._hass.async_add_executor_job(method, *args, **kwargs)
         return bool(result) if isinstance(result, bool) else True
+
+    async def async_set_zone_bypass(self, zone_id: int, bypassed: bool) -> bool:
+        """Request a zone bypass change."""
+        client = self._client
+        if client is None:
+            return False
+        pin = self._pin
+        if not pin:
+            raise Elke27PinRequiredError("PIN required to bypass zones.")
+        result = await client.async_execute(
+            "zone_set_status",
+            zone_id=zone_id,
+            pin=pin,
+            bypassed=bypassed,
+        )
+        if not getattr(result, "ok", False):
+            error = getattr(result, "error", None)
+            if error is not None:
+                raise error
+            return False
+        return True
 
     async def async_arm_area(
         self, area_id: int, mode: Any, pin: str | None

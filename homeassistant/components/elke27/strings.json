@@ -79,6 +79,11 @@
         "name": "Output"
       }
     },
+    "switch": {
+      "zone_bypass": {
+        "name": "Bypass {zone}"
+      }
+    },
     "sensor": {
       "panel_name": {
         "name": "Panel name"
