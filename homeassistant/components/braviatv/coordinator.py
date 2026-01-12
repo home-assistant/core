@@ -7,7 +7,7 @@ from dataclasses import dataclass
 from datetime import datetime, timedelta
 from functools import wraps
 import logging
-from typing import Any, Concatenate, Final, cast
+from typing import Any, Concatenate, Final
 
 from pybravia import (
     BraviaAuthError,
@@ -461,7 +461,7 @@ class BraviaTVPictureCoordinator(DataUpdateCoordinator[list[dict[str, Any]] | No
             return self.data
 
         try:
-            return cast(list[dict[str, Any]], await self.client.get_picture_setting())
+            return await self.client.get_picture_setting()
         except BraviaError:
             _LOGGER.debug("Failed to update picture settings")
             return None
