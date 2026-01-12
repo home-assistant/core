@@ -24,14 +24,14 @@ CONFIG_ENTRY_DATA = {
 MOCK_ZONES = {
     0: {
         "id": 0,
-        "output_id": 0,
+        "slot_id": 0,
         "estado": 0,
         "label": "Zone 1",
         "duracion": 30,
     },
     1: {
         "id": 1,
-        "output_id": 1,
+        "slot_id": 1,
         "estado": 0,
         "label": "Zone 2",
         "duracion": 45,
@@ -41,7 +41,7 @@ MOCK_ZONES = {
 MOCK_TANKS = {
     0: {
         "id": 0,
-        "output_id": 3,
+        "slot_id": 3,
         "estado": 0,
         "label": "Tank 1",
         "nivel": 0,

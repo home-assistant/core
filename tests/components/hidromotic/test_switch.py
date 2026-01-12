@@ -198,4 +198,4 @@ async def test_zone_switch_extra_attributes(
     state = hass.states.get("switch.chi_smart_192_168_1_250_zone_1")
     assert state is not None
     assert state.attributes.get("duration_minutes") == 30
-    assert state.attributes.get("output_id") == 0
+    assert state.attributes.get("slot_id") == 0

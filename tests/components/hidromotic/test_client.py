@@ -251,40 +251,46 @@ class TestHidromoticClientAsync:
     async def test_set_zone_state_on(self) -> None:
         """Test set_zone_state sends correct command to turn on."""
         client = HidromoticClient("192.168.1.100")
-        client._data = {"zones": {0: {"id": 0, "output_id": 2, "estado": 0}}}
+        client._data = {"zones": {0: {"id": 0, "slot_id": 2, "estado": 0}}}
         client._ws = MagicMock()
         client._ws.closed = False
         client._ws.send_str = AsyncMock()
 
         await client.set_zone_state(0, True)
 
-        client._ws.send_str.assert_called_once_with("#@S2M1;")
+        client._ws.send_str.assert_called_once_with(
+            '{"method":"hdmt","params":{"c":"#@S2M1;"}}'
+        )
 
     @pytest.mark.asyncio
     async def test_set_zone_state_off(self) -> None:
         """Test set_zone_state sends correct command to turn off."""
         client = HidromoticClient("192.168.1.100")
-        client._data = {"zones": {0: {"id": 0, "output_id": 5, "estado": 1}}}
+        client._data = {"zones": {0: {"id": 0, "slot_id": 5, "estado": 1}}}
         client._ws = MagicMock()
         client._ws.closed = False
         client._ws.send_str = AsyncMock()
 
         await client.set_zone_state(0, False)
 
-        client._ws.send_str.assert_called_once_with("#@S5M0;")
+        client._ws.send_str.assert_called_once_with(
+            '{"method":"hdmt","params":{"c":"#@S5M0;"}}'
+        )
 
     @pytest.mark.asyncio
     async def test_set_zone_state_hex_output(self) -> None:
-        """Test set_zone_state uses hex for output_id >= 10."""
+        """Test set_zone_state uses hex for slot_id >= 10."""
         client = HidromoticClient("192.168.1.100")
-        client._data = {"zones": {0: {"id": 0, "output_id": 10, "estado": 0}}}
+        client._data = {"zones": {0: {"id": 0, "slot_id": 10, "estado": 0}}}
         client._ws = MagicMock()
         client._ws.closed = False
         client._ws.send_str = AsyncMock()
 
         await client.set_zone_state(0, True)
 
-        client._ws.send_str.assert_called_once_with("#@SAM1;")
+        client._ws.send_str.assert_called_once_with(
+            '{"method":"hdmt","params":{"c":"#@SAM1;"}}'
+        )
 
     @pytest.mark.asyncio
     async def test_set_zone_state_zone_not_found(self) -> None:
@@ -310,7 +316,9 @@ class TestHidromoticClientAsync:
 
         await client.set_auto_riego(True)
 
-        client._ws.send_str.assert_called_once_with("#@RA1;")
+        client._ws.send_str.assert_called_once_with(
+            '{"method":"hdmt","params":{"c":"#@RA1;"}}'
+        )
         assert client._data["auto_riego"] is True
 
     @pytest.mark.asyncio
@@ -324,7 +332,9 @@ class TestHidromoticClientAsync:
 
         await client.set_auto_riego(False)
 
-        client._ws.send_str.assert_called_once_with("#@RA0;")
+        client._ws.send_str.assert_called_once_with(
+            '{"method":"hdmt","params":{"c":"#@RA0;"}}'
+        )
         assert client._data["auto_riego"] is False
 
     @pytest.mark.asyncio
@@ -353,7 +363,9 @@ class TestHidromoticClientAsync:
 
         await client.refresh()
 
-        client._ws.send_str.assert_called_once_with("#@C;")
+        client._ws.send_str.assert_called_once_with(
+            '{"method":"hdmt","params":{"c":"#@C;"}}'
+        )
 
     @pytest.mark.asyncio
     async def test_disconnect(self) -> None:
