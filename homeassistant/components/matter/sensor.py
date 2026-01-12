@@ -173,6 +173,13 @@ EVSE_FAULT_STATE_MAP = {
     clusters.EnergyEvse.Enums.FaultStateEnum.kOther: "other",
 }
 
+SETPOINT_CHANGE_SOURCE_MAP = {
+    clusters.Thermostat.Enums.SetpointChangeSourceEnum.kManual: "manual",
+    clusters.Thermostat.Enums.SetpointChangeSourceEnum.kSchedule: "schedule",
+    clusters.Thermostat.Enums.SetpointChangeSourceEnum.kExternal: "external",
+    clusters.Thermostat.Enums.SetpointChangeSourceEnum.kUnknownEnumValue: None,
+}
+
 PUMP_CONTROL_MODE_MAP = {
     clusters.PumpConfigurationAndControl.Enums.ControlModeEnum.kConstantSpeed: "constant_speed",
     clusters.PumpConfigurationAndControl.Enums.ControlModeEnum.kConstantPressure: "constant_pressure",
@@ -183,18 +190,34 @@ PUMP_CONTROL_MODE_MAP = {
     clusters.PumpConfigurationAndControl.Enums.ControlModeEnum.kUnknownEnumValue: None,
 }
 
-SETPOINT_CHANGE_SOURCE_MAP = {
-    clusters.Thermostat.Enums.SetpointChangeSourceEnum.kManual: "manual",
-    clusters.Thermostat.Enums.SetpointChangeSourceEnum.kSchedule: "schedule",
-    clusters.Thermostat.Enums.SetpointChangeSourceEnum.kExternal: "external",
-    clusters.Thermostat.Enums.SetpointChangeSourceEnum.kUnknownEnumValue: None,
-}
 
 MATTER_2000_TO_UNIX_EPOCH_OFFSET = (
     946684800  # Seconds from Matter 2000 epoch to Unix epoch
 )
 HUMIDITY_SCALING_FACTOR = 100
 TEMPERATURE_SCALING_FACTOR = 100
+
+
+def matter_epoch_seconds_to_utc(x: int | None) -> datetime | None:
+    """Convert Matter epoch seconds (since 2000-01-01) to UTC datetime.
+
+    Returns None for non-positive or None values (represents unknown/absent).
+    """
+    if x is None or x <= 0:
+        return None
+    return dt_util.utc_from_timestamp(x + MATTER_2000_TO_UNIX_EPOCH_OFFSET)
+
+
+def matter_epoch_microseconds_to_utc(x: int | None) -> datetime | None:
+    """Convert Matter epoch microseconds (since 2000-01-01) to UTC datetime.
+
+    The value is in microseconds; convert to seconds before applying offset.
+    Returns None for non-positive or None values.
+    """
+    if x is None or x <= 0:
+        return None
+    seconds = x // 1_000_000
+    return dt_util.utc_from_timestamp(seconds + MATTER_2000_TO_UNIX_EPOCH_OFFSET)
 
 
 async def async_setup_entry(
@@ -1478,7 +1501,8 @@ DISCOVERY_SCHEMAS = [
             translation_key="auto_close_time",
             device_class=SensorDeviceClass.TIMESTAMP,
             state_class=None,
-            device_to_ha=(lambda x: dt_util.utc_from_timestamp(x) if x > 0 else None),
+            # AutoCloseTime is defined as epoch-us in the spec
+            device_to_ha=matter_epoch_microseconds_to_utc,
         ),
         entity_class=MatterSensor,
         featuremap_contains=clusters.ValveConfigurationAndControl.Bitmaps.Feature.kTimeSync,
@@ -1493,10 +1517,37 @@ DISCOVERY_SCHEMAS = [
             translation_key="estimated_end_time",
             device_class=SensorDeviceClass.TIMESTAMP,
             state_class=None,
-            device_to_ha=(lambda x: dt_util.utc_from_timestamp(x) if x > 0 else None),
+            # EstimatedEndTime is defined as epoch-s (Matter 2000 epoch) in the spec
+            device_to_ha=matter_epoch_seconds_to_utc,
         ),
         entity_class=MatterSensor,
         required_attributes=(clusters.ServiceArea.Attributes.EstimatedEndTime,),
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.SENSOR,
+        entity_description=MatterSensorEntityDescription(
+            key="DoorLockDoorOpenEvents",
+            translation_key="door_open_events",
+            entity_category=EntityCategory.DIAGNOSTIC,
+            entity_registry_enabled_default=False,
+            state_class=SensorStateClass.TOTAL_INCREASING,
+        ),
+        entity_class=MatterSensor,
+        required_attributes=(clusters.DoorLock.Attributes.DoorOpenEvents,),
+        featuremap_contains=clusters.DoorLock.Bitmaps.Feature.kDoorPositionSensor,
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.SENSOR,
+        entity_description=MatterSensorEntityDescription(
+            key="DoorLockDoorClosedEvents",
+            translation_key="door_closed_events",
+            entity_category=EntityCategory.DIAGNOSTIC,
+            entity_registry_enabled_default=False,
+            state_class=SensorStateClass.TOTAL_INCREASING,
+        ),
+        entity_class=MatterSensor,
+        required_attributes=(clusters.DoorLock.Attributes.DoorClosedEvents,),
+        featuremap_contains=clusters.DoorLock.Bitmaps.Feature.kDoorPositionSensor,
     ),
     MatterDiscoverySchema(
         platform=Platform.SENSOR,
