@@ -106,11 +106,14 @@ class TonewinnerProtocol(asyncio.Protocol):
     def connection_made(self, transport):
         """Connection made."""
         self.transport = transport
+        _LOGGER.debug("Connection established successfully")
         self.entity.set_available(True)
 
     def data_received(self, data):
         """Data received."""
+        _LOGGER.debug("Raw RX data: %s", data.hex())
         self.buffer += data
+        _LOGGER.debug("Buffer state: %s", self.buffer.hex())
 
         # Parse ToneWinner protocol: messages start with '#' and end with '*'
         # with no newlines. Messages may arrive in multiple chunks.
@@ -119,6 +122,7 @@ class TonewinnerProtocol(asyncio.Protocol):
             start_idx = self.buffer.find(b"#")
             if start_idx == -1:
                 # No start marker in buffer, clear it
+                _LOGGER.debug("No start marker found, clearing buffer")
                 self.buffer = b""
                 break
 
@@ -126,6 +130,7 @@ class TonewinnerProtocol(asyncio.Protocol):
             end_idx = self.buffer.find(b"*", start_idx)
             if end_idx == -1:
                 # Incomplete message (no end marker), keep data from '#'
+                _LOGGER.debug("Incomplete message, waiting for end marker")
                 self.buffer = self.buffer[start_idx:]
                 break
 
@@ -192,6 +197,14 @@ class TonewinnerMediaPlayer(MediaPlayerEntity):
 
     async def connect(self):
         """Establish serial connection."""
+        _LOGGER.debug("Attempting connection to %s at %d baud", self.port, self.baud)
+        _LOGGER.debug(
+            "Serial config: bytesize=%d, parity=%d, stopbits=%d, timeout=%d",
+            serial.SEVENBITS,
+            serial.PARITY_NONE,
+            serial.STOPBITS_ONE,
+            1,
+        )
         try:
             loop = asyncio.get_event_loop()
             connection = serial_asyncio_fast.create_serial_connection(
@@ -207,12 +220,14 @@ class TonewinnerMediaPlayer(MediaPlayerEntity):
             self._transport, self._protocol = await asyncio.wait_for(
                 connection, timeout=5
             )
+            _LOGGER.info("Successfully connected to %s", self.port)
         except (TimeoutError, OSError, serial.SerialException) as ex:
             _LOGGER.error("Connection failed: %s", ex)
             self._attr_available = False
 
     def set_available(self, available: bool):
         """Update availability."""
+        _LOGGER.debug("Availability changed: %s", available)
         self._attr_available = available
         self.schedule_update_ha_state()
 
@@ -222,28 +237,44 @@ class TonewinnerMediaPlayer(MediaPlayerEntity):
 
         # Parse power status
         if power := ToneWinnerProtocol.parse_power_status(response):
-            self._attr_state = MediaPlayerState.ON if power else MediaPlayerState.OFF
+            new_state = MediaPlayerState.ON if power else MediaPlayerState.OFF
+            _LOGGER.debug("State updated: %s", new_state)
+            self._attr_state = new_state
 
         # Parse volume (device returns 0-80, convert to 0.0-1.0 for HA)
         if volume := ToneWinnerProtocol.parse_volume_status(response):
-            self._attr_volume_level = volume / 80.0
+            ha_volume = volume / 80.0
+            _LOGGER.debug("Volume updated: device=%.2f, ha=%.2f", volume, ha_volume)
+            self._attr_volume_level = ha_volume
 
         # Parse mute status
         if mute := ToneWinnerProtocol.parse_mute_status(response):
+            _LOGGER.debug("Mute updated: %s", mute)
             self._attr_is_volume_muted = mute
 
         # Parse input source
         if source := ToneWinnerProtocol.parse_input_source(response):
+            _LOGGER.debug("Source updated: %s", source)
             self._attr_source = source
 
         # Parse sound mode
         if mode := ToneWinnerProtocol.parse_sound_mode(response):
+            _LOGGER.debug("Sound mode updated: %s", mode)
             self._attr_sound_mode = mode
 
+        _LOGGER.debug(
+            "Writing HA state with: state=%s, volume=%.2f, mute=%s, source=%s, mode=%s",
+            self._attr_state,
+            self._attr_volume_level,
+            self._attr_is_volume_muted,
+            self._attr_source,
+            self._attr_sound_mode,
+        )
         self.async_write_ha_state()
 
     async def send_raw_command(self, command: str):
         """Service handler: send raw command."""
+        _LOGGER.debug("Preparing to send command: %s", command)
         if not self._transport:
             raise TonewinnerError("Not connected")
 
@@ -256,17 +287,21 @@ class TonewinnerMediaPlayer(MediaPlayerEntity):
                 command = ToneWinnerProtocol.build_command(command)
             data = command.encode("ascii")
 
+        _LOGGER.debug("TX bytes: %s", data.hex())
         self._transport.write(data)
+        _LOGGER.debug("Command sent successfully")
 
     # --- Media player controls ---
 
     async def async_turn_on(self):
         """Turn the media player on."""
+        _LOGGER.debug("Turning on receiver")
         await self.send_raw_command(ToneWinnerCommands.POWER_ON)
         self._attr_state = MediaPlayerState.ON
 
     async def async_turn_off(self):
         """Turn the media player off."""
+        _LOGGER.debug("Turning off receiver")
         await self.send_raw_command(ToneWinnerCommands.POWER_OFF)
         self._attr_state = MediaPlayerState.OFF
 
@@ -274,21 +309,25 @@ class TonewinnerMediaPlayer(MediaPlayerEntity):
         """Set volume level (HA 0.0-1.0, device 0-80)."""
         vol_device = int(volume * 80.0)
         command = f"VOL {vol_device}"
+        _LOGGER.debug("Setting volume: HA=%.2f, device=%d", volume, vol_device)
         await self.send_raw_command(command)
         self._attr_volume_level = volume
         self.async_write_ha_state()
 
     async def async_volume_up(self):
         """Volume up media player."""
+        _LOGGER.debug("Volume up")
         await self.send_raw_command(ToneWinnerCommands.VOLUME_UP)
 
     async def async_volume_down(self):
         """Volume down media player."""
+        _LOGGER.debug("Volume down")
         await self.send_raw_command(ToneWinnerCommands.VOLUME_DOWN)
 
     async def async_mute_volume(self, mute: bool) -> None:
         """Mute or unmute media player."""
         command = ToneWinnerCommands.MUTE_ON if mute else ToneWinnerCommands.MUTE_OFF
+        _LOGGER.debug("Setting mute: %s", mute)
         await self.send_raw_command(command)
         self._attr_is_volume_muted = mute
         self.async_write_ha_state()
@@ -298,6 +337,7 @@ class TonewinnerMediaPlayer(MediaPlayerEntity):
         if source not in INPUT_SOURCES:
             raise ValueError(f"Unknown source: {source}")
         command = f"SI {INPUT_SOURCES[source]}"
+        _LOGGER.debug("Selecting source: %s (command: %s)", source, command)
         await self.send_raw_command(command)
         self._attr_source = source
         self.async_write_ha_state()
@@ -307,6 +347,7 @@ class TonewinnerMediaPlayer(MediaPlayerEntity):
         if sound_mode not in SOUND_MODES:
             raise ValueError(f"Unknown sound mode: {sound_mode}")
         command = f"{ToneWinnerCommands.MODE_PREFIX} {SOUND_MODES[sound_mode]}"
+        _LOGGER.debug("Selecting sound mode: %s (command: %s)", sound_mode, command)
         await self.send_raw_command(command)
         self._attr_sound_mode = sound_mode
         self.async_write_ha_state()

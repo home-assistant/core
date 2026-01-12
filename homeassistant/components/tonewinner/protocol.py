@@ -163,7 +163,10 @@ class ToneWinnerProtocol:
     @staticmethod
     def build_command(command_code: str) -> str:
         """Build a complete command string with terminator."""
-        return f"{COMMAND_START}{command_code}{COMMAND_TERMINATOR}"
+        _LOGGER.debug("Building command for: '%s'", command_code)
+        result = f"{COMMAND_START}{command_code}{COMMAND_TERMINATOR}"
+        _LOGGER.debug("Built command: '%s'", result)
+        return result
 
     @staticmethod
     def build_volume_command(volume_level: float) -> str:
@@ -186,16 +189,22 @@ class ToneWinnerProtocol:
     @staticmethod
     def parse_power_status(response: str) -> bool | None:
         """Parse power status from device response."""
+        _LOGGER.debug("Parsing power status from: '%s'", response)
         if not response or not response.startswith("POWER"):
+            _LOGGER.debug("Not a power response")
             return None
 
         # Response format: POWER ON or POWER OFF
-        return response[6:8] == "ON"
+        is_on = response[6:8] == "ON"
+        _LOGGER.debug("Power status parsed: %s", "ON" if is_on else "OFF")
+        return is_on
 
     @staticmethod
     def parse_volume_status(response: str) -> float | None:
         """Parse volume level from device response (0-100)."""
+        _LOGGER.debug("Parsing volume from: '%s'", response)
         if not response or not response.startswith("VOL"):
+            _LOGGER.debug("Not a volume response")
             return None
 
         try:
@@ -210,18 +219,25 @@ class ToneWinnerProtocol:
     @staticmethod
     def parse_mute_status(response: str) -> bool | None:
         """Parse mute status from device response."""
+        _LOGGER.debug("Parsing mute from: '%s'", response)
         if not response or not response.startswith("MUTE"):
+            _LOGGER.debug("Not a mute response")
             return None
 
-        return response[5:7] == "ON"
+        is_muted = response[5:7] == "ON"
+        _LOGGER.debug("Mute status parsed: %s", "ON" if is_muted else "OFF")
+        return is_muted
 
     @staticmethod
     def parse_input_source(response: str) -> str | None:
         """Parse current input source from response."""
+        _LOGGER.debug("Parsing input source from: '%s'", response)
         if not response or not response.startswith("SI"):
+            _LOGGER.debug("Not an input source response")
             return None
 
         source = response[6:]
+        _LOGGER.debug("Input source raw data: '%s'", source)
 
         # Strip `V=(<video>\w+) A=(<audio>\w+)$` from the end using regex, extracting their params to log
         match = re.search(r"(?P<name>(\w+) V=(?P<video>\w+) A=(?P<audio>\w+)$", source)
@@ -243,12 +259,17 @@ class ToneWinnerProtocol:
     @staticmethod
     def parse_sound_mode(response: str) -> str | None:
         """Parse current sound mode from response."""
+        _LOGGER.debug("Parsing sound mode from: '%s'", response)
         if not response or not response.startswith("MODE"):
+            _LOGGER.debug("Not a sound mode response")
             return None
 
         mode_code = response[5:]
+        _LOGGER.debug("Sound mode code: '%s'", mode_code)
         mode = ToneWinnerCommands.MODES.get(mode_code)
-        return mode.label if mode else f"Unknown ({mode_code})"
+        result = mode.label if mode else f"Unknown ({mode_code})"
+        _LOGGER.debug("Sound mode parsed: %s", result)
+        return result
 
     @staticmethod
     def is_valid_response(response: str) -> bool:
