@@ -140,6 +140,7 @@ HOME_SENSORS = [
         data_category=SENSOR_DATA_CATEGORY_RATE_LIMIT,
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
     ),
     TadoSensorEntityDescription(
         key="rate_limit",
@@ -148,6 +149,7 @@ HOME_SENSORS = [
         data_category=SENSOR_DATA_CATEGORY_RATE_LIMIT,
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
     ),
 ]
 
