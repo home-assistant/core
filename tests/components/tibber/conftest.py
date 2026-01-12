@@ -25,7 +25,7 @@ from tests.typing import RecorderInstanceContextManager
 async def mock_recorder_before_hass(
     async_test_recorder: RecorderInstanceContextManager,
 ) -> None:
-    """Set up recorder."""
+    """Set up recorder before hass fixture runs."""
 
 
 def create_tibber_device(

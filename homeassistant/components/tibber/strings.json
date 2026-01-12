@@ -11,7 +11,7 @@
     },
     "step": {
       "connection_error": {
-        "description": "Could not connect to Tibber. This may be a temporary issue. Please try again.",
+        "description": "Could not connect to Tibber. Check your internet connection and try again.",
         "title": "Connection failed"
       },
       "reauth_confirm": {
