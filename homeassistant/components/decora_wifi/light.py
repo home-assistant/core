@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from datetime import timedelta
 import logging
 from typing import Any
 
@@ -25,6 +26,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.util import Throttle
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -167,6 +169,7 @@ class DecoraWifiLight(LightEntity):
         except ValueError:
             _LOGGER.error("Failed to turn off myLeviton switch")
 
+    @Throttle(timedelta(seconds=30))
     def update(self) -> None:
         """Fetch new state data for this switch."""
         try:

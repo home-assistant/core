@@ -25,7 +25,9 @@ from tests.common import MockConfigEntry, async_fire_time_changed
 def mock_entry():
     """Create hass config fixture."""
     return MockConfigEntry(
-        domain=DOMAIN, data={CONF_ADDRESS: WATER_TIMER_SERVICE_INFO.address}
+        domain=DOMAIN,
+        data={CONF_ADDRESS: WATER_TIMER_SERVICE_INFO.address},
+        unique_id=WATER_TIMER_SERVICE_INFO.address,
     )
 
 

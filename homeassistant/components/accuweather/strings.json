@@ -1,25 +1,8 @@
 {
   "config": {
-    "step": {
-      "user": {
-        "data": {
-          "name": "[%key:common::config_flow::data::name%]",
-          "api_key": "[%key:common::config_flow::data::api_key%]",
-          "latitude": "[%key:common::config_flow::data::latitude%]",
-          "longitude": "[%key:common::config_flow::data::longitude%]"
-        },
-        "data_description": {
-          "api_key": "API key generated in the AccuWeather APIs portal."
-        }
-      },
-      "reauth_confirm": {
-        "data": {
-          "api_key": "[%key:common::config_flow::data::api_key%]"
-        },
-        "data_description": {
-          "api_key": "[%key:component::accuweather::config::step::user::data_description::api_key%]"
-        }
-      }
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_location%]",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
     },
     "create_entry": {
       "default": "Some sensors are not enabled by default. You can enable them in the entity registry after the integration configuration."
@@ -29,9 +12,26 @@
       "invalid_api_key": "[%key:common::config_flow::error::invalid_api_key%]",
       "requests_exceeded": "The allowed number of requests to the AccuWeather API has been exceeded. You have to wait or change the API key."
     },
-    "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_location%]",
-      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
+    "step": {
+      "reauth_confirm": {
+        "data": {
+          "api_key": "[%key:common::config_flow::data::api_key%]"
+        },
+        "data_description": {
+          "api_key": "[%key:component::accuweather::config::step::user::data_description::api_key%]"
+        }
+      },
+      "user": {
+        "data": {
+          "api_key": "[%key:common::config_flow::data::api_key%]",
+          "latitude": "[%key:common::config_flow::data::latitude%]",
+          "longitude": "[%key:common::config_flow::data::longitude%]",
+          "name": "[%key:common::config_flow::data::name%]"
+        },
+        "data_description": {
+          "api_key": "API key generated in the AccuWeather APIs portal."
+        }
+      }
     }
   },
   "entity": {
@@ -120,9 +120,9 @@
       "pressure_tendency": {
         "name": "Pressure tendency",
         "state": {
-          "steady": "Steady",
+          "falling": "Falling",
           "rising": "Rising",
-          "falling": "Falling"
+          "steady": "Steady"
         },
         "state_attributes": {
           "options": {
@@ -227,9 +227,6 @@
       "wet_bulb_temperature": {
         "name": "Wet bulb temperature"
       },
-      "wind_speed": {
-        "name": "[%key:component::weather::entity_component::_::state_attributes::wind_speed::name%]"
-      },
       "wind_chill_temperature": {
         "name": "Wind chill temperature"
       },
@@ -241,6 +238,9 @@
       },
       "wind_gust_speed_night": {
         "name": "Wind gust speed night {forecast_day}"
+      },
+      "wind_speed": {
+        "name": "[%key:component::weather::entity_component::_::state_attributes::wind_speed::name%]"
       },
       "wind_speed_day": {
         "name": "Wind speed day {forecast_day}"

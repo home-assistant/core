@@ -21,6 +21,7 @@ from homeassistant.util import dt as dt_util
 from .common import (
     MOCK_UPTIMEROBOT_CONFIG_ENTRY_DATA,
     MOCK_UPTIMEROBOT_MONITOR,
+    MOCK_UPTIMEROBOT_MONITOR_2,
     MOCK_UPTIMEROBOT_MONITOR_PAUSED,
     UPTIMEROBOT_SWITCH_TEST_ENTITY,
     MockApiResponseKey,
@@ -197,20 +198,8 @@ async def test_switch_dynamic(hass: HomeAssistant) -> None:
         "pyuptimerobot.UptimeRobot.async_get_monitors",
         return_value=mock_uptimerobot_api_response(
             data=[
-                {
-                    "id": 1234,
-                    "friendly_name": "Test monitor",
-                    "status": 2,
-                    "type": 1,
-                    "url": "http://example.com",
-                },
-                {
-                    "id": 5678,
-                    "friendly_name": "Test monitor 2",
-                    "status": 2,
-                    "type": 1,
-                    "url": "http://example2.com",
-                },
+                MOCK_UPTIMEROBOT_MONITOR,
+                MOCK_UPTIMEROBOT_MONITOR_2,
             ]
         ),
     ):

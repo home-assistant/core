@@ -116,7 +116,11 @@ class EbusdData:
         try:
             _LOGGER.debug("Opening socket to ebusd %s", name)
             command_result = ebusdpy.write(self._address, self._circuit, name, value)
-            if command_result is not None and "done" not in command_result:
+            if (
+                command_result is not None
+                and "done" not in command_result
+                and "empty" not in command_result
+            ):
                 _LOGGER.warning("Write command failed: %s", name)
         except RuntimeError as err:
             _LOGGER.error(err)

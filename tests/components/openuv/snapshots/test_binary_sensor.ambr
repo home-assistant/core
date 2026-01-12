@@ -51,7 +51,7 @@
     'state': 'off',
   })
 # ---
-# name: test_protection_window_recalculation[after-protetction-state]
+# name: test_protection_window_recalculation[after-protection-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'end_time': datetime.datetime(2018, 7, 30, 16, 47, 49, 750000, tzinfo=zoneinfo.ZoneInfo(key='America/Regina')),
@@ -68,7 +68,7 @@
     'state': 'off',
   })
 # ---
-# name: test_protection_window_recalculation[before-protetction-state]
+# name: test_protection_window_recalculation[before-protection-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'end_time': datetime.datetime(2018, 7, 30, 16, 47, 49, 750000, tzinfo=zoneinfo.ZoneInfo(key='America/Regina')),
@@ -85,7 +85,7 @@
     'state': 'off',
   })
 # ---
-# name: test_protection_window_recalculation[during-protetction-state]
+# name: test_protection_window_recalculation[during-protection-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'end_time': datetime.datetime(2018, 7, 30, 16, 47, 49, 750000, tzinfo=zoneinfo.ZoneInfo(key='America/Regina')),

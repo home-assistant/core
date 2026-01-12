@@ -13,6 +13,7 @@ DEVICE_KEYS_A_B = ("A", "B")
 DEVICE_KEYS_A_D = ("A", "B", "C", "D")
 
 DEVICE_SUPPORT = {
+    "01": (),
     "05": (),
     "10": (),
     "12": (),
@@ -27,7 +28,7 @@ DEVICE_SUPPORT = {
     "3A": (),
     "3B": (),
     "42": (),
-    "7E": ("EDS0066", "EDS0068"),
+    "7E": ("EDS0065", "EDS0066", "EDS0068"),
     "A6": (),
     "EF": ("HB_HUB", "HB_MOISTURE_METER", "HobbyBoards_EF"),
 }
@@ -50,6 +51,3 @@ INPUT_ENTRY_DEVICE_SELECTION = "device_selection"
 MANUFACTURER_MAXIM = "Maxim Integrated"
 MANUFACTURER_HOBBYBOARDS = "Hobby Boards"
 MANUFACTURER_EDS = "Embedded Data Systems"
-
-READ_MODE_FLOAT = "float"
-READ_MODE_INT = "int"

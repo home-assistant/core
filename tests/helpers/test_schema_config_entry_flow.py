@@ -342,33 +342,33 @@ async def test_menu_step(hass: HomeAssistant) -> None:
         result = await hass.config_entries.flow.async_init(
             TEST_DOMAIN, context={"source": "user"}
         )
-        assert result["type"] == FlowResultType.MENU
+        assert result["type"] is FlowResultType.MENU
         assert result["step_id"] == "user"
 
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {"next_step_id": "option1"},
         )
-        assert result["type"] == FlowResultType.FORM
+        assert result["type"] is FlowResultType.FORM
         assert result["step_id"] == "option1"
 
         result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
-        assert result["type"] == FlowResultType.MENU
+        assert result["type"] is FlowResultType.MENU
         assert result["step_id"] == "menu2"
 
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {"next_step_id": "option3"},
         )
-        assert result["type"] == FlowResultType.FORM
+        assert result["type"] is FlowResultType.FORM
         assert result["step_id"] == "option3"
 
         result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
-        assert result["type"] == FlowResultType.FORM
+        assert result["type"] is FlowResultType.FORM
         assert result["step_id"] == "option4"
 
         result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
-        assert result["type"] == FlowResultType.CREATE_ENTRY
+        assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_schema_none(hass: HomeAssistant) -> None:
@@ -391,15 +391,15 @@ async def test_schema_none(hass: HomeAssistant) -> None:
         result = await hass.config_entries.flow.async_init(
             TEST_DOMAIN, context={"source": "user"}
         )
-        assert result["type"] == FlowResultType.FORM
+        assert result["type"] is FlowResultType.FORM
         assert result["step_id"] == "option1"
 
         result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
-        assert result["type"] == FlowResultType.FORM
+        assert result["type"] is FlowResultType.FORM
         assert result["step_id"] == "option3"
 
         result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
-        assert result["type"] == FlowResultType.CREATE_ENTRY
+        assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_last_step(hass: HomeAssistant) -> None:
@@ -425,22 +425,22 @@ async def test_last_step(hass: HomeAssistant) -> None:
         result = await hass.config_entries.flow.async_init(
             TEST_DOMAIN, context={"source": "user"}
         )
-        assert result["type"] == FlowResultType.FORM
+        assert result["type"] is FlowResultType.FORM
         assert result["step_id"] == "step1"
         assert result["last_step"] is False
 
         result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
-        assert result["type"] == FlowResultType.FORM
+        assert result["type"] is FlowResultType.FORM
         assert result["step_id"] == "step2"
         assert result["last_step"] is None
 
         result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
-        assert result["type"] == FlowResultType.FORM
+        assert result["type"] is FlowResultType.FORM
         assert result["step_id"] == "step3"
         assert result["last_step"] is True
 
         result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
-        assert result["type"] == FlowResultType.CREATE_ENTRY
+        assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_next_step_function(hass: HomeAssistant) -> None:
@@ -468,15 +468,15 @@ async def test_next_step_function(hass: HomeAssistant) -> None:
         result = await hass.config_entries.flow.async_init(
             TEST_DOMAIN, context={"source": "user"}
         )
-        assert result["type"] == FlowResultType.FORM
+        assert result["type"] is FlowResultType.FORM
         assert result["step_id"] == "step1"
 
         result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
-        assert result["type"] == FlowResultType.FORM
+        assert result["type"] is FlowResultType.FORM
         assert result["step_id"] == "step2"
 
         result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
-        assert result["type"] == FlowResultType.CREATE_ENTRY
+        assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_suggested_values(

@@ -10,16 +10,16 @@
   "requirements": ["pysmappee==0.2.29"],
   "zeroconf": [
     {
-      "type": "_ssh._tcp.local.",
-      "name": "smappee1*"
+      "name": "smappee1*",
+      "type": "_ssh._tcp.local."
     },
     {
-      "type": "_ssh._tcp.local.",
-      "name": "smappee2*"
+      "name": "smappee2*",
+      "type": "_ssh._tcp.local."
     },
     {
-      "type": "_ssh._tcp.local.",
-      "name": "smappee50*"
+      "name": "smappee50*",
+      "type": "_ssh._tcp.local."
     }
   ]
 }

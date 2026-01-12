@@ -32,6 +32,8 @@ DISCOVERY_SCHEMA = vol.Schema(
     }
 )
 
+EXAMPLE_URL = "http://192.168.1.123:1234"
+
 
 class MealieConfigFlow(ConfigFlow, domain=DOMAIN):
     """Mealie config flow."""
@@ -93,6 +95,7 @@ class MealieConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="user",
             data_schema=USER_SCHEMA,
             errors=errors,
+            description_placeholders={"example_url": EXAMPLE_URL},
         )
 
     async def async_step_reauth(
@@ -123,6 +126,7 @@ class MealieConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="reauth_confirm",
             data_schema=REAUTH_SCHEMA,
             errors=errors,
+            description_placeholders={"example_url": EXAMPLE_URL},
         )
 
     async def async_step_reconfigure(
@@ -151,6 +155,7 @@ class MealieConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="reconfigure",
             data_schema=USER_SCHEMA,
             errors=errors,
+            description_placeholders={"example_url": EXAMPLE_URL},
         )
 
     async def async_step_hassio(
