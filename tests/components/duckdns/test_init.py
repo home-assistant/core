@@ -18,7 +18,7 @@ from homeassistant.components.duckdns.helpers import UPDATE_URL
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_DOMAIN
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ServiceValidationError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.util.dt import utcnow
 
 from .conftest import TEST_SUBDOMAIN, TEST_TOKEN
@@ -198,6 +198,43 @@ async def test_service_exceptions(
             DOMAIN,
             SERVICE_SET_TXT,
             payload,
+            blocking=True,
+        )
+
+
+@pytest.mark.parametrize(
+    ("side_effect", "exception_msg"),
+    [
+        (
+            False,
+            "Updating Duck DNS domain homeassistant failed",
+        ),
+        (
+            ClientError,
+            "Updating Duck DNS domain homeassistant failed due to a connection error",
+        ),
+    ],
+)
+@pytest.mark.usefixtures("setup_duckdns")
+async def test_service_request_exception(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    side_effect: Exception | bool,
+    exception_msg: str,
+) -> None:
+    """Test service request exception."""
+
+    with (
+        patch(
+            "homeassistant.components.duckdns.services.update_duckdns",
+            side_effect=[side_effect],
+        ),
+        pytest.raises(HomeAssistantError, match=exception_msg),
+    ):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_SET_TXT,
+            {ATTR_CONFIG_ENTRY: config_entry.entry_id},
             blocking=True,
         )
 
