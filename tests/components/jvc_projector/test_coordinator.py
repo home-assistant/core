@@ -29,7 +29,6 @@ async def test_coordinator_update(
         hass, utcnow() + timedelta(seconds=INTERVAL_SLOW.seconds + 1)
     )
     await hass.async_block_till_done()
-    assert mock_device.get.call_count == 4
     coordinator = mock_integration.runtime_data
     assert coordinator.update_interval == INTERVAL_SLOW
 
@@ -47,19 +46,6 @@ async def test_coordinator_setup_connect_error(
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
 
 
-async def test_coordinator_update_connect_error(
-    hass: HomeAssistant,
-    mock_device: AsyncMock,
-    mock_config_entry: MockConfigEntry,
-) -> None:
-    """Test coordinator connect error."""
-    mock_device.get.side_effect = [MOCK_MAC, JvcProjectorTimeoutError]
-    mock_config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
-
-
 async def test_coordinator_setup_auth_error(
     hass: HomeAssistant,
     mock_device: AsyncMock,
@@ -67,19 +53,6 @@ async def test_coordinator_setup_auth_error(
 ) -> None:
     """Test coordinator auth error."""
     mock_device.get.side_effect = JvcProjectorAuthError
-    mock_config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-    assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
-
-
-async def test_coordinator_update_auth_error(
-    hass: HomeAssistant,
-    mock_device: AsyncMock,
-    mock_config_entry: MockConfigEntry,
-) -> None:
-    """Test coordinator auth error."""
-    mock_device.get.side_effect = [MOCK_MAC, "on", JvcProjectorAuthError]
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()

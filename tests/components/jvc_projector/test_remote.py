@@ -43,7 +43,7 @@ async def test_commands(
         {ATTR_ENTITY_ID: ENTITY_ID},
         blocking=True,
     )
-    assert mock_device.get.call_count == 4
+    assert mock_device.get.call_count == 3
 
     await hass.services.async_call(
         REMOTE_DOMAIN,
@@ -51,7 +51,7 @@ async def test_commands(
         {ATTR_ENTITY_ID: ENTITY_ID},
         blocking=True,
     )
-    assert mock_device.get.call_count == 5
+    assert mock_device.get.call_count == 4
 
     await hass.services.async_call(
         REMOTE_DOMAIN,

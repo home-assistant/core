@@ -41,12 +41,16 @@
     },
     "select": {
       "input": {
-        "name": "Input"
+        "name": "Input",
+        "state": {
+          "hdmi-1": "HDMI 1",
+          "hdmi-2": "HDMI 2"
+        }
       }
     },
     "sensor": {
-      "power": {
-        "name": "[%key:component::sensor::entity_component::power::name%]",
+      "jvc_power_status": {
+        "name": "Status",
         "state": {
           "cooling": "Cooling",
           "error": "[%key:common::state::error%]",

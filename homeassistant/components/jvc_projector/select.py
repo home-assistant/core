@@ -12,7 +12,6 @@ from homeassistant.components.select import SelectEntity, SelectEntityDescriptio
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import INPUT
 from .coordinator import JVCConfigEntry, JvcProjectorDataUpdateCoordinator
 from .entity import JvcProjectorEntity
 
@@ -24,13 +23,11 @@ class JvcProjectorSelectDescription(SelectEntityDescription):
     command: Callable[[JvcProjector, str], Awaitable[None]]
 
 
-OPTIONS: Final[dict[str, list[str]]] = {INPUT: [cmd.Input.HDMI_1, cmd.Input.HDMI_2]}
-
 SELECTS: Final[list[JvcProjectorSelectDescription]] = [
     JvcProjectorSelectDescription(
-        key=INPUT,
-        translation_key=INPUT,
-        options=OPTIONS[INPUT],
+        key="input",
+        translation_key="input",
+        options=[cmd.Input.HDMI_1, cmd.Input.HDMI_2],
         command=lambda device, option: device.set(cmd.Input, option),
     )
 ]
