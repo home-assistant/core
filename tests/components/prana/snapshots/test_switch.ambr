@@ -30,7 +30,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'auto',
-    'unique_id': '0123456789abcdef0123456789abcdef_auto',
+    'unique_id': 'ECC9FFE0E574_auto',
     'unit_of_measurement': None,
   })
 # ---
@@ -78,7 +78,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'auto_plus',
-    'unique_id': '0123456789abcdef0123456789abcdef_auto_plus',
+    'unique_id': 'ECC9FFE0E574_auto_plus',
     'unit_of_measurement': None,
   })
 # ---
@@ -126,7 +126,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'bound',
-    'unique_id': '0123456789abcdef0123456789abcdef_bound',
+    'unique_id': 'ECC9FFE0E574_bound',
     'unit_of_measurement': None,
   })
 # ---
@@ -174,7 +174,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'heater',
-    'unique_id': '0123456789abcdef0123456789abcdef_heater',
+    'unique_id': 'ECC9FFE0E574_heater',
     'unit_of_measurement': None,
   })
 # ---
@@ -222,7 +222,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'winter',
-    'unique_id': '0123456789abcdef0123456789abcdef_winter',
+    'unique_id': 'ECC9FFE0E574_winter',
     'unit_of_measurement': None,
   })
 # ---
