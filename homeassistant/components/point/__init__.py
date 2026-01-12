@@ -59,7 +59,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: PointConfigEntry) -> boo
 
     point_session = PointSession(auth)
 
-    coordinator = PointDataUpdateCoordinator(hass, point_session)
+    coordinator = PointDataUpdateCoordinator(hass, point_session, entry)
 
     await coordinator.async_config_entry_first_refresh()
 
