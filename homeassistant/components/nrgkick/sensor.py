@@ -139,6 +139,7 @@ SENSORS: tuple[NRGkickSensorEntityDescription, ...] = (
         key="connector_serial",
         translation_key="connector_serial",
         entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
         value_path=("info", "connector", "serial"),
     ),
     # INFO - Grid
