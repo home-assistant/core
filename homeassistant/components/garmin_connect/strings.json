@@ -25,13 +25,6 @@
         "description": "Your Garmin Connect session has expired. Please log in again.",
         "title": "Reauthenticate"
       },
-      "user": {
-        "data": {
-          "password": "Password",
-          "username": "Email"
-        },
-        "description": "Enter your Garmin Connect credentials."
-      },
       "reconfigure": {
         "data": {
           "password": "Password",
@@ -39,6 +32,13 @@
         },
         "description": "Update your Garmin Connect credentials.",
         "title": "Reconfigure Garmin Connect"
+      },
+      "user": {
+        "data": {
+          "password": "Password",
+          "username": "Email"
+        },
+        "description": "Enter your Garmin Connect credentials."
       }
     }
   },
@@ -47,14 +47,8 @@
       "abnormal_hr_alerts": {
         "name": "Abnormal heart rate alerts"
       },
-      "achievable_fitness_age": {
-        "name": "Achievable fitness age"
-      },
       "active_calories": {
         "name": "Active calories"
-      },
-      "active_goals": {
-        "name": "Active goals"
       },
       "active_time": {
         "name": "Active time"
@@ -80,12 +74,6 @@
       "awake_sleep": {
         "name": "Awake time"
       },
-      "badges": {
-        "name": "Badges"
-      },
-      "bmi": {
-        "name": "BMI"
-      },
       "bmr_calories": {
         "name": "BMR calories"
       },
@@ -104,32 +92,8 @@
       "body_battery_most_recent": {
         "name": "Body battery"
       },
-      "body_fat": {
-        "name": "Body fat"
-      },
-      "body_water": {
-        "name": "Body water"
-      },
-      "bone_mass": {
-        "name": "Bone mass"
-      },
-      "bp_diastolic": {
-        "name": "Blood pressure diastolic"
-      },
-      "bp_measurement_time": {
-        "name": "Blood pressure measurement time"
-      },
-      "bp_pulse": {
-        "name": "Blood pressure pulse"
-      },
-      "bp_systolic": {
-        "name": "Blood pressure systolic"
-      },
       "burned_calories": {
         "name": "Burned calories"
-      },
-      "chronological_age": {
-        "name": "Chronological age"
       },
       "consumed_calories": {
         "name": "Consumed calories"
@@ -142,12 +106,6 @@
       },
       "device_last_synced": {
         "name": "Last synced"
-      },
-      "endurance_score": {
-        "name": "Endurance score"
-      },
-      "fitness_age": {
-        "name": "Fitness age"
       },
       "floors_ascended": {
         "name": "Floors ascended"
@@ -164,12 +122,6 @@
       "floors_descended_meters": {
         "name": "Floors descended (meters)"
       },
-      "future_goals": {
-        "name": "Future goals"
-      },
-      "goals_history": {
-        "name": "Goals history"
-      },
       "high_stress_duration": {
         "name": "High stress duration"
       },
@@ -181,9 +133,6 @@
       },
       "highly_active_time": {
         "name": "Highly active time"
-      },
-      "hill_score": {
-        "name": "Hill score"
       },
       "hrv_baseline": {
         "name": "HRV baseline"
@@ -200,47 +149,11 @@
       "hrv_weekly_avg": {
         "name": "HRV weekly average"
       },
-      "hydration": {
-        "name": "Hydration"
-      },
-      "hydration_activity_intake": {
-        "name": "Hydration activity intake"
-      },
-      "hydration_daily_average": {
-        "name": "Hydration daily average"
-      },
-      "hydration_goal": {
-        "name": "Hydration goal"
-      },
-      "hydration_sweat_loss": {
-        "name": "Hydration sweat loss"
-      },
       "intensity_goal": {
         "name": "Intensity minutes goal"
       },
-      "total_intensity_minutes": {
-        "name": "Total intensity minutes"
-      },
-      "lactate_threshold_hr": {
-        "name": "Lactate threshold heart rate"
-      },
-      "lactate_threshold_speed": {
-        "name": "Lactate threshold speed"
-      },
       "last_7_days_avg_resting_heart_rate": {
         "name": "7-day average resting heart rate"
-      },
-      "last_activities": {
-        "name": "Last activities"
-      },
-      "last_activity": {
-        "name": "Last activity"
-      },
-      "last_workout": {
-        "name": "Last workout"
-      },
-      "last_workouts": {
-        "name": "Last workouts"
       },
       "latest_respiration": {
         "name": "Latest respiration"
@@ -284,36 +197,6 @@
       "medium_stress_percentage": {
         "name": "Medium stress percentage"
       },
-      "menstrual_cycle_day": {
-        "name": "Menstrual cycle day"
-      },
-      "menstrual_cycle_phase": {
-        "name": "Menstrual cycle phase"
-      },
-      "menstrual_cycle_start": {
-        "name": "Menstrual cycle start"
-      },
-      "menstrual_cycle_type": {
-        "name": "Menstrual cycle type"
-      },
-      "menstrual_days_until_next_phase": {
-        "name": "Menstrual days until next phase"
-      },
-      "menstrual_fertile_window_end": {
-        "name": "Menstrual fertile window end"
-      },
-      "menstrual_fertile_window_start": {
-        "name": "Menstrual fertile window start"
-      },
-      "menstrual_next_predicted_cycle_start": {
-        "name": "Menstrual next predicted cycle start"
-      },
-      "menstrual_period_length": {
-        "name": "Menstrual period length"
-      },
-      "metabolic_age": {
-        "name": "Metabolic age"
-      },
       "min_avg_heart_rate": {
         "name": "Min average heart rate"
       },
@@ -322,21 +205,6 @@
       },
       "moderate_intensity": {
         "name": "Moderate intensity minutes"
-      },
-      "morning_training_readiness": {
-        "name": "Morning training readiness"
-      },
-      "muscle_mass": {
-        "name": "Muscle mass"
-      },
-      "next_alarm": {
-        "name": "Next alarm"
-      },
-      "physique_rating": {
-        "name": "Physique rating"
-      },
-      "previous_fitness_age": {
-        "name": "Previous fitness age"
       },
       "rem_sleep": {
         "name": "REM sleep"
@@ -365,9 +233,6 @@
       "sleeping_time": {
         "name": "Sleeping time"
       },
-      "stress_duration": {
-        "name": "Stress duration"
-      },
       "stress_percentage": {
         "name": "Stress percentage"
       },
@@ -380,6 +245,9 @@
       "total_distance": {
         "name": "Total distance"
       },
+      "total_intensity_minutes": {
+        "name": "Total intensity minutes"
+      },
       "total_sleep_duration": {
         "name": "Total sleep duration"
       },
@@ -389,38 +257,20 @@
       "total_stress_duration": {
         "name": "Total stress duration"
       },
-      "training_readiness": {
-        "name": "Training readiness"
-      },
-      "training_status": {
-        "name": "Training status"
-      },
       "uncategorized_stress_duration": {
         "name": "Uncategorized stress duration"
       },
       "uncategorized_stress_percentage": {
         "name": "Uncategorized stress percentage"
       },
-      "user_level": {
-        "name": "User level"
-      },
-      "user_points": {
-        "name": "User points"
-      },
       "vigorous_intensity": {
         "name": "Vigorous intensity minutes"
-      },
-      "visceral_fat": {
-        "name": "Visceral fat"
       },
       "weekly_distance_avg": {
         "name": "Weekly distance average"
       },
       "weekly_step_avg": {
         "name": "Weekly step average"
-      },
-      "weight": {
-        "name": "Weight"
       },
       "wellness_active_calories": {
         "name": "Wellness active calories"
@@ -445,172 +295,6 @@
       },
       "yesterday_steps": {
         "name": "Yesterday steps"
-      }
-    }
-  },
-  "services": {
-    "set_active_gear": {
-      "name": "Set active gear",
-      "description": "Set gear as active/default for an activity type.",
-      "fields": {
-        "gear_uuid": {
-          "name": "Gear UUID",
-          "description": "The UUID of the gear. Find this in the gear sensor attributes."
-        },
-        "entity_id": {
-          "name": "Gear sensor entity",
-          "description": "Alternative to gear_uuid - select a gear sensor entity."
-        },
-        "activity_type": {
-          "name": "Activity type",
-          "description": "The activity type for which to set the gear as default."
-        },
-        "setting": {
-          "name": "Setting",
-          "description": "The gear setting to apply."
-        }
-      }
-    },
-    "add_body_composition": {
-      "name": "Add body composition",
-      "description": "Add body composition metrics to Garmin Connect.",
-      "fields": {
-        "weight": {
-          "name": "Weight",
-          "description": "Weight in kilograms."
-        },
-        "timestamp": {
-          "name": "Timestamp",
-          "description": "When the measurement was recorded (defaults to now)."
-        },
-        "bmi": {
-          "name": "BMI",
-          "description": "Body Mass Index based on weight and height."
-        },
-        "percent_fat": {
-          "name": "Body fat percentage",
-          "description": "Percentage of body fat."
-        },
-        "percent_hydration": {
-          "name": "Hydration percentage",
-          "description": "Percentage of body hydration."
-        },
-        "visceral_fat_mass": {
-          "name": "Visceral fat mass",
-          "description": "Estimated mass of visceral fat in kilograms."
-        },
-        "bone_mass": {
-          "name": "Bone mass",
-          "description": "Estimated mass of bones in kilograms."
-        },
-        "muscle_mass": {
-          "name": "Muscle mass",
-          "description": "Estimated mass of muscle in kilograms."
-        },
-        "basal_met": {
-          "name": "Basal metabolism",
-          "description": "Basal metabolic rate in kcal."
-        },
-        "active_met": {
-          "name": "Active metabolism",
-          "description": "Active metabolic rate in kcal."
-        },
-        "physique_rating": {
-          "name": "Physique rating",
-          "description": "Body physique rating (1-9 scale)."
-        },
-        "metabolic_age": {
-          "name": "Metabolic age",
-          "description": "Estimated metabolic age in years."
-        },
-        "visceral_fat_rating": {
-          "name": "Visceral fat rating",
-          "description": "Visceral fat rating (1-59 scale)."
-        }
-      }
-    },
-    "add_blood_pressure": {
-      "name": "Add blood pressure",
-      "description": "Add blood pressure measurement to Garmin Connect.",
-      "fields": {
-        "systolic": {
-          "name": "Systolic",
-          "description": "Systolic blood pressure value."
-        },
-        "diastolic": {
-          "name": "Diastolic",
-          "description": "Diastolic blood pressure value."
-        },
-        "pulse": {
-          "name": "Pulse",
-          "description": "Pulse rate."
-        },
-        "timestamp": {
-          "name": "Timestamp",
-          "description": "When the measurement was recorded (defaults to now)."
-        },
-        "notes": {
-          "name": "Notes",
-          "description": "Additional notes for the measurement."
-        }
-      }
-    },
-    "create_activity": {
-      "name": "Create activity",
-      "description": "Create an activity in Garmin Connect.",
-      "fields": {
-        "activity_name": {
-          "name": "Activity name",
-          "description": "Name of the activity."
-        },
-        "activity_type": {
-          "name": "Activity type",
-          "description": "Type of activity (e.g., running, cycling, walking)."
-        },
-        "start_datetime": {
-          "name": "Start date and time",
-          "description": "When the activity started (ISO format)."
-        },
-        "duration_min": {
-          "name": "Duration",
-          "description": "Duration of the activity in minutes."
-        },
-        "distance_km": {
-          "name": "Distance",
-          "description": "Distance covered in kilometers (optional)."
-        },
-        "time_zone": {
-          "name": "Time zone",
-          "description": "Time zone for the activity."
-        }
-      }
-    },
-    "upload_activity": {
-      "name": "Upload activity",
-      "description": "Upload an activity file (FIT, GPX, TCX) to Garmin Connect.",
-      "fields": {
-        "file_path": {
-          "name": "File path",
-          "description": "Path to the activity file on the Home Assistant system."
-        }
-      }
-    },
-    "add_gear_to_activity": {
-      "name": "Add gear to activity",
-      "description": "Associate gear with a specific activity.",
-      "fields": {
-        "activity_id": {
-          "name": "Activity ID",
-          "description": "The ID of the activity to add the gear to."
-        },
-        "gear_uuid": {
-          "name": "Gear UUID",
-          "description": "The UUID of the gear to add."
-        },
-        "entity_id": {
-          "name": "Gear sensor entity",
-          "description": "Alternative to gear_uuid - select a gear sensor entity."
-        }
       }
     }
   },
@@ -670,6 +354,172 @@
         "description": "Configure your Garmin Connect integration settings.",
         "title": "Garmin Connect Options"
       }
+    }
+  },
+  "services": {
+    "add_blood_pressure": {
+      "description": "Add blood pressure measurement to Garmin Connect.",
+      "fields": {
+        "diastolic": {
+          "description": "Diastolic blood pressure value.",
+          "name": "Diastolic"
+        },
+        "notes": {
+          "description": "Additional notes for the measurement.",
+          "name": "Notes"
+        },
+        "pulse": {
+          "description": "Pulse rate.",
+          "name": "Pulse"
+        },
+        "systolic": {
+          "description": "Systolic blood pressure value.",
+          "name": "Systolic"
+        },
+        "timestamp": {
+          "description": "When the measurement was recorded (defaults to now).",
+          "name": "Timestamp"
+        }
+      },
+      "name": "Add blood pressure"
+    },
+    "add_body_composition": {
+      "description": "Add body composition metrics to Garmin Connect.",
+      "fields": {
+        "active_met": {
+          "description": "Active metabolic rate in kcal.",
+          "name": "Active metabolism"
+        },
+        "basal_met": {
+          "description": "Basal metabolic rate in kcal.",
+          "name": "Basal metabolism"
+        },
+        "bmi": {
+          "description": "Body Mass Index based on weight and height.",
+          "name": "BMI"
+        },
+        "bone_mass": {
+          "description": "Estimated mass of bones in kilograms.",
+          "name": "Bone mass"
+        },
+        "metabolic_age": {
+          "description": "Estimated metabolic age in years.",
+          "name": "Metabolic age"
+        },
+        "muscle_mass": {
+          "description": "Estimated mass of muscle in kilograms.",
+          "name": "Muscle mass"
+        },
+        "percent_fat": {
+          "description": "Percentage of body fat.",
+          "name": "Body fat percentage"
+        },
+        "percent_hydration": {
+          "description": "Percentage of body hydration.",
+          "name": "Hydration percentage"
+        },
+        "physique_rating": {
+          "description": "Body physique rating (1-9 scale).",
+          "name": "Physique rating"
+        },
+        "timestamp": {
+          "description": "When the measurement was recorded (defaults to now).",
+          "name": "Timestamp"
+        },
+        "visceral_fat_mass": {
+          "description": "Estimated mass of visceral fat in kilograms.",
+          "name": "Visceral fat mass"
+        },
+        "visceral_fat_rating": {
+          "description": "Visceral fat rating (1-59 scale).",
+          "name": "Visceral fat rating"
+        },
+        "weight": {
+          "description": "Weight in kilograms.",
+          "name": "Weight"
+        }
+      },
+      "name": "Add body composition"
+    },
+    "add_gear_to_activity": {
+      "description": "Associate gear with a specific activity.",
+      "fields": {
+        "activity_id": {
+          "description": "The ID of the activity to add the gear to.",
+          "name": "Activity ID"
+        },
+        "entity_id": {
+          "description": "Alternative to gear_uuid - select a gear sensor entity.",
+          "name": "Gear sensor entity"
+        },
+        "gear_uuid": {
+          "description": "The UUID of the gear to add.",
+          "name": "Gear UUID"
+        }
+      },
+      "name": "Add gear to activity"
+    },
+    "create_activity": {
+      "description": "Create an activity in Garmin Connect.",
+      "fields": {
+        "activity_name": {
+          "description": "Name of the activity.",
+          "name": "Activity name"
+        },
+        "activity_type": {
+          "description": "Type of activity (e.g., running, cycling, walking).",
+          "name": "Activity type"
+        },
+        "distance_km": {
+          "description": "Distance covered in kilometers (optional).",
+          "name": "Distance"
+        },
+        "duration_min": {
+          "description": "Duration of the activity in minutes.",
+          "name": "Duration"
+        },
+        "start_datetime": {
+          "description": "When the activity started (ISO format).",
+          "name": "Start date and time"
+        },
+        "time_zone": {
+          "description": "Time zone for the activity.",
+          "name": "Time zone"
+        }
+      },
+      "name": "Create activity"
+    },
+    "set_active_gear": {
+      "description": "Set gear as active/default for an activity type.",
+      "fields": {
+        "activity_type": {
+          "description": "The activity type for which to set the gear as default.",
+          "name": "Activity type"
+        },
+        "entity_id": {
+          "description": "Alternative to gear_uuid - select a gear sensor entity.",
+          "name": "Gear sensor entity"
+        },
+        "gear_uuid": {
+          "description": "The UUID of the gear. Find this in the gear sensor attributes.",
+          "name": "Gear UUID"
+        },
+        "setting": {
+          "description": "The gear setting to apply.",
+          "name": "Setting"
+        }
+      },
+      "name": "Set active gear"
+    },
+    "upload_activity": {
+      "description": "Upload an activity file (FIT, GPX, TCX) to Garmin Connect.",
+      "fields": {
+        "file_path": {
+          "description": "Path to the activity file on the Home Assistant system.",
+          "name": "File path"
+        }
+      },
+      "name": "Upload activity"
     }
   }
 }

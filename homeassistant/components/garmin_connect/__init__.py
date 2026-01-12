@@ -2,29 +2,19 @@
 
 from __future__ import annotations
 
-import asyncio
 import logging
 
 from aiogarmin import GarminAuth, GarminClient
+from aiogarmin.exceptions import GarminAuthError
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import CONF_OAUTH1_TOKEN, CONF_OAUTH2_TOKEN, DOMAIN
-from .coordinator import (
-    ActivityCoordinator,
-    BloodPressureCoordinator,
-    BodyCoordinator,
-    CoreCoordinator,
-    GarminConnectCoordinators,
-    GearCoordinator,
-    GoalsCoordinator,
-    MenstrualCoordinator,
-    TrainingCoordinator,
-)
+from .coordinator import CoreCoordinator, GarminConnectCoordinators
 from .services import async_setup_services, async_unload_services
 
 _LOGGER = logging.getLogger(__name__)
@@ -64,40 +54,20 @@ async def async_setup_entry(
                     CONF_OAUTH2_TOKEN: result.oauth2_token,
                 },
             )
-    except Exception as err:
-        _LOGGER.error("Failed to authenticate: %s", err)
+    except GarminAuthError as err:
         raise ConfigEntryAuthFailed("Authentication failed") from err
 
     # Create client
     is_cn = hass.config.country == "CN"
     client = GarminClient(session, auth, is_cn=is_cn)
 
-    # Create all 8 coordinators
+    # Create coordinator
     coordinators = GarminConnectCoordinators(
         core=CoreCoordinator(hass, entry, client, auth),
-        activity=ActivityCoordinator(hass, entry, client, auth),
-        training=TrainingCoordinator(hass, entry, client, auth),
-        body=BodyCoordinator(hass, entry, client, auth),
-        goals=GoalsCoordinator(hass, entry, client, auth),
-        gear=GearCoordinator(hass, entry, client, auth),
-        blood_pressure=BloodPressureCoordinator(hass, entry, client, auth),
-        menstrual=MenstrualCoordinator(hass, entry, client, auth),
     )
 
-    # Fetch initial data from all coordinators concurrently
-    try:
-        await asyncio.gather(
-            coordinators.core.async_config_entry_first_refresh(),
-            coordinators.activity.async_config_entry_first_refresh(),
-            coordinators.training.async_config_entry_first_refresh(),
-            coordinators.body.async_config_entry_first_refresh(),
-            coordinators.goals.async_config_entry_first_refresh(),
-            coordinators.gear.async_config_entry_first_refresh(),
-            coordinators.blood_pressure.async_config_entry_first_refresh(),
-            coordinators.menstrual.async_config_entry_first_refresh(),
-        )
-    except Exception as err:
-        raise ConfigEntryNotReady from err
+    # Fetch initial data
+    await coordinators.core.async_config_entry_first_refresh()
 
     # Store coordinators in runtime_data
     entry.runtime_data = coordinators
@@ -105,7 +75,7 @@ async def async_setup_entry(
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     # Register services (only once, not per entry)
-    if not hass.services.has_service(DOMAIN, "set_active_gear"):
+    if not hass.services.has_service(DOMAIN, "add_body_composition"):
         await async_setup_services(hass)
 
     # Register options update listener
