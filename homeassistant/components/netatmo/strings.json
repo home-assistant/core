@@ -72,6 +72,9 @@
       }
     },
     "sensor": {
+      "therm_measured_temperature": {
+        "name": "Temperature"
+      },
       "gust_angle": {
         "name": "Gust angle"
       },

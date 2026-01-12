@@ -427,17 +427,30 @@ class NetatmoDataHandler:
                             ),
                         )
 
-                if "humidity" in room.features:
-                    async_dispatcher_send(
-                        self.hass,
-                        NETATMO_CREATE_ROOM_SENSOR,
-                        NetatmoRoom(
-                            self,
-                            room,
-                            room.entity_id,
-                            signal_home,
-                        ),
-                    )
+                # Always create room sensor for climate rooms (for temperature)
+                async_dispatcher_send(
+                    self.hass,
+                    NETATMO_CREATE_ROOM_SENSOR,
+                    NetatmoRoom(
+                        self,
+                        room,
+                        room.entity_id,
+                        signal_home,
+                    ),
+                )
+
+            elif "humidity" in room.features:
+                # Non-climate rooms with humidity sensor only
+                async_dispatcher_send(
+                    self.hass,
+                    NETATMO_CREATE_ROOM_SENSOR,
+                    NetatmoRoom(
+                        self,
+                        room,
+                        room.entity_id,
+                        signal_home,
+                    ),
+                )
 
     def setup_climate_schedule_select(
         self, home: pyatmo.Home, signal_home: str
