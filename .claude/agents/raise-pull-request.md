@@ -113,35 +113,38 @@ Select exactly ONE based on the changes. Mark the selected type with `[x]` and a
 | Type | Checkbox placeholder | Condition |
 |------|---------------------|-----------|
 | Dependency upgrade | `dependency_checkbox` | Only manifest.json/requirements changes |
+| Bugfix | `bugfix_checkbox` | Fixes broken behavior, no new features |
 | New integration | `new_integration_checkbox` | New folder in components/ |
 | New feature | `new_feature_checkbox` | Adds capability to existing integration |
-| Bugfix | `bugfix_checkbox` | Fixes broken behavior, no new features |
+| Deprecation | `deprecation_checkbox` | Adds deprecation warnings for future breaking change |
 | Breaking change | `breaking_checkbox` | Removes or changes existing functionality |
 | Code quality | `code_quality_checkbox` | Only refactoring or test additions, no functional change |
 
-**Important:** All six type options must remain in the PR body. Only the selected type gets `[x]`, all others get `[ ]`.
+**Important:** All seven type options must remain in the PR body. Only the selected type gets `[x]`, all others get `[ ]`.
 
 ## Step 7: Determine Checkbox States
 
 Based on the verification steps above, determine checkbox states:
 
-| Checkbox | Condition to tick |
-|----------|-------------------|
-| I understand the code | Always tick - agent analyzed the code |
-| Code tested locally | Tick only if `TESTS_PASSED` is true |
-| Local tests pass | Tick only if `TESTS_PASSED` is true |
-| No commented out code | Tick after verifying in Step 5 |
-| Development checklist | Tick only if all Step 5 items pass |
-| Perfect PR recommendations | Tick if PR is focused on single change |
-| Code formatted with Ruff | Tick only if `RUFF_FORMAT_PASSED` and `RUFF_CHECK_PASSED` |
-| Tests added | Tick only if test files were added/modified with new test functions |
-| Generated code reviewed | **Never tick** - user must verify this themselves |
+| Placeholder | Condition to tick |
+|-------------|-------------------|
+| `tested_checkbox` | Tick only if `TESTS_PASSED` is true |
+| `tests_pass_checkbox` | Tick only if `TESTS_PASSED` is true |
+| `no_comments_checkbox` | Tick after verifying in Step 5 |
+| `dev_checklist_checkbox` | Tick only if all Step 5 items pass |
+| `perfect_pr_checkbox` | Tick if PR is focused on single change |
+| `ruff_checkbox` | Tick only if `RUFF_FORMAT_PASSED` and `RUFF_CHECK_PASSED` |
+| `tests_added_checkbox` | Tick only if test files were added/modified with new test functions |
+| `docs_checkbox` | Tick if documentation PR created (or not applicable) |
+| `manifest_checkbox` | Tick if `HASSFEST_PASSED` is true (or not applicable) |
+| `requirements_checkbox` | Tick if requirements_all.txt updated (or not applicable) |
+| `changelog_checkbox` | Tick if dependency changelog linked in PR description (or not applicable) |
 
 ## Step 8: Breaking Change Section
 
-**If Type is NOT "Breaking change" or "Deprecation": OMIT the entire "Breaking change" section from the PR body.**
+**If Type is NOT "Breaking change" or "Deprecation": REMOVE the entire "## Breaking change" section from the PR body (including the heading).**
 
-If it IS breaking, include a `## Breaking change` section describing:
+If it IS breaking or deprecation, keep the `## Breaking change` section and describe:
 - What breaks
 - How users can fix it
 - Why it was necessary
@@ -179,9 +182,13 @@ EOF
 
 ## PR Body Template
 
-Construct the body based on all verification results. **Important: Preserve all template options - only modify checkbox states, do not remove unselected items.**
+Construct the body based on all verification results. **Important: Preserve all template options exactly as shown - only modify checkbox states, do not remove unselected items or reorder sections.**
 
 ```markdown
+## Breaking change
+
+[If type is "Breaking change" or "Deprecation", describe what breaks, how users can fix it, and why. Otherwise, REMOVE this entire section including the heading.]
+
 ## Proposed change
 
 [Describe the change and why - extract from commit messages]
@@ -189,9 +196,10 @@ Construct the body based on all verification results. **Important: Preserve all 
 ## Type of change
 
 - [{dependency_checkbox}] Dependency upgrade
-- [{new_integration_checkbox}] New integration
-- [{new_feature_checkbox}] New feature (which adds functionality to an existing integration)
 - [{bugfix_checkbox}] Bugfix (non-breaking change which fixes an issue)
+- [{new_integration_checkbox}] New integration (thank you!)
+- [{new_feature_checkbox}] New feature (which adds functionality to an existing integration)
+- [{deprecation_checkbox}] Deprecation (breaking change to happen in the future)
 - [{breaking_checkbox}] Breaking change (fix/feature causing existing functionality to break)
 - [{code_quality_checkbox}] Code quality improvements to existing code or addition of tests
 
@@ -205,7 +213,7 @@ Construct the body based on all verification results. **Important: Preserve all 
 
 ## Checklist
 
-- [x] I understand the code I am submitting and can explain how it works.
+- [ ] I understand the code I am submitting and can explain how it works.
 - [{tested_checkbox}] The code change is tested and works locally.
 - [{tests_pass_checkbox}] Local tests pass. **Your PR cannot be merged unless tests pass**
 - [{no_comments_checkbox}] There is no commented out code in this PR.
@@ -214,6 +222,18 @@ Construct the body based on all verification results. **Important: Preserve all 
 - [{ruff_checkbox}] The code has been formatted using Ruff (`ruff format homeassistant tests`)
 - [{tests_added_checkbox}] Tests have been added to verify that the new code works.
 - [ ] Any generated code has been carefully reviewed for correctness and compliance with project standards.
+
+If user exposed functionality or configuration variables are added/changed:
+
+- [{docs_checkbox}] Documentation added/updated for [www.home-assistant.io][docs-repository]
+
+If the code communicates with devices, web services, or third-party tools:
+
+- [{manifest_checkbox}] The [manifest file][manifest-docs] has all fields filled out correctly.
+      Updated and included derived files by running: `python3 -m script.hassfest`.
+- [{requirements_checkbox}] New or updated dependencies have been added to `requirements_all.txt`.
+      Updated by running `python3 -m script.gen_requirements_all`.
+- [{changelog_checkbox}] For the updated dependencies - a link to the changelog, or at minimum a diff between library versions is added to the PR description.
 
 To help with the load of incoming pull requests:
 
