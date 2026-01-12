@@ -111,3 +111,15 @@ async def test_flow_guards_and_fallbacks(hass: HomeAssistant) -> None:
     result = await flow.async_step_user_auth()
     assert result.get("type") == data_entry_flow.FlowResultType.FORM
     assert result.get("step_id") == "user"
+
+    # zeroconf auth steps without pending host fall back to their confirm steps
+    flow._discovered_host = "192.168.1.100"
+    flow._discovered_name = "NRGkick Test"
+
+    result = await flow.async_step_zeroconf_auth()
+    assert result.get("type") == data_entry_flow.FlowResultType.FORM
+    assert result.get("step_id") == "zeroconf_confirm"
+
+    result = await flow.async_step_zeroconf_enable_json_api_auth()
+    assert result.get("type") == data_entry_flow.FlowResultType.FORM
+    assert result.get("step_id") == "zeroconf_enable_json_api"

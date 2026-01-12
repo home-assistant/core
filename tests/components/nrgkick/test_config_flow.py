@@ -8,6 +8,7 @@ import voluptuous_serialize
 
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.components.nrgkick.api import (
+    NRGkickApiClientApiDisabledError,
     NRGkickApiClientAuthenticationError,
     NRGkickApiClientCommunicationError,
     NRGkickApiClientError,
@@ -139,6 +140,23 @@ async def test_form_cannot_connect(hass: HomeAssistant, mock_nrgkick_api) -> Non
             flow_id,
             {CONF_HOST: "192.168.1.100"},
         )
+
+    assert result2.get("type") == data_entry_flow.FlowResultType.FORM
+    assert result2.get("errors") == {"base": "cannot_connect"}
+
+
+async def test_form_invalid_host_input(hass: HomeAssistant) -> None:
+    """Test we handle invalid host input during normalization."""
+    result = await hass.config_entries.flow.async_init(
+        "nrgkick", context={"source": config_entries.SOURCE_USER}
+    )
+
+    flow_id = result.get("flow_id")
+    assert flow_id is not None
+    result2 = await hass.config_entries.flow.async_configure(
+        flow_id,
+        {CONF_HOST: "http://"},
+    )
 
     assert result2.get("type") == data_entry_flow.FlowResultType.FORM
     assert result2.get("errors") == {"base": "cannot_connect"}
@@ -360,6 +378,70 @@ async def test_form_unknown_exception(hass: HomeAssistant, mock_nrgkick_api) -> 
 
     assert result2.get("type") == data_entry_flow.FlowResultType.FORM
     assert result2.get("errors") == {"base": "unknown"}
+
+
+async def test_form_json_api_disabled(hass: HomeAssistant, mock_nrgkick_api) -> None:
+    """Test we handle JSON API disabled error in the user step."""
+    result = await hass.config_entries.flow.async_init(
+        "nrgkick", context={"source": config_entries.SOURCE_USER}
+    )
+
+    mock_nrgkick_api.test_connection.side_effect = NRGkickApiClientApiDisabledError
+
+    with patch(
+        "homeassistant.components.nrgkick.config_flow.NRGkickAPI",
+        return_value=mock_nrgkick_api,
+    ):
+        flow_id = result.get("flow_id")
+        assert flow_id is not None
+        result2 = await hass.config_entries.flow.async_configure(
+            flow_id,
+            {CONF_HOST: "192.168.1.100"},
+        )
+
+    assert result2.get("type") == data_entry_flow.FlowResultType.FORM
+    assert result2.get("errors") == {"base": "json_api_disabled"}
+
+
+async def test_user_auth_step_json_api_disabled(
+    hass: HomeAssistant, mock_nrgkick_api
+) -> None:
+    """Test user_auth step reports json_api_disabled."""
+    result = await hass.config_entries.flow.async_init(
+        "nrgkick", context={"source": config_entries.SOURCE_USER}
+    )
+
+    mock_nrgkick_api.test_connection.side_effect = NRGkickApiClientAuthenticationError
+
+    with patch(
+        "homeassistant.components.nrgkick.config_flow.NRGkickAPI",
+        return_value=mock_nrgkick_api,
+    ):
+        flow_id = result.get("flow_id")
+        assert flow_id is not None
+        result2 = await hass.config_entries.flow.async_configure(
+            flow_id,
+            {CONF_HOST: "192.168.1.100"},
+        )
+
+    assert result2.get("type") == data_entry_flow.FlowResultType.FORM
+    assert result2.get("step_id") == "user_auth"
+
+    mock_nrgkick_api.test_connection.side_effect = NRGkickApiClientApiDisabledError
+
+    with patch(
+        "homeassistant.components.nrgkick.config_flow.NRGkickAPI",
+        return_value=mock_nrgkick_api,
+    ):
+        flow_id = result2.get("flow_id")
+        assert flow_id is not None
+        result3 = await hass.config_entries.flow.async_configure(
+            flow_id,
+            {CONF_USERNAME: "user", CONF_PASSWORD: "pass"},
+        )
+
+    assert result3.get("type") == data_entry_flow.FlowResultType.FORM
+    assert result3.get("errors") == {"base": "json_api_disabled"}
 
 
 async def test_form_already_configured(hass: HomeAssistant, mock_nrgkick_api) -> None:

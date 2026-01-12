@@ -236,6 +236,45 @@ async def test_zeroconf_discovery_unknown_exception(
     assert result2.get("errors") == {"base": "unknown"}
 
 
+async def test_zeroconf_confirm_json_api_disabled(
+    hass: HomeAssistant, mock_nrgkick_api
+) -> None:
+    """Test zeroconf confirm step handles JSON API disabled."""
+    discovery_info = ZeroconfServiceInfo(
+        ip_address=ip_address("192.168.1.100"),
+        ip_addresses=[ip_address("192.168.1.100")],
+        hostname="nrgkick.local.",
+        name="NRGkick Test._nrgkick._tcp.local.",
+        port=80,
+        properties={
+            "serial_number": "TEST123456",
+            "device_name": "NRGkick Test",
+            "json_api_enabled": "1",
+        },
+        type="_nrgkick._tcp.local.",
+    )
+
+    result = await hass.config_entries.flow.async_init(
+        "nrgkick",
+        context={"source": config_entries.SOURCE_ZEROCONF},
+        data=discovery_info,
+    )
+    assert result.get("step_id") == "zeroconf_confirm"
+
+    mock_nrgkick_api.test_connection.side_effect = NRGkickApiClientApiDisabledError
+
+    with patch(
+        "homeassistant.components.nrgkick.config_flow.NRGkickAPI",
+        return_value=mock_nrgkick_api,
+    ):
+        flow_id = result.get("flow_id")
+        assert flow_id is not None
+        result2 = await hass.config_entries.flow.async_configure(flow_id, {})
+
+    assert result2.get("type") == data_entry_flow.FlowResultType.FORM
+    assert result2.get("errors") == {"base": "json_api_disabled"}
+
+
 async def test_zeroconf_already_configured(
     hass: HomeAssistant, mock_nrgkick_api
 ) -> None:
@@ -548,6 +587,7 @@ async def test_zeroconf_json_api_still_disabled_reports_error(
 @pytest.mark.parametrize(
     ("side_effect", "expected"),
     [
+        (NRGkickApiClientApiDisabledError, "json_api_disabled"),
         (NRGkickApiClientAuthenticationError, "invalid_auth"),
         (NRGkickApiClientCommunicationError, "cannot_connect"),
         (NRGkickApiClientError, "unknown"),
@@ -604,6 +644,182 @@ async def test_zeroconf_enable_json_api_auth_errors(
 
     assert result3.get("type") == data_entry_flow.FlowResultType.FORM
     assert result3.get("errors") == {"base": expected}
+
+
+async def test_zeroconf_enable_json_api_auth_no_serial_number(
+    hass: HomeAssistant, mock_nrgkick_api
+) -> None:
+    """Test JSON API enable auth step reports missing serial number."""
+    discovery_info = ZeroconfServiceInfo(
+        ip_address=ip_address("192.168.1.100"),
+        ip_addresses=[ip_address("192.168.1.100")],
+        hostname="nrgkick.local.",
+        name="NRGkick Test._nrgkick._tcp.local.",
+        port=80,
+        properties={
+            "serial_number": "TEST123456",
+            "device_name": "NRGkick Test",
+            "json_api_enabled": "0",
+        },
+        type="_nrgkick._tcp.local.",
+    )
+
+    result = await hass.config_entries.flow.async_init(
+        "nrgkick",
+        context={"source": config_entries.SOURCE_ZEROCONF},
+        data=discovery_info,
+    )
+    assert result.get("step_id") == "zeroconf_enable_json_api"
+
+    # First confirm needs auth
+    mock_nrgkick_api.test_connection.side_effect = NRGkickApiClientAuthenticationError
+
+    with patch(
+        "homeassistant.components.nrgkick.config_flow.NRGkickAPI",
+        return_value=mock_nrgkick_api,
+    ):
+        flow_id = result.get("flow_id")
+        assert flow_id is not None
+        result2 = await hass.config_entries.flow.async_configure(flow_id, {})
+
+    assert result2.get("step_id") == "zeroconf_enable_json_api_auth"
+
+    # Auth submission succeeds, but serial number is missing in info.
+    mock_nrgkick_api.test_connection.side_effect = None
+    mock_nrgkick_api.get_info.return_value = {"general": {"device_name": "NRGkick"}}
+
+    with patch(
+        "homeassistant.components.nrgkick.config_flow.NRGkickAPI",
+        return_value=mock_nrgkick_api,
+    ):
+        flow_id = result2.get("flow_id")
+        assert flow_id is not None
+        result3 = await hass.config_entries.flow.async_configure(
+            flow_id,
+            {CONF_USERNAME: "user", CONF_PASSWORD: "pass"},
+        )
+
+    assert result3.get("type") == data_entry_flow.FlowResultType.FORM
+    assert result3.get("errors") == {"base": "no_serial_number"}
+
+
+@pytest.mark.parametrize(
+    ("second_side_effect", "expected"),
+    [
+        (NRGkickApiClientApiDisabledError, "json_api_disabled"),
+        (NRGkickApiClientError, "unknown"),
+    ],
+)
+async def test_zeroconf_auth_errors(
+    hass: HomeAssistant,
+    mock_nrgkick_api,
+    second_side_effect: type[Exception],
+    expected: str,
+) -> None:
+    """Test zeroconf auth step reports JSON API disabled and unknown errors."""
+    discovery_info = ZeroconfServiceInfo(
+        ip_address=ip_address("192.168.1.100"),
+        ip_addresses=[ip_address("192.168.1.100")],
+        hostname="nrgkick.local.",
+        name="NRGkick Test._nrgkick._tcp.local.",
+        port=80,
+        properties={
+            "serial_number": "TEST123456",
+            "device_name": "NRGkick Test",
+            "json_api_enabled": "1",
+        },
+        type="_nrgkick._tcp.local.",
+    )
+
+    result = await hass.config_entries.flow.async_init(
+        "nrgkick",
+        context={"source": config_entries.SOURCE_ZEROCONF},
+        data=discovery_info,
+    )
+
+    mock_nrgkick_api.test_connection.side_effect = NRGkickApiClientAuthenticationError
+
+    with patch(
+        "homeassistant.components.nrgkick.config_flow.NRGkickAPI",
+        return_value=mock_nrgkick_api,
+    ):
+        flow_id = result.get("flow_id")
+        assert flow_id is not None
+        result2 = await hass.config_entries.flow.async_configure(flow_id, {})
+
+    assert result2.get("step_id") == "zeroconf_auth"
+
+    mock_nrgkick_api.test_connection.side_effect = second_side_effect
+
+    with patch(
+        "homeassistant.components.nrgkick.config_flow.NRGkickAPI",
+        return_value=mock_nrgkick_api,
+    ):
+        flow_id = result2.get("flow_id")
+        assert flow_id is not None
+        result3 = await hass.config_entries.flow.async_configure(
+            flow_id,
+            {CONF_USERNAME: "user", CONF_PASSWORD: "pass"},
+        )
+
+    assert result3.get("type") == data_entry_flow.FlowResultType.FORM
+    assert result3.get("errors") == {"base": expected}
+
+
+async def test_zeroconf_auth_no_serial_number(
+    hass: HomeAssistant, mock_nrgkick_api
+) -> None:
+    """Test zeroconf auth step reports missing serial number."""
+    discovery_info = ZeroconfServiceInfo(
+        ip_address=ip_address("192.168.1.100"),
+        ip_addresses=[ip_address("192.168.1.100")],
+        hostname="nrgkick.local.",
+        name="NRGkick Test._nrgkick._tcp.local.",
+        port=80,
+        properties={
+            "serial_number": "TEST123456",
+            "device_name": "NRGkick Test",
+            "json_api_enabled": "1",
+        },
+        type="_nrgkick._tcp.local.",
+    )
+
+    result = await hass.config_entries.flow.async_init(
+        "nrgkick",
+        context={"source": config_entries.SOURCE_ZEROCONF},
+        data=discovery_info,
+    )
+
+    # First confirm needs auth
+    mock_nrgkick_api.test_connection.side_effect = NRGkickApiClientAuthenticationError
+
+    with patch(
+        "homeassistant.components.nrgkick.config_flow.NRGkickAPI",
+        return_value=mock_nrgkick_api,
+    ):
+        flow_id = result.get("flow_id")
+        assert flow_id is not None
+        result2 = await hass.config_entries.flow.async_configure(flow_id, {})
+
+    assert result2.get("step_id") == "zeroconf_auth"
+
+    # Auth submission succeeds, but serial number is missing in info.
+    mock_nrgkick_api.test_connection.side_effect = None
+    mock_nrgkick_api.get_info.return_value = {"general": {"device_name": "NRGkick"}}
+
+    with patch(
+        "homeassistant.components.nrgkick.config_flow.NRGkickAPI",
+        return_value=mock_nrgkick_api,
+    ):
+        flow_id = result2.get("flow_id")
+        assert flow_id is not None
+        result3 = await hass.config_entries.flow.async_configure(
+            flow_id,
+            {CONF_USERNAME: "user", CONF_PASSWORD: "pass"},
+        )
+
+    assert result3.get("type") == data_entry_flow.FlowResultType.FORM
+    assert result3.get("errors") == {"base": "no_serial_number"}
 
 
 async def test_zeroconf_no_serial_number(hass: HomeAssistant) -> None:

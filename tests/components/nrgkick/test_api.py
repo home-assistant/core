@@ -7,6 +7,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import aiohttp
 from nrgkick_api import (
+    NRGkickAPIDisabledError as LibApiDisabledError,
     NRGkickAuthenticationError as LibAuthError,
     NRGkickConnectionError as LibConnectionError,
 )
@@ -14,6 +15,7 @@ import pytest
 
 from homeassistant.components.nrgkick.api import (
     NRGkickAPI,
+    NRGkickApiClientApiDisabledError,
     NRGkickApiClientAuthenticationError,
     NRGkickApiClientCommunicationError,
     NRGkickApiClientError,
@@ -79,6 +81,30 @@ class TestHAAPIWrapper:
                 "get_info",
                 side_effect=LibConnectionError("Connection failed"),
             ),
+            pytest.raises(NRGkickApiClientCommunicationError),
+        ):
+            await api.get_info()
+
+    async def test_wrapper_converts_api_disabled_error(self, mock_session):
+        """Test wrapper converts library API-disabled error to HA exception."""
+        api = NRGkickAPI(host="192.168.1.100", session=mock_session)
+
+        with (
+            patch.object(
+                api._api,
+                "get_info",
+                side_effect=LibApiDisabledError("API disabled"),
+            ),
+            pytest.raises(NRGkickApiClientApiDisabledError),
+        ):
+            await api.get_info()
+
+    async def test_wrapper_converts_aiohttp_client_error(self, mock_session):
+        """Test wrapper converts aiohttp client errors to communication error."""
+        api = NRGkickAPI(host="192.168.1.100", session=mock_session)
+
+        with (
+            patch.object(api._api, "get_info", side_effect=aiohttp.ClientError),
             pytest.raises(NRGkickApiClientCommunicationError),
         ):
             await api.get_info()

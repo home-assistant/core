@@ -2,10 +2,19 @@
 
 from unittest.mock import patch
 
+from nrgkick_api import (
+    ChargingStatus,
+    ConnectorType,
+    ErrorCode,
+    GridPhases,
+    RcdTriggerStatus,
+    RelayState,
+    WarningCode,
+)
 import pytest
 
 from homeassistant.components.sensor import SensorDeviceClass
-from homeassistant.const import UnitOfPower, UnitOfTemperature
+from homeassistant.const import STATE_UNKNOWN, UnitOfPower, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -50,16 +59,17 @@ def mock_values_data_sensor():
             "n": {"current": 0.0},
         },
         "general": {
-            "status": "CHARGING",
+            # Use numeric (IntEnum) values to exercise mapping tables.
+            "status": ChargingStatus.CHARGING,
             "charging_rate": 11.0,
             "vehicle_connect_time": 100,
             "vehicle_charging_time": 50,
             "charge_count": 5,
             "charge_permitted": True,
-            "relay_state": "N, L1, L2, L3",
-            "rcd_trigger": "NO_FAULT",
-            "warning_code": "NO_WARNING",
-            "error_code": "NO_ERROR",
+            "relay_state": RelayState.N_L1_L2_L3,
+            "rcd_trigger": RcdTriggerStatus.NO_FAULT,
+            "warning_code": WarningCode.NO_WARNING,
+            "error_code": ErrorCode.NO_ERROR,
         },
         "temperatures": {
             "housing": 35.0,
@@ -86,6 +96,10 @@ async def test_sensor_entities(
 ) -> None:
     """Test sensor entities."""
     mock_config_entry.add_to_hass(hass)
+
+    # Make enum-like info fields numeric as well (these are mapped via tables).
+    mock_info_data["connector"]["type"] = ConnectorType.TYPE2
+    mock_info_data["grid"]["phases"] = GridPhases.L1_L2_L3
 
     # Setup mock data
     mock_nrgkick_api.get_info.return_value = mock_info_data
@@ -123,7 +137,7 @@ async def test_sensor_entities(
     assert float(state.state) == 35.0
     assert state.attributes["unit_of_measurement"] == UnitOfTemperature.CELSIUS
 
-    # Test mapped sensors (API returns strings, converted to translation keys)
+    # Test mapped sensors (API returns numeric codes, mapped to translation keys)
     mapped_sensors = {
         "status": "charging",
         "rcd_trigger": "no_fault",
@@ -148,3 +162,15 @@ async def test_sensor_entities(
         state = get_state_by_key(key)
         assert state is not None, f"{key}: state not found"
         assert float(state.state) == expected, f"{key}: expected {expected}"
+
+    # Defensive: if the API returns an unexpected type for a nested section,
+    # the entity should fall back to unknown (native_value=None).
+    coordinator = mock_config_entry.runtime_data
+    assert coordinator is not None
+    coordinator.data.values["powerflow"] = "not-a-dict"
+    coordinator.async_set_updated_data(coordinator.data)
+    await hass.async_block_till_done()
+
+    state = get_state_by_key("l1_voltage")
+    assert state is not None
+    assert state.state == STATE_UNKNOWN
