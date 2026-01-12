@@ -1172,7 +1172,7 @@ habluetooth==5.8.0
 hanna-cloud==0.0.7
 
 # homeassistant.components.cloud
-hass-nabucasa==1.7.0
+hass-nabucasa==1.8.0
 
 # homeassistant.components.splunk
 hass-splunk==0.1.1
@@ -1216,7 +1216,7 @@ hole==0.9.0
 holidays==0.84
 
 # homeassistant.components.frontend
-home-assistant-frontend==20260107.0
+home-assistant-frontend==20260107.1
 
 # homeassistant.components.conversation
 home-assistant-intents==2026.1.6
@@ -2484,7 +2484,7 @@ python-awair==0.2.5
 python-blockchain-api==0.0.2
 
 # homeassistant.components.bsblan
-python-bsblan==3.1.6
+python-bsblan==4.1.0
 
 # homeassistant.components.citybikes
 python-citybikes==0.3.3
@@ -2523,7 +2523,7 @@ python-google-weather-api==0.0.4
 python-homeassistant-analytics==0.9.0
 
 # homeassistant.components.homewizard
-python-homewizard-energy==10.0.0
+python-homewizard-energy==10.0.1
 
 # homeassistant.components.hp_ilo
 python-hpilo==4.4.3
@@ -3119,7 +3119,7 @@ uvcclient==0.12.1
 vacuum-map-parser-roborock==0.1.4
 
 # homeassistant.components.vallox
-vallox-websocket-api==5.3.0
+vallox-websocket-api==6.0.0
 
 # homeassistant.components.vegehub
 vegehub==0.1.26
