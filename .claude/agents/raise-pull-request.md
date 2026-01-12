@@ -108,17 +108,18 @@ Check each item from the [development checklist](https://developers.home-assista
 
 ## Step 6: Determine Type of Change
 
-Select exactly ONE based on the changes:
+Select exactly ONE based on the changes. Mark the selected type with `[x]` and all others with `[ ]` (space):
 
-| Type | Condition |
-|------|-----------|
-| `Bugfix` | Fixes broken behavior, no new features |
-| `New feature` | Adds capability to existing integration |
-| `New integration` | New folder in components/ |
-| `Dependency upgrade` | Only manifest.json/requirements changes |
-| `Code quality` | Only refactoring or test additions, no functional change |
-| `Breaking change` | Removes or changes existing functionality |
-| `Deprecation` | Adds deprecation warnings |
+| Type | Checkbox placeholder | Condition |
+|------|---------------------|-----------|
+| Dependency upgrade | `dependency_checkbox` | Only manifest.json/requirements changes |
+| New integration | `new_integration_checkbox` | New folder in components/ |
+| New feature | `new_feature_checkbox` | Adds capability to existing integration |
+| Bugfix | `bugfix_checkbox` | Fixes broken behavior, no new features |
+| Breaking change | `breaking_checkbox` | Removes or changes existing functionality |
+| Code quality | `code_quality_checkbox` | Only refactoring or test additions, no functional change |
+
+**Important:** All six type options must remain in the PR body. Only the selected type gets `[x]`, all others get `[ ]`.
 
 ## Step 7: Determine Checkbox States
 
@@ -178,7 +179,7 @@ EOF
 
 ## PR Body Template
 
-Construct the body based on all verification results:
+Construct the body based on all verification results. **Important: Preserve all template options - only modify checkbox states, do not remove unselected items.**
 
 ```markdown
 ## Proposed change
@@ -187,7 +188,12 @@ Construct the body based on all verification results:
 
 ## Type of change
 
-- [x] {Selected type from Step 6}
+- [{dependency_checkbox}] Dependency upgrade
+- [{new_integration_checkbox}] New integration
+- [{new_feature_checkbox}] New feature (which adds functionality to an existing integration)
+- [{bugfix_checkbox}] Bugfix (non-breaking change which fixes an issue)
+- [{breaking_checkbox}] Breaking change (fix/feature causing existing functionality to break)
+- [{code_quality_checkbox}] Code quality improvements to existing code or addition of tests
 
 ## Additional information
 
@@ -221,7 +227,7 @@ To help with the load of incoming pull requests:
 [perfect-pr]: https://developers.home-assistant.io/docs/review-process/#creating-the-perfect-pr
 ```
 
-**Note:** Replace each `{*_checkbox}` with `x` if the condition passed, or ` ` (space) if it did not.
+**Note:** Replace each `{*_checkbox}` placeholder with `x` if the condition passed, or ` ` (space) if it did not. This applies to both the "Type of change" checkboxes (only one should be `x`) and the "Checklist" checkboxes (multiple can be `x` based on verification results).
 
 ## Step 11: Report Result
 
