@@ -190,7 +190,6 @@ PUMP_CONTROL_MODE_MAP = {
     clusters.PumpConfigurationAndControl.Enums.ControlModeEnum.kUnknownEnumValue: None,
 }
 
-
 MATTER_2000_TO_UNIX_EPOCH_OFFSET = (
     946684800  # Seconds from Matter 2000 epoch to Unix epoch
 )

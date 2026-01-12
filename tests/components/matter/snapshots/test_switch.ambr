@@ -487,7 +487,7 @@
     'state': 'off',
   })
 # ---
-# name: test_switches[eve_thermo][switch.eve_thermo_child_lock-entry]
+# name: test_switches[eve_thermo_v4][switch.eve_thermo_20ebp1701_child_lock-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -500,7 +500,7 @@
     'disabled_by': None,
     'domain': 'switch',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'switch.eve_thermo_child_lock',
+    'entity_id': 'switch.eve_thermo_20ebp1701_child_lock',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -522,17 +522,114 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_switches[eve_thermo][switch.eve_thermo_child_lock-state]
+# name: test_switches[eve_thermo_v4][switch.eve_thermo_20ebp1701_child_lock-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Eve Thermo Child lock',
+      'friendly_name': 'Eve Thermo 20EBP1701 Child lock',
     }),
     'context': <ANY>,
-    'entity_id': 'switch.eve_thermo_child_lock',
+    'entity_id': 'switch.eve_thermo_20ebp1701_child_lock',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
+  })
+# ---
+# name: test_switches[eve_thermo_v5][switch.eve_thermo_20ecd1701_child_lock-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'switch.eve_thermo_20ecd1701_child_lock',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Child lock',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'child_lock',
+    'unique_id': '00000000000004D2-000000000000000C-MatterNodeDevice-1-EveTrvChildLock-516-1',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_switches[eve_thermo_v5][switch.eve_thermo_20ecd1701_child_lock-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Eve Thermo 20ECD1701 Child lock',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.eve_thermo_20ecd1701_child_lock',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_switches[ikea_air_quality_monitor][switch.alpstuga_air_quality_monitor-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': None,
+    'entity_id': 'switch.alpstuga_air_quality_monitor',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SwitchDeviceClass.OUTLET: 'outlet'>,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '00000000000004D2-0000000000000025-MatterNodeDevice-1-MatterSwitch-6-0',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_switches[ikea_air_quality_monitor][switch.alpstuga_air_quality_monitor-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'outlet',
+      'friendly_name': 'ALPSTUGA air quality monitor',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.alpstuga_air_quality_monitor',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
   })
 # ---
 # name: test_switches[inovelli_vtm30][switch.white_series_onoff_switch_switch_load_control-entry]

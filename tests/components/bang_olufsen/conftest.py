@@ -5,6 +5,7 @@ from unittest.mock import AsyncMock, Mock, patch
 
 from mozart_api.models import (
     Action,
+    BatteryState,
     BeolinkPeer,
     BeolinkSelf,
     ContentItem,
@@ -34,9 +35,11 @@ from homeassistant.components.bang_olufsen.const import DOMAIN
 from homeassistant.core import HomeAssistant
 
 from .const import (
+    TEST_BATTERY,
     TEST_DATA_CREATE_ENTRY,
     TEST_DATA_CREATE_ENTRY_2,
     TEST_DATA_CREATE_ENTRY_3,
+    TEST_DATA_CREATE_ENTRY_4,
     TEST_FRIENDLY_NAME,
     TEST_FRIENDLY_NAME_3,
     TEST_FRIENDLY_NAME_4,
@@ -48,10 +51,12 @@ from .const import (
     TEST_NAME,
     TEST_NAME_2,
     TEST_NAME_3,
+    TEST_NAME_4,
     TEST_REMOTE_SERIAL,
     TEST_SERIAL_NUMBER,
     TEST_SERIAL_NUMBER_2,
     TEST_SERIAL_NUMBER_3,
+    TEST_SERIAL_NUMBER_4,
     TEST_SOUND_MODE,
     TEST_SOUND_MODE_2,
     TEST_SOUND_MODE_NAME,
@@ -93,6 +98,17 @@ def mock_config_entry_premiere() -> MockConfigEntry:
     )
 
 
+@pytest.fixture
+def mock_config_entry_a5() -> MockConfigEntry:
+    """Mock config entry for Beosound A5."""
+    return MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=TEST_SERIAL_NUMBER_4,
+        data=TEST_DATA_CREATE_ENTRY_4,
+        title=TEST_NAME_4,
+    )
+
+
 async def mock_websocket_connection(
     hass: HomeAssistant, mock_mozart_client: AsyncMock
 ) -> None:
@@ -111,6 +127,7 @@ async def mock_websocket_connection(
     playback_metadata_callback = (
         mock_mozart_client.get_playback_metadata_notifications.call_args[0][0]
     )
+    battery_callback = mock_mozart_client.get_battery_notifications.call_args[0][0]
 
     # Trigger callbacks. Try to use existing data
     volume_callback(mock_mozart_client.get_product_state.return_value.volume)
@@ -123,6 +140,10 @@ async def mock_websocket_connection(
     playback_metadata_callback(
         mock_mozart_client.get_product_state.return_value.playback.metadata
     )
+
+    # This should not affect non-battery devices.
+    battery_callback(TEST_BATTERY)
+
     await hass.async_block_till_done()
 
 
@@ -388,6 +409,14 @@ def mock_mozart_client() -> Generator[AsyncMock]:
                     name="BEORC",
                 )
             ]
+        )
+        client.get_battery_state = AsyncMock()
+        client.get_battery_state.return_value = BatteryState(
+            battery_level=0,
+            is_charging=False,
+            remaining_charging_time_minutes=0,
+            remaining_playing_time_minutes=0,
+            state="BatteryNotPresent",
         )
         client.post_standby = AsyncMock()
         client.set_current_volume_level = AsyncMock()

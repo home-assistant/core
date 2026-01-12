@@ -24,8 +24,7 @@
       "next_rising": { "name": "Next rising" },
       "next_setting": { "name": "Next setting" },
       "solar_azimuth": { "name": "Solar azimuth" },
-      "solar_elevation": { "name": "Solar elevation" },
-      "solar_rising": { "name": "Solar rising" }
+      "solar_elevation": { "name": "Solar elevation" }
     }
   },
   "entity_component": {
@@ -35,12 +34,6 @@
         "above_horizon": "Above horizon",
         "below_horizon": "Below horizon"
       }
-    }
-  },
-  "issues": {
-    "deprecated_sun_solar_rising": {
-      "description": "The 'Solar rising' sensor of the Sun integration is being deprecated; an equivalent 'Solar rising' binary sensor has been made available as a replacement. To resolve this issue, disable {entity}.",
-      "title": "Deprecated 'Solar rising' sensor"
     }
   },
   "title": "Sun"

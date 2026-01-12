@@ -198,6 +198,7 @@ class HassIO:
         timeout: int | None = 10,
         return_text: bool = False,
         *,
+        params: dict[str, Any] | None = None,
         source: str = "core.handler",
     ) -> Any:
         """Send API command to Hass.io.
@@ -218,6 +219,7 @@ class HassIO:
             response = await self.websession.request(
                 method,
                 joined_url,
+                params=params,
                 json=payload,
                 headers={
                     aiohttp.hdrs.AUTHORIZATION: (
