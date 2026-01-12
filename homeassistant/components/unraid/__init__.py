@@ -95,7 +95,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: UnraidConfigEntry) -> bo
         config_entry=entry,
         api_client=api_client,
         server_name=server_name,
-        update_interval=DEFAULT_SYSTEM_POLL_INTERVAL,
     )
 
     storage_coordinator = UnraidStorageCoordinator(
@@ -103,7 +102,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: UnraidConfigEntry) -> bo
         config_entry=entry,
         api_client=api_client,
         server_name=server_name,
-        update_interval=DEFAULT_STORAGE_POLL_INTERVAL,
     )
 
     # Fetch initial data
