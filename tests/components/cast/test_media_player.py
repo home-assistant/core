@@ -2385,3 +2385,43 @@ async def test_ha_cast(hass: HomeAssistant, ha_controller_mock) -> None:
     chromecast.unregister_handler.reset_mock()
     unregister_cb()
     chromecast.unregister_handler.assert_not_called()
+
+async def test_entity_media_states_active_app_reported_idle(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
+    """Test entity state when app is active but device reports idle (fixes #160814)."""
+    entity_id = "media_player.speaker"
+    info = get_fake_chromecast_info()
+    chromecast, _ = await async_setup_media_player_cast(hass, info)
+    cast_status_cb, conn_status_cb, _ = get_status_callbacks(chromecast)
+
+    # Connect the device
+    connection_status = MagicMock()
+    connection_status.status = "CONNECTED"
+    conn_status_cb(connection_status)
+    await hass.async_block_till_done()
+
+    # Scenario: Custom App is running (e.g. DashCast), but device reports is_idle=True
+    chromecast.app_id = "84912283"  # Example Custom App ID
+    chromecast.is_idle = True       # Device thinks it's idle/standby
+
+    # Trigger a status update
+    cast_status = MagicMock()
+    cast_status_cb(cast_status)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+    assert state is not None
+    # BEFORE FIX: This would be "off"
+    # AFTER FIX: This should be "idle"
+    assert state.state == "idle"
+
+    # Scenario: Backdrop (Screensaver) is running. Should still be OFF.
+    chromecast.app_id = pychromecast.config.APP_BACKDROP
+    chromecast.is_idle = True
+
+    cast_status_cb(cast_status)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+    assert state.state == "off"
