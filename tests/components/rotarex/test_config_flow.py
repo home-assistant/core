@@ -26,10 +26,11 @@ async def test_form(hass: HomeAssistant) -> None:
     assert result["errors"] == {}
 
     with patch(
-        "homeassistant.components.rotarex.config_flow.RotarexApi"
+        "homeassistant.components.rotarex.config_flow.RotarexApi",
+        autospec=True,
     ) as mock_api_cls:
         instance = mock_api_cls.return_value
-        instance.login.return_value = True
+        instance.login = AsyncMock(return_value=None)
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {CONF_EMAIL: "test@example.com", CONF_PASSWORD: "test_password"},
@@ -51,10 +52,11 @@ async def test_form_invalid_auth(hass: HomeAssistant) -> None:
     )
 
     with patch(
-        "homeassistant.components.rotarex.config_flow.RotarexApi.login"
-    ) as mock_login:
-        instance = mock_login.return_value
-        instance.login.side_effect = InvalidAuth
+        "homeassistant.components.rotarex.config_flow.RotarexApi",
+        autospec=True,
+    ) as mock_api_cls:
+        instance = mock_api_cls.return_value
+        instance.login = AsyncMock(side_effect=InvalidAuth)
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {CONF_EMAIL: "test@example.com", CONF_PASSWORD: "test_password"},
@@ -71,10 +73,11 @@ async def test_form_cannot_connect(hass: HomeAssistant) -> None:
     )
 
     with patch(
-        "homeassistant.components.rotarex.config_flow.RotarexApi.login"
-    ) as mock_login:
-        instance = mock_login.return_value
-        instance.login.side_effect = Exception
+        "homeassistant.components.rotarex.config_flow.RotarexApi",
+        autospec=True,
+    ) as mock_api_cls:
+        instance = mock_api_cls.return_value
+        instance.login = AsyncMock(side_effect=Exception)
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {CONF_EMAIL: "test@example.com", CONF_PASSWORD: "test_password"},

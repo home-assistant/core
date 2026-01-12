@@ -25,8 +25,8 @@ class RotarexConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle the initial step."""
         errors: dict[str, str] = {}
         if user_input is not None:
-            session = async_get_clientsession(self.hass)
-            api = RotarexApi(session)
+            api = RotarexApi(async_get_clientsession(self.hass))
+            api.set_credentials(user_input[CONF_EMAIL], user_input[CONF_PASSWORD])
             try:
                 await api.login(user_input[CONF_EMAIL], user_input[CONF_PASSWORD])
             except InvalidAuth:
@@ -35,7 +35,7 @@ class RotarexConfigFlow(ConfigFlow, domain=DOMAIN):
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "cannot_connect"
             else:
-                await self.async_set_unique_id(user_input[CONF_EMAIL])
+                await self.async_set_unique_id(user_input[CONF_EMAIL].lower())
                 self._abort_if_unique_id_configured()
                 return self.async_create_entry(
                     title=user_input[CONF_EMAIL], data=user_input

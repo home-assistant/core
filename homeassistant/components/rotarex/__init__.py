@@ -1,68 +1,42 @@
 """The Rotarex integration."""
 
-from datetime import timedelta
-import logging
+from __future__ import annotations
 
-from rotarex_dimes_srg_api import InvalidAuth, RotarexApi
+from typing import Final, cast
+
+from rotarex_dimes_srg_api import RotarexApi
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-_LOGGER = logging.getLogger(__name__)
+from .coordinator import RotarexDataUpdateCoordinator
 
-_PLATFORMS: list[Platform] = [Platform.SENSOR]
+PLATFORMS: Final = [Platform.SENSOR]
+
+type RotarexConfigEntry = ConfigEntry[RotarexDataUpdateCoordinator]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: RotarexConfigEntry) -> bool:
     """Set up Rotarex from a config entry."""
     session = async_get_clientsession(hass)
-    api = RotarexApi(session)
-
     email = entry.data[CONF_EMAIL]
     password = entry.data[CONF_PASSWORD]
 
-    try:
-        await api.login(email, password)
-    except InvalidAuth as err:
-        _LOGGER.error("Authentication failed: %s", err)
-        return False
-
-    async def async_update_data():
-        """Fetch data from API endpoint."""
-        try:
-            return await api.fetch_tanks()
-        except InvalidAuth as err:
-            _LOGGER.warning("Token expired, attempting to re-login: %s", err)
-            try:
-                await api.login(email, password)
-            except InvalidAuth as login_err:
-                raise UpdateFailed(
-                    f"Re-authentication failed: {login_err}"
-                ) from login_err
-            return await api.fetch_tanks()
-        except Exception as err:
-            raise UpdateFailed(f"Error communicating with API: {err}") from err
-
-    coordinator = DataUpdateCoordinator(
-        hass,
-        _LOGGER,
-        name="Rotarex Sensor",
-        update_method=async_update_data,
-        update_interval=timedelta(minutes=15),
-    )
-
+    api = RotarexApi(session)
+    coordinator = RotarexDataUpdateCoordinator(hass, entry, api, email, password)
     await coordinator.async_config_entry_first_refresh()
 
     entry.runtime_data = coordinator
-
-    await hass.config_entries.async_forward_entry_setups(entry, _PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: RotarexConfigEntry) -> bool:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, _PLATFORMS)
+    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    if unload_ok:
+        entry.runtime_data = cast(RotarexDataUpdateCoordinator, None)
+    return unload_ok

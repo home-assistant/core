@@ -12,7 +12,6 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import PERCENTAGE
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceInfo
@@ -20,21 +19,23 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util import dt as dt_util
 
+from . import RotarexConfigEntry
 from .const import DOMAIN
+from .coordinator import RotarexDataUpdateCoordinator
 
 
 def get_tank_name(tank_data: dict[str, Any] | None) -> str:
-    """Generate a name for the tank from the available data."""
-    if tank_data and tank_data.get("Name"):
-        return tank_data["Name"]
-    if tank_data:
-        return f"Tank {tank_data.get('Guid', 'Unknown')}"
-    return "Unknown Tank"
+    """Return a user-friendly name for the tank."""
+    if tank_data and (name := tank_data.get("Name")):
+        return name
+    if tank_data and (guid := tank_data.get("Guid")):
+        return f"Tank {guid}"
+    return "Unknown tank"
 
 
 @dataclass(kw_only=True, frozen=True)
 class RotarexTankSensorEntityDescription(SensorEntityDescription):
-    """Describes Rotarex tank sensors."""
+    """Entity description for Rotarex tank sensors."""
 
     value_fn: Callable[[dict[str, Any] | None], Any]
     extra_attr_fn: Callable[[dict[str, Any] | None], dict[str, Any] | None] | None = (
@@ -83,32 +84,37 @@ SENSOR_DESCRIPTIONS: tuple[RotarexTankSensorEntityDescription, ...] = (
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: RotarexConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Set up the sensor platform."""
+    """Set up Rotarex sensors from a config entry."""
     coordinator = config_entry.runtime_data
+    if not isinstance(coordinator, RotarexDataUpdateCoordinator):
+        return
 
     if not isinstance(coordinator.data, list):
         return
 
-    async_add_entities(
+    entities = [
         RotarexTankSensor(coordinator, tank, description)
         for tank in coordinator.data
         if isinstance(tank, dict) and tank.get("Guid")
         for description in SENSOR_DESCRIPTIONS
-    )
+    ]
+    if entities:
+        async_add_entities(entities)
 
 
-class RotarexTankSensor(CoordinatorEntity, SensorEntity):
-    """Generic Rotarex tank sensor."""
+class RotarexTankSensor(CoordinatorEntity[RotarexDataUpdateCoordinator], SensorEntity):
+    """Representation of a Rotarex tank sensor."""
 
+    __slots__ = ("_tank_id", "entity_description")
     entity_description: RotarexTankSensorEntityDescription
     _attr_has_entity_name = True
 
     def __init__(
         self,
-        coordinator,
+        coordinator: RotarexDataUpdateCoordinator,
         tank_data: dict[str, Any],
         description: RotarexTankSensorEntityDescription,
     ) -> None:
@@ -116,61 +122,73 @@ class RotarexTankSensor(CoordinatorEntity, SensorEntity):
         super().__init__(coordinator)
         self.entity_description = description
         self._tank_id = tank_data["Guid"]
-        self._attr_unique_id = f"rotarex_{self._tank_id}_{description.key}"
+        self._attr_unique_id = f"{self._tank_id}_{description.key}"
         self._update_state()
 
     @callback
     def _handle_coordinator_update(self) -> None:
-        """Handle updated data from the coordinator."""
+        """Handle coordinated data updates."""
         self._update_state()
         self.async_write_ha_state()
 
     def _get_latest_sync(self) -> dict[str, Any] | None:
-        """Return the most recent sync data."""
+        """Return the most recent synchronization entry for the tank."""
         data = self.coordinator.data
         if not isinstance(data, list):
             return None
 
         tank = next(
-            (t for t in data if isinstance(t, dict) and t.get("Guid") == self._tank_id),
+            (
+                item
+                for item in data
+                if isinstance(item, dict) and item.get("Guid") == self._tank_id
+            ),
             None,
         )
-        synch_datas = tank.get("SynchDatas") if tank else None
-        if isinstance(synch_datas, list) and synch_datas:
-            valid_synch_datas = [
-                s for s in synch_datas if isinstance(s, dict) and s.get("SynchDate")
-            ]
-            if valid_synch_datas:
-                return max(valid_synch_datas, key=lambda s: s["SynchDate"])
-        return None
+        if not tank:
+            return None
+
+        synch_datas = tank.get("SynchDatas")
+        if not isinstance(synch_datas, list):
+            return None
+
+        valid_syncs = [
+            sync
+            for sync in synch_datas
+            if isinstance(sync, dict) and sync.get("SynchDate")
+        ]
+        if not valid_syncs:
+            return None
+
+        return max(valid_syncs, key=lambda sync: sync["SynchDate"])
 
     def _update_state(self) -> None:
-        """Update native value from coordinator data."""
+        """Update native value and attributes."""
         latest_sync = self._get_latest_sync()
         self._attr_native_value = self.entity_description.value_fn(latest_sync)
 
     @property
     def extra_state_attributes(self) -> dict[str, Any] | None:
-        """Return extra attributes."""
+        """Return entity extra attributes."""
         if self.entity_description.extra_attr_fn:
             return self.entity_description.extra_attr_fn(self._get_latest_sync())
         return None
 
     @property
     def device_info(self) -> DeviceInfo:
-        """Return device information."""
+        """Return device registry information."""
         data = self.coordinator.data
-        if not isinstance(data, list):
-            return DeviceInfo(
-                identifiers={(DOMAIN, self._tank_id)},
-                name="Unknown Tank",
-                manufacturer="Rotarex",
-                model="DIMES SRG",
+        tank_data = None
+        if isinstance(data, list):
+            tank_data = next(
+                (
+                    item
+                    for item in data
+                    if isinstance(item, dict) and item.get("Guid") == self._tank_id
+                ),
+                None,
             )
-        tank_data = next(
-            (t for t in data if isinstance(t, dict) and t.get("Guid") == self._tank_id),
-            None,
-        )
+
         return DeviceInfo(
             identifiers={(DOMAIN, self._tank_id)},
             name=get_tank_name(tank_data),
