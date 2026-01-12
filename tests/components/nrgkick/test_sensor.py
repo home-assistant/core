@@ -174,3 +174,44 @@ async def test_sensor_entities(
     state = get_state_by_key("l1_voltage")
     assert state is not None
     assert state.state == STATE_UNKNOWN
+
+
+async def test_mapped_unknown_values_become_state_unknown(
+    hass: HomeAssistant,
+    mock_config_entry,
+    mock_nrgkick_api,
+    mock_info_data,
+    mock_control_data,
+    mock_values_data_sensor,
+) -> None:
+    """Test that enum-like UNKNOWN values map to HA's unknown state."""
+    mock_config_entry.add_to_hass(hass)
+
+    mock_info_data["connector"]["type"] = ConnectorType.UNKNOWN
+    mock_info_data["grid"]["phases"] = GridPhases.UNKNOWN
+    mock_values_data_sensor["general"]["status"] = ChargingStatus.UNKNOWN
+
+    mock_nrgkick_api.get_info.return_value = mock_info_data
+    mock_nrgkick_api.get_control.return_value = mock_control_data
+    mock_nrgkick_api.get_values.return_value = mock_values_data_sensor
+
+    with (
+        patch(
+            "homeassistant.components.nrgkick.NRGkickAPI", return_value=mock_nrgkick_api
+        ),
+        patch("homeassistant.components.nrgkick.async_get_clientsession"),
+    ):
+        assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    entity_registry = er.async_get(hass)
+
+    def get_state_by_key(key):
+        unique_id = f"TEST123456_{key}"
+        entity_id = entity_registry.async_get_entity_id("sensor", "nrgkick", unique_id)
+        return hass.states.get(entity_id) if entity_id else None
+
+    for key in ("connector_type", "grid_phases", "status"):
+        state = get_state_by_key(key)
+        assert state is not None
+        assert state.state == STATE_UNKNOWN

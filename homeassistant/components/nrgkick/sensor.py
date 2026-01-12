@@ -76,21 +76,17 @@ class NRGkickSensorEntityDescription(SensorEntityDescription):
 def _map_code_to_translation_key(
     value: StateType,
     mapping: Mapping[int, str],
-    *,
-    default: str = "unknown",
-    normalize: Callable[[str], str] = str.lower,
-) -> str:
+) -> StateType:
     """Map numeric API codes to translation keys.
 
-    The NRGkick API typically returns `int` (including `IntEnum`) values for
-    code-like fields. For forward compatibility, also accept strings and
-    normalize them.
+    The NRGkick API returns `int` (including `IntEnum`) values for code-like
+    fields used as sensor states.
 
     """
-    if isinstance(value, int):
-        return mapping.get(value, default)
+    if not isinstance(value, int):
+        return None
 
-    return normalize(str(value))
+    return mapping.get(value)
 
 
 async def async_setup_entry(
@@ -168,11 +164,7 @@ SENSORS: tuple[NRGkickSensorEntityDescription, ...] = (
         key="grid_phases",
         translation_key="grid_phases",
         value_path=("info", "grid", "phases"),
-        value_fn=lambda value: _map_code_to_translation_key(
-            value,
-            GRID_PHASES_MAP,
-            normalize=lambda text: text.lower().replace(", ", "_").replace(" ", "_"),
-        ),
+        value_fn=lambda value: _map_code_to_translation_key(value, GRID_PHASES_MAP),
     ),
     # INFO - Network
     NRGkickSensorEntityDescription(
@@ -611,11 +603,7 @@ SENSORS: tuple[NRGkickSensorEntityDescription, ...] = (
         translation_key="relay_state",
         entity_category=EntityCategory.DIAGNOSTIC,
         value_path=("values", "general", "relay_state"),
-        value_fn=lambda value: _map_code_to_translation_key(
-            value,
-            RELAY_STATE_MAP,
-            normalize=lambda text: text.lower().replace(", ", "_").replace(" ", "_"),
-        ),
+        value_fn=lambda value: _map_code_to_translation_key(value, RELAY_STATE_MAP),
     ),
     NRGkickSensorEntityDescription(
         key="charge_count",
