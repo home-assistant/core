@@ -822,10 +822,7 @@ class CastMediaPlayerEntity(CastDevice, MediaPlayerEntity):
             # Some apps don't report media status, show the player as playing
             return MediaPlayerState.PLAYING
 
-        if (
-            self.app_id is not None
-            and self.app_id != pychromecast.config.APP_BACKDROP
-        ):
+        if self.app_id is not None and self.app_id != pychromecast.config.APP_BACKDROP:
             # We have an active app
             return MediaPlayerState.IDLE
 
