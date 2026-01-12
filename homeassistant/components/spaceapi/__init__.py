@@ -85,6 +85,7 @@ CONF_RADIO_SHOW_URL = "url"
 CONF_RADIO_SHOW_TYPE = "type"
 CONF_RADIO_SHOW_START = "start"
 CONF_RADIO_SHOW_END = "end"
+CONF_REQUIRES_AUTH = "requires_auth"
 CONF_LOGO = "logo"
 CONF_PHONE = "phone"
 CONF_SIP = "sip"
@@ -231,6 +232,7 @@ CONFIG_SCHEMA = vol.Schema(
                 vol.Optional(CONF_RADIO_SHOW): vol.All(
                     cv.ensure_list, [RADIO_SHOW_SCHEMA]
                 ),
+                vol.Optional(CONF_REQUIRES_AUTH, default=True): cv.boolean,
             }
         )
     },
@@ -241,7 +243,7 @@ CONFIG_SCHEMA = vol.Schema(
 def setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Register the SpaceAPI with the HTTP interface."""
     hass.data[DATA_SPACEAPI] = config[DOMAIN]
-    hass.http.register_view(APISpaceApiView)
+    hass.http.register_view(APISpaceApiView(config[DOMAIN][CONF_REQUIRES_AUTH]))
 
     return True
 
@@ -251,6 +253,11 @@ class APISpaceApiView(HomeAssistantView):
 
     url = URL_API_SPACEAPI
     name = "api:spaceapi"
+    cors_allowed = True
+
+    def __init__(self, requires_auth: bool) -> None:
+        """Initialize SpaceAPI view."""
+        self.requires_auth = requires_auth
 
     @staticmethod
     def get_sensor_data(
