@@ -37,9 +37,8 @@ RETRY_EXCEPTIONS = (
 
 def _get_retry_after(e: TeslaFleetError) -> float:
     """Calculate wait time from exception."""
-    data = getattr(e, "data", {})
-    if isinstance(data, dict):
-        if after := data.get("after"):
+    if isinstance(e.data, dict):
+        if after := e.data.get("after"):
             return float(after)
     return 10.0
 
