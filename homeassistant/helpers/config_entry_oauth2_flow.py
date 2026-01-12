@@ -229,11 +229,7 @@ class LocalOAuth2Implementation(AbstractOAuth2Implementation):
         return {**token, **new_token}
 
     async def _token_request(self, data: dict) -> dict:
-        """Make a token request.
-
-        Retries only HTTP 429 responses (respecting exponential backoff).
-        Any other HTTP status >= 400 is not treated as they were.
-        """
+        """Make a token request."""
         session = async_get_clientsession(self.hass)
 
         data["client_id"] = self.client_id
@@ -464,11 +460,6 @@ class AbstractOAuth2FlowHandler(config_entries.ConfigFlow, metaclass=ABCMeta):
             return self.async_abort(reason="oauth_timeout")
         except (ClientResponseError, ClientError) as err:
             _LOGGER.error("Error resolving OAuth token: %s", err)
-            if (
-                isinstance(err, ClientResponseError)
-                and err.status == HTTPStatus.TOO_MANY_REQUESTS
-            ):
-                return self.async_abort(reason="oauth_failed")
             if (
                 isinstance(err, ClientResponseError)
                 and err.status == HTTPStatus.UNAUTHORIZED
