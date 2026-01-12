@@ -1,5 +1,6 @@
 """Test the Teslemetry init."""
 
+from copy import deepcopy
 import time
 from unittest.mock import AsyncMock, MagicMock, patch
 
@@ -18,7 +19,13 @@ from tesla_fleet_api.exceptions import (
 )
 
 from homeassistant.components.teslemetry.const import CLIENT_ID, DOMAIN
-from homeassistant.components.teslemetry.coordinator import VEHICLE_INTERVAL
+
+# Coordinator constants
+from homeassistant.components.teslemetry.coordinator import (
+    ENERGY_HISTORY_INTERVAL,
+    ENERGY_LIVE_INTERVAL,
+    VEHICLE_INTERVAL,
+)
 from homeassistant.components.teslemetry.models import TeslemetryData
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
@@ -33,9 +40,17 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
 from . import setup_platform
-from .const import CONFIG_V1, PRODUCTS_MODERN, UNIQUE_ID, VEHICLE_DATA_ALT
+from .const import (
+    CONFIG_V1,
+    ENERGY_HISTORY,
+    LIVE_STATUS,
+    PRODUCTS_MODERN,
+    UNIQUE_ID,
+    VEHICLE_DATA,
+    VEHICLE_DATA_ALT,
+)
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, async_fire_time_changed
 
 ERRORS = [
     (InvalidToken, ConfigEntryState.SETUP_ERROR),
@@ -519,3 +534,295 @@ async def test_retry_max_exceeded(
         entry = await setup_platform(hass)
         # After max retries, the entry should fail to set up
         assert entry.state is ConfigEntryState.SETUP_RETRY
+
+
+async def test_vehicle_retry_rate_limited(
+    hass: HomeAssistant,
+    mock_vehicle_data: AsyncMock,
+    mock_legacy: AsyncMock,
+) -> None:
+    """Test retry logic for vehicle data with RateLimited exception."""
+    mock_vehicle_data.side_effect = [
+        RateLimited(data={"after": 3}),
+        VEHICLE_DATA,
+    ]
+
+    with patch(
+        "homeassistant.components.teslemetry.coordinator.asyncio.sleep"
+    ) as mock_sleep:
+        entry = await setup_platform(hass)
+        assert entry.state is ConfigEntryState.LOADED
+        mock_sleep.assert_any_call(3.0)
+
+
+async def test_vehicle_retry_max_exceeded(
+    hass: HomeAssistant,
+    mock_vehicle_data: AsyncMock,
+    mock_legacy: AsyncMock,
+) -> None:
+    """Test vehicle data coordinator raises UpdateFailed after max retries."""
+    mock_vehicle_data.side_effect = [
+        RateLimited(data={"after": 1}),
+        RateLimited(data={"after": 1}),
+        RateLimited(data={"after": 1}),
+    ]
+
+    with patch("homeassistant.components.teslemetry.coordinator.asyncio.sleep"):
+        entry = await setup_platform(hass)
+        # After max retries, the entry should fail to set up
+        assert entry.state is ConfigEntryState.SETUP_RETRY
+
+
+async def test_live_status_retry_rate_limited(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test retry logic for live status with RateLimited exception."""
+    # Track call count to return different values
+    call_count = 0
+
+    def live_status_side_effect():
+        nonlocal call_count
+        call_count += 1
+        if call_count == 1:
+            return deepcopy(LIVE_STATUS)  # Initial call in async_setup_entry
+        if call_count == 2:
+            raise RateLimited(data={"after": 4})  # Coordinator refresh attempt 1
+        return deepcopy(LIVE_STATUS)  # Coordinator refresh attempt 2 (success)
+
+    with (
+        patch(
+            "tesla_fleet_api.tesla.energysite.EnergySite.live_status",
+            side_effect=live_status_side_effect,
+        ),
+        patch(
+            "homeassistant.components.teslemetry.coordinator.asyncio.sleep"
+        ) as mock_sleep,
+    ):
+        entry = await setup_platform(hass)
+        assert entry.state is ConfigEntryState.LOADED
+
+        # Trigger a coordinator refresh by advancing time
+        freezer.tick(ENERGY_LIVE_INTERVAL)
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+
+        mock_sleep.assert_any_call(4.0)
+
+
+async def test_live_status_retry_max_exceeded(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test live status coordinator raises UpdateFailed after max retries."""
+    call_count = 0
+
+    def live_status_side_effect():
+        nonlocal call_count
+        call_count += 1
+        if call_count == 1:
+            return deepcopy(LIVE_STATUS)  # Initial call in async_setup_entry
+        raise ServiceUnavailable  # All subsequent calls fail
+
+    with (
+        patch(
+            "tesla_fleet_api.tesla.energysite.EnergySite.live_status",
+            side_effect=live_status_side_effect,
+        ),
+        patch("homeassistant.components.teslemetry.coordinator.asyncio.sleep"),
+    ):
+        entry = await setup_platform(hass)
+        assert entry.state is ConfigEntryState.LOADED
+
+        # Trigger a coordinator refresh by advancing time
+        freezer.tick(ENERGY_LIVE_INTERVAL)
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+
+        # Entry stays loaded but coordinator will have failed
+        assert entry.state is ConfigEntryState.LOADED
+
+
+async def test_energy_history_retry_rate_limited(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test retry logic for energy history with RateLimited exception."""
+    call_count = 0
+
+    def energy_history_side_effect(*args, **kwargs):
+        nonlocal call_count
+        call_count += 1
+        if call_count == 1:
+            raise GatewayTimeout
+        return ENERGY_HISTORY
+
+    with (
+        patch(
+            "tesla_fleet_api.tesla.energysite.EnergySite.energy_history",
+            side_effect=energy_history_side_effect,
+        ),
+        patch(
+            "homeassistant.components.teslemetry.coordinator.asyncio.sleep"
+        ) as mock_sleep,
+    ):
+        entry = await setup_platform(hass)
+        assert entry.state is ConfigEntryState.LOADED
+
+        # Trigger a coordinator refresh by advancing time
+        freezer.tick(ENERGY_HISTORY_INTERVAL)
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+
+        mock_sleep.assert_any_call(10.0)
+
+
+async def test_energy_history_retry_max_exceeded(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test energy history coordinator raises UpdateFailed after max retries."""
+
+    def energy_history_side_effect(*args, **kwargs):
+        raise InvalidResponse
+
+    with (
+        patch(
+            "tesla_fleet_api.tesla.energysite.EnergySite.energy_history",
+            side_effect=energy_history_side_effect,
+        ),
+        patch("homeassistant.components.teslemetry.coordinator.asyncio.sleep"),
+    ):
+        entry = await setup_platform(hass)
+        assert entry.state is ConfigEntryState.LOADED
+
+        # Trigger a coordinator refresh by advancing time
+        freezer.tick(ENERGY_HISTORY_INTERVAL)
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+
+        # Entry stays loaded but coordinator will have failed
+        assert entry.state is ConfigEntryState.LOADED
+
+
+async def test_live_status_auth_error(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test live status coordinator handles auth errors."""
+    call_count = 0
+
+    def live_status_side_effect():
+        nonlocal call_count
+        call_count += 1
+        if call_count == 1:
+            return deepcopy(LIVE_STATUS)
+        raise InvalidToken
+
+    with patch(
+        "tesla_fleet_api.tesla.energysite.EnergySite.live_status",
+        side_effect=live_status_side_effect,
+    ):
+        entry = await setup_platform(hass)
+        assert entry.state is ConfigEntryState.LOADED
+
+        # Trigger a coordinator refresh by advancing time
+        freezer.tick(ENERGY_LIVE_INTERVAL)
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+
+        # Auth error triggers reauth flow
+        assert entry.state is ConfigEntryState.LOADED
+
+
+async def test_live_status_generic_error(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test live status coordinator handles generic TeslaFleetError."""
+    call_count = 0
+
+    def live_status_side_effect():
+        nonlocal call_count
+        call_count += 1
+        if call_count == 1:
+            return deepcopy(LIVE_STATUS)
+        raise TeslaFleetError
+
+    with patch(
+        "tesla_fleet_api.tesla.energysite.EnergySite.live_status",
+        side_effect=live_status_side_effect,
+    ):
+        entry = await setup_platform(hass)
+        assert entry.state is ConfigEntryState.LOADED
+
+        # Trigger a coordinator refresh by advancing time
+        freezer.tick(ENERGY_LIVE_INTERVAL)
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+
+        # Entry stays loaded but coordinator will have failed
+        assert entry.state is ConfigEntryState.LOADED
+
+
+async def test_energy_history_auth_error(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test energy history coordinator handles auth errors."""
+    with patch(
+        "tesla_fleet_api.tesla.energysite.EnergySite.energy_history",
+        side_effect=InvalidToken,
+    ):
+        entry = await setup_platform(hass)
+        assert entry.state is ConfigEntryState.LOADED
+
+        # Trigger a coordinator refresh by advancing time
+        freezer.tick(ENERGY_HISTORY_INTERVAL)
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+
+        # Auth error triggers reauth flow
+        assert entry.state is ConfigEntryState.LOADED
+
+
+async def test_energy_history_generic_error(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test energy history coordinator handles generic TeslaFleetError."""
+    with patch(
+        "tesla_fleet_api.tesla.energysite.EnergySite.energy_history",
+        side_effect=TeslaFleetError,
+    ):
+        entry = await setup_platform(hass)
+        assert entry.state is ConfigEntryState.LOADED
+
+        # Trigger a coordinator refresh by advancing time
+        freezer.tick(ENERGY_HISTORY_INTERVAL)
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+
+        # Entry stays loaded but coordinator will have failed
+        assert entry.state is ConfigEntryState.LOADED
+
+
+async def test_energy_history_invalid_data(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test energy history coordinator handles invalid data response."""
+    with patch(
+        "tesla_fleet_api.tesla.energysite.EnergySite.energy_history",
+        return_value={"response": {"time_series": "invalid"}},
+    ):
+        entry = await setup_platform(hass)
+        assert entry.state is ConfigEntryState.LOADED
+
+        # Trigger a coordinator refresh by advancing time
+        freezer.tick(ENERGY_HISTORY_INTERVAL)
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+
+        # Entry stays loaded but coordinator will have failed
+        assert entry.state is ConfigEntryState.LOADED
