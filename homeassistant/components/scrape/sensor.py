@@ -177,7 +177,11 @@ class ScrapeSensor(CoordinatorEntity[ScrapeCoordinator], ManualTriggerSensorEnti
 
     @property
     def name(self) -> str | None:
-        """Return the name of the sensor."""
+        """Return the name of the sensor.
+
+        ManualTriggerSensorEntity already implements name property,
+        so we need to override it here.
+        """
         return self._sensor_name
 
     def _extract_value(self) -> Any:
