@@ -65,16 +65,23 @@ class TibberConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
         )
 
         try:
-            await tibber_connection.data_api.get_userinfo()
+            await tibber_connection.update_info()
         except (aiohttp.ClientError, TimeoutError):
             return self.async_abort(reason="cannot_connect")
 
+        if tibber_connection.user_id is None:
+            return self.async_abort(reason="cannot_connect")
+
+        await self.async_set_unique_id(tibber_connection.user_id)
+
         if self.source == SOURCE_REAUTH:
             reauth_entry = self._get_reauth_entry()
+            self._abort_if_unique_id_mismatch(reason="wrong_account")
             return self.async_update_reload_and_abort(
                 reauth_entry,
                 data=data,
                 title=tibber_connection.name,
             )
 
+        self._abort_if_unique_id_configured()
         return self.async_create_entry(title=tibber_connection.name, data=data)
