@@ -1,16 +1,27 @@
 """Tests for Tibber config flow."""
 
+import builtins
 from http import HTTPStatus
 from unittest.mock import AsyncMock, MagicMock, patch
 from urllib.parse import parse_qs, urlparse
 
 from aiohttp import ClientError
 import pytest
+from tibber import (
+    FatalHttpExceptionError,
+    InvalidLoginError,
+    RetryableHttpExceptionError,
+)
 
 from homeassistant import config_entries
 from homeassistant.components.recorder import Recorder
 from homeassistant.components.tibber.application_credentials import TOKEN_URL
-from homeassistant.components.tibber.config_flow import DATA_API_DEFAULT_SCOPES
+from homeassistant.components.tibber.config_flow import (
+    DATA_API_DEFAULT_SCOPES,
+    ERR_CLIENT,
+    ERR_TIMEOUT,
+    ERR_TOKEN,
+)
 from homeassistant.components.tibber.const import AUTH_IMPLEMENTATION, DOMAIN
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_TOKEN
 from homeassistant.core import HomeAssistant
@@ -45,26 +56,36 @@ def _mock_tibber(
 
 
 @pytest.mark.usefixtures("setup_credentials", "current_request_with_host")
-async def test_oauth_create_entry_cannot_connect_userinfo(
+@pytest.mark.parametrize(
+    ("exception", "expected_error"),
+    [
+        (builtins.TimeoutError(), ERR_TIMEOUT),
+        (ClientError(), ERR_CLIENT),
+        (InvalidLoginError(401), ERR_TOKEN),
+        (RetryableHttpExceptionError(503), ERR_CLIENT),
+        (FatalHttpExceptionError(404), ERR_CLIENT),
+    ],
+)
+async def test_graphql_step_exceptions(
     recorder_mock: Recorder,
     hass: HomeAssistant,
     tibber_mock: MagicMock,
-    data_api_client_mock: MagicMock,
+    exception: Exception,
+    expected_error: str,
 ) -> None:
-    """Abort OAuth finalize when Data API userinfo cannot be retrieved."""
+    """Validate Tibber connection errors are surfaced."""
     result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": config_entries.SOURCE_USER},
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     handler = hass.config_entries.flow._progress[result["flow_id"]]
 
-    _mock_tibber(tibber_mock, update_side_effect=ClientError())
+    _mock_tibber(tibber_mock, update_side_effect=exception)
     flow_result = await handler.async_oauth_create_entry(
         {CONF_TOKEN: {CONF_ACCESS_TOKEN: "rest-token"}}
     )
 
     assert flow_result["type"] is FlowResultType.ABORT
-    assert flow_result["reason"] == "cannot_connect"
+    assert flow_result["reason"] == expected_error
 
 
 async def test_data_api_requires_credentials(
