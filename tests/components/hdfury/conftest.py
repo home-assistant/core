@@ -72,7 +72,17 @@ def mock_hdfury_client() -> Generator[AsyncMock]:
         )
         coord_client.get_config = AsyncMock(
             return_value={
+                "autosw": "1",
+                "iractive": "1",
+                "htpcmode0": "0",
+                "htpcmode1": "0",
+                "htpcmode2": "0",
+                "htpcmode3": "0",
+                "mutetx0": "1",
+                "mutetx1": "1",
+                "relay": "0",
                 "macaddr": "c7:1c:df:9d:f6:40",
+                "oled": "1",
             }
         )
 
