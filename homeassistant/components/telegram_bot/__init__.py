@@ -502,6 +502,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 async def _call_service(
     service: ServiceCall, notify_service: TelegramNotificationService, chat_id: int
 ) -> dict[str, JsonValueType] | None:
+    """Calls a Telegram bot service using the specified bot and chat_id."""
+
     service_name = service.service
 
     kwargs = dict(service.data)
@@ -589,7 +591,12 @@ def _deprecate_timeout(hass: HomeAssistant, service: ServiceCall) -> None:
 def _build_targets(
     hass: HomeAssistant, service: ServiceCall
 ) -> list[tuple[TelegramBotConfigEntry, int, str]]:
-    """Build list of targets where each target is represented by its corresponding config entry, chat ID and notify entity id."""
+    """Builds a list of targets from the service parameters.
+
+    Each target is a tuple of (config_entry, chat_id, notify_entity_id).
+    The config_entry identiffies the bot to use for the service call.
+    The chat_id or notify_entity_id identifies the recipient of the message.
+    """
 
     migrate_chat_ids = _warn_chat_id_migration(hass, service)
 
