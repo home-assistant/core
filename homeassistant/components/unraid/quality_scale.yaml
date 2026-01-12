@@ -21,9 +21,7 @@ rules:
   common-modules: done
 
   # Full test coverage for the config flow
-  config-flow-test-coverage:
-    status: done
-    comment: All config flow paths tested including reauth, options, and error cases.
+  config-flow-test-coverage: done
 
   # Integration needs to be able to be set up via the UI
   config-flow: done
@@ -81,10 +79,10 @@ rules:
   config-entry-unloading: done
 
   # The documentation describes all integration configuration options
-  docs-configuration-parameters: done
+  docs-configuration-parameters: todo
 
   # The documentation describes all integration installation parameters
-  docs-installation-parameters: done
+  docs-installation-parameters: todo
 
   # Mark entity unavailable if appropriate
   entity-unavailable: done
@@ -99,14 +97,10 @@ rules:
   parallel-updates: done
 
   # Reauthentication needs to be available via the UI
-  reauthentication-flow:
-    status: todo
-    comment: |
-      Deferred per reviewer feedback to reduce PR scope.
-      Can be added in a follow-up PR.
+  reauthentication-flow: todo
 
   # Above 95% test coverage for all integration modules
-  test-coverage: done
+  test-coverage: todo
 
   # ============================================================================
   # 🥇 Gold (Best user experience)
@@ -116,11 +110,7 @@ rules:
   devices: done
 
   # Implements diagnostics
-  diagnostics:
-    status: exempt
-    comment: |
-      Removed per reviewer feedback to reduce PR scope.
-      Can be added in a follow-up PR.
+  diagnostics: todo
 
   # Integration uses discovery info to update network information
   discovery-update-info:
@@ -133,13 +123,13 @@ rules:
     comment: Unraid servers do not support SSDP/mDNS/DHCP discovery.
 
   # The documentation describes how data is updated
-  docs-data-update: done
+  docs-data-update: todo
 
   # The documentation provides automation examples
-  docs-examples: done
+  docs-examples: todo
 
   # The documentation describes known limitations
-  docs-known-limitations: done
+  docs-known-limitations: todo
 
   # The documentation describes known supported / unsupported devices
   docs-supported-devices:
@@ -147,55 +137,53 @@ rules:
     comment: Integration supports all Unraid 7.2+ servers uniformly.
 
   # The documentation describes the supported functionality
-  docs-supported-functions: done
+  docs-supported-functions: todo
 
   # The documentation provides troubleshooting information
-  docs-troubleshooting: done
+  docs-troubleshooting: todo
 
   # The documentation describes use cases
-  docs-use-cases: done
+  docs-use-cases: todo
 
   # Devices added after integration setup
-  dynamic-devices: done
+  dynamic-devices:
+    status: exempt
+    comment: Single device per server, no dynamic device addition.
 
   # Entities are assigned an appropriate EntityCategory
-  entity-category: done
+  entity-category:
+    status: exempt
+    comment: Current sensors are primary measurements, not diagnostic or config.
 
   # Entities use device classes where possible
   entity-device-class: done
 
   # Integration disables less popular (or noisy) entities
-  entity-disabled-by-default: done
+  entity-disabled-by-default:
+    status: exempt
+    comment: All current sensors are primary metrics, none disabled by default.
 
   # Entities have translated names
   entity-translations: done
 
   # Exception messages are translatable
-  exception-translations: done
+  exception-translations: todo
 
   # Entities implement icon translations
-  icon-translations:
-    status: done
-    comment: |
-      icons.json defines icons for all entities using translation keys.
-      All entity classes use _attr_translation_key to map to icons.
+  icon-translations: todo
 
   # Integrations should have a reconfigure flow
-  reconfiguration-flow:
-    status: todo
-    comment: |
-      Deferred per reviewer feedback to reduce PR scope.
-      Can be added in a follow-up PR.
+  reconfiguration-flow: todo
 
   # Repair issues and repair flows are used when user intervention is needed
-  repair-issues: done
+  repair-issues:
+    status: exempt
+    comment: No actionable repair issues identified for current scope.
 
   # Stale devices are removed
   stale-devices:
     status: exempt
-    comment: |
-      Integration has a single device per server. Containers, VMs, and disks are
-      entities, not devices. Main device persists as long as integration is configured.
+    comment: Single device per server, no stale device management needed.
 
   # ============================================================================
   # 🏆 Platinum (Highest standards)
@@ -208,4 +196,4 @@ rules:
   inject-websession: done
 
   # Strict typing
-  strict-typing: done
+  strict-typing: todo

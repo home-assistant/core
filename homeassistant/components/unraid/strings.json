@@ -1,16 +1,15 @@
 {
   "config": {
     "abort": {
-      "already_configured": "This Unraid server is already configured."
+      "already_configured": "This Unraid server is already configured.",
+      "no_server_uuid": "Could not retrieve server UUID. Ensure your Unraid server is properly configured.",
+      "unsupported_version": "Unraid version not supported. Minimum required: Unraid 7.2.0 (API v4.21.0)."
     },
     "error": {
-      "already_configured": "This Unraid server is already configured.",
       "cannot_connect": "Cannot connect. Verify the IP address or hostname is correct and reachable.",
       "check_port": "Verify the port number matches your Unraid server configuration.",
       "invalid_auth": "Invalid API key or insufficient permissions. Ensure the key has ADMIN role.",
-      "no_server_uuid": "Could not retrieve server UUID. Ensure your Unraid server is properly configured.",
-      "unknown": "Unexpected error occurred. Check Home Assistant logs for details.",
-      "unsupported_version": "Unraid version not supported. Minimum required: Unraid 7.2.0 (API v4.21.0)."
+      "unknown": "Unexpected error occurred. Check Home Assistant logs for details."
     },
     "step": {
       "user": {
@@ -33,95 +32,11 @@
   },
   "entity": {
     "sensor": {
-      "array_disks": {
-        "name": "Array disks"
-      },
-      "array_free": {
-        "name": "Array free"
-      },
-      "array_state": {
-        "name": "Array state"
-      },
-      "array_total": {
-        "name": "Array total"
-      },
-      "array_usage": {
-        "name": "Array usage"
-      },
-      "array_used": {
-        "name": "Array used"
-      },
-      "cache_disks": {
-        "name": "Cache disks"
-      },
-      "cpu_power": {
-        "name": "CPU power"
-      },
       "cpu_temp": {
         "name": "CPU temperature"
       },
       "cpu_usage": {
         "name": "CPU usage"
-      },
-      "disk_free": {
-        "name": "Disk {disk_name} free"
-      },
-      "disk_temp": {
-        "name": "Disk {disk_name} temperature"
-      },
-      "disk_total": {
-        "name": "Disk {disk_name} total"
-      },
-      "disk_usage": {
-        "name": "Disk {disk_name} usage"
-      },
-      "disk_used": {
-        "name": "Disk {disk_name} used"
-      },
-      "docker_containers": {
-        "name": "Docker containers"
-      },
-      "docker_containers_running": {
-        "name": "Docker containers running"
-      },
-      "flash_total": {
-        "name": "Flash device total"
-      },
-      "flash_usage": {
-        "name": "Flash device usage"
-      },
-      "flash_used": {
-        "name": "Flash device used"
-      },
-      "notifications": {
-        "name": "Active notifications"
-      },
-      "notifications_alert": {
-        "name": "Alert notifications"
-      },
-      "notifications_warning": {
-        "name": "Warning notifications"
-      },
-      "parity_disks": {
-        "name": "Parity disks"
-      },
-      "parity_errors": {
-        "name": "Parity check errors"
-      },
-      "parity_progress": {
-        "name": "Parity check progress"
-      },
-      "parity_speed": {
-        "name": "Parity check speed"
-      },
-      "ram_available": {
-        "name": "RAM available"
-      },
-      "ram_free": {
-        "name": "RAM free"
-      },
-      "ram_total": {
-        "name": "RAM total"
       },
       "ram_usage": {
         "name": "RAM usage"
@@ -129,50 +44,8 @@
       "ram_used": {
         "name": "RAM used"
       },
-      "share_usage": {
-        "name": "Share {share_name} usage"
-      },
-      "share_used": {
-        "name": "Share {share_name} used"
-      },
-      "shares": {
-        "name": "User shares"
-      },
-      "swap_total": {
-        "name": "Swap total"
-      },
-      "swap_usage": {
-        "name": "Swap usage"
-      },
-      "swap_used": {
-        "name": "Swap used"
-      },
-      "ups_battery": {
-        "name": "UPS {ups_name} battery"
-      },
-      "ups_input_voltage": {
-        "name": "UPS {ups_name} input voltage"
-      },
-      "ups_load": {
-        "name": "UPS {ups_name} load"
-      },
-      "ups_output_voltage": {
-        "name": "UPS {ups_name} output voltage"
-      },
-      "ups_power": {
-        "name": "UPS {ups_name} power"
-      },
-      "ups_runtime": {
-        "name": "UPS {ups_name} runtime"
-      },
       "uptime": {
         "name": "Uptime"
-      },
-      "vms": {
-        "name": "Virtual machines"
-      },
-      "vms_running": {
-        "name": "Virtual machines running"
       }
     }
   }

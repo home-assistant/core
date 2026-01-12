@@ -14,7 +14,13 @@ from homeassistant.config_entries import ConfigFlow
 from homeassistant.const import CONF_API_KEY, CONF_HOST, CONF_VERIFY_SSL
 from homeassistant.exceptions import HomeAssistantError
 
-from .const import CONF_UPS_NOMINAL_POWER, DEFAULT_UPS_NOMINAL_POWER, DOMAIN
+from .const import (
+    CONF_HTTP_PORT,
+    CONF_HTTPS_PORT,
+    DEFAULT_HTTP_PORT,
+    DEFAULT_HTTPS_PORT,
+    DOMAIN,
+)
 
 if TYPE_CHECKING:
     from homeassistant.config_entries import ConfigFlowResult
@@ -23,12 +29,6 @@ _LOGGER = logging.getLogger(__name__)
 
 MIN_API_VERSION = "4.21.0"
 MIN_UNRAID_VERSION = "7.2.0"
-DEFAULT_HTTP_PORT = 80
-DEFAULT_HTTPS_PORT = 443
-
-# Custom config keys for ports (not in homeassistant.const)
-CONF_HTTP_PORT = "http_port"
-CONF_HTTPS_PORT = "https_port"
 
 
 class UnraidConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -55,7 +55,7 @@ class UnraidConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors[CONF_HOST] = "cannot_connect"
                 errors[CONF_HTTPS_PORT] = "check_port"
             except UnsupportedVersionError:
-                errors["base"] = "unsupported_version"
+                return self.async_abort(reason="unsupported_version")
             except Exception:
                 _LOGGER.exception(
                     "Unexpected error connecting to %s", user_input[CONF_HOST]
@@ -64,20 +64,18 @@ class UnraidConfigFlow(ConfigFlow, domain=DOMAIN):
 
             if not errors:
                 if not self._server_uuid:
-                    errors["base"] = "no_server_uuid"
-                else:
-                    await self.async_set_unique_id(self._server_uuid)
-                    self._abort_if_unique_id_configured()
+                    return self.async_abort(reason="no_server_uuid")
 
-                    title = self._server_hostname or user_input[CONF_HOST]
+                await self.async_set_unique_id(self._server_uuid)
+                self._abort_if_unique_id_configured()
 
-                    return self.async_create_entry(
-                        title=title,
-                        data={
-                            **user_input,
-                            CONF_VERIFY_SSL: self._verify_ssl,
-                        },
-                    )
+                return self.async_create_entry(
+                    title=self._server_hostname or user_input[CONF_HOST],
+                    data={
+                        **user_input,
+                        CONF_VERIFY_SSL: self._verify_ssl,
+                    },
+                )
 
         return self.async_show_form(
             step_id="user",
@@ -143,34 +141,25 @@ class UnraidConfigFlow(ConfigFlow, domain=DOMAIN):
         """Validate connection, version, and fetch server info."""
         try:
             await api_client.test_connection()
-
-            version_info = await api_client.get_version()
-
-            api_version = version_info.get("api", "0.0.0")
-            unraid_version = version_info.get("unraid", "0.0.0")
-
-            if not self._is_supported_version(api_version):
-                msg = (
-                    f"Unraid {unraid_version} (API {api_version}) not supported. "
-                    f"Minimum required: Unraid {MIN_UNRAID_VERSION} "
-                    f"(API {MIN_API_VERSION})"
-                )
-                raise UnsupportedVersionError(msg)  # noqa: TRY301
-
-            await self._fetch_server_info(api_client)
-
-        except (InvalidAuthError, CannotConnectError, UnsupportedVersionError):
-            raise
         except UnraidAuthenticationError as err:
             raise InvalidAuthError(str(err)) from err
         except UnraidConnectionError as err:
             raise CannotConnectError(str(err)) from err
-        except Exception as err:
-            error_str = str(err).lower()
-            if "ssl" in error_str or "certificate" in error_str:
-                msg = f"SSL error: {err}"
-                raise CannotConnectError(msg) from err
-            raise CannotConnectError(f"Unexpected error: {err}") from err
+
+        version_info = await api_client.get_version()
+
+        api_version = version_info.get("api", "0.0.0")
+        unraid_version = version_info.get("unraid", "0.0.0")
+
+        if not self._is_supported_version(api_version):
+            msg = (
+                f"Unraid {unraid_version} (API {api_version}) not supported. "
+                f"Minimum required: Unraid {MIN_UNRAID_VERSION} "
+                f"(API {MIN_API_VERSION})"
+            )
+            raise UnsupportedVersionError(msg)
+
+        await self._fetch_server_info(api_client)
 
     async def _fetch_server_info(self, api_client: UnraidClient) -> None:
         """Fetch server UUID and hostname for unique identification."""

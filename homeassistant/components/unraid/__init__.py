@@ -15,25 +15,18 @@ from unraid_api.exceptions import (
     UnraidAuthenticationError,
     UnraidConnectionError,
 )
-from unraid_api.models import ServerInfo
 
 from homeassistant.const import CONF_API_KEY, CONF_HOST, CONF_VERIFY_SSL, Platform
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .config_flow import (
+from .const import (
     CONF_HTTP_PORT,
     CONF_HTTPS_PORT,
     DEFAULT_HTTP_PORT,
     DEFAULT_HTTPS_PORT,
 )
-from .const import DEFAULT_STORAGE_POLL_INTERVAL, DEFAULT_SYSTEM_POLL_INTERVAL, DOMAIN
-from .coordinator import (
-    UnraidConfigEntry,
-    UnraidRuntimeData,
-    UnraidStorageCoordinator,
-    UnraidSystemCoordinator,
-)
+from .coordinator import UnraidConfigEntry, UnraidRuntimeData, UnraidSystemCoordinator
 
 if TYPE_CHECKING:
     from homeassistant.core import HomeAssistant
@@ -43,7 +36,6 @@ _LOGGER = logging.getLogger(__name__)
 PLATFORMS: list[Platform] = [
     Platform.SENSOR,
 ]
-
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: UnraidConfigEntry) -> bool:
@@ -72,25 +64,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: UnraidConfigEntry) -> bo
         await api_client.test_connection()
         server_info = await api_client.get_server_info()
     except UnraidAuthenticationError as err:
-        await api_client.close()
         msg = f"Authentication failed for Unraid server {host}"
         raise ConfigEntryAuthFailed(msg) from err
     except (UnraidConnectionError, UnraidAPIError) as err:
-        await api_client.close()
         msg = f"Failed to connect to Unraid server: {err}"
         raise ConfigEntryNotReady(msg) from err
 
     server_name = server_info.hostname or host
 
-    # Create coordinators with fixed poll intervals
+    # Create coordinator with fixed poll interval
     system_coordinator = UnraidSystemCoordinator(
-        hass=hass,
-        config_entry=entry,
-        api_client=api_client,
-        server_name=server_name,
-    )
-
-    storage_coordinator = UnraidStorageCoordinator(
         hass=hass,
         config_entry=entry,
         api_client=api_client,
@@ -99,13 +82,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: UnraidConfigEntry) -> bo
 
     # Fetch initial data
     await system_coordinator.async_config_entry_first_refresh()
-    await storage_coordinator.async_config_entry_first_refresh()
 
     # Store runtime data in config entry (HA 2024.4+ pattern)
     entry.runtime_data = UnraidRuntimeData(
         api_client=api_client,
         system_coordinator=system_coordinator,
-        storage_coordinator=storage_coordinator,
         server_info=server_info,
     )
 
@@ -117,9 +98,4 @@ async def async_setup_entry(hass: HomeAssistant, entry: UnraidConfigEntry) -> bo
 
 async def async_unload_entry(hass: HomeAssistant, entry: UnraidConfigEntry) -> bool:
     """Unload a config entry."""
-    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-
-    if unload_ok:
-        await entry.runtime_data.api_client.close()
-
-    return unload_ok
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)

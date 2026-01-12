@@ -47,7 +47,6 @@ def _mock_api_client(
             api_version=api_version,
         )
     )
-    mock_api.close = AsyncMock()
     return mock_api
 
 
@@ -97,7 +96,6 @@ class TestConfigFlow:
             mock_api.test_connection = AsyncMock(
                 side_effect=UnraidAuthenticationError("Invalid API key")
             )
-            mock_api.close = AsyncMock()
             MockAPIClient.return_value = mock_api
 
             result = await hass.config_entries.flow.async_init(
@@ -121,7 +119,6 @@ class TestConfigFlow:
             mock_api.test_connection = AsyncMock(
                 side_effect=UnraidConnectionError("Connection refused")
             )
-            mock_api.close = AsyncMock()
             MockAPIClient.return_value = mock_api
 
             result = await hass.config_entries.flow.async_init(
@@ -138,7 +135,7 @@ class TestConfigFlow:
             assert result["errors"][CONF_HTTPS_PORT] == "check_port"
 
     async def test_unsupported_version_error(self, hass: HomeAssistant) -> None:
-        """Test old Unraid version shows version error."""
+        """Test old Unraid version aborts flow."""
         with patch(
             "homeassistant.components.unraid.config_flow.UnraidClient"
         ) as MockAPIClient:
@@ -147,7 +144,6 @@ class TestConfigFlow:
             mock_api.get_version = AsyncMock(
                 return_value={"unraid": "6.9.0", "api": "4.10.0"}
             )
-            mock_api.close = AsyncMock()
             MockAPIClient.return_value = mock_api
 
             result = await hass.config_entries.flow.async_init(
@@ -159,8 +155,8 @@ class TestConfigFlow:
                 },
             )
 
-            assert result["type"] == FlowResultType.FORM
-            assert result["errors"]["base"] == "unsupported_version"
+            assert result["type"] == FlowResultType.ABORT
+            assert result["reason"] == "unsupported_version"
 
     async def test_duplicate_config_entry(
         self, hass: HomeAssistant, mock_setup_entry: None
@@ -204,7 +200,7 @@ class TestConfigFlow:
     async def test_user_step_unknown_error(
         self, hass: HomeAssistant, mock_setup_entry: None
     ) -> None:
-        """Test unexpected error during user step gets wrapped as cannot_connect."""
+        """Test unexpected error during user step gets caught."""
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}
         )
@@ -223,7 +219,7 @@ class TestConfigFlow:
             )
 
         assert result2["type"] == FlowResultType.FORM
-        assert result2["errors"][CONF_HOST] == "cannot_connect"
+        assert result2["errors"]["base"] == "unknown"
 
     async def test_http_error_403_shows_invalid_auth(
         self, hass: HomeAssistant, mock_setup_entry: None
@@ -242,7 +238,6 @@ class TestConfigFlow:
                     "Invalid API key or insufficient permissions"
                 )
             )
-            mock_api.close = AsyncMock()
             MockAPIClient.return_value = mock_api
 
             result2 = await hass.config_entries.flow.async_configure(
@@ -268,7 +263,6 @@ class TestConfigFlow:
             mock_api.test_connection = AsyncMock(
                 side_effect=UnraidConnectionError("Connection refused")
             )
-            mock_api.close = AsyncMock()
             MockAPIClient.return_value = mock_api
 
             result2 = await hass.config_entries.flow.async_configure(
@@ -327,10 +321,10 @@ class TestConfigFlow:
         assert call_count == 2
         assert result2["type"] == FlowResultType.CREATE_ENTRY
 
-    async def test_ssl_error_shows_cannot_connect_with_hint(
+    async def test_ssl_error_shows_unknown_for_unexpected_exception(
         self, hass: HomeAssistant, mock_setup_entry: None
     ) -> None:
-        """Test SSL errors are handled with helpful message."""
+        """Test unexpected SSL errors are caught as unknown."""
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}
         )
@@ -351,7 +345,7 @@ class TestConfigFlow:
             )
 
         assert result2["type"] == FlowResultType.FORM
-        assert result2["errors"][CONF_HOST] == "cannot_connect"
+        assert result2["errors"]["base"] == "unknown"
 
     async def test_authentication_error_shows_invalid_auth(
         self, hass: HomeAssistant, mock_setup_entry: None
@@ -368,7 +362,6 @@ class TestConfigFlow:
             mock_api.test_connection = AsyncMock(
                 side_effect=UnraidAuthenticationError("Request unauthorized")
             )
-            mock_api.close = AsyncMock()
             MockAPIClient.return_value = mock_api
 
             result2 = await hass.config_entries.flow.async_configure(
@@ -394,7 +387,6 @@ class TestConfigFlow:
             mock_api.test_connection = AsyncMock(
                 side_effect=UnraidConnectionError("HTTP 500: Internal Server Error")
             )
-            mock_api.close = AsyncMock()
             MockAPIClient.return_value = mock_api
 
             result2 = await hass.config_entries.flow.async_configure(
@@ -483,7 +475,7 @@ class TestConfigFlow:
     async def test_missing_server_uuid_shows_error(
         self, hass: HomeAssistant, mock_setup_entry: None
     ) -> None:
-        """Test connection fails with error when server UUID is not available."""
+        """Test connection aborts when server UUID is not available."""
         with patch(
             "homeassistant.components.unraid.config_flow.UnraidClient"
         ) as MockAPIClient:
@@ -498,7 +490,6 @@ class TestConfigFlow:
                     hostname="tower",
                 )
             )
-            mock_api.close = AsyncMock()
             MockAPIClient.return_value = mock_api
 
             result = await hass.config_entries.flow.async_init(
@@ -510,5 +501,5 @@ class TestConfigFlow:
                 },
             )
 
-            assert result["type"] == FlowResultType.FORM
-            assert result["errors"]["base"] == "no_server_uuid"
+            assert result["type"] == FlowResultType.ABORT
+            assert result["reason"] == "no_server_uuid"
