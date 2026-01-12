@@ -30,6 +30,7 @@ from homeassistant.const import (
     UnitOfEnergy,
     UnitOfLength,
     UnitOfPower,
+    UnitOfTemperature,
 )
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.exceptions import PlatformNotReady
@@ -281,7 +282,7 @@ DATA_API_SENSORS: tuple[SensorEntityDescription, ...] = (
         key="range.remaining",
         translation_key="range_remaining",
         device_class=SensorDeviceClass.DISTANCE,
-        native_unit_of_measurement=UnitOfLength.KILOMETERS,
+        native_unit_of_measurement=UnitOfLength.METERS,
         state_class=SensorStateClass.MEASUREMENT,
         suggested_display_precision=1,
     ),
@@ -298,6 +299,33 @@ DATA_API_SENSORS: tuple[SensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.CURRENT,
         native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
         state_class=SensorStateClass.MEASUREMENT,
+    ),
+    SensorEntityDescription(
+        key="temp.setpoint",
+        translation_key="temp_setpoint",
+        device_class=SensorDeviceClass.TEMPERATURE,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    SensorEntityDescription(
+        key="temp.current",
+        translation_key="temp_current",
+        device_class=SensorDeviceClass.TEMPERATURE,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    SensorEntityDescription(
+        key="temp.comfort",
+        translation_key="temp_comfort",
+        device_class=SensorDeviceClass.TEMPERATURE,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    SensorEntityDescription(
+        key="grid.phaseCount",
+        translation_key="grid_phase_count",
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
     ),
 )
 

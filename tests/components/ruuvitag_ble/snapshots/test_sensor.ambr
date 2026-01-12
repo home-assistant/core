@@ -161,6 +161,57 @@
     'state': '13027.0',
   })
 # ---
+# name: test_sensors[e1][sensor.ruuvi_air_884f_indoor_air_quality_score-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.ruuvi_air_884f_indoor_air_quality_score',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Indoor air quality score',
+    'platform': 'ruuvitag_ble',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'iaqs',
+    'unique_id': '01:03:05:07:12:34-iaqs',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[e1][sensor.ruuvi_air_884f_indoor_air_quality_score-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Ruuvi Air 884F Indoor air quality score',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.ruuvi_air_884f_indoor_air_quality_score',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '81',
+  })
+# ---
 # name: test_sensors[e1][sensor.ruuvi_air_884f_nox_index-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -1352,6 +1403,57 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '13027',
+  })
+# ---
+# name: test_sensors[v6][sensor.ruuvitag_884f_indoor_air_quality_score-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.ruuvitag_884f_indoor_air_quality_score',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Indoor air quality score',
+    'platform': 'ruuvitag_ble',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'iaqs',
+    'unique_id': '01:03:05:07:12:34-iaqs',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[v6][sensor.ruuvitag_884f_indoor_air_quality_score-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'RuuviTag 884F Indoor air quality score',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.ruuvitag_884f_indoor_air_quality_score',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '81',
   })
 # ---
 # name: test_sensors[v6][sensor.ruuvitag_884f_nox_index-entry]

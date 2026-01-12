@@ -4,8 +4,7 @@ from __future__ import annotations
 
 import logging
 
-import openevsewifi
-from requests import RequestException
+from openevsehttp.__main__ import OpenEVSE
 import voluptuous as vol
 
 from homeassistant.components.sensor import (
@@ -18,6 +17,8 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import (
+    ATTR_CONNECTIONS,
+    ATTR_SERIAL_NUMBER,
     CONF_HOST,
     CONF_MONITORED_VARIABLES,
     UnitOfEnergy,
@@ -27,6 +28,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import config_validation as cv, issue_registry as ir
+from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
 from homeassistant.helpers.entity_platform import (
     AddConfigEntryEntitiesCallback,
     AddEntitiesCallback,
@@ -41,25 +43,25 @@ _LOGGER = logging.getLogger(__name__)
 SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key="status",
-        name="Charging Status",
+        translation_key="status",
     ),
     SensorEntityDescription(
         key="charge_time",
-        name="Charge Time Elapsed",
+        translation_key="charge_time",
         native_unit_of_measurement=UnitOfTime.MINUTES,
         device_class=SensorDeviceClass.DURATION,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key="ambient_temp",
-        name="Ambient Temperature",
+        translation_key="ambient_temp",
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key="ir_temp",
-        name="IR Temperature",
+        translation_key="ir_temp",
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
@@ -67,7 +69,7 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     ),
     SensorEntityDescription(
         key="rtc_temp",
-        name="RTC Temperature",
+        translation_key="rtc_temp",
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
@@ -75,14 +77,14 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     ),
     SensorEntityDescription(
         key="usage_session",
-        name="Usage this Session",
+        translation_key="usage_session",
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
     ),
     SensorEntityDescription(
         key="usage_total",
-        name="Total Usage",
+        translation_key="usage_total",
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
@@ -159,9 +161,10 @@ async def async_setup_entry(
     async_add_entities(
         (
             OpenEVSESensor(
-                config_entry.data[CONF_HOST],
                 config_entry.runtime_data,
                 description,
+                config_entry.entry_id,
+                config_entry.unique_id,
             )
             for description in SENSOR_TYPES
         ),
@@ -172,36 +175,54 @@ async def async_setup_entry(
 class OpenEVSESensor(SensorEntity):
     """Implementation of an OpenEVSE sensor."""
 
+    _attr_has_entity_name = True
+
     def __init__(
         self,
-        host: str,
-        charger: openevsewifi.Charger,
+        charger: OpenEVSE,
         description: SensorEntityDescription,
+        entry_id: str,
+        unique_id: str | None,
     ) -> None:
         """Initialize the sensor."""
         self.entity_description = description
-        self.host = host
         self.charger = charger
 
-    def update(self) -> None:
+        identifier = unique_id or entry_id
+        self._attr_unique_id = f"{identifier}-{description.key}"
+
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, identifier)},
+            manufacturer="OpenEVSE",
+        )
+        if unique_id:
+            self._attr_device_info[ATTR_CONNECTIONS] = {
+                (CONNECTION_NETWORK_MAC, unique_id)
+            }
+            self._attr_device_info[ATTR_SERIAL_NUMBER] = unique_id
+
+    async def async_update(self) -> None:
         """Get the monitored data from the charger."""
         try:
-            sensor_type = self.entity_description.key
-            if sensor_type == "status":
-                self._attr_native_value = self.charger.getStatus()
-            elif sensor_type == "charge_time":
-                self._attr_native_value = self.charger.getChargeTimeElapsed() / 60
-            elif sensor_type == "ambient_temp":
-                self._attr_native_value = self.charger.getAmbientTemperature()
-            elif sensor_type == "ir_temp":
-                self._attr_native_value = self.charger.getIRTemperature()
-            elif sensor_type == "rtc_temp":
-                self._attr_native_value = self.charger.getRTCTemperature()
-            elif sensor_type == "usage_session":
-                self._attr_native_value = float(self.charger.getUsageSession()) / 1000
-            elif sensor_type == "usage_total":
-                self._attr_native_value = float(self.charger.getUsageTotal()) / 1000
-            else:
-                self._attr_native_value = "Unknown"
-        except (RequestException, ValueError, KeyError):
+            await self.charger.update()
+        except TimeoutError:
             _LOGGER.warning("Could not update status for %s", self.name)
+            return
+
+        sensor_type = self.entity_description.key
+        if sensor_type == "status":
+            self._attr_native_value = self.charger.status
+        elif sensor_type == "charge_time":
+            self._attr_native_value = self.charger.charge_time_elapsed / 60
+        elif sensor_type == "ambient_temp":
+            self._attr_native_value = self.charger.ambient_temperature
+        elif sensor_type == "ir_temp":
+            self._attr_native_value = self.charger.ir_temperature
+        elif sensor_type == "rtc_temp":
+            self._attr_native_value = self.charger.rtc_temperature
+        elif sensor_type == "usage_session":
+            self._attr_native_value = float(self.charger.usage_session) / 1000
+        elif sensor_type == "usage_total":
+            self._attr_native_value = float(self.charger.usage_total) / 1000
+        else:
+            self._attr_native_value = "Unknown"

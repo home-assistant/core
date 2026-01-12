@@ -69,6 +69,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, llm
 from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.json import json_dumps
 from homeassistant.util import slugify
 
 from . import AnthropicConfigEntry
@@ -193,7 +194,7 @@ def _convert_content(
                 tool_result_block = ToolResultBlockParam(
                     type="tool_result",
                     tool_use_id=content.tool_call_id,
-                    content=json.dumps(content.tool_result),
+                    content=json_dumps(content.tool_result),
                 )
                 external_tool = False
             if not messages or messages[-1]["role"] != (
