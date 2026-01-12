@@ -820,11 +820,11 @@ class EntityPlatform:
         suggested_object_id: str | None = None
 
         # An entity may suggest the entity_id by setting entity_id itself
-        if entity.internal_overridden_object_id is UNDEFINED:
+        if not hasattr(entity, "internal_integration_suggested_object_id"):
             if entity.entity_id is not None and not valid_entity_id(entity.entity_id):
                 entity.add_to_platform_abort()
                 raise HomeAssistantError(f"Invalid entity ID: {entity.entity_id}")
-            entity.internal_overridden_object_id = (
+            entity.internal_integration_suggested_object_id = (
                 split_entity_id(entity.entity_id)[1]
                 if entity.entity_id is not None
                 else None
@@ -1219,10 +1219,9 @@ def _async_calculate_suggested_object_id(
     calculated = True
     suggested_object_id: str | None
 
-    assert entity.internal_overridden_object_id is not UNDEFINED
-    if entity.internal_overridden_object_id is not None:
+    if entity.internal_integration_suggested_object_id is not None:
         calculated = False
-        suggested_object_id = entity.internal_overridden_object_id
+        suggested_object_id = entity.internal_integration_suggested_object_id
     else:
         suggested_object_id = entity.suggested_object_id
 

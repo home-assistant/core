@@ -452,9 +452,9 @@ class Entity(
     # Entity description instance for this Entity
     entity_description: EntityDescription
 
-    # Overridden object id, derived from entity_id, if it is set directly.
+    # Integration suggested object id, derived from entity_id, if it is set directly.
     # Only used internally, never to be set by integrations.
-    internal_overridden_object_id: str | None | UndefinedType = UNDEFINED
+    internal_integration_suggested_object_id: str | None
 
     # If we reported if this entity was slow
     _slow_reported = False
