@@ -487,7 +487,7 @@
     'state': 'off',
   })
 # ---
-# name: test_switches[eve_thermo][switch.eve_thermo_child_lock-entry]
+# name: test_switches[eve_thermo_v4][switch.eve_thermo_20ebp1701_child_lock-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -500,7 +500,7 @@
     'disabled_by': None,
     'domain': 'switch',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'switch.eve_thermo_child_lock',
+    'entity_id': 'switch.eve_thermo_20ebp1701_child_lock',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -522,13 +522,13 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_switches[eve_thermo][switch.eve_thermo_child_lock-state]
+# name: test_switches[eve_thermo_v4][switch.eve_thermo_20ebp1701_child_lock-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Eve Thermo Child lock',
+      'friendly_name': 'Eve Thermo 20EBP1701 Child lock',
     }),
     'context': <ANY>,
-    'entity_id': 'switch.eve_thermo_child_lock',
+    'entity_id': 'switch.eve_thermo_20ebp1701_child_lock',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
