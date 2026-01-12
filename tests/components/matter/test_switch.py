@@ -123,15 +123,15 @@ async def test_numeric_switch(
     matter_node: MatterNode,
 ) -> None:
     """Test numeric switch entity is discovered and working using an Eve Thermo fixture ."""
-    state = hass.states.get("switch.eve_thermo_child_lock")
+    state = hass.states.get("switch.eve_thermo_20ebp1701_child_lock")
     assert state
     assert state.state == "off"
     # name should be derived from description attribute
-    assert state.attributes["friendly_name"] == "Eve Thermo Child lock"
+    assert state.attributes["friendly_name"] == "Eve Thermo 20EBP1701 Child lock"
     # test attribute changes
     set_node_attribute(matter_node, 1, 516, 1, 1)
     await trigger_subscription_callback(hass, matter_client)
-    state = hass.states.get("switch.eve_thermo_child_lock")
+    state = hass.states.get("switch.eve_thermo_20ebp1701_child_lock")
     assert state.state == "on"
     set_node_attribute(matter_node, 1, 516, 1, 0)
     await trigger_subscription_callback(hass, matter_client)
