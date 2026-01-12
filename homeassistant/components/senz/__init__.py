@@ -3,15 +3,17 @@
 from __future__ import annotations
 
 from datetime import timedelta
+from http import HTTPStatus
 import logging
 
-from aiosenz import SENZAPI, Thermostat
-from httpx import RequestError
+from httpx import HTTPStatusError, RequestError
+import jwt
+from pysenz import SENZAPI, Thermostat
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv, httpx_client
 from homeassistant.helpers.config_entry_oauth2_flow import (
     ImplementationUnavailableError,
@@ -58,8 +60,21 @@ async def async_setup_entry(hass: HomeAssistant, entry: SENZConfigEntry) -> bool
 
     try:
         account = await senz_api.get_account()
+    except HTTPStatusError as err:
+        if err.response.status_code == HTTPStatus.UNAUTHORIZED:
+            raise ConfigEntryAuthFailed(
+                translation_domain=DOMAIN,
+                translation_key="config_entry_auth_failed",
+            ) from err
+        raise ConfigEntryNotReady(
+            translation_domain=DOMAIN,
+            translation_key="config_entry_not_ready",
+        ) from err
     except RequestError as err:
-        raise ConfigEntryNotReady from err
+        raise ConfigEntryNotReady(
+            translation_domain=DOMAIN,
+            translation_key="config_entry_not_ready",
+        ) from err
 
     coordinator: SENZDataUpdateCoordinator = DataUpdateCoordinator(
         hass,
@@ -82,3 +97,27 @@ async def async_setup_entry(hass: HomeAssistant, entry: SENZConfigEntry) -> bool
 async def async_unload_entry(hass: HomeAssistant, entry: SENZConfigEntry) -> bool:
     """Unload a config entry."""
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+
+
+async def async_migrate_entry(
+    hass: HomeAssistant, config_entry: SENZConfigEntry
+) -> bool:
+    """Migrate old entry."""
+
+    # Use sub(ject) from access_token as unique_id
+    if config_entry.version == 1 and config_entry.minor_version == 1:
+        token = jwt.decode(
+            config_entry.data["token"]["access_token"],
+            options={"verify_signature": False},
+        )
+        uid = token["sub"]
+        hass.config_entries.async_update_entry(
+            config_entry, unique_id=uid, minor_version=2
+        )
+        _LOGGER.info(
+            "Migration to version %s.%s successful",
+            config_entry.version,
+            config_entry.minor_version,
+        )
+
+    return True

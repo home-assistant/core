@@ -1,0 +1,20 @@
+.trigger_common: &trigger_common
+  target:
+    entity:
+      domain: lock
+  fields:
+    behavior:
+      required: true
+      default: any
+      selector:
+        select:
+          options:
+            - first
+            - last
+            - any
+          translation_key: trigger_behavior
+
+jammed: *trigger_common
+locked: *trigger_common
+opened: *trigger_common
+unlocked: *trigger_common

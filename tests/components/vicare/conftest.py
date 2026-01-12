@@ -42,7 +42,7 @@ class MockPyViCare:
                     "Vitovalor"
                     if fixture.data_file.endswith("VitoValor.json")
                     else f"model{idx}",
-                    "online",
+                    "Online",
                 )
             )
 

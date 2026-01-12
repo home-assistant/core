@@ -1,8 +1,6 @@
 rules:
   # Bronze
-  action-setup:
-    status: todo
-    comment: needs to move to async_setup
+  action-setup: done
   appropriate-polling: done
   brands: done
   common-modules: done
@@ -15,33 +13,27 @@ rules:
   docs-high-level-description: done
   docs-installation-instructions: done
   docs-removal-instructions: done
-  entity-event-setup:
-    status: todo
-    comment: subscribe is ok, unsubscribe needs to be added
+  entity-event-setup: done
   entity-unique-id: done
-  has-entity-name:
-    status: todo
-    comment: scenes need fixing
+  has-entity-name: done
   runtime-data: done
   test-before-configure: done
-  test-before-setup:
-    status: todo
-    comment: needs rework, failure to setup currently only returns false
+  test-before-setup: done
   unique-config-entry: done
 
   # Silver
-  action-exceptions: todo
-  config-entry-unloading: todo
+  action-exceptions: done
+  config-entry-unloading: done
   docs-configuration-parameters: todo
   docs-installation-parameters: todo
-  entity-unavailable: todo
+  entity-unavailable: done
   integration-owner: done
-  log-when-unavailable: todo
+  log-when-unavailable: done
   parallel-updates: done
-  reauthentication-flow: todo
+  reauthentication-flow: done
   test-coverage:
     status: todo
-    comment: cleanup mock_config_entry vs mock_user_config_entry, cleanup mock_pyvlx vs mock_velux_client, remove unused freezer in test_cover_closed, add tests where missing
+    comment: add tests where missing
 
   # Gold
   devices:

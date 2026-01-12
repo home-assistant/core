@@ -2,7 +2,7 @@
 
 from unittest.mock import patch
 
-from switchbot_api import Remote
+from switchbot_api import Device, Remote, SmartRadiatorThermostatCommands, SwitchBotAPI
 
 from homeassistant.components.climate import (
     ATTR_FAN_MODE,
@@ -11,11 +11,12 @@ from homeassistant.components.climate import (
     DOMAIN as CLIMATE_DOMAIN,
     SERVICE_SET_FAN_MODE,
     SERVICE_SET_HVAC_MODE,
+    SERVICE_SET_PRESET_MODE,
     SERVICE_SET_TEMPERATURE,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
+    HVACMode,
 )
-from homeassistant.components.switchbot_cloud import SwitchBotAPI
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant, State
@@ -296,3 +297,170 @@ async def test_air_conditioner_turn_on_from_hvac_mode_off(
         assert "25,4,4,on" in str(mock_turn_on_command.call_args)
 
     assert hass.states.get(entity_id).state == "fan_only"
+
+
+async def test_smart_radiator_thermostat_set_temperature(
+    hass: HomeAssistant, mock_list_devices, mock_get_status
+) -> None:
+    """Test smart radiator thermostat set temperature."""
+    mock_list_devices.return_value = [
+        Device(
+            version="V1.0",
+            deviceId="ac-device-id-1",
+            deviceName="climate-1",
+            deviceType="Smart Radiator Thermostat",
+            hubDeviceId="test-hub-id",
+        ),
+    ]
+
+    mock_get_status.side_effect = [
+        {
+            "mode": 1,
+            "temperature": 27.5,
+        },
+        {
+            "mode": 1,
+            "temperature": 27.5,
+        },
+        {
+            "mode": 2,
+            "temperature": 27.5,
+        },
+    ]
+    entry = await configure_integration(hass)
+    assert entry.state is ConfigEntryState.LOADED
+
+    entity_id = "climate.climate_1"
+
+    with patch.object(SwitchBotAPI, "send_command") as mock_send_command:
+        await hass.services.async_call(
+            CLIMATE_DOMAIN,
+            SERVICE_SET_TEMPERATURE,
+            {ATTR_ENTITY_ID: entity_id, "temperature": 27},
+        )
+    mock_send_command.assert_called_once_with(
+        "ac-device-id-1",
+        SmartRadiatorThermostatCommands.SET_MANUAL_MODE_TEMPERATURE,
+        "command",
+        "27.0",
+    )
+
+
+async def test_smart_radiator_thermostat_set_preset_mode(
+    hass: HomeAssistant, mock_list_devices, mock_get_status
+) -> None:
+    """Test smart radiator thermostat set preset mode."""
+    mock_list_devices.return_value = [
+        Device(
+            version="V1.0",
+            deviceId="ac-device-id-1",
+            deviceName="climate-1",
+            deviceType="Smart Radiator Thermostat",
+            hubDeviceId="test-hub-id",
+        ),
+    ]
+
+    mock_get_status.side_effect = [
+        {
+            "mode": 1,
+            "temperature": 27.5,
+        },
+        {
+            "mode": 1,
+            "temperature": 27.5,
+        },
+        {
+            "mode": 2,
+            "temperature": 27.5,
+        },
+    ]
+    entry = await configure_integration(hass)
+    assert entry.state is ConfigEntryState.LOADED
+
+    entity_id = "climate.climate_1"
+
+    with patch.object(SwitchBotAPI, "send_command") as mock_send_command:
+        await hass.services.async_call(
+            CLIMATE_DOMAIN,
+            SERVICE_SET_PRESET_MODE,
+            {ATTR_ENTITY_ID: entity_id, "preset_mode": "none"},
+        )
+    mock_send_command.assert_called_once_with(
+        "ac-device-id-1",
+        SmartRadiatorThermostatCommands.SET_MODE,
+        "command",
+        2,
+    )
+
+    with patch.object(SwitchBotAPI, "send_command") as mock_send_command:
+        await hass.services.async_call(
+            CLIMATE_DOMAIN,
+            SERVICE_SET_PRESET_MODE,
+            {ATTR_ENTITY_ID: entity_id, "preset_mode": "home"},
+        )
+    mock_send_command.assert_called_once_with(
+        "ac-device-id-1",
+        SmartRadiatorThermostatCommands.SET_MODE,
+        "command",
+        1,
+    )
+
+
+async def test_smart_radiator_thermostat_set_hvac_mode(
+    hass: HomeAssistant, mock_list_devices, mock_get_status
+) -> None:
+    """Test smart radiator thermostat set hvac mode."""
+    mock_list_devices.return_value = [
+        Device(
+            version="V1.0",
+            deviceId="ac-device-id-1",
+            deviceName="climate-1",
+            deviceType="Smart Radiator Thermostat",
+            hubDeviceId="test-hub-id",
+        ),
+    ]
+
+    mock_get_status.side_effect = [
+        {
+            "mode": 2,
+            "temperature": 27.5,
+        },
+        {
+            "mode": 2,
+            "temperature": 27.5,
+        },
+        {
+            "mode": 2,
+            "temperature": 27.5,
+        },
+    ]
+    entry = await configure_integration(hass)
+    assert entry.state is ConfigEntryState.LOADED
+
+    entity_id = "climate.climate_1"
+
+    with patch.object(SwitchBotAPI, "send_command") as mock_send_command:
+        await hass.services.async_call(
+            CLIMATE_DOMAIN,
+            SERVICE_SET_HVAC_MODE,
+            {ATTR_ENTITY_ID: entity_id, "hvac_mode": HVACMode.OFF},
+        )
+    mock_send_command.assert_called_once_with(
+        "ac-device-id-1",
+        SmartRadiatorThermostatCommands.SET_MODE,
+        "command",
+        2,
+    )
+
+    with patch.object(SwitchBotAPI, "send_command") as mock_send_command:
+        await hass.services.async_call(
+            CLIMATE_DOMAIN,
+            SERVICE_SET_HVAC_MODE,
+            {ATTR_ENTITY_ID: entity_id, "hvac_mode": HVACMode.HEAT},
+        )
+    mock_send_command.assert_called_once_with(
+        "ac-device-id-1",
+        SmartRadiatorThermostatCommands.SET_MODE,
+        "command",
+        5,
+    )

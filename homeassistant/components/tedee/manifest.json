@@ -5,6 +5,7 @@
   "config_flow": true,
   "dependencies": ["http", "webhook"],
   "documentation": "https://www.home-assistant.io/integrations/tedee",
+  "integration_type": "hub",
   "iot_class": "local_push",
   "loggers": ["aiotedee"],
   "quality_scale": "platinum",

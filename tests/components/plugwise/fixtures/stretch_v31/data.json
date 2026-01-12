@@ -91,7 +91,7 @@
       "059e4d03c7a34d278add5c7a4a781d19",
       "cfe95cf3de1948c0b8955125bf754614"
     ],
-    "model": "Switchgroup",
+    "model": "Group",
     "name": "Schakel",
     "switches": {
       "relay": true
@@ -107,7 +107,7 @@
       "cfe95cf3de1948c0b8955125bf754614",
       "e1c884e7dede431dadee09506ec4f859"
     ],
-    "model": "Switchgroup",
+    "model": "Group",
     "name": "Stroomvreters",
     "switches": {
       "relay": true

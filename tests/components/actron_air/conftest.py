@@ -2,9 +2,14 @@
 
 import asyncio
 from collections.abc import Generator
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+
+from homeassistant.components.actron_air.const import DOMAIN
+from homeassistant.const import CONF_API_TOKEN
+
+from tests.common import MockConfigEntry
 
 
 @pytest.fixture
@@ -12,11 +17,11 @@ def mock_actron_api() -> Generator[AsyncMock]:
     """Mock the Actron Air API class."""
     with (
         patch(
-            "homeassistant.components.actron_air.ActronNeoAPI",
+            "homeassistant.components.actron_air.ActronAirAPI",
             autospec=True,
         ) as mock_api,
         patch(
-            "homeassistant.components.actron_air.config_flow.ActronNeoAPI",
+            "homeassistant.components.actron_air.config_flow.ActronAirAPI",
             new=mock_api,
         ),
     ):
@@ -48,8 +53,59 @@ def mock_actron_api() -> Generator[AsyncMock]:
         # Mock refresh token property
         api.refresh_token_value = "test_refresh_token"
 
-        # Mock other API methods that might be used
-        api.get_systems = AsyncMock(return_value=[])
-        api.get_status = AsyncMock(return_value=None)
+        # Mock get_ac_systems
+        api.get_ac_systems = AsyncMock(
+            return_value=[{"serial": "123456", "name": "Test System"}]
+        )
+
+        # Mock state manager
+        api.state_manager = MagicMock()
+        status = api.state_manager.get_status.return_value
+        status.master_info.live_temp_c = 22.0
+        status.ac_system.system_name = "Test System"
+        status.ac_system.serial_number = "123456"
+        status.ac_system.master_wc_model = "Test Model"
+        status.ac_system.master_wc_firmware_version = "1.0.0"
+        status.remote_zone_info = []
+        status.min_temp = 16
+        status.max_temp = 30
+        status.aircon_system.mode = "OFF"
+        status.fan_mode = "LOW"
+        status.set_point = 24
+        status.room_temp = 25
+        status.is_on = False
+
+        # Mock user_aircon_settings for the switch platform
+        settings = status.user_aircon_settings
+        settings.away_mode = False
+        settings.continuous_fan_enabled = False
+        settings.quiet_mode_enabled = False
+        settings.turbo_enabled = False
+        settings.turbo_supported = True
+
+        settings.set_away_mode = AsyncMock()
+        settings.set_continuous_mode = AsyncMock()
+        settings.set_quiet_mode = AsyncMock()
+        settings.set_turbo_mode = AsyncMock()
 
         yield api
+
+
+@pytest.fixture
+def mock_config_entry() -> MockConfigEntry:
+    """Return a mock config entry."""
+    return MockConfigEntry(
+        domain=DOMAIN,
+        title="test@example.com",
+        data={CONF_API_TOKEN: "test_refresh_token"},
+        unique_id="test_user_id",
+    )
+
+
+@pytest.fixture
+def mock_setup_entry() -> Generator[AsyncMock]:
+    """Mock async_setup_entry."""
+    with patch(
+        "homeassistant.components.actron_air.async_setup_entry", return_value=True
+    ) as mock_setup:
+        yield mock_setup
