@@ -35,16 +35,10 @@ Before setting up this integration, ensure that:
 
 1. **You have a Venus OS device running 3.70~61 or higher**
 
-2. **MQTT is enabled on your Victron device**:
+2. **MQTT is enabled on your Victron device (for Venus OS version ..TBD.. and lower)**:
    - Access your device's web interface
-   - Navigate to Settings > Services > MQTT
-   - Enable "MQTT on LAN (Insecure)" or configure secure MQTT
+   - Navigate to Settings > Integrations and enable MQTT Access
    - Note the IP address of your device
-
-3. **Home Assistant MQTT discovery is enabled**:
-   - In your device's MQTT settings
-   - Enable "Home Assistant MQTT discovery"
-   - This allows automatic detection of available sensors and controls
 
 ## Installation
 
@@ -67,13 +61,12 @@ If automatic discovery doesn't work:
 
 #### Setup Process
 
-1. **Enter Device Information**:
+1. **Enter Device Information (only for manual setup)**:
    - **Host**: Enter the IP address or hostname of your Victron Energy device
    - Example: `192.168.1.100` or `venus.local`
 
-2. **Authentication** (if required):
-   - If your Local Network Security Profile is set to Secured or Weak, you'll be prompted for the secure profile password
-   - This is configured in your device's MQTT security settings
+2. **Enter password**:
+   - You'll always be prompted for a password, but if your Local Network Security Profile is set to Unsecured, this can be left empty.
 
 3. **Discovery**:
    - The integration will connect to your device and discover available entities
@@ -97,15 +90,10 @@ After setup, you can access device settings through:
 
 ## Security Considerations
 
-### Insecure MQTT
-- The integration first attempts to connect using insecure MQTT (port 1883)
-- This is the default configuration for most Victron devices
-- Data is transmitted in plain text on your local network
-
 ### Local Network Security Profile
-- If insecure connection fails, you'll be prompted for the secure profile password
-- If using a Secured Local Network Security Profile, MQTT uses encryption and authentication
-- Configure the secure profile password in your device's MQTT settings first
+- The integration always connects to the MQTT broker on the GX Device using TLS and port 8883
+- The MQTT connection always uses authenticates using a token that is generated during the configuration step
+- To generate this token, the GX Password is necessary when the Local Network Security Profile is set to Secure or Weak. When the Local Network Security Profile is set to Unsecured, the password can be left empty
 
 ### Network Security
 - Ensure your Victron device is only accessible on your trusted local network
@@ -122,7 +110,7 @@ After setup, you can access device settings through:
 
 ### Connection Failed
 - **Check Network Connectivity**: Verify the device IP address is correct and reachable
-- **Firewall Issues**: Ensure ports 1883 (insecure) or 8883 (secure) are not blocked
+- **Firewall Issues**: Ensure port 8883 is not blocked
 - **Device Settings**: Confirm MQTT services are running on the device
 
 ### Authentication Failed  

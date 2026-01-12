@@ -46,6 +46,7 @@ def mock_mqtt_client() -> Generator[MagicMock]:
 
         # Mock connection methods
         client.connect.return_value = 0
+        client.connect_async.return_value = None  # Add this for async connection
         client.loop_start.return_value = None
         client.loop_stop.return_value = None
         client.disconnect.return_value = None

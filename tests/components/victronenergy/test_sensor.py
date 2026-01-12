@@ -31,7 +31,7 @@ async def test_sensor_integration_setup(
         await hass.async_block_till_done()
 
         # Verify integration is loaded
-        assert mock_config_entry.state.name == "loaded"
+        assert mock_config_entry.state.name == "LOADED"
 
         # Verify MQTT manager is created
         assert DOMAIN in hass.data
@@ -54,7 +54,7 @@ async def test_sensor_platform_registration(
         await hass.async_block_till_done()
 
         # Verify sensor platform is loaded
-        assert "sensor.victronenergy" in hass.config.components
+        assert "victronenergy.sensor" in hass.config.components
 
 
 async def test_mqtt_client_configuration(
