@@ -113,7 +113,7 @@ SENSORS: Final = (
         key="2104",
         generation=[2],
         translation_key="total_ac_output_energy",
-        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
     ),
