@@ -869,6 +869,8 @@ class EntityPlatform:
                         )
                         entity.add_to_platform_abort()
                         return
+
+                    entity.device_entry = device
                 else:
                     device = entity.device_entry
             else:
@@ -929,8 +931,6 @@ class EntityPlatform:
                 )
 
             entity.registry_entry = entry
-            if device:
-                entity.device_entry = device
             entity.entity_id = entry.entity_id
 
         else:  # entity.unique_id is None
