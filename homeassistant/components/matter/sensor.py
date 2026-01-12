@@ -1569,13 +1569,7 @@ DISCOVERY_SCHEMAS = [
             translation_key="setpoint_change_timestamp",
             device_class=SensorDeviceClass.TIMESTAMP,
             state_class=None,
-            device_to_ha=(
-                lambda x: (
-                    dt_util.utc_from_timestamp(x + MATTER_2000_TO_UNIX_EPOCH_OFFSET)
-                    if x > 0
-                    else None
-                )
-            ),
+            device_to_ha=matter_epoch_seconds_to_utc,
         ),
         entity_class=MatterSensor,
         required_attributes=(
