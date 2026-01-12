@@ -235,7 +235,7 @@ class LocalOAuth2Implementation(AbstractOAuth2Implementation):
             # I don't have config_entry available. If correct, you have a client ID per config entry
             if self.client_id not in you_are_warned:
                 _LOGGER.warning(
-                    "Refresh token failed. Please catch 'ConfigEntryRefreshTokenFailed'. This will be added in version 2026.x.x and result in a breaking change"
+                    "Refresh token failed. Please catch 'OAuth2RefreshTokenFailed'. This will be added in version 2026.x.x and result in a breaking change"
                 )
                 you_are_warned.add(self.client_id)
 
