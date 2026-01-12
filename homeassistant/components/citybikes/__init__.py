@@ -1,14 +1,13 @@
-"""The citybikes component."""
+"""The CityBikes component."""
 
 import logging
-from typing import Final
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 
-_LOGGER: Final = logging.getLogger(__name__)
-PLATFORMS: Final = [Platform.SENSOR]
+_LOGGER = logging.getLogger(__name__)
+PLATFORMS = [Platform.SENSOR]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:

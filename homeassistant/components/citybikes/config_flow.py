@@ -54,8 +54,7 @@ class CityBikesConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
 
         # TODO: python-citybikes client doesn't let us inject a session yet
-        websession = async_get_clientsession(self.hass)
-        self.city_bike_networks.client.session = websession
+        self.city_bike_networks.client.session = async_get_clientsession(self.hass)
 
         if user_input is not None:
             self._data.update(user_input)
