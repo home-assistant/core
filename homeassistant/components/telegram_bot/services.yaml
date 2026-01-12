@@ -10,18 +10,6 @@ send_message:
             integration: telegram_bot
           multiple: true
           reorder: true
-    advanced:
-      collapsed: true
-      fields:
-        config_entry_id:
-          selector:
-            config_entry:
-              integration: telegram_bot
-        chat_id:
-          example: "[12345, 67890] or 12345"
-          selector:
-            text:
-              multiple: true
     title:
       example: "Your Garage Door Friend"
       selector:
@@ -70,17 +58,6 @@ send_message:
       selector:
         number:
           mode: box
-
-send_chat_action:
-  fields:
-    entity_id:
-      selector:
-        entity:
-          filter:
-            domain: notify
-            integration: telegram_bot
-          multiple: true
-          reorder: true
     advanced:
       collapsed: true
       fields:
@@ -93,6 +70,17 @@ send_chat_action:
           selector:
             text:
               multiple: true
+
+send_chat_action:
+  fields:
+    entity_id:
+      selector:
+        entity:
+          filter:
+            domain: notify
+            integration: telegram_bot
+          multiple: true
+          reorder: true
     chat_action:
       selector:
         select:
@@ -113,17 +101,6 @@ send_chat_action:
       selector:
         number:
           mode: box
-
-send_photo:
-  fields:
-    entity_id:
-      selector:
-        entity:
-          filter:
-            domain: notify
-            integration: telegram_bot
-          multiple: true
-          reorder: true
     advanced:
       collapsed: true
       fields:
@@ -136,6 +113,17 @@ send_photo:
           selector:
             text:
               multiple: true
+
+send_photo:
+  fields:
+    entity_id:
+      selector:
+        entity:
+          filter:
+            domain: notify
+            integration: telegram_bot
+          multiple: true
+          reorder: true
     url:
       example: "http://example.org/path/to/the/image.png"
       selector:
@@ -207,17 +195,6 @@ send_photo:
       selector:
         number:
           mode: box
-
-send_sticker:
-  fields:
-    entity_id:
-      selector:
-        entity:
-          filter:
-            domain: notify
-            integration: telegram_bot
-          multiple: true
-          reorder: true
     advanced:
       collapsed: true
       fields:
@@ -230,6 +207,17 @@ send_sticker:
           selector:
             text:
               multiple: true
+
+send_sticker:
+  fields:
+    entity_id:
+      selector:
+        entity:
+          filter:
+            domain: notify
+            integration: telegram_bot
+          multiple: true
+          reorder: true
     url:
       example: "http://example.org/path/to/the/sticker.webp"
       selector:
@@ -292,17 +280,6 @@ send_sticker:
       selector:
         number:
           mode: box
-
-send_animation:
-  fields:
-    entity_id:
-      selector:
-        entity:
-          filter:
-            domain: notify
-            integration: telegram_bot
-          multiple: true
-          reorder: true
     advanced:
       collapsed: true
       fields:
@@ -315,6 +292,17 @@ send_animation:
           selector:
             text:
               multiple: true
+
+send_animation:
+  fields:
+    entity_id:
+      selector:
+        entity:
+          filter:
+            domain: notify
+            integration: telegram_bot
+          multiple: true
+          reorder: true
     url:
       example: "http://example.org/path/to/the/animation.gif"
       selector:
@@ -386,17 +374,6 @@ send_animation:
       selector:
         number:
           mode: box
-
-send_video:
-  fields:
-    entity_id:
-      selector:
-        entity:
-          filter:
-            domain: notify
-            integration: telegram_bot
-          multiple: true
-          reorder: true
     advanced:
       collapsed: true
       fields:
@@ -409,6 +386,17 @@ send_video:
           selector:
             text:
               multiple: true
+
+send_video:
+  fields:
+    entity_id:
+      selector:
+        entity:
+          filter:
+            domain: notify
+            integration: telegram_bot
+          multiple: true
+          reorder: true
     url:
       example: "http://example.org/path/to/the/video.mp4"
       selector:
@@ -480,17 +468,6 @@ send_video:
       selector:
         number:
           mode: box
-
-send_voice:
-  fields:
-    entity_id:
-      selector:
-        entity:
-          filter:
-            domain: notify
-            integration: telegram_bot
-          multiple: true
-          reorder: true
     advanced:
       collapsed: true
       fields:
@@ -503,6 +480,17 @@ send_voice:
           selector:
             text:
               multiple: true
+
+send_voice:
+  fields:
+    entity_id:
+      selector:
+        entity:
+          filter:
+            domain: notify
+            integration: telegram_bot
+          multiple: true
+          reorder: true
     url:
       example: "http://example.org/path/to/the/voice.opus"
       selector:
@@ -565,17 +553,6 @@ send_voice:
       selector:
         number:
           mode: box
-
-send_document:
-  fields:
-    entity_id:
-      selector:
-        entity:
-          filter:
-            domain: notify
-            integration: telegram_bot
-          multiple: true
-          reorder: true
     advanced:
       collapsed: true
       fields:
@@ -588,6 +565,17 @@ send_document:
           selector:
             text:
               multiple: true
+
+send_document:
+  fields:
+    entity_id:
+      selector:
+        entity:
+          filter:
+            domain: notify
+            integration: telegram_bot
+          multiple: true
+          reorder: true
     url:
       example: "http://example.org/path/to/the/document.odf"
       selector:
@@ -659,17 +647,6 @@ send_document:
       selector:
         number:
           mode: box
-
-send_location:
-  fields:
-    entity_id:
-      selector:
-        entity:
-          filter:
-            domain: notify
-            integration: telegram_bot
-          multiple: true
-          reorder: true
     advanced:
       collapsed: true
       fields:
@@ -682,6 +659,17 @@ send_location:
           selector:
             text:
               multiple: true
+
+send_location:
+  fields:
+    entity_id:
+      selector:
+        entity:
+          filter:
+            domain: notify
+            integration: telegram_bot
+          multiple: true
+          reorder: true
     latitude:
       required: true
       selector:
@@ -724,17 +712,6 @@ send_location:
       selector:
         number:
           mode: box
-
-send_poll:
-  fields:
-    entity_id:
-      selector:
-        entity:
-          filter:
-            domain: notify
-            integration: telegram_bot
-          multiple: true
-          reorder: true
     advanced:
       collapsed: true
       fields:
@@ -747,6 +724,17 @@ send_poll:
           selector:
             text:
               multiple: true
+
+send_poll:
+  fields:
+    entity_id:
+      selector:
+        entity:
+          filter:
+            domain: notify
+            integration: telegram_bot
+          multiple: true
+          reorder: true
     question:
       required: true
       selector:
@@ -781,16 +769,6 @@ send_poll:
       selector:
         number:
           mode: box
-
-edit_message:
-  fields:
-    entity_id:
-      selector:
-        entity:
-          filter:
-            domain: notify
-            integration: telegram_bot
-          reorder: true
     advanced:
       collapsed: true
       fields:
@@ -803,6 +781,16 @@ edit_message:
           selector:
             text:
               multiple: true
+
+edit_message:
+  fields:
+    entity_id:
+      selector:
+        entity:
+          filter:
+            domain: notify
+            integration: telegram_bot
+          reorder: true
     message_id:
       required: true
       example: "{{ trigger.event.data.message.message_id }}"
@@ -834,16 +822,6 @@ edit_message:
         ["Text button2", "/button2"]], [["Text button3", "/button3"]]]'
       selector:
         object:
-
-edit_message_media:
-  fields:
-    entity_id:
-      selector:
-        entity:
-          filter:
-            domain: notify
-            integration: telegram_bot
-          reorder: true
     advanced:
       collapsed: true
       fields:
@@ -856,6 +834,16 @@ edit_message_media:
           selector:
             text:
               multiple: true
+
+edit_message_media:
+  fields:
+    entity_id:
+      selector:
+        entity:
+          filter:
+            domain: notify
+            integration: telegram_bot
+          reorder: true
     message_id:
       required: true
       example: "{{ trigger.event.data.message.message_id }}"
@@ -913,16 +901,6 @@ edit_message_media:
         ["Text button2", "/button2"]], [["Text button3", "/button3"]]]'
       selector:
         object:
-
-edit_caption:
-  fields:
-    entity_id:
-      selector:
-        entity:
-          filter:
-            domain: notify
-            integration: telegram_bot
-          reorder: true
     advanced:
       collapsed: true
       fields:
@@ -935,6 +913,16 @@ edit_caption:
           selector:
             text:
               multiple: true
+
+edit_caption:
+  fields:
+    entity_id:
+      selector:
+        entity:
+          filter:
+            domain: notify
+            integration: telegram_bot
+          reorder: true
     message_id:
       required: true
       example: "{{ trigger.event.data.message.message_id }}"
@@ -951,16 +939,6 @@ edit_caption:
         ["Text button2", "/button2"]], [["Text button3", "/button3"]]]'
       selector:
         object:
-
-edit_replymarkup:
-  fields:
-    entity_id:
-      selector:
-        entity:
-          filter:
-            domain: notify
-            integration: telegram_bot
-          reorder: true
     advanced:
       collapsed: true
       fields:
@@ -973,6 +951,16 @@ edit_replymarkup:
           selector:
             text:
               multiple: true
+
+edit_replymarkup:
+  fields:
+    entity_id:
+      selector:
+        entity:
+          filter:
+            domain: notify
+            integration: telegram_bot
+          reorder: true
     message_id:
       required: true
       example: "{{ trigger.event.data.message.message_id }}"
@@ -985,6 +973,18 @@ edit_replymarkup:
         ["Text button2", "/button2"]], [["Text button3", "/button3"]]]'
       selector:
         object:
+    advanced:
+      collapsed: true
+      fields:
+        config_entry_id:
+          selector:
+            config_entry:
+              integration: telegram_bot
+        chat_id:
+          example: "[12345, 67890] or 12345"
+          selector:
+            text:
+              multiple: true
 
 answer_callback_query:
   fields:
@@ -1016,6 +1016,11 @@ delete_message:
             domain: notify
             integration: telegram_bot
           reorder: true
+    message_id:
+      required: true
+      example: "{{ trigger.event.data.message.message_id }}"
+      selector:
+        text:
     advanced:
       collapsed: true
       fields:
@@ -1028,11 +1033,6 @@ delete_message:
           selector:
             text:
               multiple: true
-    message_id:
-      required: true
-      example: "{{ trigger.event.data.message.message_id }}"
-      selector:
-        text:
 
 leave_chat:
   fields:
@@ -1065,18 +1065,6 @@ set_message_reaction:
             domain: notify
             integration: telegram_bot
           reorder: true
-    advanced:
-      collapsed: true
-      fields:
-        config_entry_id:
-          selector:
-            config_entry:
-              integration: telegram_bot
-        chat_id:
-          example: "12345"
-          selector:
-            text:
-              multiple: true
     message_id:
       required: true
       example: 54321
@@ -1091,6 +1079,18 @@ set_message_reaction:
       required: false
       selector:
         boolean:
+    advanced:
+      collapsed: true
+      fields:
+        config_entry_id:
+          selector:
+            config_entry:
+              integration: telegram_bot
+        chat_id:
+          example: "12345"
+          selector:
+            text:
+              multiple: true
 
 download_file:
   fields:

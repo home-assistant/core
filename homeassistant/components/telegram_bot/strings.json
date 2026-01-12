@@ -960,7 +960,7 @@
       "name": "Send photo",
       "sections": {
         "advanced": {
-          "name": "Custom targets"
+          "name": "Advanced"
         },
         "url_options": {
           "name": "URL options"
