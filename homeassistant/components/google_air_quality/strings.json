@@ -52,7 +52,7 @@
               "enable_custom_laqi": "Select to enable a custom local air quality index"
             },
             "description": "Country and custom local AQI must match. You can find the available combinations here: {air_quality_coverage_url}",
-            "name": "Custom local aqi options"
+            "name": "Custom local AQI options"
           }
         }
       }
