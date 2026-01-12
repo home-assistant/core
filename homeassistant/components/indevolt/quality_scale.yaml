@@ -1,6 +1,8 @@
 rules:
   # Bronze (mandatory for core integrations)
-  action-setup: done
+  action-setup:
+    status: exempt
+    comment: Integration does not register custom actions
   appropriate-polling: done
   brands:
     status: done
@@ -10,7 +12,8 @@ rules:
   config-flow: done
   dependency-transparency: done
   docs-actions:
-    status: done
+    status: exempt
+    comment: Integration does not register custom actions
   docs-high-level-description:
     status: done
   docs-installation-instructions:
