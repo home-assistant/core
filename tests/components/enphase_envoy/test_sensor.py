@@ -1264,3 +1264,35 @@ async def test_fw_update(
 
     assert "firmware changed from: " in caplog.text
     assert "to: 0.0.0, reloading enphase envoy integration" in caplog.text
+
+
+@pytest.mark.parametrize(
+    ("mock_envoy"),
+    [
+        "envoy",
+        "envoy_1p_metered",
+        "envoy_eu_batt",
+        "envoy_metered_batt_relay",
+        "envoy_nobatt_metered_3p",
+        "envoy_tot_cons_metered",
+        "envoy_acb_batt",
+    ],
+    indirect=["mock_envoy"],
+)
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_no_state_class_warnings(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    mock_envoy: AsyncMock,
+    entity_registry: er.EntityRegistry,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test enphase_envoy sensor creation does not result in deviceclass/state_class warnings."""
+    logging.getLogger("homeassistant.components.enphase_envoy").setLevel(logging.DEBUG)
+    with patch("homeassistant.components.enphase_envoy.PLATFORMS", [Platform.SENSOR]):
+        await setup_integration(hass, config_entry)
+
+    # Simple test to verify no sensor device class / state class mismatch warning is reported
+    #
+    # assert "which is impossible considering" not in caplog.text
+    assert "create a bug report at" not in caplog.text

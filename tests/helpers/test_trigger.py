@@ -40,7 +40,6 @@ from homeassistant.helpers.trigger import (
     CONF_UPPER_LIMIT,
     DATA_PLUGGABLE_ACTIONS,
     PluggableAction,
-    ThresholdType,
     Trigger,
     TriggerActionRunner,
     _async_get_trigger_platform,
@@ -1387,25 +1386,26 @@ async def test_numerical_state_attribute_changed_error_handling(
     ("trigger_options", "expected_result"),
     [
         # Valid configurations
+        # Don't use the enum in tests to allow testing validation of strings when the source is JSON or YAML
         (
-            {CONF_THRESHOLD_TYPE: ThresholdType.ABOVE, CONF_LOWER_LIMIT: 10},
+            {CONF_THRESHOLD_TYPE: "above", CONF_LOWER_LIMIT: 10},
             does_not_raise(),
         ),
         (
-            {CONF_THRESHOLD_TYPE: ThresholdType.ABOVE, CONF_LOWER_LIMIT: "sensor.test"},
+            {CONF_THRESHOLD_TYPE: "above", CONF_LOWER_LIMIT: "sensor.test"},
             does_not_raise(),
         ),
         (
-            {CONF_THRESHOLD_TYPE: ThresholdType.BELOW, CONF_UPPER_LIMIT: 90},
+            {CONF_THRESHOLD_TYPE: "below", CONF_UPPER_LIMIT: 90},
             does_not_raise(),
         ),
         (
-            {CONF_THRESHOLD_TYPE: ThresholdType.BELOW, CONF_UPPER_LIMIT: "sensor.test"},
+            {CONF_THRESHOLD_TYPE: "below", CONF_UPPER_LIMIT: "sensor.test"},
             does_not_raise(),
         ),
         (
             {
-                CONF_THRESHOLD_TYPE: ThresholdType.BETWEEN,
+                CONF_THRESHOLD_TYPE: "between",
                 CONF_LOWER_LIMIT: 10,
                 CONF_UPPER_LIMIT: 90,
             },
@@ -1413,39 +1413,7 @@ async def test_numerical_state_attribute_changed_error_handling(
         ),
         (
             {
-                CONF_THRESHOLD_TYPE: ThresholdType.BETWEEN,
-                CONF_LOWER_LIMIT: 10,
-                CONF_UPPER_LIMIT: "sensor.test",
-            },
-            does_not_raise(),
-        ),
-        (
-            {
-                CONF_THRESHOLD_TYPE: ThresholdType.BETWEEN,
-                CONF_LOWER_LIMIT: "sensor.test",
-                CONF_UPPER_LIMIT: 90,
-            },
-            does_not_raise(),
-        ),
-        (
-            {
-                CONF_THRESHOLD_TYPE: ThresholdType.BETWEEN,
-                CONF_LOWER_LIMIT: "sensor.test",
-                CONF_UPPER_LIMIT: "sensor.test",
-            },
-            does_not_raise(),
-        ),
-        (
-            {
-                CONF_THRESHOLD_TYPE: ThresholdType.OUTSIDE,
-                CONF_LOWER_LIMIT: 10,
-                CONF_UPPER_LIMIT: 90,
-            },
-            does_not_raise(),
-        ),
-        (
-            {
-                CONF_THRESHOLD_TYPE: ThresholdType.OUTSIDE,
+                CONF_THRESHOLD_TYPE: "between",
                 CONF_LOWER_LIMIT: 10,
                 CONF_UPPER_LIMIT: "sensor.test",
             },
@@ -1453,7 +1421,7 @@ async def test_numerical_state_attribute_changed_error_handling(
         ),
         (
             {
-                CONF_THRESHOLD_TYPE: ThresholdType.OUTSIDE,
+                CONF_THRESHOLD_TYPE: "between",
                 CONF_LOWER_LIMIT: "sensor.test",
                 CONF_UPPER_LIMIT: 90,
             },
@@ -1461,7 +1429,39 @@ async def test_numerical_state_attribute_changed_error_handling(
         ),
         (
             {
-                CONF_THRESHOLD_TYPE: ThresholdType.OUTSIDE,
+                CONF_THRESHOLD_TYPE: "between",
+                CONF_LOWER_LIMIT: "sensor.test",
+                CONF_UPPER_LIMIT: "sensor.test",
+            },
+            does_not_raise(),
+        ),
+        (
+            {
+                CONF_THRESHOLD_TYPE: "outside",
+                CONF_LOWER_LIMIT: 10,
+                CONF_UPPER_LIMIT: 90,
+            },
+            does_not_raise(),
+        ),
+        (
+            {
+                CONF_THRESHOLD_TYPE: "outside",
+                CONF_LOWER_LIMIT: 10,
+                CONF_UPPER_LIMIT: "sensor.test",
+            },
+            does_not_raise(),
+        ),
+        (
+            {
+                CONF_THRESHOLD_TYPE: "outside",
+                CONF_LOWER_LIMIT: "sensor.test",
+                CONF_UPPER_LIMIT: 90,
+            },
+            does_not_raise(),
+        ),
+        (
+            {
+                CONF_THRESHOLD_TYPE: "outside",
                 CONF_LOWER_LIMIT: "sensor.test",
                 CONF_UPPER_LIMIT: "sensor.test",
             },
@@ -1481,58 +1481,58 @@ async def test_numerical_state_attribute_changed_error_handling(
         ),
         (
             # Must provide lower limit for ABOVE
-            {CONF_THRESHOLD_TYPE: ThresholdType.ABOVE},
+            {CONF_THRESHOLD_TYPE: "above"},
             pytest.raises(vol.Invalid),
         ),
         (
             # Must provide lower limit for ABOVE
-            {CONF_THRESHOLD_TYPE: ThresholdType.ABOVE, CONF_UPPER_LIMIT: 90},
+            {CONF_THRESHOLD_TYPE: "above", CONF_UPPER_LIMIT: 90},
             pytest.raises(vol.Invalid),
         ),
         (
             # Must provide upper limit for BELOW
-            {CONF_THRESHOLD_TYPE: ThresholdType.BELOW},
+            {CONF_THRESHOLD_TYPE: "below"},
             pytest.raises(vol.Invalid),
         ),
         (
             # Must provide upper limit for BELOW
-            {CONF_THRESHOLD_TYPE: ThresholdType.BELOW, CONF_LOWER_LIMIT: 10},
+            {CONF_THRESHOLD_TYPE: "below", CONF_LOWER_LIMIT: 10},
             pytest.raises(vol.Invalid),
         ),
         (
             # Must provide upper and lower limits for BETWEEN
-            {CONF_THRESHOLD_TYPE: ThresholdType.BETWEEN},
+            {CONF_THRESHOLD_TYPE: "between"},
             pytest.raises(vol.Invalid),
         ),
         (
             # Must provide upper and lower limits for BETWEEN
-            {CONF_THRESHOLD_TYPE: ThresholdType.BETWEEN, CONF_LOWER_LIMIT: 10},
+            {CONF_THRESHOLD_TYPE: "between", CONF_LOWER_LIMIT: 10},
             pytest.raises(vol.Invalid),
         ),
         (
             # Must provide upper and lower limits for BETWEEN
-            {CONF_THRESHOLD_TYPE: ThresholdType.BETWEEN, CONF_UPPER_LIMIT: 90},
+            {CONF_THRESHOLD_TYPE: "between", CONF_UPPER_LIMIT: 90},
             pytest.raises(vol.Invalid),
         ),
         (
             # Must provide upper and lower limits for OUTSIDE
-            {CONF_THRESHOLD_TYPE: ThresholdType.OUTSIDE},
+            {CONF_THRESHOLD_TYPE: "outside"},
             pytest.raises(vol.Invalid),
         ),
         (
             # Must provide upper and lower limits for OUTSIDE
-            {CONF_THRESHOLD_TYPE: ThresholdType.OUTSIDE, CONF_LOWER_LIMIT: 10},
+            {CONF_THRESHOLD_TYPE: "outside", CONF_LOWER_LIMIT: 10},
             pytest.raises(vol.Invalid),
         ),
         (
             # Must provide upper and lower limits for OUTSIDE
-            {CONF_THRESHOLD_TYPE: ThresholdType.OUTSIDE, CONF_UPPER_LIMIT: 90},
+            {CONF_THRESHOLD_TYPE: "outside", CONF_UPPER_LIMIT: 90},
             pytest.raises(vol.Invalid),
         ),
         (
             # Must be valid entity id
             {
-                CONF_THRESHOLD_TYPE: ThresholdType.BETWEEN,
+                CONF_THRESHOLD_TYPE: "between",
                 CONF_ABOVE: "cat",
                 CONF_BELOW: "dog",
             },
@@ -1541,7 +1541,7 @@ async def test_numerical_state_attribute_changed_error_handling(
         (
             # Above must be smaller than below
             {
-                CONF_THRESHOLD_TYPE: ThresholdType.BETWEEN,
+                CONF_THRESHOLD_TYPE: "between",
                 CONF_ABOVE: 90,
                 CONF_BELOW: 10,
             },

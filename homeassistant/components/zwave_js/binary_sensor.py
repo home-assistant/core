@@ -654,6 +654,7 @@ DISCOVERY_SCHEMAS: list[NewZWaveDiscoverySchema] = [
             key=NOTIFICATION_SMOKE_ALARM,
             entity_category=EntityCategory.DIAGNOSTIC,
             not_states={
+                0,
                 SmokeAlarmNotificationEvent.SENSOR_STATUS_SMOKE_DETECTED_LOCATION_PROVIDED,
                 SmokeAlarmNotificationEvent.SENSOR_STATUS_SMOKE_DETECTED,
                 SmokeAlarmNotificationEvent.MAINTENANCE_STATUS_REPLACEMENT_REQUIRED,
