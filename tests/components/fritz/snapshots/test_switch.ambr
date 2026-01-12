@@ -122,7 +122,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Internet Access',
+    'original_name': 'Internet access',
     'platform': 'fritz',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -135,7 +135,7 @@
 # name: test_switch_setup[fc_data0][switch.printer_internet_access-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'printer Internet Access',
+      'friendly_name': 'printer Internet access',
     }),
     'context': <ANY>,
     'entity_id': 'switch.printer_internet_access',
@@ -268,7 +268,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Internet Access',
+    'original_name': 'Internet access',
     'platform': 'fritz',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -281,7 +281,7 @@
 # name: test_switch_setup[fc_data1][switch.printer_internet_access-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'printer Internet Access',
+      'friendly_name': 'printer Internet access',
     }),
     'context': <ANY>,
     'entity_id': 'switch.printer_internet_access',
@@ -414,7 +414,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Internet Access',
+    'original_name': 'Internet access',
     'platform': 'fritz',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -427,7 +427,7 @@
 # name: test_switch_setup[fc_data2][switch.printer_internet_access-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'printer Internet Access',
+      'friendly_name': 'printer Internet access',
     }),
     'context': <ANY>,
     'entity_id': 'switch.printer_internet_access',
@@ -566,7 +566,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Internet Access',
+    'original_name': 'Internet access',
     'platform': 'fritz',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -579,7 +579,7 @@
 # name: test_switch_setup[fc_data3][switch.printer_internet_access-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'printer Internet Access',
+      'friendly_name': 'printer Internet access',
     }),
     'context': <ANY>,
     'entity_id': 'switch.printer_internet_access',
