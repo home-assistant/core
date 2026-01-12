@@ -59,6 +59,11 @@
     }
   },
   "entity": {
+    "button": {
+      "recalibrate_co2": {
+        "name": "Recalibrate CO2 sensor"
+      }
+    },
     "number": {
       "hysteresis_band": {
         "name": "Hysteresis band"
@@ -85,6 +90,9 @@
   "exceptions": {
     "authentication_failed": {
       "message": "Authentication failed, please reauthenticate."
+    },
+    "button_press_failed": {
+      "message": "Failed to press {button} button."
     },
     "connection_failed": {
       "message": "Failed to communicate with device."
