@@ -111,7 +111,7 @@
     'domain': 'switch',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
     'entity_id': 'switch.printer_internet_access',
-    'has_entity_name': False,
+    'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
@@ -121,13 +121,13 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:router-wireless-settings',
-    'original_name': 'printer Internet Access',
+    'original_icon': None,
+    'original_name': 'Internet access',
     'platform': 'fritz',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'internet_access',
     'unique_id': 'AA:BB:CC:00:11:22_internet_access',
     'unit_of_measurement': None,
   })
@@ -135,8 +135,7 @@
 # name: test_switch_setup[fc_data0][switch.printer_internet_access-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'printer Internet Access',
-      'icon': 'mdi:router-wireless-settings',
+      'friendly_name': 'printer Internet access',
     }),
     'context': <ANY>,
     'entity_id': 'switch.printer_internet_access',
@@ -258,7 +257,7 @@
     'domain': 'switch',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
     'entity_id': 'switch.printer_internet_access',
-    'has_entity_name': False,
+    'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
@@ -268,13 +267,13 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:router-wireless-settings',
-    'original_name': 'printer Internet Access',
+    'original_icon': None,
+    'original_name': 'Internet access',
     'platform': 'fritz',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'internet_access',
     'unique_id': 'AA:BB:CC:00:11:22_internet_access',
     'unit_of_measurement': None,
   })
@@ -282,8 +281,7 @@
 # name: test_switch_setup[fc_data1][switch.printer_internet_access-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'printer Internet Access',
-      'icon': 'mdi:router-wireless-settings',
+      'friendly_name': 'printer Internet access',
     }),
     'context': <ANY>,
     'entity_id': 'switch.printer_internet_access',
@@ -405,7 +403,7 @@
     'domain': 'switch',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
     'entity_id': 'switch.printer_internet_access',
-    'has_entity_name': False,
+    'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
@@ -415,13 +413,13 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:router-wireless-settings',
-    'original_name': 'printer Internet Access',
+    'original_icon': None,
+    'original_name': 'Internet access',
     'platform': 'fritz',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'internet_access',
     'unique_id': 'AA:BB:CC:00:11:22_internet_access',
     'unit_of_measurement': None,
   })
@@ -429,8 +427,7 @@
 # name: test_switch_setup[fc_data2][switch.printer_internet_access-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'printer Internet Access',
-      'icon': 'mdi:router-wireless-settings',
+      'friendly_name': 'printer Internet access',
     }),
     'context': <ANY>,
     'entity_id': 'switch.printer_internet_access',
@@ -558,7 +555,7 @@
     'domain': 'switch',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
     'entity_id': 'switch.printer_internet_access',
-    'has_entity_name': False,
+    'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
@@ -568,13 +565,13 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:router-wireless-settings',
-    'original_name': 'printer Internet Access',
+    'original_icon': None,
+    'original_name': 'Internet access',
     'platform': 'fritz',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'internet_access',
     'unique_id': 'AA:BB:CC:00:11:22_internet_access',
     'unit_of_measurement': None,
   })
@@ -582,8 +579,7 @@
 # name: test_switch_setup[fc_data3][switch.printer_internet_access-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'printer Internet Access',
-      'icon': 'mdi:router-wireless-settings',
+      'friendly_name': 'printer Internet access',
     }),
     'context': <ANY>,
     'entity_id': 'switch.printer_internet_access',
