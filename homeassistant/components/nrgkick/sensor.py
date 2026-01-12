@@ -169,12 +169,6 @@ SENSORS: tuple[NRGkickSensorEntityDescription, ...] = (
     ),
     # INFO - Network
     NRGkickSensorEntityDescription(
-        key="network_mac_address",
-        translation_key="network_mac_address",
-        entity_category=EntityCategory.DIAGNOSTIC,
-        value_path=("info", "network", "mac_address"),
-    ),
-    NRGkickSensorEntityDescription(
         key="network_ssid",
         translation_key="network_ssid",
         entity_category=EntityCategory.DIAGNOSTIC,

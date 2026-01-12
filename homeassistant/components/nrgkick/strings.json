@@ -272,9 +272,6 @@
       "n_current": {
         "name": "Neutral current"
       },
-      "network_mac_address": {
-        "name": "MAC address"
-      },
       "network_rssi": {
         "name": "Signal strength"
       },

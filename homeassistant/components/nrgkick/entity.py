@@ -4,7 +4,11 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any
 
-from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.device_registry import (
+    CONNECTION_NETWORK_MAC,
+    DeviceInfo,
+    format_mac,
+)
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
@@ -27,15 +31,23 @@ class NRGkickEntity(CoordinatorEntity[NRGkickDataUpdateCoordinator]):
         data: NRGkickData | None = self.coordinator.data
         info_data: dict[str, Any] = data.info if data else {}
         device_info: dict[str, Any] = info_data.get("general", {})
+        network_info: dict[str, Any] = info_data.get("network", {})
 
         # The config flow requires a serial number and sets it as unique_id.
         serial = self.coordinator.config_entry.unique_id
         if TYPE_CHECKING:
             assert serial is not None
 
+        # Get additional device info fields.
         versions: dict[str, Any] = info_data.get("versions", {})
+        connections: set[tuple[str, str]] | None = None
+        if (mac_address := network_info.get("mac_address")) and isinstance(
+            mac_address, str
+        ):
+            connections = {(CONNECTION_NETWORK_MAC, format_mac(mac_address))}
+
         self._attr_unique_id = f"{serial}_{self._key}"
-        self._attr_device_info = DeviceInfo(
+        device_info_typed = DeviceInfo(
             identifiers={(DOMAIN, serial)},
             serial_number=serial,
             # The config entry title already contains the device name (set in the
@@ -45,3 +57,7 @@ class NRGkickEntity(CoordinatorEntity[NRGkickDataUpdateCoordinator]):
             model=device_info.get("model_type", "NRGkick Gen2"),
             sw_version=versions.get("sw_sm"),
         )
+        if connections is not None:
+            device_info_typed["connections"] = connections
+
+        self._attr_device_info = device_info_typed
