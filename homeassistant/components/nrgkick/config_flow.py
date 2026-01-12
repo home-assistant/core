@@ -112,9 +112,11 @@ class NRGkickConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Handle the initial step."""
         errors: dict[str, str] = {}
+        device_ip = user_input[CONF_HOST] if user_input else ""
         if user_input is not None:
             try:
                 host = _normalize_host(user_input[CONF_HOST])
+                device_ip = host
             except vol.Invalid:
                 errors["base"] = "cannot_connect"
             else:
@@ -142,7 +144,7 @@ class NRGkickConfigFlow(ConfigFlow, domain=DOMAIN):
             data_schema=STEP_USER_DATA_SCHEMA,
             errors=errors,
             description_placeholders={
-                "device_ip": user_input[CONF_HOST] if user_input else "",
+                "device_ip": device_ip,
             },
         )
 
