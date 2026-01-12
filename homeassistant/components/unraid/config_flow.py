@@ -77,9 +77,6 @@ class UnraidConfigFlow(ConfigFlow, domain=DOMAIN):
                             **user_input,
                             CONF_VERIFY_SSL: self._verify_ssl,
                         },
-                        options={
-                            CONF_UPS_NOMINAL_POWER: DEFAULT_UPS_NOMINAL_POWER,
-                        },
                     )
 
         return self.async_show_form(
