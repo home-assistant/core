@@ -10,7 +10,7 @@ send_message:
             integration: telegram_bot
           multiple: true
           reorder: true
-    custom_targets:
+    advanced:
       collapsed: true
       fields:
         config_entry_id:
@@ -81,7 +81,7 @@ send_chat_action:
             integration: telegram_bot
           multiple: true
           reorder: true
-    custom_targets:
+    advanced:
       collapsed: true
       fields:
         config_entry_id:
@@ -124,7 +124,7 @@ send_photo:
             integration: telegram_bot
           multiple: true
           reorder: true
-    custom_targets:
+    advanced:
       collapsed: true
       fields:
         config_entry_id:
@@ -218,7 +218,7 @@ send_sticker:
             integration: telegram_bot
           multiple: true
           reorder: true
-    custom_targets:
+    advanced:
       collapsed: true
       fields:
         config_entry_id:
@@ -303,7 +303,7 @@ send_animation:
             integration: telegram_bot
           multiple: true
           reorder: true
-    custom_targets:
+    advanced:
       collapsed: true
       fields:
         config_entry_id:
@@ -397,7 +397,7 @@ send_video:
             integration: telegram_bot
           multiple: true
           reorder: true
-    custom_targets:
+    advanced:
       collapsed: true
       fields:
         config_entry_id:
@@ -491,7 +491,7 @@ send_voice:
             integration: telegram_bot
           multiple: true
           reorder: true
-    custom_targets:
+    advanced:
       collapsed: true
       fields:
         config_entry_id:
@@ -576,7 +576,7 @@ send_document:
             integration: telegram_bot
           multiple: true
           reorder: true
-    custom_targets:
+    advanced:
       collapsed: true
       fields:
         config_entry_id:
@@ -670,7 +670,7 @@ send_location:
             integration: telegram_bot
           multiple: true
           reorder: true
-    custom_targets:
+    advanced:
       collapsed: true
       fields:
         config_entry_id:
@@ -735,7 +735,7 @@ send_poll:
             integration: telegram_bot
           multiple: true
           reorder: true
-    custom_targets:
+    advanced:
       collapsed: true
       fields:
         config_entry_id:
@@ -791,7 +791,7 @@ edit_message:
             domain: notify
             integration: telegram_bot
           reorder: true
-    custom_targets:
+    advanced:
       collapsed: true
       fields:
         config_entry_id:
@@ -844,7 +844,7 @@ edit_message_media:
             domain: notify
             integration: telegram_bot
           reorder: true
-    custom_targets:
+    advanced:
       collapsed: true
       fields:
         config_entry_id:
@@ -923,7 +923,7 @@ edit_caption:
             domain: notify
             integration: telegram_bot
           reorder: true
-    custom_targets:
+    advanced:
       collapsed: true
       fields:
         config_entry_id:
@@ -961,7 +961,7 @@ edit_replymarkup:
             domain: notify
             integration: telegram_bot
           reorder: true
-    custom_targets:
+    advanced:
       collapsed: true
       fields:
         config_entry_id:
@@ -1016,7 +1016,7 @@ delete_message:
             domain: notify
             integration: telegram_bot
           reorder: true
-    custom_targets:
+    advanced:
       collapsed: true
       fields:
         config_entry_id:
@@ -1043,7 +1043,7 @@ leave_chat:
             domain: notify
             integration: telegram_bot
           reorder: true
-    custom_targets:
+    advanced:
       collapsed: true
       fields:
         config_entry_id:
@@ -1065,7 +1065,7 @@ set_message_reaction:
             domain: notify
             integration: telegram_bot
           reorder: true
-    custom_targets:
+    advanced:
       collapsed: true
       fields:
         config_entry_id:
