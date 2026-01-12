@@ -30,7 +30,6 @@ from homeassistant.util.dt import utcnow
 
 from . import entity, event
 from .debounce import Debouncer
-from .frame import report_usage
 from .typing import UNDEFINED, UndefinedType
 
 REQUEST_REFRESH_DEFAULT_COOLDOWN = 10
@@ -131,7 +130,7 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_DataT]):
         self._request_refresh_task: asyncio.TimerHandle | None = None
         self._retry_after: float | None = None
         self.last_update_success = True
-        self.last_exception: Exception | None = None
+        self.last_exception: BaseException | None = None
 
         if request_refresh_debouncer is None:
             request_refresh_debouncer = Debouncer(
@@ -333,11 +332,9 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_DataT]):
             self.config_entry.state
             is not config_entries.ConfigEntryState.SETUP_IN_PROGRESS
         ):
-            report_usage(
-                "uses `async_config_entry_first_refresh`, which is only supported "
-                f"when entry state is {config_entries.ConfigEntryState.SETUP_IN_PROGRESS}, "
-                f"but it is in state {self.config_entry.state}",
-                breaks_in_ha_version="2025.11",
+            raise ConfigEntryError(
+                f"`async_config_entry_first_refresh` called when config entry state is {self.config_entry.state}, "
+                f"but should only be called in state {config_entries.ConfigEntryState.SETUP_IN_PROGRESS}"
             )
         if await self.__wrap_async_setup():
             await self._async_refresh(
@@ -492,7 +489,15 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_DataT]):
                 self.config_entry.async_start_reauth(self.hass)
         except NotImplementedError as err:
             self.last_exception = err
+            self.last_update_success = False
             raise
+
+        except asyncio.CancelledError as err:
+            self.last_exception = err
+            self.last_update_success = False
+
+            if (task := asyncio.current_task()) and task.cancelling() > 0:
+                raise
 
         except Exception as err:
             self.last_exception = err

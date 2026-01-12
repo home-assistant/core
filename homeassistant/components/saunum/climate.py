@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import asyncio
-import logging
 from typing import Any
 
 from pysaunum import MAX_TEMPERATURE, MIN_TEMPERATURE, SaunumException
@@ -26,8 +25,6 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from . import LeilSaunaConfigEntry
 from .const import DELAYED_REFRESH_SECONDS, DOMAIN
 from .entity import LeilSaunaEntity
-
-_LOGGER = logging.getLogger(__name__)
 
 PARALLEL_UPDATES = 1
 
@@ -103,6 +100,12 @@ class LeilSaunaClimate(LeilSaunaEntity, ClimateEntity):
 
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new HVAC mode."""
+        if hvac_mode == HVACMode.HEAT and self.coordinator.data.door_open:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="door_open",
+            )
+
         try:
             if hvac_mode == HVACMode.HEAT:
                 await self.coordinator.client.async_start_session()

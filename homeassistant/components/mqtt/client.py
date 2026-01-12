@@ -228,32 +228,12 @@ async def async_subscribe(
     msg_callback: Callable[[ReceiveMessage], Coroutine[Any, Any, None] | None],
     qos: int = DEFAULT_QOS,
     encoding: str | None = DEFAULT_ENCODING,
-    on_subscribe: CALLBACK_TYPE | None = None,
 ) -> CALLBACK_TYPE:
     """Subscribe to an MQTT topic.
 
-    If the on_subcribe callback hook is set, it will be called once
-    when the subscription has been completed.
-
     Call the return value to unsubscribe.
     """
-    handler: CALLBACK_TYPE | None = None
-
-    def _on_subscribe_done() -> None:
-        """Call once when the subscription was completed."""
-        if TYPE_CHECKING:
-            assert on_subscribe is not None and handler is not None
-
-        handler()
-        on_subscribe()
-
-    subscription_handler = async_subscribe_internal(
-        hass, topic, msg_callback, qos, encoding
-    )
-    if on_subscribe is not None:
-        handler = async_on_subscribe_done(hass, topic, qos, _on_subscribe_done)
-
-    return subscription_handler
+    return async_subscribe_internal(hass, topic, msg_callback, qos, encoding)
 
 
 @callback

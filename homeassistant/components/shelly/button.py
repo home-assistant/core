@@ -21,7 +21,6 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-from homeassistant.helpers.entity_registry import RegistryEntry
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import (
@@ -45,6 +44,7 @@ from .entity import (
 )
 from .utils import (
     async_remove_orphaned_entities,
+    async_remove_shelly_entity,
     format_ble_addr,
     get_blu_trv_device_info,
     get_device_entry_gen,
@@ -81,6 +81,7 @@ BUTTONS: Final[list[ShellyButtonDescription[Any]]] = [
         device_class=ButtonDeviceClass.RESTART,
         entity_category=EntityCategory.CONFIG,
         press_action="trigger_reboot",
+        supported=lambda coordinator: coordinator.sleep_period == 0,
     ),
     ShellyButtonDescription[ShellyBlockCoordinator](
         key="self_test",
@@ -198,7 +199,8 @@ async def async_setup_entry(
     """Set up button entities."""
     entry_data = config_entry.runtime_data
     coordinator: ShellyRpcCoordinator | ShellyBlockCoordinator | None
-    if get_device_entry_gen(config_entry) in RPC_GENERATIONS:
+    device_gen = get_device_entry_gen(config_entry)
+    if device_gen in RPC_GENERATIONS:
         coordinator = entry_data.rpc
     else:
         coordinator = entry_data.block
@@ -210,6 +212,12 @@ async def async_setup_entry(
         await er.async_migrate_entries(
             hass, config_entry.entry_id, partial(async_migrate_unique_ids, coordinator)
         )
+
+    # Remove the 'restart' button for sleeping devices as it was mistakenly
+    # added in https://github.com/home-assistant/core/pull/154673
+    entry_sleep_period = config_entry.data[CONF_SLEEP_PERIOD]
+    if device_gen in RPC_GENERATIONS and entry_sleep_period:
+        async_remove_shelly_entity(hass, BUTTON_PLATFORM, f"{coordinator.mac}-reboot")
 
     entities: list[ShellyButton] = []
 
@@ -225,7 +233,7 @@ async def async_setup_entry(
         return
 
     # add RPC buttons
-    if config_entry.data[CONF_SLEEP_PERIOD]:
+    if entry_sleep_period:
         async_setup_entry_rpc(
             hass,
             config_entry,
@@ -359,9 +367,6 @@ class ShellyBluTrvButton(ShellyRpcAttributeEntity, ButtonEntity):
             config, ble_addr, coordinator.mac, fw_ver
         )
 
-        if hasattr(self, "_attr_name") and description.role != ROLE_GENERIC:
-            delattr(self, "_attr_name")
-
     @rpc_call
     async def async_press(self) -> None:
         """Triggers the Shelly button press service."""
@@ -373,19 +378,6 @@ class RpcVirtualButton(ShellyRpcAttributeEntity, ButtonEntity):
 
     entity_description: RpcButtonDescription
     _id: int
-
-    def __init__(
-        self,
-        coordinator: ShellyRpcCoordinator,
-        key: str,
-        attribute: str,
-        description: RpcButtonDescription,
-    ) -> None:
-        """Initialize select."""
-        super().__init__(coordinator, key, attribute, description)
-
-        if hasattr(self, "_attr_name") and description.role != ROLE_GENERIC:
-            delattr(self, "_attr_name")
 
     @rpc_call
     async def async_press(self) -> None:
@@ -400,20 +392,6 @@ class RpcSleepingSmokeMuteButton(ShellySleepingRpcAttributeEntity, ButtonEntity)
     """Defines a Shelly RPC Smoke mute alarm button."""
 
     entity_description: RpcButtonDescription
-
-    def __init__(
-        self,
-        coordinator: ShellyRpcCoordinator,
-        key: str,
-        attribute: str,
-        description: RpcButtonDescription,
-        entry: RegistryEntry | None = None,
-    ) -> None:
-        """Initialize the sleeping sensor."""
-        super().__init__(coordinator, key, attribute, description, entry)
-
-        if hasattr(self, "_attr_name"):
-            delattr(self, "_attr_name")
 
     @rpc_call
     async def async_press(self) -> None:

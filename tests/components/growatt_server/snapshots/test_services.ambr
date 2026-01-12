@@ -1,0 +1,70 @@
+# serializer version: 1
+# name: test_read_time_segments_single_device
+  dict({
+    'time_segments': list([
+      dict({
+        'batt_mode': 'battery_first',
+        'enabled': True,
+        'end_time': '08:00',
+        'segment_id': 1,
+        'start_time': '06:00',
+      }),
+      dict({
+        'batt_mode': 'load_first',
+        'enabled': False,
+        'end_time': '24:00',
+        'segment_id': 2,
+        'start_time': '22:00',
+      }),
+      dict({
+        'batt_mode': 'battery_first',
+        'enabled': False,
+        'end_time': '00:00',
+        'segment_id': 3,
+        'start_time': '00:00',
+      }),
+      dict({
+        'batt_mode': 'battery_first',
+        'enabled': False,
+        'end_time': '00:00',
+        'segment_id': 4,
+        'start_time': '00:00',
+      }),
+      dict({
+        'batt_mode': 'battery_first',
+        'enabled': False,
+        'end_time': '00:00',
+        'segment_id': 5,
+        'start_time': '00:00',
+      }),
+      dict({
+        'batt_mode': 'battery_first',
+        'enabled': False,
+        'end_time': '00:00',
+        'segment_id': 6,
+        'start_time': '00:00',
+      }),
+      dict({
+        'batt_mode': 'battery_first',
+        'enabled': False,
+        'end_time': '00:00',
+        'segment_id': 7,
+        'start_time': '00:00',
+      }),
+      dict({
+        'batt_mode': 'battery_first',
+        'enabled': False,
+        'end_time': '00:00',
+        'segment_id': 8,
+        'start_time': '00:00',
+      }),
+      dict({
+        'batt_mode': 'battery_first',
+        'enabled': False,
+        'end_time': '00:00',
+        'segment_id': 9,
+        'start_time': '00:00',
+      }),
+    ]),
+  })
+# ---

@@ -1,0 +1,43 @@
+{
+  "version": 2,
+  "minor_version": 2,
+  "key": "knx/config_store.json",
+  "data": {
+    "entities": {
+      "time": {
+        "knx_es_01K76NGZRMJA74CBRQF9KXNPE8": {
+          "entity": {
+            "name": "time_with_state_address",
+            "device_info": null,
+            "entity_category": null
+          },
+          "knx": {
+            "ga_time": {
+              "write": "0/0/1",
+              "state": "0/0/2",
+              "passive": []
+            },
+            "respond_to_read": true,
+            "sync_state": "init"
+          }
+        },
+        "knx_es_01K76NGZRMJA74CBRQF9KXNPE9": {
+          "entity": {
+            "name": "time_without_state_address",
+            "device_info": null,
+            "entity_category": null
+          },
+          "knx": {
+            "ga_time": {
+              "write": "0/0/1",
+              "state": null,
+              "passive": []
+            },
+            "respond_to_read": false,
+            "sync_state": false
+          }
+        }
+      }
+    }
+  }
+}

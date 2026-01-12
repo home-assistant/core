@@ -271,7 +271,7 @@ async def test_config_flow_cannot_connect(
             },
         )
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "cannot_connect"}
 
     with patch(

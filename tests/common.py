@@ -1531,7 +1531,7 @@ def mock_storage(data: dict[str, Any] | None = None) -> Generator[dict[str, Any]
         return loaded
 
     async def mock_write_data(
-        store: storage.Store, path: str, data_to_write: dict[str, Any]
+        store: storage.Store, data_to_write: dict[str, Any]
     ) -> None:
         """Mock version of write data."""
         # To ensure that the data can be serialized

@@ -25,12 +25,23 @@ from homeassistant.components.climate import (
     HVACAction,
     HVACMode,
 )
-from homeassistant.const import ATTR_ENTITY_ID, ATTR_TEMPERATURE, STATE_UNAVAILABLE
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    ATTR_TEMPERATURE,
+    STATE_UNAVAILABLE,
+    Platform,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import entity_registry as er
 
 from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
+
+
+@pytest.fixture
+def platforms() -> list[Platform]:
+    """Fixture to specify platforms to test."""
+    return [Platform.CLIMATE]
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default", "init_integration")
@@ -218,6 +229,31 @@ async def test_hvac_mode_error_handling(
 
     # Verify the exception has the correct translation key
     assert exc_info.value.translation_key == "set_hvac_mode_failed"
+    assert exc_info.value.translation_domain == "saunum"
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_hvac_mode_door_open_validation(
+    hass: HomeAssistant,
+    mock_saunum_client,
+) -> None:
+    """Test validation error when trying to heat with door open."""
+    entity_id = "climate.saunum_leil"
+
+    # Set door to open
+    mock_saunum_client.async_get_data.return_value.door_open = True
+
+    # Try to turn on heating with door open
+    with pytest.raises(ServiceValidationError) as exc_info:
+        await hass.services.async_call(
+            CLIMATE_DOMAIN,
+            SERVICE_SET_HVAC_MODE,
+            {ATTR_ENTITY_ID: entity_id, ATTR_HVAC_MODE: HVACMode.HEAT},
+            blocking=True,
+        )
+
+    # Verify the exception has the correct translation key
+    assert exc_info.value.translation_key == "door_open"
     assert exc_info.value.translation_domain == "saunum"
 
 
