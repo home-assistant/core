@@ -148,17 +148,16 @@ class BraviaTVNumber(CoordinatorEntity[BraviaTVPictureCoordinator], NumberEntity
 
     def __init__(
         self,
-        coordinator: BraviaTVCoordinator,
+        main_coordinator: BraviaTVCoordinator,
         picture_coordinator: BraviaTVPictureCoordinator,
         unique_id: str,
         description: BraviaTVNumberDescription,
     ) -> None:
         """Initialize the number."""
         super().__init__(picture_coordinator)
-        self._main_coordinator = coordinator
         self._attr_unique_id = f"{unique_id}_{description.key}"
         self.entity_description = description
-        self._attr_device_info = get_device_info(coordinator, unique_id)
+        self._attr_device_info = get_device_info(main_coordinator, unique_id)
 
         # Initialize with defaults from entity description
         self._attr_native_min_value = description.native_min_value or 0

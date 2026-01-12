@@ -190,17 +190,16 @@ class BraviaTVSelect(CoordinatorEntity[BraviaTVPictureCoordinator], SelectEntity
 
     def __init__(
         self,
-        coordinator: BraviaTVCoordinator,
+        main_coordinator: BraviaTVCoordinator,
         picture_coordinator: BraviaTVPictureCoordinator,
         unique_id: str,
         description: BraviaTVSelectDescription,
     ) -> None:
         """Initialize the select."""
         super().__init__(picture_coordinator)
-        self._main_coordinator = coordinator
         self._attr_unique_id = f"{unique_id}_{description.key}"
         self.entity_description = description
-        self._attr_device_info = get_device_info(coordinator, unique_id)
+        self._attr_device_info = get_device_info(main_coordinator, unique_id)
 
         # Initialize options from API data
         self._update_options()
