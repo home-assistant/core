@@ -272,9 +272,6 @@
       "n_current": {
         "name": "Neutral current"
       },
-      "network_ip_address": {
-        "name": "IP address"
-      },
       "network_mac_address": {
         "name": "MAC address"
       },
