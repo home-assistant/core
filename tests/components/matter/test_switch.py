@@ -116,7 +116,7 @@ async def test_power_switch(hass: HomeAssistant, matter_node: MatterNode) -> Non
     assert state.attributes["friendly_name"] == "Room AirConditioner Power"
 
 
-@pytest.mark.parametrize("node_fixture", ["eve_thermo"])
+@pytest.mark.parametrize("node_fixture", ["eve_thermo_v4"])
 async def test_numeric_switch(
     hass: HomeAssistant,
     matter_client: MagicMock,

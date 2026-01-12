@@ -201,7 +201,7 @@ async def test_battery_sensor_description(
     state = hass.states.get("sensor.smoke_sensor_battery_type") is None
 
 
-@pytest.mark.parametrize("node_fixture", ["eve_thermo"])
+@pytest.mark.parametrize("node_fixture", ["eve_thermo_v4"])
 async def test_eve_thermo_sensor(
     hass: HomeAssistant,
     matter_client: MagicMock,
