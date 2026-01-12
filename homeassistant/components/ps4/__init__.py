@@ -126,7 +126,7 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 "media_player",
                 DOMAIN,
                 unique_id,
-                suggested_object_id=new_id,
+                calculated_object_id=new_id,
                 config_entry=entry,
                 device_id=e_entry.device_id,
             )
