@@ -2386,34 +2386,43 @@ async def test_ha_cast(hass: HomeAssistant, ha_controller_mock) -> None:
     unregister_cb()
     chromecast.unregister_handler.assert_not_called()
 
-@property
-    def state(self) -> MediaPlayerState | None:
-        """Return the state of the player."""
-        # The lovelace app loops media to prevent timing out, don't show that
-        if self.app_id == CAST_APP_ID_HOMEASSISTANT_LOVELACE:
-            return MediaPlayerState.PLAYING
 
-        if (media_status := self._media_status()[0]) is not None:
-            if media_status.player_state == MEDIA_PLAYER_STATE_PLAYING:
-                return MediaPlayerState.PLAYING
-            if media_status.player_state == MEDIA_PLAYER_STATE_BUFFERING:
-                return MediaPlayerState.BUFFERING
-            if media_status.player_is_paused:
-                return MediaPlayerState.PAUSED
-            if media_status.player_is_idle:
-                return MediaPlayerState.IDLE
+async def test_entity_media_states_active_app_reported_idle(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
+    """Test entity state when app is active but device reports idle (fixes #160814)."""
+    entity_id = "media_player.speaker"
+    info = get_fake_chromecast_info()
+    chromecast, _ = await async_setup_media_player_cast(hass, info)
+    cast_status_cb, conn_status_cb, _ = get_status_callbacks(chromecast)
 
-        if self.app_id in APP_IDS_UNRELIABLE_MEDIA_INFO:
-            # Some apps don't report media status, show the player as playing
-            return MediaPlayerState.PLAYING
+    # Connect the device
+    connection_status = MagicMock()
+    connection_status.status = "CONNECTED"
+    conn_status_cb(connection_status)
+    await hass.async_block_till_done()
 
-        if self.app_id is not None and self.app_id != pychromecast.config.APP_BACKDROP:
-            # We have an active app
-            return MediaPlayerState.IDLE
+    # Scenario: Custom App is running (e.g. DashCast), but device reports is_idle=True
+    chromecast.app_id = "84912283"  # Example Custom App ID
+    chromecast.is_idle = True  # Device thinks it's idle/standby
 
-        if self._chromecast is not None and self._chromecast.is_idle:
-            # If library consider us idle, that is our off state
-            # it takes HDMI status into account for cast devices.
-            return MediaPlayerState.OFF
+    # Trigger a status update
+    cast_status = MagicMock()
+    cast_status_cb(cast_status)
+    await hass.async_block_till_done()
 
-        return None
+    state = hass.states.get(entity_id)
+    assert state is not None
+    # BEFORE FIX: This would be "off"
+    # AFTER FIX: This should be "idle"
+    assert state.state == "idle"
+
+    # Scenario: Backdrop (Screensaver) is running. Should still be OFF.
+    chromecast.app_id = pychromecast.config.APP_BACKDROP
+    chromecast.is_idle = True
+
+    cast_status_cb(cast_status)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+    assert state.state == "off"
