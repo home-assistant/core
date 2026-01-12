@@ -391,7 +391,7 @@
     'state': 'off',
   })
 # ---
-# name: test_binary_sensors[eve_thermo][binary_sensor.eve_thermo_local_temperature_remote_sensing-entry]
+# name: test_binary_sensors[eve_thermo_v4][binary_sensor.eve_thermo_local_temperature_remote_sensing-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -426,7 +426,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_binary_sensors[eve_thermo][binary_sensor.eve_thermo_local_temperature_remote_sensing-state]
+# name: test_binary_sensors[eve_thermo_v4][binary_sensor.eve_thermo_local_temperature_remote_sensing-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Eve Thermo Local temperature remote sensing',
@@ -439,7 +439,7 @@
     'state': 'off',
   })
 # ---
-# name: test_binary_sensors[eve_thermo][binary_sensor.eve_thermo_outdoor_temperature_remote_sensing-entry]
+# name: test_binary_sensors[eve_thermo_v4][binary_sensor.eve_thermo_outdoor_temperature_remote_sensing-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -474,7 +474,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_binary_sensors[eve_thermo][binary_sensor.eve_thermo_outdoor_temperature_remote_sensing-state]
+# name: test_binary_sensors[eve_thermo_v4][binary_sensor.eve_thermo_outdoor_temperature_remote_sensing-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Eve Thermo Outdoor temperature remote sensing',

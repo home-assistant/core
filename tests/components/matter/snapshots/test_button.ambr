@@ -1418,7 +1418,7 @@
     'state': 'unknown',
   })
 # ---
-# name: test_buttons[eve_thermo][button.eve_thermo_identify-entry]
+# name: test_buttons[eve_thermo_v4][button.eve_thermo_identify-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1453,7 +1453,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_buttons[eve_thermo][button.eve_thermo_identify-state]
+# name: test_buttons[eve_thermo_v4][button.eve_thermo_identify-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'identify',

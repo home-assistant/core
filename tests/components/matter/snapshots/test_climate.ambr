@@ -191,7 +191,7 @@
     'state': 'heat',
   })
 # ---
-# name: test_climates[eve_thermo][climate.eve_thermo-entry]
+# name: test_climates[eve_thermo_v4][climate.eve_thermo-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -233,7 +233,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_climates[eve_thermo][climate.eve_thermo-state]
+# name: test_climates[eve_thermo_v4][climate.eve_thermo-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'current_temperature': 21.0,

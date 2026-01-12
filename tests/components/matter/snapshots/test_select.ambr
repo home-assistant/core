@@ -1400,7 +1400,7 @@
     'state': 'previous',
   })
 # ---
-# name: test_selects[eve_thermo][select.eve_thermo_temperature_display_mode-entry]
+# name: test_selects[eve_thermo_v4][select.eve_thermo_temperature_display_mode-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1440,7 +1440,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_selects[eve_thermo][select.eve_thermo_temperature_display_mode-state]
+# name: test_selects[eve_thermo_v4][select.eve_thermo_temperature_display_mode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Eve Thermo Temperature display mode',

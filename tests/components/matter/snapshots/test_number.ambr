@@ -1037,7 +1037,7 @@
     'state': '3',
   })
 # ---
-# name: test_numbers[eve_thermo][number.eve_thermo_temperature_offset-entry]
+# name: test_numbers[eve_thermo_v4][number.eve_thermo_temperature_offset-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1077,7 +1077,7 @@
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_numbers[eve_thermo][number.eve_thermo_temperature_offset-state]
+# name: test_numbers[eve_thermo_v4][number.eve_thermo_temperature_offset-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',

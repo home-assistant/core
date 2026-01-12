@@ -4904,7 +4904,7 @@
     'state': '100',
   })
 # ---
-# name: test_sensors[eve_thermo][sensor.eve_thermo_battery-entry]
+# name: test_sensors[eve_thermo_v4][sensor.eve_thermo_battery-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -4941,7 +4941,7 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_sensors[eve_thermo][sensor.eve_thermo_battery-state]
+# name: test_sensors[eve_thermo_v4][sensor.eve_thermo_battery-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'battery',
@@ -4957,7 +4957,7 @@
     'state': '100',
   })
 # ---
-# name: test_sensors[eve_thermo][sensor.eve_thermo_battery_voltage-entry]
+# name: test_sensors[eve_thermo_v4][sensor.eve_thermo_battery_voltage-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -5000,7 +5000,7 @@
     'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
   })
 # ---
-# name: test_sensors[eve_thermo][sensor.eve_thermo_battery_voltage-state]
+# name: test_sensors[eve_thermo_v4][sensor.eve_thermo_battery_voltage-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'voltage',
@@ -5016,7 +5016,7 @@
     'state': '3.05',
   })
 # ---
-# name: test_sensors[eve_thermo][sensor.eve_thermo_temperature-entry]
+# name: test_sensors[eve_thermo_v4][sensor.eve_thermo_temperature-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -5056,7 +5056,7 @@
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_sensors[eve_thermo][sensor.eve_thermo_temperature-state]
+# name: test_sensors[eve_thermo_v4][sensor.eve_thermo_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
@@ -5072,7 +5072,7 @@
     'state': '21.0',
   })
 # ---
-# name: test_sensors[eve_thermo][sensor.eve_thermo_valve_position-entry]
+# name: test_sensors[eve_thermo_v4][sensor.eve_thermo_valve_position-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -5107,7 +5107,7 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_sensors[eve_thermo][sensor.eve_thermo_valve_position-state]
+# name: test_sensors[eve_thermo_v4][sensor.eve_thermo_valve_position-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Eve Thermo Valve position',
