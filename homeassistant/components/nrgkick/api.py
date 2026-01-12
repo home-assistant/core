@@ -117,6 +117,10 @@ class NRGkickApiClientApiDisabledError(NRGkickApiClientError):
     translation_key = "json_api_disabled"
 
 
+class NRGkickApiClientInvalidResponseError(NRGkickApiClientError):
+    """Exception for invalid responses from the device."""
+
+
 class NRGkickAPI:
     """Home Assistant wrapper for NRGkick API client.
 

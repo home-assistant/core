@@ -21,6 +21,7 @@ from .api import (
     NRGkickApiClientAuthenticationError,
     NRGkickApiClientCommunicationError,
     NRGkickApiClientError,
+    NRGkickApiClientInvalidResponseError,
 )
 from .const import DOMAIN
 
@@ -84,7 +85,10 @@ async def validate_input(
 
     serial = info.get("general", {}).get("serial_number")
     if not serial:
-        raise ValueError
+        raise NRGkickApiClientInvalidResponseError(
+            translation_domain=DOMAIN,
+            translation_key="invalid_response",
+        )
 
     return {
         "title": device_name,
@@ -118,8 +122,6 @@ class NRGkickConfigFlow(ConfigFlow, domain=DOMAIN):
                     info = await validate_input(self.hass, host)
                 except NRGkickApiClientApiDisabledError:
                     errors["base"] = "json_api_disabled"
-                except ValueError:
-                    errors["base"] = "no_serial_number"
                 except NRGkickApiClientAuthenticationError:
                     self._pending_host = host
                     return await self.async_step_user_auth()
@@ -166,8 +168,6 @@ class NRGkickConfigFlow(ConfigFlow, domain=DOMAIN):
                 )
             except NRGkickApiClientApiDisabledError:
                 errors["base"] = "json_api_disabled"
-            except ValueError:
-                errors["base"] = "no_serial_number"
             except NRGkickApiClientAuthenticationError:
                 errors["base"] = "invalid_auth"
             except NRGkickApiClientCommunicationError:
@@ -246,8 +246,6 @@ class NRGkickConfigFlow(ConfigFlow, domain=DOMAIN):
                 info = await validate_input(self.hass, host)
             except NRGkickApiClientApiDisabledError:
                 errors["base"] = "json_api_disabled"
-            except ValueError:
-                errors["base"] = "no_serial_number"
             except NRGkickApiClientAuthenticationError:
                 self._pending_host = host
                 return await self.async_step_zeroconf_enable_json_api_auth()
@@ -293,8 +291,6 @@ class NRGkickConfigFlow(ConfigFlow, domain=DOMAIN):
                 )
             except NRGkickApiClientApiDisabledError:
                 errors["base"] = "json_api_disabled"
-            except ValueError:
-                errors["base"] = "no_serial_number"
             except NRGkickApiClientAuthenticationError:
                 errors["base"] = "invalid_auth"
             except NRGkickApiClientCommunicationError:
@@ -335,8 +331,6 @@ class NRGkickConfigFlow(ConfigFlow, domain=DOMAIN):
                 info = await validate_input(self.hass, host)
             except NRGkickApiClientApiDisabledError:
                 errors["base"] = "json_api_disabled"
-            except ValueError:
-                errors["base"] = "no_serial_number"
             except NRGkickApiClientAuthenticationError:
                 self._pending_host = host
                 return await self.async_step_zeroconf_auth()
@@ -382,8 +376,6 @@ class NRGkickConfigFlow(ConfigFlow, domain=DOMAIN):
                 )
             except NRGkickApiClientApiDisabledError:
                 errors["base"] = "json_api_disabled"
-            except ValueError:
-                errors["base"] = "no_serial_number"
             except NRGkickApiClientAuthenticationError:
                 errors["base"] = "invalid_auth"
             except NRGkickApiClientCommunicationError:

@@ -7,6 +7,7 @@ from unittest.mock import ANY, AsyncMock, patch
 import pytest
 import voluptuous as vol
 
+from homeassistant.components.nrgkick.api import NRGkickApiClientInvalidResponseError
 from homeassistant.components.nrgkick.config_flow import _normalize_host, validate_input
 from homeassistant.core import HomeAssistant
 
@@ -91,6 +92,6 @@ async def test_validate_input_fallback_name_and_serial_required(
             "homeassistant.components.nrgkick.config_flow.NRGkickAPI",
             return_value=api,
         ),
-        pytest.raises(ValueError),
+        pytest.raises(NRGkickApiClientInvalidResponseError),
     ):
         await validate_input(hass, "192.168.1.100")

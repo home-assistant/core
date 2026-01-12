@@ -410,6 +410,9 @@
     "http_error": {
       "message": "Device returned HTTP error {status_code} ({status_message}). URL: {url}"
     },
+    "invalid_response": {
+      "message": "The device returned an invalid response."
+    },
     "unknown_error": {
       "message": "An unknown error occurred."
     }
