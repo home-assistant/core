@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -29,11 +29,9 @@ class NRGkickEntity(CoordinatorEntity[NRGkickDataUpdateCoordinator]):
         device_info: dict[str, Any] = info_data.get("general", {})
 
         # The config flow requires a serial number and sets it as unique_id.
-        # Prefer the configured unique_id to avoid depending on runtime API data.
-        serial: str = (
-            self.coordinator.config_entry.unique_id
-            or self.coordinator.config_entry.entry_id
-        )
+        serial = self.coordinator.config_entry.unique_id
+        if TYPE_CHECKING:
+            assert serial is not None
 
         versions: dict[str, Any] = info_data.get("versions", {})
         self._attr_unique_id = f"{serial}_{self._key}"
