@@ -194,7 +194,7 @@ def parametrize_condition_states(
     The target_states and other_states iterables are either iterables of
     states or iterables of (state, attributes) tuples.
 
-    Returns a list of tuples with (trigger, list of states),
+    Returns a list of tuples with (condition, condition options, list of states),
     where states is a list of ConditionStateDescription dicts.
     """
 

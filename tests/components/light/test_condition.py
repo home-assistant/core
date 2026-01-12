@@ -246,7 +246,6 @@ async def test_light_state_condition_behavior_all(
             await hass.async_block_till_done()
 
         # The condition passes if all entities are either in a target state or invalid
-        assert (
-            await calls_after_trigger(hass, service_calls) == (not state["valid"])
-            or state["count"]
+        assert await calls_after_trigger(hass, service_calls) == (
+            (not state["valid"]) or state["count"]
         )
