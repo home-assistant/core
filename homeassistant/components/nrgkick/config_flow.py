@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import logging
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import voluptuous as vol
 import yarl
@@ -150,8 +150,8 @@ class NRGkickConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle the authentication step only when needed."""
         errors: dict[str, str] = {}
 
-        if not self._pending_host:
-            return await self.async_step_user()
+        if TYPE_CHECKING:
+            assert self._pending_host is not None
 
         if user_input is not None:
             username = user_input.get(CONF_USERNAME)
@@ -277,8 +277,8 @@ class NRGkickConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle authentication after JSON API enabling guidance."""
         errors: dict[str, str] = {}
 
-        if not self._pending_host:
-            return await self.async_step_zeroconf_enable_json_api()
+        if TYPE_CHECKING:
+            assert self._pending_host is not None
 
         if user_input is not None:
             username = user_input.get(CONF_USERNAME)
@@ -366,8 +366,8 @@ class NRGkickConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle authentication for zeroconf discovery when needed."""
         errors: dict[str, str] = {}
 
-        if not self._pending_host:
-            return await self.async_step_zeroconf_confirm()
+        if TYPE_CHECKING:
+            assert self._pending_host is not None
 
         if user_input is not None:
             username = user_input.get(CONF_USERNAME)

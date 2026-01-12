@@ -7,12 +7,7 @@ from unittest.mock import ANY, AsyncMock, patch
 import pytest
 import voluptuous as vol
 
-from homeassistant import data_entry_flow
-from homeassistant.components.nrgkick.config_flow import (
-    NRGkickConfigFlow,
-    _normalize_host,
-    validate_input,
-)
+from homeassistant.components.nrgkick.config_flow import _normalize_host, validate_input
 from homeassistant.core import HomeAssistant
 
 
@@ -99,27 +94,3 @@ async def test_validate_input_fallback_name_and_serial_required(
         pytest.raises(ValueError),
     ):
         await validate_input(hass, "192.168.1.100")
-
-
-async def test_flow_guards_and_fallbacks(hass: HomeAssistant) -> None:
-    """Test defensive guards and fallbacks that are hard to hit via FlowManager."""
-    flow = NRGkickConfigFlow()
-    flow.hass = hass
-
-    # user_auth without pending host falls back to user step
-    flow._pending_host = None
-    result = await flow.async_step_user_auth()
-    assert result.get("type") == data_entry_flow.FlowResultType.FORM
-    assert result.get("step_id") == "user"
-
-    # zeroconf auth steps without pending host fall back to their confirm steps
-    flow._discovered_host = "192.168.1.100"
-    flow._discovered_name = "NRGkick Test"
-
-    result = await flow.async_step_zeroconf_auth()
-    assert result.get("type") == data_entry_flow.FlowResultType.FORM
-    assert result.get("step_id") == "zeroconf_confirm"
-
-    result = await flow.async_step_zeroconf_enable_json_api_auth()
-    assert result.get("type") == data_entry_flow.FlowResultType.FORM
-    assert result.get("step_id") == "zeroconf_enable_json_api"
