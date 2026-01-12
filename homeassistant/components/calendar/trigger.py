@@ -62,8 +62,8 @@ _SINGLE_ENTITY_EVENT_TRIGGER_SCHEMA = vol.Schema(
 _EVENT_TRIGGER_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_OPTIONS, default={}): {
-            vol.Optional(CONF_OFFSET, default=datetime.timedelta(0)): cv.time_period,
-            vol.Optional(CONF_OFFSET_TYPE, default=OFFSET_TYPE_BEFORE): vol.In(
+            vol.Required(CONF_OFFSET, default=datetime.timedelta(0)): cv.time_period,
+            vol.Required(CONF_OFFSET_TYPE, default=OFFSET_TYPE_BEFORE): vol.In(
                 {OFFSET_TYPE_BEFORE, OFFSET_TYPE_AFTER}
             ),
         },
@@ -328,8 +328,8 @@ class TargetCalendarEventListener(TargetEntityChangeTracker):
         self._calendar_event_listener: CalendarEventListener | None = None
 
     @callback
-    def _handle_entities(self, tracked_entities: set[str]) -> None:
-        """Handle the tracked entities."""
+    def _handle_entities_update(self, tracked_entities: set[str]) -> None:
+        """Restart the listeners when the list of entities of the tracked targets is updated."""
         if self._pending_listener_task:
             self._pending_listener_task.cancel()
         self._pending_listener_task = self._hass.async_create_task(
