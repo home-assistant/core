@@ -450,169 +450,118 @@ async def test_migrate_from_future_version_fails(hass: HomeAssistant) -> None:
     assert entry.version == 3  # Version should remain unchanged
 
 
-async def test_retry_rate_limited(
+RETRY_EXCEPTIONS = [
+    (RateLimited(data={"after": 5}), 5.0),
+    (InvalidResponse(data={"after": 7}), 7.0),
+    (ServiceUnavailable(), 10.0),  # Default retry_after when no "after" in data
+    (GatewayTimeout(), 10.0),  # Default retry_after when no "after" in data
+]
+
+
+@pytest.mark.parametrize(("exception", "expected_retry_after"), RETRY_EXCEPTIONS)
+async def test_site_info_retry_exceptions(
     hass: HomeAssistant,
     mock_site_info: AsyncMock,
+    exception: TeslaFleetError,
+    expected_retry_after: float,
 ) -> None:
-    """Test UpdateFailed with retry_after for RateLimited exception."""
-    mock_site_info.side_effect = RateLimited(data={"after": 5})
+    """Test UpdateFailed with retry_after for site info coordinator."""
+    mock_site_info.side_effect = exception
     entry = await setup_platform(hass)
-    # Rate limited during first refresh causes setup retry
+    # Retry exceptions during first refresh cause setup retry
     assert entry.state is ConfigEntryState.SETUP_RETRY
+    # API should only be called once (no manual retries)
+    assert mock_site_info.call_count == 1
 
 
-async def test_retry_invalid_response(
-    hass: HomeAssistant,
-    mock_site_info: AsyncMock,
-) -> None:
-    """Test UpdateFailed with retry_after for InvalidResponse exception."""
-    mock_site_info.side_effect = InvalidResponse(data={"after": 7})
-    entry = await setup_platform(hass)
-    # Invalid response during first refresh causes setup retry
-    assert entry.state is ConfigEntryState.SETUP_RETRY
-
-
-async def test_retry_service_unavailable(
-    hass: HomeAssistant,
-    mock_site_info: AsyncMock,
-) -> None:
-    """Test UpdateFailed with retry_after for ServiceUnavailable exception."""
-    mock_site_info.side_effect = ServiceUnavailable()
-    entry = await setup_platform(hass)
-    # Service unavailable during first refresh causes setup retry
-    assert entry.state is ConfigEntryState.SETUP_RETRY
-
-
-async def test_retry_gateway_timeout(
-    hass: HomeAssistant,
-    mock_site_info: AsyncMock,
-) -> None:
-    """Test UpdateFailed with retry_after for GatewayTimeout exception."""
-    mock_site_info.side_effect = GatewayTimeout()
-    entry = await setup_platform(hass)
-    # Gateway timeout during first refresh causes setup retry
-    assert entry.state is ConfigEntryState.SETUP_RETRY
-
-
-async def test_vehicle_retry_rate_limited(
+@pytest.mark.parametrize(("exception", "expected_retry_after"), RETRY_EXCEPTIONS)
+async def test_vehicle_data_retry_exceptions(
     hass: HomeAssistant,
     mock_vehicle_data: AsyncMock,
     mock_legacy: AsyncMock,
+    exception: TeslaFleetError,
+    expected_retry_after: float,
 ) -> None:
-    """Test UpdateFailed with retry_after for vehicle data with RateLimited exception."""
-    mock_vehicle_data.side_effect = RateLimited(data={"after": 3})
+    """Test UpdateFailed with retry_after for vehicle data coordinator."""
+    mock_vehicle_data.side_effect = exception
     entry = await setup_platform(hass)
-    # Rate limited during first refresh causes setup retry
+    # Retry exceptions during first refresh cause setup retry
     assert entry.state is ConfigEntryState.SETUP_RETRY
+    # API should only be called once (no manual retries)
+    assert mock_vehicle_data.call_count == 1
 
 
-async def test_live_status_retry_rate_limited(
+@pytest.mark.parametrize(("exception", "expected_retry_after"), RETRY_EXCEPTIONS)
+async def test_live_status_coordinator_retry_exceptions(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
+    mock_live_status: AsyncMock,
+    exception: TeslaFleetError,
+    expected_retry_after: float,
 ) -> None:
-    """Test UpdateFailed with retry_after for live status with RateLimited exception."""
+    """Test live status coordinator raises UpdateFailed with retry_after."""
     call_count = 0
 
     def live_status_side_effect():
         nonlocal call_count
         call_count += 1
         if call_count == 1:
-            return deepcopy(LIVE_STATUS)  # Initial call in async_setup_entry
-        raise RateLimited(data={"after": 4})  # Coordinator refresh raises UpdateFailed
+            return deepcopy(LIVE_STATUS)  # Initial call succeeds
+        if call_count == 2:
+            raise exception  # Second call raises exception
+        return deepcopy(LIVE_STATUS)  # Subsequent calls succeed
 
-    with patch(
-        "tesla_fleet_api.tesla.energysite.EnergySite.live_status",
-        side_effect=live_status_side_effect,
-    ):
-        entry = await setup_platform(hass)
-        assert entry.state is ConfigEntryState.LOADED
+    mock_live_status.side_effect = live_status_side_effect
 
-        # Trigger a coordinator refresh by advancing time
-        freezer.tick(ENERGY_LIVE_INTERVAL)
-        async_fire_time_changed(hass)
-        await hass.async_block_till_done()
+    entry = await setup_platform(hass)
+    assert entry.state is ConfigEntryState.LOADED
+    assert call_count == 1
 
-        # Entry stays loaded, coordinator handles retry via retry_after
-        assert entry.state is ConfigEntryState.LOADED
+    # Trigger coordinator refresh - this will raise the exception
+    freezer.tick(ENERGY_LIVE_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    # API was called exactly once for this refresh (no manual retry loop)
+    assert call_count == 2
+    # Entry stays loaded - UpdateFailed with retry_after doesn't break the entry
+    assert entry.state is ConfigEntryState.LOADED
 
 
-async def test_live_status_retry_service_unavailable(
+@pytest.mark.parametrize(("exception", "expected_retry_after"), RETRY_EXCEPTIONS)
+async def test_energy_history_coordinator_retry_exceptions(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
+    mock_energy_history: AsyncMock,
+    exception: TeslaFleetError,
+    expected_retry_after: float,
 ) -> None:
-    """Test live status coordinator handles ServiceUnavailable with retry_after."""
-    call_count = 0
-
-    def live_status_side_effect():
-        nonlocal call_count
-        call_count += 1
-        if call_count == 1:
-            return deepcopy(LIVE_STATUS)  # Initial call in async_setup_entry
-        raise ServiceUnavailable  # Subsequent calls raise UpdateFailed with retry_after
-
-    with patch(
-        "tesla_fleet_api.tesla.energysite.EnergySite.live_status",
-        side_effect=live_status_side_effect,
-    ):
-        entry = await setup_platform(hass)
-        assert entry.state is ConfigEntryState.LOADED
-
-        # Trigger a coordinator refresh by advancing time
-        freezer.tick(ENERGY_LIVE_INTERVAL)
-        async_fire_time_changed(hass)
-        await hass.async_block_till_done()
-
-        # Entry stays loaded, coordinator handles retry via retry_after
-        assert entry.state is ConfigEntryState.LOADED
-
-
-async def test_energy_history_retry_gateway_timeout(
-    hass: HomeAssistant,
-    freezer: FrozenDateTimeFactory,
-) -> None:
-    """Test UpdateFailed with retry_after for energy history with GatewayTimeout."""
+    """Test energy history coordinator raises UpdateFailed with retry_after."""
     call_count = 0
 
     def energy_history_side_effect(*args, **kwargs):
         nonlocal call_count
         call_count += 1
         if call_count == 1:
-            raise GatewayTimeout  # First call raises UpdateFailed with retry_after
-        return ENERGY_HISTORY
+            raise exception  # First call raises exception
+        return ENERGY_HISTORY  # Subsequent calls succeed
 
-    with patch(
-        "tesla_fleet_api.tesla.energysite.EnergySite.energy_history",
-        side_effect=energy_history_side_effect,
-    ):
-        entry = await setup_platform(hass)
-        # Entry loads (energy history isn't first refresh)
-        assert entry.state is ConfigEntryState.LOADED
+    mock_energy_history.side_effect = energy_history_side_effect
 
+    entry = await setup_platform(hass)
+    assert entry.state is ConfigEntryState.LOADED
+    # Energy history doesn't have first_refresh during setup
+    assert call_count == 0
 
-async def test_energy_history_retry_invalid_response(
-    hass: HomeAssistant,
-    freezer: FrozenDateTimeFactory,
-) -> None:
-    """Test energy history coordinator handles InvalidResponse with retry_after."""
+    # Trigger first coordinator refresh - this will raise the exception
+    freezer.tick(ENERGY_HISTORY_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
 
-    def energy_history_side_effect(*args, **kwargs):
-        raise InvalidResponse
-
-    with patch(
-        "tesla_fleet_api.tesla.energysite.EnergySite.energy_history",
-        side_effect=energy_history_side_effect,
-    ):
-        entry = await setup_platform(hass)
-        # Entry loads (energy history raises UpdateFailed with retry_after)
-        assert entry.state is ConfigEntryState.LOADED
-
-        # Trigger a coordinator refresh by advancing time
-        freezer.tick(ENERGY_HISTORY_INTERVAL)
-        async_fire_time_changed(hass)
-        await hass.async_block_till_done()
-
-        # Entry stays loaded, coordinator handles retry via retry_after
-        assert entry.state is ConfigEntryState.LOADED
+    # API was called exactly once (no manual retry loop)
+    assert call_count == 1
+    # Entry stays loaded - UpdateFailed with retry_after doesn't break the entry
+    assert entry.state is ConfigEntryState.LOADED
 
 
 async def test_live_status_auth_error(
