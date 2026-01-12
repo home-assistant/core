@@ -108,6 +108,9 @@
       },
       "reconnect": {
         "name": "Reconnect"
+      },
+      "wake_on_lan": {
+        "name": "Wake on LAN"
       }
     },
     "sensor": {
@@ -161,6 +164,11 @@
       },
       "max_kb_s_sent": {
         "name": "Max connection upload throughput"
+      }
+    },
+    "switch": {
+      "internet_access": {
+        "name": "Internet access"
       }
     }
   },
