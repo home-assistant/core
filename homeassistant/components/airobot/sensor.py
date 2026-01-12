@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
+from datetime import datetime, timedelta
 
 from pyairobotrest.models import ThermostatStatus
 
@@ -23,6 +24,8 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
+from homeassistant.util.dt import utcnow
+from homeassistant.util.variance import ignore_variance
 
 from . import AirobotConfigEntry
 from .entity import AirobotEntity
@@ -34,9 +37,14 @@ PARALLEL_UPDATES = 0
 class AirobotSensorEntityDescription(SensorEntityDescription):
     """Describes Airobot sensor entity."""
 
-    value_fn: Callable[[ThermostatStatus], StateType]
+    value_fn: Callable[[ThermostatStatus], StateType | datetime]
     supported_fn: Callable[[ThermostatStatus], bool] = lambda _: True
 
+
+uptime_to_stable_datetime = ignore_variance(
+    lambda value: utcnow().replace(microsecond=0) - timedelta(seconds=value),
+    timedelta(minutes=2),
+)
 
 SENSOR_TYPES: tuple[AirobotSensorEntityDescription, ...] = (
     AirobotSensorEntityDescription(
@@ -96,6 +104,14 @@ SENSOR_TYPES: tuple[AirobotSensorEntityDescription, ...] = (
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda status: status.errors,
     ),
+    AirobotSensorEntityDescription(
+        key="device_uptime",
+        translation_key="device_uptime",
+        device_class=SensorDeviceClass.TIMESTAMP,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        value_fn=lambda status: uptime_to_stable_datetime(status.device_uptime),
+        entity_registry_enabled_default=False,
+    ),
 )
 
 
@@ -129,6 +145,6 @@ class AirobotSensor(AirobotEntity, SensorEntity):
         self._attr_unique_id = f"{coordinator.data.status.device_id}_{description.key}"
 
     @property
-    def native_value(self) -> StateType:
+    def native_value(self) -> StateType | datetime:
         """Return the state of the sensor."""
         return self.entity_description.value_fn(self.coordinator.data.status)

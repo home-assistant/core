@@ -130,7 +130,6 @@ async def setup_cloud_fixture(hass: HomeAssistant, cloud: MagicMock) -> None:
                 "relayer_server": "relayer",
                 "acme_server": "cert-server",
                 "api_server": "api-test.example.com",
-                "accounts_server": "api-test.hass.io",
                 "google_actions": {"filter": {"include_domains": "light"}},
                 "alexa": {
                     "filter": {"include_entities": ["light.kitchen", "switch.ac"]}

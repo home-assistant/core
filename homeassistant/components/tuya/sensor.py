@@ -39,6 +39,7 @@ from .const import (
 )
 from .entity import TuyaEntity
 from .models import (
+    DeviceWrapper,
     DPCodeEnumWrapper,
     DPCodeIntegerWrapper,
     DPCodeJsonWrapper,
@@ -76,9 +77,7 @@ class _WindDirectionWrapper(DPCodeTypeInformationWrapper[EnumTypeInformation]):
 
     def read_device_status(self, device: CustomerDevice) -> float | None:
         """Read the device value for the dpcode."""
-        if (
-            raw_value := self._read_device_status_raw(device)
-        ) in self.type_information.range:
+        if (raw_value := device.status.get(self.dpcode)) in self.type_information.range:
             return self._WIND_DIRECTIONS.get(raw_value)
         return None
 
@@ -90,9 +89,9 @@ class _JsonElectricityCurrentWrapper(DPCodeJsonWrapper):
 
     def read_device_status(self, device: CustomerDevice) -> float | None:
         """Read the device value for the dpcode."""
-        if (raw_value := super().read_json(device)) is None:
+        if (status := super().read_device_status(device)) is None:
             return None
-        return raw_value.get("electricCurrent")
+        return status.get("electricCurrent")
 
 
 class _JsonElectricityPowerWrapper(DPCodeJsonWrapper):
@@ -102,9 +101,9 @@ class _JsonElectricityPowerWrapper(DPCodeJsonWrapper):
 
     def read_device_status(self, device: CustomerDevice) -> float | None:
         """Read the device value for the dpcode."""
-        if (raw_value := super().read_json(device)) is None:
+        if (status := super().read_device_status(device)) is None:
             return None
-        return raw_value.get("power")
+        return status.get("power")
 
 
 class _JsonElectricityVoltageWrapper(DPCodeJsonWrapper):
@@ -114,9 +113,9 @@ class _JsonElectricityVoltageWrapper(DPCodeJsonWrapper):
 
     def read_device_status(self, device: CustomerDevice) -> float | None:
         """Read the device value for the dpcode."""
-        if (raw_value := super().read_json(device)) is None:
+        if (status := super().read_device_status(device)) is None:
             return None
-        return raw_value.get("voltage")
+        return status.get("voltage")
 
 
 class _RawElectricityDataWrapper(DPCodeRawWrapper):
@@ -1781,14 +1780,13 @@ class TuyaSensorEntity(TuyaEntity, SensorEntity):
     """Tuya Sensor Entity."""
 
     entity_description: TuyaSensorEntityDescription
-    _dpcode_wrapper: DPCodeWrapper
 
     def __init__(
         self,
         device: CustomerDevice,
         device_manager: Manager,
         description: TuyaSensorEntityDescription,
-        dpcode_wrapper: DPCodeWrapper,
+        dpcode_wrapper: DeviceWrapper[StateType],
     ) -> None:
         """Init Tuya sensor."""
         super().__init__(device, device_manager)
@@ -1851,3 +1849,13 @@ class TuyaSensorEntity(TuyaEntity, SensorEntity):
     def native_value(self) -> StateType:
         """Return the value reported by the sensor."""
         return self._read_wrapper(self._dpcode_wrapper)
+
+    async def _handle_state_update(
+        self,
+        updated_status_properties: list[str] | None,
+        dp_timestamps: dict | None = None,
+    ) -> None:
+        """Handle state update, only if this entity's dpcode was actually updated."""
+        if self._dpcode_wrapper.skip_update(self.device, updated_status_properties):
+            return
+        self.async_write_ha_state()

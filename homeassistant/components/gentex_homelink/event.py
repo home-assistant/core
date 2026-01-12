@@ -3,25 +3,24 @@
 from __future__ import annotations
 
 from homeassistant.components.event import EventDeviceClass, EventEntity
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import DOMAIN, EVENT_PRESSED
-from .coordinator import HomeLinkCoordinator, HomeLinkEventData
+from .coordinator import HomeLinkConfigEntry, HomeLinkCoordinator, HomeLinkEventData
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: HomeLinkConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Add the entities for the binary sensor."""
-    coordinator = config_entry.runtime_data.coordinator
+    """Add the entities for the event platform."""
+    coordinator = config_entry.runtime_data
 
     async_add_entities(
-        HomeLinkEventEntity(button.id, button.name, device.id, device.name, coordinator)
+        HomeLinkEventEntity(coordinator, button.id, button.name, device.id, device.name)
         for device in coordinator.device_data
         for button in device.buttons
     )
@@ -40,11 +39,11 @@ class HomeLinkEventEntity(EventEntity):
 
     def __init__(
         self,
+        coordinator: HomeLinkCoordinator,
         button_id: str,
         param_name: str,
         device_id: str,
         device_name: str,
-        coordinator: HomeLinkCoordinator,
     ) -> None:
         """Initialize the event entity."""
 
@@ -74,5 +73,4 @@ class HomeLinkEventEntity(EventEntity):
         if update_data["requestId"] != self.last_request_id:
             self._trigger_event(EVENT_PRESSED)
             self.last_request_id = update_data["requestId"]
-
-        self.async_write_ha_state()
+            self.async_write_ha_state()

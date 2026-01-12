@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_server_device_registry
+# name: test_device
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entries': <ANY>,
@@ -8,25 +8,25 @@
     'connections': set({
     }),
     'disabled_by': None,
-    'entry_type': <DeviceEntryType.SERVICE: 'service'>,
+    'entry_type': None,
     'hw_version': None,
     'id': <ANY>,
     'identifiers': set({
       tuple(
-        'openrgb',
-        '01J0EXAMPLE0CONFIGENTRY00',
+        'gentex_homelink',
+        'TestDevice',
       ),
     }),
     'labels': set({
     }),
-    'manufacturer': 'OpenRGB',
-    'model': 'OpenRGB SDK Server',
+    'manufacturer': None,
+    'model': None,
     'model_id': None,
-    'name': 'Test Computer',
+    'name': 'TestDevice',
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'sw_version': '4 (Protocol)',
+    'sw_version': None,
     'via_device_id': None,
   })
 # ---

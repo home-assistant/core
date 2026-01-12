@@ -1,11 +1,9 @@
-"""Makes requests to the state server and stores the resulting data so that the buttons can access it."""
+"""Establish MQTT connection and listen for event data."""
 
 from __future__ import annotations
 
 from collections.abc import Callable
-from dataclasses import dataclass
 from functools import partial
-import logging
 from typing import TypedDict
 
 from homelink.model.device import Device
@@ -15,19 +13,8 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.util.ssl import get_default_context
 
-_LOGGER = logging.getLogger(__name__)
-
-type HomeLinkConfigEntry = ConfigEntry[HomeLinkData]
+type HomeLinkConfigEntry = ConfigEntry[HomeLinkCoordinator]
 type EventCallback = Callable[[HomeLinkEventData], None]
-
-
-@dataclass
-class HomeLinkData:
-    """Class for HomeLink integration runtime data."""
-
-    provider: MQTTProvider
-    coordinator: HomeLinkCoordinator
-    last_update_id: str | None
 
 
 class HomeLinkEventData(TypedDict):
@@ -68,7 +55,7 @@ class HomeLinkCoordinator:
         self._listeners[target_event_id] = update_callback
         return partial(self.__async_remove_listener_internal, target_event_id)
 
-    def __async_remove_listener_internal(self, listener_id: str):
+    def __async_remove_listener_internal(self, listener_id: str) -> None:
         del self._listeners[listener_id]
 
     @callback
@@ -92,7 +79,7 @@ class HomeLinkCoordinator:
         await self.discover_devices()
         self.provider.listen(self.on_message)
 
-    async def discover_devices(self):
+    async def discover_devices(self) -> None:
         """Discover devices and build the Entities."""
         self.device_data = await self.provider.discover()
 
