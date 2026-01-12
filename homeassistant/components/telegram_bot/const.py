@@ -28,6 +28,7 @@ DEFAULT_TRUSTED_NETWORKS = [ip_network("149.154.160.0/20"), ip_network("91.108.4
 SERVICE_SEND_CHAT_ACTION = "send_chat_action"
 SERVICE_SEND_MESSAGE = "send_message"
 SERVICE_SEND_PHOTO = "send_photo"
+SERVICE_SEND_MEDIA_GROUP = "send_media_group"
 SERVICE_SEND_STICKER = "send_sticker"
 SERVICE_SEND_ANIMATION = "send_animation"
 SERVICE_SEND_VIDEO = "send_video"
