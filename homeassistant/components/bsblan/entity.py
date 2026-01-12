@@ -30,6 +30,7 @@ class BSBLanEntityBase[_T: BSBLanCoordinator](CoordinatorEntity[_T]):
             name=data.device.name,
             manufacturer="BSBLAN Inc.",
             model=data.info.device_identification.value,
+            model_id=f"{data.info.controller_family.value}_{data.info.controller_variant.value}",
             sw_version=data.device.version,
             configuration_url=f"http://{host}",
         )
