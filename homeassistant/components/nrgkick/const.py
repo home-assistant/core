@@ -23,7 +23,8 @@ DEFAULT_SCAN_INTERVAL: Final = 30
 
 # Human-readable status mapping for the status sensor.
 # Values are translation keys that match translations/<lang>.json
-STATUS_MAP: Final[dict[int, str]] = {
+STATUS_MAP: Final[dict[int, str | None]] = {
+    ChargingStatus.UNKNOWN: None,
     ChargingStatus.STANDBY: "standby",
     ChargingStatus.CONNECTED: "connected",
     ChargingStatus.CHARGING: "charging",
@@ -126,7 +127,8 @@ RELAY_STATE_MAP: Final[dict[int, str]] = {
 
 # Human-readable connector type mapping.
 # Values are translation keys that match translations/<lang>.json
-CONNECTOR_TYPE_MAP: Final[dict[int, str]] = {
+CONNECTOR_TYPE_MAP: Final[dict[int, str | None]] = {
+    ConnectorType.UNKNOWN: None,
     ConnectorType.CEE: "cee",
     ConnectorType.DOMESTIC: "domestic",
     ConnectorType.TYPE2: "type2",
@@ -137,7 +139,8 @@ CONNECTOR_TYPE_MAP: Final[dict[int, str]] = {
 
 # Human-readable grid phases mapping.
 # Values are translation keys that match translations/<lang>.json
-GRID_PHASES_MAP: Final[dict[int, str]] = {
+GRID_PHASES_MAP: Final[dict[int, str | None]] = {
+    GridPhases.UNKNOWN: None,
     GridPhases.L1: "l1",
     GridPhases.L2: "l2",
     GridPhases.L1_L2: "l1_l2",
@@ -150,7 +153,8 @@ GRID_PHASES_MAP: Final[dict[int, str]] = {
 
 # Human-readable cellular mode mapping.
 # Values are translation keys that match translations/<lang>.json
-CELLULAR_MODE_MAP: Final[dict[int, str]] = {
+CELLULAR_MODE_MAP: Final[dict[int, str | None]] = {
+    CellularMode.UNKNOWN: None,
     CellularMode.NO_SERVICE: "no_service",
     CellularMode.GSM: "gsm",
     CellularMode.LTE_CAT_M1: "lte_cat_m1",

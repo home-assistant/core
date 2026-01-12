@@ -75,7 +75,7 @@ class NRGkickSensorEntityDescription(SensorEntityDescription):
 
 def _map_code_to_translation_key(
     value: StateType,
-    mapping: Mapping[int, str],
+    mapping: Mapping[int, str | None],
 ) -> StateType:
     """Map numeric API codes to translation keys.
 
