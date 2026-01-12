@@ -23,35 +23,8 @@
   },
   "entity": {
     "sensor": {
-      "air_pressure": {
-        "name": "[%key:component::sensor::entity_component::atmospheric_pressure::name%]"
-      },
-      "co": {
-        "name": "[%key:component::sensor::entity_component::carbon_monoxide::name%]"
-      },
-      "co2": {
-        "name": "[%key:component::sensor::entity_component::carbon_dioxide::name%]"
-      },
-      "humidity": {
-        "name": "[%key:component::sensor::entity_component::humidity::name%]"
-      },
       "mold_index": {
         "name": "Mold index"
-      },
-      "no2": {
-        "name": "[%key:component::sensor::entity_component::nitrogen_dioxide::name%]"
-      },
-      "ozone": {
-        "name": "[%key:component::sensor::entity_component::ozone::name%]"
-      },
-      "pm25": {
-        "name": "[%key:component::sensor::entity_component::pm25::name%]"
-      },
-      "temperature": {
-        "name": "[%key:component::sensor::entity_component::temperature::name%]"
-      },
-      "tvoc": {
-        "name": "[%key:component::sensor::entity_component::volatile_organic_compounds::name%]"
       },
       "virus_index": {
         "name": "Virus index"

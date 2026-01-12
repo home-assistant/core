@@ -10,13 +10,7 @@ MOCK_CONFIG: dict = {CONF_API_KEY: "tes1232421232"}
 
 MOCK_DEVICE: dict[str, Any] = {
     "deviceName": "Office Room",
-    "macAddress": "239239fj29j23f",
     "serialNumber": "23f9239m92m3ffkkdkdd",
-    "floorNumber": 1,
-    "roomName": "Living Room",
-    "timezone": "(UTC+05:30) Chennai, Kolkata, Mumbai, New Delhi",
-    "utcOffset": "+05:30",
-    "ssid": "ssidsample",
 }
 
 MOCK_DEVICE_DATA = [
