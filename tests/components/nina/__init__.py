@@ -3,6 +3,7 @@
 from typing import Any
 from unittest.mock import patch
 
+from homeassistant.components.nina.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 
@@ -28,19 +29,19 @@ async def setup_platform(hass: HomeAssistant, config_entry: MockConfigEntry) -> 
 def mocked_request_function(url: str) -> dict[str, Any]:
     """Mock of the request function."""
     dummy_response: list[dict[str, Any]] = load_json_array_fixture(
-        "sample_warnings.json", "nina"
+        "sample_warnings.json", DOMAIN
     )
 
     dummy_response_details: dict[str, Any] = load_json_object_fixture(
-        "sample_warning_details.json", "nina"
+        "sample_warning_details.json", DOMAIN
     )
 
     dummy_response_regions: dict[str, Any] = load_json_object_fixture(
-        "sample_regions.json", "nina"
+        "sample_regions.json", DOMAIN
     )
 
     dummy_response_labels: dict[str, Any] = load_json_object_fixture(
-        "sample_labels.json", "nina"
+        "sample_labels.json", DOMAIN
     )
 
     if "https://warnung.bund.de/api31/dashboard/" in url:  # codespell:ignore bund
