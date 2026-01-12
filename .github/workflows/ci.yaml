@@ -657,9 +657,7 @@ jobs:
       - base
       - gen-requirements-all
       - hassfest
-      - lint-other
-      - lint-ruff
-      - lint-ruff-format
+      - prek
       - mypy
     steps:
       - *cache-restore-apt
@@ -698,9 +696,7 @@ jobs:
       - base
       - gen-requirements-all
       - hassfest
-      - lint-other
-      - lint-ruff
-      - lint-ruff-format
+      - prek
       - mypy
       - prepare-pytest-full
     if: |
@@ -824,9 +820,7 @@ jobs:
       - base
       - gen-requirements-all
       - hassfest
-      - lint-other
-      - lint-ruff
-      - lint-ruff-format
+      - prek
       - mypy
     if: |
       needs.info.outputs.lint_only != 'true'
@@ -941,9 +935,7 @@ jobs:
       - base
       - gen-requirements-all
       - hassfest
-      - lint-other
-      - lint-ruff
-      - lint-ruff-format
+      - prek
       - mypy
     if: |
       needs.info.outputs.lint_only != 'true'
@@ -1077,9 +1069,7 @@ jobs:
       - base
       - gen-requirements-all
       - hassfest
-      - lint-other
-      - lint-ruff
-      - lint-ruff-format
+      - prek
       - mypy
     if: |
       needs.info.outputs.lint_only != 'true'
