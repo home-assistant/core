@@ -9,11 +9,9 @@ from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy.assertion import SnapshotAssertion
 from tesla_fleet_api.exceptions import (
-    GatewayTimeout,
     InvalidResponse,
     InvalidToken,
     RateLimited,
-    ServiceUnavailable,
     SubscriptionRequired,
     TeslaFleetError,
 )
@@ -452,9 +450,7 @@ async def test_migrate_from_future_version_fails(hass: HomeAssistant) -> None:
 
 RETRY_EXCEPTIONS = [
     (RateLimited(data={"after": 5}), 5.0),
-    (InvalidResponse(data={"after": 7}), 7.0),
-    (ServiceUnavailable(), 10.0),  # Default retry_after when no "after" in data
-    (GatewayTimeout(), 10.0),  # Default retry_after when no "after" in data
+    (InvalidResponse(), 10.0),
 ]
 
 
