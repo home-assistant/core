@@ -15,8 +15,8 @@
     "step": {
       "user": {
         "data": {
-          "api_key": "API Key",
-          "host": "Server IP or Hostname",
+          "api_key": "[%key:common::config_flow::data::api_key%]",
+          "host": "[%key:common::config_flow::data::host%]",
           "http_port": "HTTP Port",
           "https_port": "HTTPS Port"
         },
