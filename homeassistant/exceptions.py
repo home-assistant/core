@@ -218,6 +218,10 @@ class ConfigEntryAuthFailed(IntegrationError):
     """Error to indicate that config entry could not authenticate."""
 
 
+class ConfigEntryRefreshTokenFailed(IntegrationError):
+    """Error to indicate that config entry could not refresh token."""
+
+
 class InvalidStateError(HomeAssistantError):
     """When an invalid state is encountered."""
 
