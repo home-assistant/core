@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from homeassistant.const import Platform
+from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
@@ -17,9 +17,9 @@ PLATFORMS: list[Platform] = [
 async def async_setup_entry(hass: HomeAssistant, entry: NRGkickConfigEntry) -> bool:
     """Set up NRGkick from a config entry."""
     api = NRGkickAPI(
-        host=entry.data["host"],
-        username=entry.data.get("username"),
-        password=entry.data.get("password"),
+        host=entry.data[CONF_HOST],
+        username=entry.data.get(CONF_USERNAME),
+        password=entry.data.get(CONF_PASSWORD),
         session=async_get_clientsession(hass),
     )
 
