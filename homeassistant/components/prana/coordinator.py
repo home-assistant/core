@@ -45,7 +45,6 @@ class PranaCoordinator(DataUpdateCoordinator[PranaState]):
             config_entry=entry,
         )
 
-        self.max_speed: int | None = None
         self.api_client = PranaLocalApiClient(host=entry.data[CONF_HOST], port=80)
 
     async def _async_setup(self) -> None:

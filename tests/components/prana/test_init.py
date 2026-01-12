@@ -1,7 +1,6 @@
 """Tests for Prana integration entry points (async_setup_entry / async_unload_entry)."""
 
 from homeassistant.components.prana.const import DOMAIN
-from homeassistant.components.prana.coordinator import PranaCoordinator
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
@@ -18,7 +17,6 @@ async def test_async_setup_entry_and_unload_entry(
 
     await async_init_integration(hass, mock_config_entry)
 
-    assert isinstance(mock_config_entry.runtime_data, PranaCoordinator)
     assert mock_config_entry.state is ConfigEntryState.LOADED
 
     await hass.config_entries.async_unload(mock_config_entry.entry_id)
@@ -47,4 +45,4 @@ async def test_device_info_registered(
     for item in ("created_at", "modified_at", "id"):
         snapshot_dict.pop(item, None)
 
-    snapshot.assert_match(snapshot_dict)
+    assert snapshot == snapshot_dict

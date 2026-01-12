@@ -17,15 +17,9 @@ _LOGGER = logging.getLogger(__name__)
 # Keep platforms sorted alphabetically to satisfy lint rule
 PLATFORMS = [Platform.SWITCH]
 
-# Provide a typed ConfigEntry
-
 
 async def async_setup_entry(hass: HomeAssistant, entry: PranaConfigEntry) -> bool:
-    """Set up Prana from a config entry.
-
-    Creates and refreshes the coordinator, stores it in runtime_data and forwards
-    platform setups.
-    """
+    """Set up Prana from a config entry."""
 
     coordinator = PranaCoordinator(hass, entry)
     await coordinator.async_config_entry_first_refresh()

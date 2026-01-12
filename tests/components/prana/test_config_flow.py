@@ -4,7 +4,6 @@ from prana_local_api_client.exceptions import (
     PranaApiCommunicationError as PranaCommunicationError,
 )
 
-from homeassistant.components.prana.config_flow import SERVICE_TYPE
 from homeassistant.components.prana.const import DOMAIN
 from homeassistant.config_entries import SOURCE_ZEROCONF
 from homeassistant.const import CONF_HOST
@@ -12,23 +11,24 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
+ZEROCONF_INFO = ZeroconfServiceInfo(
+    ip_address="192.168.1.30",
+    ip_addresses=["192.168.1.30"],
+    hostname="prana.local",
+    name="TestNew._prana._tcp.local.",
+    type="_prana._tcp.local.",
+    port=1234,
+    properties={},
+)
+
 
 async def test_zeroconf_new_device_and_confirm(
     hass: HomeAssistant, mock_prana_api
 ) -> None:
     """Zeroconf discovery shows confirm form and creates a config entry."""
-    info = ZeroconfServiceInfo(
-        ip_address="192.168.1.30",
-        ip_addresses=["192.168.1.30"],
-        hostname="prana.local",
-        name="TestNew._prana._tcp.local.",
-        type=SERVICE_TYPE,
-        port=1234,
-        properties={},
-    )
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_ZEROCONF}, data=info
+        DOMAIN, context={"source": SOURCE_ZEROCONF}, data=ZEROCONF_INFO
     )
 
     device_info = await mock_prana_api.get_device_info()
@@ -123,3 +123,28 @@ async def test_configure_two_entries_same_device(
     )
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
+
+
+async def test_zeroconf_already_configured(hass: HomeAssistant, mock_prana_api) -> None:
+    """Zeroconf discovery of an already configured device should be aborted."""
+    await test_zeroconf_new_device_and_confirm(hass, mock_prana_api)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_ZEROCONF}, data=ZEROCONF_INFO
+    )
+    await mock_prana_api.get_device_info()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+
+
+async def test_zeroconf_invalid_device(hass: HomeAssistant, mock_prana_api) -> None:
+    """Zeroconf discovery of an invalid device should be aborted."""
+    mock_prana_api.get_device_info.side_effect = PranaCommunicationError(
+        "Network error"
+    )
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_ZEROCONF}, data=ZEROCONF_INFO
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "invalid_device_or_unreachable"

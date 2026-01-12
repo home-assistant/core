@@ -46,8 +46,5 @@ class PranaBaseEntity(CoordinatorEntity[PranaCoordinator]):
             serial_number=self.coordinator.device_info.manufactureId,
             sw_version=str(self.coordinator.device_info.fwVersion),
         )
-
-        self._entry = coordinator.config_entry
-        self._attr_unique_id = f"{self._entry.entry_id}_{description.key}"
-
+        self._attr_unique_id = f"{coordinator.config_entry.entry_id}_{description.key}"
         self.entity_description = description

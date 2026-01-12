@@ -17,9 +17,13 @@ from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 from .const import DOMAIN
 
-SERVICE_TYPE = "_prana._tcp.local."
-
 _LOGGER = logging.getLogger(__name__)
+
+USER_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_HOST): str,
+    }
+)
 
 
 class PranaConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -48,33 +52,6 @@ class PranaConfigFlow(ConfigFlow, domain=DOMAIN):
         self._set_confirm_only()
         return await self.async_step_confirm()
 
-    async def async_step_user(
-        self,
-        user_input: dict[str, Any] | None = None,
-        errors: dict[str, str] | None = None,
-    ) -> ConfigFlowResult:
-        """Manual entry by IP address."""
-        if user_input is not None:
-            self._host = user_input[CONF_HOST]
-            try:
-                self._device_info = await self._validate_device()
-            except ValueError:
-                return self.async_abort(reason="invalid_device")
-            except PranaApiCommunicationError:
-                return self.async_show_form(
-                    step_id="user",
-                    data_schema=vol.Schema({vol.Required(CONF_HOST): str}),
-                    errors={CONF_BASE: "invalid_device_or_unreachable"},
-                )
-            if not errors:
-                return self.async_create_entry(
-                    title=self._device_info.label,
-                    data={CONF_HOST: self._host},
-                )
-
-        schema = vol.Schema({vol.Required(CONF_HOST): str})
-        return self.async_show_form(step_id="user", data_schema=schema, errors=errors)
-
     async def async_step_confirm(self, user_input=None) -> ConfigFlowResult:
         """Handle the user confirming a discovered Prana device."""
         if user_input is not None:
@@ -88,6 +65,30 @@ class PranaConfigFlow(ConfigFlow, domain=DOMAIN):
                 "name": self._device_info.label,
                 "host": self._host,
             },
+        )
+
+    async def async_step_user(
+        self,
+        user_input: dict[str, Any] | None = None,
+    ) -> ConfigFlowResult:
+        """Manual entry by IP address."""
+        errors: dict[str, str] = {}
+
+        if user_input is not None:
+            self._host = user_input[CONF_HOST]
+            try:
+                self._device_info = await self._validate_device()
+            except ValueError:
+                return self.async_abort(reason="invalid_device")
+            except PranaApiCommunicationError:
+                errors = {CONF_BASE: "invalid_device_or_unreachable"}
+            if not errors:
+                return self.async_create_entry(
+                    title=self._device_info.label,
+                    data={CONF_HOST: self._host},
+                )
+        return self.async_show_form(
+            step_id="user", data_schema=USER_SCHEMA, errors=errors
         )
 
     async def _validate_device(self) -> PranaDeviceInfo:
