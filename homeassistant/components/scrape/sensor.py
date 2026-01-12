@@ -142,6 +142,8 @@ async def async_setup_entry(
 class ScrapeSensor(CoordinatorEntity[ScrapeCoordinator], ManualTriggerSensorEntity):
     """Representation of a web scrape sensor."""
 
+    _sensor_name: str | None = None
+
     def __init__(
         self,
         hass: HomeAssistant,
@@ -162,14 +164,21 @@ class ScrapeSensor(CoordinatorEntity[ScrapeCoordinator], ManualTriggerSensorEnti
         self._value_template = value_template
         self._attr_native_value = None
         if not yaml and (unique_id := trigger_entity_config.get(CONF_UNIQUE_ID)):
-            self._attr_name = None
+            self._sensor_name = None
             self._attr_has_entity_name = True
             self._attr_device_info = DeviceInfo(
                 entry_type=DeviceEntryType.SERVICE,
                 identifiers={(DOMAIN, unique_id)},
                 manufacturer="Scrape",
-                name=self.name,
+                name=self._rendered[CONF_NAME],
             )
+        else:
+            self._sensor_name = self._rendered.get(CONF_NAME)
+
+    @property
+    def name(self) -> str | None:
+        """Return the name of the sensor."""
+        return self._sensor_name
 
     def _extract_value(self) -> Any:
         """Parse the html extraction in the executor."""
