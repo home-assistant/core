@@ -143,15 +143,16 @@ async def async_setup_entry(
 class CityBikesNetworks:
     """Represent all CityBikes networks."""
 
-    def __init__(self, hass: HomeAssistant) -> None:
+    def __init__(
+        self, hass: HomeAssistant, client: CitybikesClient | None = None
+    ) -> None:
         """Initialize the networks instance."""
         self.hass = hass
-        self.client = hass.data[PLATFORM][DATA_CLIENT]
-        self.networks = None
+        self.client = client or hass.data[PLATFORM][DATA_CLIENT]
+        self.networks: list[CitybikesNetworkModel] | None = None
         self.networks_loading = asyncio.Condition()
-        self.session: aiohttp.ClientSession | None = None
 
-    async def load_networks(self, session: aiohttp.ClientSession | None = None):
+    async def load_networks(self):
         """Load the list of networks from the CityBikes API."""
         try:
             await self.networks_loading.acquire()
@@ -193,13 +194,18 @@ class CityBikesNetworks:
 class CityBikesNetwork:
     """Thin wrapper around a CityBikes network object."""
 
-    def __init__(self, hass: HomeAssistant, network_id: str) -> None:
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        network_id: str,
+        client: CitybikesClient | None = None,
+    ) -> None:
         """Initialize the network object."""
         self.hass = hass
         self.network_id = network_id
         self.stations: list[CitybikesStationModel] = []
         self.ready = asyncio.Event()
-        self.client: CitybikesClient = hass.data[PLATFORM][DATA_CLIENT]
+        self.client: CitybikesClient = client or hass.data[PLATFORM][DATA_CLIENT]
 
     async def async_refresh(self, now=None) -> None:
         """Refresh the state of the network."""

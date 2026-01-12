@@ -3,10 +3,11 @@
 import logging
 from typing import Any
 
+from citybikes.asyncio import Client as CitybikesClient
 import voluptuous as vol
 
-from homeassistant import config_entries
-from homeassistant.const import ATTR_ID, ATTR_NAME, CONF_LOCATION
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
+from homeassistant.const import CONF_LOCATION
 from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -28,38 +29,33 @@ from .const import (
     CONF_STATIONS_LIST,
     DOMAIN,
 )
-from .sensor import CityBikesNetwork, CityBikesNetworks
+from .sensor import HA_USER_AGENT, REQUEST_TIMEOUT, CityBikesNetwork, CityBikesNetworks
 
 _LOGGER = logging.getLogger(__name__)
 
 
-class CityBikesConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class CityBikesConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for CityBikes."""
-
-    # The schema version of the entries that it creates
-    # Home Assistant will call your migrate method if the version changes
-    VERSION = 1
-    MINOR_VERSION = 0
 
     def __init__(self) -> None:
         """Initialize the config flow."""
-        self.city_bike_networks: CityBikesNetworks = CityBikesNetworks(self.hass)
-        self._data = {
-            CONF_NAME: None,
-            CONF_NETWORK: None,
-            CONF_STATION_FILTER: None,
-            CONF_STATIONS_LIST: None,
-            CONF_LOCATION: None,
-        }
+        self.city_bike_networks: CityBikesNetworks = CityBikesNetworks(
+            self.hass,
+            # TODO: python-citybikes client will create a client session here. This is an issue that needs to be fixed
+            client=CitybikesClient(user_agent=HA_USER_AGENT, timeout=REQUEST_TIMEOUT),
+        )
+        self._data: dict[str, Any] = {}
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> config_entries.ConfigFlowResult:
+    ) -> ConfigFlowResult:
         """Handle a flow initiated by the user."""
 
         errors: dict[str, str] = {}
+
+        # TODO: python-citybikes client doesn't let us inject a session yet
         websession = async_get_clientsession(self.hass)
-        self.city_bike_networks.session = websession
+        self.city_bike_networks.client.session = websession
 
         if user_input is not None:
             self._data.update(user_input)
@@ -103,8 +99,8 @@ class CityBikesConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 SelectSelectorConfig(
                     options=[
                         SelectOptionDict(
-                            value=n[ATTR_ID],
-                            label=f"{n.get(ATTR_NAME, n[ATTR_ID])} ({n.get('location', {}).get('city', 'unknown city')}, {n.get('location', {}).get('country', 'unknown country')})",
+                            value=n.id,
+                            label=f"{(n.name or n.id)} ({n.location.city or 'unknown city'}, {n.location.country or 'unknown country'})",
                         )
                         for n in self.city_bike_networks.networks
                     ],
@@ -136,7 +132,7 @@ class CityBikesConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_stations(
         self, user_input: dict[str, Any] | None = None
-    ) -> config_entries.ConfigFlowResult:
+    ) -> ConfigFlowResult:
         """Handle an explicit list of stations flow."""
 
         network_id = self._data[CONF_NETWORK]
@@ -173,9 +169,7 @@ class CityBikesConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             vol.Required(CONF_STATIONS_LIST, default=[]): SelectSelector(
                 SelectSelectorConfig(
                     options=[
-                        SelectOptionDict(
-                            value=s[ATTR_ID], label=s.get("name", s[ATTR_ID])
-                        )
+                        SelectOptionDict(value=s.id, label=(s.name or s.id))
                         for s in network.stations
                     ],
                     multiple=True,
@@ -190,7 +184,7 @@ class CityBikesConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_radius(
         self, user_input: dict[str, Any] | None = None
-    ) -> config_entries.ConfigFlowResult:
+    ) -> ConfigFlowResult:
         """Handle a stations near me flow."""
 
         if user_input is not None:
@@ -221,17 +215,17 @@ class CityBikesConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     # async def async_step_import(
     #     self, import_config: dict[str, Any]
-    # ) -> config_entries.ConfigFlowResult:
+    # ) -> ConfigFlowResult:
     #     """Handle import from YAML."""
     #     pass
 
-    async def async_create(self) -> config_entries.ConfigFlowResult:
+    async def async_create(self) -> ConfigFlowResult:
         """Create the CityBikes entry entry."""
         title = self._data.get(CONF_NAME)
         if title == "" or title is None:
             title = self._data[CONF_NETWORK]
-            if title is None:
-                return self.async_abort(reason="need_name")
+        if title is None:
+            return self.async_abort(reason="need_name")
         network = self._data.get(CONF_LOCATION, {})
         if network is None:
             network = {}
