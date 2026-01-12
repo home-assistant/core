@@ -1,16 +1,24 @@
 """Tonewinner AT-500 media player."""
 
 import asyncio
+import logging
 
-import serial_asyncio
+import serial
+import serial_asyncio_fast
 import voluptuous as vol
 
-from homeassistant.components.media_player import MediaPlayerEntity
+from homeassistant.components.media_player import (
+    MediaPlayerDeviceClass,
+    MediaPlayerEntity,
+)
+from homeassistant.components.media_player.const import MediaPlayerEntityFeature
 from homeassistant.core import ServiceCall
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import DeviceInfo
 
 from .const import CONF_BAUD_RATE, CONF_SERIAL_PORT, DOMAIN
+
+_LOGGER = logging.getLogger(__name__)
 
 # Service registration schema
 SERVICE_SEND_RAW = "send_raw"
@@ -19,6 +27,14 @@ SERVICE_SEND_RAW_SCHEMA = vol.Schema(
         vol.Required("command"): cv.string,
     }
 )
+
+SERIAL_CONFIG = {
+    "baudrate": 9600,
+    "bytesize": serial.SEVENBITS,  # istrip: 7-bit data
+    "parity": serial.PARITY_NONE,  # -parenb: no parity
+    "stopbits": serial.STOPBITS_ONE,  # -cstopb: 1 stop bit
+    "timeout": 1.0,
+}
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
@@ -59,13 +75,31 @@ class TonewinnerProtocol(asyncio.Protocol):
     def data_received(self, data):
         """Data received."""
         self.buffer += data
-        # Simple line-based parsing (adjust terminator as needed)
-        if b"\r" in self.buffer:
-            lines = self.buffer.split(b"\r")
-            self.buffer = lines[-1]
-            for line in lines[:-1]:
-                if line:
-                    self.entity.handle_response(line.decode("ascii", errors="ignore"))
+
+        # Parse ToneWinner protocol: messages start with '#' and end with '*'
+        # with no newlines. Messages may arrive in multiple chunks.
+        while True:
+            # Find start of next message
+            start_idx = self.buffer.find(b"#")
+            if start_idx == -1:
+                # No start marker in buffer, clear it
+                self.buffer = b""
+                break
+
+            # Find end of message
+            end_idx = self.buffer.find(b"*", start_idx)
+            if end_idx == -1:
+                # Incomplete message (no end marker), keep data from '#'
+                self.buffer = self.buffer[start_idx:]
+                break
+
+            # Extract message content (between # and *)
+            message = self.buffer[start_idx + 1 : end_idx]
+            if message:
+                self.entity.handle_response(message.decode("ascii", errors="ignore"))
+
+            # Remove processed message from buffer
+            self.buffer = self.buffer[end_idx + 1 :]
 
     def connection_lost(self, exc):
         """Connection lost."""
@@ -74,6 +108,24 @@ class TonewinnerProtocol(asyncio.Protocol):
 
 class TonewinnerMediaPlayer(MediaPlayerEntity):
     """Tonewinner AT-500 media player."""
+
+    _transport: None | serial_asyncio_fast.SerialTransport
+    _protocol: None | asyncio.Protocol
+
+    _attr_device_class = MediaPlayerDeviceClass.RECEIVER
+    _attr_supported_features = (
+        MediaPlayerEntityFeature.VOLUME_MUTE
+        | MediaPlayerEntityFeature.VOLUME_SET
+        | MediaPlayerEntityFeature.TURN_ON
+        | MediaPlayerEntityFeature.TURN_OFF
+        | MediaPlayerEntityFeature.VOLUME_STEP
+        | MediaPlayerEntityFeature.SELECT_SOURCE
+        | MediaPlayerEntityFeature.SELECT_SOUND_MODE
+    )
+    _attr_has_entity_name = True
+    _attr_name = None
+
+    _available = False
 
     def __init__(self, hass, entry, data):
         self.hass = hass
@@ -98,16 +150,21 @@ class TonewinnerMediaPlayer(MediaPlayerEntity):
         """Establish serial connection."""
         try:
             loop = asyncio.get_event_loop()
-            coro = serial_asyncio.create_serial_connection(
+            connection = serial_asyncio_fast.create_serial_connection(
                 loop,
                 lambda: TonewinnerProtocol(self),
                 self.port,
-                self.baud,
+                baudrate=self.baud,
+                bytesize=serial.SEVENBITS,
+                parity=serial.PARITY_NONE,
+                stopbits=serial.STOPBITS_ONE,
                 timeout=1,
             )
-            self._transport, self._protocol = await asyncio.wait_for(coro, timeout=5)
+            self._transport, self._protocol = await asyncio.wait_for(
+                connection, timeout=5
+            )
         except Exception as ex:
-            self.hass.logger.error(f"Connection failed: {ex}")
+            _LOGGER.error("Connection failed: %s", ex)
             self._available = False
 
     def set_available(self, available: bool):
@@ -117,7 +174,7 @@ class TonewinnerMediaPlayer(MediaPlayerEntity):
 
     def handle_response(self, response: str):
         """Parse incoming data."""
-        self.hass.logger.debug(f"RX: {response}")
+        _LOGGER.debug(f"RX: {response}")
         # TODO: Update self._attr_state, volume, source based on response
 
     async def send_raw_command(self, command: str):
