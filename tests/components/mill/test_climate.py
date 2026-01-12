@@ -152,7 +152,9 @@ async def functional_cloud_heater(
 ) -> Heater:
     """Make sure the cloud heater is "functional".
 
-    This will create a pseudo-functional cloud heater, meaning that function calls will edit the original cloud heater in a similar way that the API would.
+    This will create a pseudo-functional cloud heater,
+    meaning that function calls will edit the original cloud heater
+    in a similar way that the API would.
     """
 
     def calculate_heating():
@@ -190,7 +192,8 @@ async def functional_cloud_heater(
 async def local_heater(hass: HomeAssistant, mock_mill_local: MagicMock) -> dict:
     """Local Mill Heater.
 
-    This returns a by-reference status dict with which this heater's information is organised and updated.
+    This returns a by-reference status dict
+    with which this heater's information is organised and updated.
     """
     config_entry = MockConfigEntry(
         domain=DOMAIN,
@@ -244,7 +247,9 @@ async def functional_local_heater(
 ) -> None:
     """Make sure the local heater is "functional".
 
-    This will create a pseudo-functional local heater, meaning that function calls will edit the original local heater in a similar way that the API would.
+    This will create a pseudo-functional local heater,
+    meaning that function calls will edit the original local heater
+    in a similar way that the API would.
     """
 
     def set_temperature(target_temperature: float):
