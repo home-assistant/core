@@ -177,8 +177,8 @@ class ConditionStateDescription(TypedDict):
 
     included: _StateDescription
     excluded: _StateDescription
-    count: int
-    valid: bool
+    condition_true: bool
+    state_valid: bool
 
 
 def parametrize_condition_states(
@@ -202,7 +202,9 @@ def parametrize_condition_states(
     condition_options = condition_options or {}
 
     def state_with_attributes(
-        state: str | None | tuple[str | None, dict], count: int, valid: bool
+        state: str | None | tuple[str | None, dict],
+        condition_true: bool,
+        state_valid: bool,
     ) -> ConditionStateDescription:
         """Return (state, attributes) dict."""
         if isinstance(state, str) or state is None:
@@ -215,8 +217,8 @@ def parametrize_condition_states(
                     "state": state,
                     "attributes": {},
                 },
-                "count": count,
-                "valid": valid,
+                "condition_true": condition_true,
+                "state_valid": state_valid,
             }
         return {
             "included": {
@@ -227,8 +229,8 @@ def parametrize_condition_states(
                 "state": state[0],
                 "attributes": state[1],
             },
-            "count": count,
-            "valid": valid,
+            "condition_true": condition_true,
+            "state_valid": state_valid,
         }
 
     return [
@@ -237,15 +239,15 @@ def parametrize_condition_states(
             condition_options,
             list(
                 itertools.chain(
-                    (state_with_attributes(None, 0, False),),
-                    (state_with_attributes(STATE_UNAVAILABLE, 0, False),),
-                    (state_with_attributes(STATE_UNKNOWN, 0, False),),
+                    (state_with_attributes(None, False, False),),
+                    (state_with_attributes(STATE_UNAVAILABLE, False, False),),
+                    (state_with_attributes(STATE_UNKNOWN, False, False),),
                     (
-                        state_with_attributes(other_state, 0, True)
+                        state_with_attributes(other_state, False, True)
                         for other_state in other_states
                     ),
                     (
-                        state_with_attributes(target_state, 1, True)
+                        state_with_attributes(target_state, True, True)
                         for target_state in target_states
                     ),
                 )
