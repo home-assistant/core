@@ -4904,7 +4904,7 @@
     'state': '100',
   })
 # ---
-# name: test_sensors[eve_thermo][sensor.eve_thermo_battery-entry]
+# name: test_sensors[eve_thermo_v4][sensor.eve_thermo_20ebp1701_battery-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -4919,7 +4919,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.eve_thermo_battery',
+    'entity_id': 'sensor.eve_thermo_20ebp1701_battery',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -4941,23 +4941,23 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_sensors[eve_thermo][sensor.eve_thermo_battery-state]
+# name: test_sensors[eve_thermo_v4][sensor.eve_thermo_20ebp1701_battery-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'battery',
-      'friendly_name': 'Eve Thermo Battery',
+      'friendly_name': 'Eve Thermo 20EBP1701 Battery',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': '%',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.eve_thermo_battery',
+    'entity_id': 'sensor.eve_thermo_20ebp1701_battery',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '100',
   })
 # ---
-# name: test_sensors[eve_thermo][sensor.eve_thermo_battery_voltage-entry]
+# name: test_sensors[eve_thermo_v4][sensor.eve_thermo_20ebp1701_battery_voltage-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -4972,7 +4972,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.eve_thermo_battery_voltage',
+    'entity_id': 'sensor.eve_thermo_20ebp1701_battery_voltage',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -5000,23 +5000,23 @@
     'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
   })
 # ---
-# name: test_sensors[eve_thermo][sensor.eve_thermo_battery_voltage-state]
+# name: test_sensors[eve_thermo_v4][sensor.eve_thermo_20ebp1701_battery_voltage-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'voltage',
-      'friendly_name': 'Eve Thermo Battery voltage',
+      'friendly_name': 'Eve Thermo 20EBP1701 Battery voltage',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.eve_thermo_battery_voltage',
+    'entity_id': 'sensor.eve_thermo_20ebp1701_battery_voltage',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '3.05',
   })
 # ---
-# name: test_sensors[eve_thermo][sensor.eve_thermo_temperature-entry]
+# name: test_sensors[eve_thermo_v4][sensor.eve_thermo_20ebp1701_temperature-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -5031,7 +5031,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.eve_thermo_temperature',
+    'entity_id': 'sensor.eve_thermo_20ebp1701_temperature',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -5056,23 +5056,23 @@
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_sensors[eve_thermo][sensor.eve_thermo_temperature-state]
+# name: test_sensors[eve_thermo_v4][sensor.eve_thermo_20ebp1701_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
-      'friendly_name': 'Eve Thermo Temperature',
+      'friendly_name': 'Eve Thermo 20EBP1701 Temperature',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.eve_thermo_temperature',
+    'entity_id': 'sensor.eve_thermo_20ebp1701_temperature',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '21.0',
   })
 # ---
-# name: test_sensors[eve_thermo][sensor.eve_thermo_valve_position-entry]
+# name: test_sensors[eve_thermo_v4][sensor.eve_thermo_20ebp1701_valve_position-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -5085,7 +5085,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.eve_thermo_valve_position',
+    'entity_id': 'sensor.eve_thermo_20ebp1701_valve_position',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -5107,14 +5107,14 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_sensors[eve_thermo][sensor.eve_thermo_valve_position-state]
+# name: test_sensors[eve_thermo_v4][sensor.eve_thermo_20ebp1701_valve_position-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Eve Thermo Valve position',
+      'friendly_name': 'Eve Thermo 20EBP1701 Valve position',
       'unit_of_measurement': '%',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.eve_thermo_valve_position',
+    'entity_id': 'sensor.eve_thermo_20ebp1701_valve_position',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

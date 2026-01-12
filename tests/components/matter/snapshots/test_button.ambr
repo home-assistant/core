@@ -1418,7 +1418,7 @@
     'state': 'unknown',
   })
 # ---
-# name: test_buttons[eve_thermo][button.eve_thermo_identify-entry]
+# name: test_buttons[eve_thermo_v4][button.eve_thermo_20ebp1701_identify-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1431,7 +1431,7 @@
     'disabled_by': None,
     'domain': 'button',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'button.eve_thermo_identify',
+    'entity_id': 'button.eve_thermo_20ebp1701_identify',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1453,14 +1453,14 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_buttons[eve_thermo][button.eve_thermo_identify-state]
+# name: test_buttons[eve_thermo_v4][button.eve_thermo_20ebp1701_identify-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'identify',
-      'friendly_name': 'Eve Thermo Identify',
+      'friendly_name': 'Eve Thermo 20EBP1701 Identify',
     }),
     'context': <ANY>,
-    'entity_id': 'button.eve_thermo_identify',
+    'entity_id': 'button.eve_thermo_20ebp1701_identify',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
