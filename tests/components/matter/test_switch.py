@@ -141,7 +141,7 @@ async def test_numeric_switch(
     await hass.services.async_call(
         "switch",
         "turn_on",
-        {"entity_id": "switch.eve_thermo_child_lock"},
+        {"entity_id": "switch.eve_thermo_20ebp1701_child_lock"},
         blocking=True,
     )
     assert matter_client.write_attribute.call_count == 1
@@ -156,7 +156,7 @@ async def test_numeric_switch(
     await hass.services.async_call(
         "switch",
         "turn_off",
-        {"entity_id": "switch.eve_thermo_child_lock"},
+        {"entity_id": "switch.eve_thermo_20ebp1701_child_lock"},
         blocking=True,
     )
     assert matter_client.write_attribute.call_count == 2
