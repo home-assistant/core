@@ -28,6 +28,7 @@ from homeassistant.helpers.event import async_track_time_interval
 
 from .const import (
     AUTH,
+    CAMERA_CONNECTION_WEBHOOKS,
     DATA_PERSONS,
     DATA_SCHEDULES,
     DOMAIN,
@@ -44,11 +45,11 @@ from .const import (
     NETATMO_CREATE_SELECT,
     NETATMO_CREATE_SENSOR,
     NETATMO_CREATE_SWITCH,
+    NETATMO_CREATE_WEATHER_BINARY_SENSOR,
     NETATMO_CREATE_WEATHER_SENSOR,
     PLATFORMS,
     WEBHOOK_ACTIVATION,
     WEBHOOK_DEACTIVATION,
-    WEBHOOK_NACAMERA_CONNECTION,
     WEBHOOK_PUSH_TYPE,
 )
 
@@ -223,7 +224,7 @@ class NetatmoDataHandler:
             _LOGGER.debug("%s webhook unregistered", MANUFACTURER)
             self._webhook = False
 
-        elif event["data"][WEBHOOK_PUSH_TYPE] == WEBHOOK_NACAMERA_CONNECTION:
+        elif event["data"][WEBHOOK_PUSH_TYPE] in CAMERA_CONNECTION_WEBHOOKS:
             _LOGGER.debug("%s camera reconnected", MANUFACTURER)
             self.async_force_update(ACCOUNT)
 
@@ -332,16 +333,20 @@ class NetatmoDataHandler:
         """Set up home coach/air care modules."""
         for module in self.account.modules.values():
             if module.device_category is NetatmoDeviceCategory.air_care:
-                async_dispatcher_send(
-                    self.hass,
+                for signal in (
+                    NETATMO_CREATE_WEATHER_BINARY_SENSOR,
                     NETATMO_CREATE_WEATHER_SENSOR,
-                    NetatmoDevice(
-                        self,
-                        module,
-                        AIR_CARE,
-                        AIR_CARE,
-                    ),
-                )
+                ):
+                    async_dispatcher_send(
+                        self.hass,
+                        signal,
+                        NetatmoDevice(
+                            self,
+                            module,
+                            AIR_CARE,
+                            AIR_CARE,
+                        ),
+                    )
 
     def setup_modules(self, home: pyatmo.Home, signal_home: str) -> None:
         """Set up modules."""
@@ -379,16 +384,20 @@ class NetatmoDataHandler:
                     ),
                 )
             if module.device_category is NetatmoDeviceCategory.weather:
-                async_dispatcher_send(
-                    self.hass,
+                for signal in (
+                    NETATMO_CREATE_WEATHER_BINARY_SENSOR,
                     NETATMO_CREATE_WEATHER_SENSOR,
-                    NetatmoDevice(
-                        self,
-                        module,
-                        home.entity_id,
-                        WEATHER,
-                    ),
-                )
+                ):
+                    async_dispatcher_send(
+                        self.hass,
+                        signal,
+                        NetatmoDevice(
+                            self,
+                            module,
+                            home.entity_id,
+                            WEATHER,
+                        ),
+                    )
 
     def setup_rooms(self, home: pyatmo.Home, signal_home: str) -> None:
         """Set up rooms."""

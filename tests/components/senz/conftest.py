@@ -3,9 +3,9 @@
 from collections.abc import Generator
 import time
 from typing import Any
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock, Mock, patch
 
-from aiosenz import Account, Thermostat
+from pysenz import Account, Thermostat
 import pytest
 
 from homeassistant.components.application_credentials import (
@@ -14,9 +14,10 @@ from homeassistant.components.application_credentials import (
 )
 from homeassistant.components.senz.const import DOMAIN
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import config_entry_oauth2_flow
 from homeassistant.setup import async_setup_component
 
-from .const import CLIENT_ID, CLIENT_SECRET
+from .const import CLIENT_ID, CLIENT_SECRET, ENTRY_UNIQUE_ID
 
 from tests.common import (
     MockConfigEntry,
@@ -63,7 +64,7 @@ def mock_expires_at() -> float:
 def mock_config_entry(hass: HomeAssistant, expires_at: float) -> MockConfigEntry:
     """Return the default mocked config entry."""
     config_entry = MockConfigEntry(
-        minor_version=1,
+        minor_version=2,
         domain=DOMAIN,
         title="Senz test",
         data={
@@ -77,6 +78,7 @@ def mock_config_entry(hass: HomeAssistant, expires_at: float) -> MockConfigEntry
             },
         },
         entry_id="senz_test",
+        unique_id=ENTRY_UNIQUE_ID,
     )
     config_entry.add_to_hass(hass)
     return config_entry
@@ -90,7 +92,7 @@ def mock_senz_client(account_fixture, device_fixture) -> Generator[MagicMock]:
 
         client.get_account.return_value = Account(account_fixture)
         client.get_thermostats.return_value = [
-            Thermostat(device, None) for device in device_fixture
+            Thermostat(device, Mock()) for device in device_fixture
         ]
 
         yield client
@@ -108,4 +110,27 @@ async def setup_credentials(hass: HomeAssistant) -> None:
             CLIENT_SECRET,
         ),
         DOMAIN,
+    )
+
+
+@pytest.fixture
+def unique_id() -> str:
+    """Return a unique ID."""
+    return ENTRY_UNIQUE_ID
+
+
+@pytest.fixture
+async def access_token(hass: HomeAssistant, unique_id: str) -> str:
+    """Return a valid access token."""
+    return config_entry_oauth2_flow._encode_jwt(
+        hass,
+        {
+            "sub": unique_id,
+            "aud": [],
+            "scp": [
+                "rest_api",
+                "offline_access",
+            ],
+            "ou_code": "NA",
+        },
     )
