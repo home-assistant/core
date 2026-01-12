@@ -191,7 +191,7 @@
     'state': 'heat',
   })
 # ---
-# name: test_climates[eve_thermo_v4][climate.eve_thermo-entry]
+# name: test_climates[eve_thermo_v4][climate.eve_thermo_20ebp1701-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -211,7 +211,7 @@
     'disabled_by': None,
     'domain': 'climate',
     'entity_category': None,
-    'entity_id': 'climate.eve_thermo',
+    'entity_id': 'climate.eve_thermo_20ebp1701',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -233,11 +233,11 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_climates[eve_thermo_v4][climate.eve_thermo-state]
+# name: test_climates[eve_thermo_v4][climate.eve_thermo_20ebp1701-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'current_temperature': 21.0,
-      'friendly_name': 'Eve Thermo',
+      'friendly_name': 'Eve Thermo 20EBP1701',
       'hvac_modes': list([
         <HVACMode.OFF: 'off'>,
         <HVACMode.HEAT: 'heat'>,
@@ -248,7 +248,7 @@
       'temperature': 17.0,
     }),
     'context': <ANY>,
-    'entity_id': 'climate.eve_thermo',
+    'entity_id': 'climate.eve_thermo_20ebp1701',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

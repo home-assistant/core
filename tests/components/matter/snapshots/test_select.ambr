@@ -1400,7 +1400,7 @@
     'state': 'previous',
   })
 # ---
-# name: test_selects[eve_thermo_v4][select.eve_thermo_temperature_display_mode-entry]
+# name: test_selects[eve_thermo_v4][select.eve_thermo_20ebp1701_temperature_display_mode-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1418,7 +1418,7 @@
     'disabled_by': None,
     'domain': 'select',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'select.eve_thermo_temperature_display_mode',
+    'entity_id': 'select.eve_thermo_20ebp1701_temperature_display_mode',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1440,17 +1440,17 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_selects[eve_thermo_v4][select.eve_thermo_temperature_display_mode-state]
+# name: test_selects[eve_thermo_v4][select.eve_thermo_20ebp1701_temperature_display_mode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Eve Thermo Temperature display mode',
+      'friendly_name': 'Eve Thermo 20EBP1701 Temperature display mode',
       'options': list([
         'Celsius',
         'Fahrenheit',
       ]),
     }),
     'context': <ANY>,
-    'entity_id': 'select.eve_thermo_temperature_display_mode',
+    'entity_id': 'select.eve_thermo_20ebp1701_temperature_display_mode',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

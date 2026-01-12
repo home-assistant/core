@@ -1037,7 +1037,7 @@
     'state': '3',
   })
 # ---
-# name: test_numbers[eve_thermo_v4][number.eve_thermo_temperature_offset-entry]
+# name: test_numbers[eve_thermo_v4][number.eve_thermo_20ebp1701_temperature_offset-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1055,7 +1055,7 @@
     'disabled_by': None,
     'domain': 'number',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'number.eve_thermo_temperature_offset',
+    'entity_id': 'number.eve_thermo_20ebp1701_temperature_offset',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1077,11 +1077,11 @@
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_numbers[eve_thermo_v4][number.eve_thermo_temperature_offset-state]
+# name: test_numbers[eve_thermo_v4][number.eve_thermo_20ebp1701_temperature_offset-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
-      'friendly_name': 'Eve Thermo Temperature offset',
+      'friendly_name': 'Eve Thermo 20EBP1701 Temperature offset',
       'max': 50,
       'min': -50,
       'mode': <NumberMode.BOX: 'box'>,
@@ -1089,7 +1089,7 @@
       'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
-    'entity_id': 'number.eve_thermo_temperature_offset',
+    'entity_id': 'number.eve_thermo_20ebp1701_temperature_offset',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
