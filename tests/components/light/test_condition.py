@@ -245,7 +245,7 @@ async def test_light_state_condition_behavior_all(
         # The condition passes if all entities are either in a target state or invalid
         assert await has_single_call_after_trigger(hass, service_calls) == (
             (not state["state_valid"])
-            or (state["condition_true"] if entities_in_target == 1 else 0)
+            or (state["condition_true"] and entities_in_target == 1)
         )
 
         for other_entity_id in other_entity_ids:
