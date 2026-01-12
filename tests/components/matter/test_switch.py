@@ -135,7 +135,7 @@ async def test_numeric_switch(
     assert state.state == "on"
     set_node_attribute(matter_node, 1, 516, 1, 0)
     await trigger_subscription_callback(hass, matter_client)
-    state = hass.states.get("switch.eve_thermo_child_lock")
+    state = hass.states.get("switch.eve_thermo_20ebp1701_child_lock")
     assert state.state == "off"
     # test switch service
     await hass.services.async_call(
