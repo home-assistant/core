@@ -1,7 +1,4 @@
-"""Configuration flow for Prana integration discovered via Zeroconf.
-
-The flow is discovery-only. Users confirm a found device; manual starts abort.
-"""
+"""Configuration flow for Prana integration."""
 
 import logging
 from typing import Any
