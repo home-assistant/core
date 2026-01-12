@@ -502,19 +502,19 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 async def _call_service(
     service: ServiceCall, notify_service: TelegramNotificationService, chat_id: int
 ) -> dict[str, JsonValueType] | None:
-    msgtype = service.service
+    service_name = service.service
 
     kwargs = dict(service.data)
     kwargs[ATTR_TARGET] = chat_id
 
     messages: dict[str, JsonValueType] | None = None
-    if msgtype == SERVICE_SEND_MESSAGE:
+    if service_name == SERVICE_SEND_MESSAGE:
         messages = await notify_service.send_message(context=service.context, **kwargs)
-    elif msgtype == SERVICE_SEND_CHAT_ACTION:
+    elif service_name == SERVICE_SEND_CHAT_ACTION:
         messages = await notify_service.send_chat_action(
             context=service.context, **kwargs
         )
-    elif msgtype in [
+    elif service_name in [
         SERVICE_SEND_PHOTO,
         SERVICE_SEND_ANIMATION,
         SERVICE_SEND_VIDEO,
@@ -522,28 +522,30 @@ async def _call_service(
         SERVICE_SEND_DOCUMENT,
     ]:
         messages = await notify_service.send_file(
-            msgtype, context=service.context, **kwargs
+            service_name, context=service.context, **kwargs
         )
-    elif msgtype == SERVICE_SEND_STICKER:
+    elif service_name == SERVICE_SEND_STICKER:
         messages = await notify_service.send_sticker(context=service.context, **kwargs)
-    elif msgtype == SERVICE_SEND_LOCATION:
+    elif service_name == SERVICE_SEND_LOCATION:
         messages = await notify_service.send_location(context=service.context, **kwargs)
-    elif msgtype == SERVICE_SEND_POLL:
+    elif service_name == SERVICE_SEND_POLL:
         messages = await notify_service.send_poll(context=service.context, **kwargs)
-    elif msgtype == SERVICE_ANSWER_CALLBACK_QUERY:
+    elif service_name == SERVICE_ANSWER_CALLBACK_QUERY:
         await notify_service.answer_callback_query(context=service.context, **kwargs)
-    elif msgtype == SERVICE_DELETE_MESSAGE:
+    elif service_name == SERVICE_DELETE_MESSAGE:
         await notify_service.delete_message(context=service.context, **kwargs)
-    elif msgtype == SERVICE_LEAVE_CHAT:
+    elif service_name == SERVICE_LEAVE_CHAT:
         await notify_service.leave_chat(context=service.context, **kwargs)
-    elif msgtype == SERVICE_SET_MESSAGE_REACTION:
+    elif service_name == SERVICE_SET_MESSAGE_REACTION:
         await notify_service.set_message_reaction(context=service.context, **kwargs)
-    elif msgtype == SERVICE_EDIT_MESSAGE_MEDIA:
+    elif service_name == SERVICE_EDIT_MESSAGE_MEDIA:
         await notify_service.edit_message_media(context=service.context, **kwargs)
-    elif msgtype == SERVICE_DOWNLOAD_FILE:
+    elif service_name == SERVICE_DOWNLOAD_FILE:
         return await notify_service.download_file(context=service.context, **kwargs)
     else:
-        await notify_service.edit_message(msgtype, context=service.context, **kwargs)
+        await notify_service.edit_message(
+            service_name, context=service.context, **kwargs
+        )
 
     if service.return_response and messages is not None:
         return messages
