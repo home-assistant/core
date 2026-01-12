@@ -635,6 +635,7 @@
       'aliases': set({
       }),
       'area_id': None,
+      'calculated_object_id': 'Current temperature',
       'capabilities': dict({
         'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       }),
@@ -673,6 +674,7 @@
       'aliases': set({
       }),
       'area_id': None,
+      'calculated_object_id': 'Cooking set temperature',
       'capabilities': dict({
         'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       }),
@@ -711,6 +713,7 @@
       'aliases': set({
       }),
       'area_id': None,
+      'calculated_object_id': 'Cooking set time',
       'capabilities': None,
       'config_entry_id': <ANY>,
       'config_subentry_id': <ANY>,
@@ -747,6 +750,7 @@
       'aliases': set({
       }),
       'area_id': None,
+      'calculated_object_id': 'Preheating set time',
       'capabilities': None,
       'config_entry_id': <ANY>,
       'config_subentry_id': <ANY>,
@@ -783,6 +787,7 @@
       'aliases': set({
       }),
       'area_id': None,
+      'calculated_object_id': 'Cooking status',
       'capabilities': dict({
         'options': list([
           'cooking_end',
@@ -950,6 +955,7 @@
       'aliases': set({
       }),
       'area_id': None,
+      'calculated_object_id': 'Current temperature',
       'capabilities': dict({
         'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       }),
@@ -985,6 +991,7 @@
       'aliases': set({
       }),
       'area_id': None,
+      'calculated_object_id': 'Cooking set temperature',
       'capabilities': dict({
         'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       }),
@@ -1020,6 +1027,7 @@
       'aliases': set({
       }),
       'area_id': None,
+      'calculated_object_id': 'Cooking set time',
       'capabilities': None,
       'config_entry_id': <ANY>,
       'config_subentry_id': <ANY>,
@@ -1056,6 +1064,7 @@
       'aliases': set({
       }),
       'area_id': None,
+      'calculated_object_id': 'Preheating set time',
       'capabilities': None,
       'config_entry_id': <ANY>,
       'config_subentry_id': <ANY>,
@@ -1092,6 +1101,7 @@
       'aliases': set({
       }),
       'area_id': None,
+      'calculated_object_id': 'Cooking status',
       'capabilities': dict({
         'options': list([
           'cooking_end',

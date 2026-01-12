@@ -4,6 +4,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Operation mode',
     'capabilities': dict({
       'options': list([
         '0',
@@ -69,6 +70,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Port select TX0',
     'capabilities': dict({
       'options': list([
         '0',
@@ -132,6 +134,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Port select TX1',
     'capabilities': dict({
       'options': list([
         '0',

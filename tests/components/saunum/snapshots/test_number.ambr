@@ -4,6 +4,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Fan duration',
     'capabilities': dict({
       'max': 30,
       'min': 1,
@@ -63,6 +64,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Sauna duration',
     'capabilities': dict({
       'max': 720,
       'min': 1,

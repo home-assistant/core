@@ -2940,6 +2940,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Indicator light mode',
     'capabilities': dict({
       'options': list([
         'relay',
@@ -2999,6 +3000,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Power on behavior',
     'capabilities': dict({
       'options': list([
         'power_off',

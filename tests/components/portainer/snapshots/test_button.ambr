@@ -4,7 +4,7 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Restart Container',
+    'calculated_object_id': 'Restart container',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -54,7 +54,7 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Restart Container',
+    'calculated_object_id': 'Restart container',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -104,6 +104,7 @@
     'aliases': set({
     }),
     'area_id': None,
+    'calculated_object_id': 'Prune unused images',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -153,7 +154,7 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Restart Container',
+    'calculated_object_id': 'Restart container',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -203,7 +204,7 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Restart Container',
+    'calculated_object_id': 'Restart container',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -253,7 +254,7 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Restart Container',
+    'calculated_object_id': 'Restart container',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
