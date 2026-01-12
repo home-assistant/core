@@ -40,7 +40,7 @@
         "python.terminal.activateEnvInCurrentTerminal": true,
         "python.testing.pytestArgs": ["--no-cov"],
         "pylint.importStrategy": "fromEnvironment",
-        // Pyright type checking is too not compatible with mypy which Home Assistant uses for type checking
+        // Pyright type checking is not compatible with mypy which Home Assistant uses for type checking
         "python.analysis.typeCheckingMode": "off",
         "editor.formatOnPaste": false,
         "editor.formatOnSave": true,
