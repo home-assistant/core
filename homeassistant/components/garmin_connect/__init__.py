@@ -37,10 +37,6 @@ async def async_setup_entry(
         oauth2_token=entry.data.get(CONF_OAUTH2_TOKEN),
     )
 
-    # Check if we have valid tokens
-    if not auth.oauth1_token:
-        raise ConfigEntryAuthFailed("No authentication tokens found")
-
     # Try to refresh tokens if needed
     try:
         if not auth.oauth2_token:
