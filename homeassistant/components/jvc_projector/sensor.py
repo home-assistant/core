@@ -19,7 +19,7 @@ from .entity import JvcProjectorEntity
 JVC_SENSORS = (
     SensorEntityDescription(
         key="power",
-        translation_key="power",
+        translation_key="jvc_power_status",
         device_class=SensorDeviceClass.ENUM,
         entity_category=EntityCategory.DIAGNOSTIC,
         options=[
