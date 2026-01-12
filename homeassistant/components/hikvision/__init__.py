@@ -5,6 +5,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 import logging
 
+from pyhik.constants import SENSOR_MAP
 from pyhik.hikvision import HikCamera
 import requests
 
@@ -70,13 +71,33 @@ async def async_setup_entry(hass: HomeAssistant, entry: HikvisionConfigEntry) ->
         device_type=device_type,
     )
 
+    _LOGGER.debug(
+        "Device %s (type=%s) initial event_states: %s",
+        device_name,
+        device_type,
+        camera.current_event_states,
+    )
+
     # For NVRs or devices with no detected events, try to fetch events from ISAPI
+    # Use broader notification methods for NVRs since they often use 'record' etc.
     if device_type == "NVR" or not camera.current_event_states:
+        nvr_notification_methods = {"center", "HTTP", "record", "email", "beep"}
 
         def fetch_and_inject_nvr_events() -> None:
             """Fetch and inject NVR events in a single executor job."""
-            if nvr_events := camera.get_event_triggers():
-                camera.inject_events(nvr_events)
+            nvr_events = camera.get_event_triggers(nvr_notification_methods)
+            _LOGGER.debug("NVR events fetched with extended methods: %s", nvr_events)
+            if nvr_events:
+                # Map raw event type names to friendly names using SENSOR_MAP
+                mapped_events: dict[str, list[int]] = {}
+                for event_type, channels in nvr_events.items():
+                    friendly_name = SENSOR_MAP.get(event_type.lower(), event_type)
+                    if friendly_name in mapped_events:
+                        mapped_events[friendly_name].extend(channels)
+                    else:
+                        mapped_events[friendly_name] = list(channels)
+                _LOGGER.debug("Mapped NVR events: %s", mapped_events)
+                camera.inject_events(mapped_events)
 
         await hass.async_add_executor_job(fetch_and_inject_nvr_events)
 

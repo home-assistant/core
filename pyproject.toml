@@ -24,7 +24,7 @@ classifiers = [
 ]
 requires-python = ">=3.13.2"
 dependencies = [
-  "aiodns==3.6.1",
+  "aiodns==4.0.0",
   # Integrations may depend on hassio integration without listing it to
   # change behavior based on presence of supervisor. Deprecated with #127228
   # Lib can be removed with 2025.11
@@ -76,9 +76,9 @@ dependencies = [
   "ulid-transform==1.5.2",
   "urllib3>=2.0",
   "uv==0.9.17",
-  "voluptuous==0.16.0",
+  "voluptuous==0.15.2",
   "voluptuous-serialize==2.7.0",
-  "voluptuous-openapi==0.3.0",
+  "voluptuous-openapi==0.2.0",
   "yarl==1.22.0",
   "webrtc-models==0.3.0",
   "zeroconf==0.148.0",
