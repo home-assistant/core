@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import asyncio
 from functools import cache
-from importlib.metadata import PackageNotFoundError, version
+from importlib.metadata import Distribution, PackageNotFoundError, version
 import logging
 import os
 from pathlib import Path
@@ -14,6 +14,7 @@ import sys
 from urllib.parse import urlparse
 
 from packaging.requirements import InvalidRequirement, Requirement
+from pip._internal.models.link import Link
 
 from .system_info import is_official_image
 
@@ -73,6 +74,11 @@ def is_installed(requirement_str: str) -> bool:
         # remove it.
         try:
             req = Requirement(urlparse(requirement_str).fragment)
+            _LOGGER.error(
+                "Requirement '%s' is using a deprecated URL fragment syntax. "
+                "Please update to a standard requirement specifier with Direct url "
+                "Check home assistant documentation https://developers.home-assistant.io/docs/creating_integration_manifest/#custom-requirements-during-development--testing"
+            )
         except InvalidRequirement:
             _LOGGER.error("Invalid requirement '%s'", requirement_str)
             return False
@@ -86,13 +92,32 @@ def is_installed(requirement_str: str) -> bool:
                 "Installed version for %s resolved to None", req.name
             )
             return False
+        # For VCS installs using library@git+
         if req.url:
-            # If requirement is a URL, we cannot verify versions, so let
-            # the package manager handle it
-            return False
-        return req.specifier.contains(installed_version, prereleases=True)
+            # Override to fetch specifier from VCS link
+            # Link provided from https://github.com/pypa/pip/pull/13495/files
+            req = Requirement(Link(requirement_str).show_url)
+
+            # In case library>=version is provided we return false and log error.
+            if not req.url:
+                _LOGGER.error("Unable to determine URL for VCS install of %s", req.name)
+                return False
+            # If contain library@<commit_id, branch or tag> or library>=<commit_id, branch or tag>
+            if (
+                origin := Distribution.from_name(req.name).origin
+            ) is not None and getattr(origin, "vcs_info", None) is not None:
+                # If commit_id match or url match installed version
+                return (
+                    origin.vcs_info.commit_id[:7] in req.url
+                    or req.url == installed_version
+                )
+            # If specifier is empty we cannot determine version so return False
+            if not req.specifier:
+                return False
     except PackageNotFoundError:
         return False
+
+    return req.specifier.contains(installed_version, prereleases=True)
 
 
 _UV_ENV_PYTHON_VARS = (
