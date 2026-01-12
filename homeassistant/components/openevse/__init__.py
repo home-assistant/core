@@ -2,23 +2,23 @@
 
 from __future__ import annotations
 
-import openevsewifi
+from openevsehttp.__main__ import OpenEVSE
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryError
 
-type OpenEVSEConfigEntry = ConfigEntry[openevsewifi.Charger]
+type OpenEVSEConfigEntry = ConfigEntry[OpenEVSE]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: OpenEVSEConfigEntry) -> bool:
     """Set up openevse from a config entry."""
 
-    entry.runtime_data = openevsewifi.Charger(entry.data[CONF_HOST])
+    entry.runtime_data = OpenEVSE(entry.data[CONF_HOST])
     try:
-        await hass.async_add_executor_job(entry.runtime_data.getStatus)
-    except AttributeError as ex:
+        await entry.runtime_data.test_and_get()
+    except TimeoutError as ex:
         raise ConfigEntryError("Unable to connect to charger") from ex
 
     await hass.config_entries.async_forward_entry_setups(entry, [Platform.SENSOR])

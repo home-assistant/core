@@ -250,6 +250,12 @@ class TibberDataAPICoordinator(DataUpdateCoordinator[dict[str, TibberDevice]]):
     async def _async_update_data(self) -> dict[str, TibberDevice]:
         """Fetch the latest device capabilities from the Tibber Data API."""
         client = await self._async_get_client()
-        devices: dict[str, TibberDevice] = await client.update_devices()
+        try:
+            devices: dict[str, TibberDevice] = await client.update_devices()
+        except tibber.exceptions.RateLimitExceededError as err:
+            raise UpdateFailed(
+                f"Rate limit exceeded, retry after {err.retry_after} seconds",
+                retry_after=err.retry_after,
+            ) from err
         self._build_sensor_lookup(devices)
         return devices
