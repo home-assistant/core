@@ -165,8 +165,8 @@ async def test_light_state_condition_behavior_any(
     for state in states:
         for eid in target_switches:
             set_or_remove_state(hass, eid, state["included"])
-            await hass.async_block_till_done()
-            assert await calls_after_trigger(hass, service_calls) == 0
+        await hass.async_block_till_done()
+        assert await calls_after_trigger(hass, service_calls) == 0
 
     for state in states:
         included_state = state["included"]
