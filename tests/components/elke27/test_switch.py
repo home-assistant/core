@@ -281,3 +281,4 @@ async def test_zone_bypass_pin_required(hass: HomeAssistant) -> None:
             {"entity_id": zone_1.entity_id},
             blocking=True,
         )
+
