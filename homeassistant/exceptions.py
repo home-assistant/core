@@ -6,6 +6,9 @@ from collections.abc import Callable, Generator, Sequence
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any
 
+from aiohttp import ClientResponse, ClientResponseError, RequestInfo
+from multidict import MultiMapping
+
 from .util.event_type import EventType
 
 if TYPE_CHECKING:
@@ -218,8 +221,28 @@ class ConfigEntryAuthFailed(IntegrationError):
     """Error to indicate that config entry could not authenticate."""
 
 
-class ConfigEntryRefreshTokenFailed(IntegrationError):
-    """Error to indicate that config entry could not refresh token."""
+class OAuth2RefreshTokenFailed(ClientResponseError, IntegrationError):
+    """Error to indicate that the OAuth 2.0 flow could not refresh token."""
+
+    def __init__(
+        self,
+        *,
+        request_info: RequestInfo,
+        history: tuple[ClientResponse, ...] = (),
+        status: int = 0,
+        message: str = "OAuth 2.0 token refresh failed",
+        headers: MultiMapping[str] | None = None,
+    ) -> None:
+        """Initialize OAuth2RefreshTokenFailed."""
+        ClientResponseError.__init__(
+            self,
+            request_info=request_info,
+            history=history,
+            status=status,
+            message=message,
+            headers=headers,
+        )
+        IntegrationError.__init__(self, message)
 
 
 class InvalidStateError(HomeAssistantError):

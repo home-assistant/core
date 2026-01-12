@@ -29,7 +29,7 @@ from yarl import URL
 
 from homeassistant import config_entries
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError, OAuth2RefreshTokenFailed
 from homeassistant.loader import async_get_application_credentials
 from homeassistant.util.hass_dict import HassKey
 
@@ -52,9 +52,13 @@ DATA_PROVIDERS: HassKey[
         Callable[[HomeAssistant, str], Awaitable[list[AbstractOAuth2Implementation]]],
     ]
 ] = HassKey("oauth2_providers")
+DATA_OAUTH2_REFRESHTOKEN_DEPRECATION_WARNING: HassKey[set[str]] = HassKey(
+    "oauth2_refresh_token_deprecation_warning"
+)
 AUTH_CALLBACK_PATH = "/auth/external/callback"
 HEADER_FRONTEND_BASE = "HA-Frontend-Base"
 MY_AUTH_CALLBACK_PATH = "https://my.home-assistant.io/redirect/oauth"
+
 
 CLOCK_OUT_OF_SYNC_MAX_SEC = 20
 
@@ -134,7 +138,7 @@ class AbstractOAuth2Implementation(ABC):
 
     @abstractmethod
     async def _async_refresh_token(self, token: dict) -> dict:
-        """Refresh a token."""
+        """Refresh tokens. Raises OAuth2RefreshTokenFailed on failure."""
 
 
 class LocalOAuth2Implementation(AbstractOAuth2Implementation):
@@ -211,7 +215,7 @@ class LocalOAuth2Implementation(AbstractOAuth2Implementation):
         return await self._token_request(request_data)
 
     async def _async_refresh_token(self, token: dict) -> dict:
-        """Refresh tokens."""
+        """Refresh tokens. Raises OAuth2RefreshTokenFailed on failure."""
         try:
             new_token = await self._token_request(
                 {
@@ -220,11 +224,28 @@ class LocalOAuth2Implementation(AbstractOAuth2Implementation):
                     "refresh_token": token["refresh_token"],
                 }
             )
-        except ClientResponseError:
-            _LOGGER.warning(
-                "Refresh token failed. Please catch 'ConfigEntryRefreshTokenFailed'. This will be added in version 2026.x.x and result in a breaking change",
+        except ClientResponseError as err:
+            # Store the warning messages in memory during Home Assistant runtime
+            # This to prevent spamming for logs who are not ready, yet
+            you_are_warned: set[str] = self.hass.data.setdefault(
+                DATA_OAUTH2_REFRESHTOKEN_DEPRECATION_WARNING, set()
             )
-            raise  # Re-raise the exception to keep it non-breaking
+
+            # Best what I could to think of is to use the clientID, unique enough to prevent flooding?
+            # I don't have config_entry available. If correct, you have a client ID per config entry
+            if self.client_id not in you_are_warned:
+                _LOGGER.warning(
+                    "Refresh token failed. Please catch 'ConfigEntryRefreshTokenFailed'. This will be added in version 2026.x.x and result in a breaking change"
+                )
+                you_are_warned.add(self.client_id)
+
+            raise OAuth2RefreshTokenFailed(
+                request_info=err.request_info,
+                history=err.history,
+                status=err.status,
+                message=err.message,
+                headers=err.headers,
+            ) from err
 
         return {**token, **new_token}
 
