@@ -62,7 +62,7 @@ async def test_turn_off_on(
     """Test the switches. Have you tried to turn it off and on again?"""
     await setup_integration(hass, mock_config_entry)
 
-    entity_id = "switch.practical_morse_container"
+    entity_id = "switch.my_environment_practical_morse_container"
     method_mock = getattr(mock_portainer_client, client_method)
 
     await hass.services.async_call(
@@ -105,7 +105,78 @@ async def test_turn_off_on_exceptions(
     """Test the switches. Have you tried to turn it off and on again? This time they will do boom!"""
     await setup_integration(hass, mock_config_entry)
 
-    entity_id = "switch.practical_morse_container"
+    entity_id = "switch.my_environment_practical_morse_container"
+    method_mock = getattr(mock_portainer_client, client_method)
+
+    method_mock.side_effect = raise_exception
+    with pytest.raises(expected_exception):
+        await hass.services.async_call(
+            SWITCH_DOMAIN,
+            service_call,
+            {ATTR_ENTITY_ID: entity_id},
+            blocking=True,
+        )
+
+
+@pytest.mark.parametrize(
+    ("service_call", "client_method"),
+    [
+        (SERVICE_TURN_ON, "start_stack"),
+        (SERVICE_TURN_OFF, "stop_stack"),
+    ],
+)
+async def test_stack_turn_off_on(
+    hass: HomeAssistant,
+    mock_portainer_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    service_call: str,
+    client_method: str,
+) -> None:
+    """Test the stack switches."""
+    await setup_integration(hass, mock_config_entry)
+
+    entity_id = "switch.my_environment_webstack_stack"
+    method_mock = getattr(mock_portainer_client, client_method)
+
+    await hass.services.async_call(
+        SWITCH_DOMAIN,
+        service_call,
+        {ATTR_ENTITY_ID: entity_id},
+        blocking=True,
+    )
+
+    # Matches stack_id=1 and endpoint_id=1
+    method_mock.assert_called_once_with(1, 1)
+
+
+@pytest.mark.parametrize(
+    ("service_call", "client_method"),
+    [
+        (SERVICE_TURN_ON, "start_stack"),
+        (SERVICE_TURN_OFF, "stop_stack"),
+    ],
+)
+@pytest.mark.parametrize(
+    ("raise_exception", "expected_exception"),
+    [
+        (PortainerAuthenticationError, HomeAssistantError),
+        (PortainerConnectionError, HomeAssistantError),
+        (PortainerTimeoutError, HomeAssistantError),
+    ],
+)
+async def test_stack_turn_off_on_exceptions(
+    hass: HomeAssistant,
+    mock_portainer_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    service_call: str,
+    client_method: str,
+    raise_exception: Exception,
+    expected_exception: Exception,
+) -> None:
+    """Test the stack switches with exceptions."""
+    await setup_integration(hass, mock_config_entry)
+
+    entity_id = "switch.my_environment_webstack_stack"
     method_mock = getattr(mock_portainer_client, client_method)
 
     method_mock.side_effect = raise_exception

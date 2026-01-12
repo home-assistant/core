@@ -71,7 +71,7 @@ async def test_refresh_endpoints_exceptions(
     async_fire_time_changed(hass, dt_util.utcnow())
     await hass.async_block_till_done()
 
-    state = hass.states.get("binary_sensor.practical_morse_status")
+    state = hass.states.get("binary_sensor.my_environment_practical_morse_status")
     assert state.state == STATE_UNAVAILABLE
 
 
@@ -100,5 +100,5 @@ async def test_refresh_containers_exceptions(
     async_fire_time_changed(hass, dt_util.utcnow())
     await hass.async_block_till_done()
 
-    state = hass.states.get("binary_sensor.practical_morse_status")
+    state = hass.states.get("binary_sensor.my_environment_practical_morse_status")
     assert state.state == STATE_UNAVAILABLE

@@ -17,15 +17,18 @@ from homeassistant.const import PERCENTAGE, UnitOfInformation
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
+from .const import STACK_STATUS_ACTIVE, STACK_STATUS_INACTIVE
 from .coordinator import (
     PortainerConfigEntry,
     PortainerContainerData,
     PortainerCoordinator,
+    PortainerStackData,
 )
 from .entity import (
     PortainerContainerEntity,
     PortainerCoordinatorData,
     PortainerEndpointEntity,
+    PortainerStackEntity,
 )
 
 
@@ -41,6 +44,13 @@ class PortainerEndpointSensorEntityDescription(SensorEntityDescription):
     """Class to hold Portainer endpoint sensor description."""
 
     value_fn: Callable[[PortainerCoordinatorData], StateType]
+
+
+@dataclass(frozen=True, kw_only=True)
+class PortainerStackSensorEntityDescription(SensorEntityDescription):
+    """Class to hold Portainer stack sensor description."""
+
+    value_fn: Callable[[PortainerStackData], StateType]
 
 
 CONTAINER_SENSORS: tuple[PortainerContainerSensorEntityDescription, ...] = (
@@ -227,6 +237,47 @@ ENDPOINT_SENSORS: tuple[PortainerEndpointSensorEntityDescription, ...] = (
 )
 
 
+def _get_stack_status_value(data: PortainerStackData) -> str:
+    """Get stack status as string."""
+    if data.stack.status == STACK_STATUS_ACTIVE:
+        return "active"
+    if data.stack.status == STACK_STATUS_INACTIVE:
+        return "inactive"
+    return "unknown"
+
+
+def _get_stack_type_value(data: PortainerStackData) -> str:
+    """Get stack type as string."""
+    stack_types = {1: "swarm", 2: "compose", 3: "kubernetes"}
+    return stack_types.get(data.stack.type, "unknown")
+
+
+STACK_SENSORS: tuple[PortainerStackSensorEntityDescription, ...] = (
+    PortainerStackSensorEntityDescription(
+        key="stack_status",
+        translation_key="stack_status",
+        value_fn=_get_stack_status_value,
+        device_class=SensorDeviceClass.ENUM,
+        options=["active", "inactive", "unknown"],
+    ),
+    PortainerStackSensorEntityDescription(
+        key="stack_type",
+        translation_key="stack_type",
+        value_fn=_get_stack_type_value,
+        device_class=SensorDeviceClass.ENUM,
+        options=["swarm", "compose", "kubernetes", "unknown"],
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    PortainerStackSensorEntityDescription(
+        key="stack_containers_count",
+        translation_key="stack_containers_count",
+        value_fn=lambda data: data.container_count,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+)
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: PortainerConfigEntry,
@@ -263,8 +314,24 @@ async def async_setup_entry(
             for entity_description in CONTAINER_SENSORS
         )
 
+    def _async_add_new_stacks(
+        stacks: list[tuple[PortainerCoordinatorData, PortainerStackData]],
+    ) -> None:
+        """Add new stack sensors."""
+        async_add_entities(
+            PortainerStackSensor(
+                coordinator,
+                entity_description,
+                stack,
+                endpoint,
+            )
+            for (endpoint, stack) in stacks
+            for entity_description in STACK_SENSORS
+        )
+
     coordinator.new_endpoints_callbacks.append(_async_add_new_endpoints)
     coordinator.new_containers_callbacks.append(_async_add_new_containers)
+    coordinator.new_stacks_callbacks.append(_async_add_new_stacks)
 
     _async_add_new_endpoints(
         [
@@ -278,6 +345,13 @@ async def async_setup_entry(
             (endpoint, container)
             for endpoint in coordinator.data.values()
             for container in endpoint.containers.values()
+        ]
+    )
+    _async_add_new_stacks(
+        [
+            (endpoint, stack)
+            for endpoint in coordinator.data.values()
+            for stack in endpoint.stacks.values()
         ]
     )
 
@@ -298,16 +372,7 @@ class PortainerContainerSensor(PortainerContainerEntity, SensorEntity):
         self.entity_description = entity_description
         super().__init__(device_info, coordinator, via_device)
 
-        self._attr_unique_id = f"{coordinator.config_entry.entry_id}_{self.device_name}_{entity_description.key}"
-
-    @property
-    def available(self) -> bool:
-        """Return if the device is available."""
-        return (
-            super().available
-            and self.endpoint_id in self.coordinator.data
-            and self.device_name in self.coordinator.data[self.endpoint_id].containers
-        )
+        self._attr_unique_id = f"{coordinator.config_entry.entry_id}_{self.endpoint_id}_{self.device_name}_{entity_description.key}"
 
     @property
     def native_value(self) -> StateType:
@@ -342,3 +407,27 @@ class PortainerEndpointSensor(PortainerEndpointEntity, SensorEntity):
         """Return the state of the sensor."""
         endpoint_data = self.coordinator.data[self._device_info.endpoint.id]
         return self.entity_description.value_fn(endpoint_data)
+
+
+class PortainerStackSensor(PortainerStackEntity, SensorEntity):
+    """Representation of a Portainer stack sensor."""
+
+    entity_description: PortainerStackSensorEntityDescription
+
+    def __init__(
+        self,
+        coordinator: PortainerCoordinator,
+        entity_description: PortainerStackSensorEntityDescription,
+        device_info: PortainerStackData,
+        via_device: PortainerCoordinatorData,
+    ) -> None:
+        """Initialize the Portainer stack sensor."""
+        self.entity_description = entity_description
+        super().__init__(device_info, coordinator, via_device)
+
+        self._attr_unique_id = f"{coordinator.config_entry.entry_id}_{self.endpoint_id}_stack_{self.stack_name}_{entity_description.key}"
+
+    @property
+    def native_value(self) -> StateType:
+        """Return the state of the sensor."""
+        return self.entity_description.value_fn(self.stack_data)

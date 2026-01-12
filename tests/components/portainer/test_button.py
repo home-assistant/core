@@ -59,7 +59,7 @@ async def test_buttons_containers(
     """Test pressing a Portainer container action button triggers client call. Click, click!"""
     await setup_integration(hass, mock_config_entry)
 
-    entity_id = f"button.practical_morse_{action}_container"
+    entity_id = f"button.my_environment_practical_morse_{action}_container"
     method_mock = getattr(mock_portainer_client, client_method)
     pre_calls = len(method_mock.mock_calls)
 
@@ -92,7 +92,7 @@ async def test_buttons_containers_exceptions(
     await setup_integration(hass, mock_config_entry)
 
     action = client_method.split("_")[0]
-    entity_id = f"button.practical_morse_{action}_container"
+    entity_id = f"button.my_environment_practical_morse_{action}_container"
 
     method_mock = getattr(mock_portainer_client, client_method)
     method_mock.side_effect = exception

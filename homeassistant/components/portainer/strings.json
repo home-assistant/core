@@ -134,11 +134,34 @@
       },
       "operating_system_version": {
         "name": "Operating system version"
+      },
+      "stack_containers_count": {
+        "name": "Container count"
+      },
+      "stack_status": {
+        "name": "Status",
+        "state": {
+          "active": "Active",
+          "inactive": "Inactive",
+          "unknown": "Unknown"
+        }
+      },
+      "stack_type": {
+        "name": "Type",
+        "state": {
+          "compose": "Compose",
+          "kubernetes": "Kubernetes",
+          "swarm": "Swarm",
+          "unknown": "Unknown"
+        }
       }
     },
     "switch": {
       "container": {
         "name": "Container"
+      },
+      "stack": {
+        "name": "Stack"
       }
     }
   },

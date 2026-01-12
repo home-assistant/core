@@ -6,6 +6,7 @@ from unittest.mock import AsyncMock, patch
 from pyportainer.models.docker import DockerContainer, DockerContainerStats
 from pyportainer.models.docker_inspect import DockerInfo, DockerVersion
 from pyportainer.models.portainer import Endpoint
+from pyportainer.models.stacks import Stack
 import pytest
 
 from homeassistant.components.portainer.const import DOMAIN
@@ -63,8 +64,16 @@ def mock_portainer_client() -> Generator[AsyncMock]:
         client.container_stats.return_value = DockerContainerStats.from_dict(
             load_json_value_fixture("container_stats.json", DOMAIN)
         )
+        client.get_stacks.return_value = [
+            Stack.from_dict(stack)
+            for stack in load_json_array_fixture("stacks.json", DOMAIN)
+        ]
 
         client.restart_container = AsyncMock(return_value=None)
+        client.start_container = AsyncMock(return_value=None)
+        client.stop_container = AsyncMock(return_value=None)
+        client.start_stack = AsyncMock(return_value=None)
+        client.stop_stack = AsyncMock(return_value=None)
         client.images_prune = AsyncMock(return_value=None)
 
         yield client

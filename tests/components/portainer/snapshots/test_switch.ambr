@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_all_switch_entities_snapshot[switch.focused_einstein_container-entry]
+# name: test_all_switch_entities_snapshot[switch.my_environment_focused_einstein_container-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -12,7 +12,7 @@
     'disabled_by': None,
     'domain': 'switch',
     'entity_category': None,
-    'entity_id': 'switch.focused_einstein_container',
+    'entity_id': 'switch.my_environment_focused_einstein_container',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -30,25 +30,25 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'container',
-    'unique_id': 'portainer_test_entry_123_focused_einstein_container',
+    'unique_id': 'portainer_test_entry_123_1_focused_einstein_container',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_switch_entities_snapshot[switch.focused_einstein_container-state]
+# name: test_all_switch_entities_snapshot[switch.my_environment_focused_einstein_container-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'switch',
-      'friendly_name': 'focused_einstein Container',
+      'friendly_name': 'my-environment - focused_einstein Container',
     }),
     'context': <ANY>,
-    'entity_id': 'switch.focused_einstein_container',
+    'entity_id': 'switch.my_environment_focused_einstein_container',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'on',
   })
 # ---
-# name: test_all_switch_entities_snapshot[switch.funny_chatelet_container-entry]
+# name: test_all_switch_entities_snapshot[switch.my_environment_funny_chatelet_container-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -61,7 +61,7 @@
     'disabled_by': None,
     'domain': 'switch',
     'entity_category': None,
-    'entity_id': 'switch.funny_chatelet_container',
+    'entity_id': 'switch.my_environment_funny_chatelet_container',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -79,25 +79,25 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'container',
-    'unique_id': 'portainer_test_entry_123_funny_chatelet_container',
+    'unique_id': 'portainer_test_entry_123_1_funny_chatelet_container',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_switch_entities_snapshot[switch.funny_chatelet_container-state]
+# name: test_all_switch_entities_snapshot[switch.my_environment_funny_chatelet_container-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'switch',
-      'friendly_name': 'funny_chatelet Container',
+      'friendly_name': 'my-environment - funny_chatelet Container',
     }),
     'context': <ANY>,
-    'entity_id': 'switch.funny_chatelet_container',
+    'entity_id': 'switch.my_environment_funny_chatelet_container',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'on',
   })
 # ---
-# name: test_all_switch_entities_snapshot[switch.practical_morse_container-entry]
+# name: test_all_switch_entities_snapshot[switch.my_environment_practical_morse_container-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -110,7 +110,7 @@
     'disabled_by': None,
     'domain': 'switch',
     'entity_category': None,
-    'entity_id': 'switch.practical_morse_container',
+    'entity_id': 'switch.my_environment_practical_morse_container',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -128,25 +128,25 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'container',
-    'unique_id': 'portainer_test_entry_123_practical_morse_container',
+    'unique_id': 'portainer_test_entry_123_1_practical_morse_container',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_switch_entities_snapshot[switch.practical_morse_container-state]
+# name: test_all_switch_entities_snapshot[switch.my_environment_practical_morse_container-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'switch',
-      'friendly_name': 'practical_morse Container',
+      'friendly_name': 'my-environment - practical_morse Container',
     }),
     'context': <ANY>,
-    'entity_id': 'switch.practical_morse_container',
+    'entity_id': 'switch.my_environment_practical_morse_container',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'on',
   })
 # ---
-# name: test_all_switch_entities_snapshot[switch.serene_banach_container-entry]
+# name: test_all_switch_entities_snapshot[switch.my_environment_serene_banach_container-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -159,7 +159,7 @@
     'disabled_by': None,
     'domain': 'switch',
     'entity_category': None,
-    'entity_id': 'switch.serene_banach_container',
+    'entity_id': 'switch.my_environment_serene_banach_container',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -177,25 +177,25 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'container',
-    'unique_id': 'portainer_test_entry_123_serene_banach_container',
+    'unique_id': 'portainer_test_entry_123_1_serene_banach_container',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_switch_entities_snapshot[switch.serene_banach_container-state]
+# name: test_all_switch_entities_snapshot[switch.my_environment_serene_banach_container-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'switch',
-      'friendly_name': 'serene_banach Container',
+      'friendly_name': 'my-environment - serene_banach Container',
     }),
     'context': <ANY>,
-    'entity_id': 'switch.serene_banach_container',
+    'entity_id': 'switch.my_environment_serene_banach_container',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'on',
   })
 # ---
-# name: test_all_switch_entities_snapshot[switch.stoic_turing_container-entry]
+# name: test_all_switch_entities_snapshot[switch.my_environment_stoic_turing_container-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -208,7 +208,7 @@
     'disabled_by': None,
     'domain': 'switch',
     'entity_category': None,
-    'entity_id': 'switch.stoic_turing_container',
+    'entity_id': 'switch.my_environment_stoic_turing_container',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -226,18 +226,67 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'container',
-    'unique_id': 'portainer_test_entry_123_stoic_turing_container',
+    'unique_id': 'portainer_test_entry_123_1_stoic_turing_container',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_switch_entities_snapshot[switch.stoic_turing_container-state]
+# name: test_all_switch_entities_snapshot[switch.my_environment_stoic_turing_container-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'switch',
-      'friendly_name': 'stoic_turing Container',
+      'friendly_name': 'my-environment - stoic_turing Container',
     }),
     'context': <ANY>,
-    'entity_id': 'switch.stoic_turing_container',
+    'entity_id': 'switch.my_environment_stoic_turing_container',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_all_switch_entities_snapshot[switch.my_environment_webstack_stack-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': None,
+    'entity_id': 'switch.my_environment_webstack_stack',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SwitchDeviceClass.SWITCH: 'switch'>,
+    'original_icon': None,
+    'original_name': 'Stack',
+    'platform': 'portainer',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'stack',
+    'unique_id': 'portainer_test_entry_123_1_stack_webstack_stack',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_switch_entities_snapshot[switch.my_environment_webstack_stack-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'switch',
+      'friendly_name': 'my-environment - webstack Stack',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.my_environment_webstack_stack',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
