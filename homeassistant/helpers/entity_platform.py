@@ -882,10 +882,10 @@ class EntityPlatform:
             else:
                 device = None
 
-            calculated_object_id, calculated = _async_calculate_suggested_object_id(
+            calculated_object_id, is_calculated = _async_calculate_suggested_object_id(
                 entity, self
             )
-            if not calculated:
+            if not is_calculated:
                 suggested_object_id = calculated_object_id
                 calculated_object_id = None
 
