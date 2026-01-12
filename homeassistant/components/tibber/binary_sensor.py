@@ -6,6 +6,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 import logging
 
+import tibber
 from tibber.data_api import TibberDevice
 
 from homeassistant.components.binary_sensor import (
@@ -31,48 +32,21 @@ class TibberBinarySensorEntityDescription(BinarySensorEntityDescription):
     is_on_fn: Callable[[str | None], bool | None]
 
 
-def _connector_status_is_on(value: str | None) -> bool | None:
-    """Map connector status value to binary sensor state."""
-    if value == "connected":
-        return True
-    if value == "disconnected":
-        return False
-    return None
-
-
-def _charging_status_is_on(value: str | None) -> bool | None:
-    """Map charging status value to binary sensor state."""
-    if value == "charging":
-        return True
-    if value == "idle":
-        return False
-    return None
-
-
-def _device_status_is_on(value: str | None) -> bool | None:
-    """Map device status value to binary sensor state."""
-    if value == "on":
-        return True
-    if value == "off":
-        return False
-    return None
-
-
 DATA_API_BINARY_SENSORS: tuple[TibberBinarySensorEntityDescription, ...] = (
     TibberBinarySensorEntityDescription(
         key="connector.status",
         device_class=BinarySensorDeviceClass.PLUG,
-        is_on_fn={"connected": True, "disconnected": False}.get,
+        is_on_fn={"connected": True, "disconnected": False}.get,  # type: ignore[arg-type]
     ),
     TibberBinarySensorEntityDescription(
         key="charging.status",
         device_class=BinarySensorDeviceClass.BATTERY_CHARGING,
-        is_on_fn={"charging": True, "idle": False}.get,
+        is_on_fn={"charging": True, "idle": False}.get,  # type: ignore[arg-type]
     ),
     TibberBinarySensorEntityDescription(
         key="onOff",
         device_class=BinarySensorDeviceClass.POWER,
-        is_on_fn={"on": True, "off": False}.get,
+        is_on_fn={"on": True, "off": False}.get,  # type: ignore[arg-type]
     ),
 )
 
@@ -128,16 +102,22 @@ class TibberDataAPIBinarySensor(
             manufacturer=device.brand,
             model=device.model,
         )
-    
+
     @property
     def available(self) -> bool:
-        return super().available and self._device_id in self.coordinator.sensors_by_device
-        
+        """Return if entity is available."""
+        return (
+            super().available and self._device_id in self.coordinator.sensors_by_device
+        )
+
     @property
-    def device(self) -> dict[str, tibber.data_api.Sensor]:
-        return self.coordinator.sensors_by_device[self._device_id]
+    def sensor(self) -> tibber.data_api.Sensor:
+        """Return the device sensors."""
+        return self.coordinator.sensors_by_device[self._device_id]  # type: ignore[return-value]
 
     @property
     def is_on(self) -> bool | None:
         """Return the state of the binary sensor."""
-        return self.entity_description.is_on_fn(self.device[self.entity_description.key])
+        return self.entity_description.is_on_fn(
+            self.device[self.entity_description.key].value  # type: ignore[attr-defined]
+        )
