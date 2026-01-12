@@ -1,0 +1,30 @@
+# serializer version: 1
+# name: test_diagnostics
+  dict({
+    'board': dict({
+      'hostname': 'VRROOM-02',
+      'ipaddress': '192.168.1.123',
+      'pcbv': '3',
+      'serial': '000123456789',
+      'version': 'FW: 0.61',
+    }),
+    'config': dict({
+      'autosw': '1',
+      'htpcmode0': '0',
+      'htpcmode1': '0',
+      'htpcmode2': '0',
+      'htpcmode3': '0',
+      'iractive': '1',
+      'macaddr': 'c7:1c:df:9d:f6:40',
+      'mutetx0': '1',
+      'mutetx1': '1',
+      'oled': '1',
+      'relay': '0',
+    }),
+    'info': dict({
+      'opmode': '0',
+      'portseltx0': '0',
+      'portseltx1': '4',
+    }),
+  })
+# ---
