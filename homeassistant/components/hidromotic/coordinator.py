@@ -65,6 +65,10 @@ class HidromoticCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         """Set zone state."""
         await self.client.set_zone_state(zone_id, on)
 
+    async def async_set_tank_state(self, tank_id: int, on: bool) -> None:
+        """Set tank state."""
+        await self.client.set_tank_state(tank_id, on)
+
     async def async_refresh_data(self) -> None:
         """Request data refresh from device."""
         await self.client.refresh()

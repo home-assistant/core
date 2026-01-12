@@ -3,6 +3,7 @@
   "name": "Hidromotic",
   "codeowners": ["@bulju"],
   "config_flow": true,
+  "version": "1.0.0",
   "documentation": "https://www.home-assistant.io/integrations/hidromotic",
   "integration_type": "device",
   "iot_class": "local_push",
