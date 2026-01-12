@@ -2,12 +2,17 @@
 
 from __future__ import annotations
 
+import asyncio
 from datetime import datetime, timedelta
 from typing import TYPE_CHECKING, Any
 
 from tesla_fleet_api.const import TeslaEnergyPeriod, VehicleDataEndpoint
 from tesla_fleet_api.exceptions import (
+    GatewayTimeout,
+    InvalidResponse,
     InvalidToken,
+    RateLimited,
+    ServiceUnavailable,
     SubscriptionRequired,
     TeslaFleetError,
 )
@@ -22,6 +27,24 @@ if TYPE_CHECKING:
 
 from .const import ENERGY_HISTORY_FIELDS, LOGGER
 from .helpers import flatten
+
+RETRY_EXCEPTIONS = (
+    InvalidResponse,
+    RateLimited,
+    ServiceUnavailable,
+    GatewayTimeout,
+)
+MAX_RETRIES = 3
+
+
+def _get_wait_time(e: TeslaFleetError) -> float:
+    """Calculate wait time from exception."""
+    data = getattr(e, "data", {})
+    if isinstance(data, dict):
+        if after := data.get("after"):
+            return float(after)
+    return 10.0
+
 
 VEHICLE_INTERVAL = timedelta(seconds=60)
 VEHICLE_WAIT = timedelta(minutes=15)
@@ -69,15 +92,19 @@ class TeslemetryVehicleDataCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
     async def _async_update_data(self) -> dict[str, Any]:
         """Update vehicle data using Teslemetry API."""
-
-        try:
-            data = (await self.api.vehicle_data(endpoints=ENDPOINTS))["response"]
-        except (InvalidToken, SubscriptionRequired) as e:
-            raise ConfigEntryAuthFailed from e
-        except TeslaFleetError as e:
-            raise UpdateFailed(e.message) from e
-
-        return flatten(data)
+        for attempt in range(MAX_RETRIES):
+            try:
+                data = (await self.api.vehicle_data(endpoints=ENDPOINTS))["response"]
+                return flatten(data)
+            except (InvalidToken, SubscriptionRequired) as e:
+                raise ConfigEntryAuthFailed from e
+            except RETRY_EXCEPTIONS as e:
+                if attempt == MAX_RETRIES - 1:
+                    raise UpdateFailed(e.message) from e
+                await asyncio.sleep(_get_wait_time(e))
+            except TeslaFleetError as e:
+                raise UpdateFailed(e.message) from e
+        raise RuntimeError("Unreachable")
 
 
 class TeslemetryEnergySiteLiveCoordinator(DataUpdateCoordinator[dict[str, Any]]):
@@ -111,20 +138,24 @@ class TeslemetryEnergySiteLiveCoordinator(DataUpdateCoordinator[dict[str, Any]])
 
     async def _async_update_data(self) -> dict[str, Any]:
         """Update energy site data using Teslemetry API."""
-
-        try:
-            data = (await self.api.live_status())["response"]
-        except (InvalidToken, SubscriptionRequired) as e:
-            raise ConfigEntryAuthFailed from e
-        except TeslaFleetError as e:
-            raise UpdateFailed(e.message) from e
-
-        # Convert Wall Connectors from array to dict
-        data["wall_connectors"] = {
-            wc["din"]: wc for wc in (data.get("wall_connectors") or [])
-        }
-
-        return data
+        for attempt in range(MAX_RETRIES):
+            try:
+                data = (await self.api.live_status())["response"]
+                # Convert Wall Connectors from array to dict
+                data["wall_connectors"] = {
+                    wc["din"]: wc for wc in (data.get("wall_connectors") or [])
+                }
+            except (InvalidToken, SubscriptionRequired) as e:
+                raise ConfigEntryAuthFailed from e
+            except RETRY_EXCEPTIONS as e:
+                if attempt == MAX_RETRIES - 1:
+                    raise UpdateFailed(e.message) from e
+                await asyncio.sleep(_get_wait_time(e))
+            except TeslaFleetError as e:
+                raise UpdateFailed(e.message) from e
+            else:
+                return data
+        raise RuntimeError("Unreachable")
 
 
 class TeslemetryEnergySiteInfoCoordinator(DataUpdateCoordinator[dict[str, Any]]):
@@ -152,15 +183,19 @@ class TeslemetryEnergySiteInfoCoordinator(DataUpdateCoordinator[dict[str, Any]])
 
     async def _async_update_data(self) -> dict[str, Any]:
         """Update energy site data using Teslemetry API."""
-
-        try:
-            data = (await self.api.site_info())["response"]
-        except (InvalidToken, SubscriptionRequired) as e:
-            raise ConfigEntryAuthFailed from e
-        except TeslaFleetError as e:
-            raise UpdateFailed(e.message) from e
-
-        return flatten(data)
+        for attempt in range(MAX_RETRIES):
+            try:
+                data = (await self.api.site_info())["response"]
+                return flatten(data)
+            except (InvalidToken, SubscriptionRequired) as e:
+                raise ConfigEntryAuthFailed from e
+            except RETRY_EXCEPTIONS as e:
+                if attempt == MAX_RETRIES - 1:
+                    raise UpdateFailed(e.message) from e
+                await asyncio.sleep(_get_wait_time(e))
+            except TeslaFleetError as e:
+                raise UpdateFailed(e.message) from e
+        raise RuntimeError("Unreachable")
 
 
 class TeslemetryEnergyHistoryCoordinator(DataUpdateCoordinator[dict[str, Any]]):
@@ -187,25 +222,32 @@ class TeslemetryEnergyHistoryCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
     async def _async_update_data(self) -> dict[str, Any]:
         """Update energy site data using Teslemetry API."""
+        for attempt in range(MAX_RETRIES):
+            try:
+                data = (await self.api.energy_history(TeslaEnergyPeriod.DAY))[
+                    "response"
+                ]
+            except (InvalidToken, SubscriptionRequired) as e:
+                raise ConfigEntryAuthFailed from e
+            except RETRY_EXCEPTIONS as e:
+                if attempt == MAX_RETRIES - 1:
+                    raise UpdateFailed(e.message) from e
+                await asyncio.sleep(_get_wait_time(e))
+            except TeslaFleetError as e:
+                raise UpdateFailed(e.message) from e
+            else:
+                if not data or not isinstance(data.get("time_series"), list):
+                    raise UpdateFailed("Received invalid data")
 
-        try:
-            data = (await self.api.energy_history(TeslaEnergyPeriod.DAY))["response"]
-        except (InvalidToken, SubscriptionRequired) as e:
-            raise ConfigEntryAuthFailed from e
-        except TeslaFleetError as e:
-            raise UpdateFailed(e.message) from e
+                # Add all time periods together
+                output = dict.fromkeys(ENERGY_HISTORY_FIELDS, None)
+                for period in data.get("time_series", []):
+                    for key in ENERGY_HISTORY_FIELDS:
+                        if key in period:
+                            if output[key] is None:
+                                output[key] = period[key]
+                            else:
+                                output[key] += period[key]
 
-        if not data or not isinstance(data.get("time_series"), list):
-            raise UpdateFailed("Received invalid data")
-
-        # Add all time periods together
-        output = dict.fromkeys(ENERGY_HISTORY_FIELDS, None)
-        for period in data.get("time_series", []):
-            for key in ENERGY_HISTORY_FIELDS:
-                if key in period:
-                    if output[key] is None:
-                        output[key] = period[key]
-                    else:
-                        output[key] += period[key]
-
-        return output
+                return output
+        raise RuntimeError("Unreachable")

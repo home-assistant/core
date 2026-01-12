@@ -8,7 +8,11 @@ from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy.assertion import SnapshotAssertion
 from tesla_fleet_api.exceptions import (
+    GatewayTimeout,
+    InvalidResponse,
     InvalidToken,
+    RateLimited,
+    ServiceUnavailable,
     SubscriptionRequired,
     TeslaFleetError,
 )
@@ -430,3 +434,88 @@ async def test_migrate_from_future_version_fails(hass: HomeAssistant) -> None:
     assert entry is not None
     assert entry.state is ConfigEntryState.MIGRATION_ERROR
     assert entry.version == 3  # Version should remain unchanged
+
+
+async def test_retry_rate_limited(
+    hass: HomeAssistant,
+    mock_site_info: AsyncMock,
+) -> None:
+    """Test retry logic for RateLimited exception."""
+    mock_site_info.side_effect = [
+        RateLimited(data={"after": 5}),
+        {"response": {}},
+    ]
+
+    with patch(
+        "homeassistant.components.teslemetry.coordinator.asyncio.sleep"
+    ) as mock_sleep:
+        await setup_platform(hass)
+        mock_sleep.assert_any_call(5.0)
+
+
+async def test_retry_invalid_response(
+    hass: HomeAssistant,
+    mock_site_info: AsyncMock,
+) -> None:
+    """Test retry logic for InvalidResponse exception."""
+    mock_site_info.side_effect = [
+        InvalidResponse(data={"after": 7}),
+        {"response": {}},
+    ]
+
+    with patch(
+        "homeassistant.components.teslemetry.coordinator.asyncio.sleep"
+    ) as mock_sleep:
+        await setup_platform(hass)
+        mock_sleep.assert_any_call(7.0)
+
+
+async def test_retry_service_unavailable(
+    hass: HomeAssistant,
+    mock_site_info: AsyncMock,
+) -> None:
+    """Test retry logic for ServiceUnavailable exception."""
+    mock_site_info.side_effect = [
+        ServiceUnavailable(),
+        {"response": {}},
+    ]
+
+    with patch(
+        "homeassistant.components.teslemetry.coordinator.asyncio.sleep"
+    ) as mock_sleep:
+        await setup_platform(hass)
+        mock_sleep.assert_any_call(10.0)
+
+
+async def test_retry_gateway_timeout(
+    hass: HomeAssistant,
+    mock_site_info: AsyncMock,
+) -> None:
+    """Test retry logic for GatewayTimeout exception."""
+    mock_site_info.side_effect = [
+        GatewayTimeout(),
+        {"response": {}},
+    ]
+
+    with patch(
+        "homeassistant.components.teslemetry.coordinator.asyncio.sleep"
+    ) as mock_sleep:
+        await setup_platform(hass)
+        mock_sleep.assert_any_call(10.0)
+
+
+async def test_retry_max_exceeded(
+    hass: HomeAssistant,
+    mock_site_info: AsyncMock,
+) -> None:
+    """Test that UpdateFailed is raised after max retries exceeded."""
+    mock_site_info.side_effect = [
+        RateLimited(data={"after": 1}),
+        RateLimited(data={"after": 1}),
+        RateLimited(data={"after": 1}),
+    ]
+
+    with patch("homeassistant.components.teslemetry.coordinator.asyncio.sleep"):
+        entry = await setup_platform(hass)
+        # After max retries, the entry should fail to set up
+        assert entry.state is ConfigEntryState.SETUP_RETRY
