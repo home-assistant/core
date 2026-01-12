@@ -548,7 +548,8 @@ class CalendarEntity(Entity):
         Called when the entity registry entry has been updated and before the
         calendar is added to the state machine.
         """
-        assert self.registry_entry
+        if not self.registry_entry:
+            return
         if (
             (calendar_options := self.registry_entry.options.get(DOMAIN))
             and (color := calendar_options.get(CONF_COLOR))
