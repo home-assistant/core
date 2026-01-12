@@ -5174,7 +5174,112 @@
     'state': '100',
   })
 # ---
-# name: test_sensors[eve_thermo_v5][sensor.eve_thermo_20ecd1701_none-entry]
+# name: test_sensors[eve_thermo_v5][sensor.eve_thermo_20ecd1701_last_change-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.eve_thermo_20ecd1701_last_change',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
+    'original_icon': None,
+    'original_name': 'Last change',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'setpoint_change_timestamp',
+    'unique_id': '00000000000004D2-000000000000000C-MatterNodeDevice-1-SetpointChangeSourceTimestamp-513-50',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[eve_thermo_v5][sensor.eve_thermo_20ecd1701_last_change-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'timestamp',
+      'friendly_name': 'Eve Thermo 20ECD1701 Last change',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.eve_thermo_20ecd1701_last_change',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_sensors[eve_thermo_v5][sensor.eve_thermo_20ecd1701_last_change_amount-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.eve_thermo_20ecd1701_last_change_amount',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
+    'original_icon': None,
+    'original_name': 'Last change amount',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'setpoint_change_amount',
+    'unique_id': '00000000000004D2-000000000000000C-MatterNodeDevice-1-ThermostatSetpointChangeAmount-513-49',
+    'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+  })
+# ---
+# name: test_sensors[eve_thermo_v5][sensor.eve_thermo_20ecd1701_last_change_amount-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'temperature',
+      'friendly_name': 'Eve Thermo 20ECD1701 Last change amount',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.eve_thermo_20ecd1701_last_change_amount',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.0',
+  })
+# ---
+# name: test_sensors[eve_thermo_v5][sensor.eve_thermo_20ecd1701_last_change_source-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -5193,7 +5298,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.eve_thermo_20ecd1701_none',
+    'entity_id': 'sensor.eve_thermo_20ecd1701_last_change_source',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -5205,7 +5310,7 @@
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
-    'original_name': None,
+    'original_name': 'Last change source',
     'platform': 'matter',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -5215,11 +5320,11 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensors[eve_thermo_v5][sensor.eve_thermo_20ecd1701_none-state]
+# name: test_sensors[eve_thermo_v5][sensor.eve_thermo_20ecd1701_last_change_source-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'enum',
-      'friendly_name': 'Eve Thermo 20ECD1701 None',
+      'friendly_name': 'Eve Thermo 20ECD1701 Last change source',
       'options': list([
         'manual',
         'schedule',
@@ -5227,7 +5332,7 @@
       ]),
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.eve_thermo_20ecd1701_none',
+    'entity_id': 'sensor.eve_thermo_20ecd1701_last_change_source',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -5288,111 +5393,6 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '16.2',
-  })
-# ---
-# name: test_sensors[eve_thermo_v5][sensor.eve_thermo_20ecd1701_temperature_2-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.eve_thermo_20ecd1701_temperature_2',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 1,
-      }),
-    }),
-    'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
-    'original_icon': None,
-    'original_name': 'Temperature',
-    'platform': 'matter',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'setpoint_change_amount',
-    'unique_id': '00000000000004D2-000000000000000C-MatterNodeDevice-1-ThermostatSetpointChangeAmount-513-49',
-    'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
-  })
-# ---
-# name: test_sensors[eve_thermo_v5][sensor.eve_thermo_20ecd1701_temperature_2-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'temperature',
-      'friendly_name': 'Eve Thermo 20ECD1701 Temperature',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.eve_thermo_20ecd1701_temperature_2',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '0.0',
-  })
-# ---
-# name: test_sensors[eve_thermo_v5][sensor.eve_thermo_20ecd1701_timestamp-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.eve_thermo_20ecd1701_timestamp',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
-    'original_icon': None,
-    'original_name': 'Timestamp',
-    'platform': 'matter',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'setpoint_change_timestamp',
-    'unique_id': '00000000000004D2-000000000000000C-MatterNodeDevice-1-SetpointChangeSourceTimestamp-513-50',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_sensors[eve_thermo_v5][sensor.eve_thermo_20ecd1701_timestamp-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'timestamp',
-      'friendly_name': 'Eve Thermo 20ECD1701 Timestamp',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.eve_thermo_20ecd1701_timestamp',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'unknown',
   })
 # ---
 # name: test_sensors[eve_thermo_v5][sensor.eve_thermo_20ecd1701_valve_position-entry]
@@ -8906,7 +8906,112 @@
     'state': '25',
   })
 # ---
-# name: test_sensors[mock_thermostat][sensor.mock_thermostat_none-entry]
+# name: test_sensors[mock_thermostat][sensor.mock_thermostat_last_change-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.mock_thermostat_last_change',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
+    'original_icon': None,
+    'original_name': 'Last change',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'setpoint_change_timestamp',
+    'unique_id': '00000000000004D2-0000000000000096-MatterNodeDevice-1-SetpointChangeSourceTimestamp-513-50',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[mock_thermostat][sensor.mock_thermostat_last_change-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'timestamp',
+      'friendly_name': 'Mock Thermostat Last change',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.mock_thermostat_last_change',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2025-01-01T00:00:00+00:00',
+  })
+# ---
+# name: test_sensors[mock_thermostat][sensor.mock_thermostat_last_change_amount-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.mock_thermostat_last_change_amount',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
+    'original_icon': None,
+    'original_name': 'Last change amount',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'setpoint_change_amount',
+    'unique_id': '00000000000004D2-0000000000000096-MatterNodeDevice-1-ThermostatSetpointChangeAmount-513-49',
+    'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+  })
+# ---
+# name: test_sensors[mock_thermostat][sensor.mock_thermostat_last_change_amount-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'temperature',
+      'friendly_name': 'Mock Thermostat Last change amount',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.mock_thermostat_last_change_amount',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '1.5',
+  })
+# ---
+# name: test_sensors[mock_thermostat][sensor.mock_thermostat_last_change_source-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -8925,7 +9030,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.mock_thermostat_none',
+    'entity_id': 'sensor.mock_thermostat_last_change_source',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -8937,7 +9042,7 @@
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
-    'original_name': None,
+    'original_name': 'Last change source',
     'platform': 'matter',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -8947,11 +9052,11 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensors[mock_thermostat][sensor.mock_thermostat_none-state]
+# name: test_sensors[mock_thermostat][sensor.mock_thermostat_last_change_source-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'enum',
-      'friendly_name': 'Mock Thermostat None',
+      'friendly_name': 'Mock Thermostat Last change source',
       'options': list([
         'manual',
         'schedule',
@@ -8959,7 +9064,7 @@
       ]),
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.mock_thermostat_none',
+    'entity_id': 'sensor.mock_thermostat_last_change_source',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -9076,111 +9181,6 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '18.0',
-  })
-# ---
-# name: test_sensors[mock_thermostat][sensor.mock_thermostat_temperature_2-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.mock_thermostat_temperature_2',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 1,
-      }),
-    }),
-    'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
-    'original_icon': None,
-    'original_name': 'Temperature',
-    'platform': 'matter',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'setpoint_change_amount',
-    'unique_id': '00000000000004D2-0000000000000096-MatterNodeDevice-1-ThermostatSetpointChangeAmount-513-49',
-    'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
-  })
-# ---
-# name: test_sensors[mock_thermostat][sensor.mock_thermostat_temperature_2-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'temperature',
-      'friendly_name': 'Mock Thermostat Temperature',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.mock_thermostat_temperature_2',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '1.5',
-  })
-# ---
-# name: test_sensors[mock_thermostat][sensor.mock_thermostat_timestamp-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.mock_thermostat_timestamp',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
-    'original_icon': None,
-    'original_name': 'Timestamp',
-    'platform': 'matter',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'setpoint_change_timestamp',
-    'unique_id': '00000000000004D2-0000000000000096-MatterNodeDevice-1-SetpointChangeSourceTimestamp-513-50',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_sensors[mock_thermostat][sensor.mock_thermostat_timestamp-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'timestamp',
-      'friendly_name': 'Mock Thermostat Timestamp',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.mock_thermostat_timestamp',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '2025-01-01T00:00:00+00:00',
   })
 # ---
 # name: test_sensors[multi_endpoint_light][sensor.inovelli_current_switch_position_config-entry]
