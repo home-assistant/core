@@ -7,7 +7,6 @@ from aiohttp import ClientError, ClientResponseError, web
 from pypoint import PointSession
 
 from homeassistant.components import webhook
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_WEBHOOK_ID, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
@@ -21,13 +20,11 @@ from homeassistant.helpers.dispatcher import async_dispatcher_send
 
 from . import api
 from .const import CONF_WEBHOOK_URL, DOMAIN, EVENT_RECEIVED, SIGNAL_WEBHOOK
-from .coordinator import PointDataUpdateCoordinator
+from .coordinator import PointConfigEntry, PointDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
 PLATFORMS = [Platform.BINARY_SENSOR, Platform.SENSOR]
-
-type PointConfigEntry = ConfigEntry[PointDataUpdateCoordinator]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: PointConfigEntry) -> bool:
