@@ -11,10 +11,6 @@ from async_upnp_client.aiohttp import AiohttpRequester
 from async_upnp_client.client import UpnpDevice
 from async_upnp_client.client_factory import UpnpFactory
 from async_upnp_client.exceptions import UpnpConnectionError, UpnpError
-from wiim.consts import (
-    MANUFACTURER_WIIM,
-    UPNP_DEVICE_TYPE as SDK_UPNP_ST_MEDIA_RENDERER,
-)
 from wiim.controller import WiimController
 from wiim.endpoint import WiimApiEndpoint
 from wiim.exceptions import WiimDeviceException, WiimRequestException
@@ -30,7 +26,6 @@ from .const import (
     CONF_UDN,
     CONF_UPNP_LOCATION,
     DEFAULT_AVAILABILITY_POLLING_INTERVAL,
-    DEFAULT_DEVICE_NAME,
     DOMAIN,
     PLATFORMS,
     SDK_LOGGER,
@@ -47,41 +42,6 @@ def _get_local_ip() -> str | None:
             return s.getsockname()[0]
     except OSError:
         return None
-
-
-class MinimalUpnpShell(UpnpDevice):
-    """Minimal mock implementation of a UPnP device for WiiM integration."""
-
-    def __init__(self, _udn, _host, _name, _requester):
-        """Initialize the MinimalUpnpShell.
-
-        Args:
-            _udn (str): Unique Device Name (UDN).
-            _host (str): IP address of the device.
-            _name (str): Friendly name of the device.
-            _requester (AiohttpRequester): HTTP requester used for UPnP communication.
-        """
-
-        # pylint: disable=super-init-not-called
-        self.udn = _udn
-        self.friendly_name = _name or DEFAULT_DEVICE_NAME
-        self.manufacturer = MANUFACTURER_WIIM
-        self.model_name = "WiiM Device"
-        self.device_type = SDK_UPNP_ST_MEDIA_RENDERER
-        self.device_url = f"http://{_host}:49152/description.xml"
-        self.presentation_url = f"http://{_host}"
-        self._services = {}
-        self.requester = _requester
-        self.client = None
-        self.available = True
-
-    def service(self, service_type):
-        """Return the UPnP service by service ID, if available."""
-        return self._services.get(service_type)
-
-    def add_service(self, service):
-        """Add a UPnP service to the internal service registry."""
-        self._services[service.service_id] = service
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: WiimConfigEntry) -> bool:
@@ -151,7 +111,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: WiimConfigEntry) -> bool
                 host,
             )
 
-            upnp_device_instance = MinimalUpnpShell(udn, host, entry.title, requester)
+            return False
 
         sessions = ClientSession(connector=TCPConnector(ssl=False))
         http_api = WiimApiEndpoint(

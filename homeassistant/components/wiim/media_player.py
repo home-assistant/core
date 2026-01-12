@@ -103,12 +103,6 @@ async def async_setup_entry(
     """Set up WiiM media player from a config entry."""
 
     device: WiimDevice = entry.runtime_data
-    if not isinstance(device, WiimDevice):
-        SDK_LOGGER.error(
-            "Config entry runtime_data is not a WiimDevice instance. Found: %s",
-            type(device).__name__,
-        )
-        return
 
     # Store controller in hass.data if it's the first device, or update it
     wiim_data: WiimData = hass.data[DOMAIN]
