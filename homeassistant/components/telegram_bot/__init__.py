@@ -449,8 +449,10 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             _LOGGER.error(
                 "Service %s failed with %s errors:", service.service, len(errors)
             )
-            for idx, error in enumerate(errors):
-                _LOGGER.error("Error %s: %s", idx, str(error[0]))
+            for error in errors:
+                _LOGGER.error(
+                    "Error for chat_id / notify entity %s: %s", error[1], str(error[0])
+                )
 
             failed_targets = [target for _, target in errors]
             raise HomeAssistantError(
