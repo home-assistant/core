@@ -218,6 +218,12 @@ class Elke27Hub:
         pin = self._pin
         if not pin:
             raise Elke27PinRequiredError("PIN required to bypass zones.")
+        _LOGGER.debug(
+            "Sending zone bypass request: zone_id=%s bypassed=%s pin=%s",
+            zone_id,
+            bypassed,
+            pin,
+        )
         result = await client.async_execute(
             "zone_set_status",
             zone_id=zone_id,
