@@ -106,22 +106,18 @@ def _migrate_entity_unique_ids(hass: HomeAssistant, entry_id: str) -> None:
     )
 
     for entity in entities:
-        if entity.unique_id and "-" in entity.unique_id:
-            parts = entity.unique_id.split("-")
-            if len(parts) == 2 and entity.device_id:
-                # Get module type from device registry
-                device = dev_reg.async_get(entity.device_id)
-                if device and device.model:
-                    module_type = device.model
-                    new_unique_id = f"{module_type}-{entity.unique_id}"
-                    _LOGGER.debug(
-                        "migrate unique_id '%s' to '%s'",
-                        entity.unique_id,
-                        new_unique_id,
-                    )
-                    ent_reg.async_update_entity(
-                        entity.entity_id, new_unique_id=new_unique_id
-                    )
+        if not entity.unique_id or not entity.device_id:
+            continue
+        device_entry = dev_reg.async_get(entity.device_id)
+        if not device_entry or not device_entry.model:
+            continue
+        new_unique_id = f"{device_entry.model}-{entity.unique_id}"
+        _LOGGER.debug(
+            "migrate unique_id '%s' to '%s'",
+            entity.unique_id,
+            new_unique_id,
+        )
+        ent_reg.async_update_entity(entity.entity_id, new_unique_id=new_unique_id)
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
