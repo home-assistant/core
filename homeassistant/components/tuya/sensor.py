@@ -1828,19 +1828,12 @@ class TuyaSensorEntity(TuyaEntity, SensorEntity):
         if raw_value is None:
             return
 
-        try:
-            self._accumulated_value = float(raw_value)
-            LOGGER.debug(
-                "Initialized accumulated value from device for %s: %s",
-                self.unique_id,
-                self._accumulated_value,
-            )
-        except (ValueError, TypeError) as err:
-            LOGGER.error(
-                "Could not initialize accumulated value for %s: %s",
-                self.unique_id,
-                err,
-            )
+        self._accumulated_value = float(raw_value)
+        LOGGER.debug(
+            "Initialized accumulated value from device for %s: %s",
+            self.unique_id,
+            self._accumulated_value,
+        )
 
     async def _handle_state_update(
         self,
@@ -1888,11 +1881,7 @@ class TuyaSensorEntity(TuyaEntity, SensorEntity):
         if raw_value is None:
             return
 
-        try:
-            delta = float(raw_value)
-        except (ValueError, TypeError) as err:
-            LOGGER.error("Error processing delta for %s: %s", self.unique_id, err)
-            return
+        delta = float(raw_value)
 
         if self._accumulated_value is None:
             self._accumulated_value = delta
