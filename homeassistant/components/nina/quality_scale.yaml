@@ -47,7 +47,6 @@ rules:
   test-coverage:
     status: todo
     comment: |
-      Use load_json_object_fixture in tests
       Patch the library instead of the HTTP requests
       Create a shared fixture for the mock config entry
       Use init_integration in tests
