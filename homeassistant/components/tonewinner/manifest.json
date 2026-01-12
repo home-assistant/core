@@ -4,7 +4,7 @@
   "codeowners": ["@emma-sg"],
   "config_flow": true,
   "documentation": "",
-  "iot_class": "local_polling",
+  "iot_class": "local_push",
   "issue_tracker": "",
   "loggers": ["custom_components.tonewinner"],
   "version": "0.1.0"

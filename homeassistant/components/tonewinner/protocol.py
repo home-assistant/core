@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 import logging
+import re
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -102,7 +103,7 @@ class ToneWinnerCommands:
     # ？
     # X
     # **? (* for digit)
-    # 1-2 digit，mim 1	Set input as designated NO. input
+    # 1-2 digit，min 1	Set input as designated NO. input
     # HD*	Set input as designated HDMI port.
     # OP*	Set input as designated opt port.
     # CO*	Set input as designated coaxial port.
@@ -165,7 +166,7 @@ class ToneWinnerProtocol:
         return f"{COMMAND_START}{command_code}{COMMAND_TERMINATOR}"
 
     @staticmethod
-    def build_volume_command(volume_level: int) -> str:
+    def build_volume_command(volume_level: float) -> str:
         """Build volume set command.
 
         Args:
@@ -179,29 +180,29 @@ class ToneWinnerProtocol:
 
         # Convert 0-100 to 0-80 hex
         vol_value = int((volume_level / 100) * 128)
-        vol_hex = f"{vol_value:02X}"
-        return f"{ToneWinnerCommands.VOLUME_SET_PREFIX}{vol_hex}{COMMAND_TERMINATOR}"
+        vol_hex = f"{vol_value}"
+        return f"{ToneWinnerCommands.VOLUME_SET_PREFIX} {vol_hex}"
 
     @staticmethod
     def parse_power_status(response: str) -> bool | None:
         """Parse power status from device response."""
-        if not response or not response.startswith("PWR"):
+        if not response or not response.startswith("POWER"):
             return None
 
-        # Response format: PWR01 (on) or PWR00 (off)
-        return response[3:5] == "01"
+        # Response format: POWER ON or POWER OFF
+        return response[6:8] == "ON"
 
     @staticmethod
     def parse_volume_status(response: str) -> float | None:
         """Parse volume level from device response (0-100)."""
-        if not response or not response.startswith("MVL"):
+        if not response or not response.startswith("VOL"):
             return None
 
         try:
-            # Response format: MVLXX where XX is hex (00-80 = 0-128)
-            vol_hex = response[3:5]
-            vol_value = int(vol_hex, 16)
-            return min(100.0, (vol_value / 128) * 100)
+            # Response format: VOL XX.X where XX.X is 0-80 in 0.5 steps
+            vol = response[4:8]
+            vol_value = float(vol)
+            return min(80.0, (vol_value / 80) * 80)
         except (ValueError, IndexError):
             _LOGGER.error("Invalid volume response: %s", response)
             return None
@@ -209,53 +210,45 @@ class ToneWinnerProtocol:
     @staticmethod
     def parse_mute_status(response: str) -> bool | None:
         """Parse mute status from device response."""
-        if not response or not response.startswith("AMT"):
+        if not response or not response.startswith("MUTE"):
             return None
 
-        return response[3:5] == "01"
+        return response[5:7] == "ON"
 
     @staticmethod
     def parse_input_source(response: str) -> str | None:
         """Parse current input source from response."""
-        if not response or not response.startswith("SLI"):
+        if not response or not response.startswith("SI"):
             return None
 
-        source_code = response[3:5]
-        source_map = {
-            "00": "DVD",
-            "01": "Video 1",
-            "02": "Video 2",
-            "03": "Video 3",
-            "04": "Video 4",
-            "05": "Video 5",
-            "06": "Video 6",
-            "07": "Video 7",
-            "20": "CD",
-            "22": "Tuner",
-            "23": "Phono",
-            "30": "Multi-channel",
-            "40": "USB",
-            "41": "Bluetooth",
-            "44": "Home Media",
-        }
-        return source_map.get(source_code, f"Unknown ({source_code})")
+        source = response[6:]
+
+        # Strip `V=(<video>\w+) A=(<audio>\w+)$` from the end using regex, extracting their params to log
+        match = re.search(r"(?P<name>(\w+) V=(?P<video>\w+) A=(?P<audio>\w+)$", source)
+        if match:
+            source_name = match.group("name")
+            video_source = match.group("video")
+            audio_source = match.group("audio")
+            _LOGGER.debug(
+                "Input source: %s (Video source: %s, Audio source: %s)",
+                source_name,
+                video_source,
+                audio_source,
+            )
+            return source_name
+
+        _LOGGER.debug("Invalid input source format: %s", source)
+        return None
 
     @staticmethod
     def parse_sound_mode(response: str) -> str | None:
         """Parse current sound mode from response."""
-        if not response or not response.startswith("LMD"):
+        if not response or not response.startswith("MODE"):
             return None
 
-        mode_code = response[3:5]
-        mode_map = {
-            "00": "Stereo",
-            "01": "Direct",
-            "02": "Surround",
-            "03": "Film",
-            "04": "Music",
-            "05": "Game",
-        }
-        return mode_map.get(mode_code, f"Unknown ({mode_code})")
+        mode_code = response[5:]
+        mode = ToneWinnerCommands.MODES.get(mode_code)
+        return mode.label if mode else f"Unknown ({mode_code})"
 
     @staticmethod
     def is_valid_response(response: str) -> bool:
@@ -263,56 +256,5 @@ class ToneWinnerProtocol:
         if not response:
             return False
 
-        # Valid responses start with 3-letter command code and have at least 5 chars
-        return len(response) >= 5 and response[:3].isalpha()
-
-    @staticmethod
-    def extract_numeric_value(response: str, prefix: str) -> int | None:
-        """Extract numeric value from response (for bass, treble, balance, etc.)."""
-        if not response or not response.startswith(prefix):
-            return None
-
-        try:
-            # Format: PREFIXXX where XX is hex value
-            hex_value = response[len(prefix) : len(prefix) + 2]
-            return int(hex_value, 16)
-        except (ValueError, IndexError):
-            _LOGGER.error("Invalid numeric value in response: %s", response)
-            return None
-
-
-# Mapping of friendly names to command codes for easy access
-COMMAND_MAP = {
-    "power_on": ToneWinnerCommands.POWER_ON,
-    "power_off": ToneWinnerCommands.POWER_OFF,
-    "power_query": ToneWinnerCommands.POWER_QUERY,
-    "volume_up": ToneWinnerCommands.VOLUME_UP,
-    "volume_down": ToneWinnerCommands.VOLUME_DOWN,
-    "volume_query": ToneWinnerCommands.VOLUME_QUERY,
-    "mute_on": ToneWinnerCommands.MUTE_ON,
-    "mute_off": ToneWinnerCommands.MUTE_OFF,
-    "mute_query": ToneWinnerCommands.MUTE_QUERY,
-    "input_dvd": ToneWinnerCommands.INPUT_DVD,
-    "input_video1": ToneWinnerCommands.INPUT_VIDEO1,
-    "input_video2": ToneWinnerCommands.INPUT_VIDEO2,
-    "input_cd": ToneWinnerCommands.INPUT_CD,
-    "input_tuner": ToneWinnerCommands.INPUT_TUNER,
-    "input_phono": ToneWinnerCommands.INPUT_PHONO,
-    "input_usb": ToneWinnerCommands.INPUT_USB,
-    "input_bluetooth": ToneWinnerCommands.INPUT_BLUETOOTH,
-    "sound_stereo": ToneWinnerCommands.SOUND_MODE_STEREO,
-    "sound_direct": ToneWinnerCommands.SOUND_MODE_DIRECT,
-    "sound_surround": ToneWinnerCommands.SOUND_MODE_SURROUND,
-    "sound_film": ToneWinnerCommands.SOUND_MODE_FILM,
-    "sound_music": ToneWinnerCommands.SOUND_MODE_MUSIC,
-    "sound_game": ToneWinnerCommands.SOUND_MODE_GAME,
-    "bass_up": ToneWinnerCommands.BASS_UP,
-    "bass_down": ToneWinnerCommands.BASS_DOWN,
-    "treble_up": ToneWinnerCommands.TREBLE_UP,
-    "treble_down": ToneWinnerCommands.TREBLE_DOWN,
-    "balance_left": ToneWinnerCommands.BALANCE_LEFT,
-    "balance_right": ToneWinnerCommands.BALANCE_RIGHT,
-    "balance_center": ToneWinnerCommands.BALANCE_CENTER,
-    "led_bright_up": ToneWinnerCommands.LED_BRIGHTNESS_UP,
-    "led_bright_down": ToneWinnerCommands.LED_BRIGHTNESS_DOWN,
-}
+        ## TODO figure out better parsing here maybe
+        return True

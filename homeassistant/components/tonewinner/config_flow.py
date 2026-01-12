@@ -21,7 +21,7 @@ class TonewinnerConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     user_input[CONF_SERIAL_PORT], user_input[CONF_BAUD_RATE], timeout=1
                 )
                 s.close()
-            except Exception as e:
+            except (serial.SerialException, OSError) as e:
                 errors["base"] = f"Cannot open port: {e}"
             if not errors:
                 return self.async_create_entry(

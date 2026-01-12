@@ -20,6 +20,11 @@ from .const import CONF_BAUD_RATE, CONF_SERIAL_PORT, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
+
+class TonewinnerError(Exception):
+    """Exception for Tonewinner errors."""
+
+
 # Service registration schema
 SERVICE_SEND_RAW = "send_raw"
 SERVICE_SEND_RAW_SCHEMA = vol.Schema(
@@ -125,9 +130,8 @@ class TonewinnerMediaPlayer(MediaPlayerEntity):
     _attr_has_entity_name = True
     _attr_name = None
 
-    _available = False
-
     def __init__(self, hass, entry, data):
+        """Initialize the media player."""
         self.hass = hass
         self.port = data[CONF_SERIAL_PORT]
         self.baud = data.get(CONF_BAUD_RATE, 9600)
@@ -140,7 +144,7 @@ class TonewinnerMediaPlayer(MediaPlayerEntity):
         )
         self._transport = None
         self._protocol = None
-        self._available = False
+        self._attr_available = False
 
     async def async_added_to_hass(self):
         """Connect when entity is added."""
@@ -155,32 +159,32 @@ class TonewinnerMediaPlayer(MediaPlayerEntity):
                 lambda: TonewinnerProtocol(self),
                 self.port,
                 baudrate=self.baud,
-                bytesize=serial.SEVENBITS,
-                parity=serial.PARITY_NONE,
-                stopbits=serial.STOPBITS_ONE,
+                bytesize=serial.SEVENBITS,  # type: ignore[arg-type]  # serial const are ints
+                parity=serial.PARITY_NONE,  # type: ignore[arg-type]
+                stopbits=serial.STOPBITS_ONE,  # type: ignore[arg-type]
                 timeout=1,
             )
             self._transport, self._protocol = await asyncio.wait_for(
                 connection, timeout=5
             )
-        except Exception as ex:
+        except (TimeoutError, OSError, serial.SerialException) as ex:
             _LOGGER.error("Connection failed: %s", ex)
-            self._available = False
+            self._attr_available = False
 
     def set_available(self, available: bool):
         """Update availability."""
-        self._available = available
+        self._attr_available = available
         self.schedule_update_ha_state()
 
     def handle_response(self, response: str):
         """Parse incoming data."""
-        _LOGGER.debug(f"RX: {response}")
+        _LOGGER.debug("RX: %s", response)
         # TODO: Update self._attr_state, volume, source based on response
 
     async def send_raw_command(self, command: str):
         """Service handler: send raw command."""
         if not self._transport:
-            raise Exception("Not connected")
+            raise TonewinnerError("Not connected")
 
         # Handle hex strings like "0x21 0x50" or plain ASCII
         if command.startswith("0x"):
@@ -192,18 +196,17 @@ class TonewinnerMediaPlayer(MediaPlayerEntity):
         if not data.endswith(b"\r") and not data.endswith(b"\n"):
             self._transport.write(b"\r")  # Common terminator
 
-    # --- Media player controls (Integra-style stubs) ---
-
-    @property
-    def available(self):
-        return self._available
+    # --- Media player controls (receiver-style stubs) ---
 
     async def async_turn_on(self):
+        """Turn the media player on."""
         await self.send_raw_command("PWR01")
 
     async def async_turn_off(self):
+        """Turn the media player off."""
         await self.send_raw_command("PWR00")
 
     async def async_set_volume_level(self, volume):
+        """Set volume level."""
         vol_int = int(volume * 100)
         await self.send_raw_command(f"VL{vol_int:03d}")
