@@ -8,8 +8,7 @@ from typing import Any
 import voluptuous as vol
 import yarl
 
-from homeassistant import config_entries
-from homeassistant.config_entries import ConfigFlowResult
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
@@ -93,7 +92,7 @@ async def validate_input(
     }
 
 
-class NRGkickConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class NRGkickConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for NRGkick."""
 
     VERSION = 1
