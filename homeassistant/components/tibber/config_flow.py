@@ -66,8 +66,16 @@ class TibberConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
 
         try:
             await tibber_connection.update_info()
-        except (aiohttp.ClientError, TimeoutError):
-            return self.async_abort(reason="cannot_connect")
+        except TimeoutError:
+            return self.async_abort(reason=ERR_TIMEOUT)
+        except tibber.InvalidLoginError:
+            return self.async_abort(reason=ERR_TOKEN)
+        except (
+            aiohttp.ClientError,
+            tibber.RetryableHttpExceptionError,
+            tibber.FatalHttpExceptionError,
+        ):
+            return self.async_abort(reason=ERR_CLIENT)
 
         if tibber_connection.user_id is None:
             return self.async_abort(reason="cannot_connect")
