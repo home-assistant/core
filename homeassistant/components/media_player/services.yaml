@@ -289,3 +289,10 @@ unjoin:
       domain: media_player
       supported_features:
         - media_player.MediaPlayerEntityFeature.GROUPING
+
+get_groupable_players:
+  target:
+    entity:
+      domain: media_player
+      supported_features:
+        - media_player.MediaPlayerEntityFeature.GROUPING

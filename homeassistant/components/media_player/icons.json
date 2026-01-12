@@ -38,6 +38,9 @@
     "clear_playlist": {
       "service": "mdi:playlist-remove"
     },
+    "get_groupable_players": {
+      "service": "mdi:speaker-multiple"
+    },
     "join": {
       "service": "mdi:group"
     },
