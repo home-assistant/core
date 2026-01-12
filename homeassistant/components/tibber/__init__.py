@@ -87,6 +87,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: TibberConfigEntry) -> bo
             translation_domain=DOMAIN,
             translation_key="oauth2_implementation_unavailable",
         ) from err
+
     session = OAuth2Session(hass, entry, implementation)
     try:
         await session.async_ensure_token_valid()
