@@ -9,7 +9,7 @@ from aiohttp import ClientError
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
-from homeassistant.const import CONF_DOMAIN, CONF_HOST, CONF_PASSWORD
+from homeassistant.const import CONF_DOMAIN, CONF_HOST, CONF_NAME, CONF_PASSWORD
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.selector import (
@@ -29,6 +29,16 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_HOST, default="@"): cv.string,
         vol.Required(CONF_DOMAIN): cv.string,
+        vol.Required(CONF_PASSWORD): TextSelector(
+            TextSelectorConfig(
+                type=TextSelectorType.PASSWORD, autocomplete="current-password"
+            )
+        ),
+    }
+)
+
+STEP_RECONFIGURE_DATA_SCHEMA = vol.Schema(
+    {
         vol.Required(CONF_PASSWORD): TextSelector(
             TextSelectorConfig(
                 type=TextSelectorType.PASSWORD, autocomplete="current-password"
@@ -89,3 +99,41 @@ class NamecheapDnsConfigFlow(ConfigFlow, domain=DOMAIN):
 
         deprecate_yaml_issue(self.hass, import_success=True)
         return result
+
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle reconfigure flow."""
+        errors: dict[str, str] = {}
+
+        entry = self._get_reconfigure_entry()
+
+        if user_input is not None:
+            session = async_get_clientsession(self.hass)
+            try:
+                if not await update_namecheapdns(
+                    session,
+                    entry.data[CONF_HOST],
+                    entry.data[CONF_DOMAIN],
+                    user_input[CONF_PASSWORD],
+                ):
+                    errors["base"] = "update_failed"
+            except ClientError:
+                _LOGGER.debug("Cannot connect", exc_info=True)
+                errors["base"] = "cannot_connect"
+            except Exception:
+                _LOGGER.exception("Unexpected exception")
+                errors["base"] = "unknown"
+
+            if not errors:
+                return self.async_update_reload_and_abort(
+                    entry,
+                    data_updates=user_input,
+                )
+
+        return self.async_show_form(
+            step_id="reconfigure",
+            data_schema=STEP_RECONFIGURE_DATA_SCHEMA,
+            errors=errors,
+            description_placeholders={CONF_NAME: entry.title},
+        )
