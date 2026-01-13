@@ -7,7 +7,7 @@ from collections.abc import Awaitable, Callable, Coroutine, Iterable, Mapping
 from contextvars import ContextVar
 from datetime import timedelta
 from logging import Logger, getLogger
-from typing import TYPE_CHECKING, Any, Protocol
+from typing import TYPE_CHECKING, Any, Protocol, overload
 
 from homeassistant import config_entries
 from homeassistant.const import (
@@ -931,11 +931,12 @@ class EntityPlatform:
             if entity.entity_id is None or entity_registry.async_is_registered(
                 entity.entity_id
             ):
-                suggested_object_id, calculated_object_id = _async_derive_object_ids(
-                    entity, self
+                object_ids = _async_derive_object_ids(
+                    entity, self, fallback_object_id=DEVICE_DEFAULT_NAME
                 )
-                suggested_object_id = suggested_object_id or calculated_object_id
-                assert suggested_object_id is not None
+                suggested_object_id = (
+                    object_ids[0] if object_ids[0] is not None else object_ids[1]
+                )
                 entity.entity_id = entity_registry.async_get_available_entity_id(
                     self.domain, suggested_object_id
                 )
@@ -1207,9 +1208,21 @@ class EntityPlatform:
         return await self.platform_data.async_load_translations()
 
 
+@overload
+def _async_derive_object_ids(
+    entity: Entity, platform: EntityPlatform, *, fallback_object_id: None = None
+) -> tuple[str | None, str | None]: ...
+
+
+@overload
+def _async_derive_object_ids(
+    entity: Entity, platform: EntityPlatform, *, fallback_object_id: str
+) -> tuple[str, None] | tuple[None, str]: ...
+
+
 @callback
 def _async_derive_object_ids(
-    entity: Entity, platform: EntityPlatform
+    entity: Entity, platform: EntityPlatform, *, fallback_object_id: str | None = None
 ) -> tuple[str | None, str | None]:
     """Derive the object IDs for an entity.
 
@@ -1224,8 +1237,8 @@ def _async_derive_object_ids(
     else:
         object_id = entity.suggested_object_id
 
-    if entity.unique_id is None and not object_id:
-        object_id = DEVICE_DEFAULT_NAME
+    if not object_id and fallback_object_id is not None:
+        object_id = fallback_object_id
 
     if platform.entity_namespace is not None:
         is_calculated = False
