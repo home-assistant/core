@@ -10,10 +10,10 @@ from elke27_lib import ArmMode
 from elke27_lib.errors import Elke27PinRequiredError
 
 from homeassistant.components.alarm_control_panel import (
-    AlarmControlPanelCodeFormat,
     AlarmControlPanelEntity,
     AlarmControlPanelEntityFeature,
     AlarmControlPanelState,
+    CodeFormat,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
@@ -67,7 +67,7 @@ class Elke27AreaAlarmControlPanel(AlarmControlPanelEntity):
     """Representation of an Elke27 area."""
 
     _attr_has_entity_name = True
-    _attr_code_format = AlarmControlPanelCodeFormat.NUMBER
+    _attr_code_format = CodeFormat.NUMBER
     _attr_code_arm_required = True
     _attr_supported_features = (
         AlarmControlPanelEntityFeature.ARM_AWAY
