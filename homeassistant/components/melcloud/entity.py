@@ -12,13 +12,6 @@ class MelCloudEntity(CoordinatorEntity[MelCloudDeviceUpdateCoordinator]):
 
     _attr_has_entity_name = True
 
-    def __init__(
-        self,
-        coordinator: MelCloudDeviceUpdateCoordinator,
-    ) -> None:
-        """Initialize the entity."""
-        super().__init__(coordinator)
-
     @property
     def available(self) -> bool:
         """Return True if entity is available."""
