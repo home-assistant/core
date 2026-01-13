@@ -86,10 +86,10 @@
     },
     "sensor": {
       "panel_name": {
-        "name": "Panel name"
+        "name": "Panel Name"
       },
       "panel_ready": {
-        "name": "Panel connection"
+        "name": "Panel State"
       }
     }
   }
