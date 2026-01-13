@@ -1,0 +1,67 @@
+{
+  "dailySchedules": [
+    {
+      "dayOfWeek": "Monday",
+      "switchpoints": [
+        {
+          "heatSetpoint": 15.0,
+          "timeOfDay": "00:00:00"
+        }
+      ]
+    },
+    {
+      "dayOfWeek": "Tuesday",
+      "switchpoints": [
+        {
+          "heatSetpoint": 15.0,
+          "timeOfDay": "00:00:00"
+        }
+      ]
+    },
+    {
+      "dayOfWeek": "Wednesday",
+      "switchpoints": [
+        {
+          "heatSetpoint": 15.0,
+          "timeOfDay": "00:00:00"
+        }
+      ]
+    },
+    {
+      "dayOfWeek": "Thursday",
+      "switchpoints": [
+        {
+          "heatSetpoint": 15.0,
+          "timeOfDay": "00:00:00"
+        }
+      ]
+    },
+    {
+      "dayOfWeek": "Friday",
+      "switchpoints": [
+        {
+          "heatSetpoint": 15.0,
+          "timeOfDay": "00:00:00"
+        }
+      ]
+    },
+    {
+      "dayOfWeek": "Saturday",
+      "switchpoints": [
+        {
+          "heatSetpoint": 15.0,
+          "timeOfDay": "00:00:00"
+        }
+      ]
+    },
+    {
+      "dayOfWeek": "Sunday",
+      "switchpoints": [
+        {
+          "heatSetpoint": 15.0,
+          "timeOfDay": "00:00:00"
+        }
+      ]
+    }
+  ]
+}

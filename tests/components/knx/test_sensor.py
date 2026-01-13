@@ -1,6 +1,9 @@
 """Test KNX sensor."""
 
+from typing import Any
+
 from freezegun.api import FrozenDateTimeFactory
+import pytest
 
 from homeassistant.components.knx.const import (
     ATTR_SOURCE,
@@ -8,9 +11,10 @@ from homeassistant.components.knx.const import (
     CONF_SYNC_STATE,
 )
 from homeassistant.components.knx.schema import SensorSchema
-from homeassistant.const import CONF_NAME, CONF_TYPE, STATE_UNKNOWN
+from homeassistant.const import CONF_NAME, CONF_TYPE, STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant, State
 
+from . import KnxEntityGenerator
 from .conftest import KNXTestKit
 
 from tests.common import (
@@ -166,3 +170,135 @@ async def test_always_callback(hass: HomeAssistant, knx: KNXTestKit) -> None:
     await knx.receive_write("1/1/1", (0xFA,))
     await knx.receive_write("2/2/2", (0xFA,))
     assert len(events) == 6
+
+
+@pytest.mark.parametrize(
+    ("knx_config", "response_payload", "expected_state"),
+    [
+        (
+            {
+                "ga_sensor": {
+                    "state": "1/1/1",
+                    "passive": [],
+                    "dpt": "9.001",  # temperature 2 byte float
+                },
+            },
+            (0, 0),
+            {
+                "state": "0.0",
+                "device_class": "temperature",
+                "state_class": "measurement",
+                "unit_of_measurement": "°C",
+            },
+        ),
+        (
+            {
+                "ga_sensor": {
+                    "state": "1/1/1",
+                    "passive": [],
+                    "dpt": "12",  # generic 4byte uint
+                },
+                "state_class": "total_increasing",
+                "device_class": "energy",
+                "unit_of_measurement": "Mcal",
+                "sync_state": True,
+            },
+            (1, 2, 3, 4),
+            {
+                "state": "16909060",
+                "device_class": "energy",
+                "state_class": "total_increasing",
+            },
+        ),
+    ],
+)
+async def test_sensor_ui_create(
+    hass: HomeAssistant,
+    knx: KNXTestKit,
+    create_ui_entity: KnxEntityGenerator,
+    knx_config: dict[str, Any],
+    response_payload: tuple[int, ...],
+    expected_state: dict[str, Any],
+) -> None:
+    """Test creating a sensor."""
+    await knx.setup_integration()
+    await create_ui_entity(
+        platform=Platform.SENSOR,
+        entity_data={"name": "test"},
+        knx_data=knx_config,
+    )
+    # created entity sends read-request to KNX bus
+    await knx.assert_read("1/1/1")
+    await knx.receive_response("1/1/1", response_payload)
+    knx.assert_state("sensor.test", **expected_state)
+
+
+async def test_sensor_ui_load(knx: KNXTestKit) -> None:
+    """Test loading a sensor from storage."""
+    await knx.setup_integration(config_store_fixture="config_store_sensor.json")
+
+    await knx.assert_read("1/1/1", response=(0, 0), ignore_order=True)
+    knx.assert_state(
+        "sensor.test",
+        "0",
+        device_class=None,  # 7.600 color temperature has no sensor device class
+        state_class="measurement",
+        unit_of_measurement="K",
+    )
+
+
+@pytest.mark.parametrize(
+    "knx_config",
+    [
+        (
+            {
+                "ga_sensor": {
+                    "state": "1/1/1",
+                    "passive": [],
+                    "dpt": "9.001",  # temperature 2 byte float
+                },
+                "state_class": "totoal_increasing",  # invalid for temperature
+            }
+        ),
+        (
+            {
+                "ga_sensor": {
+                    "state": "1/1/1",
+                    "passive": [],
+                    "dpt": "12",  # generic 4byte uint
+                },
+                "state_class": "total_increasing",
+                "device_class": "energy",  # requires unit_of_measurement
+                "sync_state": True,
+            }
+        ),
+        (
+            {
+                "ga_sensor": {
+                    "state": "1/1/1",
+                    "passive": [],
+                    "dpt": "9.001",  # temperature 2 byte float
+                },
+                "state_class": "measurement_angle",  # requires degree unit
+                "sync_state": True,
+            }
+        ),
+    ],
+)
+async def test_sensor_ui_create_attribute_validation(
+    hass: HomeAssistant,
+    knx: KNXTestKit,
+    create_ui_entity: KnxEntityGenerator,
+    knx_config: dict[str, Any],
+) -> None:
+    """Test creating a sensor with invalid unit, state_class or device_class."""
+    await knx.setup_integration()
+    with pytest.raises(AssertionError) as err:
+        await create_ui_entity(
+            platform=Platform.SENSOR,
+            entity_data={"name": "test"},
+            knx_data=knx_config,
+        )
+    assert "success" in err.value.args[0]
+    assert "error_base" in err.value.args[0]
+    assert "path" in err.value.args[0]

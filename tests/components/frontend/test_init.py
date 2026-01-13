@@ -11,6 +11,7 @@ from unittest.mock import patch
 from aiohttp.test_utils import TestClient
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+import voluptuous as vol
 
 from homeassistant.components.frontend import (
     CONF_EXTRA_JS_URL_ES5,
@@ -279,6 +280,30 @@ async def test_themes_save_storage(
     }
 
 
+@pytest.mark.usefixtures("frontend_themes")
+async def test_themes_save_storage_new_schema(
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test that theme settings are restores after restart."""
+
+    await hass.services.async_call(
+        DOMAIN, "set_theme", {"name": "happy", "name_dark": "dark"}, blocking=True
+    )
+
+    # To trigger the call_later
+    freezer.tick(60.0)
+    async_fire_time_changed(hass)
+    # To execute the save
+    await hass.async_block_till_done()
+
+    assert hass_storage[THEMES_STORAGE_KEY]["data"] == {
+        "frontend_default_theme": "happy",
+        "frontend_default_dark_theme": "dark",
+    }
+
+
 async def test_themes_set_theme(
     hass: HomeAssistant, themes_ws_client: MockHAClientWebSocket
 ) -> None:
@@ -318,9 +343,13 @@ async def test_themes_set_theme_wrong_name(
 ) -> None:
     """Test frontend.set_theme service called with wrong name."""
 
-    await hass.services.async_call(
-        DOMAIN, "set_theme", {"name": "wrong"}, blocking=True
-    )
+    with pytest.raises(
+        vol.error.MultipleInvalid,
+        match="Theme wrong not found",
+    ):
+        await hass.services.async_call(
+            DOMAIN, "set_theme", {"name": "wrong"}, blocking=True
+        )
 
     await themes_ws_client.send_json({"id": 5, "type": "frontend/get_themes"})
 
@@ -371,14 +400,58 @@ async def test_themes_set_dark_theme(
     assert msg["result"]["default_dark_theme"] == "light_and_dark"
 
 
-@pytest.mark.usefixtures("frontend")
-async def test_themes_set_dark_theme_wrong_name(
+async def test_themes_set_combined_theme(
     hass: HomeAssistant, themes_ws_client: MockHAClientWebSocket
 ) -> None:
-    """Test frontend.set_theme service called with mode dark and wrong name."""
+    """Test frontend.set_theme service setting both light and dark modes."""
+
     await hass.services.async_call(
-        DOMAIN, "set_theme", {"name": "wrong", "mode": "dark"}, blocking=True
+        DOMAIN, "set_theme", {"name_dark": "dark"}, blocking=True
     )
+
+    await themes_ws_client.send_json({"id": 5, "type": "frontend/get_themes"})
+    msg = await themes_ws_client.receive_json()
+
+    assert msg["result"]["default_theme"] == "default"
+    assert msg["result"]["default_dark_theme"] == "dark"
+
+    await hass.services.async_call(
+        DOMAIN, "set_theme", {"name": "happy"}, blocking=True
+    )
+
+    await themes_ws_client.send_json({"id": 6, "type": "frontend/get_themes"})
+    msg = await themes_ws_client.receive_json()
+
+    assert msg["result"]["default_theme"] == "happy"
+    assert msg["result"]["default_dark_theme"] == "dark"
+
+    await hass.services.async_call(
+        DOMAIN,
+        "set_theme",
+        {"name": "light_only", "name_dark": "dark_only"},
+        blocking=True,
+    )
+
+    await themes_ws_client.send_json({"id": 7, "type": "frontend/get_themes"})
+    msg = await themes_ws_client.receive_json()
+
+    assert msg["result"]["default_theme"] == "light_only"
+    assert msg["result"]["default_dark_theme"] == "dark_only"
+
+
+@pytest.mark.usefixtures("frontend")
+@pytest.mark.parametrize(
+    ("schema"), [{"name": "wrong", "mode": "dark"}, {"name_dark": "wrong"}]
+)
+async def test_themes_set_dark_theme_wrong_name(
+    hass: HomeAssistant, themes_ws_client: MockHAClientWebSocket, schema
+) -> None:
+    """Test frontend.set_theme service called with mode dark and wrong name."""
+    with pytest.raises(
+        vol.error.MultipleInvalid,
+        match="Theme wrong not found",
+    ):
+        await hass.services.async_call(DOMAIN, "set_theme", schema, blocking=True)
 
     await themes_ws_client.send_json({"id": 5, "type": "frontend/get_themes"})
 
@@ -397,9 +470,13 @@ async def test_themes_reload_themes(
         "homeassistant.components.frontend.async_hass_config_yaml",
         return_value={DOMAIN: {CONF_THEMES: {"sad": {"primary-color": "blue"}}}},
     ):
-        await hass.services.async_call(
-            DOMAIN, "set_theme", {"name": "happy"}, blocking=True
-        )
+        with pytest.raises(
+            vol.error.MultipleInvalid,
+            match="Theme happy not found",
+        ):
+            await hass.services.async_call(
+                DOMAIN, "set_theme", {"name": "happy"}, blocking=True
+            )
         await hass.services.async_call(DOMAIN, "reload_themes", blocking=True)
 
     await themes_ws_client.send_json({"id": 5, "type": "frontend/get_themes"})

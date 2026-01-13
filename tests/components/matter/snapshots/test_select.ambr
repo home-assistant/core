@@ -241,10 +241,7 @@
     'capabilities': dict({
       'options': list([
         'normal',
-        'vacation',
-        'privacy',
         'no_remote_lock_unlock',
-        'passage',
       ]),
     }),
     'config_entry_id': <ANY>,
@@ -253,7 +250,7 @@
     'device_id': <ANY>,
     'disabled_by': None,
     'domain': 'select',
-    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_category': None,
     'entity_id': 'select.aqara_smart_lock_u200_operating_mode',
     'has_entity_name': True,
     'hidden_by': None,
@@ -282,10 +279,7 @@
       'friendly_name': 'Aqara Smart Lock U200 Operating mode',
       'options': list([
         'normal',
-        'vacation',
-        'privacy',
         'no_remote_lock_unlock',
-        'passage',
       ]),
     }),
     'context': <ANY>,
@@ -684,10 +678,7 @@
     'capabilities': dict({
       'options': list([
         'normal',
-        'vacation',
-        'privacy',
         'no_remote_lock_unlock',
-        'passage',
       ]),
     }),
     'config_entry_id': <ANY>,
@@ -696,7 +687,7 @@
     'device_id': <ANY>,
     'disabled_by': None,
     'domain': 'select',
-    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_category': None,
     'entity_id': 'select.mock_door_lock_operating_mode',
     'has_entity_name': True,
     'hidden_by': None,
@@ -725,10 +716,7 @@
       'friendly_name': 'Mock Door Lock Operating mode',
       'options': list([
         'normal',
-        'vacation',
-        'privacy',
         'no_remote_lock_unlock',
-        'passage',
       ]),
     }),
     'context': <ANY>,
@@ -869,10 +857,7 @@
     'capabilities': dict({
       'options': list([
         'normal',
-        'vacation',
-        'privacy',
         'no_remote_lock_unlock',
-        'passage',
       ]),
     }),
     'config_entry_id': <ANY>,
@@ -881,7 +866,7 @@
     'device_id': <ANY>,
     'disabled_by': None,
     'domain': 'select',
-    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_category': None,
     'entity_id': 'select.mock_door_lock_with_unbolt_operating_mode',
     'has_entity_name': True,
     'hidden_by': None,
@@ -910,10 +895,7 @@
       'friendly_name': 'Mock Door Lock with unbolt Operating mode',
       'options': list([
         'normal',
-        'vacation',
-        'privacy',
         'no_remote_lock_unlock',
-        'passage',
       ]),
     }),
     'context': <ANY>,
@@ -1418,7 +1400,7 @@
     'state': 'previous',
   })
 # ---
-# name: test_selects[eve_thermo][select.eve_thermo_temperature_display_mode-entry]
+# name: test_selects[eve_thermo_v4][select.eve_thermo_20ebp1701_temperature_display_mode-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1436,7 +1418,7 @@
     'disabled_by': None,
     'domain': 'select',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'select.eve_thermo_temperature_display_mode',
+    'entity_id': 'select.eve_thermo_20ebp1701_temperature_display_mode',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1458,17 +1440,74 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_selects[eve_thermo][select.eve_thermo_temperature_display_mode-state]
+# name: test_selects[eve_thermo_v4][select.eve_thermo_20ebp1701_temperature_display_mode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Eve Thermo Temperature display mode',
+      'friendly_name': 'Eve Thermo 20EBP1701 Temperature display mode',
       'options': list([
         'Celsius',
         'Fahrenheit',
       ]),
     }),
     'context': <ANY>,
-    'entity_id': 'select.eve_thermo_temperature_display_mode',
+    'entity_id': 'select.eve_thermo_20ebp1701_temperature_display_mode',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'Celsius',
+  })
+# ---
+# name: test_selects[eve_thermo_v5][select.eve_thermo_20ecd1701_temperature_display_mode-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'Celsius',
+        'Fahrenheit',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.eve_thermo_20ecd1701_temperature_display_mode',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Temperature display mode',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'temperature_display_mode',
+    'unique_id': '00000000000004D2-000000000000000C-MatterNodeDevice-1-TrvTemperatureDisplayMode-516-0',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_selects[eve_thermo_v5][select.eve_thermo_20ecd1701_temperature_display_mode-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Eve Thermo 20ECD1701 Temperature display mode',
+      'options': list([
+        'Celsius',
+        'Fahrenheit',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.eve_thermo_20ecd1701_temperature_display_mode',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -2523,10 +2562,7 @@
     'capabilities': dict({
       'options': list([
         'normal',
-        'vacation',
-        'privacy',
         'no_remote_lock_unlock',
-        'passage',
       ]),
     }),
     'config_entry_id': <ANY>,
@@ -2535,7 +2571,7 @@
     'device_id': <ANY>,
     'disabled_by': None,
     'domain': 'select',
-    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_category': None,
     'entity_id': 'select.mock_lock_operating_mode',
     'has_entity_name': True,
     'hidden_by': None,
@@ -2564,10 +2600,7 @@
       'friendly_name': 'Mock Lock Operating mode',
       'options': list([
         'normal',
-        'vacation',
-        'privacy',
         'no_remote_lock_unlock',
-        'passage',
       ]),
     }),
     'context': <ANY>,
@@ -2637,6 +2670,63 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'silent',
+  })
+# ---
+# name: test_selects[mock_thermostat][select.mock_thermostat_temperature_display_mode-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'Celsius',
+        'Fahrenheit',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.mock_thermostat_temperature_display_mode',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Temperature display mode',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'temperature_display_mode',
+    'unique_id': '00000000000004D2-0000000000000096-MatterNodeDevice-1-TrvTemperatureDisplayMode-516-0',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_selects[mock_thermostat][select.mock_thermostat_temperature_display_mode-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Mock Thermostat Temperature display mode',
+      'options': list([
+        'Celsius',
+        'Fahrenheit',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.mock_thermostat_temperature_display_mode',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'Celsius',
   })
 # ---
 # name: test_selects[mounted_dimmable_load_control_fixture][select.mock_mounted_dimmable_load_control_power_on_behavior_on_startup-entry]
@@ -3726,10 +3816,8 @@
     'capabilities': dict({
       'options': list([
         'normal',
-        'vacation',
         'privacy',
         'no_remote_lock_unlock',
-        'passage',
       ]),
     }),
     'config_entry_id': <ANY>,
@@ -3738,7 +3826,7 @@
     'device_id': <ANY>,
     'disabled_by': None,
     'domain': 'select',
-    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_category': None,
     'entity_id': 'select.secuyou_smart_lock_operating_mode',
     'has_entity_name': True,
     'hidden_by': None,
@@ -3767,10 +3855,8 @@
       'friendly_name': 'Secuyou Smart Lock Operating mode',
       'options': list([
         'normal',
-        'vacation',
         'privacy',
         'no_remote_lock_unlock',
-        'passage',
       ]),
     }),
     'context': <ANY>,

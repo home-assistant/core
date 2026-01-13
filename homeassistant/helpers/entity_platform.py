@@ -38,12 +38,7 @@ from homeassistant.setup import SetupPhases, async_start_setup
 from homeassistant.util.async_ import create_eager_task
 from homeassistant.util.hass_dict import HassKey
 
-from . import (
-    device_registry as dev_reg,
-    entity_registry as ent_reg,
-    service,
-    translation,
-)
+from . import device_registry as dr, entity_registry as er, service, translation
 from .deprecation import deprecated_function
 from .entity_registry import EntityRegistry, RegistryEntryDisabler, RegistryEntryHider
 from .event import async_call_later
@@ -330,10 +325,18 @@ class EntityPlatform:
                 self.domain,
             )
             learn_more_url = None
-            if self.platform and "custom_components" not in self.platform.__file__:  # type: ignore[attr-defined]
-                learn_more_url = (
-                    f"https://www.home-assistant.io/integrations/{self.platform_name}/"
-                )
+            if self.platform:
+                if "custom_components" in self.platform.__file__:  # type: ignore[attr-defined]
+                    self.logger.warning(
+                        (
+                            "The %s platform module for the %s custom integration does not implement"
+                            " async_setup_platform or setup_platform."
+                        ),
+                        self.platform_name,
+                        self.domain,
+                    )
+                else:
+                    learn_more_url = f"https://www.home-assistant.io/integrations/{self.platform_name}/"
             platform_key = f"platform: {self.platform_name}"
             yaml_example = f"```yaml\n{self.domain}:\n  - {platform_key}\n```"
             async_create_issue(
@@ -616,7 +619,7 @@ class EntityPlatform:
         event loop and will finish faster if we run them concurrently.
         """
         results: list[BaseException | None] | None = None
-        entity_registry = ent_reg.async_get(self.hass)
+        entity_registry = er.async_get(self.hass)
         try:
             async with self.hass.timeout.async_timeout(timeout, self.domain):
                 results = await asyncio.gather(
@@ -668,7 +671,7 @@ class EntityPlatform:
         to the event loop so we can await the coros directly without
         scheduling them as tasks.
         """
-        entity_registry = ent_reg.async_get(self.hass)
+        entity_registry = er.async_get(self.hass)
         try:
             async with self.hass.timeout.async_timeout(timeout, self.domain):
                 for entity in entities:
@@ -844,16 +847,16 @@ class EntityPlatform:
                     entity.add_to_platform_abort()
                     return
 
-            device: dev_reg.DeviceEntry | None
+            device: dr.DeviceEntry | None
             if self.config_entry:
                 if device_info := entity.device_info:
                     try:
-                        device = dev_reg.async_get(self.hass).async_get_or_create(
+                        device = dr.async_get(self.hass).async_get_or_create(
                             config_entry_id=self.config_entry.entry_id,
                             config_subentry_id=config_subentry_id,
                             **device_info,
                         )
-                    except dev_reg.DeviceInfoError as exc:
+                    except dr.DeviceInfoError as exc:
                         self.logger.error(
                             "%s: Not adding entity with invalid device info: %s",
                             self.platform_name,
@@ -861,6 +864,8 @@ class EntityPlatform:
                         )
                         entity.add_to_platform_abort()
                         return
+
+                    entity.device_entry = device
                 else:
                     device = entity.device_entry
             else:
@@ -921,8 +926,6 @@ class EntityPlatform:
                 )
 
             entity.registry_entry = entry
-            if device:
-                entity.device_entry = device
             entity.entity_id = entry.entity_id
 
         else:  # entity.unique_id is None
@@ -1228,7 +1231,7 @@ class EntityPlatform:
 
 @callback
 def async_calculate_suggested_object_id(
-    entity: Entity, device: dev_reg.DeviceEntry | None
+    entity: Entity, device: dr.DeviceEntry | None
 ) -> str | None:
     """Calculate the suggested object ID for an entity."""
     calculated_object_id: str | None = None

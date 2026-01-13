@@ -98,50 +98,28 @@ DEVICE_TYPE_TAGS = {
 }
 
 
-class StateStatus(IntEnum):
+class StateStatus(MieleEnum, missing_to_none=True):
     """Define appliance states."""
 
-    RESERVED = 0
-    OFF = 1
-    ON = 2
-    PROGRAMMED = 3
-    WAITING_TO_START = 4
-    IN_USE = 5
-    PAUSE = 6
-    PROGRAM_ENDED = 7
-    FAILURE = 8
-    PROGRAM_INTERRUPTED = 9
-    IDLE = 10
-    RINSE_HOLD = 11
-    SERVICE = 12
-    SUPERFREEZING = 13
-    SUPERCOOLING = 14
-    SUPERHEATING = 15
-    SUPERCOOLING_SUPERFREEZING = 146
-    AUTOCLEANING = 147
-    NOT_CONNECTED = 255
-
-
-STATE_STATUS_TAGS = {
-    StateStatus.OFF: "off",
-    StateStatus.ON: "on",
-    StateStatus.PROGRAMMED: "programmed",
-    StateStatus.WAITING_TO_START: "waiting_to_start",
-    StateStatus.IN_USE: "in_use",
-    StateStatus.PAUSE: "pause",
-    StateStatus.PROGRAM_ENDED: "program_ended",
-    StateStatus.FAILURE: "failure",
-    StateStatus.PROGRAM_INTERRUPTED: "program_interrupted",
-    StateStatus.IDLE: "idle",
-    StateStatus.RINSE_HOLD: "rinse_hold",
-    StateStatus.SERVICE: "service",
-    StateStatus.SUPERFREEZING: "superfreezing",
-    StateStatus.SUPERCOOLING: "supercooling",
-    StateStatus.SUPERHEATING: "superheating",
-    StateStatus.SUPERCOOLING_SUPERFREEZING: "supercooling_superfreezing",
-    StateStatus.AUTOCLEANING: "autocleaning",
-    StateStatus.NOT_CONNECTED: "not_connected",
-}
+    reserved = 0
+    off = 1
+    on = 2
+    programmed = 3
+    waiting_to_start = 4
+    in_use = 5
+    pause = 6
+    program_ended = 7
+    failure = 8
+    program_interrupted = 9
+    idle = 10
+    rinse_hold = 11
+    service = 12
+    superfreezing = 13
+    supercooling = 14
+    superheating = 15
+    supercooling_superfreezing = 146
+    autocleaning = 147
+    not_connected = 255
 
 
 class MieleActions(IntEnum):
@@ -182,7 +160,7 @@ class ProgramPhaseWashingMachine(MieleEnum, missing_to_none=True):
     drain = 265
     spin = 266, 11010
     anti_crease = 267, 11029
-    finished = 268
+    finished = 268, 11012
     venting = 269
     starch_stop = 270
     freshen_up_and_moisten = 271
@@ -190,6 +168,8 @@ class ProgramPhaseWashingMachine(MieleEnum, missing_to_none=True):
     hygiene = 279
     drying = 280
     disinfecting = 285
+    flex_load_active = 11047
+    automatic_start = 11044
 
 
 class ProgramPhaseTumbleDryer(MieleEnum, missing_to_none=True):
@@ -450,19 +430,19 @@ class WashingMachineProgramId(MieleEnum, missing_to_none=True):
     """Program Id codes for washing machines."""
 
     no_program = 0, -1
-    cottons = 1
+    cottons = 1, 10001
     minimum_iron = 3
-    delicates = 4
-    woollens = 8
-    silks = 9
+    delicates = 4, 10022
+    woollens = 8, 10040
+    silks = 9, 10042
     starch = 17
-    rinse = 18
-    drain_spin = 21
-    curtains = 22
-    shirts = 23
+    rinse = 18, 10058
+    drain_spin = 21, 10036
+    curtains = 22, 10055
+    shirts = 23, 10038
     denim = 24, 123
-    proofing = 27
-    sportswear = 29
+    proofing = 27, 10057
+    sportswear = 29, 10052
     automatic_plus = 31
     outerwear = 37
     pillows = 39
@@ -471,19 +451,29 @@ class WashingMachineProgramId(MieleEnum, missing_to_none=True):
     rinse_out_lint = 48  # washer-dryer
     dark_garments = 50
     separate_rinse_starch = 52
-    first_wash = 53
+    first_wash = 53, 10053
     cottons_hygiene = 69
     steam_care = 75  # washer-dryer
     freshen_up = 76  # washer-dryer
-    trainers = 77
-    clean_machine = 91
-    down_duvets = 95
-    express_20 = 122
+    trainers = 77, 10056
+    clean_machine = 91, 10067
+    down_duvets = 95, 10050
+    express_20 = 122, 10029
     down_filled_items = 129
     cottons_eco = 133
-    quick_power_wash = 146
-    eco_40_60 = 190
-    normal = 10001
+    quick_power_wash = 146, 10031
+    eco_40_60 = 190, 10007
+    bed_linen = 10047
+    easy_care = 10016
+    dark_jeans = 10048
+    outdoor_garments = 10049
+    game_pieces = 10070
+    stuffed_toys = 10069
+    pre_ironing = 10059
+    trainers_refresh = 10066
+    smartmatic = 10068
+    cottonrepair = 10065
+    powerfresh = 10075
 
 
 class DishWasherProgramId(MieleEnum, missing_to_none=True):

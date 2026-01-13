@@ -5,16 +5,17 @@ from __future__ import annotations
 from collections.abc import Callable
 from dataclasses import dataclass
 from enum import StrEnum
+from typing import TYPE_CHECKING
 
 from pythonxbox.api.provider.people.models import Person
 from pythonxbox.api.provider.titlehub.models import Title
 
 from homeassistant.components.image import ImageEntity, ImageEntityDescription
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import dt as dt_util
 
-from .coordinator import XboxConfigEntry, XboxUpdateCoordinator
+from .coordinator import XboxConfigEntry, XboxPresenceCoordinator
 from .entity import XboxBaseEntity, XboxBaseEntityDescription, profile_pic
 
 PARALLEL_UPDATES = 0
@@ -63,30 +64,27 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Xbox images."""
+    coordinator = config_entry.runtime_data.presence
+    if TYPE_CHECKING:
+        assert config_entry.unique_id
+    async_add_entities(
+        [
+            XboxImageEntity(hass, coordinator, config_entry.unique_id, description)
+            for description in IMAGE_DESCRIPTIONS
+        ]
+    )
 
-    coordinator = config_entry.runtime_data.status
-
-    xuids_added: set[str] = set()
-
-    @callback
-    def add_entities() -> None:
-        """Add image entities."""
-        nonlocal xuids_added
-
-        current_xuids = set(coordinator.data.presence)
-        if new_xuids := current_xuids - xuids_added:
-            async_add_entities(
-                [
-                    XboxImageEntity(hass, coordinator, xuid, description)
-                    for xuid in new_xuids
-                    for description in IMAGE_DESCRIPTIONS
-                ]
-            )
-            xuids_added |= new_xuids
-        xuids_added &= current_xuids
-
-    coordinator.async_add_listener(add_entities)
-    add_entities()
+    for subentry_id, subentry in config_entry.subentries.items():
+        async_add_entities(
+            [
+                XboxImageEntity(hass, coordinator, subentry.unique_id, description)
+                for description in IMAGE_DESCRIPTIONS
+                if subentry.unique_id
+                and subentry.unique_id in coordinator.data.presence
+                and subentry.subentry_type == "friend"
+            ],
+            config_subentry_id=subentry_id,
+        )
 
 
 class XboxImageEntity(XboxBaseEntity, ImageEntity):
@@ -97,7 +95,7 @@ class XboxImageEntity(XboxBaseEntity, ImageEntity):
     def __init__(
         self,
         hass: HomeAssistant,
-        coordinator: XboxUpdateCoordinator,
+        coordinator: XboxPresenceCoordinator,
         xuid: str,
         entity_description: XboxImageEntityDescription,
     ) -> None:
@@ -113,11 +111,12 @@ class XboxImageEntity(XboxBaseEntity, ImageEntity):
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
 
-        url = self.entity_description.image_url_fn(self.data, self.title_info)
+        if self.available:
+            url = self.entity_description.image_url_fn(self.data, self.title_info)
 
-        if url != self._attr_image_url:
-            self._attr_image_url = url
-            self._cached_image = None
-            self._attr_image_last_updated = dt_util.utcnow()
+            if url != self._attr_image_url:
+                self._attr_image_url = url
+                self._cached_image = None
+                self._attr_image_last_updated = dt_util.utcnow()
 
         super()._handle_coordinator_update()
