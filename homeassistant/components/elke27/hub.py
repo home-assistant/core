@@ -9,7 +9,7 @@ import inspect
 import logging
 from typing import Any, Callable
 
-from elke27_lib import ClientConfig, Elke27Client, LinkKeys
+from elke27_lib import ArmMode, ClientConfig, Elke27Client, LinkKeys
 from elke27_lib.errors import Elke27LinkRequiredError, Elke27PinRequiredError
 
 from homeassistant.core import HomeAssistant, callback
