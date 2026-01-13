@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from enum import StrEnum
 import logging
 
 from pytomorrowio.const import DAILY, HOURLY, NOWCAST, WeatherCode
@@ -76,45 +77,50 @@ CONDITIONS = {
     WeatherCode.PARTLY_CLOUDY: ATTR_CONDITION_PARTLYCLOUDY,
 }
 
-# Weather constants
-TMRW_ATTR_TIMESTAMP = "startTime"
-TMRW_ATTR_TEMPERATURE = "temperature"
-TMRW_ATTR_TEMPERATURE_HIGH = "temperatureMax"
-TMRW_ATTR_TEMPERATURE_LOW = "temperatureMin"
-TMRW_ATTR_PRESSURE = "pressureSeaLevel"
-TMRW_ATTR_HUMIDITY = "humidity"
-TMRW_ATTR_WIND_SPEED = "windSpeed"
-TMRW_ATTR_WIND_DIRECTION = "windDirection"
-TMRW_ATTR_OZONE = "pollutantO3"
-TMRW_ATTR_CONDITION = "weatherCode"
-TMRW_ATTR_VISIBILITY = "visibility"
-TMRW_ATTR_PRECIPITATION = "precipitationIntensityAvg"
-TMRW_ATTR_PRECIPITATION_PROBABILITY = "precipitationProbability"
-TMRW_ATTR_WIND_GUST = "windGust"
-TMRW_ATTR_CLOUD_COVER = "cloudCover"
-TMRW_ATTR_PRECIPITATION_TYPE = "precipitationType"
 
-# Sensor attributes
-TMRW_ATTR_PARTICULATE_MATTER_25 = "particulateMatter25"
-TMRW_ATTR_PARTICULATE_MATTER_10 = "particulateMatter10"
-TMRW_ATTR_NITROGEN_DIOXIDE = "pollutantNO2"
-TMRW_ATTR_CARBON_MONOXIDE = "pollutantCO"
-TMRW_ATTR_SULPHUR_DIOXIDE = "pollutantSO2"
-TMRW_ATTR_EPA_AQI = "epaIndex"
-TMRW_ATTR_EPA_PRIMARY_POLLUTANT = "epaPrimaryPollutant"
-TMRW_ATTR_EPA_HEALTH_CONCERN = "epaHealthConcern"
-TMRW_ATTR_CHINA_AQI = "mepIndex"
-TMRW_ATTR_CHINA_PRIMARY_POLLUTANT = "mepPrimaryPollutant"
-TMRW_ATTR_CHINA_HEALTH_CONCERN = "mepHealthConcern"
-TMRW_ATTR_POLLEN_TREE = "treeIndex"
-TMRW_ATTR_POLLEN_WEED = "weedIndex"
-TMRW_ATTR_POLLEN_GRASS = "grassIndex"
-TMRW_ATTR_FIRE_INDEX = "fireIndex"
-TMRW_ATTR_FEELS_LIKE = "temperatureApparent"
-TMRW_ATTR_DEW_POINT = "dewPoint"
-TMRW_ATTR_PRESSURE_SURFACE_LEVEL = "pressureSurfaceLevel"
-TMRW_ATTR_SOLAR_GHI = "solarGHI"
-TMRW_ATTR_CLOUD_BASE = "cloudBase"
-TMRW_ATTR_CLOUD_CEILING = "cloudCeiling"
-TMRW_ATTR_UV_INDEX = "uvIndex"
-TMRW_ATTR_UV_HEALTH_CONCERN = "uvHealthConcern"
+# This should be in pytomorrowio
+class TomorrowioAttr(StrEnum):
+    """Weather attributes."""
+
+    # Weather constants
+    TIMESTAMP = "startTime"
+    TEMPERATURE = "temperature"
+    TEMPERATURE_HIGH = "temperatureMax"
+    TEMPERATURE_LOW = "temperatureMin"
+    PRESSURE = "pressureSeaLevel"
+    HUMIDITY = "humidity"
+    WIND_SPEED = "windSpeed"
+    WIND_DIRECTION = "windDirection"
+    OZONE = "pollutantO3"
+    CONDITION = "weatherCode"
+    VISIBILITY = "visibility"
+    PRECIPITATION = "precipitationIntensityAvg"
+    PRECIPITATION_PROBABILITY = "precipitationProbability"
+    WIND_GUST = "windGust"
+    CLOUD_COVER = "cloudCover"
+    PRECIPITATION_TYPE = "precipitationType"
+
+    # Sensor attributes
+    PARTICULATE_MATTER_25 = "particulateMatter25"
+    PARTICULATE_MATTER_10 = "particulateMatter10"
+    NITROGEN_DIOXIDE = "pollutantNO2"
+    CARBON_MONOXIDE = "pollutantCO"
+    SULPHUR_DIOXIDE = "pollutantSO2"
+    EPA_AQI = "epaIndex"
+    EPA_PRIMARY_POLLUTANT = "epaPrimaryPollutant"
+    EPA_HEALTH_CONCERN = "epaHealthConcern"
+    CHINA_AQI = "mepIndex"
+    CHINA_PRIMARY_POLLUTANT = "mepPrimaryPollutant"
+    CHINA_HEALTH_CONCERN = "mepHealthConcern"
+    POLLEN_TREE = "treeIndex"
+    POLLEN_WEED = "weedIndex"
+    POLLEN_GRASS = "grassIndex"
+    FIRE_INDEX = "fireIndex"
+    FEELS_LIKE = "temperatureApparent"
+    DEW_POINT = "dewPoint"
+    PRESSURE_SURFACE_LEVEL = "pressureSurfaceLevel"
+    SOLAR_GHI = "solarGHI"
+    CLOUD_BASE = "cloudBase"
+    CLOUD_CEILING = "cloudCeiling"
+    UV_INDEX = "uvIndex"
+    UV_HEALTH_CONCERN = "uvHealthConcern"

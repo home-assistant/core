@@ -12,6 +12,7 @@ from pytomorrowio.const import CURRENT, FORECASTS
 from pytomorrowio.exceptions import (
     CantConnectException,
     InvalidAPIKeyException,
+    MalformedRequestException,
     RateLimitedException,
     UnknownException,
 )
@@ -24,51 +25,65 @@ from homeassistant.const import (
     CONF_LONGITUDE,
 )
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import (
-    CONF_TIMESTEP,
-    DOMAIN,
-    LOGGER,
-    TMRW_ATTR_CARBON_MONOXIDE,
-    TMRW_ATTR_CHINA_AQI,
-    TMRW_ATTR_CHINA_HEALTH_CONCERN,
-    TMRW_ATTR_CHINA_PRIMARY_POLLUTANT,
-    TMRW_ATTR_CLOUD_BASE,
-    TMRW_ATTR_CLOUD_CEILING,
-    TMRW_ATTR_CLOUD_COVER,
-    TMRW_ATTR_CONDITION,
-    TMRW_ATTR_DEW_POINT,
-    TMRW_ATTR_EPA_AQI,
-    TMRW_ATTR_EPA_HEALTH_CONCERN,
-    TMRW_ATTR_EPA_PRIMARY_POLLUTANT,
-    TMRW_ATTR_FEELS_LIKE,
-    TMRW_ATTR_FIRE_INDEX,
-    TMRW_ATTR_HUMIDITY,
-    TMRW_ATTR_NITROGEN_DIOXIDE,
-    TMRW_ATTR_OZONE,
-    TMRW_ATTR_PARTICULATE_MATTER_10,
-    TMRW_ATTR_PARTICULATE_MATTER_25,
-    TMRW_ATTR_POLLEN_GRASS,
-    TMRW_ATTR_POLLEN_TREE,
-    TMRW_ATTR_POLLEN_WEED,
-    TMRW_ATTR_PRECIPITATION,
-    TMRW_ATTR_PRECIPITATION_PROBABILITY,
-    TMRW_ATTR_PRECIPITATION_TYPE,
-    TMRW_ATTR_PRESSURE,
-    TMRW_ATTR_PRESSURE_SURFACE_LEVEL,
-    TMRW_ATTR_SOLAR_GHI,
-    TMRW_ATTR_SULPHUR_DIOXIDE,
-    TMRW_ATTR_TEMPERATURE,
-    TMRW_ATTR_TEMPERATURE_HIGH,
-    TMRW_ATTR_TEMPERATURE_LOW,
-    TMRW_ATTR_UV_HEALTH_CONCERN,
-    TMRW_ATTR_UV_INDEX,
-    TMRW_ATTR_VISIBILITY,
-    TMRW_ATTR_WIND_DIRECTION,
-    TMRW_ATTR_WIND_GUST,
-    TMRW_ATTR_WIND_SPEED,
-)
+from .const import CONF_TIMESTEP, DOMAIN, LOGGER, TomorrowioAttr
+
+REALTIME_FIELDS: list[str] = [
+    # Weather
+    TomorrowioAttr.TEMPERATURE,
+    TomorrowioAttr.HUMIDITY,
+    TomorrowioAttr.PRESSURE,
+    TomorrowioAttr.WIND_SPEED,
+    TomorrowioAttr.WIND_DIRECTION,
+    TomorrowioAttr.CONDITION,
+    TomorrowioAttr.VISIBILITY,
+    TomorrowioAttr.OZONE,
+    TomorrowioAttr.WIND_GUST,
+    TomorrowioAttr.CLOUD_COVER,
+    TomorrowioAttr.PRECIPITATION_TYPE,
+    # Sensors
+    TomorrowioAttr.CARBON_MONOXIDE,
+    TomorrowioAttr.CHINA_AQI,
+    TomorrowioAttr.CHINA_HEALTH_CONCERN,
+    TomorrowioAttr.CHINA_PRIMARY_POLLUTANT,
+    TomorrowioAttr.CLOUD_BASE,
+    TomorrowioAttr.CLOUD_CEILING,
+    TomorrowioAttr.CLOUD_COVER,
+    TomorrowioAttr.DEW_POINT,
+    TomorrowioAttr.EPA_AQI,
+    TomorrowioAttr.EPA_HEALTH_CONCERN,
+    TomorrowioAttr.EPA_PRIMARY_POLLUTANT,
+    TomorrowioAttr.FEELS_LIKE,
+    TomorrowioAttr.FIRE_INDEX,
+    TomorrowioAttr.NITROGEN_DIOXIDE,
+    TomorrowioAttr.OZONE,
+    TomorrowioAttr.PARTICULATE_MATTER_10,
+    TomorrowioAttr.PARTICULATE_MATTER_25,
+    TomorrowioAttr.POLLEN_GRASS,
+    TomorrowioAttr.POLLEN_TREE,
+    TomorrowioAttr.POLLEN_WEED,
+    TomorrowioAttr.PRECIPITATION_TYPE,
+    TomorrowioAttr.PRESSURE_SURFACE_LEVEL,
+    TomorrowioAttr.SOLAR_GHI,
+    TomorrowioAttr.SULPHUR_DIOXIDE,
+    TomorrowioAttr.UV_INDEX,
+    TomorrowioAttr.UV_HEALTH_CONCERN,
+    TomorrowioAttr.WIND_GUST,
+]
+
+ALL_FORECAST_FIELDS: list[str] = [
+    TomorrowioAttr.TEMPERATURE_LOW,
+    TomorrowioAttr.TEMPERATURE_HIGH,
+    TomorrowioAttr.DEW_POINT,
+    TomorrowioAttr.HUMIDITY,
+    TomorrowioAttr.WIND_SPEED,
+    TomorrowioAttr.WIND_DIRECTION,
+    TomorrowioAttr.CONDITION,
+    TomorrowioAttr.PRECIPITATION,
+    TomorrowioAttr.PRECIPITATION_PROBABILITY,
+]
 
 
 @callback
@@ -126,6 +141,7 @@ class TomorrowioDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         self.data = {CURRENT: {}, FORECASTS: {}}
         self.entry_id_to_location_dict: dict[str, str] = {}
         self._coordinator_ready: asyncio.Event | None = None
+        self._setup_error: Exception | None = None
 
         super().__init__(
             hass,
@@ -158,11 +174,19 @@ class TomorrowioDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 "Loaded %s entries, initiating first refresh",
                 len(self.entry_id_to_location_dict),
             )
-            await self.async_config_entry_first_refresh()
-            self._coordinator_ready.set()
+            try:
+                async with asyncio.timeout(45):
+                    await self.async_config_entry_first_refresh()
+            except Exception as err:
+                self._setup_error = err
+                raise ConfigEntryNotReady(str(err)) from err
+            finally:
+                self._coordinator_ready.set()
         else:
             # If we have an event, we need to wait for it to be set before we proceed
             await self._coordinator_ready.wait()
+            if self._setup_error is not None:
+                raise ConfigEntryNotReady(str(self._setup_error)) from self._setup_error
             # If we're not getting new data because we already know this entry, we
             # don't need to schedule a refresh
             if entry.entry_id in self.entry_id_to_location_dict:
@@ -214,63 +238,15 @@ class TomorrowioDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             entry = self.hass.config_entries.async_get_entry(entry_id)
             assert entry
             try:
-                data[entry_id] = await self._api.realtime_and_all_forecasts(
-                    [
-                        # Weather
-                        TMRW_ATTR_TEMPERATURE,
-                        TMRW_ATTR_HUMIDITY,
-                        TMRW_ATTR_PRESSURE,
-                        TMRW_ATTR_WIND_SPEED,
-                        TMRW_ATTR_WIND_DIRECTION,
-                        TMRW_ATTR_CONDITION,
-                        TMRW_ATTR_VISIBILITY,
-                        TMRW_ATTR_OZONE,
-                        TMRW_ATTR_WIND_GUST,
-                        TMRW_ATTR_CLOUD_COVER,
-                        TMRW_ATTR_PRECIPITATION_TYPE,
-                        # Sensors
-                        TMRW_ATTR_CARBON_MONOXIDE,
-                        TMRW_ATTR_CHINA_AQI,
-                        TMRW_ATTR_CHINA_HEALTH_CONCERN,
-                        TMRW_ATTR_CHINA_PRIMARY_POLLUTANT,
-                        TMRW_ATTR_CLOUD_BASE,
-                        TMRW_ATTR_CLOUD_CEILING,
-                        TMRW_ATTR_CLOUD_COVER,
-                        TMRW_ATTR_DEW_POINT,
-                        TMRW_ATTR_EPA_AQI,
-                        TMRW_ATTR_EPA_HEALTH_CONCERN,
-                        TMRW_ATTR_EPA_PRIMARY_POLLUTANT,
-                        TMRW_ATTR_FEELS_LIKE,
-                        TMRW_ATTR_FIRE_INDEX,
-                        TMRW_ATTR_NITROGEN_DIOXIDE,
-                        TMRW_ATTR_OZONE,
-                        TMRW_ATTR_PARTICULATE_MATTER_10,
-                        TMRW_ATTR_PARTICULATE_MATTER_25,
-                        TMRW_ATTR_POLLEN_GRASS,
-                        TMRW_ATTR_POLLEN_TREE,
-                        TMRW_ATTR_POLLEN_WEED,
-                        TMRW_ATTR_PRECIPITATION_TYPE,
-                        TMRW_ATTR_PRESSURE_SURFACE_LEVEL,
-                        TMRW_ATTR_SOLAR_GHI,
-                        TMRW_ATTR_SULPHUR_DIOXIDE,
-                        TMRW_ATTR_UV_INDEX,
-                        TMRW_ATTR_UV_HEALTH_CONCERN,
-                        TMRW_ATTR_WIND_GUST,
-                    ],
-                    [
-                        TMRW_ATTR_TEMPERATURE_LOW,
-                        TMRW_ATTR_TEMPERATURE_HIGH,
-                        TMRW_ATTR_DEW_POINT,
-                        TMRW_ATTR_HUMIDITY,
-                        TMRW_ATTR_WIND_SPEED,
-                        TMRW_ATTR_WIND_DIRECTION,
-                        TMRW_ATTR_CONDITION,
-                        TMRW_ATTR_PRECIPITATION,
-                        TMRW_ATTR_PRECIPITATION_PROBABILITY,
-                    ],
-                    nowcast_timestep=entry.options[CONF_TIMESTEP],
-                    location=location,
-                )
+                async with asyncio.timeout(30):
+                    data[entry_id] = await self._api.realtime_and_all_forecasts(
+                        realtime_fields=REALTIME_FIELDS,
+                        all_forecasts_fields=ALL_FORECAST_FIELDS,
+                        nowcast_timestep=entry.options[CONF_TIMESTEP],
+                        location=location,
+                    )
+            except MalformedRequestException as err:
+                raise UpdateFailed(str(err)) from err
             except (
                 CantConnectException,
                 InvalidAPIKeyException,

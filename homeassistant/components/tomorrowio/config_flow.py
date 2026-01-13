@@ -33,13 +33,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.selector import LocationSelector, LocationSelectorConfig
 
-from .const import (
-    CONF_TIMESTEP,
-    DEFAULT_NAME,
-    DEFAULT_TIMESTEP,
-    DOMAIN,
-    TMRW_ATTR_TEMPERATURE,
-)
+from .const import CONF_TIMESTEP, DEFAULT_NAME, DEFAULT_TIMESTEP, DOMAIN, TomorrowioAttr
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -149,7 +143,7 @@ class TomorrowioConfigFlow(ConfigFlow, domain=DOMAIN):
                     str(latitude),
                     str(longitude),
                     session=async_get_clientsession(self.hass),
-                ).realtime([TMRW_ATTR_TEMPERATURE])
+                ).realtime([TomorrowioAttr.TEMPERATURE])
             except CantConnectException:
                 errors["base"] = "cannot_connect"
             except InvalidAPIKeyException:

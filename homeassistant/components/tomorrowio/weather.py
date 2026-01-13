@@ -44,20 +44,7 @@ from .const import (
     DEFAULT_FORECAST_TYPE,
     DOMAIN,
     MAX_FORECASTS,
-    TMRW_ATTR_CONDITION,
-    TMRW_ATTR_DEW_POINT,
-    TMRW_ATTR_HUMIDITY,
-    TMRW_ATTR_OZONE,
-    TMRW_ATTR_PRECIPITATION,
-    TMRW_ATTR_PRECIPITATION_PROBABILITY,
-    TMRW_ATTR_PRESSURE,
-    TMRW_ATTR_TEMPERATURE,
-    TMRW_ATTR_TEMPERATURE_HIGH,
-    TMRW_ATTR_TEMPERATURE_LOW,
-    TMRW_ATTR_TIMESTAMP,
-    TMRW_ATTR_VISIBILITY,
-    TMRW_ATTR_WIND_DIRECTION,
-    TMRW_ATTR_WIND_SPEED,
+    TomorrowioAttr,
 )
 from .coordinator import TomorrowioDataUpdateCoordinator
 from .entity import TomorrowioEntity
@@ -177,45 +164,45 @@ class TomorrowioWeatherEntity(TomorrowioEntity, SingleCoordinatorWeatherEntity):
     @property
     def native_temperature(self):
         """Return the platform temperature."""
-        return self._get_current_property(TMRW_ATTR_TEMPERATURE)
+        return self._get_current_property(TomorrowioAttr.TEMPERATURE)
 
     @property
     def native_pressure(self):
         """Return the raw pressure."""
-        return self._get_current_property(TMRW_ATTR_PRESSURE)
+        return self._get_current_property(TomorrowioAttr.PRESSURE)
 
     @property
     def humidity(self):
         """Return the humidity."""
-        return self._get_current_property(TMRW_ATTR_HUMIDITY)
+        return self._get_current_property(TomorrowioAttr.HUMIDITY)
 
     @property
     def native_wind_speed(self):
         """Return the raw wind speed."""
-        return self._get_current_property(TMRW_ATTR_WIND_SPEED)
+        return self._get_current_property(TomorrowioAttr.WIND_SPEED)
 
     @property
     def wind_bearing(self):
         """Return the wind bearing."""
-        return self._get_current_property(TMRW_ATTR_WIND_DIRECTION)
+        return self._get_current_property(TomorrowioAttr.WIND_DIRECTION)
 
     @property
     def ozone(self):
         """Return the O3 (ozone) level."""
-        return self._get_current_property(TMRW_ATTR_OZONE)
+        return self._get_current_property(TomorrowioAttr.OZONE)
 
     @property
     def condition(self):
         """Return the condition."""
         return self._translate_condition(
-            self._get_current_property(TMRW_ATTR_CONDITION),
+            self._get_current_property(TomorrowioAttr.CONDITION),
             is_up(self.hass),
         )
 
     @property
     def native_visibility(self):
         """Return the raw visibility."""
-        return self._get_current_property(TMRW_ATTR_VISIBILITY)
+        return self._get_current_property(TomorrowioAttr.VISIBILITY)
 
     def _forecast(self, forecast_type: str) -> list[Forecast] | None:
         """Return the forecast."""
@@ -238,7 +225,7 @@ class TomorrowioWeatherEntity(TomorrowioEntity, SingleCoordinatorWeatherEntity):
         # Set default values (in cases where keys don't exist), None will be
         # returned. Override properties per forecast type as needed
         for forecast in raw_forecasts:
-            forecast_dt = dt_util.parse_datetime(forecast[TMRW_ATTR_TIMESTAMP])
+            forecast_dt = dt_util.parse_datetime(forecast[TomorrowioAttr.TIMESTAMP])
 
             # Throw out past data
             if forecast_dt is None or dt_util.as_local(forecast_dt).date() < today:
@@ -247,26 +234,28 @@ class TomorrowioWeatherEntity(TomorrowioEntity, SingleCoordinatorWeatherEntity):
             values = forecast["values"]
             use_datetime = True
 
-            condition = values.get(TMRW_ATTR_CONDITION)
-            precipitation = values.get(TMRW_ATTR_PRECIPITATION)
-            precipitation_probability = values.get(TMRW_ATTR_PRECIPITATION_PROBABILITY)
+            condition = values.get(TomorrowioAttr.CONDITION)
+            precipitation = values.get(TomorrowioAttr.PRECIPITATION)
+            precipitation_probability = values.get(
+                TomorrowioAttr.PRECIPITATION_PROBABILITY
+            )
 
             try:
                 precipitation_probability = round(precipitation_probability)
             except TypeError:
                 precipitation_probability = None
 
-            temp = values.get(TMRW_ATTR_TEMPERATURE_HIGH)
+            temp = values.get(TomorrowioAttr.TEMPERATURE_HIGH)
             temp_low = None
-            dew_point = values.get(TMRW_ATTR_DEW_POINT)
-            humidity = values.get(TMRW_ATTR_HUMIDITY)
+            dew_point = values.get(TomorrowioAttr.DEW_POINT)
+            humidity = values.get(TomorrowioAttr.HUMIDITY)
 
-            wind_direction = values.get(TMRW_ATTR_WIND_DIRECTION)
-            wind_speed = values.get(TMRW_ATTR_WIND_SPEED)
+            wind_direction = values.get(TomorrowioAttr.WIND_DIRECTION)
+            wind_speed = values.get(TomorrowioAttr.WIND_SPEED)
 
             if forecast_type == DAILY:
                 use_datetime = False
-                temp_low = values.get(TMRW_ATTR_TEMPERATURE_LOW)
+                temp_low = values.get(TomorrowioAttr.TEMPERATURE_LOW)
                 if precipitation:
                     precipitation = precipitation * 24
             elif forecast_type == NOWCAST:
