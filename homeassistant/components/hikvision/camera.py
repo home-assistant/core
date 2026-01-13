@@ -39,6 +39,7 @@ class HikvisionCamera(Camera):
     """Representation of a Hikvision camera."""
 
     _attr_has_entity_name = True
+    _attr_name = None
     _attr_supported_features = CameraEntityFeature.STREAM
 
     def __init__(
@@ -65,7 +66,6 @@ class HikvisionCamera(Camera):
                 manufacturer="Hikvision",
                 model="NVR Channel",
             )
-            self._attr_name = None  # Use device name
         else:
             # Single camera device
             self._attr_device_info = DeviceInfo(
@@ -74,7 +74,6 @@ class HikvisionCamera(Camera):
                 manufacturer="Hikvision",
                 model=self._data.device_type,
             )
-            self._attr_name = None  # Use device name
 
     async def async_camera_image(
         self, width: int | None = None, height: int | None = None
