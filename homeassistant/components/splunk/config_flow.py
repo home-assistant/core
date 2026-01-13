@@ -52,9 +52,7 @@ class SplunkConfigFlow(ConfigFlow, domain=DOMAIN):
             errors = await self._async_validate_input(user_input)
 
             if not errors:
-                await self.async_set_unique_id(
-                    f"{user_input[CONF_HOST]}:{user_input[CONF_PORT]}"
-                )
+                await self.async_set_unique_id(user_input[CONF_TOKEN])
                 self._abort_if_unique_id_configured()
 
                 return self.async_create_entry(
