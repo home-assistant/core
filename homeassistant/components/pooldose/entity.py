@@ -82,7 +82,7 @@ class PooldoseEntity(CoordinatorEntity[PooldoseCoordinator]):
 
     async def _async_perform_write(
         self,
-        api_call: Callable[[str, Any], Awaitable[bool]],
+        api_call: Callable[[str, Any], Coroutine[Any, Any, bool]],
         key: str,
         value: bool | str | float,
     ) -> None:
