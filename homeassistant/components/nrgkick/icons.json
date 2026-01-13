@@ -4,9 +4,6 @@
       "charge_count": {
         "default": "mdi:counter"
       },
-      "charge_pause": {
-        "default": "mdi:pause-circle-outline"
-      },
       "charge_permitted": {
         "default": "mdi:check-circle"
       },
@@ -34,12 +31,6 @@
       "connector_type": {
         "default": "mdi:ev-plug-type2"
       },
-      "current_set": {
-        "default": "mdi:current-ac"
-      },
-      "energy_limit": {
-        "default": "mdi:battery-charging-100"
-      },
       "error_code": {
         "default": "mdi:alert-circle"
       },
@@ -60,9 +51,6 @@
       },
       "peak_power": {
         "default": "mdi:flash"
-      },
-      "phase_count": {
-        "default": "mdi:sine-wave"
       },
       "powerflow_grid_frequency": {
         "default": "mdi:sine-wave"

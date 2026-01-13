@@ -156,7 +156,6 @@ async def test_sensor_entities(
     numeric_sensors = {
         "rated_current": 32.0,
         "charging_current": 16.0,
-        "current_set": 16.0,
     }
     for key, expected in numeric_sensors.items():
         state = get_state_by_key(key)

@@ -85,9 +85,6 @@
       "charge_count": {
         "name": "Charge count"
       },
-      "charge_pause": {
-        "name": "Charge pause"
-      },
       "charge_permitted": {
         "name": "Charge permitted"
       },
@@ -132,17 +129,11 @@
           "wall": "Wall socket"
         }
       },
-      "current_set": {
-        "name": "Charging current set"
-      },
       "domestic_plug_1_temperature": {
         "name": "Domestic plug 1 temperature"
       },
       "domestic_plug_2_temperature": {
         "name": "Domestic plug 2 temperature"
-      },
-      "energy_limit": {
-        "name": "Energy limit"
       },
       "error_code": {
         "name": "Error code",
@@ -280,9 +271,6 @@
       },
       "peak_power": {
         "name": "Peak power"
-      },
-      "phase_count": {
-        "name": "Phase count"
       },
       "powerflow_grid_frequency": {
         "name": "Powerflow grid frequency"

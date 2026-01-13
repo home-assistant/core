@@ -265,36 +265,6 @@ SENSORS: tuple[NRGkickSensorEntityDescription, ...] = (
         entity_registry_enabled_default=False,
         value_path=("info", "versions", "hw_sm"),
     ),
-    # Control
-    NRGkickSensorEntityDescription(
-        key="current_set",
-        translation_key="current_set",
-        device_class=SensorDeviceClass.CURRENT,
-        state_class=SensorStateClass.MEASUREMENT,
-        native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
-        suggested_display_precision=2,
-        value_path=("control", "current_set"),
-    ),
-    NRGkickSensorEntityDescription(
-        key="charge_pause",
-        translation_key="charge_pause",
-        value_path=("control", "charge_pause"),
-    ),
-    NRGkickSensorEntityDescription(
-        key="energy_limit",
-        translation_key="energy_limit",
-        device_class=SensorDeviceClass.ENERGY,
-        state_class=SensorStateClass.TOTAL,
-        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
-        suggested_display_precision=3,
-        suggested_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
-        value_path=("control", "energy_limit"),
-    ),
-    NRGkickSensorEntityDescription(
-        key="phase_count",
-        translation_key="phase_count",
-        value_path=("control", "phase_count"),
-    ),
     # VALUES - Energy
     NRGkickSensorEntityDescription(
         key="total_charged_energy",
