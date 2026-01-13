@@ -46,9 +46,6 @@ class NRGkickEntity(CoordinatorEntity[NRGkickDataUpdateCoordinator]):
         device_info_typed = DeviceInfo(
             identifiers={(DOMAIN, serial)},
             serial_number=serial,
-            # The config entry title already contains the device name (set in the
-            # config flow), so we can reuse it here.
-            name=self.coordinator.config_entry.title,
             manufacturer="DiniTech",
             model=device_info.get("model_type", "NRGkick Gen2"),
             sw_version=versions.get("sw_sm"),
