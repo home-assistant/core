@@ -7,7 +7,7 @@ set_presets:
   fields:
     preset:
       required: true
-      example: "away"
+      example: "Away"
       selector:
         text:
 water_heater_boost:
