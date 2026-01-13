@@ -265,6 +265,16 @@ class Elke27Hub:
             if error is not None:
                 raise error
             return False
+        status_result = await client.async_execute(
+            "zone_get_status",
+            zone_id=zone_id,
+        )
+        if not getattr(status_result, "ok", False):
+            _LOGGER.debug(
+                "Zone status refresh failed for zone %s: %s",
+                zone_id,
+                getattr(status_result, "error", None),
+            )
         return True
 
     async def async_arm_area(
@@ -309,11 +319,6 @@ class Elke27Hub:
 
     def _handle_event(self, event: Any) -> None:
         """Handle events from the client."""
-        self._hass.loop.call_soon_threadsafe(self._handle_event_in_loop, event)
-
-    @callback
-    def _handle_event_in_loop(self, event: Any) -> None:
-        """Handle events from the client on the event loop."""
         if self._client is None:
             return
         self.snapshot = self._client.snapshot
@@ -325,6 +330,15 @@ class Elke27Hub:
             self._schedule_reconnect()
         elif connection_state is True or event_type == "READY":
             self._cancel_reconnect()
+        if event_type == "ZONE":
+            zone_id = _event_zone_id(event)
+            if zone_id is not None:
+                zone = _zone_from_snapshot(self.snapshot, zone_id)
+                _LOGGER.debug(
+                    "Zone %s snapshot bypassed=%s",
+                    zone_id,
+                    getattr(zone, "bypassed", None) if zone is not None else None,
+                )
         self._dispatch(self._listeners)
         if event_type == "AREA":
             self._dispatch(self._area_listeners)
@@ -434,3 +448,26 @@ def _connection_state(event: Any) -> bool | None:
         return None
     connected = getattr(event, "connected", None)
     return connected if isinstance(connected, bool) else None
+
+
+def _event_zone_id(event: Any) -> int | None:
+    if isinstance(event, dict):
+        for key in ("zone_id", "id"):
+            value = event.get(key)
+            if isinstance(value, int):
+                return value
+        return None
+    return getattr(event, "zone_id", None)
+
+
+def _zone_from_snapshot(snapshot: Any, zone_id: int) -> Any | None:
+    if snapshot is None:
+        return None
+    zones = getattr(snapshot, "zones", None)
+    if isinstance(zones, dict):
+        return zones.get(zone_id)
+    if isinstance(zones, list | tuple):
+        for zone in zones:
+            if getattr(zone, "zone_id", None) == zone_id:
+                return zone
+    return None
