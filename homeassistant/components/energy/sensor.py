@@ -658,9 +658,10 @@ class EnergyPowerSensor(SensorEntity):
                 return
             try:
                 value = float(source_state.state)
-                self._attr_native_value = value * -1
             except ValueError:
                 self._attr_native_value = None
+            else:
+                self._attr_native_value = value * -1
 
         elif self._is_combined:
             discharge_state = self.hass.states.get(self._source_sensors[0])
@@ -678,26 +679,28 @@ class EnergyPowerSensor(SensorEntity):
             try:
                 discharge = float(discharge_state.state)
                 charge = float(charge_state.state)
-
-                # Get units from state attributes
-                discharge_unit = discharge_state.attributes.get(
-                    ATTR_UNIT_OF_MEASUREMENT
-                )
-                charge_unit = charge_state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
-
-                # Convert to Watts if units are present
-                if discharge_unit:
-                    discharge = unit_conversion.PowerConverter.convert(
-                        discharge, discharge_unit, UnitOfPower.WATT
-                    )
-                if charge_unit:
-                    charge = unit_conversion.PowerConverter.convert(
-                        charge, charge_unit, UnitOfPower.WATT
-                    )
-
-                self._attr_native_value = discharge - charge
             except ValueError:
                 self._attr_native_value = None
+                return
+
+            # Get units from state attributes
+            discharge_unit = discharge_state.attributes.get(
+                ATTR_UNIT_OF_MEASUREMENT
+            )
+            charge_unit = charge_state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
+
+            # Convert to Watts if units are present
+            if discharge_unit:
+                discharge = unit_conversion.PowerConverter.convert(
+                    discharge, discharge_unit, UnitOfPower.WATT
+                )
+            if charge_unit:
+                charge = unit_conversion.PowerConverter.convert(
+                    charge, charge_unit, UnitOfPower.WATT
+                )
+
+            self._attr_native_value = discharge - charge
+            
 
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""

@@ -8,7 +8,9 @@ if TYPE_CHECKING:
     from .data import PowerConfig
 
 
-def generate_power_sensor_unique_id(source_type: str, config: PowerConfig) -> str:
+def generate_power_sensor_unique_id(
+    source_type: str, config: PowerConfig
+) -> str | None:
     """Generate a unique ID for a power transform sensor."""
     if "stat_rate_inverted" in config:
         sensor_id = config["stat_rate_inverted"].replace(".", "_")
@@ -17,10 +19,12 @@ def generate_power_sensor_unique_id(source_type: str, config: PowerConfig) -> st
         from_id = config["stat_rate_from"].replace(".", "_")
         to_id = config["stat_rate_to"].replace(".", "_")
         return f"energy_power_{source_type}_combined_{from_id}_{to_id}"
-    return ""
+    return None
 
 
-def generate_power_sensor_entity_id(source_type: str, config: PowerConfig) -> str:
+def generate_power_sensor_entity_id(
+    source_type: str, config: PowerConfig
+) -> str | None:
     """Generate an entity ID for a power transform sensor."""
     if "stat_rate_inverted" in config:
         # Use source sensor name with _inverted suffix
@@ -32,4 +36,4 @@ def generate_power_sensor_entity_id(source_type: str, config: PowerConfig) -> st
         # Include sensor IDs to avoid collisions when multiple combined configs exist
         from_sensor = config["stat_rate_from"].removeprefix("sensor.")
         return f"sensor.energy_{source_type}_{from_sensor}_power"
-    return ""
+    return None
