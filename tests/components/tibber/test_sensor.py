@@ -24,10 +24,10 @@ async def test_data_api_sensors_are_created(
 ) -> None:
     """Ensure Data API sensors are created and expose values from the coordinator."""
     data_api_client_mock.get_all_devices = AsyncMock(
-        return_value={"device-id": create_tibber_device(value=72.0)}
+        return_value={"device-id": create_tibber_device(state_of_charge=72.0)}
     )
     data_api_client_mock.update_devices = AsyncMock(
-        return_value={"device-id": create_tibber_device(value=83.0)}
+        return_value={"device-id": create_tibber_device(state_of_charge=83.0)}
     )
 
     await hass.config_entries.async_setup(config_entry.entry_id)
