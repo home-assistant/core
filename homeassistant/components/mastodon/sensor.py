@@ -7,7 +7,7 @@ from dataclasses import dataclass
 from datetime import datetime
 from typing import Any
 
-from mastodon.Mastodon import Account
+from mastodon.Mastodon import Account, Instance, InstanceV2
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -22,6 +22,7 @@ from homeassistant.util import dt as dt_util
 
 from .coordinator import MastodonConfigEntry
 from .entity import MastodonEntity
+from .utils import construct_mastodon_username
 
 # Coordinator is used to centralize the data updates
 PARALLEL_UPDATES = 0
@@ -31,7 +32,7 @@ PARALLEL_UPDATES = 0
 class MastodonSensorEntityDescription(SensorEntityDescription):
     """Describes Mastodon sensor entity."""
 
-    value_fn: Callable[[Account], StateType | datetime]
+    value_fn: Callable[[Account, InstanceV2 | Instance], StateType | datetime]
     attributes_fn: Callable[[Account], Mapping[str, Any]] | None = None
     entity_picture_fn: Callable[[Account], str] | None = None
 
@@ -52,26 +53,26 @@ ENTITY_DESCRIPTIONS = (
         key="followers",
         translation_key="followers",
         state_class=SensorStateClass.TOTAL,
-        value_fn=lambda data: data.followers_count,
+        value_fn=lambda data, _: data.followers_count,
     ),
     MastodonSensorEntityDescription(
         key="following",
         translation_key="following",
         state_class=SensorStateClass.TOTAL,
-        value_fn=lambda data: data.following_count,
+        value_fn=lambda data, _: data.following_count,
     ),
     MastodonSensorEntityDescription(
         key="posts",
         translation_key="posts",
         state_class=SensorStateClass.TOTAL,
-        value_fn=lambda data: data.statuses_count,
+        value_fn=lambda data, _: data.statuses_count,
     ),
     MastodonSensorEntityDescription(
         key="last_post",
         translation_key="last_post",
         device_class=SensorDeviceClass.TIMESTAMP,
         value_fn=(
-            lambda data: dt_util.as_local(data.last_status_at)
+            lambda data, _: dt_util.as_local(data.last_status_at)
             if data.last_status_at
             else None
         ),
@@ -79,7 +80,7 @@ ENTITY_DESCRIPTIONS = (
     MastodonSensorEntityDescription(
         key="username",
         translation_key="username",
-        value_fn=lambda data: data.username,
+        value_fn=lambda data, instance: construct_mastodon_username(instance, data),
         attributes_fn=account_meta,
         entity_picture_fn=lambda data: data.avatar,
     ),
@@ -112,7 +113,7 @@ class MastodonSensorEntity(MastodonEntity, SensorEntity):
     @property
     def native_value(self) -> StateType | datetime:
         """Return the native value of the sensor."""
-        return self.entity_description.value_fn(self.coordinator.data)
+        return self.entity_description.value_fn(self.coordinator.data, self.instance)
 
     @property
     def extra_state_attributes(self) -> Mapping[str, Any] | None:
