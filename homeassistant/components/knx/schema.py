@@ -59,10 +59,12 @@ from .const import (
     ClimateConf,
     ColorTempModes,
     CoverConf,
+    ExposeType,
     FanConf,
     FanZeroMode,
     SceneConf,
 )
+from .storage.knx_selector import GASelector
 from .validation import (
     backwards_compatible_xknx_climate_enum_member,
     dpt_base_type_validator,
@@ -539,17 +541,14 @@ class ExposeSchema(KNXPlatformSchema):
     CONF_KNX_EXPOSE_BINARY = "binary"
     CONF_KNX_EXPOSE_COOLDOWN = "cooldown"
     CONF_KNX_EXPOSE_DEFAULT = "default"
-    CONF_TIME = "time"
-    CONF_DATE = "date"
-    CONF_DATETIME = "datetime"
-    EXPOSE_TIME_TYPES: Final = [CONF_TIME, CONF_DATE, CONF_DATETIME]
+    EXPOSE_TIME_TYPES: Final = [ExposeType.TIME, ExposeType.DATE, ExposeType.DATETIME]
 
     EXPOSE_TIME_SCHEMA = vol.Schema(
         {
             vol.Required(CONF_KNX_EXPOSE_TYPE): vol.All(
                 cv.string, str.lower, vol.In(EXPOSE_TIME_TYPES)
             ),
-            vol.Required(KNX_ADDRESS): ga_validator,
+            vol.Required(KNX_ADDRESS): vol.Union(ga_validator, GASelector(state=False, passive=False, write_required=True)),
         }
     )
     EXPOSE_SENSOR_SCHEMA = vol.Schema(
@@ -559,7 +558,7 @@ class ExposeSchema(KNXPlatformSchema):
             vol.Required(CONF_KNX_EXPOSE_TYPE): vol.Any(
                 CONF_KNX_EXPOSE_BINARY, sensor_type_validator
             ),
-            vol.Required(KNX_ADDRESS): ga_validator,
+            vol.Required(KNX_ADDRESS): vol.Union(ga_validator, GASelector(state=False, passive=False, write_required=True)),
             vol.Required(CONF_ENTITY_ID): cv.entity_id,
             vol.Optional(CONF_KNX_EXPOSE_ATTRIBUTE): cv.string,
             vol.Optional(CONF_KNX_EXPOSE_DEFAULT): cv.match_all,

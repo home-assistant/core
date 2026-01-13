@@ -31,7 +31,7 @@ from .const import (
     SERVICE_KNX_READ,
     SERVICE_KNX_SEND,
 )
-from .expose import create_knx_exposure
+from .expose import create_and_register_knx_exposure
 from .schema import ExposeSchema, dpt_base_type_validator, ga_validator
 
 if TYPE_CHECKING:
@@ -196,7 +196,7 @@ async def service_exposure_register_modify(call: ServiceCall) -> None:
             replaced_exposure.device.name,
         )
         replaced_exposure.async_remove()
-    exposure = create_knx_exposure(knx_module.hass, knx_module.xknx, call.data)
+    exposure = create_and_register_knx_exposure(knx_module.hass, knx_module.xknx, call.data)
     knx_module.service_exposures[group_address] = exposure
     _LOGGER.debug(
         "Service exposure_register registered exposure for '%s' - %s",

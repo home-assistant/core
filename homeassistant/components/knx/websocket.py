@@ -22,10 +22,16 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.typing import UNDEFINED
 from homeassistant.util.ulid import ulid_now
 
-from .const import DOMAIN, KNX_MODULE_KEY, SUPPORTED_PLATFORMS_UI
+from .const import (
+    DOMAIN,
+    KNX_ADDRESS,
+    KNX_MODULE_KEY,
+    SUPPORTED_PLATFORMS_UI,
+    ExposeType,
+)
 from .dpt import get_supported_dpts
 from .storage.config_store import ConfigStoreException
-from .storage.const import CONF_DATA
+from .storage.const import CONF_DATA, CONF_GA_WRITE
 from .storage.entity_store_schema import (
     CREATE_ENTITY_BASE_SCHEMA,
     UPDATE_ENTITY_BASE_SCHEMA,
@@ -35,7 +41,11 @@ from .storage.entity_store_validation import (
     EntityStoreValidationSuccess,
     validate_entity_data,
 )
-from .storage.serialize import get_serialized_schema
+from .storage.expose_store_validation import (
+    ExposeStoreValidationSuccess,
+    validate_expose_data,
+)
+from .storage.serialize import get_serialized_expose_schema, get_serialized_schema
 from .telegrams import (
     SIGNAL_KNX_DATA_SECURE_ISSUE_TELEGRAM,
     SIGNAL_KNX_TELEGRAM,
@@ -63,6 +73,13 @@ async def register_panel(hass: HomeAssistant) -> None:
     websocket_api.async_register_command(hass, ws_delete_entity)
     websocket_api.async_register_command(hass, ws_get_entity_config)
     websocket_api.async_register_command(hass, ws_get_entity_entries)
+    websocket_api.async_register_command(hass, ws_validate_expose)
+    websocket_api.async_register_command(hass, ws_get_expose_schema)
+    websocket_api.async_register_command(hass, ws_create_expose)
+    websocket_api.async_register_command(hass, ws_update_expose)
+    websocket_api.async_register_command(hass, ws_delete_expose)
+    websocket_api.async_register_command(hass, ws_get_expose_config)
+    websocket_api.async_register_command(hass, ws_get_expose_entries)
     websocket_api.async_register_command(hass, ws_create_device)
     websocket_api.async_register_command(hass, ws_get_schema)
 
@@ -193,6 +210,7 @@ def ws_get_base_data(
             "dpt_metadata": get_supported_dpts(),
             "project_info": _project_info,
             "supported_platforms": sorted(SUPPORTED_PLATFORMS_UI),
+            "supported_expose_types": sorted(ExposeType),
         },
     )
 
@@ -583,3 +601,189 @@ def ws_create_device(
         configuration_url=f"homeassistant://knx/entities/view?device_id={_device.id}",
     )
     connection.send_result(msg["id"], _device.dict_repr)
+
+@websocket_api.require_admin
+@websocket_api.websocket_command(
+    {
+        vol.Required("type"): "knx/validate_expose",
+        vol.Required("data"): dict,
+    }
+)
+@callback
+def ws_validate_expose(
+    hass: HomeAssistant,
+    connection: websocket_api.ActiveConnection,
+    msg: dict,
+) -> None:
+    """Validate expose data."""
+    try:
+        validate_expose_data(msg["data"])
+    except EntityStoreValidationException as exc:
+        connection.send_result(msg["id"], exc.validation_error)
+        return
+    connection.send_result(
+        msg["id"], ExposeStoreValidationSuccess(success=True, expose_address=msg["data"][KNX_ADDRESS][CONF_GA_WRITE])
+    )
+
+
+@websocket_api.require_admin
+@websocket_api.websocket_command(
+    {
+        vol.Required("type"): "knx/get_expose_schema",
+        vol.Required("expose_type"): vol.Coerce(ExposeType),
+    }
+)
+@websocket_api.async_response
+async def ws_get_expose_schema(
+    hass: HomeAssistant,
+    connection: websocket_api.ActiveConnection,
+    msg: dict,
+) -> None:
+    """Provide serialized schema for platform."""
+    if schema := get_serialized_expose_schema(msg["expose_type"]):
+        connection.send_result(msg["id"], schema)
+        return
+    connection.send_error(
+        msg["id"], websocket_api.const.ERR_HOME_ASSISTANT_ERROR, "Unknown type"
+    )
+
+@websocket_api.require_admin
+@websocket_api.websocket_command(
+    {
+        vol.Required("type"): "knx/create_expose",
+        vol.Required("data"): dict,
+    }
+)
+@websocket_api.async_response
+@provide_knx
+async def ws_create_expose(
+    hass: HomeAssistant,
+    knx: KNXModule,
+    connection: websocket_api.ActiveConnection,
+    msg: dict,
+) -> None:
+    """Create expose in the exposed store and load it."""
+    try:
+        validated_data = validate_expose_data(msg["data"])
+    except EntityStoreValidationException as exc:
+        connection.send_result(msg["id"], exc.validation_error)
+        return
+    try:
+        address = await knx.config_store.create_expose(
+            # use validation result so defaults are applied
+            validated_data,
+        )
+    except ConfigStoreException as err:
+        connection.send_error(
+            msg["id"], websocket_api.const.ERR_HOME_ASSISTANT_ERROR, str(err)
+        )
+        return
+    connection.send_result(
+        msg["id"], ExposeStoreValidationSuccess(success=True, expose_address=address)
+    )
+
+
+@websocket_api.require_admin
+@websocket_api.websocket_command(
+    {
+        vol.Required("type"): "knx/update_expose",
+        vol.Required("data"): dict,
+    }
+)
+@websocket_api.async_response
+@provide_knx
+async def ws_update_expose(
+    hass: HomeAssistant,
+    knx: KNXModule,
+    connection: websocket_api.ActiveConnection,
+    msg: dict,
+) -> None:
+    """Update expose in exposed store and reload it."""
+    try:
+        validated_data = validate_expose_data(msg["data"])
+    except EntityStoreValidationException as exc:
+        connection.send_result(msg["id"], exc.validation_error)
+        return
+    try:
+        address = await knx.config_store.update_expose(
+            validated_data[CONF_DATA],
+        )
+    except ConfigStoreException as err:
+        connection.send_error(
+            msg["id"], websocket_api.const.ERR_HOME_ASSISTANT_ERROR, str(err)
+        )
+        return
+    connection.send_result(
+        msg["id"], ExposeStoreValidationSuccess(success=True, expose_address=address)
+    )
+
+
+@websocket_api.require_admin
+@websocket_api.websocket_command(
+    {
+        vol.Required("type"): "knx/delete_expose",
+        vol.Required(KNX_ADDRESS): str,
+    }
+)
+@websocket_api.async_response
+@provide_knx
+async def ws_delete_expose(
+    hass: HomeAssistant,
+    knx: KNXModule,
+    connection: websocket_api.ActiveConnection,
+    msg: dict,
+) -> None:
+    """Delete expose from exposed store and remove it."""
+    try:
+        await knx.config_store.delete_expose(msg[KNX_ADDRESS])
+    except ConfigStoreException as err:
+        connection.send_error(
+            msg["id"], websocket_api.const.ERR_HOME_ASSISTANT_ERROR, str(err)
+        )
+        return
+    connection.send_result(msg["id"])
+
+
+@websocket_api.require_admin
+@websocket_api.websocket_command(
+    {
+        vol.Required("type"): "knx/get_expose_config",
+        vol.Required(KNX_ADDRESS): str,
+    }
+)
+@provide_knx
+@callback
+def ws_get_expose_config(
+    hass: HomeAssistant,
+    knx: KNXModule,
+    connection: websocket_api.ActiveConnection,
+    msg: dict,
+) -> None:
+    """Get expose configuration from exposed store."""
+    try:
+        config_info = knx.config_store.get_expose_config(msg[KNX_ADDRESS])
+    except ConfigStoreException as err:
+        connection.send_error(
+            msg["id"], websocket_api.const.ERR_HOME_ASSISTANT_ERROR, str(err)
+        )
+        return
+    connection.send_result(msg["id"], config_info)
+
+
+@websocket_api.require_admin
+@websocket_api.websocket_command(
+    {
+        vol.Required("type"): "knx/get_expose_entries",
+    }
+)
+@provide_knx
+@callback
+def ws_get_expose_entries(
+    hass: HomeAssistant,
+    knx: KNXModule,
+    connection: websocket_api.ActiveConnection,
+    msg: dict,
+) -> None:
+    """Get expose entries configured from the exposed store."""
+    exposed_entries = knx.config_store.get_expose_entries()
+    connection.send_result(msg["id"], exposed_entries)

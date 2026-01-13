@@ -891,6 +891,10 @@
       "description": "Add and manage KNX entities",
       "title": "Entities"
     },
+    "expose": {
+      "description": "Add and manage KNX exposed entries",
+      "title": "Expose"
+    },
     "group_monitor": {
       "description": "Monitor KNX group communication",
       "title": "Group monitor"

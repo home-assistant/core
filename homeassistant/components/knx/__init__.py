@@ -27,7 +27,7 @@ from .const import (
     SUPPORTED_PLATFORMS_UI,
     SUPPORTED_PLATFORMS_YAML,
 )
-from .expose import create_knx_exposure
+from .expose import create_and_register_knx_exposure
 from .knx_module import KNXModule
 from .project import STORAGE_KEY as PROJECT_STORAGE_KEY
 from .schema import (
@@ -123,8 +123,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     if CONF_KNX_EXPOSE in config:
         for expose_config in config[CONF_KNX_EXPOSE]:
             knx_module.exposures.append(
-                create_knx_exposure(hass, knx_module.xknx, expose_config)
+                create_and_register_knx_exposure(hass, knx_module.xknx, expose_config)
             )
+    for address, data in knx_module.config_store.get_expose_entries().items():
+        exposure = create_and_register_knx_exposure(hass, knx_module.xknx, data)
+        knx_module.ui_exposures[address] = exposure
     configured_platforms_yaml = {
         platform for platform in SUPPORTED_PLATFORMS_YAML if platform in config
     }

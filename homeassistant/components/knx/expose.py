@@ -32,8 +32,9 @@ from homeassistant.helpers.template import Template
 from homeassistant.helpers.typing import ConfigType, StateType
 from homeassistant.util import dt as dt_util
 
-from .const import CONF_RESPOND_TO_READ, KNX_ADDRESS
+from .const import CONF_RESPOND_TO_READ, KNX_ADDRESS, ExposeType
 from .schema import ExposeSchema
+from .storage.const import CONF_GA_WRITE
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -42,7 +43,7 @@ _LOGGER = logging.getLogger(__name__)
 def create_knx_exposure(
     hass: HomeAssistant, xknx: XKNX, config: ConfigType
 ) -> KNXExposeSensor | KNXExposeTime:
-    """Create exposures from config."""
+    """Create an exposure from config but don't register it."""
 
     expose_type = config[ExposeSchema.CONF_KNX_EXPOSE_TYPE]
 
@@ -61,6 +62,14 @@ def create_knx_exposure(
             xknx=xknx,
             config=config,
         )
+    return exposure
+
+@callback
+def create_and_register_knx_exposure(
+        hass: HomeAssistant, xknx: XKNX, config: ConfigType
+) -> KNXExposeSensor | KNXExposeTime:
+    """Create and register an exposure from config."""
+    exposure = create_knx_exposure(hass, xknx, config)
     exposure.async_register()
     return exposure
 
@@ -90,7 +99,7 @@ class KNXExposeSensor:
         self.device: ExposeSensor = ExposeSensor(
             xknx=self.xknx,
             name=f"{self.entity_id}__{self.expose_attribute or 'state'}",
-            group_address=config[KNX_ADDRESS],
+            group_address=config[KNX_ADDRESS][CONF_GA_WRITE] if isinstance(config[KNX_ADDRESS], dict) else config[KNX_ADDRESS],
             respond_to_read=config[CONF_RESPOND_TO_READ],
             value_type=self.expose_type,
             cooldown=config[ExposeSchema.CONF_KNX_EXPOSE_COOLDOWN],
@@ -204,22 +213,24 @@ class KNXExposeTime:
     """Object to Expose Time/Date object to KNX bus."""
 
     def __init__(self, xknx: XKNX, config: ConfigType) -> None:
-        """Initialize of Expose class."""
+        """Initialize KNXExposeTime."""
         self.xknx = xknx
         expose_type = config[ExposeSchema.CONF_KNX_EXPOSE_TYPE]
         xknx_device_cls: type[DateDevice | DateTimeDevice | TimeDevice]
         match expose_type:
-            case ExposeSchema.CONF_DATE:
+            case ExposeType.DATE:
                 xknx_device_cls = DateDevice
-            case ExposeSchema.CONF_DATETIME:
+            case ExposeType.DATETIME:
                 xknx_device_cls = DateTimeDevice
-            case ExposeSchema.CONF_TIME:
+            case ExposeType.TIME:
                 xknx_device_cls = TimeDevice
+            case _:
+                raise ValueError(f"Unknown expose_type: {expose_type}")
         self.device = xknx_device_cls(
             self.xknx,
             name=expose_type.capitalize(),
             localtime=dt_util.get_default_time_zone(),
-            group_address=config[KNX_ADDRESS],
+            group_address=config[KNX_ADDRESS][CONF_GA_WRITE] if isinstance(config[KNX_ADDRESS], dict) else config[KNX_ADDRESS],
         )
 
     @callback

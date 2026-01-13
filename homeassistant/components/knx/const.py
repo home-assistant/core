@@ -139,6 +139,12 @@ class FanZeroMode(StrEnum):
     OFF = FAN_OFF
     AUTO = FAN_AUTO
 
+class ExposeType(StrEnum):
+    """A type of expose configuration."""
+    TIME = "time"
+    DATE = "date"
+    DATETIME = "datetime"
+
 
 SUPPORTED_PLATFORMS_YAML: Final = {
     Platform.BINARY_SENSOR,

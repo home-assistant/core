@@ -8,7 +8,9 @@ from voluptuous_serialize import UNSUPPORTED, UnsupportedType, convert
 from homeassistant.const import Platform
 from homeassistant.helpers import selector
 
+from ..const import ExposeType
 from .entity_store_schema import KNX_SCHEMA_FOR_PLATFORM
+from .expose_store_schema import KNX_SCHEMA_FOR_TYPE
 from .knx_selector import AllSerializeFirst, GroupSelectSchema, KNXSelectorBase
 
 
@@ -43,5 +45,12 @@ def get_serialized_schema(
 ) -> dict[str, Any] | list[dict[str, Any]] | None:
     """Get the schema for a specific platform."""
     if knx_schema := KNX_SCHEMA_FOR_PLATFORM.get(platform):
+        return convert(knx_schema, custom_serializer=knx_serializer)
+    return None
+
+
+def get_serialized_expose_schema(typ: ExposeType) -> dict[str, Any] | list[dict[str, Any]] | None:
+    """Get the schema for a specific expose type."""
+    if knx_schema := KNX_SCHEMA_FOR_TYPE.get(typ):
         return convert(knx_schema, custom_serializer=knx_serializer)
     return None
