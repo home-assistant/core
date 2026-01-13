@@ -4,7 +4,7 @@ from typing import Final
 
 from aiohttp.client_exceptions import ClientResponseError
 import jwt
-from tesla_fleet_api import TeslaFleetApi
+from tesla_fleet_api import TeslaFleetApi, is_valid_region
 from tesla_fleet_api.const import Scope
 from tesla_fleet_api.exceptions import (
     InvalidRegion,
@@ -80,9 +80,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslaFleetConfigEntry) -
 
     token = jwt.decode(access_token, options={"verify_signature": False})
     scopes: list[Scope] = [Scope(s) for s in token["scp"]]
-    region: str | None = token["ou_code"].lower()
-    if region not in ("na", "eu"):
-        region = None
+    region_code = token["ou_code"].lower()
+    region = region_code if is_valid_region(region_code) else None
 
     oauth_session = OAuth2Session(hass, entry, implementation)
 

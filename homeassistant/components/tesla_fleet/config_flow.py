@@ -80,7 +80,6 @@ class OAuth2FlowHandler(
         session = async_get_clientsession(self.hass)
         self.api = TeslaFleetApi(
             session=session,
-            access_token=None,
             server=server,
             partner_scope=True,
             charging_scope=False,
