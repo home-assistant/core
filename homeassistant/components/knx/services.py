@@ -193,7 +193,7 @@ async def service_exposure_register_modify(call: ServiceCall) -> None:
                 " for '%s' - %s"
             ),
             group_address,
-            replaced_exposure.device.name,
+            replaced_exposure.name,
         )
         replaced_exposure.async_remove()
     exposure = create_knx_exposure(knx_module.hass, knx_module.xknx, call.data)
@@ -201,7 +201,7 @@ async def service_exposure_register_modify(call: ServiceCall) -> None:
     _LOGGER.debug(
         "Service exposure_register registered exposure for '%s' - %s",
         group_address,
-        exposure.device.name,
+        exposure.name,
     )
 
 
