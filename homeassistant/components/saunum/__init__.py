@@ -27,7 +27,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: LeilSaunaConfigEntry) ->
     host = entry.data[CONF_HOST]
 
     try:
-        client = await SaunumClient.create(host)  # type: ignore[attr-defined]
+        client = await SaunumClient.create(host)
     except SaunumConnectionError as exc:
         raise ConfigEntryNotReady(f"Error connecting to {host}: {exc}") from exc
 
