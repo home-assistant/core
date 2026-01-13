@@ -85,7 +85,7 @@
       "vehicle_charging_time": {
         "default": "mdi:timer"
       },
-      "vehicle_connect_time": {
+      "vehicle_connected_since": {
         "default": "mdi:timer-outline"
       },
       "warning_code": {

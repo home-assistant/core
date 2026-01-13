@@ -342,8 +342,8 @@
       "vehicle_charging_time": {
         "name": "Vehicle charging time"
       },
-      "vehicle_connect_time": {
-        "name": "Vehicle connect time"
+      "vehicle_connected_since": {
+        "name": "Vehicle connected since"
       },
       "warning_code": {
         "name": "Warning code",

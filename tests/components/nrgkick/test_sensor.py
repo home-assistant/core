@@ -1,5 +1,6 @@
 """Tests for the NRGkick sensor platform."""
 
+from datetime import datetime, timedelta
 from unittest.mock import patch
 
 from nrgkick_api import (
@@ -22,6 +23,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
+from homeassistant.util import dt as dt_util
 
 
 @pytest.fixture
@@ -112,11 +114,13 @@ async def test_sensor_entities(
     mock_nrgkick_api.get_values.return_value = mock_values_data_sensor
 
     # Setup entry
+    now = datetime(2025, 1, 1, 0, 0, 0, tzinfo=dt_util.UTC)
     with (
         patch(
             "homeassistant.components.nrgkick.NRGkickAPI", return_value=mock_nrgkick_api
         ),
         patch("homeassistant.components.nrgkick.async_get_clientsession"),
+        patch("homeassistant.components.nrgkick.sensor.utcnow", return_value=now),
     ):
         assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
@@ -147,6 +151,12 @@ async def test_sensor_entities(
     assert state is not None
     assert float(state.state) == 11.0
     assert state.attributes["unit_of_measurement"] == UnitOfSpeed.KILOMETERS_PER_HOUR
+
+    # Test derived timestamp sensor (invariant to polling cadence)
+    state = get_state_by_key("vehicle_connected_since")
+    assert state is not None
+    assert state.attributes["device_class"] == SensorDeviceClass.TIMESTAMP
+    assert dt_util.parse_datetime(state.state) == now - timedelta(seconds=100)
 
     # Test mapped sensors (API returns numeric codes, mapped to translation keys)
     mapped_sensors = {
@@ -225,3 +235,69 @@ async def test_mapped_unknown_values_become_state_unknown(
         state = get_state_by_key(key)
         assert state is not None
         assert state.state == STATE_UNKNOWN
+
+
+@pytest.mark.parametrize(
+    ("model_type", "expect_optional_entities"),
+    [
+        ("NRGkick Gen2", False),
+        ("NRGkick Gen2 SIM", True),
+    ],
+)
+async def test_cellular_and_gps_entities_are_gated_by_model_type(
+    hass: HomeAssistant,
+    mock_config_entry,
+    mock_nrgkick_api,
+    mock_info_data,
+    mock_control_data,
+    mock_values_data_sensor,
+    model_type: str,
+    expect_optional_entities: bool,
+) -> None:
+    """Test that cellular/GPS entities are only created for SIM-capable models."""
+    mock_config_entry.add_to_hass(hass)
+
+    mock_info_data["general"]["model_type"] = model_type
+
+    # Include example payload sections. Even if values are missing/None, the
+    # sensors should still be created when the model supports the modules.
+    mock_info_data["cellular"] = {"mode": None, "rssi": None, "operator": None}
+    mock_info_data["gps"] = {
+        "latitude": None,
+        "longitude": None,
+        "altitude": None,
+        "accuracy": None,
+    }
+
+    mock_nrgkick_api.get_info.return_value = mock_info_data
+    mock_nrgkick_api.get_control.return_value = mock_control_data
+    mock_nrgkick_api.get_values.return_value = mock_values_data_sensor
+
+    with (
+        patch(
+            "homeassistant.components.nrgkick.NRGkickAPI", return_value=mock_nrgkick_api
+        ),
+        patch("homeassistant.components.nrgkick.async_get_clientsession"),
+    ):
+        assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    entity_registry = er.async_get(hass)
+    optional_keys = (
+        "cellular_mode",
+        "cellular_rssi",
+        "cellular_operator",
+        "gps_latitude",
+        "gps_longitude",
+        "gps_altitude",
+        "gps_accuracy",
+    )
+    for key in optional_keys:
+        unique_id = f"TEST123456_{key}"
+        entity_id = entity_registry.async_get_entity_id("sensor", "nrgkick", unique_id)
+        if expect_optional_entities:
+            assert entity_id is not None, f"{model_type}: expected {key} to be created"
+        else:
+            assert entity_id is None, (
+                f"{model_type}: did not expect {key} to be created"
+            )

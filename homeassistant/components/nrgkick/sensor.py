@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass
+from datetime import datetime, timedelta
 from typing import Any, cast
 
 from homeassistant.components.sensor import (
@@ -30,6 +31,8 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
+from homeassistant.util.dt import utcnow
+from homeassistant.util.variance import ignore_variance
 
 from .const import (
     CELLULAR_MODE_MAP,
@@ -52,7 +55,29 @@ class NRGkickSensorEntityDescription(SensorEntityDescription):
     """Class describing NRGkick sensor entities."""
 
     value_path: tuple[str, ...]
-    value_fn: Callable[[StateType], StateType] | None = None
+    value_fn: Callable[[StateType], StateType | datetime] | None = None
+
+
+def _seconds_to_datetime(value: int) -> datetime:
+    """Convert seconds to a UTC timestamp."""
+    return utcnow().replace(microsecond=0) - timedelta(seconds=value)
+
+
+_seconds_to_stable_datetime = ignore_variance(
+    _seconds_to_datetime, timedelta(minutes=1)
+)
+
+
+def _seconds_to_stable_timestamp(value: StateType) -> datetime | None:
+    """Convert seconds to a stable timestamp.
+
+    This is used for durations that represent "seconds since X" coming from the
+    device. Converting to a timestamp avoids UI drift due to polling cadence.
+    """
+    if not isinstance(value, int):
+        return None
+
+    return _seconds_to_stable_datetime(value)
 
 
 def _map_code_to_translation_key(
@@ -89,8 +114,21 @@ async def async_setup_entry(
     """Set up NRGkick sensors based on a config entry."""
     coordinator: NRGkickDataUpdateCoordinator = entry.runtime_data
 
+    data = coordinator.data
+    info_data: dict[str, Any] = data.info if data else {}
+    general_info: dict[str, Any] = info_data.get("general", {})
+    model_type = general_info.get("model_type")
+
+    # Cellular and GPS modules are optional. There is no dedicated API to query
+    # module availability, but SIM-capable models include "SIM" in their model
+    # type (e.g. "NRGkick Gen2 SIM").
+    has_sim_module = isinstance(model_type, str) and "SIM" in model_type.upper()
+
     async_add_entities(
-        NRGkickSensor(coordinator, description) for description in SENSORS
+        NRGkickSensor(coordinator, description)
+        for description in SENSORS
+        if has_sim_module
+        or description.value_path[:2] not in (("info", "cellular"), ("info", "gps"))
     )
 
 
@@ -551,12 +589,11 @@ SENSORS: tuple[NRGkickSensorEntityDescription, ...] = (
         value_path=("values", "general", "charging_rate"),
     ),
     NRGkickSensorEntityDescription(
-        key="vehicle_connect_time",
-        translation_key="vehicle_connect_time",
-        device_class=SensorDeviceClass.DURATION,
-        state_class=SensorStateClass.MEASUREMENT,
-        native_unit_of_measurement=UnitOfTime.SECONDS,
+        key="vehicle_connected_since",
+        translation_key="vehicle_connected_since",
+        device_class=SensorDeviceClass.TIMESTAMP,
         value_path=("values", "general", "vehicle_connect_time"),
+        value_fn=_seconds_to_stable_timestamp,
     ),
     NRGkickSensorEntityDescription(
         key="vehicle_charging_time",
@@ -695,7 +732,7 @@ class NRGkickSensor(NRGkickEntity, SensorEntity):
         self.entity_description = entity_description
 
     @property
-    def native_value(self) -> StateType:
+    def native_value(self) -> StateType | datetime:
         """Return the state of the sensor."""
         data: Any = self.coordinator.data
         for index, key in enumerate(self.entity_description.value_path):
