@@ -49,7 +49,7 @@ class RpcValveDescription(RpcEntityDescription, ValveEntityDescription):
 BLOCK_VALVES: dict[tuple[str, str], BlockValveDescription] = {
     ("valve", "valve"): BlockValveDescription(
         key="valve|valve",
-        name="Valve",
+        translation_key="gas_valve",
         available=lambda block: block.valve not in ("failure", "checking"),
         removal_condition=lambda _, block: block.valve in ("not_connected", "unknown"),
         models={MODEL_GAS},

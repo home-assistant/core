@@ -2,7 +2,7 @@
 
 import asyncio
 from collections.abc import Callable
-from unittest.mock import patch
+from unittest.mock import PropertyMock, patch
 
 from bleak.exc import BleakError
 from improv_ble_client import (
@@ -294,8 +294,13 @@ async def test_bluetooth_rediscovery_after_successful_provision(
     assert result["step_id"] == "bluetooth_confirm"
 
     # Start provisioning
-    with patch(
-        f"{IMPROV_BLE}.config_flow.ImprovBLEClient.can_identify", return_value=False
+    with (
+        patch(
+            f"{IMPROV_BLE}.config_flow.ImprovBLEClient.can_identify",
+            return_value=False,
+            new_callable=PropertyMock,
+        ),
+        patch(f"{IMPROV_BLE}.config_flow.ImprovBLEClient.ensure_connected"),
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -375,8 +380,13 @@ async def _test_common_success_with_identify(
     hass: HomeAssistant, result: FlowResult, address: str
 ) -> None:
     """Test bluetooth and user flow success paths."""
-    with patch(
-        f"{IMPROV_BLE}.config_flow.ImprovBLEClient.can_identify", return_value=True
+    with (
+        patch(
+            f"{IMPROV_BLE}.config_flow.ImprovBLEClient.can_identify",
+            return_value=True,
+            new_callable=PropertyMock,
+        ),
+        patch(f"{IMPROV_BLE}.config_flow.ImprovBLEClient.ensure_connected"),
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -420,8 +430,13 @@ async def _test_common_success_wo_identify(
     placeholders: dict[str, str] | None = None,
 ) -> None:
     """Test bluetooth and user flow success paths."""
-    with patch(
-        f"{IMPROV_BLE}.config_flow.ImprovBLEClient.can_identify", return_value=False
+    with (
+        patch(
+            f"{IMPROV_BLE}.config_flow.ImprovBLEClient.can_identify",
+            return_value=False,
+            new_callable=PropertyMock,
+        ),
+        patch(f"{IMPROV_BLE}.config_flow.ImprovBLEClient.ensure_connected"),
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -475,8 +490,13 @@ async def _test_common_success_wo_identify_w_authorize(
     hass: HomeAssistant, result: FlowResult, address: str
 ) -> None:
     """Test bluetooth and user flow success paths."""
-    with patch(
-        f"{IMPROV_BLE}.config_flow.ImprovBLEClient.can_identify", return_value=False
+    with (
+        patch(
+            f"{IMPROV_BLE}.config_flow.ImprovBLEClient.can_identify",
+            return_value=False,
+            new_callable=PropertyMock,
+        ),
+        patch(f"{IMPROV_BLE}.config_flow.ImprovBLEClient.ensure_connected"),
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -571,7 +591,7 @@ async def test_bluetooth_step_already_in_progress(hass: HomeAssistant) -> None:
         (improv_ble_errors.CharacteristicMissingError, "characteristic_missing"),
     ],
 )
-async def test_can_identify_fails(hass: HomeAssistant, exc, error) -> None:
+async def test_ensure_connected_fails(hass: HomeAssistant, exc, error) -> None:
     """Test bluetooth flow with error."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -588,7 +608,8 @@ async def test_can_identify_fails(hass: HomeAssistant, exc, error) -> None:
     assert result["errors"] is None
 
     with patch(
-        f"{IMPROV_BLE}.config_flow.ImprovBLEClient.can_identify", side_effect=exc
+        f"{IMPROV_BLE}.config_flow.ImprovBLEClient.ensure_connected",
+        side_effect=exc,
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -622,8 +643,13 @@ async def test_identify_fails(hass: HomeAssistant, exc, error) -> None:
     assert result["step_id"] == "bluetooth_confirm"
     assert result["errors"] is None
 
-    with patch(
-        f"{IMPROV_BLE}.config_flow.ImprovBLEClient.can_identify", return_value=True
+    with (
+        patch(
+            f"{IMPROV_BLE}.config_flow.ImprovBLEClient.can_identify",
+            return_value=True,
+            new_callable=PropertyMock,
+        ),
+        patch(f"{IMPROV_BLE}.config_flow.ImprovBLEClient.ensure_connected"),
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -665,8 +691,13 @@ async def test_need_authorization_fails(hass: HomeAssistant, exc, error) -> None
     assert result["step_id"] == "bluetooth_confirm"
     assert result["errors"] is None
 
-    with patch(
-        f"{IMPROV_BLE}.config_flow.ImprovBLEClient.can_identify", return_value=False
+    with (
+        patch(
+            f"{IMPROV_BLE}.config_flow.ImprovBLEClient.can_identify",
+            return_value=False,
+            new_callable=PropertyMock,
+        ),
+        patch(f"{IMPROV_BLE}.config_flow.ImprovBLEClient.ensure_connected"),
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -709,8 +740,13 @@ async def test_authorize_fails(hass: HomeAssistant, exc, error) -> None:
     assert result["step_id"] == "bluetooth_confirm"
     assert result["errors"] is None
 
-    with patch(
-        f"{IMPROV_BLE}.config_flow.ImprovBLEClient.can_identify", return_value=False
+    with (
+        patch(
+            f"{IMPROV_BLE}.config_flow.ImprovBLEClient.can_identify",
+            return_value=False,
+            new_callable=PropertyMock,
+        ),
+        patch(f"{IMPROV_BLE}.config_flow.ImprovBLEClient.ensure_connected"),
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -752,8 +788,13 @@ async def _test_provision_error(hass: HomeAssistant, exc) -> str:
     assert result["step_id"] == "bluetooth_confirm"
     assert result["errors"] is None
 
-    with patch(
-        f"{IMPROV_BLE}.config_flow.ImprovBLEClient.can_identify", return_value=False
+    with (
+        patch(
+            f"{IMPROV_BLE}.config_flow.ImprovBLEClient.can_identify",
+            return_value=False,
+            new_callable=PropertyMock,
+        ),
+        patch(f"{IMPROV_BLE}.config_flow.ImprovBLEClient.ensure_connected"),
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -878,8 +919,13 @@ async def test_flow_chaining_with_next_flow(hass: HomeAssistant) -> None:
     assert result["step_id"] == "bluetooth_confirm"
 
     # Start provisioning
-    with patch(
-        f"{IMPROV_BLE}.config_flow.ImprovBLEClient.can_identify", return_value=False
+    with (
+        patch(
+            f"{IMPROV_BLE}.config_flow.ImprovBLEClient.can_identify",
+            return_value=False,
+            new_callable=PropertyMock,
+        ),
+        patch(f"{IMPROV_BLE}.config_flow.ImprovBLEClient.ensure_connected"),
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -946,8 +992,13 @@ async def test_flow_chaining_timeout(hass: HomeAssistant) -> None:
     assert result["step_id"] == "bluetooth_confirm"
 
     # Start provisioning
-    with patch(
-        f"{IMPROV_BLE}.config_flow.ImprovBLEClient.can_identify", return_value=False
+    with (
+        patch(
+            f"{IMPROV_BLE}.config_flow.ImprovBLEClient.can_identify",
+            return_value=False,
+            new_callable=PropertyMock,
+        ),
+        patch(f"{IMPROV_BLE}.config_flow.ImprovBLEClient.ensure_connected"),
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -998,8 +1049,13 @@ async def test_flow_chaining_with_redirect_url(hass: HomeAssistant) -> None:
     assert result["step_id"] == "bluetooth_confirm"
 
     # Start provisioning
-    with patch(
-        f"{IMPROV_BLE}.config_flow.ImprovBLEClient.can_identify", return_value=False
+    with (
+        patch(
+            f"{IMPROV_BLE}.config_flow.ImprovBLEClient.can_identify",
+            return_value=False,
+            new_callable=PropertyMock,
+        ),
+        patch(f"{IMPROV_BLE}.config_flow.ImprovBLEClient.ensure_connected"),
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -1069,8 +1125,13 @@ async def test_flow_chaining_future_already_done(
     assert result["step_id"] == "bluetooth_confirm"
 
     # Start provisioning
-    with patch(
-        f"{IMPROV_BLE}.config_flow.ImprovBLEClient.can_identify", return_value=False
+    with (
+        patch(
+            f"{IMPROV_BLE}.config_flow.ImprovBLEClient.can_identify",
+            return_value=False,
+            new_callable=PropertyMock,
+        ),
+        patch(f"{IMPROV_BLE}.config_flow.ImprovBLEClient.ensure_connected"),
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
