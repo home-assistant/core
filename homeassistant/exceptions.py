@@ -250,7 +250,10 @@ class OAuth2RefreshTokenTransientError(OAuth2RefreshTokenError):
 
 
 class OAuth2RefreshTokenReauthError(OAuth2RefreshTokenError):
-    """Error to indicate the flow could not refresh token, but not recoverable and re-authentication is required."""
+    """Non recoverable error to indicate the flow could not refresh token.
+
+    Re-authentication is required.
+    """
 
 
 class InvalidStateError(HomeAssistantError):
