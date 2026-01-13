@@ -6,7 +6,6 @@ from dataclasses import dataclass
 from enum import IntEnum
 from typing import Any
 
-# from .const import ATTR_PRESETS, SERVICE_SET_PRESETS
 from chip.clusters import Objects as clusters
 from matter_server.client.models import device_types
 from matter_server.common.errors import MatterError
