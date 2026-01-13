@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from asyncio import TaskGroup
 from collections.abc import Callable, Iterable
 from dataclasses import dataclass
 import logging
@@ -268,28 +269,19 @@ class KnxExposeEntity:
     async def _async_entity_changed(self, event: Event[EventStateChangedData]) -> None:
         """Handle entity change for all options."""
         new_state = event.data["new_state"]
-        old_state = event.data["old_state"]
-
-        for option, xknx_expose in self._exposures:
-            new_value = self._get_expose_value(new_state, option)
-            if new_value is None:
-                continue
-            # Don't use default value for comparison on first state change
-            old_value = (
-                self._get_expose_value(old_state, option)
-                if old_state is not None
-                else None
-            )
-            # Don't send same value sequentially
-            if new_value != old_value:
-                await self._async_set_knx_value(xknx_expose, new_value)
+        async with TaskGroup() as tg:
+            for option, xknx_expose in self._exposures:
+                expose_value = self._get_expose_value(new_state, option)
+                if expose_value is None:
+                    continue
+                tg.create_task(self._async_set_knx_value(xknx_expose, expose_value))
 
     async def _async_set_knx_value(
         self, xknx_expose: ExposeSensor, value: StateType
     ) -> None:
         """Set new value on xknx ExposeSensor."""
         try:
-            await xknx_expose.set(value)
+            await xknx_expose.set(value, skip_unchanged=True)
         except ConversionError as err:
             _LOGGER.warning(
                 'Could not expose %s value "%s" to KNX: %s',
