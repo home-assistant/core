@@ -74,12 +74,10 @@
         "name": "Zone"
       }
     },
-    "light": {
+    "switch": {
       "output": {
         "name": "Output"
-      }
-    },
-    "switch": {
+      },
       "zone_bypass": {
         "name": "Bypass {zone}"
       }

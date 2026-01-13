@@ -1,4 +1,4 @@
-"""Tests for Elke27 zone bypass switches."""
+"""Tests for Elke27 output switches."""
 
 from __future__ import annotations
 
@@ -111,13 +111,12 @@ class PanelInfo:
 
 
 @dataclass(frozen=True, slots=True)
-class ZoneState:
-    """Zone state stub."""
+class OutputState:
+    """Output state stub."""
 
-    zone_id: int
+    output_id: int
     name: str
-    bypassed: bool
-    definition: str = "NORMAL"
+    is_on: bool
 
 
 @dataclass(frozen=True, slots=True)
@@ -125,11 +124,11 @@ class Snapshot:
     """Snapshot stub."""
 
     panel_info: PanelInfo
-    zones: list[ZoneState]
+    outputs: list[OutputState]
 
 
 class FakeHub:
-    """Minimal hub stub for zone bypass tests."""
+    """Minimal hub stub for output tests."""
 
     def __init__(self) -> None:
         self.snapshot = Snapshot(
@@ -138,14 +137,14 @@ class FakeHub:
                 name="Panel A",
                 serial="1234",
             ),
-            zones=[
-                ZoneState(zone_id=1, name="Front Door", bypassed=False),
-                ZoneState(zone_id=2, name="Back Door", bypassed=True),
+            outputs=[
+                OutputState(output_id=1, name="Output 1", is_on=False),
+                OutputState(output_id=2, name="Output 2", is_on=True),
             ],
         )
         self.is_ready = True
         self._listeners: list[callable] = []
-        self.async_set_zone_bypass = AsyncMock(return_value=True)
+        self.async_set_output = AsyncMock(return_value=True)
 
     async def async_start(self) -> None:
         return None
@@ -162,6 +161,12 @@ class FakeHub:
 
         return _remove
 
+    def async_add_output_listener(self, listener):
+        return self.async_add_listener(listener)
+
+    def async_add_area_listener(self, listener):
+        return self.async_add_listener(listener)
+
     def async_add_zone_listener(self, listener):
         return self.async_add_listener(listener)
 
@@ -175,10 +180,8 @@ class FakeHub:
             listener()
 
 
-async def test_zone_bypass_switches_update_and_actions(
-    hass: HomeAssistant,
-) -> None:
-    """Test zone bypass switches are created, update, and delegate actions."""
+async def test_output_entities_updates_and_actions(hass: HomeAssistant) -> None:
+    """Test output entities are created, update, and delegate actions."""
     hub = FakeHub()
     hub.async_start = AsyncMock()
     hub.async_stop = AsyncMock()
@@ -213,44 +216,41 @@ async def test_zone_bypass_switches_update_and_actions(
         for entry in registry.entities.values()
         if entry.domain == "switch"
     }
-    assert unique_ids == {
-        "aa:bb:cc:dd:ee:ff_zone_1_bypass",
-        "aa:bb:cc:dd:ee:ff_zone_2_bypass",
-    }
+    assert unique_ids == {"aa:bb:cc:dd:ee:ff_output_1", "aa:bb:cc:dd:ee:ff_output_2"}
 
-    zone_1 = next(
+    output_1 = next(
         entry
         for entry in registry.entities.values()
-        if entry.unique_id == "aa:bb:cc:dd:ee:ff_zone_1_bypass"
+        if entry.unique_id == "aa:bb:cc:dd:ee:ff_output_1"
     )
 
     await hass.services.async_call(
         "switch",
         "turn_on",
-        {"entity_id": zone_1.entity_id},
+        {"entity_id": output_1.entity_id},
         blocking=True,
     )
-    hub.async_set_zone_bypass.assert_awaited_once_with(1, True)
-    assert hub.snapshot.zones[0].bypassed is False
+    hub.async_set_output.assert_awaited_once_with(1, True)
+    assert hub.snapshot.outputs[0].is_on is False
 
-    updated = replace(hub.snapshot.zones[0], bypassed=True)
+    updated = replace(hub.snapshot.outputs[0], is_on=True)
     hub.snapshot = replace(
-        hub.snapshot, zones=[updated, hub.snapshot.zones[1]]
+        hub.snapshot, outputs=[updated, hub.snapshot.outputs[1]]
     )
     hub.fire_update()
     await hass.async_block_till_done()
 
-    state = hass.states.get(zone_1.entity_id)
+    state = hass.states.get(output_1.entity_id)
     assert state is not None
     assert state.state == "on"
 
 
-async def test_zone_bypass_pin_required(hass: HomeAssistant) -> None:
+async def test_output_pin_required(hass: HomeAssistant) -> None:
     """Test PIN-required error surfaces as HomeAssistantError."""
     hub = FakeHub()
     hub.async_start = AsyncMock()
     hub.async_stop = AsyncMock()
-    hub.async_set_zone_bypass.side_effect = switch_module.Elke27PinRequiredError
+    hub.async_set_output.side_effect = switch_module.Elke27PinRequiredError
 
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -268,17 +268,16 @@ async def test_zone_bypass_pin_required(hass: HomeAssistant) -> None:
         await hass.async_block_till_done()
 
     registry = er.async_get(hass)
-    zone_1 = next(
+    output_1 = next(
         entry
         for entry in registry.entities.values()
-        if entry.unique_id == "aa:bb:cc:dd:ee:ff_zone_1_bypass"
+        if entry.unique_id == "aa:bb:cc:dd:ee:ff_output_1"
     )
 
     with pytest.raises(HomeAssistantError, match="PIN required to perform this action."):
         await hass.services.async_call(
             "switch",
             "turn_on",
-            {"entity_id": zone_1.entity_id},
+            {"entity_id": output_1.entity_id},
             blocking=True,
         )
-
