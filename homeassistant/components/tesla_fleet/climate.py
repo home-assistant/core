@@ -72,8 +72,10 @@ class TeslaFleetClimateEntity(TeslaFleetVehicleEntity, ClimateEntity):
         | ClimateEntityFeature.TURN_OFF
         | ClimateEntityFeature.TARGET_TEMPERATURE
         | ClimateEntityFeature.PRESET_MODE
+        | ClimateEntityFeature.FAN_MODE
     )
     _attr_preset_modes = ["off", "keep", "dog", "camp"]
+    _attr_fan_modes = ["off", "bioweapon"]
 
     def __init__(
         self,
@@ -111,6 +113,10 @@ class TeslaFleetClimateEntity(TeslaFleetVehicleEntity, ClimateEntity):
         self._attr_current_temperature = self.get("climate_state_inside_temp")
         self._attr_target_temperature = self.get(f"climate_state_{self.key}_setting")
         self._attr_preset_mode = self.get("climate_state_climate_keeper_mode")
+        if self.get("climate_state_bioweapon_mode"):
+            self._attr_fan_mode = "bioweapon"
+        else:
+            self._attr_fan_mode = "off"
         self._attr_min_temp = cast(
             float, self.get("climate_state_min_avail_temp", DEFAULT_MIN_TEMP)
         )
@@ -182,6 +188,23 @@ class TeslaFleetClimateEntity(TeslaFleetVehicleEntity, ClimateEntity):
             self._attr_hvac_mode = HVACMode.HEAT_COOL
         self.async_write_ha_state()
 
+    async def async_set_fan_mode(self, fan_mode: str) -> None:
+        """Set the Bioweapon defense mode."""
+        await self.wake_up_if_asleep()
+        
+        await handle_vehicle_command(
+            self.api.set_bioweapon_mode(
+                on=(fan_mode != "off"),
+                manual_override=True,
+            )
+        )
+        self._attr_fan_mode = fan_mode
+        
+        # Bioweapon mode forces HVAC on
+        if fan_mode == self._attr_fan_modes[1]: 
+            self._attr_hvac_mode = HVACMode.HEAT_COOL
+            
+        self.async_write_ha_state()
 
 COP_MODES = {
     "Off": HVACMode.OFF,
