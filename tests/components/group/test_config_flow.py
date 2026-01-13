@@ -490,7 +490,7 @@ LIGHT_ATTRS = [
 LOCK_ATTRS = [
     {
         "supported_features": 1,
-        "entity_id": [
+        "group_entities": [
             "lock.input_one",
             "lock.input_two",
         ],
