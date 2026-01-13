@@ -162,7 +162,7 @@ class Elke27ZoneBinarySensor(BinarySensorEntity):
         zone = _get_zone(self._hub.snapshot, self._zone_id)
         if zone is None:
             return None
-        definition = _zone_definition(zone)
+        definition = _zone_definition_for_id(self._hub, self._zone_id, zone)
         if not definition:
             return None
         is_open = getattr(zone, "open", None)
@@ -177,7 +177,7 @@ class Elke27ZoneBinarySensor(BinarySensorEntity):
         if zone is None:
             return {}
         return {
-            "definition": _zone_definition(zone),
+            "definition": _zone_definition_for_id(self._hub, self._zone_id, zone),
             "bypassed": getattr(zone, "bypassed", None),
             "trouble": getattr(zone, "trouble", None),
         }
@@ -220,6 +220,22 @@ def _zone_definition(zone: Any) -> str | None:
         else getattr(zone, "definition", None)
     )
     return str(definition) if definition else None
+
+
+def _zone_definition_for_id(
+    hub: Elke27Hub, zone_id: int, zone: Any | None = None
+) -> str | None:
+    definition = _zone_definition(zone) if zone is not None else None
+    if definition:
+        return definition
+    client = hub.client
+    zones_by_id = None
+    if client is not None:
+        zones_by_id = getattr(getattr(client, "state", None), "zones", None)
+    if isinstance(zones_by_id, Mapping):
+        zone_state = zones_by_id.get(zone_id)
+        return _zone_definition(zone_state)
+    return None
 
 
 def _zone_device_class(zone: Any) -> BinarySensorDeviceClass:
