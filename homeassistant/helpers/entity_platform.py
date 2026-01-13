@@ -1226,7 +1226,7 @@ def _async_derive_object_ids(
 ) -> tuple[str | None, str | None]:
     """Derive the object IDs for an entity.
 
-    Dervives both suggested and calculated object IDs.
+    Derives both suggested and calculated object IDs.
     """
     is_calculated = True
     object_id: str | None

@@ -987,8 +987,12 @@ class EntityRegistry(BaseRegistry):
     ) -> str:
         """Generate an entity ID, based on all the provided parameters.
 
-        Entity ID conflicts are checked against registered and currently existing entities,
-        as well as provided `reserved_entity_ids`.
+        `name` has priority over `suggested_object_id`, which has priority
+        over `calculated_object_id`.
+        `name` and `suggested_object_id` do not cause the use of device name,
+        `calculated_object_id` does if `has_entity_name` is True.
+        Entity ID conflicts are checked against registered and currently
+        existing entities, as well as provided `reserved_entity_ids`.
         """
         object_id: str | None
         use_device = False
@@ -1052,7 +1056,8 @@ class EntityRegistry(BaseRegistry):
         platform: str,
         unique_id: str,
         *,
-        # To influence entity ID generation
+        # Used for entity ID generation, if entity gets created.
+        # `suggested_object_id` has priority over `calculated_object_id`.
         calculated_object_id: str | None | UndefinedType = UNDEFINED,
         suggested_object_id: str | None | UndefinedType = UNDEFINED,
         # To disable or hide an entity if it gets created, does not affect

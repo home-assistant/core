@@ -452,8 +452,9 @@ class Entity(
     # Entity description instance for this Entity
     entity_description: EntityDescription
 
-    # Integration suggested object id, derived from entity_id, if it is set directly.
-    # Only used internally, never to be set by integrations.
+    # Integration suggested object id, derived from entity_id, if it is set by the
+    # integration before the entity is added.
+    # Only handled internally, never to be used by integrations.
     internal_integration_suggested_object_id: str | None
 
     # If we reported if this entity was slow
