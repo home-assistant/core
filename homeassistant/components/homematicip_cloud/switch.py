@@ -113,15 +113,18 @@ class HomematicipMultiSwitch(HomematicipGenericEntity, SwitchEntity):
     @property
     def is_on(self) -> bool:
         """Return true if switch is on."""
-        return self.functional_channel.on
+        channel = self.get_channel_or_raise()
+        return channel.on
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
-        await self.functional_channel.async_turn_on()
+        channel = self.get_channel_or_raise()
+        await channel.async_turn_on()
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the switch off."""
-        await self.functional_channel.async_turn_off()
+        channel = self.get_channel_or_raise()
+        await channel.async_turn_off()
 
 
 class HomematicipSwitch(HomematicipMultiSwitch, SwitchEntity):

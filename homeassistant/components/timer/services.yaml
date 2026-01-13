@@ -8,7 +8,7 @@ start:
     duration:
       example: "00:01:00 or 60"
       selector:
-        text:
+        duration:
 
 pause:
   target:

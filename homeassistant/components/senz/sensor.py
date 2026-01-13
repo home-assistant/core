@@ -5,7 +5,7 @@ from __future__ import annotations
 from collections.abc import Callable
 from dataclasses import dataclass
 
-from aiosenz import Thermostat
+from pysenz import Thermostat
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -13,14 +13,13 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import SENZDataUpdateCoordinator
+from . import SENZConfigEntry, SENZDataUpdateCoordinator
 from .const import DOMAIN
 
 
@@ -45,11 +44,11 @@ SENSORS: tuple[SenzSensorDescription, ...] = (
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: SENZConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the SENZ sensor entities from a config entry."""
-    coordinator: SENZDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator = entry.runtime_data
     async_add_entities(
         SENZSensor(thermostat, coordinator, description)
         for description in SENSORS

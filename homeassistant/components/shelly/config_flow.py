@@ -5,10 +5,14 @@ from __future__ import annotations
 import asyncio
 from collections.abc import AsyncIterator, Mapping
 from contextlib import asynccontextmanager
-from typing import TYPE_CHECKING, Any, Final
+from dataclasses import dataclass
+from typing import TYPE_CHECKING, Any, Final, cast
 
-from aioshelly.ble.manufacturer_data import has_rpc_over_ble
-from aioshelly.ble.provisioning import async_provision_wifi, async_scan_wifi_networks
+from aioshelly.ble import get_name_from_model_id
+from aioshelly.ble.manufacturer_data import (
+    has_rpc_over_ble,
+    parse_shelly_manufacturer_data,
+)
 from aioshelly.block_device import BlockDevice
 from aioshelly.common import ConnectionOptions, get_info
 from aioshelly.const import BLOCK_GENERATIONS, DEFAULT_HTTP_PORT, RPC_GENERATIONS
@@ -21,17 +25,28 @@ from aioshelly.exceptions import (
     RpcCallError,
 )
 from aioshelly.rpc_device import RpcDevice
-from aioshelly.zeroconf import async_lookup_device_by_name
+from aioshelly.rpc_device.models import ShellyWiFiNetwork
+from aioshelly.zeroconf import async_discover_devices, async_lookup_device_by_name
 from bleak.backends.device import BLEDevice
 import voluptuous as vol
+from zeroconf import IPVersion
 
 from homeassistant.components import zeroconf
 from homeassistant.components.bluetooth import (
     BluetoothServiceInfoBleak,
     async_ble_device_from_address,
+    async_clear_address_from_match_history,
+    async_discovered_service_info,
 )
-from homeassistant.config_entries import ConfigFlow, ConfigFlowResult, OptionsFlow
+from homeassistant.config_entries import (
+    SOURCE_BLUETOOTH,
+    SOURCE_ZEROCONF,
+    ConfigFlow,
+    ConfigFlowResult,
+    OptionsFlow,
+)
 from homeassistant.const import (
+    CONF_DEVICE,
     CONF_HOST,
     CONF_MAC,
     CONF_MODEL,
@@ -40,9 +55,11 @@ from homeassistant.const import (
     CONF_USERNAME,
 )
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.data_entry_flow import AbortFlow
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.selector import (
+    SelectOptionDict,
     SelectSelector,
     SelectSelectorConfig,
     SelectSelectorMode,
@@ -93,10 +110,33 @@ BLE_SCANNER_OPTIONS = [
 ]
 
 INTERNAL_WIFI_AP_IP = "192.168.33.1"
+MANUAL_ENTRY_STRING = "manual"
+DISCOVERY_SOURCES = {SOURCE_BLUETOOTH, SOURCE_ZEROCONF}
+
 
 # BLE provisioning flow steps that are in the finishing state
 # Used to determine if a BLE flow should be aborted when zeroconf discovers the device
 BLUETOOTH_FINISHING_STEPS = {"do_provision", "provision_done"}
+
+
+@dataclass(frozen=True, slots=True)
+class DiscoveredDeviceZeroconf:
+    """Discovered Shelly device via Zeroconf."""
+
+    name: str
+    mac: str
+    host: str
+    port: int
+
+
+@dataclass(frozen=True, slots=True)
+class DiscoveredDeviceBluetooth:
+    """Discovered Shelly device via Bluetooth."""
+
+    name: str
+    mac: str
+    ble_device: BLEDevice
+    discovery_info: BluetoothServiceInfoBleak
 
 
 async def validate_input(
@@ -175,67 +215,362 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
     device_info: dict[str, Any] = {}
     ble_device: BLEDevice | None = None
     device_name: str = ""
-    wifi_networks: list[dict[str, Any]] = []
+    wifi_networks: list[ShellyWiFiNetwork] = []
     selected_ssid: str = ""
     _provision_task: asyncio.Task | None = None
     _provision_result: ConfigFlowResult | None = None
+    disable_ap_after_provision: bool = True
+    disable_ble_rpc_after_provision: bool = True
+    _discovered_devices: dict[str, DiscoveredDeviceZeroconf | DiscoveredDeviceBluetooth]
+    _ble_rpc_device: RpcDevice | None = None
+
+    @staticmethod
+    def _get_name_from_mac_and_ble_model(
+        mac: str, parsed_data: dict[str, int | str]
+    ) -> str:
+        """Generate device name from MAC and BLE manufacturer data model ID.
+
+        For devices without a Shelly name, use model name from model ID if available.
+        Gen3/4 devices advertise MAC address as name instead of "ShellyXXX-MACADDR".
+        """
+        if (
+            (model_id := parsed_data.get("model_id"))
+            and isinstance(model_id, int)
+            and (model_name := get_name_from_model_id(model_id))
+        ):
+            # Remove spaces from model name (e.g., "Shelly 1 Mini Gen4" -> "Shelly1MiniGen4")
+            return f"{model_name.replace(' ', '')}-{mac}"
+        return f"Shelly-{mac}"
+
+    def _parse_ble_device_mac_and_name(
+        self, discovery_info: BluetoothServiceInfoBleak
+    ) -> tuple[str | None, str]:
+        """Parse MAC address and device name from BLE discovery info.
+
+        Returns:
+            Tuple of (mac, device_name) where mac is None if parsing failed.
+        """
+        device_name = discovery_info.name
+        mac: str | None = None
+
+        # Try to get MAC from device name first
+        if mac := mac_address_from_name(device_name):
+            return mac, device_name
+
+        # Try to parse from manufacturer data
+        if not (
+            (parsed := parse_shelly_manufacturer_data(discovery_info.manufacturer_data))
+            and (mac_with_colons := parsed.get("mac"))
+            and isinstance(mac_with_colons, str)
+        ):
+            return None, device_name
+
+        # Convert MAC from "CC:BA:97:C2:D6:72" to "CCBA97C2D672"
+        mac = mac_with_colons.replace(":", "")
+        device_name = self._get_name_from_mac_and_ble_model(mac, parsed)
+
+        return mac, device_name
+
+    async def _async_ensure_ble_connected(self) -> RpcDevice:
+        """Ensure BLE RPC device is connected, reconnecting if needed.
+
+        Maintains a persistent BLE connection across config flow steps to avoid
+        the overhead of reconnecting between WiFi scan and provisioning steps.
+
+        Returns:
+            Connected RpcDevice instance
+
+        Raises:
+            DeviceConnectionError: If connection fails
+            RpcCallError: If ping fails after connection
+
+        """
+        if TYPE_CHECKING:
+            assert self.ble_device is not None
+
+        if self._ble_rpc_device is not None and self._ble_rpc_device.connected:
+            # Ping to verify connection is still alive
+            try:
+                await self._ble_rpc_device.update_status()
+            except (DeviceConnectionError, RpcCallError):
+                # Connection dropped, need to reconnect
+                LOGGER.debug("BLE connection lost, reconnecting")
+                await self._async_disconnect_ble()
+            else:
+                return self._ble_rpc_device
+
+        # Create new connection
+        LOGGER.debug("Creating new BLE RPC connection to %s", self.ble_device.address)
+        options = ConnectionOptions(ble_device=self.ble_device)
+        device = await RpcDevice.create(
+            aiohttp_session=None, ws_context=None, ip_or_options=options
+        )
+        try:
+            await device.initialize()
+        except (DeviceConnectionError, RpcCallError):
+            await device.shutdown()
+            raise
+        self._ble_rpc_device = device
+        return self._ble_rpc_device
+
+    async def _async_disconnect_ble(self) -> None:
+        """Disconnect and cleanup BLE RPC device."""
+        if self._ble_rpc_device is not None:
+            try:
+                await self._ble_rpc_device.shutdown()
+            except Exception:  # noqa: BLE001
+                LOGGER.debug("Error during BLE shutdown", exc_info=True)
+            finally:
+                self._ble_rpc_device = None
+
+    async def _async_get_ip_from_ble(self) -> str | None:
+        """Get device IP address via BLE after WiFi provisioning.
+
+        Uses the persistent BLE connection to get the device's sta_ip from status.
+
+        Returns:
+            IP address string if available, None otherwise
+
+        """
+        try:
+            device = await self._async_ensure_ble_connected()
+        except (DeviceConnectionError, RpcCallError) as err:
+            LOGGER.debug("Failed to get IP via BLE: %s", err)
+            return None
+
+        if (
+            (wifi := device.status.get("wifi"))
+            and isinstance(wifi, dict)
+            and (ip := wifi.get("sta_ip"))
+        ):
+            return cast(str, ip)
+        return None
+
+    async def _async_discover_zeroconf_devices(
+        self,
+    ) -> dict[str, DiscoveredDeviceZeroconf]:
+        """Discover Shelly devices via Zeroconf."""
+        discovered: dict[str, DiscoveredDeviceZeroconf] = {}
+
+        aiozc = await zeroconf.async_get_async_instance(self.hass)
+        zeroconf_devices = await async_discover_devices(aiozc)
+
+        for service_info in zeroconf_devices:
+            device_name = service_info.name.partition(".")[0]
+            if not (mac := mac_address_from_name(device_name)):
+                continue
+
+            # Get IPv4 address from service info (Shelly doesn't support IPv6)
+            if not (
+                ipv4_addresses := service_info.ip_addresses_by_version(IPVersion.V4Only)
+            ):
+                continue
+
+            host = str(ipv4_addresses[0])
+            discovered[mac] = DiscoveredDeviceZeroconf(
+                name=device_name,
+                mac=mac,
+                host=host,
+                port=service_info.port or DEFAULT_HTTP_PORT,
+            )
+
+        return discovered
+
+    @callback
+    def _async_discover_bluetooth_devices(
+        self,
+    ) -> dict[str, DiscoveredDeviceBluetooth]:
+        """Discover Shelly devices via Bluetooth."""
+        discovered: dict[str, DiscoveredDeviceBluetooth] = {}
+
+        for discovery_info in async_discovered_service_info(self.hass, False):
+            mac, device_name = self._parse_ble_device_mac_and_name(discovery_info)
+
+            if not (
+                mac
+                and has_rpc_over_ble(discovery_info.manufacturer_data)
+                and (
+                    ble_device := async_ble_device_from_address(
+                        self.hass, discovery_info.address, connectable=True
+                    )
+                )
+            ):
+                continue
+
+            discovered[mac] = DiscoveredDeviceBluetooth(
+                name=device_name,
+                mac=mac,
+                ble_device=ble_device,
+                discovery_info=discovery_info,
+            )
+
+        return discovered
+
+    async def _async_connect_and_get_info(
+        self, host: str, port: int
+    ) -> ConfigFlowResult | None:
+        """Connect to device, validate, and create entry or return None to continue flow.
+
+        This helper consolidates the common logic between Zeroconf device selection
+        and manual entry flows. Returns a ConfigFlowResult if the flow should end
+        (create_entry or abort), or None if the flow should continue (e.g., to credentials).
+
+        Sets self.info, self.host, and self.port on success.
+        """
+        self.info = await self._async_get_info(host, port)
+        await self.async_set_unique_id(self.info[CONF_MAC], raise_on_progress=False)
+        self._abort_if_unique_id_configured({CONF_HOST: host})
+
+        self.host = host
+        self.port = port
+
+        if get_info_auth(self.info):
+            return None  # Continue to credentials step
+
+        device_info = await validate_input(
+            self.hass, self.host, self.port, self.info, {}
+        )
+
+        if device_info[CONF_MODEL]:
+            return self.async_create_entry(
+                title=device_info["title"],
+                data={
+                    CONF_HOST: self.host,
+                    CONF_PORT: self.port,
+                    CONF_SLEEP_PERIOD: device_info[CONF_SLEEP_PERIOD],
+                    CONF_MODEL: device_info[CONF_MODEL],
+                    CONF_GEN: device_info[CONF_GEN],
+                },
+            )
+        return self.async_abort(reason="firmware_not_fully_provisioned")
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Handle the initial step."""
+        """Handle the initial step - show discovered devices or manual entry."""
+        if user_input is not None:
+            selected = user_input[CONF_DEVICE]
+            if selected == MANUAL_ENTRY_STRING:
+                return await self.async_step_user_manual()
+
+            # User selected a discovered device
+            device_data = self._discovered_devices[selected]
+
+            if isinstance(device_data, DiscoveredDeviceZeroconf):
+                # Zeroconf device - connect directly
+                try:
+                    result = await self._async_connect_and_get_info(
+                        device_data.host, device_data.port
+                    )
+                except AbortFlow:
+                    raise  # Let AbortFlow propagate (e.g., already_configured)
+                except DeviceConnectionError:
+                    return self.async_abort(reason="cannot_connect")
+                except MacAddressMismatchError:
+                    return self.async_abort(reason="mac_address_mismatch")
+                except CustomPortNotSupported:
+                    return self.async_abort(reason="custom_port_not_supported")
+
+                # If result is None, continue to credentials step
+                if result is None:
+                    return await self.async_step_credentials()
+                return result
+
+            # BLE device - start provisioning flow
+            self.ble_device = device_data.ble_device
+            self.device_name = device_data.name
+            await self.async_set_unique_id(device_data.mac, raise_on_progress=False)
+            self._abort_if_unique_id_configured()
+            self.context.update(
+                {
+                    "title_placeholders": {"name": self.device_name},
+                }
+            )
+            return await self.async_step_bluetooth_confirm()
+
+        # Discover devices from both sources
+        discovered_devices: dict[
+            str, DiscoveredDeviceZeroconf | DiscoveredDeviceBluetooth
+        ] = {}
+
+        # Discover BLE devices first, then zeroconf (which will overwrite duplicates)
+        discovered_devices.update(self._async_discover_bluetooth_devices())
+        # Zeroconf devices are preferred over BLE, so update overwrites any duplicates
+        discovered_devices.update(await self._async_discover_zeroconf_devices())
+
+        # Filter out already-configured devices (excluding ignored)
+        # and devices with active discovery flows (already being offered to user)
+        current_ids = self._async_current_ids(include_ignore=False)
+        in_progress_macs = self._async_get_in_progress_discovery_macs()
+        discovered_devices = {
+            mac: device
+            for mac, device in discovered_devices.items()
+            if mac not in current_ids and mac not in in_progress_macs
+        }
+
+        # Store discovered devices for use in selection
+        self._discovered_devices = discovered_devices
+
+        # If no devices discovered, go directly to manual entry
+        if not discovered_devices:
+            return await self.async_step_user_manual()
+
+        # Build selection options for discovered devices
+        device_options: list[SelectOptionDict] = [
+            SelectOptionDict(label=data.name, value=mac)
+            for mac, data in discovered_devices.items()
+        ]
+        # Add manual entry option with translation key
+        device_options.append(
+            SelectOptionDict(label="manual", value=MANUAL_ENTRY_STRING)
+        )
+
+        return self.async_show_form(
+            step_id="user",
+            data_schema=vol.Schema(
+                {
+                    vol.Required(CONF_DEVICE): SelectSelector(
+                        SelectSelectorConfig(
+                            options=device_options,
+                            translation_key=CONF_DEVICE,
+                            mode=SelectSelectorMode.LIST,
+                        )
+                    ),
+                }
+            ),
+        )
+
+    async def async_step_user_manual(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle manual entry step."""
         errors: dict[str, str] = {}
         if user_input is not None:
-            host = user_input[CONF_HOST]
-            port = user_input[CONF_PORT]
             try:
-                self.info = await self._async_get_info(host, port)
+                result = await self._async_connect_and_get_info(
+                    user_input[CONF_HOST], user_input[CONF_PORT]
+                )
+            except AbortFlow:
+                raise  # Let AbortFlow propagate (e.g., already_configured)
             except DeviceConnectionError:
                 errors["base"] = "cannot_connect"
             except InvalidHostError:
                 errors["base"] = "invalid_host"
+            except MacAddressMismatchError:
+                errors["base"] = "mac_address_mismatch"
+            except CustomPortNotSupported:
+                errors["base"] = "custom_port_not_supported"
             except Exception:  # noqa: BLE001
                 LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:
-                await self.async_set_unique_id(
-                    self.info[CONF_MAC], raise_on_progress=False
-                )
-                self._abort_if_unique_id_configured({CONF_HOST: host})
-                self.host = host
-                self.port = port
-                if get_info_auth(self.info):
+                # If result is None, continue to credentials step
+                if result is None:
                     return await self.async_step_credentials()
-
-                try:
-                    device_info = await validate_input(
-                        self.hass, host, port, self.info, {}
-                    )
-                except DeviceConnectionError:
-                    errors["base"] = "cannot_connect"
-                except MacAddressMismatchError:
-                    errors["base"] = "mac_address_mismatch"
-                except CustomPortNotSupported:
-                    errors["base"] = "custom_port_not_supported"
-                except Exception:  # noqa: BLE001
-                    LOGGER.exception("Unexpected exception")
-                    errors["base"] = "unknown"
-                else:
-                    if device_info[CONF_MODEL]:
-                        return self.async_create_entry(
-                            title=device_info["title"],
-                            data={
-                                CONF_HOST: user_input[CONF_HOST],
-                                CONF_PORT: user_input[CONF_PORT],
-                                CONF_SLEEP_PERIOD: device_info[CONF_SLEEP_PERIOD],
-                                CONF_MODEL: device_info[CONF_MODEL],
-                                CONF_GEN: device_info[CONF_GEN],
-                            },
-                        )
-                    return self.async_abort(reason="firmware_not_fully_provisioned")
+                return result
 
         return self.async_show_form(
-            step_id="user", data_schema=CONFIG_SCHEMA, errors=errors
+            step_id="user_manual", data_schema=CONFIG_SCHEMA, errors=errors
         )
 
     async def async_step_credentials(
@@ -295,6 +630,22 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="credentials", data_schema=vol.Schema(schema), errors=errors
         )
+
+    @callback
+    def _async_get_in_progress_discovery_macs(self) -> set[str]:
+        """Get MAC addresses of devices with active discovery flows.
+
+        Returns MAC addresses from bluetooth and zeroconf discovery flows
+        that are already in progress, so they can be filtered from the
+        user step device list (since they're already being offered).
+        """
+        return {
+            mac
+            for flow in self._async_in_progress(include_uninitialized=True)
+            if flow["flow_id"] != self.flow_id
+            and flow["context"].get("source") in DISCOVERY_SOURCES
+            and (mac := flow["context"].get("unique_id"))
+        }
 
     def _abort_idle_ble_flows(self, mac: str) -> None:
         """Abort idle BLE provisioning flows for this device.
@@ -358,9 +709,18 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
         self, discovery_info: BluetoothServiceInfoBleak
     ) -> ConfigFlowResult:
         """Handle bluetooth discovery."""
-        # Parse MAC address from the Bluetooth device name
-        if not (mac := mac_address_from_name(discovery_info.name)):
+        mac, device_name = self._parse_ble_device_mac_and_name(discovery_info)
+
+        if not mac:
             return self.async_abort(reason="invalid_discovery_info")
+
+        # Clear match history at the start of discovery flow.
+        # This ensures that if the user never provisions the device and it
+        # disappears (powers down), the discovery flow gets cleaned up,
+        # and then the device comes back later, it can be rediscovered.
+        # Also handles factory reset scenarios where the device may reappear
+        # with different advertisement content (RPC-over-BLE re-enabled).
+        async_clear_address_from_match_history(self.hass, discovery_info.address)
 
         # Check if RPC-over-BLE is enabled - required for WiFi provisioning
         if not has_rpc_over_ble(discovery_info.manufacturer_data):
@@ -381,10 +741,10 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
         if not self.ble_device:
             return self.async_abort(reason="cannot_connect")
 
-        self.device_name = discovery_info.name
+        self.device_name = device_name
         self.context.update(
             {
-                "title_placeholders": {"name": discovery_info.name},
+                "title_placeholders": {"name": device_name},
             }
         )
 
@@ -395,10 +755,20 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Confirm bluetooth provisioning."""
         if user_input is not None:
+            self.disable_ap_after_provision = user_input.get("disable_ap", True)
+            self.disable_ble_rpc_after_provision = user_input.get(
+                "disable_ble_rpc", True
+            )
             return await self.async_step_wifi_scan()
 
         return self.async_show_form(
             step_id="bluetooth_confirm",
+            data_schema=vol.Schema(
+                {
+                    vol.Optional("disable_ap", default=True): bool,
+                    vol.Optional("disable_ble_rpc", default=True): bool,
+                }
+            ),
             description_placeholders={
                 "name": self.context["title_placeholders"]["name"]
             },
@@ -410,40 +780,54 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
         """Scan for WiFi networks via BLE."""
         if user_input is not None:
             self.selected_ssid = user_input[CONF_SSID]
-            return await self.async_step_wifi_credentials()
+            password = user_input[CONF_PASSWORD]
+            return await self.async_step_do_provision({"password": password})
 
-        # Scan for WiFi networks via BLE
-        if TYPE_CHECKING:
-            assert self.ble_device is not None
+        # Scan for WiFi networks via BLE using persistent connection
         try:
-            self.wifi_networks = await async_scan_wifi_networks(self.ble_device)
+            device = await self._async_ensure_ble_connected()
+            self.wifi_networks = await device.wifi_scan()
         except (DeviceConnectionError, RpcCallError) as err:
             LOGGER.debug("Failed to scan WiFi networks via BLE: %s", err)
             # "Writing is not permitted" error means device rejects BLE writes
             # and BLE provisioning is disabled - user must use Shelly app
             if "not permitted" in str(err):
+                await self._async_disconnect_ble()
                 return self.async_abort(reason="ble_not_permitted")
             return await self.async_step_wifi_scan_failed()
         except Exception:  # noqa: BLE001
             LOGGER.exception("Unexpected exception during WiFi scan")
+            await self._async_disconnect_ble()
             return self.async_abort(reason="unknown")
 
-        # Create list of SSIDs for selection
-        # If no networks found, still allow custom SSID entry
-        ssid_options = [network["ssid"] for network in self.wifi_networks]
+        # Sort by RSSI (strongest signal first - higher/less negative values first)
+        # and create list of SSIDs for selection
+        sorted_networks = sorted(
+            self.wifi_networks, key=lambda n: n["rssi"], reverse=True
+        )
+        ssid_options = [network["ssid"] for network in sorted_networks]
+
+        # Pre-select SSID if returning from failed provisioning attempt
+        suggested_values: dict[str, Any] = {}
+        if self.selected_ssid:
+            suggested_values[CONF_SSID] = self.selected_ssid
 
         return self.async_show_form(
             step_id="wifi_scan",
-            data_schema=vol.Schema(
-                {
-                    vol.Required(CONF_SSID): SelectSelector(
-                        SelectSelectorConfig(
-                            options=ssid_options,
-                            mode=SelectSelectorMode.DROPDOWN,
-                            custom_value=True,
-                        )
-                    ),
-                }
+            data_schema=self.add_suggested_values_to_schema(
+                vol.Schema(
+                    {
+                        vol.Required(CONF_SSID): SelectSelector(
+                            SelectSelectorConfig(
+                                options=ssid_options,
+                                mode=SelectSelectorMode.DROPDOWN,
+                                custom_value=True,
+                            )
+                        ),
+                        vol.Required(CONF_PASSWORD): str,
+                    }
+                ),
+                suggested_values,
             ),
         )
 
@@ -471,24 +855,61 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
         finally:
             provisioning_registry.pop(normalized_mac, None)
 
-    async def async_step_wifi_credentials(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Get WiFi credentials and provision device."""
-        if user_input is not None:
-            self.selected_ssid = user_input.get(CONF_SSID, self.selected_ssid)
-            password = user_input[CONF_PASSWORD]
-            return await self.async_step_do_provision({"password": password})
+    async def _async_secure_device_after_provision(self, host: str, port: int) -> None:
+        """Disable AP and/or BLE RPC after successful WiFi provisioning.
 
-        return self.async_show_form(
-            step_id="wifi_credentials",
-            data_schema=vol.Schema(
-                {
-                    vol.Required(CONF_PASSWORD): str,
-                }
-            ),
-            description_placeholders={"ssid": self.selected_ssid},
+        Must be called via IP after device is on WiFi, not via BLE.
+        """
+        if (
+            not self.disable_ap_after_provision
+            and not self.disable_ble_rpc_after_provision
+        ):
+            return
+
+        # Connect to device via IP
+        options = ConnectionOptions(
+            host,
+            None,
+            None,
+            device_mac=self.unique_id,
+            port=port,
         )
+        device: RpcDevice | None = None
+        try:
+            device = await RpcDevice.create(
+                async_get_clientsession(self.hass), None, options
+            )
+            await device.initialize()
+
+            restart_required = False
+
+            # Disable WiFi AP if requested
+            if self.disable_ap_after_provision:
+                result = await device.wifi_setconfig(ap_enable=False)
+                LOGGER.debug("Disabled WiFi AP on %s", host)
+                restart_required = restart_required or result.get(
+                    "restart_required", False
+                )
+
+            # Disable BLE RPC if requested (keep BLE enabled for sensors/buttons)
+            if self.disable_ble_rpc_after_provision:
+                result = await device.ble_setconfig(enable=True, enable_rpc=False)
+                LOGGER.debug("Disabled BLE RPC on %s", host)
+                restart_required = restart_required or result.get(
+                    "restart_required", False
+                )
+
+            # Restart device once if either operation requires it
+            if restart_required:
+                await device.trigger_reboot(delay_ms=1000)
+        except (TimeoutError, DeviceConnectionError, RpcCallError) as err:
+            LOGGER.warning(
+                "Failed to secure device after provisioning at %s: %s", host, err
+            )
+            # Don't fail the flow - device is already on WiFi and functional
+        finally:
+            if device:
+                await device.shutdown()
 
     async def _async_provision_wifi_and_wait_for_zeroconf(
         self, mac: str, password: str, state: ProvisioningState
@@ -497,17 +918,21 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
 
         Returns the flow result to be stored in self._provision_result, or None if failed.
         """
-        # Provision WiFi via BLE
-        if TYPE_CHECKING:
-            assert self.ble_device is not None
+        # Provision WiFi via BLE using persistent connection
         try:
-            await async_provision_wifi(self.ble_device, self.selected_ssid, password)
+            device = await self._async_ensure_ble_connected()
+            await device.wifi_setconfig(
+                sta_ssid=self.selected_ssid,
+                sta_password=password,
+                sta_enable=True,
+            )
         except (DeviceConnectionError, RpcCallError) as err:
             LOGGER.debug("Failed to provision WiFi via BLE: %s", err)
             # BLE connection/communication failed - allow retry from network selection
             return None
         except Exception:  # noqa: BLE001
             LOGGER.exception("Unexpected exception during WiFi provisioning")
+            await self._async_disconnect_ble()
             return self.async_abort(reason="unknown")
 
         LOGGER.debug(
@@ -540,13 +965,21 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
             aiozc = await zeroconf.async_get_async_instance(self.hass)
             result = await async_lookup_device_by_name(aiozc, self.device_name)
 
-            # If we still don't have a host, provisioning failed
+            # If we still don't have a host, try BLE fallback for alternate subnets
             if not result:
-                LOGGER.debug("Active lookup failed - provisioning unsuccessful")
-                # Store failure info and return None - provision_done will handle redirect
-                return None
-
-            state.host, state.port = result
+                LOGGER.debug(
+                    "Active lookup failed, trying to get IP address via BLE as fallback"
+                )
+                if ip := await self._async_get_ip_from_ble():
+                    LOGGER.debug("Got IP %s from BLE, using it", ip)
+                    state.host = ip
+                    state.port = DEFAULT_HTTP_PORT
+                else:
+                    LOGGER.debug("BLE fallback also failed - provisioning unsuccessful")
+                    # Store failure info and return None - provision_done will handle redirect
+                    return None
+            else:
+                state.host, state.port = result
         else:
             LOGGER.debug(
                 "Zeroconf discovery received for device after WiFi provisioning at %s",
@@ -583,6 +1016,16 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
         if not device_info[CONF_MODEL]:
             return self.async_abort(reason="firmware_not_fully_provisioned")
 
+        # Secure device after provisioning if requested (disable AP/BLE)
+        await self._async_secure_device_after_provision(self.host, self.port)
+
+        # Clear match history so device can be rediscovered if factory reset
+        # This ensures that if the device is factory reset in the future
+        # (re-enabling BLE provisioning), it will trigger a new discovery flow
+        if TYPE_CHECKING:
+            assert self.ble_device is not None
+        async_clear_address_from_match_history(self.hass, self.ble_device.address)
+
         # User just provisioned this device - create entry directly without confirmation
         return self.async_create_entry(
             title=device_info["title"],
@@ -604,12 +1047,17 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
         if TYPE_CHECKING:
             assert mac is not None
 
-        async with self._async_provision_context(mac) as state:
-            self._provision_result = (
-                await self._async_provision_wifi_and_wait_for_zeroconf(
-                    mac, password, state
+        try:
+            async with self._async_provision_context(mac) as state:
+                self._provision_result = (
+                    await self._async_provision_wifi_and_wait_for_zeroconf(
+                        mac, password, state
+                    )
                 )
-            )
+        finally:
+            # Always disconnect BLE after provisioning attempt completes
+            # We either succeeded (and will use IP now) or failed (and user will retry)
+            await self._async_disconnect_ble()
 
     async def async_step_do_provision(
         self, user_input: dict[str, Any] | None = None
@@ -638,8 +1086,7 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Handle failed provisioning - allow retry."""
         if user_input is not None:
-            # User wants to retry - clear state and go back to wifi_scan
-            self.selected_ssid = ""
+            # User wants to retry - keep selected_ssid so it's pre-selected
             self.wifi_networks = []
             return await self.async_step_wifi_scan()
 
@@ -828,6 +1275,17 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
     async def _async_get_info(self, host: str, port: int) -> dict[str, Any]:
         """Get info from shelly device."""
         return await get_info(async_get_clientsession(self.hass), host, port=port)
+
+    @callback
+    def async_remove(self) -> None:
+        """Handle flow removal - cleanup BLE connection."""
+        super().async_remove()
+        if self._ble_rpc_device is not None:
+            # Schedule cleanup as background task since async_remove is sync
+            self.hass.async_create_background_task(
+                self._async_disconnect_ble(),
+                name="shelly_config_flow_ble_cleanup",
+            )
 
     @staticmethod
     @callback

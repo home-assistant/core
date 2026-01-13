@@ -33,6 +33,9 @@
       "acceleration_z": {
         "name": "Acceleration Z"
       },
+      "iaqs": {
+        "name": "Indoor air quality score"
+      },
       "movement_counter": {
         "name": "Movement counter"
       },

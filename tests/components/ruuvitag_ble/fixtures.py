@@ -1,4 +1,4 @@
-"""Fixtures for testing RuuviTag BLE."""
+"""Fixtures for testing Ruuvi BLE."""
 
 from homeassistant.helpers.service_info.bluetooth import BluetoothServiceInfo
 

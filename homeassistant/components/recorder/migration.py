@@ -1361,7 +1361,7 @@ class _SchemaVersion20Migrator(_SchemaVersionMigrator, target_version=20):
 class _SchemaVersion21Migrator(_SchemaVersionMigrator, target_version=21):
     def _apply_update(self) -> None:
         """Version specific update method."""
-        # Try to change the character set of the statistic_meta table
+        # Try to change the character set of events, states and statistics_meta tables
         if self.engine.dialect.name == SupportedDialect.MYSQL:
             for table in ("events", "states", "statistics_meta"):
                 _correct_table_character_set_and_collation(table, self.session_maker)
@@ -2125,6 +2125,23 @@ class _SchemaVersion52Migrator(_SchemaVersionMigrator, target_version=52):
                 )
 
 
+class _SchemaVersion53Migrator(_SchemaVersionMigrator, target_version=53):
+    def _apply_update(self) -> None:
+        """Version specific update method."""
+        # Try to change the character set of events, states and statistics_meta tables
+        if self.engine.dialect.name == SupportedDialect.MYSQL:
+            for table in (
+                "events",
+                "event_data",
+                "states",
+                "state_attributes",
+                "statistics",
+                "statistics_meta",
+                "statistics_short_term",
+            ):
+                _correct_table_character_set_and_collation(table, self.session_maker)
+
+
 def _migrate_statistics_columns_to_timestamp_removing_duplicates(
     hass: HomeAssistant,
     instance: Recorder,
@@ -2167,8 +2184,10 @@ def _correct_table_character_set_and_collation(
     """Correct issues detected by validate_db_schema."""
     # Attempt to convert the table to utf8mb4
     _LOGGER.warning(
-        "Updating character set and collation of table %s to utf8mb4. %s",
+        "Updating table %s to character set %s and collation %s. %s",
         table,
+        MYSQL_DEFAULT_CHARSET,
+        MYSQL_COLLATE,
         MIGRATION_NOTE_MINUTES,
     )
     with (

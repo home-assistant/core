@@ -53,6 +53,9 @@ def _convert_api_item(item: dict[str, str]) -> TodoItem:
         # Due dates are returned always in UTC so we only need to
         # parse the date portion which will be interpreted as a a local date.
         due = datetime.fromisoformat(due_str).date()
+    completed: datetime | None = None
+    if (completed_str := item.get("completed")) is not None:
+        completed = datetime.fromisoformat(completed_str)
     return TodoItem(
         summary=item["title"],
         uid=item["id"],
@@ -61,6 +64,7 @@ def _convert_api_item(item: dict[str, str]) -> TodoItem:
             TodoItemStatus.NEEDS_ACTION,
         ),
         due=due,
+        completed=completed,
         description=item.get("notes"),
     )
 

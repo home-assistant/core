@@ -125,7 +125,7 @@ class LaMarzoccoUpdateEntity(LaMarzoccoEntity, UpdateEntity):
             await self.coordinator.device.update_firmware()
             while (
                 update_progress := await self.coordinator.device.get_firmware()
-            ).command_status is UpdateStatus.IN_PROGRESS:
+            ).command_status is not UpdateStatus.UPDATED:
                 if counter >= MAX_UPDATE_WAIT:
                     _raise_timeout_error()
                 self._attr_update_percentage = update_progress.progress_percentage

@@ -3,7 +3,7 @@
 import asyncio
 from unittest.mock import AsyncMock
 
-from actron_neo_api import ActronNeoAuthError
+from actron_neo_api import ActronAirAuthError
 
 from homeassistant import config_entries
 from homeassistant.components.actron_air.const import DOMAIN
@@ -15,7 +15,7 @@ from tests.common import MockConfigEntry
 
 
 async def test_user_flow_oauth2_success(
-    hass: HomeAssistant, mock_actron_api: AsyncMock
+    hass: HomeAssistant, mock_actron_api: AsyncMock, mock_setup_entry: AsyncMock
 ) -> None:
     """Test successful OAuth2 device code flow."""
     # Start the config flow
@@ -76,7 +76,7 @@ async def test_user_flow_oauth2_error(hass: HomeAssistant, mock_actron_api) -> N
     """Test OAuth2 flow with authentication error during device code request."""
     # Override the default mock to raise an error
     mock_actron_api.request_device_code = AsyncMock(
-        side_effect=ActronNeoAuthError("OAuth2 error")
+        side_effect=ActronAirAuthError("OAuth2 error")
     )
 
     # Start the flow
@@ -90,12 +90,12 @@ async def test_user_flow_oauth2_error(hass: HomeAssistant, mock_actron_api) -> N
 
 
 async def test_user_flow_token_polling_error(
-    hass: HomeAssistant, mock_actron_api
+    hass: HomeAssistant, mock_actron_api, mock_setup_entry: AsyncMock
 ) -> None:
     """Test OAuth2 flow with error during token polling."""
     # Override the default mock to raise an error during token polling
     mock_actron_api.poll_for_token = AsyncMock(
-        side_effect=ActronNeoAuthError("Token polling error")
+        side_effect=ActronAirAuthError("Token polling error")
     )
 
     # Start the config flow
@@ -148,17 +148,11 @@ async def test_user_flow_token_polling_error(
 
 
 async def test_user_flow_duplicate_account(
-    hass: HomeAssistant, mock_actron_api: AsyncMock
+    hass: HomeAssistant, mock_actron_api: AsyncMock, mock_config_entry: MockConfigEntry
 ) -> None:
     """Test duplicate account handling - should abort when same account is already configured."""
     # Create an existing config entry for the same user account
-    existing_entry = MockConfigEntry(
-        domain=DOMAIN,
-        title="test@example.com",
-        data={CONF_API_TOKEN: "existing_refresh_token"},
-        unique_id="test_user_id",
-    )
-    existing_entry.add_to_hass(hass)
+    mock_config_entry.add_to_hass(hass)
 
     # Start the config flow
     result = await hass.config_entries.flow.async_init(
@@ -180,5 +174,81 @@ async def test_user_flow_duplicate_account(
     result = await hass.config_entries.flow.async_configure(result["flow_id"])
 
     # Should abort because the account is already configured
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
+
+
+async def test_reauth_flow_success(
+    hass: HomeAssistant,
+    mock_actron_api: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    mock_setup_entry: AsyncMock,
+) -> None:
+    """Test successful reauthentication flow."""
+    # Create an existing config entry
+    mock_config_entry.add_to_hass(hass)
+    existing_entry = mock_config_entry
+
+    # Start the reauth flow
+    result = await mock_config_entry.start_reauth_flow(hass)
+
+    # Should show the reauth confirmation form
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
+
+    # Submit the confirmation form to start the OAuth flow
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+
+    # Should start with a progress step
+    assert result["type"] is FlowResultType.SHOW_PROGRESS
+    assert result["step_id"] == "user"
+    assert result["progress_action"] == "wait_for_authorization"
+
+    # Wait for the progress to complete
+    await hass.async_block_till_done()
+
+    # Continue the flow after progress is done
+    result = await hass.config_entries.flow.async_configure(result["flow_id"])
+
+    # Should update the existing entry with new token
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+    assert existing_entry.data[CONF_API_TOKEN] == "test_refresh_token"
+
+
+async def test_reauth_flow_wrong_account(
+    hass: HomeAssistant, mock_actron_api: AsyncMock, mock_config_entry: MockConfigEntry
+) -> None:
+    """Test reauthentication flow with wrong account."""
+    # Create an existing config entry
+    mock_config_entry.add_to_hass(hass)
+
+    # Mock the API to return a different user ID
+    mock_actron_api.get_user_info = AsyncMock(
+        return_value={"id": "different_user_id", "email": "different@example.com"}
+    )
+
+    # Start the reauth flow
+    result = await mock_config_entry.start_reauth_flow(hass)
+
+    # Should show the reauth confirmation form
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
+
+    # Submit the confirmation form
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+
+    # Should start with a progress step
+    assert result["type"] is FlowResultType.SHOW_PROGRESS
+    assert result["step_id"] == "user"
+    assert result["progress_action"] == "wait_for_authorization"
+
+    # Wait for the progress to complete
+    await hass.async_block_till_done()
+
+    # Continue the flow after progress is done
+    result = await hass.config_entries.flow.async_configure(result["flow_id"])
+
+    # Should abort because of wrong account
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "wrong_account"
