@@ -294,6 +294,8 @@ class Elke27Hub:
         client = self._client
         if client is None:
             return False
+        if pin is not None and not isinstance(pin, str):
+            pin = str(pin)
 
         method = getattr(client, "async_arm_area", None)
         if method is None:
@@ -314,6 +316,8 @@ class Elke27Hub:
         client = self._client
         if client is None:
             return False
+        if pin is not None and not isinstance(pin, str):
+            pin = str(pin)
 
         method = getattr(client, "async_disarm_area", None)
         if method is None:
