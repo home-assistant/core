@@ -10,7 +10,6 @@ from . import setup_integration
 
 from tests.common import MockConfigEntry
 from tests.components.diagnostics import get_diagnostics_for_config_entry
-from tests.test_util.aiohttp import AiohttpClientMocker
 from tests.typing import ClientSessionGenerator
 
 
@@ -41,22 +40,17 @@ async def test_entry_diagnostics(
 async def test_entry_diagnostics_exception(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
-    init_integration: MockConfigEntry,
-    aioclient_mock: AiohttpClientMocker,
+    mock_config_entry: MockConfigEntry,
+    github_client: AsyncMock,
 ) -> None:
     """Test config entry diagnostics with exception for ratelimit."""
-    aioclient_mock.get(
-        "https://api.github.com/rate_limit",
-        exc=GitHubException("error"),
-    )
+    await setup_integration(hass, mock_config_entry)
+    github_client.rate_limit.side_effect = GitHubException("error")
 
     result = await get_diagnostics_for_config_entry(
         hass,
         hass_client,
-        init_integration,
+        mock_config_entry,
     )
 
-    assert (
-        result["rate_limit"]["error"]
-        == "Unexpected exception for 'https://api.github.com/rate_limit' with - error"
-    )
+    assert result["rate_limit"]["error"] == "error"
