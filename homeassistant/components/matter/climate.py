@@ -197,6 +197,7 @@ class MatterClimate(MatterEntity, ClimateEntity):
     _attr_temperature_unit: str = UnitOfTemperature.CELSIUS
     _attr_hvac_mode: HVACMode = HVACMode.OFF
     matter_presets: list[clusters.Thermostat.Structs.PresetStruct] | None = None
+    _preset_handle_by_name: dict[str, bytes] = {}
     _attr_preset_mode: str | None = None
     _attr_preset_modes: list[str] | None = None
     _feature_map: int | None = None
@@ -253,17 +254,14 @@ class MatterClimate(MatterEntity, ClimateEntity):
 
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set new preset mode."""
-        mode = preset_mode
-        if self.matter_presets:
-            for preset in self.matter_presets:
-                # find preset handle for the given preset name
-                name = preset.name
-                if not name:
-                    # fallback to scenario name if no name is set
-                    name = "Preset" + str(preset.presetHandle[0])
-                if name == mode:
-                    preset_handle = preset.presetHandle
-                    break
+        preset_handle = self._preset_handle_by_name.get(preset_mode)
+
+        if preset_handle is None:
+            raise ValueError(
+                f"Preset mode '{preset_mode}' not found. "
+                f"Available presets: {self.preset_modes}"
+            )
+
         try:
             await self.send_device_command(
                 clusters.Thermostat.Commands.SetActivePresetRequest(
@@ -272,7 +270,7 @@ class MatterClimate(MatterEntity, ClimateEntity):
             )
             self._update_from_device()
         except MatterError as ex:
-            raise ValueError(f"Error setting preset mode {mode}: {ex}") from ex
+            raise ValueError(f"Error setting preset mode {preset_mode}: {ex}") from ex
 
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new target hvac mode."""
@@ -305,17 +303,14 @@ class MatterClimate(MatterEntity, ClimateEntity):
         self.matter_presets = self.get_matter_attribute_value(
             clusters.Thermostat.Attributes.Presets
         )
+        # Build preset mapping and list
+        self._preset_handle_by_name.clear()
         presets = []
-        # Decode presets
-        i = 1
         if self.matter_presets:
-            for preset in self.matter_presets:
-                name = preset.name
-                if not name:
-                    # fallback to scenario name if no name is set
-                    name = "Preset" + str(i)
+            for i, preset in enumerate(self.matter_presets, start=1):
+                name = preset.name or f"Preset{i}"
                 presets.append(name)
-                i += 1
+                self._preset_handle_by_name[name] = preset.presetHandle
         self._attr_preset_modes = presets
 
         self._attr_current_temperature = self._get_temperature_in_degrees(
