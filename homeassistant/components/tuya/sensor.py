@@ -1849,3 +1849,13 @@ class TuyaSensorEntity(TuyaEntity, SensorEntity):
     def native_value(self) -> StateType:
         """Return the value reported by the sensor."""
         return self._read_wrapper(self._dpcode_wrapper)
+
+    async def _handle_state_update(
+        self,
+        updated_status_properties: list[str] | None,
+        dp_timestamps: dict | None = None,
+    ) -> None:
+        """Handle state update, only if this entity's dpcode was actually updated."""
+        if self._dpcode_wrapper.skip_update(self.device, updated_status_properties):
+            return
+        self.async_write_ha_state()

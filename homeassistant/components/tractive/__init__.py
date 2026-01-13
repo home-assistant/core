@@ -338,8 +338,8 @@ class TractiveClient:
         # Handle both structures for compatibility
         data = event.get("content", event)
 
-        activity = data.get("activity", {})
-        sleep = data.get("sleep", {})
+        activity = data.get("activity") or {}
+        sleep = data.get("sleep") or {}
 
         payload = {
             ATTR_DAILY_GOAL: activity.get("minutesGoal"),
