@@ -1,0 +1,18 @@
+.condition_common: &condition_common
+  target:
+    entity:
+      domain: fan
+  fields:
+    behavior:
+      required: true
+      default: any
+      selector:
+        select:
+          options:
+            - first
+            - last
+            - any
+          translation_key: trigger_behavior
+
+is_off: *condition_common
+is_on: *condition_common

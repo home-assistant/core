@@ -1,7 +1,31 @@
 {
   "common": {
+    "condition_behavior_description": "How the state should match on the targeted fans.",
+    "condition_behavior_name": "Behavior",
     "trigger_behavior_description": "The behavior of the targeted fans to trigger on.",
     "trigger_behavior_name": "Behavior"
+  },
+  "conditions": {
+    "is_off": {
+      "description": "Test if a fan is off.",
+      "fields": {
+        "behavior": {
+          "description": "[%key:component::fan::common::condition_behavior_description%]",
+          "name": "[%key:component::fan::common::condition_behavior_name%]"
+        }
+      },
+      "name": "If a fan is off"
+    },
+    "is_on": {
+      "description": "Test if a fan is on.",
+      "fields": {
+        "behavior": {
+          "description": "[%key:component::fan::common::condition_behavior_description%]",
+          "name": "[%key:component::fan::common::condition_behavior_name%]"
+        }
+      },
+      "name": "If a fan is on"
+    }
   },
   "device_automation": {
     "action_type": {
