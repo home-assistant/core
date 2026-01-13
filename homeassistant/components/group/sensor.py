@@ -346,7 +346,6 @@ class SensorGroup(GroupEntity, SensorEntity):
         self._attr_name = name
         if name == DEFAULT_NAME:
             self._attr_name = f"{DEFAULT_NAME} {sensor_type}".capitalize()
-        self._attr_extra_state_attributes = {ATTR_ENTITY_ID: entity_ids}
         self._attr_unique_id = unique_id
         self._ignore_non_numeric = ignore_non_numeric
         self.mode = all if ignore_non_numeric is False else any
