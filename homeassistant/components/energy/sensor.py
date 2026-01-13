@@ -660,8 +660,9 @@ class EnergyPowerSensor(SensorEntity):
                 value = float(source_state.state)
             except ValueError:
                 self._attr_native_value = None
-            else:
-                self._attr_native_value = value * -1
+                return
+
+            self._attr_native_value = value * -1
 
         elif self._is_combined:
             discharge_state = self.hass.states.get(self._source_sensors[0])
@@ -684,9 +685,7 @@ class EnergyPowerSensor(SensorEntity):
                 return
 
             # Get units from state attributes
-            discharge_unit = discharge_state.attributes.get(
-                ATTR_UNIT_OF_MEASUREMENT
-            )
+            discharge_unit = discharge_state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
             charge_unit = charge_state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
 
             # Convert to Watts if units are present
@@ -700,7 +699,6 @@ class EnergyPowerSensor(SensorEntity):
                 )
 
             self._attr_native_value = discharge - charge
-            
 
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""

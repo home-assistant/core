@@ -133,7 +133,10 @@ async def test_battery_power_config_two_sensors_sets_stat_rate(
     assert manager.data is not None
     source = manager.data["energy_sources"][0]
     # Entity ID includes discharge sensor name to avoid collisions
-    assert source["stat_rate"] == "sensor.energy_battery_battery_discharge_power"
+    assert (
+        source["stat_rate"]
+        == "sensor.energy_battery_battery_discharge_battery_charge_net_power"
+    )
 
 
 async def test_grid_power_config_inverted_sets_stat_rate(

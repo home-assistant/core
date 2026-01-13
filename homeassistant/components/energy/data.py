@@ -242,9 +242,22 @@ FLOW_TO_GRID_SOURCE_SCHEMA = vol.Schema(
 
 
 def _validate_power_config(val: dict[str, Any]) -> dict[str, Any]:
-    """Validate power_config has at least one option."""
+    """Validate power_config has exactly one configuration method."""
     if not val:
         raise vol.Invalid("power_config must have at least one option")
+
+    # Ensure only one configuration method is used
+    has_single = "stat_rate" in val
+    has_inverted = "stat_rate_inverted" in val
+    has_combined = "stat_rate_from" in val or "stat_rate_to" in val
+
+    methods_count = sum([has_single, has_inverted, has_combined])
+    if methods_count > 1:
+        raise vol.Invalid(
+            "power_config must use only one configuration method: "
+            "stat_rate, stat_rate_inverted, or stat_rate_from/stat_rate_to"
+        )
+
     return val
 
 
@@ -264,13 +277,6 @@ POWER_CONFIG_SCHEMA = vol.All(
 )
 
 
-def _validate_grid_power_source(val: dict[str, Any]) -> dict[str, Any]:
-    """Validate grid power source has either stat_rate or power_config."""
-    if "stat_rate" not in val and "power_config" not in val:
-        raise vol.Invalid("Either stat_rate or power_config is required")
-    return val
-
-
 GRID_POWER_SOURCE_SCHEMA = vol.All(
     vol.Schema(
         {
@@ -280,7 +286,7 @@ GRID_POWER_SOURCE_SCHEMA = vol.All(
             vol.Optional("power_config"): POWER_CONFIG_SCHEMA,
         }
     ),
-    _validate_grid_power_source,
+    cv.has_at_least_one_key("stat_rate", "power_config"),
 )
 
 
@@ -490,7 +496,7 @@ class EnergyManager:
     def _process_battery_power(
         self,
         source: BatterySourceType,
-        generate_entity_id: Callable[[str, PowerConfig], str],
+        generate_entity_id: Callable[[str, PowerConfig], str | None],
     ) -> BatterySourceType:
         """Set stat_rate for battery if power_config is specified."""
         if "power_config" not in source:
@@ -512,7 +518,7 @@ class EnergyManager:
     def _process_grid_power(
         self,
         source: GridSourceType,
-        generate_entity_id: Callable[[str, PowerConfig], str],
+        generate_entity_id: Callable[[str, PowerConfig], str | None],
     ) -> GridSourceType:
         """Set stat_rate for grid power sources if power_config is specified."""
         if "power" not in source:
