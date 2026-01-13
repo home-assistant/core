@@ -43,6 +43,15 @@
   },
   "entity": {
     "sensor": {
+      "condensing_temperature": {
+        "name": "Condensing temperature"
+      },
+      "energy_produced": {
+        "name": "Energy produced"
+      },
+      "fan_frequency": {
+        "name": "Fan frequency"
+      },
       "flow_temperature": {
         "name": "Flow temperature"
       },
