@@ -167,18 +167,18 @@ class _StateDescription(TypedDict):
 class StateDescription(TypedDict):
     """Test state and expected service call count."""
 
-    included: _StateDescription
-    excluded: _StateDescription
-    count: int
+    included: _StateDescription  # State for entities meant to be targeted
+    excluded: _StateDescription  # State for entities not meant to be targeted
+    count: int  # Expected service call count
 
 
 class ConditionStateDescription(TypedDict):
     """Test state and expected service call count."""
 
-    included: _StateDescription
-    excluded: _StateDescription
-    condition_true: bool
-    state_valid: bool
+    included: _StateDescription  # State for entities meant to be targeted
+    excluded: _StateDescription  # State for entities not meant to be targeted
+    condition_true: bool  # Whether the condition is expected to evaluate to true
+    state_valid: bool  # Whether the state is valid (not None, unavailable or unknown)
 
 
 def parametrize_condition_states(
@@ -206,7 +206,7 @@ def parametrize_condition_states(
         condition_true: bool,
         state_valid: bool,
     ) -> ConditionStateDescription:
-        """Return (state, attributes) dict."""
+        """Return ConditionStateDescription dict."""
         if isinstance(state, str) or state is None:
             return {
                 "included": {
@@ -287,7 +287,7 @@ def parametrize_trigger_states(
     def state_with_attributes(
         state: str | None | tuple[str | None, dict], count: int
     ) -> StateDescription:
-        """Return (state, attributes) dict."""
+        """Return StateDescription dict."""
         if isinstance(state, str) or state is None:
             return {
                 "included": {
