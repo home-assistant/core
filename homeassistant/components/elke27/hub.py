@@ -315,9 +315,18 @@ class Elke27Hub:
         )
         if not getattr(result, "ok", False):
             error = getattr(result, "error", None)
-            _LOGGER.warning("Area arming failed for area %s: %s", area_id, error)
+            error_message = getattr(error, "user_message", None) or getattr(
+                error, "message", None
+            )
+            _LOGGER.warning(
+                "Area arming failed for area %s: %s",
+                area_id,
+                error_message or error,
+            )
             if error is not None:
-                raise HomeAssistantError(str(error)) from error
+                raise HomeAssistantError(
+                    error_message or str(error)
+                ) from error
             return False
         return True
 
@@ -341,9 +350,18 @@ class Elke27Hub:
         )
         if not getattr(result, "ok", False):
             error = getattr(result, "error", None)
-            _LOGGER.warning("Area disarm failed for area %s: %s", area_id, error)
+            error_message = getattr(error, "user_message", None) or getattr(
+                error, "message", None
+            )
+            _LOGGER.warning(
+                "Area disarm failed for area %s: %s",
+                area_id,
+                error_message or error,
+            )
             if error is not None:
-                raise HomeAssistantError(str(error)) from error
+                raise HomeAssistantError(
+                    error_message or str(error)
+                ) from error
             return False
         return True
 
