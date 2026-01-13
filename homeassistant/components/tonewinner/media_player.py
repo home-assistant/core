@@ -63,7 +63,7 @@ SERVICE_SEND_RAW_SCHEMA = vol.Schema(
 
 SERIAL_CONFIG = {
     "baudrate": 9600,
-    "bytesize": serial.SEVENBITS,  # istrip: 7-bit data
+    "bytesize": serial.EIGHTBITS,  # 8-bit data
     "parity": serial.PARITY_NONE,  # -parenb: no parity
     "stopbits": serial.STOPBITS_ONE,  # -cstopb: 1 stop bit
     "timeout": 1.0,
@@ -210,11 +210,11 @@ class TonewinnerMediaPlayer(MediaPlayerEntity):
         """Establish serial connection."""
         _LOGGER.debug("Attempting connection to %s at %d baud", self.port, self.baud)
         _LOGGER.debug(
-            "Serial config: bytesize=%d, parity=%d, stopbits=%d, timeout=%d",
-            serial.SEVENBITS,
-            serial.PARITY_NONE,
-            serial.STOPBITS_ONE,
-            1,
+            "Serial config: bytesize=%d, parity=%s, stopbits=%d, timeout=%d",
+            SERIAL_CONFIG["bytesize"],
+            SERIAL_CONFIG["parity"],
+            SERIAL_CONFIG["stopbits"],
+            SERIAL_CONFIG["timeout"],
         )
         try:
             loop = asyncio.get_event_loop()
@@ -223,10 +223,10 @@ class TonewinnerMediaPlayer(MediaPlayerEntity):
                 lambda: TonewinnerProtocol(self),
                 self.port,
                 baudrate=self.baud,
-                bytesize=serial.SEVENBITS,
-                parity=serial.PARITY_NONE,
-                stopbits=serial.STOPBITS_ONE,
-                timeout=1,
+                bytesize=SERIAL_CONFIG["bytesize"],
+                parity=SERIAL_CONFIG["parity"],
+                stopbits=SERIAL_CONFIG["stopbits"],
+                timeout=SERIAL_CONFIG["timeout"],
             )
             self._transport, self._protocol = await asyncio.wait_for(
                 connection, timeout=5
@@ -291,7 +291,7 @@ class TonewinnerMediaPlayer(MediaPlayerEntity):
 
         # Handle hex strings like "0x21 0x50" or plain ASCII
         if command.startswith("0x"):
-            data = bytes(int(x, 16) for x in command.split())
+            data = bytes([int(x, 16) for x in command.split()])
         else:
             # Wrap in protocol markers if not already present
             if not command.startswith("##"):
