@@ -4413,8 +4413,6 @@
     'last_updated': <ANY>,
     'state': 'Quick',
   })
-    'state': 'Celsius',
-  })
 # ---
 # name: test_selects[vacuum_cleaner][select.mock_vacuum_clean_mode-entry]
   EntityRegistryEntrySnapshot({
