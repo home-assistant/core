@@ -1,6 +1,7 @@
 """Test the Nederlandse Spoorwegen sensor."""
 
-from unittest.mock import AsyncMock
+from collections.abc import Generator
+from unittest.mock import AsyncMock, patch
 
 import pytest
 from requests.exceptions import ConnectionError as RequestsConnectionError
@@ -18,7 +19,13 @@ from homeassistant.components.nederlandse_spoorwegen.const import (
 )
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.config_entries import ConfigSubentryDataWithId
-from homeassistant.const import CONF_API_KEY, CONF_NAME, CONF_PLATFORM
+from homeassistant.const import (
+    CONF_API_KEY,
+    CONF_NAME,
+    CONF_PLATFORM,
+    STATE_UNKNOWN,
+    Platform,
+)
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
 import homeassistant.helpers.entity_registry as er
 import homeassistant.helpers.issue_registry as ir
@@ -28,6 +35,16 @@ from . import setup_integration
 from .const import API_KEY
 
 from tests.common import MockConfigEntry, snapshot_platform
+
+
+@pytest.fixture(autouse=True)
+def mock_sensor_platform() -> Generator:
+    """Override PLATFORMS for NS integration."""
+    with patch(
+        "homeassistant.components.nederlandse_spoorwegen.PLATFORMS",
+        [Platform.SENSOR],
+    ) as mock_platform:
+        yield mock_platform
 
 
 async def test_config_import(
@@ -66,9 +83,10 @@ async def test_config_import(
 
 
 @pytest.mark.freeze_time("2025-09-15 14:30:00+00:00")
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_sensor(
     hass: HomeAssistant,
-    mock_nsapi,
+    mock_nsapi: AsyncMock,
     mock_config_entry: MockConfigEntry,
     snapshot: SnapshotAssertion,
     entity_registry: er.EntityRegistry,
@@ -77,6 +95,40 @@ async def test_sensor(
     await setup_integration(hass, mock_config_entry)
 
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
+
+
+@pytest.mark.freeze_time("2025-09-15 14:30:00+00:00")
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_single_trip_sensor(
+    hass: HomeAssistant,
+    mock_single_trip_nsapi: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    snapshot: SnapshotAssertion,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test sensor initialization."""
+    await setup_integration(hass, mock_config_entry)
+
+    await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
+
+
+@pytest.mark.freeze_time("2025-09-15 14:30:00+00:00")
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_no_trips_sensor(
+    hass: HomeAssistant,
+    mock_no_trips_nsapi: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test sensor initialization."""
+    await setup_integration(hass, mock_config_entry)
+
+    for entity_entry in er.async_entries_for_config_entry(
+        entity_registry, mock_config_entry.entry_id
+    ):
+        state = hass.states.get(entity_entry.entity_id)
+        assert state is not None
+        assert state.state == STATE_UNKNOWN
 
 
 async def test_sensor_with_api_connection_error(
@@ -104,6 +156,7 @@ async def test_sensor_with_api_connection_error(
         ("08:30:45", "Early commute", "Time with seconds - should truncate seconds"),
     ],
 )
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_sensor_with_custom_time_parsing(
     hass: HomeAssistant,
     mock_nsapi: AsyncMock,
@@ -139,17 +192,15 @@ async def test_sensor_with_custom_time_parsing(
     await setup_integration(hass, config_entry)
     await hass.async_block_till_done()
 
-    # Should create one sensor for the route with time parsing
+    # Should create 13 sensors for the route with time parsing
     sensor_states = hass.states.async_all("sensor")
-    assert len(sensor_states) == 1
+    assert len(sensor_states) == 13
 
     # Verify sensor was created successfully with time parsing
     state = sensor_states[0]
     assert state is not None
     assert state.state != "unavailable"
     assert state.attributes.get("attribution") == "Data provided by NS"
-    assert state.attributes.get("device_class") == "timestamp"
-    assert state.attributes.get("icon") == "mdi:train"
 
     # The sensor should have a friendly name based on the route name
     friendly_name = state.attributes.get("friendly_name", "").lower()

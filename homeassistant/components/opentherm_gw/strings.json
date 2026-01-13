@@ -386,7 +386,7 @@
       "name": "Reset gateway"
     },
     "send_transparent_command": {
-      "description": "Sends custom otgw commands (https://otgw.tclcode.com/firmware.html) through a transparent interface.",
+      "description": "Sends custom OTGW commands ({opentherm_gateway_firmware_url}) through a transparent interface.",
       "fields": {
         "gateway_id": {
           "description": "[%key:component::opentherm_gw::services::reset_gateway::fields::gateway_id::description%]",
@@ -461,7 +461,7 @@
           "name": "ID"
         },
         "mode": {
-          "description": "Mode to set on the GPIO pin. Values 0 through 6 are accepted for both GPIOs, 7 is only accepted for GPIO \"B\". See https://www.home-assistant.io/integrations/opentherm_gw/#gpio-modes for an explanation of the values.",
+          "description": "Mode to set on the GPIO pin. Values 0 through 6 are accepted for both GPIOs, 7 is only accepted for GPIO \"B\". See {gpio_modes_documentation_url} for an explanation of the values.",
           "name": "[%key:common::config_flow::data::mode%]"
         }
       },
@@ -507,7 +507,7 @@
           "name": "ID"
         },
         "mode": {
-          "description": "The function to assign to the LED. See https://www.home-assistant.io/integrations/opentherm_gw/#led-modes for an explanation of the values.",
+          "description": "The function to assign to the LED. See {led_modes_documentation_url} for an explanation of the values.",
           "name": "[%key:common::config_flow::data::mode%]"
         }
       },

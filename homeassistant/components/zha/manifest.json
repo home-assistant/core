@@ -6,6 +6,7 @@
   "config_flow": true,
   "dependencies": ["file_upload", "homeassistant_hardware"],
   "documentation": "https://www.home-assistant.io/integrations/zha",
+  "integration_type": "hub",
   "iot_class": "local_polling",
   "loggers": [
     "aiosqlite",
@@ -19,9 +20,10 @@
     "zigpy_zigate",
     "zigpy_znp",
     "zha",
-    "universal_silabs_flasher"
+    "universal_silabs_flasher",
+    "serialx"
   ],
-  "requirements": ["zha==0.0.75"],
+  "requirements": ["zha==0.0.84", "serialx==0.6.2"],
   "usb": [
     {
       "description": "*2652*",
