@@ -23,6 +23,7 @@ from homeassistant.const import (
     UnitOfFrequency,
     UnitOfPower,
     UnitOfReactivePower,
+    UnitOfSpeed,
     UnitOfTemperature,
     UnitOfTime,
 )
@@ -527,6 +528,7 @@ SENSORS: tuple[NRGkickSensorEntityDescription, ...] = (
         key="charging_rate",
         translation_key="charging_rate",
         state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfSpeed.KILOMETERS_PER_HOUR,
         value_path=("values", "general", "charging_rate"),
     ),
     NRGkickSensorEntityDescription(

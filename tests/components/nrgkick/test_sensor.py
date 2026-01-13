@@ -14,7 +14,12 @@ from nrgkick_api import (
 import pytest
 
 from homeassistant.components.sensor import SensorDeviceClass
-from homeassistant.const import STATE_UNKNOWN, UnitOfPower, UnitOfTemperature
+from homeassistant.const import (
+    STATE_UNKNOWN,
+    UnitOfPower,
+    UnitOfSpeed,
+    UnitOfTemperature,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -136,6 +141,12 @@ async def test_sensor_entities(
     assert state is not None
     assert float(state.state) == 35.0
     assert state.attributes["unit_of_measurement"] == UnitOfTemperature.CELSIUS
+
+    # Test charging rate sensor (range added per hour)
+    state = get_state_by_key("charging_rate")
+    assert state is not None
+    assert float(state.state) == 11.0
+    assert state.attributes["unit_of_measurement"] == UnitOfSpeed.KILOMETERS_PER_HOUR
 
     # Test mapped sensors (API returns numeric codes, mapped to translation keys)
     mapped_sensors = {
