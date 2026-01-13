@@ -66,6 +66,12 @@ TEST_UNITS: dict[str, dict[str, Any]] = {
 }
 
 
+@pytest.fixture
+def unit_count():
+    """Fixture to expose the number of pre-defined units."""
+    return len(TEST_UNITS)
+
+
 class CoolMasterNetUnitMock:
     """Mock for CoolMasterNetUnit."""
 
