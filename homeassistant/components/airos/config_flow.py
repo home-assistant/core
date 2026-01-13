@@ -348,7 +348,7 @@ class AirOSConfigFlow(ConfigFlow, domain=DOMAIN):
             data_schema=STEP_DISCOVERY_DATA_SCHEMA,
             errors=self.errors,
             description_placeholders={
-                "device_name": device_name if device_name else DEVICE_NAME
+                "device_name": device_name
             },
         )
 
