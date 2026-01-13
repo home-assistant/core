@@ -43,7 +43,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up the Hegel media player from a config entry."""
     model = entry.data[CONF_MODEL]
-    unique_id = entry.data["unique_id"]
+    unique_id = entry.unique_id or entry.entry_id
 
     # map inputs (source_map)
     source_map: dict[int, str] = (
@@ -96,7 +96,7 @@ class HegelMediaPlayer(MediaPlayerEntity):
 
         # Set device info
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, self._attr_unique_id)},
+            identifiers={(DOMAIN, unique_id)},
             name=config_entry.title,
             manufacturer="Hegel",
             model=config_entry.data[CONF_MODEL],
@@ -212,6 +212,21 @@ class HegelMediaPlayer(MediaPlayerEntity):
         except (HegelConnectionError, OSError) as err:
             _LOGGER.warning("Connected watcher failed: %s", err)
 
+    async def async_will_remove_from_hass(self) -> None:
+        """Handle entity removal from Home Assistant.
+
+        Note: Push callback cleanup is handled by async_on_remove.
+        _connected_watcher_task cleanup is handled automatically by
+        entry.async_create_background_task when the config entry is unloaded.
+        """
+        await super().async_will_remove_from_hass()
+
+        # Cancel push task if running (short-lived task, defensive cleanup)
+        if self._push_task and not self._push_task.done():
+            self._push_task.cancel()
+            with contextlib.suppress(asyncio.CancelledError):
+                await self._push_task
+
     async def async_update(self) -> None:
         """Query the amplifier for the main values and update state dict."""
         for cmd in (
@@ -326,18 +341,3 @@ class HegelMediaPlayer(MediaPlayerEntity):
             raise HomeAssistantError(
                 f"Failed to select source {source}: {err}"
             ) from err
-
-    async def async_will_remove_from_hass(self) -> None:
-        """Handle entity removal from Home Assistant.
-
-        Note: Push callback cleanup is handled by async_on_remove.
-        _connected_watcher_task cleanup is handled automatically by
-        entry.async_create_background_task when the config entry is unloaded.
-        """
-        await super().async_will_remove_from_hass()
-
-        # Cancel push task if running (short-lived task, defensive cleanup)
-        if self._push_task and not self._push_task.done():
-            self._push_task.cancel()
-            with contextlib.suppress(asyncio.CancelledError):
-                await self._push_task

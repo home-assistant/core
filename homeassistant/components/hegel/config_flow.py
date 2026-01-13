@@ -26,9 +26,6 @@ class HegelConfigFlow(ConfigFlow, domain=DOMAIN):
     def __init__(self) -> None:
         """Initialize the config flow."""
         self._discovered_data: dict[str, Any] = {}
-        self._host = ""
-        self._model = ""
-        self._errors: dict[str, str] = {}
 
     async def async_step_discovery_confirm(
         self, user_input: dict[str, Any] | None = None
@@ -53,13 +50,8 @@ class HegelConfigFlow(ConfigFlow, domain=DOMAIN):
                 self._abort_if_unique_id_configured()
                 entry_data["unique_id"] = unique_id
 
-                title = entry_data.get(CONF_NAME)
-                if not title:
-                    model = entry_data.get(CONF_MODEL)
-                    title = f"Hegel {model}" if model else "Hegel Amplifier"
-
                 return self.async_create_entry(
-                    title=title,
+                    title=entry_data[CONF_NAME],
                     data=entry_data,
                 )
 
@@ -81,85 +73,21 @@ class HegelConfigFlow(ConfigFlow, domain=DOMAIN):
             },
         )
 
-    async def async_step_reconfigure(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Reconfigure a config entry."""
-        reconfigure_entry = self._get_reconfigure_entry()
-
-        if user_input is not None:
-            self._host = str(user_input[CONF_HOST])
-            self._model = str(user_input[CONF_MODEL])
-
-            # Test connection
-            try:
-                await asyncio.wait_for(
-                    asyncio.open_connection(self._host, DEFAULT_PORT), timeout=2.0
-                )
-            except (TimeoutError, OSError, ConnectionRefusedError) as err:
-                _LOGGER.debug(
-                    "Cannot connect to %s:%s: %s", self._host, DEFAULT_PORT, err
-                )
-                self._errors[CONF_HOST] = "cannot_connect"
-            else:
-                # Determine recognizable title from model
-                title = f"Hegel {self._model}" if self._model else "Hegel Amplifier"
-
-                return self.async_update_reload_and_abort(
-                    reconfigure_entry,
-                    title=title,
-                    data_updates={
-                        CONF_HOST: self._host,
-                        CONF_MODEL: self._model,
-                    },
-                )
-
-            return self.async_show_form(
-                step_id="reconfigure",
-                data_schema=vol.Schema(
-                    {
-                        vol.Required(CONF_HOST, default=self._host): str,
-                        vol.Required(CONF_MODEL, default=self._model): vol.In(
-                            list(MODEL_INPUTS.keys())
-                        ),
-                    }
-                ),
-                errors=self._errors,
-            )
-
-        # Pre-populate with current values
-        self._host = reconfigure_entry.data[CONF_HOST]
-        self._model = str(reconfigure_entry.data.get(CONF_MODEL, ""))
-
-        return self.async_show_form(
-            step_id="reconfigure",
-            data_schema=vol.Schema(
-                {
-                    vol.Required(CONF_HOST, default=self._host): str,
-                    vol.Required(CONF_MODEL, default=self._model): vol.In(
-                        list(MODEL_INPUTS.keys())
-                    ),
-                }
-            ),
-        )
-
     async def async_step_ssdp(
         self, discovery_info: SsdpServiceInfo
     ) -> ConfigFlowResult:
         """Handle SSDP discovery and pre-fill the user form."""
         upnp = discovery_info.upnp or {}
 
-        host = None
-        presentation_url = upnp.get("presentationURL")
-        if presentation_url:
-            host = URL(presentation_url).host
-        else:
+        url = upnp.get("presentationURL")
+        if not url:
             ssdp_location = discovery_info.ssdp_location or ""
             if ssdp_location:
-                host = URL(ssdp_location).host
+                url = ssdp_location
 
-        if not host:
+        if not url:
             return self.async_abort(reason="no_host_found")
+        host = URL(url).host
 
         # Use UDN (device UUID) instead of USN to avoid duplicates from multiple services
         unique_id = discovery_info.ssdp_udn or discovery_info.ssdp_usn
