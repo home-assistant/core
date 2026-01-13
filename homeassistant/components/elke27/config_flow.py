@@ -191,7 +191,7 @@ class Elke27ConfigFlow(ConfigFlow, domain=DOMAIN):
             await client.async_connect(host=host, port=port, link_keys=link_keys)
             if pin:
                 auth_error = _validate_auth_result(
-                    await client.async_execute("control_authenticate", pin=pin)
+                    await client.async_execute("control_authenticate", pin=int(pin))
                 )
                 if auth_error is not None:
                     errors["base"] = auth_error

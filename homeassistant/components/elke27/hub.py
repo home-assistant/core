@@ -145,7 +145,7 @@ class Elke27Hub:
                     _LOGGER.debug("Discovered panel name: %s", panel_name)
             if self._pin:
                 auth_result = await client.async_execute(
-                    "control_authenticate", pin=self._pin
+                    "control_authenticate", pin=int(self._pin)
                 )
                 if not getattr(auth_result, "ok", False):
                     error = getattr(auth_result, "error", None)
