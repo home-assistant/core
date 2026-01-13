@@ -29,7 +29,7 @@ _LOGGER = logging.getLogger(__name__)
 class TibberBinarySensorEntityDescription(BinarySensorEntityDescription):
     """Describes Tibber binary sensor entity."""
 
-    is_on_fn: Callable[[str | None], bool | None]
+    is_on_fn: Callable[[int | float | str | None], bool | None]
 
 
 DATA_API_BINARY_SENSORS: tuple[TibberBinarySensorEntityDescription, ...] = (
@@ -111,13 +111,13 @@ class TibberDataAPIBinarySensor(
         )
 
     @property
-    def sensor(self) -> tibber.data_api.Sensor:
+    def device(self) -> dict[str, tibber.data_api.Sensor]:
         """Return the device sensors."""
-        return self.coordinator.sensors_by_device[self._device_id]  # type: ignore[return-value]
+        return self.coordinator.sensors_by_device[self._device_id]
 
     @property
     def is_on(self) -> bool | None:
         """Return the state of the binary sensor."""
         return self.entity_description.is_on_fn(
-            self.device[self.entity_description.key].value  # type: ignore[attr-defined]
+            self.device[self.entity_description.key].value
         )
