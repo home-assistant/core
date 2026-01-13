@@ -1863,6 +1863,9 @@ pymata-express==1.19
 # homeassistant.components.meteoclimatic
 pymeteoclimatic==0.1.0
 
+# homeassistant.components.assist_pipeline
+pymicro-vad==1.0.1
+
 # homeassistant.components.miele
 pymiele==0.6.1
 
@@ -2033,9 +2036,6 @@ pysiaalarm==3.1.1
 
 # homeassistant.components.signal_messenger
 pysignalclirestapi==0.3.24
-
-# homeassistant.components.assist_pipeline
-pysilero-vad==3.2.0
 
 # homeassistant.components.sma
 pysma==1.1.0
