@@ -1,7 +1,10 @@
 {
   "entity": {
     "sensor": {
-      "watching_count": {
+      "progress": {
+        "default": "mdi:progress-clock"
+      },
+      "state": {
         "default": "mdi:plex"
       },
       "stream_count_direct_play": {
@@ -22,13 +25,10 @@
       "top_user": {
         "default": "mdi:walk"
       },
-      "state": {
+      "transcode_decision": {
         "default": "mdi:plex"
       },
-      "progress": {
-        "default": "mdi:progress-clock"
-      },
-      "transcode_decision": {
+      "watching_count": {
         "default": "mdi:plex"
       }
     }

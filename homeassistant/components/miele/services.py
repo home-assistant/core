@@ -4,7 +4,7 @@ from datetime import timedelta
 import logging
 from typing import cast
 
-import aiohttp
+from aiohttp import ClientResponseError
 import voluptuous as vol
 
 from homeassistant.const import ATTR_DEVICE_ID, ATTR_TEMPERATURE
@@ -58,11 +58,12 @@ _LOGGER = logging.getLogger(__name__)
 
 async def _extract_config_entry(service_call: ServiceCall) -> MieleConfigEntry:
     """Extract config entry from the service call."""
-    hass = service_call.hass
-    target_entry_ids = await async_extract_config_entry_ids(hass, service_call)
+    target_entry_ids = await async_extract_config_entry_ids(service_call)
     target_entries: list[MieleConfigEntry] = [
         loaded_entry
-        for loaded_entry in hass.config_entries.async_loaded_entries(DOMAIN)
+        for loaded_entry in service_call.hass.config_entries.async_loaded_entries(
+            DOMAIN
+        )
         if loaded_entry.entry_id in target_entry_ids
     ]
     if not target_entries:
@@ -106,7 +107,7 @@ async def set_program(call: ServiceCall) -> None:
     data = {"programId": call.data[ATTR_PROGRAM_ID]}
     try:
         await api.set_program(serial_number, data)
-    except aiohttp.ClientResponseError as ex:
+    except ClientResponseError as ex:
         raise HomeAssistantError(
             translation_domain=DOMAIN,
             translation_key="set_program_error",
@@ -136,7 +137,7 @@ async def set_program_oven(call: ServiceCall) -> None:
         data["temperature"] = call.data[ATTR_TEMPERATURE]
     try:
         await api.set_program(serial_number, data)
-    except aiohttp.ClientResponseError as ex:
+    except ClientResponseError as ex:
         raise HomeAssistantError(
             translation_domain=DOMAIN,
             translation_key="set_program_oven_error",
@@ -156,7 +157,7 @@ async def get_programs(call: ServiceCall) -> ServiceResponse:
 
     try:
         programs = await api.get_programs(serial_number)
-    except aiohttp.ClientResponseError as ex:
+    except ClientResponseError as ex:
         raise HomeAssistantError(
             translation_domain=DOMAIN,
             translation_key="get_programs_error",

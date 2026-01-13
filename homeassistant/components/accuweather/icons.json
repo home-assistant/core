@@ -1,6 +1,9 @@
 {
   "entity": {
     "sensor": {
+      "air_quality": {
+        "default": "mdi:air-filter"
+      },
       "cloud_ceiling": {
         "default": "mdi:weather-fog"
       },
@@ -33,9 +36,6 @@
       },
       "thunderstorm_probability_night": {
         "default": "mdi:weather-lightning"
-      },
-      "translation_key": {
-        "default": "mdi:air-filter"
       },
       "tree_pollen": {
         "default": "mdi:tree-outline"

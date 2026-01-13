@@ -15,6 +15,7 @@ from soco.core import (
     PLAY_MODES,
 )
 from soco.data_structures import DidlFavorite, DidlMusicTrack
+from soco.exceptions import SoCoException
 from soco.ms_data_structures import MusicServiceItem
 from sonos_websocket.exception import SonosWebsocketError
 
@@ -26,6 +27,7 @@ from homeassistant.components.media_player import (
     ATTR_MEDIA_ARTIST,
     ATTR_MEDIA_CONTENT_ID,
     ATTR_MEDIA_ENQUEUE,
+    ATTR_MEDIA_EXTRA,
     ATTR_MEDIA_TITLE,
     BrowseMedia,
     MediaPlayerDeviceClass,
@@ -38,7 +40,9 @@ from homeassistant.components.media_player import (
     async_process_play_media_url,
 )
 from homeassistant.components.plex import PLEX_URI_SCHEME
-from homeassistant.components.plex.services import process_plex_payload
+from homeassistant.components.plex.services import (  # pylint: disable=hass-component-root-import
+    process_plex_payload,
+)
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import entity_registry as er
@@ -50,6 +54,7 @@ from . import media_browser
 from .const import (
     ATTR_QUEUE_POSITION,
     DOMAIN,
+    LONG_SERVICE_TIMEOUT,
     MEDIA_TYPE_DIRECTORY,
     MEDIA_TYPES_TO_SONOS,
     MODELS_LINEIN_AND_TV,
@@ -72,7 +77,6 @@ if TYPE_CHECKING:
 
 _LOGGER = logging.getLogger(__name__)
 
-LONG_SERVICE_TIMEOUT = 30.0
 UNJOIN_SERVICE_TIMEOUT = 0.1
 VOLUME_INCREMENT = 2
 
@@ -538,26 +542,14 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
 
         share_link = self.coordinator.share_link
         if share_link.is_share_link(media_id):
-            if enqueue == MediaPlayerEnqueue.ADD:
-                share_link.add_share_link_to_queue(
-                    media_id, timeout=LONG_SERVICE_TIMEOUT
-                )
-            elif enqueue in (
-                MediaPlayerEnqueue.NEXT,
-                MediaPlayerEnqueue.PLAY,
-            ):
-                pos = (self.media.queue_position or 0) + 1
-                new_pos = share_link.add_share_link_to_queue(
-                    media_id, position=pos, timeout=LONG_SERVICE_TIMEOUT
-                )
-                if enqueue == MediaPlayerEnqueue.PLAY:
-                    soco.play_from_queue(new_pos - 1)
-            elif enqueue == MediaPlayerEnqueue.REPLACE:
-                soco.clear_queue()
-                share_link.add_share_link_to_queue(
-                    media_id, timeout=LONG_SERVICE_TIMEOUT
-                )
-                soco.play_from_queue(0)
+            title = kwargs.get(ATTR_MEDIA_EXTRA, {}).get("title", "")
+            self._play_media_sharelink(
+                soco=soco,
+                media_type=media_type,
+                media_id=media_id,
+                enqueue=enqueue,
+                title=title,
+            )
         elif media_type == MEDIA_TYPE_DIRECTORY:
             self._play_media_directory(
                 soco=soco, media_type=media_type, media_id=media_id, enqueue=enqueue
@@ -621,7 +613,7 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
 
     def _play_media_queue(
         self, soco: SoCo, item: MusicServiceItem, enqueue: MediaPlayerEnqueue
-    ):
+    ) -> None:
         """Manage adding, replacing, playing items onto the sonos queue."""
         _LOGGER.debug(
             "_play_media_queue item_id [%s] title [%s] enqueue [%s]",
@@ -650,7 +642,7 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
         media_type: MediaType | str,
         media_id: str,
         enqueue: MediaPlayerEnqueue,
-    ):
+    ) -> None:
         """Play a directory from a music library share."""
         item = media_browser.get_media(self.media.library, media_id, media_type)
         if not item:
@@ -662,6 +654,40 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
                 },
             )
         self._play_media_queue(soco, item, enqueue)
+
+    def _play_media_sharelink(
+        self,
+        soco: SoCo,
+        media_type: MediaType | str,
+        media_id: str,
+        enqueue: MediaPlayerEnqueue,
+        title: str,
+    ) -> None:
+        """Play a sharelink."""
+        share_link = self.coordinator.share_link
+        kwargs = {}
+        if title:
+            kwargs["dc_title"] = title
+        if enqueue == MediaPlayerEnqueue.ADD:
+            share_link.add_share_link_to_queue(
+                media_id, timeout=LONG_SERVICE_TIMEOUT, **kwargs
+            )
+        elif enqueue in (
+            MediaPlayerEnqueue.NEXT,
+            MediaPlayerEnqueue.PLAY,
+        ):
+            pos = (self.media.queue_position or 0) + 1
+            new_pos = share_link.add_share_link_to_queue(
+                media_id, position=pos, timeout=LONG_SERVICE_TIMEOUT, **kwargs
+            )
+            if enqueue == MediaPlayerEnqueue.PLAY:
+                soco.play_from_queue(new_pos - 1)
+        elif enqueue == MediaPlayerEnqueue.REPLACE:
+            soco.clear_queue()
+            share_link.add_share_link_to_queue(
+                media_id, timeout=LONG_SERVICE_TIMEOUT, **kwargs
+            )
+            soco.play_from_queue(0)
 
     @soco_error()
     def set_sleep_timer(self, sleep_time: int) -> None:
@@ -828,10 +854,14 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
             _LOGGER.debug(
                 "Processing unjoins for %s", [x.zone_name for x in unjoin_data.speakers]
             )
-            await SonosSpeaker.unjoin_multi(
-                self.hass, self.config_entry, unjoin_data.speakers
-            )
-            unjoin_data.event.set()
+            try:
+                await SonosSpeaker.unjoin_multi(
+                    self.hass, self.config_entry, unjoin_data.speakers
+                )
+            except (HomeAssistantError, SoCoException, OSError) as err:
+                unjoin_data.exception = err
+            finally:
+                unjoin_data.event.set()
 
         if unjoin_data := sonos_data.unjoin_data.get(household_id):
             unjoin_data.speakers.append(self.speaker)
@@ -843,3 +873,7 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
 
         _LOGGER.debug("Requesting unjoin for %s", self.speaker.zone_name)
         await unjoin_data.event.wait()
+
+        # Re-raise any exception that occurred during processing
+        if unjoin_data.exception:
+            raise unjoin_data.exception

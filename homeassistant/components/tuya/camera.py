@@ -11,18 +11,13 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import TuyaConfigEntry
-from .const import TUYA_DISCOVERY_NEW, DPCode
+from .const import TUYA_DISCOVERY_NEW, DeviceCategory, DPCode
 from .entity import TuyaEntity
+from .models import DeviceWrapper, DPCodeBooleanWrapper
 
-# All descriptions can be found here:
-# https://developer.tuya.com/en/docs/iot/standarddescription?id=K9i5ql6waswzq
-CAMERAS: tuple[str, ...] = (
-    # Smart Camera - Low power consumption camera
-    # Undocumented, see https://github.com/home-assistant/core/issues/132844
-    "dghsxj",
-    # Smart Camera (including doorbells)
-    # https://developer.tuya.com/en/docs/iot/categorysgbj?id=Kaiuz37tlpbnu
-    "sp",
+CAMERAS: tuple[DeviceCategory, ...] = (
+    DeviceCategory.DGHSXJ,
+    DeviceCategory.SP,
 )
 
 
@@ -32,20 +27,31 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Tuya cameras dynamically through Tuya discovery."""
-    hass_data = entry.runtime_data
+    manager = entry.runtime_data.manager
 
     @callback
     def async_discover_device(device_ids: list[str]) -> None:
         """Discover and add a discovered Tuya camera."""
         entities: list[TuyaCameraEntity] = []
         for device_id in device_ids:
-            device = hass_data.manager.device_map[device_id]
+            device = manager.device_map[device_id]
             if device.category in CAMERAS:
-                entities.append(TuyaCameraEntity(device, hass_data.manager))
+                entities.append(
+                    TuyaCameraEntity(
+                        device,
+                        manager,
+                        motion_detection_switch=DPCodeBooleanWrapper.find_dpcode(
+                            device, DPCode.MOTION_SWITCH, prefer_function=True
+                        ),
+                        recording_status=DPCodeBooleanWrapper.find_dpcode(
+                            device, DPCode.RECORD_SWITCH
+                        ),
+                    )
+                )
 
         async_add_entities(entities)
 
-    async_discover_device([*hass_data.manager.device_map])
+    async_discover_device([*manager.device_map])
 
     entry.async_on_unload(
         async_dispatcher_connect(hass, TUYA_DISCOVERY_NEW, async_discover_device)
@@ -63,21 +69,30 @@ class TuyaCameraEntity(TuyaEntity, CameraEntity):
         self,
         device: CustomerDevice,
         device_manager: Manager,
+        *,
+        motion_detection_switch: DeviceWrapper[bool] | None = None,
+        recording_status: DeviceWrapper[bool] | None = None,
     ) -> None:
         """Init Tuya Camera."""
         super().__init__(device, device_manager)
         CameraEntity.__init__(self)
         self._attr_model = device.product_name
+        self._motion_detection_switch = motion_detection_switch
+        self._recording_status = recording_status
 
     @property
     def is_recording(self) -> bool:
         """Return true if the device is recording."""
-        return self.device.status.get(DPCode.RECORD_SWITCH, False)
+        if (status := self._read_wrapper(self._recording_status)) is not None:
+            return status
+        return False
 
     @property
     def motion_detection_enabled(self) -> bool:
         """Return the camera motion detection status."""
-        return self.device.status.get(DPCode.MOTION_SWITCH, False)
+        if (status := self._read_wrapper(self._motion_detection_switch)) is not None:
+            return status
+        return False
 
     async def stream_source(self) -> str | None:
         """Return the source of the stream."""
@@ -101,10 +116,10 @@ class TuyaCameraEntity(TuyaEntity, CameraEntity):
             height=height,
         )
 
-    def enable_motion_detection(self) -> None:
+    async def async_enable_motion_detection(self) -> None:
         """Enable motion detection in the camera."""
-        self._send_command([{"code": DPCode.MOTION_SWITCH, "value": True}])
+        await self._async_send_wrapper_updates(self._motion_detection_switch, True)
 
-    def disable_motion_detection(self) -> None:
+    async def async_disable_motion_detection(self) -> None:
         """Disable motion detection in camera."""
-        self._send_command([{"code": DPCode.MOTION_SWITCH, "value": False}])
+        await self._async_send_wrapper_updates(self._motion_detection_switch, False)

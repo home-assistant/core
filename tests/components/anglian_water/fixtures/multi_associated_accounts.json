@@ -1,0 +1,65 @@
+{
+  "result": {
+    "property_count": 4,
+    "active": [
+      {
+        "business_partner_number": 906922831,
+        "account_number": 171266493,
+        "address": {
+          "company_name": "",
+          "building_name": "",
+          "sub_building_name": "",
+          "house_number": "10",
+          "street": "DOWNING STREET",
+          "locality": "",
+          "city": "LONDON",
+          "postcode": "SW1A 1AA"
+        }
+      },
+      {
+        "business_partner_number": 906922832,
+        "account_number": 171266494,
+        "address": {
+          "company_name": "",
+          "building_name": "Historic Building A",
+          "sub_building_name": "",
+          "house_number": "10",
+          "street": "DOWNING STREET",
+          "locality": "",
+          "city": "LONDON",
+          "postcode": "SW1A 1AA"
+        }
+      },
+      {
+        "business_partner_number": 906922832,
+        "account_number": 171266494,
+        "address": {
+          "company_name": "UK Government",
+          "building_name": "",
+          "sub_building_name": "",
+          "house_number": "10",
+          "street": "DOWNING STREET",
+          "locality": "",
+          "city": "LONDON",
+          "postcode": "SW1A 1AA"
+        }
+      }
+    ],
+    "inactive": [
+      {
+        "business_partner_number": 100000000,
+        "account_number": 171200000,
+        "address": {
+          "company_name": "",
+          "building_name": "Finance Office",
+          "sub_building_name": "Heritage Wing",
+          "house_number": "50",
+          "street": "DOWNING STREET",
+          "locality": "",
+          "city": "LONDON",
+          "postcode": "SW1A 1AA"
+        }
+      }
+    ]
+  }
+}

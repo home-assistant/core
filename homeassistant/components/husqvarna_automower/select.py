@@ -67,7 +67,7 @@ class AutomowerSelectEntity(AutomowerControlEntity, SelectEntity):
         """Return the current option for the entity."""
         return cast(HeadlightModes, self.mower_attributes.settings.headlight.mode)
 
-    @handle_sending_exception()
+    @handle_sending_exception
     async def async_select_option(self, option: str) -> None:
         """Change the selected option."""
         await self.coordinator.api.commands.set_headlight_mode(

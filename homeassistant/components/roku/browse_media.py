@@ -142,7 +142,7 @@ async def root_payload(
                 children.extend(browse_item.children)
         else:
             children.append(browse_item)
-    except media_source.BrowseError:
+    except BrowseError:
         pass
 
     if len(children) == 1:

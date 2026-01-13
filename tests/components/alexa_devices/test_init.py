@@ -16,7 +16,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
 from . import setup_integration
-from .const import TEST_PASSWORD, TEST_SERIAL_NUMBER, TEST_USERNAME
+from .const import TEST_DEVICE_1_SN, TEST_PASSWORD, TEST_USERNAME
 
 from tests.common import MockConfigEntry
 
@@ -31,7 +31,7 @@ async def test_device_info(
     """Test device registry integration."""
     await setup_integration(hass, mock_config_entry)
     device_entry = device_registry.async_get_device(
-        identifiers={(DOMAIN, TEST_SERIAL_NUMBER)}
+        identifiers={(DOMAIN, TEST_DEVICE_1_SN)}
     )
     assert device_entry is not None
     assert device_entry == snapshot

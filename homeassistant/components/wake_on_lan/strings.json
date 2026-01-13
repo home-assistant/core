@@ -6,14 +6,14 @@
     "step": {
       "user": {
         "data": {
-          "mac": "MAC address",
           "broadcast_address": "Broadcast address",
-          "broadcast_port": "Broadcast port"
+          "broadcast_port": "Broadcast port",
+          "mac": "MAC address"
         },
         "data_description": {
-          "mac": "MAC address of the device to wake up.",
           "broadcast_address": "The IP address of the host to send the magic packet to. Defaults to `255.255.255.255` and is normally not changed.",
-          "broadcast_port": "The port to send the magic packet to. Defaults to `9` and is normally not changed."
+          "broadcast_port": "The port to send the magic packet to. Defaults to `9` and is normally not changed.",
+          "mac": "MAC address of the device to wake up."
         }
       }
     }
@@ -37,22 +37,22 @@
   },
   "services": {
     "send_magic_packet": {
-      "name": "Send magic packet",
       "description": "Sends a 'magic packet' to wake up a device with 'Wake-On-LAN' capabilities.",
       "fields": {
-        "mac": {
-          "name": "[%key:component::wake_on_lan::config::step::user::data::mac%]",
-          "description": "[%key:component::wake_on_lan::config::step::user::data_description::mac%]"
-        },
         "broadcast_address": {
-          "name": "[%key:component::wake_on_lan::config::step::user::data::broadcast_address%]",
-          "description": "[%key:component::wake_on_lan::config::step::user::data_description::broadcast_address%]"
+          "description": "[%key:component::wake_on_lan::config::step::user::data_description::broadcast_address%]",
+          "name": "[%key:component::wake_on_lan::config::step::user::data::broadcast_address%]"
         },
         "broadcast_port": {
-          "name": "[%key:component::wake_on_lan::config::step::user::data::broadcast_port%]",
-          "description": "[%key:component::wake_on_lan::config::step::user::data_description::broadcast_port%]"
+          "description": "[%key:component::wake_on_lan::config::step::user::data_description::broadcast_port%]",
+          "name": "[%key:component::wake_on_lan::config::step::user::data::broadcast_port%]"
+        },
+        "mac": {
+          "description": "[%key:component::wake_on_lan::config::step::user::data_description::mac%]",
+          "name": "[%key:component::wake_on_lan::config::step::user::data::mac%]"
         }
-      }
+      },
+      "name": "Send magic packet"
     }
   }
 }

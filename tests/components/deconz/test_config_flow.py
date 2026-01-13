@@ -483,7 +483,7 @@ async def test_ssdp_discovery_update_configuration(
     with patch(
         "homeassistant.components.deconz.async_setup_entry",
         return_value=True,
-    ) as mock_setup_entry:
+    ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             data=SsdpServiceInfo(
@@ -502,7 +502,6 @@ async def test_ssdp_discovery_update_configuration(
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
     assert config_entry_setup.data[CONF_HOST] == "2.3.4.5"
-    assert len(mock_setup_entry.mock_calls) == 1
 
 
 async def test_ssdp_discovery_dont_update_configuration(
@@ -607,7 +606,7 @@ async def test_hassio_discovery_update_configuration(
     with patch(
         "homeassistant.components.deconz.async_setup_entry",
         return_value=True,
-    ) as mock_setup_entry:
+    ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             data=HassioServiceInfo(
@@ -630,7 +629,6 @@ async def test_hassio_discovery_update_configuration(
     assert config_entry_setup.data[CONF_HOST] == "2.3.4.5"
     assert config_entry_setup.data[CONF_PORT] == 8080
     assert config_entry_setup.data[CONF_API_KEY] == "updated"
-    assert len(mock_setup_entry.mock_calls) == 1
 
 
 @pytest.mark.usefixtures("config_entry_setup")

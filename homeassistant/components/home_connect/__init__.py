@@ -12,10 +12,11 @@ import jwt
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
-from homeassistant.helpers import (
-    config_entry_oauth2_flow,
-    config_validation as cv,
-    issue_registry as ir,
+from homeassistant.helpers import config_validation as cv, issue_registry as ir
+from homeassistant.helpers.config_entry_oauth2_flow import (
+    ImplementationUnavailableError,
+    OAuth2Session,
+    async_get_config_entry_implementation,
 )
 from homeassistant.helpers.entity_registry import RegistryEntry, async_migrate_entries
 from homeassistant.helpers.typing import ConfigType
@@ -37,7 +38,6 @@ PLATFORMS = [
     Platform.SELECT,
     Platform.SENSOR,
     Platform.SWITCH,
-    Platform.TIME,
 ]
 
 
@@ -49,13 +49,15 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 async def async_setup_entry(hass: HomeAssistant, entry: HomeConnectConfigEntry) -> bool:
     """Set up Home Connect from a config entry."""
-    implementation = (
-        await config_entry_oauth2_flow.async_get_config_entry_implementation(
-            hass, entry
-        )
-    )
+    try:
+        implementation = await async_get_config_entry_implementation(hass, entry)
+    except ImplementationUnavailableError as err:
+        raise ConfigEntryNotReady(
+            translation_domain=DOMAIN,
+            translation_key="oauth2_implementation_unavailable",
+        ) from err
 
-    session = config_entry_oauth2_flow.OAuth2Session(hass, entry, implementation)
+    session = OAuth2Session(hass, entry, implementation)
 
     config_entry_auth = AsyncConfigEntryAuth(hass, session)
     try:
@@ -109,7 +111,7 @@ async def async_migrate_entry(
     hass: HomeAssistant, entry: HomeConnectConfigEntry
 ) -> bool:
     """Migrate old entry."""
-    _LOGGER.debug("Migrating from version %s", entry.version)
+    _LOGGER.debug("Migrating from version %s.%s", entry.version, entry.minor_version)
 
     if entry.version == 1:
         match entry.minor_version:
@@ -145,5 +147,7 @@ async def async_migrate_entry(
                     )["sub"],
                 )
 
-    _LOGGER.debug("Migration to version %s successful", entry.version)
+    _LOGGER.debug(
+        "Migration to version %s.%s successful", entry.version, entry.minor_version
+    )
     return True

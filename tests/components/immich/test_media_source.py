@@ -14,13 +14,8 @@ from homeassistant.components.immich.media_source import (
     ImmichMediaView,
     async_get_media_source,
 )
-from homeassistant.components.media_player import MediaClass
-from homeassistant.components.media_source import (
-    BrowseError,
-    BrowseMedia,
-    MediaSourceItem,
-    Unresolvable,
-)
+from homeassistant.components.media_player import BrowseError, BrowseMedia, MediaClass
+from homeassistant.components.media_source import MediaSourceItem, Unresolvable
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 from homeassistant.util.aiohttp import MockRequest, MockStreamReaderChunked

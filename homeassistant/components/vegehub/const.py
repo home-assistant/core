@@ -4,6 +4,6 @@ from homeassistant.const import Platform
 
 DOMAIN = "vegehub"
 NAME = "VegeHub"
-PLATFORMS = [Platform.SENSOR]
+PLATFORMS = [Platform.SENSOR, Platform.SWITCH]
 MANUFACTURER = "vegetronix"
 MODEL = "VegeHub"

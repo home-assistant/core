@@ -1,0 +1,66 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
+      "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]",
+      "authorize_url_timeout": "[%key:common::config_flow::abort::oauth2_authorize_url_timeout%]",
+      "cannot_connect": "Connection to {ekeybionyx} failed. Please check your Internet connection and try again.",
+      "missing_configuration": "[%key:common::config_flow::abort::oauth2_missing_configuration%]",
+      "no_available_webhooks": "There are no available webhooks in the {ekeybionyx} system. Please delete some and try again.",
+      "no_own_systems": "Your account does not have admin access to any systems.",
+      "no_url_available": "[%key:common::config_flow::abort::oauth2_no_url_available%]",
+      "oauth_error": "[%key:common::config_flow::abort::oauth2_error%]",
+      "oauth_failed": "[%key:common::config_flow::abort::oauth2_failed%]",
+      "oauth_timeout": "[%key:common::config_flow::abort::oauth2_timeout%]",
+      "oauth_unauthorized": "[%key:common::config_flow::abort::oauth2_unauthorized%]",
+      "user_rejected_authorize": "[%key:common::config_flow::abort::oauth2_user_rejected_authorize%]"
+    },
+    "create_entry": {
+      "default": "[%key:common::config_flow::create_entry::authenticated%]"
+    },
+    "error": {
+      "invalid_name": "Name is invalid",
+      "invalid_url": "URL is invalid",
+      "no_webhooks_provided": "No event names provided"
+    },
+    "progress": {
+      "check_deletion_status": "Please open the {ekeybionyx} app and confirm the deletion of the functions."
+    },
+    "step": {
+      "choose_system": {
+        "data": {
+          "system": "System"
+        },
+        "data_description": {
+          "system": "System the event entities should be set up for."
+        },
+        "description": "Please select the {ekeybionyx} system which you want to connect to Home Assistant."
+      },
+      "delete_webhooks": {
+        "description": "This system has already been connected to Home Assistant. If you continue, the previously configured functions will be deleted."
+      },
+      "pick_implementation": {
+        "title": "[%key:common::config_flow::title::oauth2_pick_implementation%]"
+      },
+      "webhooks": {
+        "data": {
+          "url": "Home Assistant URL",
+          "webhook1": "Event entity 1",
+          "webhook2": "Event entity 2",
+          "webhook3": "Event entity 3",
+          "webhook4": "Event entity 4",
+          "webhook5": "Event entity 5"
+        },
+        "data_description": {
+          "url": "Home Assistant instance URL which can be reached from the fingerprint controller",
+          "webhook1": "Name of event entity 1 that will be mapped into a function",
+          "webhook2": "Name of event entity 2 that will be mapped into a function",
+          "webhook3": "Name of event entity 3 that will be mapped into a function",
+          "webhook4": "Name of event entity 4 that will be mapped into a function",
+          "webhook5": "Name of event entity 5 that will be mapped into a function"
+        },
+        "description": "Please name your event entities. These event entities will be mapped as functions in the {ekeybionyx} app. You can configure up to {webhooks_available} event entities. Leaving a name empty will skip the setup of that event entity."
+      }
+    }
+  }
+}

@@ -12,7 +12,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
 from . import setup_integration
-from .const import TEST_SERIAL_NUMBER
+from .const import TEST_DEVICE_1_SN
 
 from tests.common import MockConfigEntry
 from tests.components.diagnostics import (
@@ -54,9 +54,7 @@ async def test_device_diagnostics(
     """Test Amazon device diagnostics."""
     await setup_integration(hass, mock_config_entry)
 
-    device = device_registry.async_get_device(
-        identifiers={(DOMAIN, TEST_SERIAL_NUMBER)}
-    )
+    device = device_registry.async_get_device(identifiers={(DOMAIN, TEST_DEVICE_1_SN)})
     assert device, repr(device_registry.devices)
 
     assert await get_diagnostics_for_device(
