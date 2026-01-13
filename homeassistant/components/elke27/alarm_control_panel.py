@@ -134,6 +134,7 @@ class Elke27AreaAlarmControlPanel(AlarmControlPanelEntity):
 
     async def async_alarm_disarm(self, code: str | None = None) -> None:
         """Disarm the area."""
+        code = _normalize_code(code)
         try:
             await self._hub.async_disarm_area(self._area_id, code)
         except Elke27PinRequiredError as err:
@@ -141,6 +142,7 @@ class Elke27AreaAlarmControlPanel(AlarmControlPanelEntity):
 
     async def _async_arm(self, mode: ArmMode, code: str | None) -> None:
         """Arm the area using the requested mode."""
+        code = _normalize_code(code)
         try:
             await self._hub.async_arm_area(self._area_id, mode, code)
         except Elke27PinRequiredError as err:
@@ -198,3 +200,12 @@ def _area_state_to_ha(area: Any) -> AlarmControlPanelState:
         return AlarmControlPanelState.ARMED_AWAY
     return AlarmControlPanelState.ARMED_AWAY
     return AlarmControlPanelState.DISARMED
+
+
+def _normalize_code(code: str | None) -> str | None:
+    if code is None:
+        return None
+    normalized = code.strip()
+    if not normalized.isdigit():
+        raise HomeAssistantError("Code must be numeric.")
+    return normalized
