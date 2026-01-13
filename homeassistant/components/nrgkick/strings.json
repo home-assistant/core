@@ -83,7 +83,8 @@
         "name": "Cellular signal strength"
       },
       "charge_count": {
-        "name": "Charge count"
+        "name": "Charge count",
+        "unit_of_measurement": "cycles"
       },
       "charge_permitted": {
         "name": "Charge permitted"

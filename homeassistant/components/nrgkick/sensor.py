@@ -589,7 +589,9 @@ SENSORS: tuple[NRGkickSensorEntityDescription, ...] = (
     NRGkickSensorEntityDescription(
         key="charge_count",
         translation_key="charge_count",
+        entity_category=EntityCategory.DIAGNOSTIC,
         state_class=SensorStateClass.TOTAL_INCREASING,
+        suggested_display_precision=0,
         value_path=("values", "general", "charge_count"),
     ),
     NRGkickSensorEntityDescription(
