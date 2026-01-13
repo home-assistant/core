@@ -23,6 +23,7 @@ from .const import CONF_BAUD_RATE, CONF_SERIAL_PORT, DOMAIN
 from .protocol import ToneWinnerCommands, ToneWinnerProtocol
 
 _LOGGER = logging.getLogger(__name__)
+_LOGGER.info("Tonewinner media_player module loaded!")
 
 
 class TonewinnerError(Exception):
