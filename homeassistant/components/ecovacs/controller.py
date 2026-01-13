@@ -92,11 +92,9 @@ class EcovacsController:
                 return_exceptions=True,
             )
 
-            # Keep only successful ones, if I understood Ecovacs logic correctly
-            for device, res in zip(mqtt_devices, results, strict=False):
-                if isinstance(res, Exception):
-                    _LOGGER.exception("Failed to initialize device", exc_info=res)
-                    continue
+            # Keep only successful ones, we could also use extend and then end up with:
+            # self._devices.extend(mqtt_devices), I believe. But up to the ones who know the integration better. :)
+            for device, _ in zip(mqtt_devices, results, strict=False):
                 self._devices.append(device)
 
             for device_config in devices.xmpp:
