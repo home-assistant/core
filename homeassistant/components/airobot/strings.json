@@ -59,6 +59,11 @@
     }
   },
   "entity": {
+    "button": {
+      "recalibrate_co2": {
+        "name": "Recalibrate CO2 sensor"
+      }
+    },
     "number": {
       "hysteresis_band": {
         "name": "Hysteresis band"

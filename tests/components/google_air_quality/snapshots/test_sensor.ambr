@@ -1,4 +1,110 @@
 # serializer version: 1
+# name: test_sensor_snapshot[sensor.home_ammonia-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.home_ammonia',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Ammonia',
+    'platform': 'google_air_quality',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'ammonia',
+    'unique_id': 'nh3_10.1_20.1',
+    'unit_of_measurement': 'ppb',
+  })
+# ---
+# name: test_sensor_snapshot[sensor.home_ammonia-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Data provided by Google Air Quality',
+      'friendly_name': 'Home Ammonia',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': 'ppb',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.home_ammonia',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '81.41',
+  })
+# ---
+# name: test_sensor_snapshot[sensor.home_benzene-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.home_benzene',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Benzene',
+    'platform': 'google_air_quality',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'benzene',
+    'unique_id': 'c6h6_10.1_20.1',
+    'unit_of_measurement': 'μg/m³',
+  })
+# ---
+# name: test_sensor_snapshot[sensor.home_benzene-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Data provided by Google Air Quality',
+      'friendly_name': 'Home Benzene',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': 'μg/m³',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.home_benzene',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.24',
+  })
+# ---
 # name: test_sensor_snapshot[sensor.home_carbon_monoxide-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -2071,6 +2177,112 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '14.18',
+  })
+# ---
+# name: test_sensor_snapshot[sensor.home_nitrogen_monoxide-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.home_nitrogen_monoxide',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Nitrogen monoxide',
+    'platform': 'google_air_quality',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'nitrogen_monoxide',
+    'unique_id': 'no_10.1_20.1',
+    'unit_of_measurement': 'ppb',
+  })
+# ---
+# name: test_sensor_snapshot[sensor.home_nitrogen_monoxide-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Data provided by Google Air Quality',
+      'friendly_name': 'Home Nitrogen monoxide',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': 'ppb',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.home_nitrogen_monoxide',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.62',
+  })
+# ---
+# name: test_sensor_snapshot[sensor.home_non_methane_hydrocarbons-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.home_non_methane_hydrocarbons',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Non-methane hydrocarbons',
+    'platform': 'google_air_quality',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'non_methane_hydrocarbons',
+    'unique_id': 'nmhc_10.1_20.1',
+    'unit_of_measurement': 'ppb',
+  })
+# ---
+# name: test_sensor_snapshot[sensor.home_non_methane_hydrocarbons-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Data provided by Google Air Quality',
+      'friendly_name': 'Home Non-methane hydrocarbons',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': 'ppb',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.home_non_methane_hydrocarbons',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '52.66',
   })
 # ---
 # name: test_sensor_snapshot[sensor.home_ozone-entry]
