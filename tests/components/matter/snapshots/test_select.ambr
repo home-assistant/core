@@ -4413,61 +4413,6 @@
     'last_updated': <ANY>,
     'state': 'Quick',
   })
-# ---
-# name: test_selects[thermostat_presets][select.mock_thermostat_temperature_display_mode-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'options': list([
-        'Celsius',
-        'Fahrenheit',
-      ]),
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'select',
-    'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'select.mock_thermostat_temperature_display_mode',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'Temperature display mode',
-    'platform': 'matter',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'temperature_display_mode',
-    'unique_id': '00000000000004D2-0000000000000083-MatterNodeDevice-1-TrvTemperatureDisplayMode-516-0',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_selects[thermostat_presets][select.mock_thermostat_temperature_display_mode-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'Mock thermostat Temperature display mode',
-      'options': list([
-        'Celsius',
-        'Fahrenheit',
-      ]),
-    }),
-    'context': <ANY>,
-    'entity_id': 'select.mock_thermostat_temperature_display_mode',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
     'state': 'Celsius',
   })
 # ---
