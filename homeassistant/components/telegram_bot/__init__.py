@@ -651,12 +651,12 @@ def _build_targets(
 
     # parse chat IDs from service data: `chat_id`
     if config_entry is not None:
-        chat_ids = migrate_chat_ids
+        chat_ids: set[int] = migrate_chat_ids
         if ATTR_CHAT_ID in service.data:
-            chat_ids = chat_ids | (
-                {int(service.data[ATTR_CHAT_ID])}
+            chat_ids = chat_ids | set(
+                [service.data[ATTR_CHAT_ID]]
                 if isinstance(service.data[ATTR_CHAT_ID], int)
-                else set(map(int, set(service.data[ATTR_CHAT_ID])))
+                else service.data[ATTR_CHAT_ID]
             )
 
         if not chat_ids and not targets:
