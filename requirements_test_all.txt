@@ -1863,6 +1863,9 @@ pymata-express==1.19
 # homeassistant.components.meteoclimatic
 pymeteoclimatic==0.1.0
 
+# homeassistant.components.assist_pipeline
+pymicro-vad==1.0.1
+
 # homeassistant.components.miele
 pymiele==0.6.1
 
@@ -2033,9 +2036,6 @@ pysiaalarm==3.1.1
 
 # homeassistant.components.signal_messenger
 pysignalclirestapi==0.3.24
-
-# homeassistant.components.assist_pipeline
-pysilero-vad==3.2.0
 
 # homeassistant.components.sma
 pysma==1.1.0
@@ -2277,7 +2277,7 @@ qbittorrent-api==2024.9.67
 qbusmqttapi==1.4.2
 
 # homeassistant.components.qingping
-qingping-ble==1.0.1
+qingping-ble==1.1.0
 
 # homeassistant.components.qnap
 qnapstats==0.4.0
@@ -2634,7 +2634,7 @@ visionpluspython==1.0.2
 vobject==0.9.9
 
 # homeassistant.components.voip
-voip-utils==0.3.4
+voip-utils==0.3.5
 
 # homeassistant.components.volvo
 volvocarsapi==0.4.3
