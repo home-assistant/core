@@ -95,7 +95,7 @@ async def async_setup_entry(
                     zone_name,
                 )
                 skipped += 1
-                known_ids.add(zone_id)
+                known_zone_ids.add(zone_id)
                 continue
             if zone_id in known_zone_ids:
                 continue
