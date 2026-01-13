@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from openevsehttp.__main__ import OpenEVSE
 
-from homeassistant.const import CONF_HOST, Platform
+from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 
@@ -13,7 +13,11 @@ from .coordinator import OpenEVSEConfigEntry, OpenEVSEDataUpdateCoordinator
 
 async def async_setup_entry(hass: HomeAssistant, entry: OpenEVSEConfigEntry) -> bool:
     """Set up OpenEVSE from a config entry."""
-    charger = OpenEVSE(entry.data[CONF_HOST])
+    charger = OpenEVSE(
+        entry.data[CONF_HOST],
+        entry.data.get(CONF_USERNAME),
+        entry.data.get(CONF_PASSWORD),
+    )
 
     try:
         await charger.test_and_get()
