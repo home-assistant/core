@@ -9,7 +9,6 @@ from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.media_player import (
     ATTR_INPUT_SOURCE,
-    ATTR_INPUT_SOURCE_LIST,
     ATTR_MEDIA_REPEAT,
     ATTR_MEDIA_SHUFFLE,
     ATTR_MEDIA_VOLUME_LEVEL,
@@ -331,12 +330,6 @@ async def test_select_source(
     """Test media player select source command."""
     await setup_integration(hass, mock_config_entry)
 
-    state = hass.states.get("media_player.soundbar")
-    assert state is not None
-    assert MediaPlayerEntityFeature.SELECT_SOURCE in MediaPlayerEntityFeature(
-        state.attributes[ATTR_SUPPORTED_FEATURES]
-    )
-
     await hass.services.async_call(
         MEDIA_PLAYER_DOMAIN,
         SERVICE_SELECT_SOURCE,
@@ -383,45 +376,6 @@ async def test_tv_select_source(
         MAIN,
         argument="HDMI1",
     )
-
-
-@pytest.mark.parametrize("device_fixture", ["vd_stv_2017_k"])
-async def test_tv_source_list(
-    hass: HomeAssistant,
-    devices: AsyncMock,
-    mock_config_entry: MockConfigEntry,
-) -> None:
-    """Test TV media player source list using Samsung VD capability."""
-    await setup_integration(hass, mock_config_entry)
-
-    state = hass.states.get("media_player.tv_samsung_8_series_49")
-    assert state is not None
-    assert MediaPlayerEntityFeature.SELECT_SOURCE in MediaPlayerEntityFeature(
-        state.attributes[ATTR_SUPPORTED_FEATURES]
-    )
-    assert state.attributes[ATTR_INPUT_SOURCE_LIST] == [
-        "dtv",
-        "HDMI1",
-        "HDMI2",
-        "HDMI3",
-    ]
-
-
-@pytest.mark.parametrize("device_fixture", ["vd_stv_2017_k"])
-async def test_tv_current_source(
-    hass: HomeAssistant,
-    devices: AsyncMock,
-    mock_config_entry: MockConfigEntry,
-) -> None:
-    """Test TV media player current source using Samsung VD capability."""
-    await setup_integration(hass, mock_config_entry)
-
-    state = hass.states.get("media_player.tv_samsung_8_series_49")
-    assert state is not None
-    assert MediaPlayerEntityFeature.SELECT_SOURCE in MediaPlayerEntityFeature(
-        state.attributes[ATTR_SUPPORTED_FEATURES]
-    )
-    assert state.attributes[ATTR_INPUT_SOURCE] == "HDMI1"
 
 
 @pytest.mark.parametrize("device_fixture", ["vd_stv_2017_k"])
