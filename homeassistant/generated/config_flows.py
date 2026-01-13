@@ -443,6 +443,7 @@ FLOWS = {
         "mystrom",
         "myuplink",
         "nam",
+        "namecheapdns",
         "nanoleaf",
         "nasweb",
         "neato",
