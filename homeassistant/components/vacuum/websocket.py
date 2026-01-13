@@ -8,6 +8,7 @@ import voluptuous as vol
 
 from homeassistant.components import websocket_api
 from homeassistant.core import HomeAssistant, callback
+import homeassistant.helpers.config_validation as cv
 
 from .const import DATA_COMPONENT, VacuumEntityFeature
 
@@ -22,7 +23,7 @@ def async_register_websocket_handlers(hass: HomeAssistant) -> None:
 @websocket_api.websocket_command(
     {
         vol.Required("type"): "vacuum/get_segments",
-        vol.Required("entity_id"): str,
+        vol.Required("entity_id"): cv.strict_entity_id,
     }
 )
 @websocket_api.async_response

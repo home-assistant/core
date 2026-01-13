@@ -446,6 +446,7 @@ class StateVacuumEntity(
         """
         raise NotImplementedError
 
+    @final
     @property
     def last_seen_segments(self) -> list[Segment] | None:
         """Return segments as seen by the user, when last mapping the areas.
