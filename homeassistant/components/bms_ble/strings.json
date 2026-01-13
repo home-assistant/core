@@ -36,10 +36,10 @@
         "name": "Link quality"
       },
       "max_cell_voltage": {
-        "name": "Maximal cell voltage"
+        "name": "Highest cell voltage"
       },
       "min_cell_voltage": {
-        "name": "Minimal cell voltage"
+        "name": "Lowest cell voltage"
       },
       "runtime": {
         "name": "Runtime"
