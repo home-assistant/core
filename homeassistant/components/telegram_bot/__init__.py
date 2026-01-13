@@ -398,74 +398,6 @@ PLATFORMS: list[Platform] = [Platform.EVENT, Platform.NOTIFY]
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Telegram bot component."""
 
-    async def async_send_telegram_message(service: ServiceCall) -> ServiceResponse:
-        """Handle sending Telegram Bot message service calls."""
-
-        _deprecate_timeout(hass, service)
-
-        # this is the list of targets to send the message to
-        targets = _build_targets(hass, service)
-
-        service_responses: JsonValueType = []
-        errors: list[tuple[HomeAssistantError, str]] = []
-
-        # invoke the service for each target
-        for target_config_entry, target_chat_id, target_notify_entity_id in targets:
-            try:
-                service_response = await _call_service(
-                    service, target_config_entry.runtime_data, target_chat_id
-                )
-
-                if service.service == SERVICE_DOWNLOAD_FILE:
-                    return service_response
-
-                if service_response is not None:
-                    formatted_responses: list[JsonValueType] = []
-                    for chat_id, message_id in service_response.items():
-                        formatted_response = {
-                            ATTR_CHAT_ID: int(chat_id),
-                            ATTR_MESSAGEID: message_id,
-                        }
-
-                        if target_notify_entity_id:
-                            formatted_response[ATTR_ENTITY_ID] = target_notify_entity_id
-
-                        formatted_responses.append(formatted_response)
-
-                    assert isinstance(service_responses, list)
-                    service_responses.extend(formatted_responses)
-            except HomeAssistantError as ex:
-                target = (
-                    target_notify_entity_id
-                    if target_notify_entity_id
-                    else str(target_chat_id)
-                )
-                errors.append((ex, target))
-
-        if len(errors) == 1:
-            raise errors[0][0]
-
-        if len(errors) > 1:
-            _LOGGER.error(
-                "Service %s failed with %s errors:", service.service, len(errors)
-            )
-            for error in errors:
-                _LOGGER.error(
-                    "Error for chat_id / notify entity %s: %s", error[1], str(error[0])
-                )
-
-            failed_targets = [target for _, target in errors]
-            raise HomeAssistantError(
-                translation_domain=DOMAIN,
-                translation_key="failed_targets",
-                translation_placeholders={"failed_targets": ", ".join(failed_targets)},
-            )
-
-        if service.return_response:
-            return {"chats": service_responses}
-
-        return None
-
     # Register notification services
     for service_notif, schema in SERVICE_MAP.items():
         supports_response = SupportsResponse.NONE
@@ -488,7 +420,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         hass.services.async_register(
             DOMAIN,
             service_notif,
-            async_send_telegram_message,
+            _async_send_telegram_message,
             schema=schema,
             supports_response=supports_response,
             description_placeholders={
@@ -497,6 +429,73 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         )
 
     return True
+
+
+async def _async_send_telegram_message(service: ServiceCall) -> ServiceResponse:
+    """Handle sending Telegram Bot message service calls."""
+
+    _deprecate_timeout(service)
+
+    # this is the list of targets to send the message to
+    targets = _build_targets(service)
+
+    service_responses: JsonValueType = []
+    errors: list[tuple[HomeAssistantError, str]] = []
+
+    # invoke the service for each target
+    for target_config_entry, target_chat_id, target_notify_entity_id in targets:
+        try:
+            service_response = await _call_service(
+                service, target_config_entry.runtime_data, target_chat_id
+            )
+
+            if service.service == SERVICE_DOWNLOAD_FILE:
+                return service_response
+
+            if service_response is not None:
+                formatted_responses: list[JsonValueType] = []
+                for chat_id, message_id in service_response.items():
+                    formatted_response = {
+                        ATTR_CHAT_ID: int(chat_id),
+                        ATTR_MESSAGEID: message_id,
+                    }
+
+                    if target_notify_entity_id:
+                        formatted_response[ATTR_ENTITY_ID] = target_notify_entity_id
+
+                    formatted_responses.append(formatted_response)
+
+                assert isinstance(service_responses, list)
+                service_responses.extend(formatted_responses)
+        except HomeAssistantError as ex:
+            target = (
+                target_notify_entity_id
+                if target_notify_entity_id
+                else str(target_chat_id)
+            )
+            errors.append((ex, target))
+
+    if len(errors) == 1:
+        raise errors[0][0]
+
+    if len(errors) > 1:
+        _LOGGER.error("Service %s failed with %s errors:", service.service, len(errors))
+        for error in errors:
+            _LOGGER.error(
+                "Error for chat_id / notify entity %s: %s", error[1], str(error[0])
+            )
+
+        failed_targets = [target for _, target in errors]
+        raise HomeAssistantError(
+            translation_domain=DOMAIN,
+            translation_key="failed_targets",
+            translation_placeholders={"failed_targets": ", ".join(failed_targets)},
+        )
+
+    if service.return_response:
+        return {"chats": service_responses}
+
+    return None
 
 
 async def _call_service(
@@ -555,7 +554,7 @@ async def _call_service(
     return None
 
 
-def _deprecate_timeout(hass: HomeAssistant, service: ServiceCall) -> None:
+def _deprecate_timeout(service: ServiceCall) -> None:
     if ATTR_TIMEOUT not in service.data:
         return
 
@@ -571,7 +570,7 @@ def _deprecate_timeout(hass: HomeAssistant, service: ServiceCall) -> None:
         service_call_origin = f"{origin.data[ATTR_DOMAIN]}.{origin.data[ATTR_SERVICE]}"
 
     ir.async_create_issue(
-        hass,
+        service.hass,
         DOMAIN,
         "deprecated_timeout_parameter",
         breaks_in_ha_version="2026.7.0",
@@ -589,7 +588,7 @@ def _deprecate_timeout(hass: HomeAssistant, service: ServiceCall) -> None:
 
 
 def _build_targets(
-    hass: HomeAssistant, service: ServiceCall
+    service: ServiceCall,
 ) -> list[tuple[TelegramBotConfigEntry, int, str]]:
     """Builds a list of targets from the service parameters.
 
@@ -598,19 +597,19 @@ def _build_targets(
     The chat_id or notify_entity_id identifies the recipient of the message.
     """
 
-    migrate_chat_ids = _warn_chat_id_migration(hass, service)
+    migrate_chat_ids = _warn_chat_id_migration(service)
 
     targets: list[tuple[TelegramBotConfigEntry, int, str]] = []
 
     # build target list from notify entities using service data: `entity_id`
 
     referenced = async_extract_referenced_entity_ids(
-        hass, TargetSelection(service.data)
+        service.hass, TargetSelection(service.data)
     )
     notify_entity_ids = referenced.referenced | referenced.indirectly_referenced
 
     # parse entity IDs
-    entity_registry = er.async_get(hass)
+    entity_registry = er.async_get(service.hass)
     for notify_entity_id in notify_entity_ids:
         # get config entry from notify entity
         entity_entry = entity_registry.async_get(notify_entity_id)
@@ -621,7 +620,7 @@ def _build_targets(
                 translation_placeholders={ATTR_ENTITY_ID: notify_entity_id},
             )
         assert entity_entry.config_entry_id is not None
-        notify_config_entry = hass.config_entries.async_get_known_entry(
+        notify_config_entry = service.hass.config_entries.async_get_known_entry(
             entity_entry.config_entry_id
         )
 
@@ -640,7 +639,9 @@ def _build_targets(
     if CONF_CONFIG_ENTRY_ID in service.data:
         # parse config entry from service data
         config_entry_id: str = service.data[CONF_CONFIG_ENTRY_ID]
-        config_entry = hass.config_entries.async_get_known_entry(config_entry_id)
+        config_entry = service.hass.config_entries.async_get_known_entry(
+            config_entry_id
+        )
     else:
         # config entry not provided so we try to determine the default
         config_entries: list[TelegramBotConfigEntry] = (
@@ -721,7 +722,7 @@ def _build_targets(
     )
 
 
-def _warn_chat_id_migration(hass: HomeAssistant, service: ServiceCall) -> set[int]:
+def _warn_chat_id_migration(service: ServiceCall) -> set[int]:
     if not service.data.get(ATTR_TARGET):
         return set()
 
@@ -743,7 +744,7 @@ def _warn_chat_id_migration(hass: HomeAssistant, service: ServiceCall) -> set[in
         service_call_origin = f"{origin.data[ATTR_DOMAIN]}.{origin.data[ATTR_SERVICE]}"
 
     ir.async_create_issue(
-        hass,
+        service.hass,
         DOMAIN,
         f"migrate_chat_ids_in_target_{service_call_origin}_{service.service}",
         breaks_in_ha_version="2026.7.0",
