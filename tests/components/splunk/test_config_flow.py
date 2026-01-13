@@ -39,7 +39,7 @@ async def test_user_flow_success(
     await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == "Test Splunk"
+    assert result["title"] == "splunk.example.com"
     assert result["data"] == {
         CONF_TOKEN: "test-token-123",
         CONF_HOST: "splunk.example.com",
@@ -48,7 +48,7 @@ async def test_user_flow_success(
         "verify_ssl": True,
         CONF_NAME: "Test Splunk",
     }
-    assert result["result"].unique_id == "splunk.example.com:8088"
+    assert result["result"].unique_id == "test-token-123"
 
     # Verify that check was called twice (connectivity and token)
     assert mock_hass_splunk.check.call_count == 2
@@ -205,10 +205,21 @@ async def test_import_flow_invalid_config(
 
 
 async def test_import_flow_already_configured(
-    hass: HomeAssistant, mock_hass_splunk: AsyncMock, mock_config_entry: MockConfigEntry
+    hass: HomeAssistant, mock_hass_splunk: AsyncMock
 ) -> None:
     """Test import flow when entry is already configured."""
-    mock_config_entry.add_to_hass(hass)
+    # Import flow uses host:port as unique_id, so create entry with that format
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_TOKEN: "test-token-123",
+            CONF_HOST: DEFAULT_HOST,
+            CONF_PORT: DEFAULT_PORT,
+            CONF_SSL: False,
+        },
+        unique_id=f"{DEFAULT_HOST}:{DEFAULT_PORT}",
+    )
+    entry.add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
