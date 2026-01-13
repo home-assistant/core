@@ -220,7 +220,10 @@ class LocalOAuth2Implementation(AbstractOAuth2Implementation):
         return await self._token_request(request_data)
 
     async def _async_refresh_token(self, token: dict) -> dict:
-        """Refresh a token. Raises OAuth2RefreshTokenFailed on failure."""
+        """Refresh a token.
+
+        Raises OAuth2RefreshTokenFailed on token refresh failure.
+        """
         try:
             new_token = await self._token_request(
                 {
