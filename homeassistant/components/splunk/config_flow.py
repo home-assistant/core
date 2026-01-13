@@ -73,9 +73,7 @@ class SplunkConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Handle import from YAML configuration."""
         # Set unique ID to prevent duplicate imports
-        host = import_config.get(CONF_HOST, DEFAULT_HOST)
-        port = import_config.get(CONF_PORT, DEFAULT_PORT)
-        await self.async_set_unique_id(f"{host}:{port}")
+        await self.async_set_unique_id(f"{import_config.get(CONF_HOST, DEFAULT_HOST)}:{import_config.get(CONF_PORT, DEFAULT_PORT)}")
         self._abort_if_unique_id_configured()
 
         # Validate the imported configuration

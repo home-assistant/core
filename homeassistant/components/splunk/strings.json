@@ -1,15 +1,15 @@
 {
   "config": {
     "abort": {
-      "already_configured": "This Splunk server is already configured.",
+      "already_configured": "%key:common::config_flow::abort::already_configured_device%]",
       "invalid_config": "The YAML configuration is invalid and cannot be imported. Please check your configuration.yaml file and set up Splunk through the UI instead.",
       "reauth_successful": "Re-authentication was successful."
     },
     "error": {
-      "cannot_connect": "Unable to connect to the Splunk server. Please verify the host, port, and SSL settings are correct.",
-      "invalid_auth": "The HTTP Event Collector token is invalid. Please verify the token is correct and enabled in your Splunk server.",
-      "invalid_config": "Failed to import YAML configuration. Please check your configuration.yaml file.",
-      "unknown": "An unexpected error occurred. Please check the logs for more details."
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "timeout_connect": "[%key:common::config_flow::error::timeout_connect%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "step": {
       "reauth_confirm": {
