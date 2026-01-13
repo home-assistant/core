@@ -22,6 +22,7 @@ APPLICATION_CREDENTIALS = [
     "husqvarna_automower",
     "iotty",
     "lametric",
+    "levelhome",
     "lyric",
     "mcp",
     "microbees",
