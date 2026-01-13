@@ -17,6 +17,8 @@ from homeassistant.components.nina.const import (
     CONST_REGION_V_TO_Z,
 )
 
+# MOCK_REGIONS_PACKAGE: str = "pynina.nina.Nina.getAllRegionalCodes"
+
 DUMMY_USER_INPUT: dict[str, Any] = {
     CONF_MESSAGE_SLOTS: 5,
     CONST_REGION_A_TO_D: ["095760000000_0", "095760000000_1"],
