@@ -5,13 +5,14 @@ from __future__ import annotations
 from unittest.mock import AsyncMock, patch
 
 import pytest
-from unraid_api.exceptions import UnraidAuthenticationError, UnraidConnectionError
+from unraid_api.exceptions import (
+    UnraidAuthenticationError,
+    UnraidConnectionError,
+    UnraidSSLError,
+)
 
 from homeassistant import config_entries
-from homeassistant.components.unraid.config_flow import (
-    CONF_HTTPS_PORT,
-    CannotConnectError,
-)
+from homeassistant.components.unraid.config_flow import CONF_HTTPS_PORT
 from homeassistant.components.unraid.const import DOMAIN
 from homeassistant.const import CONF_API_KEY, CONF_HOST
 from homeassistant.core import HomeAssistant
@@ -295,7 +296,7 @@ class TestConfigFlow:
 
                 if kwargs.get("verify_ssl", True) is True:
                     mock_api.test_connection = AsyncMock(
-                        side_effect=CannotConnectError("SSL certificate verify failed")
+                        side_effect=UnraidSSLError("SSL certificate verify failed")
                     )
                 else:
                     mock_api.test_connection = AsyncMock(return_value=True)

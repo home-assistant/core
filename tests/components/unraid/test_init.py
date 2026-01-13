@@ -113,7 +113,7 @@ class TestAsyncSetupEntry:
             ) as mock_session,
         ):
             mock_api = AsyncMock()
-            mock_api.test_connection = AsyncMock(
+            mock_api.get_server_info = AsyncMock(
                 side_effect=UnraidAuthenticationError("Invalid API key")
             )
             MockAPIClient.return_value = mock_api
@@ -142,7 +142,7 @@ class TestAsyncSetupEntry:
             ) as mock_session,
         ):
             mock_api = AsyncMock()
-            mock_api.test_connection = AsyncMock(
+            mock_api.get_server_info = AsyncMock(
                 side_effect=UnraidConnectionError("Connection refused")
             )
             MockAPIClient.return_value = mock_api
@@ -169,9 +169,7 @@ class TestAsyncUnloadEntry:
         entry.add_to_hass(hass)
 
         # Setup mock runtime data
-        mock_api = AsyncMock()
         entry.runtime_data = UnraidRuntimeData(
-            api_client=mock_api,
             system_coordinator=MagicMock(),
             server_info=_create_mock_server_info(uuid="test-uuid", hostname="tower"),
         )

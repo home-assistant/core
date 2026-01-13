@@ -25,7 +25,7 @@
           "http_port": "HTTP port (default: 80). Change only if modified in Unraid Settings → Management Access.",
           "https_port": "HTTPS port (default: 443). Change only if modified in Unraid Settings → Management Access."
         },
-        "description": "Connect to your Unraid server using the GraphQL API. Requires Unraid {min_version} or newer.",
+        "description": "Connect to your Unraid server using the GraphQL API. Requires Unraid 7.2.0 or newer.",
         "title": "Connect to Unraid"
       }
     }

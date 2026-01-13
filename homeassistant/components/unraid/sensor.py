@@ -5,8 +5,6 @@ from __future__ import annotations
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime
-import logging
-from typing import TYPE_CHECKING
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -15,20 +13,12 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.const import UnitOfInformation, UnitOfTemperature
-from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
-from .const import DOMAIN
-from .coordinator import UnraidSystemCoordinator, UnraidSystemData
-from .entity import UnraidSystemEntity
-
-if TYPE_CHECKING:
-    from homeassistant.core import HomeAssistant
-
-    from .coordinator import UnraidConfigEntry
-
-_LOGGER = logging.getLogger(__name__)
+from .coordinator import UnraidConfigEntry, UnraidSystemCoordinator, UnraidSystemData
+from .entity import UnraidEntityDescription, UnraidSystemEntity
 
 # Coordinator-based, no polling needed
 PARALLEL_UPDATES = 0
@@ -89,11 +79,10 @@ def _parse_uptime(uptime: datetime | None) -> str | None:
 
 
 @dataclass(frozen=True, kw_only=True)
-class UnraidSensorEntityDescription(SensorEntityDescription):
+class UnraidSensorEntityDescription(UnraidEntityDescription, SensorEntityDescription):
     """Describes an Unraid sensor entity."""
 
     value_fn: Callable[[UnraidSystemData], StateType]
-    available_fn: Callable[[UnraidSystemData], bool] = lambda _: True
 
 
 # System sensor descriptions - limited set for initial PR
@@ -114,7 +103,7 @@ SYSTEM_SENSORS: tuple[UnraidSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         suggested_display_precision=1,
         value_fn=lambda data: _to_float_or_none(data.metrics.cpu_temperature),
-        available_fn=lambda data: data.metrics.cpu_temperature is not None,
+        available_fn=lambda coord: coord.data.metrics.cpu_temperature is not None,
     ),
     UnraidSensorEntityDescription(
         key="ram_usage",
@@ -149,26 +138,15 @@ class UnraidSensorEntity(UnraidSystemEntity, SensorEntity):
     def __init__(
         self,
         coordinator: UnraidSystemCoordinator,
-        description: UnraidSensorEntityDescription,
-        server_uuid: str,
-        device_info: DeviceInfo,
+        entity_description: UnraidSensorEntityDescription,
     ) -> None:
         """Initialize the sensor."""
-        super().__init__(coordinator, server_uuid, device_info)
-        self.entity_description = description
-        self._attr_unique_id = f"{server_uuid}_{description.key}"
+        super().__init__(coordinator, entity_description)
 
     @property
     def native_value(self) -> StateType | datetime:
         """Return the state of the sensor."""
         return self.entity_description.value_fn(self.coordinator.data)
-
-    @property
-    def available(self) -> bool:
-        """Return if entity is available."""
-        if not self.coordinator.last_update_success:
-            return False
-        return self.entity_description.available_fn(self.coordinator.data)
 
 
 async def async_setup_entry(
@@ -177,32 +155,10 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up sensor entities."""
-    runtime_data = entry.runtime_data
-    system_coordinator = runtime_data.system_coordinator
-    server_info = runtime_data.server_info
+    coordinator = entry.runtime_data.system_coordinator
 
-    server_uuid = server_info.uuid or "unknown"
-    server_name = server_info.hostname or entry.data.get("host", "Unraid")
-
-    # Create device info for all entities
-    device_info = DeviceInfo(
-        identifiers={(DOMAIN, server_uuid)},
-        name=server_name,
-        manufacturer=server_info.manufacturer,
-        model=server_info.model,
-        serial_number=server_info.serial_number,
-        sw_version=server_info.sw_version,
-        hw_version=server_info.hw_version,
-        configuration_url=server_info.local_url,
-    )
-
-    entities: list[SensorEntity] = []
-
-    # System sensors only for initial PR
-    entities.extend(
-        UnraidSensorEntity(system_coordinator, description, server_uuid, device_info)
+    async_add_entities(
+        UnraidSensorEntity(coordinator, description)
         for description in SYSTEM_SENSORS
+        if description.supported_fn(coordinator)
     )
-
-    _LOGGER.debug("Adding %d sensor entities", len(entities))
-    async_add_entities(entities)

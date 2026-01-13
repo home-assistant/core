@@ -27,7 +27,6 @@ _LOGGER = logging.getLogger(__name__)
 class UnraidRuntimeData:
     """Runtime data for Unraid integration (stored in entry.runtime_data)."""
 
-    api_client: UnraidClient
     system_coordinator: UnraidSystemCoordinator
     server_info: ServerInfo
 
@@ -46,45 +45,35 @@ class UnraidSystemData:
 class UnraidSystemCoordinator(DataUpdateCoordinator[UnraidSystemData]):
     """Coordinator for Unraid system data."""
 
+    config_entry: UnraidConfigEntry
+
     def __init__(
         self,
         hass: HomeAssistant,
-        config_entry: ConfigEntry,
+        config_entry: UnraidConfigEntry,
         api_client: UnraidClient,
-        server_name: str,
+        server_info: ServerInfo,
     ) -> None:
         """Initialize the system coordinator."""
         super().__init__(
             hass,
             logger=_LOGGER,
-            name=f"{server_name} System",
+            name=f"{server_info.hostname or 'Unraid'} System",
             update_interval=timedelta(seconds=DEFAULT_SYSTEM_POLL_INTERVAL),
             config_entry=config_entry,
         )
         self.api_client = api_client
-        self._server_name = server_name
-        self._previously_unavailable = False
+        self.server_info = server_info
 
     async def _async_update_data(self) -> UnraidSystemData:
         """Fetch system data from Unraid server using library methods."""
         try:
             metrics = await self.api_client.get_system_metrics()
-
-            # Log recovery if previously unavailable
-            if self._previously_unavailable:
-                _LOGGER.info(
-                    "Connection restored to Unraid server %s", self._server_name
-                )
-                self._previously_unavailable = False
-
-            return UnraidSystemData(metrics=metrics)
-
         except UnraidAuthenticationError as err:
-            self._previously_unavailable = True
             raise UpdateFailed(f"Authentication failed: {err}") from err
         except UnraidConnectionError as err:
-            self._previously_unavailable = True
             raise UpdateFailed(f"Connection error: {err}") from err
         except UnraidAPIError as err:
-            self._previously_unavailable = True
             raise UpdateFailed(f"API error: {err}") from err
+
+        return UnraidSystemData(metrics=metrics)

@@ -3,16 +3,19 @@
 from __future__ import annotations
 
 import logging
-from typing import TYPE_CHECKING, Any
+from typing import Any
 
-from packaging.version import InvalidVersion, Version
+from awesomeversion import AwesomeVersion, AwesomeVersionException
 from unraid_api import UnraidClient
-from unraid_api.exceptions import UnraidAuthenticationError, UnraidConnectionError
+from unraid_api.exceptions import (
+    UnraidAuthenticationError,
+    UnraidConnectionError,
+    UnraidSSLError,
+)
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigFlow
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_API_KEY, CONF_HOST, CONF_VERIFY_SSL
-from homeassistant.exceptions import HomeAssistantError
 
 from .const import (
     CONF_HTTP_PORT,
@@ -22,13 +25,9 @@ from .const import (
     DOMAIN,
 )
 
-if TYPE_CHECKING:
-    from homeassistant.config_entries import ConfigFlowResult
-
 _LOGGER = logging.getLogger(__name__)
 
 MIN_API_VERSION = "4.21.0"
-MIN_UNRAID_VERSION = "7.2.0"
 
 
 class UnraidConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -45,22 +44,13 @@ class UnraidConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Handle the user step."""
         errors: dict[str, str] = {}
+        abort_reason: str | None = None
 
         if user_input is not None:
-            try:
-                await self._test_connection(user_input)
-            except InvalidAuthError:
-                errors[CONF_API_KEY] = "invalid_auth"
-            except CannotConnectError:
-                errors[CONF_HOST] = "cannot_connect"
-                errors[CONF_HTTPS_PORT] = "check_port"
-            except UnsupportedVersionError:
-                return self.async_abort(reason="unsupported_version")
-            except Exception:
-                _LOGGER.exception(
-                    "Unexpected error connecting to %s", user_input[CONF_HOST]
-                )
-                errors["base"] = "unknown"
+            abort_reason = await self._test_connection(user_input, errors)
+
+            if abort_reason:
+                return self.async_abort(reason=abort_reason)
 
             if not errors:
                 if not self._server_uuid:
@@ -92,13 +82,16 @@ class UnraidConfigFlow(ConfigFlow, domain=DOMAIN):
                 }
             ),
             errors=errors,
-            description_placeholders={
-                "min_version": MIN_UNRAID_VERSION,
-            },
         )
 
-    async def _test_connection(self, user_input: dict[str, Any]) -> None:
-        """Test connection to Unraid server and validate version."""
+    async def _test_connection(
+        self, user_input: dict[str, Any], errors: dict[str, str]
+    ) -> str | None:
+        """Test connection to Unraid server and validate version.
+
+        Returns abort reason if flow should be aborted, otherwise None.
+        Populates errors dict with any validation errors.
+        """
         host = user_input[CONF_HOST].strip()
         api_key = user_input[CONF_API_KEY].strip()
         http_port = user_input.get(CONF_HTTP_PORT, DEFAULT_HTTP_PORT)
@@ -115,75 +108,79 @@ class UnraidConfigFlow(ConfigFlow, domain=DOMAIN):
         )
 
         try:
-            await self._validate_connection(api_client, host)
-        except CannotConnectError as err:
-            error_str = str(err).lower()
-            if "ssl" in error_str or "certificate" in error_str:
-                await api_client.close()
-                api_client = UnraidClient(
-                    host=host,
-                    api_key=api_key,
-                    http_port=http_port,
-                    https_port=https_port,
-                    verify_ssl=False,
-                )
-                try:
-                    await self._validate_connection(api_client, host)
+            return await self._validate_connection(api_client, errors)
+        except UnraidSSLError:
+            # SSL failed, try without SSL verification
+            await api_client.close()
+            api_client = UnraidClient(
+                host=host,
+                api_key=api_key,
+                http_port=http_port,
+                https_port=https_port,
+                verify_ssl=False,
+            )
+            try:
+                result = await self._validate_connection(api_client, errors)
+                if not errors:
                     self._verify_ssl = False
-                finally:
-                    await api_client.close()
-            else:
-                raise
+                return result
+            finally:
+                await api_client.close()
         finally:
             await api_client.close()
 
-    async def _validate_connection(self, api_client: UnraidClient, host: str) -> None:
-        """Validate connection, version, and fetch server info."""
+    async def _validate_connection(
+        self, api_client: UnraidClient, errors: dict[str, str]
+    ) -> str | None:
+        """Validate connection, version, and fetch server info.
+
+        Returns abort reason if flow should be aborted, otherwise None.
+        Populates errors dict with any validation errors.
+        Raises UnraidSSLError to trigger SSL fallback.
+        """
         try:
             await api_client.test_connection()
-        except UnraidAuthenticationError as err:
-            raise InvalidAuthError(str(err)) from err
-        except UnraidConnectionError as err:
-            raise CannotConnectError(str(err)) from err
+        except UnraidAuthenticationError:
+            errors[CONF_API_KEY] = "invalid_auth"
+            return None
+        except UnraidSSLError:
+            raise
+        except UnraidConnectionError:
+            errors[CONF_HOST] = "cannot_connect"
+            errors[CONF_HTTPS_PORT] = "check_port"
+            return None
+        except Exception:
+            _LOGGER.exception("Unexpected error during connection test")
+            errors["base"] = "unknown"
+            return None
 
-        version_info = await api_client.get_version()
+        try:
+            version_info = await api_client.get_version()
+        except Exception:
+            _LOGGER.exception("Failed to get version info")
+            errors["base"] = "unknown"
+            return None
 
         api_version = version_info.get("api", "0.0.0")
-        unraid_version = version_info.get("unraid", "0.0.0")
-
         if not self._is_supported_version(api_version):
-            msg = (
-                f"Unraid {unraid_version} (API {api_version}) not supported. "
-                f"Minimum required: Unraid {MIN_UNRAID_VERSION} "
-                f"(API {MIN_API_VERSION})"
-            )
-            raise UnsupportedVersionError(msg)
+            return "unsupported_version"
 
-        await self._fetch_server_info(api_client)
+        try:
+            server_info = await api_client.get_server_info()
+        except Exception:
+            _LOGGER.exception("Failed to get server info")
+            errors["base"] = "unknown"
+            return None
 
-    async def _fetch_server_info(self, api_client: UnraidClient) -> None:
-        """Fetch server UUID and hostname for unique identification."""
-        server_info = await api_client.get_server_info()
         self._server_uuid = server_info.uuid
         self._server_hostname = server_info.hostname
+        return None
 
     def _is_supported_version(self, api_version: str) -> bool:
         """Check if API version is supported using proper version parsing."""
         try:
-            current = Version(api_version)
-            minimum = Version(MIN_API_VERSION)
-        except InvalidVersion:
+            current = AwesomeVersion(api_version)
+            minimum = AwesomeVersion(MIN_API_VERSION)
+        except AwesomeVersionException:
             return True
         return current >= minimum
-
-
-class InvalidAuthError(HomeAssistantError):
-    """Exception for invalid authentication."""
-
-
-class CannotConnectError(HomeAssistantError):
-    """Exception for cannot connect to server."""
-
-
-class UnsupportedVersionError(HomeAssistantError):
-    """Exception for unsupported version."""

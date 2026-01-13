@@ -6,9 +6,6 @@ Provides monitoring and control for system metrics, storage, Docker, and VMs.
 
 from __future__ import annotations
 
-import logging
-from typing import TYPE_CHECKING
-
 from unraid_api import UnraidClient
 from unraid_api.exceptions import (
     UnraidAPIError,
@@ -17,6 +14,7 @@ from unraid_api.exceptions import (
 )
 
 from homeassistant.const import CONF_API_KEY, CONF_HOST, CONF_VERIFY_SSL, Platform
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
@@ -28,11 +26,6 @@ from .const import (
 )
 from .coordinator import UnraidConfigEntry, UnraidRuntimeData, UnraidSystemCoordinator
 
-if TYPE_CHECKING:
-    from homeassistant.core import HomeAssistant
-
-_LOGGER = logging.getLogger(__name__)
-
 PLATFORMS: list[Platform] = [
     Platform.SENSOR,
 ]
@@ -40,44 +33,34 @@ PLATFORMS: list[Platform] = [
 
 async def async_setup_entry(hass: HomeAssistant, entry: UnraidConfigEntry) -> bool:
     """Set up Unraid from a config entry."""
-    host = entry.data[CONF_HOST]
-    http_port = entry.data.get(CONF_HTTP_PORT, DEFAULT_HTTP_PORT)
-    https_port = entry.data.get(CONF_HTTPS_PORT, DEFAULT_HTTPS_PORT)
-    api_key = entry.data[CONF_API_KEY]
-    verify_ssl = entry.data.get(CONF_VERIFY_SSL, True)
-
-    # Get HA's aiohttp session for proper connection pooling
-    session = async_get_clientsession(hass, verify_ssl=verify_ssl)
-
-    # Create API client with injected session
+    # Create API client with HA's shared session
     api_client = UnraidClient(
-        host=host,
-        http_port=http_port,
-        https_port=https_port,
-        api_key=api_key,
-        verify_ssl=verify_ssl,
-        session=session,
+        host=entry.data[CONF_HOST],
+        http_port=entry.data.get(CONF_HTTP_PORT, DEFAULT_HTTP_PORT),
+        https_port=entry.data.get(CONF_HTTPS_PORT, DEFAULT_HTTPS_PORT),
+        api_key=entry.data[CONF_API_KEY],
+        verify_ssl=entry.data.get(CONF_VERIFY_SSL, True),
+        session=async_get_clientsession(
+            hass, verify_ssl=entry.data.get(CONF_VERIFY_SSL, True)
+        ),
     )
 
-    # Test connection and get server info
+    # Get server info (validates connection)
     try:
-        await api_client.test_connection()
         server_info = await api_client.get_server_info()
     except UnraidAuthenticationError as err:
-        msg = f"Authentication failed for Unraid server {host}"
-        raise ConfigEntryAuthFailed(msg) from err
+        raise ConfigEntryAuthFailed(
+            f"Authentication failed for Unraid server {entry.data[CONF_HOST]}"
+        ) from err
     except (UnraidConnectionError, UnraidAPIError) as err:
-        msg = f"Failed to connect to Unraid server: {err}"
-        raise ConfigEntryNotReady(msg) from err
+        raise ConfigEntryNotReady(f"Failed to connect to Unraid server: {err}") from err
 
-    server_name = server_info.hostname or host
-
-    # Create coordinator with fixed poll interval
+    # Create coordinator with server_info
     system_coordinator = UnraidSystemCoordinator(
         hass=hass,
         config_entry=entry,
         api_client=api_client,
-        server_name=server_name,
+        server_info=server_info,
     )
 
     # Fetch initial data
@@ -85,7 +68,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: UnraidConfigEntry) -> bo
 
     # Store runtime data in config entry (HA 2024.4+ pattern)
     entry.runtime_data = UnraidRuntimeData(
-        api_client=api_client,
         system_coordinator=system_coordinator,
         server_info=server_info,
     )
