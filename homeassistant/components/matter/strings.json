@@ -625,6 +625,16 @@
       },
       "name": "Open commissioning window"
     },
+    "set_presets": {
+      "description": "Set the preset for a Matter thermostat.",
+      "fields": {
+        "preset": {
+          "description": "The preset mode to set.",
+          "name": "Preset"
+        }
+      },
+      "name": "Set thermostat preset"
+    },
     "water_heater_boost": {
       "description": "Enables water heater boost for a specific duration.",
       "fields": {
