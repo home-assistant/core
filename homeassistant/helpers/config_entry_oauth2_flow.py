@@ -40,6 +40,7 @@ from homeassistant.util.hass_dict import HassKey
 
 from . import http
 from .aiohttp_client import async_get_clientsession
+from .frame import ReportBehavior, report_usage
 from .network import NoURLAvailableError
 from .service_info.dhcp import DhcpServiceInfo
 from .service_info.ssdp import SsdpServiceInfo
@@ -57,9 +58,6 @@ DATA_PROVIDERS: HassKey[
         Callable[[HomeAssistant, str], Awaitable[list[AbstractOAuth2Implementation]]],
     ]
 ] = HassKey("oauth2_providers")
-DATA_OAUTH2_REFRESHTOKEN_DEPRECATION_WARNING: HassKey[set[str]] = HassKey(
-    "oauth2_refresh_token_deprecation_warning"
-)
 AUTH_CALLBACK_PATH = "/auth/external/callback"
 HEADER_FRONTEND_BASE = "HA-Frontend-Base"
 MY_AUTH_CALLBACK_PATH = "https://my.home-assistant.io/redirect/oauth"
@@ -236,35 +234,37 @@ class LocalOAuth2Implementation(AbstractOAuth2Implementation):
                 }
             )
         except ClientResponseError as err:
-            # Store the warning messages in memory during Home Assistant runtime
-            # to prevent spamming logs
-            you_are_warned: set[str] = self.hass.data.setdefault(
-                DATA_OAUTH2_REFRESHTOKEN_DEPRECATION_WARNING, set()
+            report_usage(
+                "is now catchable via `OAuth2RefreshTokenError`, throwing "
+                "a recoverable or non-recoverable error based on the "
+                "HTTP status code. Please update your integration to handle "
+                "`OAuth2RefreshTokenError` gracefully (see "
+                "{LINK_TO_DEVELOPER_DOCS})",
+                breaks_in_ha_version="2026.8",
+                core_behavior=ReportBehavior.LOG,
+                integration_domain=self._domain,
             )
 
-            # Best what I could to think of is to use the clientID, unique enough to prevent flooding?
-            # I don't have config_entry available. If correct, you have a client ID per config entry
-            if self.client_id not in you_are_warned:
-                _LOGGER.warning(
-                    "Refresh token failed. Integrations should catch 'OAuth2RefreshTokenFailed'. In version 2026.8.0 'OAuth2RefreshTokenFailed' will no longer inherit 'ClientResponseError'"
-                )
-                you_are_warned.add(self.client_id)
+            if err.status == HTTPStatus.TOO_MANY_REQUESTS or 500 <= err.status <= 599:
+                # Recoverable error
+                raise OAuth2RefreshTokenTransientError(
+                    request_info=err.request_info,
+                    history=err.history,
+                    status=err.status,
+                    message=err.message,
+                    headers=err.headers,
+                ) from err
+            if 400 <= err.status <= 499:
+                # Non-recoverable error
+                raise OAuth2RefreshTokenReauthError(
+                    request_info=err.request_info,
+                    history=err.history,
+                    status=err.status,
+                    message=err.message,
+                    headers=err.headers,
+                ) from err
 
-            def _handle_refresh_error(
-                err: ClientResponseError,
-            ) -> type[OAuth2RefreshTokenError]:
-                """Handle and determine the appropriate refresh token error type."""
-                if (
-                    err.status == HTTPStatus.TOO_MANY_REQUESTS
-                    or 500 <= err.status <= 599
-                ):
-                    return OAuth2RefreshTokenTransientError  # Recoverable
-                if 400 <= err.status <= 499:
-                    return OAuth2RefreshTokenReauthError  # Non-recoverable
-                return OAuth2RefreshTokenError  # Needed for linting
-
-            refresh_exception = _handle_refresh_error(err)
-            raise refresh_exception(
+            raise OAuth2RefreshTokenError(
                 request_info=err.request_info,
                 history=err.history,
                 status=err.status,
