@@ -420,6 +420,7 @@ CACHED_PROPERTIES_WITH_ATTR_ = {
     "extra_state_attributes",
     "force_update",
     "icon",
+    "included_entity_ids",
     "included_unique_ids",
     "name",
     "should_poll",
