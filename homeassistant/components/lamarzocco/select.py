@@ -149,6 +149,8 @@ ENTITIES: tuple[LaMarzoccoSelectEntityDescription, ...] = (
         supported_fn=(
             lambda coordinator: coordinator.device.dashboard.model_name
             in (ModelName.LINEA_MINI, ModelName.LINEA_MINI_R)
+            and WidgetType.CM_BREW_BY_WEIGHT_DOSES
+            in coordinator.device.dashboard.config
         ),
     ),
 )

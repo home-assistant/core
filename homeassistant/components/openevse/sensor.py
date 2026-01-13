@@ -47,67 +47,70 @@ PARALLEL_UPDATES = 0
 
 
 @dataclass(frozen=True, kw_only=True)
-class OpenEVSESensorEntityDescription(SensorEntityDescription):
-    """Describe OpenEVSE sensor entity."""
+class OpenEVSESensorDescription(SensorEntityDescription):
+    """Describes an OpenEVSE sensor entity."""
 
-    value_fn: Callable[[OpenEVSE], StateType]
+    value_fn: Callable[[OpenEVSE], str | float | None]
 
 
-SENSOR_TYPES: tuple[OpenEVSESensorEntityDescription, ...] = (
-    OpenEVSESensorEntityDescription(
+SENSOR_TYPES: tuple[OpenEVSESensorDescription, ...] = (
+    OpenEVSESensorDescription(
         key="status",
         translation_key="status",
-        value_fn=lambda charger: charger.status,
+        value_fn=lambda ev: ev.status,
     ),
-    OpenEVSESensorEntityDescription(
+    OpenEVSESensorDescription(
         key="charge_time",
         translation_key="charge_time",
-        native_unit_of_measurement=UnitOfTime.MINUTES,
+        native_unit_of_measurement=UnitOfTime.SECONDS,
+        suggested_unit_of_measurement=UnitOfTime.MINUTES,
         device_class=SensorDeviceClass.DURATION,
         state_class=SensorStateClass.MEASUREMENT,
-        value_fn=lambda charger: charger.charge_time_elapsed / 60,
+        value_fn=lambda ev: ev.charge_time_elapsed,
     ),
-    OpenEVSESensorEntityDescription(
+    OpenEVSESensorDescription(
         key="ambient_temp",
         translation_key="ambient_temp",
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
-        value_fn=lambda charger: charger.ambient_temperature,
+        value_fn=lambda ev: ev.ambient_temperature,
     ),
-    OpenEVSESensorEntityDescription(
+    OpenEVSESensorDescription(
         key="ir_temp",
         translation_key="ir_temp",
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
+        value_fn=lambda ev: ev.ir_temperature,
         entity_registry_enabled_default=False,
-        value_fn=lambda charger: charger.ir_temperature,
     ),
-    OpenEVSESensorEntityDescription(
+    OpenEVSESensorDescription(
         key="rtc_temp",
         translation_key="rtc_temp",
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
+        value_fn=lambda ev: ev.rtc_temperature,
         entity_registry_enabled_default=False,
-        value_fn=lambda charger: charger.rtc_temperature,
     ),
-    OpenEVSESensorEntityDescription(
+    OpenEVSESensorDescription(
         key="usage_session",
         translation_key="usage_session",
-        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
+        suggested_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
-        value_fn=lambda charger: float(charger.usage_session) / 1000,
+        value_fn=lambda ev: ev.usage_session,
     ),
-    OpenEVSESensorEntityDescription(
+    OpenEVSESensorDescription(
         key="usage_total",
         translation_key="usage_total",
-        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
+        suggested_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
-        value_fn=lambda charger: float(charger.usage_total) / 1000,
+        value_fn=lambda ev: ev.usage_total,
     ),
 )
 
@@ -190,12 +193,12 @@ class OpenEVSESensor(CoordinatorEntity[OpenEVSEDataUpdateCoordinator], SensorEnt
     """Implementation of an OpenEVSE sensor."""
 
     _attr_has_entity_name = True
-    entity_description: OpenEVSESensorEntityDescription
+    entity_description: OpenEVSESensorDescription
 
     def __init__(
         self,
         coordinator: OpenEVSEDataUpdateCoordinator,
-        description: OpenEVSESensorEntityDescription,
+        description: OpenEVSESensorDescription,
         identifier: str,
         unique_id: str | None,
     ) -> None:
