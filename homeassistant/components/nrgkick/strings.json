@@ -345,9 +345,6 @@
       "vehicle_connect_time": {
         "name": "Vehicle connect time"
       },
-      "versions_sw_sm": {
-        "name": "Software version"
-      },
       "warning_code": {
         "name": "Warning code",
         "state": {

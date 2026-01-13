@@ -88,9 +88,6 @@
       "vehicle_connect_time": {
         "default": "mdi:timer-outline"
       },
-      "versions_sw_sm": {
-        "default": "mdi:package-up"
-      },
       "warning_code": {
         "default": "mdi:alert"
       }

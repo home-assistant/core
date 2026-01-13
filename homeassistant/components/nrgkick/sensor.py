@@ -249,14 +249,6 @@ SENSORS: tuple[NRGkickSensorEntityDescription, ...] = (
         entity_registry_enabled_default=False,
         value_path=("info", "gps", "accuracy"),
     ),
-    # INFO - Versions
-    NRGkickSensorEntityDescription(
-        key="versions_sw_sm",
-        translation_key="versions_sw_sm",
-        entity_category=EntityCategory.DIAGNOSTIC,
-        entity_registry_enabled_default=False,
-        value_path=("info", "versions", "sw_sm"),
-    ),
     # VALUES - Energy
     NRGkickSensorEntityDescription(
         key="total_charged_energy",
