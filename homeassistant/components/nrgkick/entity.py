@@ -49,6 +49,7 @@ class NRGkickEntity(CoordinatorEntity[NRGkickDataUpdateCoordinator]):
             manufacturer="DiniTech",
             model=device_info.get("model_type", "NRGkick Gen2"),
             sw_version=versions.get("sw_sm"),
+            hw_version=versions.get("hw_sm"),
         )
         if connections is not None:
             device_info_typed["connections"] = connections

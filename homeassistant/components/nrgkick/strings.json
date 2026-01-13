@@ -345,9 +345,6 @@
       "vehicle_connect_time": {
         "name": "Vehicle connect time"
       },
-      "versions_hw_sm": {
-        "name": "Hardware version"
-      },
       "versions_sw_sm": {
         "name": "Software version"
       },

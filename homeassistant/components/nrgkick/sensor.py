@@ -168,6 +168,7 @@ SENSORS: tuple[NRGkickSensorEntityDescription, ...] = (
         key="network_ssid",
         translation_key="network_ssid",
         entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
         value_path=("info", "network", "ssid"),
     ),
     NRGkickSensorEntityDescription(
@@ -255,13 +256,6 @@ SENSORS: tuple[NRGkickSensorEntityDescription, ...] = (
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
         value_path=("info", "versions", "sw_sm"),
-    ),
-    NRGkickSensorEntityDescription(
-        key="versions_hw_sm",
-        translation_key="versions_hw_sm",
-        entity_category=EntityCategory.DIAGNOSTIC,
-        entity_registry_enabled_default=False,
-        value_path=("info", "versions", "hw_sm"),
     ),
     # VALUES - Energy
     NRGkickSensorEntityDescription(

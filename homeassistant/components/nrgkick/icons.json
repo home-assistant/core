@@ -88,9 +88,6 @@
       "vehicle_connect_time": {
         "default": "mdi:timer-outline"
       },
-      "versions_hw_sm": {
-        "default": "mdi:chip"
-      },
       "versions_sw_sm": {
         "default": "mdi:package-up"
       },
