@@ -13,6 +13,8 @@ from packaging.version import Version
 from homeassistant import const
 from homeassistant.util import dt as dt_util
 
+_PACKAGING_VERSION_BELOW_26 = Version(packaging.__version__) < Version("26.0dev0")
+
 
 def _bump_release(release, bump_type):
     """Bump a release tuple consisting of 3 numbers."""
@@ -29,7 +31,7 @@ def _bump_release(release, bump_type):
 
 def _get_dev_change(dev: int) -> int | tuple[str, int]:
     """Return the dev change based on packaging version."""
-    if Version(packaging.__version__) < Version("26.0dev0"):
+    if _PACKAGING_VERSION_BELOW_26:
         return ("dev", dev)
     return dev
 
@@ -116,7 +118,7 @@ def bump_version(
     else:
         raise ValueError(f"Unsupported type: {bump_type}")
 
-    if Version(packaging.__version__) < Version("26.0dev0"):
+    if _PACKAGING_VERSION_BELOW_26:
         temp = Version("0")
         temp._version = version._version._replace(**to_change)  # noqa: SLF001
         return Version(str(temp))
