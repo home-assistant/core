@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Awaitable, Callable
+from collections.abc import Callable, Coroutine
 from typing import Any, Literal
 
 from pooldose.type_definitions import DeviceInfoDict, ValueDict
