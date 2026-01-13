@@ -67,6 +67,18 @@ DEVICE_CLASS_MAP: dict[str, BinarySensorDeviceClass | None] = {
     "Entering Region": BinarySensorDeviceClass.MOTION,
 }
 
+# System-level sensor types that belong to the NVR device, not camera channels
+NVR_SYSTEM_SENSORS: set[str] = {
+    "Disk Full",
+    "Disk Error",
+    "Net Interface Broken",
+    "IP Conflict",
+    "Illegal Access",
+    "Recording Failure",
+    "Video Mismatch",
+    "Bad Video",
+}
+
 _LOGGER = logging.getLogger(__name__)
 
 CUSTOMIZE_SCHEMA = vol.Schema(
@@ -187,8 +199,31 @@ class HikvisionBinarySensor(HikvisionEntity, BinarySensorEntity):
         # Build unique ID (includes sensor_type for uniqueness per sensor)
         self._attr_unique_id = f"{self._data.device_id}_{sensor_type}_{channel}"
 
-        # Set entity name
-        self._attr_name = sensor_type
+        # Device info for device registry
+        if self._data.device_type == "NVR":
+            # NVR channels get their own device linked to the NVR via via_device
+            # Get the channel name from channels dict
+            ch = self._data.channels.get(channel)
+            channel_name = (
+                ch.name if ch else f"{self._data.device_name} Channel {channel}"
+            )
+            self._attr_device_info = DeviceInfo(
+                identifiers={(DOMAIN, f"{self._data.device_id}_{channel}")},
+                via_device=(DOMAIN, self._data.device_id),
+                name=channel_name,
+                manufacturer="Hikvision",
+                model="NVR channel",
+            )
+            self._attr_name = sensor_type
+        else:
+            # Single camera device
+            self._attr_device_info = DeviceInfo(
+                identifiers={(DOMAIN, self._data.device_id)},
+                name=self._data.device_name,
+                manufacturer="Hikvision",
+                model=self._data.device_type,
+            )
+            self._attr_name = sensor_type
 
         # Set device class
         self._attr_device_class = DEVICE_CLASS_MAP.get(sensor_type)
