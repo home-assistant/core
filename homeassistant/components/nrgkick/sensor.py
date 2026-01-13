@@ -90,6 +90,16 @@ def _map_code_to_translation_key(
     return mapping.get(value)
 
 
+def _enum_options_from_mapping(mapping: Mapping[int, str | None]) -> tuple[str, ...]:
+    """Build stable enum options from a numeric->translation-key mapping."""
+    # Keep ordering stable by sorting keys.
+    unique_options: dict[str, None] = {}
+    for key in sorted(mapping):
+        if (option := mapping[key]) is not None:
+            unique_options[option] = None
+    return tuple(unique_options)
+
+
 async def async_setup_entry(
     _hass: HomeAssistant,
     entry: NRGkickConfigEntry,
@@ -132,6 +142,8 @@ SENSORS: tuple[NRGkickSensorEntityDescription, ...] = (
     NRGkickSensorEntityDescription(
         key="connector_type",
         translation_key="connector_type",
+        device_class=SensorDeviceClass.ENUM,
+        options=_enum_options_from_mapping(CONNECTOR_TYPE_MAP),
         entity_category=EntityCategory.DIAGNOSTIC,
         value_path=("info", "connector", "type"),
         value_fn=lambda value: _map_code_to_translation_key(value, CONNECTOR_TYPE_MAP),
@@ -165,6 +177,8 @@ SENSORS: tuple[NRGkickSensorEntityDescription, ...] = (
     NRGkickSensorEntityDescription(
         key="grid_phases",
         translation_key="grid_phases",
+        device_class=SensorDeviceClass.ENUM,
+        options=_enum_options_from_mapping(GRID_PHASES_MAP),
         value_path=("info", "grid", "phases"),
         value_fn=lambda value: _map_code_to_translation_key(value, GRID_PHASES_MAP),
     ),
@@ -188,6 +202,8 @@ SENSORS: tuple[NRGkickSensorEntityDescription, ...] = (
     NRGkickSensorEntityDescription(
         key="cellular_mode",
         translation_key="cellular_mode",
+        device_class=SensorDeviceClass.ENUM,
+        options=_enum_options_from_mapping(CELLULAR_MODE_MAP),
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
         value_path=("info", "cellular", "mode"),
@@ -550,6 +566,8 @@ SENSORS: tuple[NRGkickSensorEntityDescription, ...] = (
     NRGkickSensorEntityDescription(
         key="status",
         translation_key="status",
+        device_class=SensorDeviceClass.ENUM,
+        options=_enum_options_from_mapping(STATUS_MAP),
         entity_category=EntityCategory.DIAGNOSTIC,
         value_path=("values", "general", "status"),
         value_fn=lambda value: _map_code_to_translation_key(value, STATUS_MAP),
@@ -562,6 +580,8 @@ SENSORS: tuple[NRGkickSensorEntityDescription, ...] = (
     NRGkickSensorEntityDescription(
         key="relay_state",
         translation_key="relay_state",
+        device_class=SensorDeviceClass.ENUM,
+        options=_enum_options_from_mapping(RELAY_STATE_MAP),
         entity_category=EntityCategory.DIAGNOSTIC,
         value_path=("values", "general", "relay_state"),
         value_fn=lambda value: _map_code_to_translation_key(value, RELAY_STATE_MAP),
@@ -575,6 +595,8 @@ SENSORS: tuple[NRGkickSensorEntityDescription, ...] = (
     NRGkickSensorEntityDescription(
         key="rcd_trigger",
         translation_key="rcd_trigger",
+        device_class=SensorDeviceClass.ENUM,
+        options=_enum_options_from_mapping(RCD_TRIGGER_MAP),
         entity_category=EntityCategory.DIAGNOSTIC,
         value_path=("values", "general", "rcd_trigger"),
         value_fn=lambda value: _map_code_to_translation_key(value, RCD_TRIGGER_MAP),
@@ -582,6 +604,8 @@ SENSORS: tuple[NRGkickSensorEntityDescription, ...] = (
     NRGkickSensorEntityDescription(
         key="warning_code",
         translation_key="warning_code",
+        device_class=SensorDeviceClass.ENUM,
+        options=_enum_options_from_mapping(WARNING_CODE_MAP),
         entity_category=EntityCategory.DIAGNOSTIC,
         value_path=("values", "general", "warning_code"),
         value_fn=lambda value: _map_code_to_translation_key(value, WARNING_CODE_MAP),
@@ -589,6 +613,8 @@ SENSORS: tuple[NRGkickSensorEntityDescription, ...] = (
     NRGkickSensorEntityDescription(
         key="error_code",
         translation_key="error_code",
+        device_class=SensorDeviceClass.ENUM,
+        options=_enum_options_from_mapping(ERROR_CODE_MAP),
         entity_category=EntityCategory.DIAGNOSTIC,
         value_path=("values", "general", "error_code"),
         value_fn=lambda value: _map_code_to_translation_key(value, ERROR_CODE_MAP),
