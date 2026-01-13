@@ -193,6 +193,8 @@ async def load_int(hass: HomeAssistant) -> MockConfigEntry:
                 HVACMode.COOL,
                 HVACMode.HEAT,
                 HVACMode.DRY,
+                HVACMode.HEAT_COOL,
+                HVACMode.FAN_ONLY,
             ],
         },
     )
@@ -222,6 +224,8 @@ async def config_entry_with_errors(hass: HomeAssistant) -> MockConfigEntry:
                 HVACMode.COOL,
                 HVACMode.HEAT,
                 HVACMode.DRY,
+                HVACMode.HEAT_COOL,
+                HVACMode.FAN_ONLY,
             ],
         },
     )
@@ -251,6 +255,8 @@ async def config_entry_with_empty_status(hass: HomeAssistant) -> MockConfigEntry
                 HVACMode.COOL,
                 HVACMode.HEAT,
                 HVACMode.DRY,
+                HVACMode.HEAT_COOL,
+                HVACMode.FAN_ONLY,
             ],
         },
     )

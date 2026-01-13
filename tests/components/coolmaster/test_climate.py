@@ -24,7 +24,7 @@ from homeassistant.components.climate import (
     ClimateEntityFeature,
     HVACMode,
 )
-from homeassistant.components.coolmaster.climate import FAN_MODES
+from homeassistant.components.coolmaster.climate import FAN_MODES, HVAC_MODES
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -112,6 +112,8 @@ async def test_climate_hvac_modes(
         HVACMode.COOL,
         HVACMode.HEAT,
         HVACMode.DRY,
+        HVACMode.HEAT_COOL,
+        HVACMode.FAN_ONLY,
     ]
     for unit in ("climate.l1_101", "climate.l1_102", "climate.l1_103"):
         assert (
@@ -137,10 +139,11 @@ async def test_climate_fan_modes(
 ) -> None:
     """Test the Coolmaster climate fan modes."""
     assert hass.states.get("climate.l1_100").attributes[ATTR_FAN_MODES] == FAN_MODES
-    assert (
-        hass.states.get("climate.l1_101").attributes[ATTR_FAN_MODES]
-        == hass.states.get("climate.l1_100").attributes[ATTR_FAN_MODES]
-    )
+    for unit in ("climate.l1_101", "climate.l1_102", "climate.l1_103"):
+        assert (
+            hass.states.get(unit).attributes[ATTR_FAN_MODES]
+            == hass.states.get("climate.l1_100").attributes[ATTR_FAN_MODES]
+        )
 
 
 async def test_climate_swing_mode(
@@ -240,9 +243,9 @@ async def test_set_swing_mode_error(
         )
 
 
+@pytest.mark.parametrize("target_hvac_mode", HVAC_MODES)
 async def test_set_hvac_mode(
-    hass: HomeAssistant,
-    load_int: ConfigEntry,
+    hass: HomeAssistant, load_int: ConfigEntry, target_hvac_mode: str
 ) -> None:
     """Test the Coolmaster climate set hvac mode."""
     assert hass.states.get("climate.l1_100").state == HVACMode.OFF
@@ -251,12 +254,12 @@ async def test_set_hvac_mode(
         SERVICE_SET_HVAC_MODE,
         {
             ATTR_ENTITY_ID: "climate.l1_100",
-            ATTR_HVAC_MODE: HVACMode.HEAT,
+            ATTR_HVAC_MODE: target_hvac_mode,
         },
         blocking=True,
     )
     await hass.async_block_till_done()
-    assert hass.states.get("climate.l1_100").state == HVACMode.HEAT
+    assert hass.states.get("climate.l1_100").state == target_hvac_mode
 
 
 async def test_set_hvac_mode_off(
