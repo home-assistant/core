@@ -33,7 +33,9 @@ async def async_setup_entry(
     gateway: EnOceanHomeAssistantGateway | None = None
 
     try:
-        gateway = EnOceanHomeAssistantGateway(config_entry.data[CONF_DEVICE])
+        gateway = EnOceanHomeAssistantGateway(
+            config_entry.data[CONF_DEVICE], create_task=hass.create_task
+        )
         await gateway.start()
     except Exception as ex:
         raise ConfigEntryError from ex
@@ -72,14 +74,6 @@ async def async_setup_entry(
             sender_id_string: str | None = device.get(CONF_ENOCEAN_SENDER_ID)
             if sender_id_string:
                 sender_id = EnOceanAddress.from_string(sender_id_string)
-
-            LOGGER.warning(
-                "Adding EnOcean device %s of type %s with name %s and sender ID %s",
-                enocean_id,
-                device_type.unique_id,
-                device_name,
-                sender_id.to_string(),
-            )
 
             gateway.add_device(
                 enocean_id=enocean_id,
