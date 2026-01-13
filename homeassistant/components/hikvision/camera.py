@@ -55,19 +55,26 @@ class HikvisionCamera(Camera):
         # Build unique ID (unique per platform per integration)
         self._attr_unique_id = f"{self._data.device_id}_{channel}"
 
-        # Build entity name based on device type
-        if self._data.device_type == "NVR":
-            self._attr_name = f"Channel {channel}"
-        else:
-            self._attr_name = None  # Use device name
-
         # Device info for device registry
-        self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, self._data.device_id)},
-            name=self._data.device_name,
-            manufacturer="Hikvision",
-            model=self._data.device_type,
-        )
+        if self._data.device_type == "NVR":
+            # NVR channels get their own device linked to the NVR via via_device
+            self._attr_device_info = DeviceInfo(
+                identifiers={(DOMAIN, f"{self._data.device_id}_{channel}")},
+                via_device=(DOMAIN, self._data.device_id),
+                name=f"{self._data.device_name} Channel {channel}",
+                manufacturer="Hikvision",
+                model="NVR Channel",
+            )
+            self._attr_name = None  # Use device name
+        else:
+            # Single camera device
+            self._attr_device_info = DeviceInfo(
+                identifiers={(DOMAIN, self._data.device_id)},
+                name=self._data.device_name,
+                manufacturer="Hikvision",
+                model=self._data.device_type,
+            )
+            self._attr_name = None  # Use device name
 
     async def async_camera_image(
         self, width: int | None = None, height: int | None = None

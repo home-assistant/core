@@ -139,11 +139,11 @@ async def test_binary_sensor_nvr_device(
 
     await setup_integration(hass, mock_config_entry)
 
-    # NVR sensors should include channel number in name
-    state = hass.states.get("binary_sensor.front_camera_motion_1")
+    # NVR sensors are on per-channel devices
+    state = hass.states.get("binary_sensor.front_camera_channel_1_motion")
     assert state is not None
 
-    state = hass.states.get("binary_sensor.front_camera_motion_2")
+    state = hass.states.get("binary_sensor.front_camera_channel_2_motion")
     assert state is not None
 
 
