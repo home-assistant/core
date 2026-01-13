@@ -34,6 +34,8 @@ RETRY_INTERVAL_SECONDS = 30
 # Number of consecutive failures before marking device unavailable
 MAX_CONSECUTIVE_FAILURES = 3
 
+type MelCloudConfigEntry = ConfigEntry[dict[str, list[MelCloudDeviceUpdateCoordinator]]]
+
 
 class MelCloudDeviceUpdateCoordinator(DataUpdateCoordinator[None]):
     """Per-device coordinator for MELCloud data updates."""
@@ -81,12 +83,16 @@ class MelCloudDeviceUpdateCoordinator(DataUpdateCoordinator[None]):
     @property
     def device_id(self) -> str:
         """Return device ID."""
-        return self.device.device_id
+        if (device_id := self.device.device_id) is None:
+            raise ValueError("MELCloud device ID is missing")
+        return str(device_id)
 
     @property
     def building_id(self) -> str:
         """Return building ID of the device."""
-        return self.device.building_id
+        if (building_id := self.device.building_id) is None:
+            raise ValueError("MELCloud building ID is missing")
+        return str(building_id)
 
     @property
     def device_info(self) -> DeviceInfo:
@@ -188,6 +194,3 @@ class MelCloudDeviceUpdateCoordinator(DataUpdateCoordinator[None]):
             self.device_available = False
 
         await self.async_request_refresh()
-
-
-type MelCloudConfigEntry = ConfigEntry[dict[str, list[MelCloudDeviceUpdateCoordinator]]]
