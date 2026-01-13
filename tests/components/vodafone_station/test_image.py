@@ -49,7 +49,7 @@ async def test_image_entity(
 ) -> None:
     """Test image entity."""
 
-    entity_id = f"image.vodafone_station_{TEST_SERIAL_NUMBER}_wifi_guest"
+    entity_id = f"image.vodafone_station_{TEST_SERIAL_NUMBER}_guest_network"
 
     await setup_integration(hass, mock_config_entry)
 
@@ -60,14 +60,14 @@ async def test_image_entity(
     assert len(states) == 2
 
     state = states[0]
-    assert state.name == f"Vodafone Station ({TEST_SERIAL_NUMBER}) Wifi-Guest"
+    assert state.name == f"Vodafone Station ({TEST_SERIAL_NUMBER}) Guest network"
     assert state.entity_id == entity_id
 
     access_token = state.attributes["access_token"]
     assert state.attributes == {
         "access_token": access_token,
         "entity_picture": f"/api/image_proxy/{entity_id}?token={access_token}",
-        "friendly_name": f"Vodafone Station ({TEST_SERIAL_NUMBER}) Wifi-Guest",
+        "friendly_name": f"Vodafone Station ({TEST_SERIAL_NUMBER}) Guest network",
     }
 
     entity_entry = entity_registry.async_get(entity_id)
@@ -92,7 +92,7 @@ async def test_image_update(
 ) -> None:
     """Test image update."""
 
-    entity_id = f"image.vodafone_station_{TEST_SERIAL_NUMBER}_wifi_guest"
+    entity_id = f"image.vodafone_station_{TEST_SERIAL_NUMBER}_guest_network"
 
     await setup_integration(hass, mock_config_entry)
 

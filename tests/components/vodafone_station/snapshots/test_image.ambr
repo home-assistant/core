@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_all_entities[image.vodafone_station_m123456789_wifi_guest-entry]
+# name: test_all_entities[image.vodafone_station_m123456789_guest_5ghz_network-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -12,7 +12,7 @@
     'disabled_by': None,
     'domain': 'image',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'image.vodafone_station_m123456789_wifi_guest',
+    'entity_id': 'image.vodafone_station_m123456789_guest_5ghz_network',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -24,32 +24,32 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Wifi-Guest',
+    'original_name': 'Guest 5GHz network',
     'platform': 'vodafone_station',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': None,
-    'unique_id': 'm123456789-guest-qr-code',
+    'translation_key': 'guest_5g',
+    'unique_id': 'm123456789-guest_5g-qr-code',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[image.vodafone_station_m123456789_wifi_guest-state]
+# name: test_all_entities[image.vodafone_station_m123456789_guest_5ghz_network-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'access_token': '1',
-      'entity_picture': '/api/image_proxy/image.vodafone_station_m123456789_wifi_guest?token=1',
-      'friendly_name': 'Vodafone Station (m123456789) Wifi-Guest',
+      'entity_picture': '/api/image_proxy/image.vodafone_station_m123456789_guest_5ghz_network?token=1',
+      'friendly_name': 'Vodafone Station (m123456789) Guest 5GHz network',
     }),
     'context': <ANY>,
-    'entity_id': 'image.vodafone_station_m123456789_wifi_guest',
+    'entity_id': 'image.vodafone_station_m123456789_guest_5ghz_network',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
 # ---
-# name: test_all_entities[image.vodafone_station_m123456789_wifi_guest_5ghz-entry]
+# name: test_all_entities[image.vodafone_station_m123456789_guest_network-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -62,7 +62,7 @@
     'disabled_by': None,
     'domain': 'image',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'image.vodafone_station_m123456789_wifi_guest_5ghz',
+    'entity_id': 'image.vodafone_station_m123456789_guest_network',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -74,25 +74,25 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Wifi-Guest-5Ghz',
+    'original_name': 'Guest network',
     'platform': 'vodafone_station',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': None,
-    'unique_id': 'm123456789-guest_5g-qr-code',
+    'translation_key': 'guest',
+    'unique_id': 'm123456789-guest-qr-code',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[image.vodafone_station_m123456789_wifi_guest_5ghz-state]
+# name: test_all_entities[image.vodafone_station_m123456789_guest_network-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'access_token': '1',
-      'entity_picture': '/api/image_proxy/image.vodafone_station_m123456789_wifi_guest_5ghz?token=1',
-      'friendly_name': 'Vodafone Station (m123456789) Wifi-Guest-5Ghz',
+      'entity_picture': '/api/image_proxy/image.vodafone_station_m123456789_guest_network?token=1',
+      'friendly_name': 'Vodafone Station (m123456789) Guest network',
     }),
     'context': <ANY>,
-    'entity_id': 'image.vodafone_station_m123456789_wifi_guest_5ghz',
+    'entity_id': 'image.vodafone_station_m123456789_guest_network',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

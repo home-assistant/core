@@ -23,9 +23,11 @@ PARALLEL_UPDATES = 0
 IMAGE_TYPES: Final = (
     ImageEntityDescription(
         key="guest",
+        translation_key="guest",
     ),
     ImageEntityDescription(
         key="guest_5g",
+        translation_key="guest_5g",
     ),
 )
 
@@ -72,7 +74,6 @@ class VodafoneGuestWifiQRImage(
 
         self.entity_description = description
         self._attr_device_info = coordinator.device_info
-        self._attr_name = coordinator.data.wifi[WIFI_DATA][description.key]["ssid"]
         self._attr_unique_id = f"{coordinator.serial_number}-{description.key}-qr-code"
 
     async def async_image(self) -> bytes | None:
