@@ -78,7 +78,7 @@ set_humidity:
         number:
           min: 30
           max: 99
-          step: 2
+          step: 1
           unit_of_measurement: "%"
 
 set_fan_mode:
