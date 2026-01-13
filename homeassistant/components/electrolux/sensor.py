@@ -86,8 +86,8 @@ OVEN_ELECTROLUX_SENSORS: tuple[ElectroluxSensorDescription, ...] = (
         is_supported_fn=lambda appliance: appliance.is_feature_supported(START_TIME),
     ),
     ElectroluxSensorDescription(
-        key="runnig_time",
-        translation_key="runnig_time",
+        key="running_time",
+        translation_key="running_time",
         icon="mdi:timer-outline",
         device_class=SensorDeviceClass.DURATION,
         native_unit_of_measurement=UnitOfTime.SECONDS,
@@ -137,6 +137,8 @@ OVEN_TEMPERATURE_ELECTROLUX_SENSORS: tuple[ElectroluxSensorDescription, ...] = (
         key="food_probe_temperature",
         translation_key="food_probe_temperature",
         icon="mdi:thermometer-probe",
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class="measurement",
         value_fn=lambda appliance: appliance.get_current_display_food_probe_temperature_f()
         if appliance.get_current_temperature_unit() == "FAHRENHEIT"
         else appliance.get_current_display_food_probe_temperature_c(),
@@ -148,6 +150,8 @@ OVEN_TEMPERATURE_ELECTROLUX_SENSORS: tuple[ElectroluxSensorDescription, ...] = (
         key="display_temperature",
         translation_key="display_temperature",
         icon="mdi:thermometer",
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class="measurement",
         value_fn=lambda appliance: appliance.get_current_display_temperature_f()
         if appliance.get_current_temperature_unit() == "FAHRENHEIT"
         else appliance.get_current_display_temperature_c(),
@@ -255,13 +259,15 @@ class ElectroluxTemperatureSensor(ElectroluxSensor):
     ) -> None:
         """Initialize the sensor."""
         super().__init__(appliance_data, coordinator, description)
-        self._attr_device_class = SensorDeviceClass.TEMPERATURE
-        self._attr_state_class = "measurement"
         self._appliance = cast(OVAppliance | CRAppliance, appliance_data)
-        self._attr_native_unit_of_measurement = ELECTROLUX_TO_HA_TEMPERATURE_UNIT.get(
-            self._appliance.get_current_temperature_unit()
-        )
         self._update_attr_state()
+
+    @property
+    def native_unit_of_measurement(self) -> str | None:
+        """Property for getting the current unit of measurement used by the appliance."""
+        return ELECTROLUX_TO_HA_TEMPERATURE_UNIT.get(
+            self._appliance.get_current_temperature_unit(), UnitOfTemperature.CELSIUS
+        )
 
     def _update_attr_state(self) -> None:
         self._attr_native_value = self._get_value()
