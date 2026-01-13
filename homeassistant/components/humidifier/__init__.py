@@ -34,6 +34,7 @@ from .const import (  # noqa: F401
     ATTR_HUMIDITY,
     ATTR_MAX_HUMIDITY,
     ATTR_MIN_HUMIDITY,
+    ATTR_TARGET_HUMIDITY_STEP,
     DEFAULT_MAX_HUMIDITY,
     DEFAULT_MIN_HUMIDITY,
     DOMAIN,
@@ -141,6 +142,7 @@ CACHED_PROPERTIES_WITH_ATTR_ = {
     "min_humidity",
     "max_humidity",
     "supported_features",
+    "target_humidity_step",
 }
 
 
@@ -148,7 +150,12 @@ class HumidifierEntity(ToggleEntity, cached_properties=CACHED_PROPERTIES_WITH_AT
     """Base class for humidifier entities."""
 
     _entity_component_unrecorded_attributes = frozenset(
-        {ATTR_MIN_HUMIDITY, ATTR_MAX_HUMIDITY, ATTR_AVAILABLE_MODES}
+        {
+            ATTR_MIN_HUMIDITY,
+            ATTR_MAX_HUMIDITY,
+            ATTR_AVAILABLE_MODES,
+            ATTR_TARGET_HUMIDITY_STEP,
+        }
     )
 
     entity_description: HumidifierEntityDescription
@@ -161,6 +168,7 @@ class HumidifierEntity(ToggleEntity, cached_properties=CACHED_PROPERTIES_WITH_AT
     _attr_mode: str | None
     _attr_supported_features: HumidifierEntityFeature = HumidifierEntityFeature(0)
     _attr_target_humidity: float | None = None
+    _attr_target_humidity_step: float | None = None
 
     @property
     def capability_attributes(self) -> dict[str, Any]:
@@ -169,6 +177,8 @@ class HumidifierEntity(ToggleEntity, cached_properties=CACHED_PROPERTIES_WITH_AT
             ATTR_MIN_HUMIDITY: self.min_humidity,
             ATTR_MAX_HUMIDITY: self.max_humidity,
         }
+        if self.target_humidity_step is not None:
+            data[ATTR_TARGET_HUMIDITY_STEP] = self.target_humidity_step
 
         if HumidifierEntityFeature.MODES in self.supported_features:
             data[ATTR_AVAILABLE_MODES] = self.available_modes
@@ -250,6 +260,11 @@ class HumidifierEntity(ToggleEntity, cached_properties=CACHED_PROPERTIES_WITH_AT
     async def async_set_mode(self, mode: str) -> None:
         """Set new mode."""
         await self.hass.async_add_executor_job(self.set_mode, mode)
+
+    @cached_property
+    def target_humidity_step(self) -> float | None:
+        """Return the supported step of humidity."""
+        return self._attr_target_humidity_step
 
     @cached_property
     def min_humidity(self) -> float:
