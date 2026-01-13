@@ -143,7 +143,10 @@ class AbstractOAuth2Implementation(ABC):
 
     @abstractmethod
     async def _async_refresh_token(self, token: dict) -> dict:
-        """Refresh a token. Raises OAuth2RefreshTokenFailed on failure."""
+        """Refresh a token.
+
+        Should raise OAuth2RefreshTokenFailed on token refresh failure.
+        """
 
 
 class LocalOAuth2Implementation(AbstractOAuth2Implementation):
