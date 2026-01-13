@@ -54,16 +54,16 @@
       "b1": {
         "name": "B1"
       },
-      "pairing": {
-        "name": "Pairing mode active"
+      "learning": {
+        "name": "Learning mode active"
       }
     },
     "button": {
       "query_state": {
         "name": "Query state"
       },
-      "start_pairing": {
-        "name": "Start pairing"
+      "toggle_learning": {
+        "name": "Learning start/stop"
       }
     },
     "number": {
@@ -79,7 +79,7 @@
     },
     "select": {
       "sender_id": {
-        "name": "Sender ID for pairing"
+        "name": "Learning sender ID"
       }
     },
     "sensor": {
@@ -95,8 +95,8 @@
       "last_seen": {
         "name": "Last seen"
       },
-      "pairing_timeout": {
-        "name": "Pairing mode timeout"
+      "learning_countdown": {
+        "name": "Learning seconds remaining"
       },
       "supply_voltage": {
         "name": "Supply voltage"
