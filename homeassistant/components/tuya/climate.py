@@ -164,13 +164,11 @@ class _HvacModeWrapper(DPCodeEnumWrapper):
         self, device: CustomerDevice, value: HVACMode
     ) -> Any:
         """Convert value to raw value."""
-        if value in self.options:
-            return next(
-                tuya_mode
-                for tuya_mode, ha_mode in TUYA_HVAC_TO_HA.items()
-                if ha_mode == value
-            )
-        raise ValueError(f"Unsupported value {value} for {self.dpcode}")
+        return next(
+            tuya_mode
+            for tuya_mode, ha_mode in TUYA_HVAC_TO_HA.items()
+            if ha_mode == value
+        )
 
 
 class _PresetWrapper(DPCodeEnumWrapper):
