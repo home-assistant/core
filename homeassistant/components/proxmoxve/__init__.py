@@ -151,24 +151,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         node_coordinators = coordinators[host_name][node_name] = {}
 
         try:
-
-            def get_vms_containers(
-                node_config: dict[str, Any],
-            ) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
-                vms = proxmox.nodes(node_config[CONF_NODE]).qemu.get()
-                containers = proxmox.nodes(node_config[CONF_NODE]).lxc.get()
-                assert vms is not None and containers is not None
-                return vms, containers
-
             vms, containers = await hass.async_add_executor_job(
-                get_vms_containers, node_config
+                _get_vms_containers, proxmox, node_config
             )
         except (ResourceException, requests.exceptions.ConnectionError) as err:
             LOGGER.error("Unable to get vms/containers for node %s: %s", node_name, err)
             continue
 
         for vm in vms:
-            coordinator = create_coordinator_container_vm(
+            coordinator = _create_coordinator_container_vm(
                 hass, entry, proxmox, host_name, node_name, vm["vmid"], TYPE_VM
             )
             await coordinator.async_config_entry_first_refresh()
@@ -176,7 +167,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             node_coordinators[vm["vmid"]] = coordinator
 
         for container in containers:
-            coordinator = create_coordinator_container_vm(
+            coordinator = _create_coordinator_container_vm(
                 hass,
                 entry,
                 proxmox,
@@ -194,7 +185,18 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return True
 
 
-def create_coordinator_container_vm(
+def _get_vms_containers(
+    proxmox: ProxmoxAPI,
+    node_config: dict[str, Any],
+) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
+    """Get vms and containers for a node."""
+    vms = proxmox.nodes(node_config[CONF_NODE]).qemu.get()
+    containers = proxmox.nodes(node_config[CONF_NODE]).lxc.get()
+    assert vms is not None and containers is not None
+    return vms, containers
+
+
+def _create_coordinator_container_vm(
     hass: HomeAssistant,
     entry: ConfigEntry,
     proxmox: ProxmoxAPI,
