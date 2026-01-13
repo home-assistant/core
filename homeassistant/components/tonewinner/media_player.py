@@ -308,13 +308,11 @@ class TonewinnerMediaPlayer(MediaPlayerEntity):
         """Turn the media player on."""
         _LOGGER.debug("Turning on receiver")
         await self.send_raw_command(ToneWinnerCommands.POWER_ON)
-        self._attr_state = MediaPlayerState.ON
 
     async def async_turn_off(self):
         """Turn the media player off."""
         _LOGGER.debug("Turning off receiver")
         await self.send_raw_command(ToneWinnerCommands.POWER_OFF)
-        self._attr_state = MediaPlayerState.OFF
 
     async def async_set_volume_level(self, volume: float) -> None:
         """Set volume level (HA 0.0-1.0, device 0-80)."""
@@ -322,7 +320,6 @@ class TonewinnerMediaPlayer(MediaPlayerEntity):
         command = f"VOL {vol_device}"
         _LOGGER.debug("Setting volume: HA=%.2f, device=%d", volume, vol_device)
         await self.send_raw_command(command)
-        self._attr_volume_level = volume
         self.async_write_ha_state()
 
     async def async_volume_up(self):
@@ -340,7 +337,6 @@ class TonewinnerMediaPlayer(MediaPlayerEntity):
         command = ToneWinnerCommands.MUTE_ON if mute else ToneWinnerCommands.MUTE_OFF
         _LOGGER.debug("Setting mute: %s", mute)
         await self.send_raw_command(command)
-        self._attr_is_volume_muted = mute
         self.async_write_ha_state()
 
     async def async_select_source(self, source: str) -> None:
@@ -350,7 +346,6 @@ class TonewinnerMediaPlayer(MediaPlayerEntity):
         command = f"SI {INPUT_SOURCES[source]}"
         _LOGGER.debug("Selecting source: %s (command: %s)", source, command)
         await self.send_raw_command(command)
-        self._attr_source = source
         self.async_write_ha_state()
 
     async def async_select_sound_mode(self, sound_mode: str) -> None:
@@ -360,5 +355,4 @@ class TonewinnerMediaPlayer(MediaPlayerEntity):
         command = f"{ToneWinnerCommands.MODE_PREFIX} {SOUND_MODES[sound_mode]}"
         _LOGGER.debug("Selecting sound mode: %s (command: %s)", sound_mode, command)
         await self.send_raw_command(command)
-        self._attr_sound_mode = sound_mode
         self.async_write_ha_state()
