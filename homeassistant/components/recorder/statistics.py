@@ -1348,7 +1348,7 @@ def reduce_year_ts_factory() -> tuple[
         return _lower_bound <= time2 < _upper_bound
 
     def _year_start_end_ts(time: float) -> tuple[float, float]:
-        """Return the start and end of the period (day) time is within."""
+        """Return the start and end of the period (year) time is within."""
         start_local = _local_from_timestamp(time).replace(
             month=1, day=1, hour=0, minute=0, second=0, microsecond=0
         )
