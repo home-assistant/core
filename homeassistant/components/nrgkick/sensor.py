@@ -601,6 +601,7 @@ SENSORS: tuple[NRGkickSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.DURATION,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfTime.SECONDS,
+        suggested_unit_of_measurement=UnitOfTime.MINUTES,
         value_path=("values", "general", "vehicle_charging_time"),
     ),
     NRGkickSensorEntityDescription(
