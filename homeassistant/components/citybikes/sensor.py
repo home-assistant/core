@@ -10,14 +10,12 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE, CONF_RADIUS, UnitOfLength
+from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util import location as location_util
-from homeassistant.util.unit_conversion import DistanceConverter
-from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM
 
 from .const import (
     ATTR_EBIKE,
@@ -27,7 +25,9 @@ from .const import (
     ATTR_TIMESTAMP,
     ATTR_UID,
     CITYBIKES_ATTRIBUTION,
+    CONF_ALL_STATIONS,
     CONF_NETWORK,
+    CONF_RADIUS,
     CONF_STATIONS_LIST,
     DOMAIN,
 )
@@ -65,16 +65,11 @@ async def async_setup_entry(
     """Set up CityBikes sensor entities from a config entry."""
     coordinator: CityBikesCoordinator = entry.runtime_data
     options = entry.options or {}
+    all_stations = options.get(CONF_ALL_STATIONS, True)
     stations_list = set(options.get(CONF_STATIONS_LIST, []))
     radius = options.get(CONF_RADIUS, 0)
     
-    # Convert radius from feet to meters if using US customary units
-    if hass.config.units is US_CUSTOMARY_SYSTEM and radius:
-        radius = DistanceConverter.convert(
-            radius, UnitOfLength.FEET, UnitOfLength.METERS
-        )
-
-    # Use latitude/longitude from options if provided, otherwise use hass.config
+    # Use location from options if provided, otherwise use Home Assistant's configured location
     latitude = options.get(CONF_LATITUDE, hass.config.latitude)
     longitude = options.get(CONF_LONGITUDE, hass.config.longitude)
 
@@ -85,16 +80,17 @@ async def async_setup_entry(
             station_id = station.id
             station_uid = str(station.extra.get(ATTR_UID, ""))
 
-            # Filter stations by radius or station list
-            if radius > 0:
+            # If explicit station list is selected, only include those stations
+            if not all_stations:
+                if not stations_list.intersection((station_id, station_uid)):
+                    continue
+            # If "all stations" is selected, apply radius filter if set
+            elif radius > 0:
                 dist = location_util.distance(
                     latitude, longitude, station.latitude, station.longitude
                 )
-                if dist > radius:
+                if dist is None or dist > radius:
                     continue
-
-            if stations_list and not stations_list.intersection((station_id, station_uid)):
-                continue
 
             # Create multiple entities per station (bikes, ebikes, empty_slots)
             for description in SENSOR_TYPES:

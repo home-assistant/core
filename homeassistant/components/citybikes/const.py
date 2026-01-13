@@ -14,6 +14,8 @@ ATTR_EBIKE = "ebikes"
 CONF_NETWORK = "network"
 CONF_STATIONS_LIST = "stations"
 CONF_RADIUS = "radius"
+CONF_ALL_STATIONS = "all_stations"
+CONF_NAME = "name"
 
 CITYBIKES_ATTRIBUTION = (
     "Information provided by the CityBikes Project (https://citybik.es/#about)"

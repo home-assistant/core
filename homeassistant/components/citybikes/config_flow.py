@@ -10,82 +10,51 @@ from citybikes.asyncio import Client as CitybikesClient
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
-from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE
+from homeassistant.const import CONF_LATITUDE, CONF_LOCATION, CONF_LONGITUDE
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.selector import (
+    BooleanSelector,
+    LocationSelector,
+    LocationSelectorConfig,
     NumberSelector,
     NumberSelectorConfig,
     NumberSelectorMode,
+    SelectOptionDict,
+    SelectSelector,
+    SelectSelectorConfig,
+    SelectSelectorMode,
     TextSelector,
-    TextSelectorConfig,
-    TextSelectorType,
 )
 from homeassistant.util import location as location_util
 
-from .const import CONF_NETWORK, CONF_RADIUS, CONF_STATIONS_LIST, DOMAIN
+from .const import CONF_ALL_STATIONS, CONF_NAME, CONF_NETWORK, CONF_RADIUS, CONF_STATIONS_LIST, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-STEP_STATIONS_DATA_SCHEMA = vol.Schema(
-    {
-        vol.Optional(CONF_RADIUS): NumberSelector(
-            NumberSelectorConfig(
-                min=1,
-                mode=NumberSelectorMode.BOX,
-                unit_of_measurement="m",
-            )
-        ),
-        vol.Optional(CONF_STATIONS_LIST): TextSelector(
-            TextSelectorConfig(
-                type=TextSelectorType.TEXT,
-                multiple=True,
-            ),
-        ),
-    }
-)
-
-
-async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str, Any]:
-    """Validate the user input allows us to connect."""
+async def fetch_networks() -> list[dict[str, str]]:
+    """Fetch all available networks."""
     client = CitybikesClient()
-    network_id = data.get(CONF_NETWORK)
-
     try:
-        if network_id:
-            network = await client.network(uid=network_id).fetch()
-        else:
-            # Find closest network
-            latitude = data.get(CONF_LATITUDE, hass.config.latitude)
-            longitude = data.get(CONF_LONGITUDE, hass.config.longitude)
-            networks = await client.networks.fetch()
-            if not networks:
-                raise CannotConnect("No networks available")
-
-            minimum_dist = None
-            network = None
-            for net in networks:
-                net_lat = net.location.latitude
-                net_lng = net.location.longitude
-                dist = location_util.distance(
-                    latitude, longitude, net_lat, net_lng
-                )
-                if minimum_dist is None or dist < minimum_dist:
-                    minimum_dist = dist
-                    network = net
-                    network_id = net.id
-
-            if network is None:
-                raise CannotConnect("Could not find a network")
-
-        return {
-            "network_id": network_id,
-            "network_name": network.name,
-            "title": network.name,
-        }
-    except aiohttp.ClientError as err:
-        raise CannotConnect(f"Error connecting to CityBikes API: {err}") from err
+        networks = await client.networks.fetch()
+        result = []
+        for net in networks:
+            location_parts = []
+            if hasattr(net, "location") and net.location:
+                if hasattr(net.location, "city") and net.location.city:
+                    location_parts.append(net.location.city)
+                if hasattr(net.location, "country") and net.location.country:
+                    location_parts.append(net.location.country)
+            
+            location_str = f" ({', '.join(location_parts)})" if location_parts else ""
+            label = f"{net.name}{location_str}"
+            
+            result.append({
+                "id": net.id,
+                "name": net.name,
+                "label": label,
+            })
+        return result
     finally:
         await client.close()
 
@@ -97,53 +66,86 @@ class CityBikesConfigFlow(ConfigFlow, domain=DOMAIN):
         """Initialize the config flow."""
         self.network_id: str | None = None
         self.network_name: str | None = None
-        self.station_config: dict[str, Any] = {}
+        self.all_stations: list[dict[str, Any]] = []
+        self.filtered_stations: list[dict[str, str]] = []
+        self.radius: float = 0.0
         self.latitude: float | None = None
         self.longitude: float | None = None
+        self.selected_stations: list[str] = []
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Handle the initial step."""
+        """Handle the initial step - network selection."""
         errors: dict[str, str] = {}
 
         if user_input is not None:
-            # If network is empty string, treat as None
-            if not user_input.get(CONF_NETWORK):
-                user_input[CONF_NETWORK] = None
-            
-            try:
-                info = await validate_input(self.hass, user_input)
-                self.network_id = info["network_id"]
-                self.network_name = info["network_name"]
-                # Store latitude/longitude if provided, otherwise use hass.config defaults
-                self.latitude = user_input.get(
-                    CONF_LATITUDE, self.hass.config.latitude
-                )
-                self.longitude = user_input.get(
-                    CONF_LONGITUDE, self.hass.config.longitude
-                )
+            network_id = user_input.get(CONF_NETWORK)
+            if not network_id:
+                errors["base"] = "network_required"
+            else:
+                try:
+                    # Validate network and fetch stations
+                    client = CitybikesClient()
+                    try:
+                        network = await client.network(uid=network_id).fetch()
+                        self.network_id = network_id
+                        self.network_name = network.name
+                        
+                        # Store network location for default map position
+                        if hasattr(network, "location") and network.location:
+                            self.latitude = network.location.latitude
+                            self.longitude = network.location.longitude
+                        else:
+                            # Fallback to Home Assistant location if network doesn't have location
+                            self.latitude = self.hass.config.latitude
+                            self.longitude = self.hass.config.longitude
+                        
+                        # Store all stations with location data for radius filtering
+                        self.all_stations = [
+                            {
+                                "id": station.id,
+                                "name": station.name or f"Station {station.id}",
+                                "latitude": station.latitude,
+                                "longitude": station.longitude,
+                            }
+                            for station in network.stations
+                        ]
+                    finally:
+                        await client.close()
 
-                await self.async_set_unique_id(self.network_id)
-                self._abort_if_unique_id_configured()
+                    await self.async_set_unique_id(self.network_id)
+                    self._abort_if_unique_id_configured()
 
-                return await self.async_step_stations()
-            except CannotConnect:
+                    return await self.async_step_radius()
+                except aiohttp.ClientError:
+                    errors["base"] = "cannot_connect"
+                except Exception:
+                    _LOGGER.exception("Unexpected exception")
+                    errors["base"] = "unknown"
+
+        # Fetch networks for dropdown
+        try:
+            networks = await fetch_networks()
+            network_options = [
+                SelectOptionDict(value=net["id"], label=net["label"])
+                for net in networks
+            ]
+        except Exception:
+            _LOGGER.exception("Failed to fetch networks")
+            network_options = []
+            if not errors:
                 errors["base"] = "cannot_connect"
-            except Exception:
-                _LOGGER.exception("Unexpected exception")
-                errors["base"] = "unknown"
 
-        # Create schema with default values from hass.config
         schema = vol.Schema(
             {
-                vol.Optional(CONF_NETWORK, default=""): str,
-                vol.Optional(
-                    CONF_LATITUDE, default=self.hass.config.latitude
-                ): cv.latitude,
-                vol.Optional(
-                    CONF_LONGITUDE, default=self.hass.config.longitude
-                ): cv.longitude,
+                vol.Required(CONF_NETWORK): SelectSelector(
+                    SelectSelectorConfig(
+                        options=network_options,
+                        mode=SelectSelectorMode.DROPDOWN,
+                        sort=True,
+                    )
+                ),
             }
         )
 
@@ -153,6 +155,75 @@ class CityBikesConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
+    async def async_step_radius(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle the radius configuration step."""
+        errors: dict[str, str] = {}
+
+        if user_input is not None:
+            # Get location from map selector or use network location (already set from network selection)
+            location = user_input.get(CONF_LOCATION)
+            if location:
+                self.latitude = location.get(CONF_LATITUDE, self.latitude or self.hass.config.latitude)
+                self.longitude = location.get(CONF_LONGITUDE, self.longitude or self.hass.config.longitude)
+                # Get radius from location object (LocationSelector with radius=True includes it)
+                radius = location.get(CONF_RADIUS, 1000)
+                self.radius = float(radius) if radius else 0.0
+            else:
+                # Use network location if available, otherwise fallback to Home Assistant location
+                if self.latitude is None or self.longitude is None:
+                    self.latitude = self.hass.config.latitude
+                    self.longitude = self.hass.config.longitude
+                self.radius = 0.0
+            
+            # Filter stations by radius if radius is specified
+            if self.radius > 0:
+                self.filtered_stations = []
+                for station in self.all_stations:
+                    dist = location_util.distance(
+                        self.latitude,
+                        self.longitude,
+                        station["latitude"],
+                        station["longitude"],
+                    )
+                    if dist is not None and dist <= self.radius:
+                        self.filtered_stations.append({
+                            "id": station["id"],
+                            "name": station["name"],
+                        })
+            else:
+                # No radius filter - show all stations
+                self.filtered_stations = [
+                    {"id": station["id"], "name": station["name"]}
+                    for station in self.all_stations
+                ]
+            
+            return await self.async_step_stations()
+
+        # Default location to network's location (or Home Assistant's if network location not available) with 1000m radius
+        default_location = {
+            CONF_LATITUDE: self.latitude or self.hass.config.latitude,
+            CONF_LONGITUDE: self.longitude or self.hass.config.longitude,
+            CONF_RADIUS: 1000,
+        }
+
+        schema = vol.Schema(
+            {
+                vol.Required(
+                    CONF_LOCATION,
+                    default=default_location,
+                ): LocationSelector(LocationSelectorConfig(radius=True)),
+            }
+        )
+
+        return self.async_show_form(
+            step_id="radius",
+            data_schema=schema,
+            errors=errors,
+            description_placeholders={"network": self.network_name or "CityBikes"},
+        )
+
     async def async_step_stations(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -160,31 +231,98 @@ class CityBikesConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
 
         if user_input is not None:
-            # Validate that at least one filter is provided
-            if not user_input.get(CONF_RADIUS) and not user_input.get(CONF_STATIONS_LIST):
-                errors["base"] = "no_station_filter"
+            # Store user input for form re-display if there are errors
+            if user_input.get(CONF_STATIONS_LIST):
+                self.selected_stations = user_input.get(CONF_STATIONS_LIST, [])
+            elif user_input.get(CONF_ALL_STATIONS):
+                self.selected_stations = []
+            all_stations = user_input.get(CONF_ALL_STATIONS, False)
+            stations_list = user_input.get(CONF_STATIONS_LIST, [])
+            hub_name = user_input.get(CONF_NAME, "")
+
+            # Store selected stations for form re-display
+            self.selected_stations = stations_list if isinstance(stations_list, list) else []
+
+            # Make "All stations" and explicit list mutually exclusive
+            # If explicit stations are selected, automatically uncheck "All stations"
+            if stations_list:
+                all_stations = False
+            # If "All stations" is enabled, clear the explicit list
+            elif all_stations:
+                stations_list = []
+                self.selected_stations = []
+
+            # Validate that at least one option is selected
+            if not all_stations and not stations_list:
+                errors["base"] = "no_stations_selected"
             else:
-                self.station_config = user_input
-                # Add latitude/longitude to options if they differ from hass.config
-                options = self.station_config.copy()
-                if self.latitude != self.hass.config.latitude:
+                options: dict[str, Any] = {
+                    CONF_ALL_STATIONS: all_stations,
+                }
+                
+                if self.radius > 0:
+                    options[CONF_RADIUS] = self.radius
+                
+                # Store location if it differs from Home Assistant's configured location
+                if (self.latitude is not None and self.longitude is not None and
+                    (self.latitude != self.hass.config.latitude or
+                     self.longitude != self.hass.config.longitude)):
                     options[CONF_LATITUDE] = self.latitude
-                if self.longitude != self.hass.config.longitude:
                     options[CONF_LONGITUDE] = self.longitude
                 
+                if not all_stations:
+                    options[CONF_STATIONS_LIST] = stations_list
+                
+                title = hub_name.strip() if hub_name else self.network_name or "CityBikes"
+                
                 return self.async_create_entry(
-                    title=self.network_name or "CityBikes",
+                    title=title,
                     data={
                         CONF_NETWORK: self.network_id,
                     },
                     options=options,
                 )
 
+        # Create station options for checkboxes from filtered stations
+        station_options = [
+            SelectOptionDict(value=station["id"], label=station["name"])
+            for station in self.filtered_stations
+        ]
+
+        # Use user_input values if available (form re-display after errors), otherwise use stored state
+        if user_input is not None:
+            default_all_stations = user_input.get(CONF_ALL_STATIONS, not bool(user_input.get(CONF_STATIONS_LIST, [])))
+            default_stations = user_input.get(CONF_STATIONS_LIST, [])
+        else:
+            # Default "All stations" to False if explicit stations are already selected
+            default_all_stations = not bool(self.selected_stations)
+            default_stations = self.selected_stations
+
+        schema = vol.Schema(
+            {
+                vol.Optional(CONF_NAME, default=user_input.get(CONF_NAME, "") if user_input else ""): TextSelector(),
+                vol.Required(CONF_ALL_STATIONS, default=default_all_stations): BooleanSelector(),
+                vol.Optional(CONF_STATIONS_LIST, default=default_stations): SelectSelector(
+                    SelectSelectorConfig(
+                        options=station_options,
+                        multiple=True,
+                        mode=SelectSelectorMode.LIST,
+                    )
+                ),
+            }
+        )
+
+        station_count = len(self.filtered_stations)
+        radius_info = f" within {int(self.radius)}m" if self.radius > 0 else ""
         return self.async_show_form(
             step_id="stations",
-            data_schema=STEP_STATIONS_DATA_SCHEMA,
+            data_schema=schema,
             errors=errors,
-            description_placeholders={"network": self.network_name or "CityBikes"},
+            description_placeholders={
+                "network": self.network_name or "CityBikes",
+                "count": str(station_count),
+                "radius": radius_info,
+            },
         )
 
 

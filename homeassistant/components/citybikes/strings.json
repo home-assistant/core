@@ -3,26 +3,33 @@
     "step": {
       "user": {
         "title": "CityBikes Network",
-        "description": "Select a bike share network or leave empty to use the closest network to your location.",
+        "description": "Select a bike share network from the list.",
         "data": {
-          "network": "Network ID (optional)",
-          "latitude": "Latitude (optional)",
-          "longitude": "Longitude (optional)"
+          "network": "Network"
+        }
+      },
+      "radius": {
+        "title": "Filter by radius",
+        "description": "Select your location on the map and set a radius (in meters) to filter stations. Default radius is 1000 meters.",
+        "data": {
+          "location": "Location"
         }
       },
       "stations": {
-        "title": "Station Filter",
-        "description": "Configure which stations to monitor for {network}. You must specify either a radius or specific station IDs.",
+        "title": "Which station to monitor",
+        "description": "Configure which stations to monitor for {network}{radius}. Found {count} station(s).",
         "data": {
-          "radius": "Radius (meters)",
-          "stations": "Station IDs (comma-separated)"
+          "name": "Name for the hub",
+          "all_stations": "All stations",
+          "stations": "Explicit list"
         }
       }
     },
     "error": {
       "cannot_connect": "Unable to connect to CityBikes API",
       "unknown": "Unexpected error",
-      "no_station_filter": "You must specify either a radius or station IDs"
+      "network_required": "Please select a network",
+      "no_stations_selected": "Please select at least one station or enable 'All stations'"
     },
     "abort": {
       "already_configured": "This network is already configured"
