@@ -135,14 +135,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslemetryConfigEntry) -
             # Remove the protobuff 'cached_data' that we do not use to save memory
             product.pop("cached_data", None)
             vin = product["vin"]
-            api = teslemetry.vehicles.create(vin)
-            coordinator = TeslemetryVehicleDataCoordinator(hass, entry, api, product)
+            vehicle = teslemetry.vehicles.create(vin)
+            coordinator = TeslemetryVehicleDataCoordinator(
+                hass, entry, vehicle, product
+            )
             device = DeviceInfo(
                 identifiers={(DOMAIN, vin)},
                 manufacturer="Tesla",
                 configuration_url="https://teslemetry.com/console",
                 name=product["display_name"],
-                model=api.model,
+                model=vehicle.model,
                 serial_number=vin,
             )
             current_devices.add((DOMAIN, vin))
@@ -167,7 +169,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslemetryConfigEntry) -
 
             vehicles.append(
                 TeslemetryVehicleData(
-                    api=api,
+                    api=vehicle,
                     config_entry=entry,
                     coordinator=coordinator,
                     poll=poll,
@@ -193,7 +195,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslemetryConfigEntry) -
                 )
                 continue
 
-            api = teslemetry.energySites.create(site_id)
+            energy_site = teslemetry.energySites.create(site_id)
             device = DeviceInfo(
                 identifiers={(DOMAIN, str(site_id))},
                 manufacturer="Tesla",
@@ -209,7 +211,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslemetryConfigEntry) -
 
             # Check live status endpoint works before creating its coordinator
             try:
-                live_status = (await api.live_status())["response"]
+                live_status = (await energy_site.live_status())["response"]
             except (InvalidToken, Forbidden, SubscriptionRequired) as e:
                 raise ConfigEntryAuthFailed from e
             except TeslaFleetError as e:
@@ -217,19 +219,19 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslemetryConfigEntry) -
 
             energysites.append(
                 TeslemetryEnergyData(
-                    api=api,
+                    api=energy_site,
                     live_coordinator=(
                         TeslemetryEnergySiteLiveCoordinator(
-                            hass, entry, api, live_status
+                            hass, entry, energy_site, live_status
                         )
                         if isinstance(live_status, dict)
                         else None
                     ),
                     info_coordinator=TeslemetryEnergySiteInfoCoordinator(
-                        hass, entry, api, product
+                        hass, entry, energy_site, product
                     ),
                     history_coordinator=(
-                        TeslemetryEnergyHistoryCoordinator(hass, entry, api)
+                        TeslemetryEnergyHistoryCoordinator(hass, entry, energy_site)
                         if powerwall
                         else None
                     ),
