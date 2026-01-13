@@ -84,11 +84,7 @@ async def async_setup_entry(
         added = 0
         skipped = 0
         for zone in zones:
-            definition = (
-                zone.get("definition")
-                if isinstance(zone, Mapping)
-                else getattr(zone, "definition", None)
-            )
+            definition = _zone_definition(zone)
             zone_id = getattr(zone, "zone_id", None)
             if not isinstance(zone_id, int):
                 continue
@@ -181,6 +177,7 @@ class Elke27ZoneBinarySensor(BinarySensorEntity):
         if zone is None:
             return {}
         return {
+            "definition": _zone_definition(zone),
             "bypassed": getattr(zone, "bypassed", None),
             "trouble": getattr(zone, "trouble", None),
         }
