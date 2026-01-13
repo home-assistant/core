@@ -64,7 +64,7 @@ async def test_entity_unavailable_on_update_failure(
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test that entity becomes unavailable when coordinator update fails."""
-    entity_id = "sensor.saunum_leil_current_temperature"
+    entity_id = "sensor.saunum_leil_temperature"
 
     # Verify entity is initially available
     state = hass.states.get(entity_id)

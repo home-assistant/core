@@ -406,5 +406,5 @@ async def test_fan_mode_error_handling(
         )
 
     # Verify the exception has the correct translation key
-    assert exc_info.value.translation_key == "set_value_failed"
+    assert exc_info.value.translation_key == "set_fan_mode_failed"
     assert exc_info.value.translation_domain == "saunum"

@@ -156,11 +156,7 @@ class LeilSaunaClimate(LeilSaunaEntity, ClimateEntity):
         except SaunumException as err:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
-                translation_key="set_value_failed",
-                translation_placeholders={
-                    "entity": "fan_mode",
-                    "value": fan_mode,
-                },
+                translation_key="set_fan_mode_failed",
             ) from err
 
         await self.coordinator.async_request_refresh()
