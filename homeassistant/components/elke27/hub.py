@@ -327,9 +327,9 @@ class Elke27Hub:
         if connection_state is False or event_type == "DISCONNECTED":
             _LOGGER.debug("Panel disconnect event received; scheduling reconnect")
             self._log_unavailable()
-            self._schedule_reconnect()
+            self._hass.loop.call_soon_threadsafe(self._schedule_reconnect)
         elif connection_state is True or event_type == "READY":
-            self._cancel_reconnect()
+            self._hass.loop.call_soon_threadsafe(self._cancel_reconnect)
         if event_type == "ZONE":
             zone_id = _event_zone_id(event)
             if zone_id is not None:
