@@ -147,7 +147,7 @@ async def test_service_add_blood_pressure(
 
         mock_client = mock_client_class.return_value
         mock_client.fetch_core_data = AsyncMock(return_value=mock_sensor_data)
-        mock_client.add_blood_pressure = AsyncMock(return_value={"success": True})
+        mock_client.set_blood_pressure = AsyncMock(return_value={"success": True})
 
         await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
@@ -160,7 +160,7 @@ async def test_service_add_blood_pressure(
             blocking=True,
         )
 
-        mock_client.add_blood_pressure.assert_called_once()
+        mock_client.set_blood_pressure.assert_called_once()
 
 
 async def test_service_create_activity(
@@ -197,8 +197,7 @@ async def test_service_create_activity(
             {
                 "activity_name": "Test Run",
                 "activity_type": "running",
-                "start_time": "2024-01-15T07:00:00",
-                "duration_seconds": 1800,
+                "duration_min": 30,
             },
             blocking=True,
         )

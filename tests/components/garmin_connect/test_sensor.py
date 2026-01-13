@@ -121,7 +121,7 @@ async def test_sensor_values(
     assert state.state == "10"
 
     # Test body battery
-    state = hass.states.get("sensor.garmin_connect_body_battery")
+    state = hass.states.get("sensor.garmin_connect_body_battery_most_recent")
     assert state is not None
     assert state.state == "80"
 
