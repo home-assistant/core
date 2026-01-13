@@ -1458,7 +1458,7 @@ openrgb-python==0.3.6
 openwebifpy==4.3.1
 
 # homeassistant.components.opower
-opower==0.16.1
+opower==0.16.2
 
 # homeassistant.components.oralb
 oralb-ble==1.0.2
