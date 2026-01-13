@@ -54,7 +54,7 @@ async def async_setup_entry(
     except aiohttp.ClientResponseError as err:
         if 400 <= err.status < 500:
             raise ConfigEntryAuthFailed(
-                "OAuth session is not valid, reauth required"
+                translation_domain=DOMAIN, translation_key="reauth_required"
             ) from err
         raise ConfigEntryNotReady from err
     except aiohttp.ClientError as err:
@@ -76,10 +76,6 @@ async def async_unload_entry(
     hass: HomeAssistant, entry: GoogleAssistantSDKConfigEntry
 ) -> bool:
     """Unload a config entry."""
-    if not hass.config_entries.async_loaded_entries(DOMAIN):
-        for service_name in hass.services.async_services_for_domain(DOMAIN):
-            hass.services.async_remove(DOMAIN, service_name)
-
     conversation.async_unset_agent(hass, entry)
 
     return True

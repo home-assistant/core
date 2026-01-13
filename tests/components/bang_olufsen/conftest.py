@@ -5,17 +5,20 @@ from unittest.mock import AsyncMock, Mock, patch
 
 from mozart_api.models import (
     Action,
+    BatteryState,
     BeolinkPeer,
     BeolinkSelf,
     ContentItem,
     ListeningMode,
     ListeningModeFeatures,
     ListeningModeRef,
-    ListeningModeTrigger,
+    PairedRemote,
+    PairedRemoteResponse,
     PlaybackContentMetadata,
     PlaybackProgress,
     PlaybackState,
     PlayQueueSettings,
+    PowerLinkTrigger,
     ProductState,
     RemoteMenuItem,
     RenderingState,
@@ -32,8 +35,11 @@ from homeassistant.components.bang_olufsen.const import DOMAIN
 from homeassistant.core import HomeAssistant
 
 from .const import (
+    TEST_BATTERY,
     TEST_DATA_CREATE_ENTRY,
     TEST_DATA_CREATE_ENTRY_2,
+    TEST_DATA_CREATE_ENTRY_3,
+    TEST_DATA_CREATE_ENTRY_4,
     TEST_FRIENDLY_NAME,
     TEST_FRIENDLY_NAME_3,
     TEST_FRIENDLY_NAME_4,
@@ -44,8 +50,13 @@ from .const import (
     TEST_JID_4,
     TEST_NAME,
     TEST_NAME_2,
+    TEST_NAME_3,
+    TEST_NAME_4,
+    TEST_REMOTE_SERIAL,
     TEST_SERIAL_NUMBER,
     TEST_SERIAL_NUMBER_2,
+    TEST_SERIAL_NUMBER_3,
+    TEST_SERIAL_NUMBER_4,
     TEST_SOUND_MODE,
     TEST_SOUND_MODE_2,
     TEST_SOUND_MODE_NAME,
@@ -76,6 +87,66 @@ def mock_config_entry_core() -> MockConfigEntry:
     )
 
 
+@pytest.fixture
+def mock_config_entry_premiere() -> MockConfigEntry:
+    """Mock config entry for Beosound Premiere."""
+    return MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=TEST_SERIAL_NUMBER_3,
+        data=TEST_DATA_CREATE_ENTRY_3,
+        title=TEST_NAME_3,
+    )
+
+
+@pytest.fixture
+def mock_config_entry_a5() -> MockConfigEntry:
+    """Mock config entry for Beosound A5."""
+    return MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=TEST_SERIAL_NUMBER_4,
+        data=TEST_DATA_CREATE_ENTRY_4,
+        title=TEST_NAME_4,
+    )
+
+
+async def mock_websocket_connection(
+    hass: HomeAssistant, mock_mozart_client: AsyncMock
+) -> None:
+    """Register and receive initial WebSocket notifications."""
+
+    # Currently only add notifications that are used.
+
+    # Register callbacks.
+    volume_callback = mock_mozart_client.get_volume_notifications.call_args[0][0]
+    source_change_callback = (
+        mock_mozart_client.get_source_change_notifications.call_args[0][0]
+    )
+    playback_state_callback = (
+        mock_mozart_client.get_playback_state_notifications.call_args[0][0]
+    )
+    playback_metadata_callback = (
+        mock_mozart_client.get_playback_metadata_notifications.call_args[0][0]
+    )
+    battery_callback = mock_mozart_client.get_battery_notifications.call_args[0][0]
+
+    # Trigger callbacks. Try to use existing data
+    volume_callback(mock_mozart_client.get_product_state.return_value.volume)
+    source_change_callback(
+        mock_mozart_client.get_product_state.return_value.playback.source
+    )
+    playback_state_callback(
+        mock_mozart_client.get_product_state.return_value.playback.state
+    )
+    playback_metadata_callback(
+        mock_mozart_client.get_product_state.return_value.playback.metadata
+    )
+
+    # This should not affect non-battery devices.
+    battery_callback(TEST_BATTERY)
+
+    await hass.async_block_till_done()
+
+
 @pytest.fixture(name="integration")
 async def integration_fixture(
     hass: HomeAssistant,
@@ -87,6 +158,8 @@ async def integration_fixture(
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
+
+    await mock_websocket_connection(hass, mock_mozart_client)
 
 
 @pytest.fixture
@@ -299,19 +372,19 @@ def mock_mozart_client() -> Generator[AsyncMock]:
                 id=TEST_SOUND_MODE,
                 name=TEST_SOUND_MODE_NAME,
                 features=ListeningModeFeatures(),
-                triggers=[ListeningModeTrigger()],
+                triggers=[PowerLinkTrigger()],
             ),
             ListeningMode(
                 id=TEST_SOUND_MODE_2,
                 name=TEST_SOUND_MODE_NAME,
                 features=ListeningModeFeatures(),
-                triggers=[ListeningModeTrigger()],
+                triggers=[PowerLinkTrigger()],
             ),
             ListeningMode(
                 id=345,
                 name=f"{TEST_SOUND_MODE_NAME} 2",
                 features=ListeningModeFeatures(),
-                triggers=[ListeningModeTrigger()],
+                triggers=[PowerLinkTrigger()],
             ),
         ]
         client.get_active_listening_mode = AsyncMock()
@@ -324,7 +397,27 @@ def mock_mozart_client() -> Generator[AsyncMock]:
             repeat="none",
             shuffle=False,
         )
-
+        client.get_bluetooth_remotes = AsyncMock()
+        client.get_bluetooth_remotes.return_value = PairedRemoteResponse(
+            items=[
+                PairedRemote(
+                    address="",
+                    app_version="1.0.0",
+                    battery_level=50,
+                    connected=True,
+                    serial_number=TEST_REMOTE_SERIAL,
+                    name="BEORC",
+                )
+            ]
+        )
+        client.get_battery_state = AsyncMock()
+        client.get_battery_state.return_value = BatteryState(
+            battery_level=0,
+            is_charging=False,
+            remaining_charging_time_minutes=0,
+            remaining_playing_time_minutes=0,
+            state="BatteryNotPresent",
+        )
         client.post_standby = AsyncMock()
         client.set_current_volume_level = AsyncMock()
         client.set_volume_mute = AsyncMock()

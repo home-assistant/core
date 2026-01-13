@@ -22,16 +22,21 @@ from hass_nabucasa.payments_api import PaymentsApiError
 from hass_nabucasa.remote import CertificateStatus
 import pytest
 from syrupy.assertion import SnapshotAssertion
+from webrtc_models import RTCIceServer
 
 from homeassistant.components import system_health
 from homeassistant.components.alexa import errors as alexa_errors
 
 # pylint: disable-next=hass-component-root-import
 from homeassistant.components.alexa.entities import LightCapabilities
-from homeassistant.components.assist_pipeline.pipeline import STORAGE_KEY
+from homeassistant.components.assist_pipeline.pipeline import (  # pylint: disable=hass-component-root-import
+    STORAGE_KEY,
+)
 from homeassistant.components.cloud.const import DEFAULT_EXPOSED_DOMAINS, DOMAIN
 from homeassistant.components.cloud.http_api import validate_language_voice
-from homeassistant.components.google_assistant.helpers import GoogleEntity
+from homeassistant.components.google_assistant.helpers import (  # pylint: disable=hass-component-root-import
+    GoogleEntity,
+)
 from homeassistant.components.homeassistant import exposed_entities
 from homeassistant.components.websocket_api import ERR_INVALID_FORMAT
 from homeassistant.core import HomeAssistant, State
@@ -124,7 +129,7 @@ async def setup_cloud_fixture(hass: HomeAssistant, cloud: MagicMock) -> None:
                 "region": "region",
                 "relayer_server": "relayer",
                 "acme_server": "cert-server",
-                "accounts_server": "api-test.hass.io",
+                "api_server": "api-test.example.com",
                 "google_actions": {"filter": {"include_domains": "light"}},
                 "alexa": {
                     "filter": {"include_entities": ["light.kitchen", "switch.ac"]}
@@ -2181,3 +2186,39 @@ async def test_download_support_package_integration_load_error(
         req = await cloud_client.get("/api/cloud/support_package")
     assert req.status == HTTPStatus.OK
     assert await req.text() == snapshot
+
+
+async def test_websocket_ice_servers(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    cloud: MagicMock,
+    setup_cloud: None,
+) -> None:
+    """Test getting ICE servers."""
+    cloud.client._ice_servers = [
+        RTCIceServer(urls="stun:stun.l.bla.com:19302"),
+        RTCIceServer(
+            urls="turn:turn.example.com:3478", username="user", credential="pass"
+        ),
+    ]
+    client = await hass_ws_client(hass)
+
+    await client.send_json_auto_id({"type": "cloud/webrtc/ice_servers"})
+    response = await client.receive_json()
+
+    assert response["success"]
+    assert response["result"] == [
+        {"urls": "stun:stun.l.bla.com:19302"},
+        {
+            "urls": "turn:turn.example.com:3478",
+            "username": "user",
+            "credential": "pass",
+        },
+    ]
+
+    cloud.id_token = None
+
+    await client.send_json_auto_id({"type": "cloud/webrtc/ice_servers"})
+    response = await client.receive_json()
+    assert not response["success"]
+    assert response["error"]["code"] == "not_logged_in"

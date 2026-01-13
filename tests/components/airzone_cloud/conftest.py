@@ -9,7 +9,7 @@ import pytest
 class MockAirzoneCloudApi(AirzoneCloudApi):
     """Mock AirzoneCloudApi class."""
 
-    async def mock_update(self: "AirzoneCloudApi"):
+    async def mock_update(self):
         """Mock AirzoneCloudApi _update function."""
         await self.update_polling()
 

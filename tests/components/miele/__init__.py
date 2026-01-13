@@ -1,6 +1,7 @@
 """Tests for the Miele integration."""
 
 from collections.abc import Awaitable, Callable
+from typing import Any
 from unittest.mock import AsyncMock
 
 from homeassistant.core import HomeAssistant
@@ -16,11 +17,15 @@ async def setup_integration(hass: HomeAssistant, config_entry: MockConfigEntry) 
     await hass.async_block_till_done()
 
 
-def get_data_callback(mock: AsyncMock) -> Callable[[int], Awaitable[None]]:
+def get_data_callback(
+    mock: AsyncMock,
+) -> Callable[[dict[str, Any]], Awaitable[None]]:
     """Get registered callback for api data push."""
     return mock.listen_events.call_args_list[0].kwargs.get("data_callback")
 
 
-def get_actions_callback(mock: AsyncMock) -> Callable[[int], Awaitable[None]]:
+def get_actions_callback(
+    mock: AsyncMock,
+) -> Callable[[dict[str, Any]], Awaitable[None]]:
     """Get registered callback for api data push."""
     return mock.listen_events.call_args_list[0].kwargs.get("actions_callback")

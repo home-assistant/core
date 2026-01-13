@@ -47,6 +47,10 @@ class TautulliConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="user",
             data_schema=vol.Schema(data_schema),
             errors=errors or {},
+            description_placeholders={
+                "sample_url": "http://192.168.0.10:8181",
+                "sample_port": "8181",
+            },
         )
 
     async def async_step_reauth(

@@ -5,6 +5,7 @@ from collections.abc import Callable, Iterable
 from copy import deepcopy
 import dataclasses
 import io
+import threading
 from typing import Any
 from unittest.mock import AsyncMock, Mock, patch
 
@@ -46,14 +47,13 @@ from homeassistant.helpers import (
     entity_registry as er,
     service,
 )
-from homeassistant.helpers.translation import async_get_translations
 from homeassistant.loader import (
     Integration,
     async_get_integration,
     async_get_integrations,
 )
 from homeassistant.setup import async_setup_component
-from homeassistant.util.yaml.loader import parse_yaml
+from homeassistant.util.yaml.loader import JSON_TYPE, parse_yaml
 
 from tests.common import (
     MockEntity,
@@ -91,24 +91,28 @@ def mock_entities(hass: HomeAssistant) -> dict[str, MockEntity]:
         available=True,
         should_poll=False,
         supported_features=SUPPORT_A,
+        device_class=None,
     )
     living_room = MockEntity(
         entity_id="light.living_room",
         available=True,
         should_poll=False,
         supported_features=SUPPORT_B,
+        device_class="class_a",
     )
     bedroom = MockEntity(
         entity_id="light.bedroom",
         available=True,
         should_poll=False,
         supported_features=(SUPPORT_A | SUPPORT_B),
+        device_class="class_b",
     )
     bathroom = MockEntity(
         entity_id="light.bathroom",
         available=True,
         should_poll=False,
         supported_features=(SUPPORT_B | SUPPORT_C),
+        device_class="class_c",
     )
     entities = {}
     entities[kitchen.entity_id] = kitchen
@@ -465,6 +469,7 @@ async def test_service_call(hass: HomeAssistant) -> None:
         "floor_id": ["test-floor-id"],
     }
 
+    # Templated strings in target fields
     config = {
         "action": "{{ 'test_domain.test_service' }}",
         "target": {
@@ -485,6 +490,7 @@ async def test_service_call(hass: HomeAssistant) -> None:
         "floor_id": ["floor-first", "floor-second"],
     }
 
+    # Templated dict as target
     config = {
         "action": "{{ 'test_domain.test_service' }}",
         "target": "{{ var_target }}",
@@ -505,6 +511,27 @@ async def test_service_call(hass: HomeAssistant) -> None:
     assert dict(calls[2].data) == {
         "area_id": ["area-42", "area-51"],
         "entity_id": ["light.static"],
+    }
+
+    # Templated lists as target fields
+    config = {
+        "action": "{{ 'test_domain.test_service' }}",
+        "target": {
+            "area_id": "{{ ['area-42', 'area-51'] }}",
+            "device_id": "{{ ['abcdef', 'fedcba'] }}",
+            "entity_id": "{{ ['light.static', 'light.dynamic'] }}",
+            "floor_id": "{{ ['floor-first', 'floor-second'] }}",
+        },
+    }
+
+    await service.async_call_from_config(hass, config)
+    await hass.async_block_till_done()
+
+    assert dict(calls[3].data) == {
+        "area_id": ["area-42", "area-51"],
+        "device_id": ["abcdef", "fedcba"],
+        "entity_id": ["light.static", "light.dynamic"],
+        "floor_id": ["floor-first", "floor-second"],
     }
 
 
@@ -845,7 +872,7 @@ async def test_async_get_all_descriptions(hass: HomeAssistant) -> None:
 
     assert len(descriptions) == 1
     assert DOMAIN_GROUP in descriptions
-    assert "description" in descriptions[DOMAIN_GROUP]["reload"]
+    assert "description" not in descriptions[DOMAIN_GROUP]["reload"]
     assert "fields" in descriptions[DOMAIN_GROUP]["reload"]
 
     # Does not have services
@@ -853,26 +880,39 @@ async def test_async_get_all_descriptions(hass: HomeAssistant) -> None:
 
     logger_config = {DOMAIN_LOGGER: {}}
 
-    async def async_get_translations(
-        hass: HomeAssistant,
-        language: str,
-        category: str,
-        integrations: Iterable[str] | None = None,
-        config_flow: bool | None = None,
-    ) -> dict[str, Any]:
-        """Return all backend translations."""
-        translation_key_prefix = f"component.{DOMAIN_LOGGER}.services.set_default_level"
+    # Test legacy service with translations in services.yaml
+    def _load_services_file(integration: Integration) -> JSON_TYPE:
         return {
-            f"{translation_key_prefix}.name": "Translated name",
-            f"{translation_key_prefix}.description": "Translated description",
-            f"{translation_key_prefix}.fields.level.name": "Field name",
-            f"{translation_key_prefix}.fields.level.description": "Field description",
-            f"{translation_key_prefix}.fields.level.example": "Field example",
+            "set_default_level": {
+                "description": "Translated description",
+                "fields": {
+                    "level": {
+                        "description": "Field description",
+                        "example": "Field example",
+                        "name": "Field name",
+                        "selector": {
+                            "select": {
+                                "options": [
+                                    "debug",
+                                    "info",
+                                    "warning",
+                                    "error",
+                                    "fatal",
+                                    "critical",
+                                ],
+                                "translation_key": "level",
+                            }
+                        },
+                    }
+                },
+                "name": "Translated name",
+            },
+            "set_level": None,
         }
 
     with patch(
-        "homeassistant.helpers.service.translation.async_get_translations",
-        side_effect=async_get_translations,
+        "homeassistant.helpers.service._load_services_file",
+        side_effect=_load_services_file,
     ):
         await async_setup_component(hass, DOMAIN_LOGGER, logger_config)
         descriptions = await service.async_get_all_descriptions(hass)
@@ -989,7 +1029,9 @@ async def test_async_get_all_descriptions_dot_keys(hass: HomeAssistant) -> None:
     ):
         descriptions = await service.async_get_all_descriptions(hass)
 
-    mock_load_yaml.assert_called_once_with("services.yaml", None)
+    mock_load_yaml.assert_called_once_with(
+        "homeassistant/components/test_domain/services.yaml", None
+    )
     assert proxy_load_services_files.mock_calls[0][1][0] == unordered(
         [
             await async_get_integration(hass, domain),
@@ -999,18 +1041,11 @@ async def test_async_get_all_descriptions_dot_keys(hass: HomeAssistant) -> None:
     assert descriptions == {
         "test_domain": {
             "test_service": {
-                "description": "",
                 "fields": {
                     "test": {
-                        "selector": {
-                            "text": {
-                                "multiline": False,
-                                "multiple": False,
-                            }
-                        }
+                        "selector": {"text": {"multiline": False, "multiple": False}}
                     }
                 },
-                "name": "",
             }
         }
     }
@@ -1084,7 +1119,9 @@ async def test_async_get_all_descriptions_filter(hass: HomeAssistant) -> None:
     ):
         descriptions = await service.async_get_all_descriptions(hass)
 
-    mock_load_yaml.assert_called_once_with("services.yaml", None)
+    mock_load_yaml.assert_called_once_with(
+        "homeassistant/components/test_domain/services.yaml", None
+    )
     assert proxy_load_services_files.mock_calls[0][1][0] == unordered(
         [
             await async_get_integration(hass, domain),
@@ -1092,7 +1129,6 @@ async def test_async_get_all_descriptions_filter(hass: HomeAssistant) -> None:
     )
 
     test_service_schema = {
-        "description": "",
         "fields": {
             "advanced_stuff": {
                 "fields": {
@@ -1151,7 +1187,6 @@ async def test_async_get_all_descriptions_filter(hass: HomeAssistant) -> None:
                 },
             },
         },
-        "name": "",
         "target": {
             "entity": [
                 {
@@ -1187,30 +1222,10 @@ async def test_async_get_all_descriptions_failing_integration(
         integrations[DOMAIN_LOGGER] = ImportError("Failed to load services.yaml")
         return integrations
 
-    async def wrap_get_translations(
-        hass: HomeAssistant,
-        language: str,
-        category: str,
-        integrations: Iterable[str] | None = None,
-        config_flow: bool | None = None,
-    ) -> dict[str, str]:
-        translations = await async_get_translations(
-            hass, language, category, integrations, config_flow
-        )
-        return {
-            key: value
-            for key, value in translations.items()
-            if not key.startswith("component.logger.services.")
-        }
-
     with (
         patch(
             "homeassistant.helpers.service.async_get_integrations",
             wraps=wrap_get_integrations,
-        ),
-        patch(
-            "homeassistant.helpers.service.translation.async_get_translations",
-            wrap_get_translations,
         ),
     ):
         descriptions = await service.async_get_all_descriptions(hass)
@@ -1220,16 +1235,12 @@ async def test_async_get_all_descriptions_failing_integration(
 
     # Services are empty defaults if the load fails but should
     # not raise
-    assert descriptions[DOMAIN_GROUP]["remove"]["description"]
+    assert "description" not in descriptions[DOMAIN_GROUP]["remove"]
     assert descriptions[DOMAIN_GROUP]["remove"]["fields"]
 
-    assert descriptions[DOMAIN_LOGGER]["set_level"] == {
-        "description": "",
-        "fields": {},
-        "name": "",
-    }
+    assert descriptions[DOMAIN_LOGGER]["set_level"] == {"fields": {}}
 
-    assert descriptions[DOMAIN_INPUT_BUTTON]["press"]["description"]
+    assert "description" not in descriptions[DOMAIN_INPUT_BUTTON]["press"]
     assert descriptions[DOMAIN_INPUT_BUTTON]["press"]["fields"] == {}
     assert "target" in descriptions[DOMAIN_INPUT_BUTTON]["press"]
 
@@ -1284,7 +1295,7 @@ async def test_async_get_all_descriptions_dynamically_created_services(
 
     assert len(descriptions) == 1
 
-    assert "description" in descriptions["group"]["reload"]
+    assert "description" not in descriptions["group"]["reload"]
     assert "fields" in descriptions["group"]["reload"]
 
     shell_command_config = {DOMAIN_SHELL_COMMAND: {"test_service": "ls /bin"}}
@@ -1293,9 +1304,7 @@ async def test_async_get_all_descriptions_dynamically_created_services(
 
     assert len(descriptions) == 2
     assert descriptions[DOMAIN_SHELL_COMMAND]["test_service"] == {
-        "description": "",
         "fields": {},
-        "name": "",
         "response": {"optional": True},
     }
 
@@ -1310,41 +1319,53 @@ async def test_async_get_all_descriptions_new_service_added_while_loading(
 
     assert len(descriptions) == 1
 
-    assert "description" in descriptions["group"]["reload"]
+    assert "description" not in descriptions["group"]["reload"]
     assert "fields" in descriptions["group"]["reload"]
 
     logger_domain = DOMAIN_LOGGER
     logger_config = {logger_domain: {}}
 
-    translations_called = asyncio.Event()
-    translations_wait = asyncio.Event()
+    translations_called = threading.Event()
+    translations_wait = threading.Event()
 
-    async def async_get_translations(
-        hass: HomeAssistant,
-        language: str,
-        category: str,
-        integrations: Iterable[str] | None = None,
-        config_flow: bool | None = None,
-    ) -> dict[str, Any]:
-        """Return all backend translations."""
+    def _load_services_file(integration: Integration) -> JSON_TYPE:
         translations_called.set()
-        await translations_wait.wait()
-        translation_key_prefix = f"component.{logger_domain}.services.set_default_level"
+        translations_wait.wait()
         return {
-            f"{translation_key_prefix}.name": "Translated name",
-            f"{translation_key_prefix}.description": "Translated description",
-            f"{translation_key_prefix}.fields.level.name": "Field name",
-            f"{translation_key_prefix}.fields.level.description": "Field description",
-            f"{translation_key_prefix}.fields.level.example": "Field example",
+            "set_default_level": {
+                "description": "Translated description",
+                "fields": {
+                    "level": {
+                        "description": "Field description",
+                        "example": "Field example",
+                        "name": "Field name",
+                        "selector": {
+                            "select": {
+                                "options": [
+                                    "debug",
+                                    "info",
+                                    "warning",
+                                    "error",
+                                    "fatal",
+                                    "critical",
+                                ],
+                                "translation_key": "level",
+                            }
+                        },
+                    }
+                },
+                "name": "Translated name",
+            },
+            "set_level": None,
         }
 
     with patch(
-        "homeassistant.helpers.service.translation.async_get_translations",
-        side_effect=async_get_translations,
+        "homeassistant.helpers.service._load_services_file",
+        side_effect=_load_services_file,
     ):
         await async_setup_component(hass, logger_domain, logger_config)
         task = asyncio.create_task(service.async_get_all_descriptions(hass))
-        await translations_called.wait()
+        await hass.async_add_executor_job(translations_called.wait)
         # Now register a new service while translations are being loaded
         hass.services.async_register(logger_domain, "new_service", lambda x: None, None)
         service.async_set_service_schema(
@@ -1374,6 +1395,96 @@ async def test_async_get_all_descriptions_new_service_added_while_loading(
     descriptions = await service.async_get_all_descriptions(hass)
     assert "description" in descriptions[logger_domain]["new_service"]
     assert descriptions[logger_domain]["new_service"]["description"] == "new service"
+
+
+async def test_async_get_descriptions_with_placeholders(hass: HomeAssistant) -> None:
+    """Test descriptions async_get_all_descriptions with placeholders.
+
+    Placeholders supplied with a service registration should be included.
+    """
+    service_descriptions = """
+    happy_time:
+      fields:
+        topic:
+          selector:
+            text:
+        duration:
+          default: 5
+          selector:
+            number:
+              min: 1
+              max: 300
+              unit_of_measurement: "seconds"
+    """
+
+    service_schema = vol.Schema(
+        {
+            "topic": cv.string,
+            "duration": cv.positive_int,
+        }
+    )
+
+    domain = "test_domain"
+
+    hass.services.async_register(
+        domain,
+        "happy_time",
+        lambda call: None,
+        schema=service_schema,
+        description_placeholders={"placeholder": "beer"},
+    )
+    mock_integration(hass, MockModule(domain), top_level_files={"services.yaml"})
+    assert await async_setup_component(hass, domain, {})
+
+    def load_yaml(fname, secrets=None):
+        with io.StringIO(service_descriptions) as file:
+            return parse_yaml(file)
+
+    with (
+        patch(
+            "homeassistant.helpers.service._load_services_files",
+            side_effect=service._load_services_files,
+        ) as proxy_load_services_files,
+        patch(
+            "annotatedyaml.loader.load_yaml",
+            side_effect=load_yaml,
+        ) as mock_load_yaml,
+    ):
+        descriptions = await service.async_get_all_descriptions(hass)
+
+    mock_load_yaml.assert_called_once_with(
+        "homeassistant/components/test_domain/services.yaml", None
+    )
+    assert proxy_load_services_files.mock_calls[0][1][0] == unordered(
+        [
+            await async_get_integration(hass, domain),
+        ]
+    )
+
+    assert descriptions == {
+        "test_domain": {
+            "happy_time": {
+                "fields": {
+                    "topic": {
+                        "selector": {"text": {"multiple": False, "multiline": False}}
+                    },
+                    "duration": {
+                        "default": 5,
+                        "selector": {
+                            "number": {
+                                "min": 1.0,
+                                "max": 300.0,
+                                "unit_of_measurement": "seconds",
+                                "step": 1.0,
+                                "mode": "slider",
+                            }
+                        },
+                    },
+                },
+                "description_placeholders": {"placeholder": "beer"},
+            }
+        }
+    }
 
 
 async def test_register_with_mixed_case(hass: HomeAssistant) -> None:
@@ -1415,7 +1526,7 @@ async def test_call_with_required_features(hass: HomeAssistant, mock_entities) -
         mock_entities["light.bedroom"],
     ]
     actual = [call[0][0] for call in test_service_mock.call_args_list]
-    assert all(entity in actual for entity in expected)
+    assert actual == unordered(expected)
 
     # Test we raise if we target entity ID that does not support the service
     test_service_mock.reset_mock()
@@ -1475,7 +1586,70 @@ async def test_call_with_one_of_required_features(
         mock_entities["light.bathroom"],
     ]
     actual = [call[0][0] for call in test_service_mock.call_args_list]
-    assert all(entity in actual for entity in expected)
+    assert actual == unordered(expected)
+
+
+@pytest.mark.parametrize(
+    ("entity_device_classes", "expected_entities", "unsupported_entity"),
+    [
+        (
+            [None],
+            ["light.kitchen"],
+            "light.living_room",
+        ),
+        (
+            ["class_a"],
+            ["light.living_room"],
+            "light.kitchen",
+        ),
+        (
+            [None, "class_a"],
+            ["light.kitchen", "light.living_room"],
+            "light.bedroom",
+        ),
+    ],
+)
+async def test_call_with_device_class(
+    hass: HomeAssistant,
+    mock_entities,
+    entity_device_classes: list[str | None],
+    expected_entities: list[str],
+    unsupported_entity: str,
+) -> None:
+    """Test service calls invoked only if entity has required features."""
+    # Set up homeassistant component to fetch the translations
+    await async_setup_component(hass, "homeassistant", {})
+    test_service_mock = AsyncMock(return_value=None)
+    await service.entity_service_call(
+        hass,
+        mock_entities,
+        HassJob(test_service_mock),
+        ServiceCall(hass, "test_domain", "test_service", {"entity_id": "all"}),
+        entity_device_classes=entity_device_classes,
+    )
+
+    assert test_service_mock.call_count == len(expected_entities)
+    expected = [mock_entities[expected_entity] for expected_entity in expected_entities]
+    actual = [call[0][0] for call in test_service_mock.call_args_list]
+    assert actual == unordered(expected)
+
+    # Test we raise if we target entity ID that does not support the service
+    test_service_mock.reset_mock()
+    with pytest.raises(
+        exceptions.ServiceNotSupported,
+        match=f"Entity {unsupported_entity} does not "
+        "support action test_domain.test_service",
+    ):
+        await service.entity_service_call(
+            hass,
+            mock_entities,
+            HassJob(test_service_mock),
+            ServiceCall(
+                hass, "test_domain", "test_service", {"entity_id": unsupported_entity}
+            ),
+            entity_device_classes=entity_device_classes,
+        )
+    assert test_service_mock.call_count == 0
 
 
 async def test_call_with_sync_func(hass: HomeAssistant, mock_entities) -> None:
@@ -1756,6 +1930,37 @@ async def test_register_admin_service(
     )
     assert len(calls) == 1
     assert calls[0].context.user_id == hass_admin_user.id
+
+
+async def test_register_admin_service_with_placeholders(
+    hass: HomeAssistant, hass_admin_user: MockUser
+) -> None:
+    """Test the register admin service with description placeholders."""
+    calls = []
+
+    async def mock_service(call):
+        calls.append(call)
+
+    service.async_register_admin_service(
+        hass,
+        "test",
+        "test",
+        mock_service,
+        description_placeholders={"test_placeholder": "beer"},
+    )
+    await hass.services.async_call(
+        "test",
+        "test",
+        {},
+        blocking=True,
+        context=Context(user_id=hass_admin_user.id),
+    )
+    assert len(calls) == 1
+
+    descriptions = await service.async_get_all_descriptions(hass)
+    assert descriptions["test"]["test"]["description_placeholders"] == {
+        "test_placeholder": "beer"
+    }
 
 
 @pytest.mark.parametrize(
@@ -2494,7 +2699,7 @@ async def test_deprecated_service_target_selector_class(hass: HomeAssistant) -> 
     assert selector.device_ids == {"device1", "device2"}
     assert selector.floor_ids == {"first_floor"}
     assert selector.label_ids == {"label1", "label2"}
-    assert selector.has_any_selector is True
+    assert selector.has_any_target is True
 
 
 async def test_deprecated_selected_entities_class(
@@ -2567,6 +2772,13 @@ async def test_register_platform_entity_service(
         entity_domain="mock_integration",
         schema={},
         func=handle_service,
+        description_placeholders={"test_placeholder": "beer"},
+    )
+    descriptions = await service.async_get_all_descriptions(hass)
+    assert (
+        descriptions["mock_platform"]["hello"]["description_placeholders"]
+        == {"test_placeholder": "beer"}
+        == {"test_placeholder": "beer"}
     )
 
     await hass.services.async_call(

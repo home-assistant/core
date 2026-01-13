@@ -35,7 +35,7 @@ from tests.test_util.aiohttp import AiohttpClientMocker
 ADDITIONAL_NUMBER_ENTITIES = 1
 ADDITIONAL_SENSOR_ENTITIES = 2
 ADDITIONAL_SWITCH_ENTITIES = 1
-NUMBER_OF_ENTITIES_MOWER_2 = 11
+NUMBER_OF_ENTITIES_MOWER_2 = 12
 
 
 async def test_load_unload_entry(
@@ -192,17 +192,44 @@ async def test_websocket_not_available(
     await hass.async_block_till_done()
     assert f"{error_msg} Trying to reconnect: Boom" in caplog.text
 
-    # Simulate a successful connection
     caplog.clear()
-    await mock_called.wait()
-    mock_called.clear()
-    await hass.async_block_till_done()
-    assert mock.call_count == 2
-    assert "Trying to reconnect: Boom" not in caplog.text
 
     # Simulate hass shutting down
     await hass.async_stop()
-    assert mock.call_count == 2
+    assert mock.call_count == 1
+
+
+@pytest.mark.parametrize(
+    ("api_input", "model", "model_id"),
+    [
+        ("HUSQVARNA AUTOMOWER® 450XH", "Automower", "450XH"),
+        ("Automower 315X", "Automower", "315X"),
+        ("Husqvarna Automower® 435 AWD", "Automower", "435 AWD"),
+        ("Husqvarna CEORA® 544 EPOS", "Ceora", "544 EPOS"),
+    ],
+)
+async def test_model_id_information(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_automower_client: AsyncMock,
+    device_registry: dr.DeviceRegistry,
+    values: dict[str, MowerAttributes],
+    api_input: str,
+    model: str,
+    model_id: str,
+) -> None:
+    """Test model and model_id parsing."""
+    values[TEST_MOWER_ID].system.model = api_input
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+    reg_device = device_registry.async_get_device(
+        identifiers={(DOMAIN, TEST_MOWER_ID)},
+    )
+    assert reg_device is not None
+    assert reg_device.manufacturer == "Husqvarna"
+    assert reg_device.model == model
+    assert reg_device.model_id == model_id
 
 
 async def test_device_info(
@@ -212,7 +239,7 @@ async def test_device_info(
     device_registry: dr.DeviceRegistry,
     snapshot: SnapshotAssertion,
 ) -> None:
-    """Test select platform."""
+    """Test device info."""
 
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)

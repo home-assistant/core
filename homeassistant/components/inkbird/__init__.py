@@ -11,7 +11,7 @@ from homeassistant.core import HomeAssistant
 from .const import CONF_DEVICE_DATA, CONF_DEVICE_TYPE
 from .coordinator import INKBIRDActiveBluetoothProcessorCoordinator
 
-INKBIRDConfigEntry = ConfigEntry[INKBIRDActiveBluetoothProcessorCoordinator]
+type INKBIRDConfigEntry = ConfigEntry[INKBIRDActiveBluetoothProcessorCoordinator]
 
 PLATFORMS: list[Platform] = [Platform.SENSOR]
 

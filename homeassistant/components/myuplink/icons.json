@@ -17,6 +17,9 @@
       "airflow": {
         "default": "mdi:weather-windy"
       },
+      "degree_minutes": {
+        "default": "mdi:thermometer-lines"
+      },
       "elect_add": {
         "default": "mdi:heat-wave"
       },

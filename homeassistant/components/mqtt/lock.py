@@ -188,7 +188,10 @@ class MqttLock(MqttEntity, LockEntity):
             return
         if payload == self._config[CONF_PAYLOAD_RESET]:
             # Reset the state to `unknown`
-            self._attr_is_locked = None
+            self._attr_is_locked = self._attr_is_locking = None
+            self._attr_is_unlocking = None
+            self._attr_is_open = self._attr_is_opening = None
+            self._attr_is_jammed = None
         elif payload in self._valid_states:
             self._attr_is_locked = payload == self._config[CONF_STATE_LOCKED]
             self._attr_is_locking = payload == self._config[CONF_STATE_LOCKING]

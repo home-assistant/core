@@ -70,6 +70,11 @@ async def test_holiday_calendar_entity(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
+    # Binary sensor added to ensure same state for both entities
+    state = hass.states.get("binary_sensor.workday_sensor")
+    assert state is not None
+    assert state.state == "on"
+
     state = hass.states.get("calendar.workday_sensor_calendar")
     assert state is not None
     assert state.state == "on"
@@ -77,6 +82,10 @@ async def test_holiday_calendar_entity(
     freezer.move_to(datetime(2023, 1, 7, 0, 1, 1, tzinfo=zone))  # Workday
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
+
+    state = hass.states.get("binary_sensor.workday_sensor")
+    assert state is not None
+    assert state.state == "off"
 
     state = hass.states.get("calendar.workday_sensor_calendar")
     assert state is not None
