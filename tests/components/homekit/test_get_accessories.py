@@ -55,7 +55,7 @@ def get_identified_type(entity_id, attrs, config=None):
     def passthrough(type: type):
         return lambda *args, **kwargs: type
 
-    # Patch all TYPES to our type_factory
+    # Patch TYPES so that get_accessory returns a type instead of an instance.
     with patch.dict(
         TYPES, {type_name: passthrough(v) for type_name, v in TYPES.items()}
     ):
