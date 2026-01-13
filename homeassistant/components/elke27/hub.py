@@ -13,7 +13,7 @@ from elke27_lib import ArmMode, ClientConfig, Elke27Client, LinkKeys
 from elke27_lib.errors import Elke27LinkRequiredError, Elke27PinRequiredError
 
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady, HomeAssistantError
 
 from .const import READY_TIMEOUT
 from .identity import build_client_identity
