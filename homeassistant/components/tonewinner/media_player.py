@@ -75,23 +75,30 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up media player and register service."""
+    _LOGGER.debug("Setting up Tonewinner media player platform")
+    _LOGGER.debug("Config entry ID: %s", config_entry.entry_id)
 
     # Create the entity
     data = hass.data[DOMAIN][config_entry.entry_id]
+    _LOGGER.debug("Creating TonewinnerMediaPlayer entity with data: %s", data)
     entity = TonewinnerMediaPlayer(hass, config_entry, data)
     async_add_entities([entity])
+    _LOGGER.debug("Entity added successfully")
 
     # Register the service HERE – hass is available in this function
     async def handle_send_raw(call: ServiceCall):
         command = call.data["command"]
+        _LOGGER.debug("send_raw service called with command: %s", command)
         await entity.send_raw_command(command)
 
     hass.services.async_register(
         DOMAIN, SERVICE_SEND_RAW, handle_send_raw, schema=SERVICE_SEND_RAW_SCHEMA
     )
+    _LOGGER.debug("Registered send_raw service")
 
     # Store handle for cleanup
     hass.data[DOMAIN][f"{config_entry.entry_id}_service"] = handle_send_raw
+    _LOGGER.info("Tonewinner media player platform setup complete")
 
 
 class TonewinnerProtocol(asyncio.Protocol):
@@ -144,6 +151,7 @@ class TonewinnerProtocol(asyncio.Protocol):
 
     def connection_lost(self, exc):
         """Connection lost."""
+        _LOGGER.debug("Connection lost: %s", exc)
         self.entity.set_available(False)
 
 
@@ -168,9 +176,11 @@ class TonewinnerMediaPlayer(MediaPlayerEntity):
 
     def __init__(self, hass, entry, data):
         """Initialize the media player."""
+        _LOGGER.debug("Initializing TonewinnerMediaPlayer")
         self.hass = hass
         self.port = data[CONF_SERIAL_PORT]
         self.baud = data.get(CONF_BAUD_RATE, 9600)
+        _LOGGER.debug("Configured for port: %s, baud: %d", self.port, self.baud)
         self._attr_name = "Tonewinner AT-500"
         self._attr_unique_id = entry.entry_id
         self._attr_device_info = DeviceInfo(
