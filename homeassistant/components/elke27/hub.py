@@ -294,42 +294,58 @@ class Elke27Hub:
         client = self._client
         if client is None:
             return False
-        if pin is not None and not isinstance(pin, str):
-            pin = str(pin)
+        if pin is None:
+            raise Elke27PinRequiredError("PIN required to arm areas.")
+        try:
+            pin_value = int(pin)
+        except (TypeError, ValueError) as err:
+            raise HomeAssistantError("Code must be numeric.") from err
 
-        method = getattr(client, "async_arm_area", None)
-        if method is None:
-            method = getattr(client, "arm_area", None)
-        if method is None:
-            _LOGGER.warning("Area arming is not supported for area %s", area_id)
-            return False
-        if inspect.iscoroutinefunction(method):
-            result = await method(area_id, mode=mode, pin=pin)
+        if mode is ArmMode.ARMED_STAY:
+            arm_state = "ARMED_STAY"
+        elif mode is ArmMode.ARMED_AWAY:
+            arm_state = "ARMED_AWAY"
         else:
-            result = await self._hass.async_add_executor_job(
-                method, area_id, mode=mode, pin=pin
-            )
-        return bool(result) if isinstance(result, bool) else True
+            raise HomeAssistantError("Arm mode is not supported.")
+        result = await client.async_execute(
+            "area_set_arm_state",
+            area_id=area_id,
+            arm_state=arm_state,
+            pin=pin_value,
+        )
+        if not getattr(result, "ok", False):
+            error = getattr(result, "error", None)
+            _LOGGER.warning("Area arming failed for area %s: %s", area_id, error)
+            if error is not None:
+                raise HomeAssistantError(str(error)) from error
+            return False
+        return True
 
     async def async_disarm_area(self, area_id: int, pin: str | None) -> bool:
         """Request an area disarming change if supported."""
         client = self._client
         if client is None:
             return False
-        if pin is not None and not isinstance(pin, str):
-            pin = str(pin)
+        if pin is None:
+            raise Elke27PinRequiredError("PIN required to disarm areas.")
+        try:
+            pin_value = int(pin)
+        except (TypeError, ValueError) as err:
+            raise HomeAssistantError("Code must be numeric.") from err
 
-        method = getattr(client, "async_disarm_area", None)
-        if method is None:
-            method = getattr(client, "disarm_area", None)
-        if method is None:
-            _LOGGER.warning("Area disarm is not supported for area %s", area_id)
+        result = await client.async_execute(
+            "area_set_arm_state",
+            area_id=area_id,
+            arm_state="DISARMED",
+            pin=pin_value,
+        )
+        if not getattr(result, "ok", False):
+            error = getattr(result, "error", None)
+            _LOGGER.warning("Area disarm failed for area %s: %s", area_id, error)
+            if error is not None:
+                raise HomeAssistantError(str(error)) from error
             return False
-        if inspect.iscoroutinefunction(method):
-            result = await method(area_id, pin=pin)
-        else:
-            result = await self._hass.async_add_executor_job(method, area_id, pin=pin)
-        return bool(result) if isinstance(result, bool) else True
+        return True
 
     def _handle_event(self, event: Any) -> None:
         """Handle events from the client."""
