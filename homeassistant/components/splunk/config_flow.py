@@ -24,17 +24,6 @@ from .const import DEFAULT_HOST, DEFAULT_NAME, DEFAULT_PORT, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-SPLUNK_SCHEMA = vol.Schema(
-    {
-        vol.Required(CONF_TOKEN): str,
-        vol.Optional(CONF_HOST, default=DEFAULT_HOST): str,
-        vol.Optional(CONF_PORT, default=DEFAULT_PORT): int,
-        vol.Optional(CONF_SSL, default=False): bool,
-        vol.Optional(CONF_VERIFY_SSL, default=True): bool,
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): str,
-    }
-)
-
 
 class SplunkConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Splunk."""
@@ -56,13 +45,24 @@ class SplunkConfigFlow(ConfigFlow, domain=DOMAIN):
                 self._abort_if_unique_id_configured()
 
                 return self.async_create_entry(
-                    title=user_input.get(CONF_NAME, DEFAULT_NAME),
+                    title=user_input[CONF_HOST],
                     data=user_input,
                 )
 
         return self.async_show_form(
             step_id="user",
-            data_schema=SPLUNK_SCHEMA,
+            data_schema=vol.Schema(
+                {
+                    vol.Required(CONF_TOKEN): str,
+                    vol.Optional(CONF_HOST, default=DEFAULT_HOST): str,
+                    vol.Optional(CONF_PORT, default=DEFAULT_PORT): int,
+                    vol.Optional(CONF_SSL, default=False): bool,
+                    vol.Optional(CONF_VERIFY_SSL, default=True): bool,
+                    vol.Optional(
+                        CONF_NAME, default=self.hass.config.location_name
+                    ): str,
+                }
+            ),
             errors=errors,
         )
 
