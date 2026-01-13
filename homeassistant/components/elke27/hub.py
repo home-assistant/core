@@ -254,11 +254,21 @@ class Elke27Hub:
             bypassed,
             pin_value,
         )
+        timeout_s = 15.0
+        start = self._hass.loop.time()
         result = await client.async_execute(
             "zone_set_status",
             zone_id=zone_id,
             pin=pin_value,
             bypassed=bypassed,
+            timeout_s=timeout_s,
+        )
+        elapsed = self._hass.loop.time() - start
+        _LOGGER.debug(
+            "Zone bypass reply for zone %s in %.2fs (timeout %.1fs)",
+            zone_id,
+            elapsed,
+            timeout_s,
         )
         if not getattr(result, "ok", False):
             error = getattr(result, "error", None)
