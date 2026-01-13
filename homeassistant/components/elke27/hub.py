@@ -319,6 +319,7 @@ class Elke27Hub:
         self.snapshot = self._client.snapshot
         event_type = _event_type(event)
         if event_type == "DISCONNECTED":
+            _LOGGER.debug("Panel disconnect event received; scheduling reconnect")
             self._log_unavailable()
             self._schedule_reconnect()
         elif event_type == "READY":
@@ -340,6 +341,7 @@ class Elke27Hub:
             return
         if self._reconnect_task is not None and not self._reconnect_task.done():
             return
+        _LOGGER.debug("Creating reconnect task")
         self._reconnect_task = self._hass.async_create_task(
             self._async_reconnect_loop()
         )
@@ -364,6 +366,7 @@ class Elke27Hub:
     async def _async_reconnect_loop(self) -> None:
         """Reconnect with exponential backoff until successful or stopped."""
         while not self._stopping:
+            _LOGGER.debug("Reconnect attempt %s starting", self._reconnect_attempts + 1)
             try:
                 await self._async_connect()
                 self._reconnect_attempts = 0
@@ -375,6 +378,7 @@ class Elke27Hub:
                 _LOGGER.debug("Reconnect attempt failed: %s", err)
             self._reconnect_attempts += 1
             delay = min(300, 2 ** self._reconnect_attempts)
+            _LOGGER.debug("Reconnect attempt %s sleeping for %s seconds", self._reconnect_attempts, delay)
             await asyncio.sleep(delay)
 
     @callback
