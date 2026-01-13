@@ -246,7 +246,7 @@ class OAuth2RefreshTokenError(ClientResponseError, IntegrationError):
 
 
 class OAuth2RefreshTokenTransientError(OAuth2RefreshTokenError):
-    """Error to indicate flow could not refresh token, but it's recoverable."""
+    """Recoverable error to indicate flow could not refresh token."""
 
 
 class OAuth2RefreshTokenReauthError(OAuth2RefreshTokenError):
