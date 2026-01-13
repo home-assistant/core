@@ -231,7 +231,7 @@ aiodhcpwatcher==1.2.1
 aiodiscover==2.7.1
 
 # homeassistant.components.dnsip
-aiodns==3.6.1
+aiodns==4.0.0
 
 # homeassistant.components.duke_energy
 aiodukeenergy==0.3.0
@@ -1011,7 +1011,7 @@ freebox-api==1.2.2
 freesms==0.2.0
 
 # homeassistant.components.fressnapf_tracker
-fressnapftracker==0.2.0
+fressnapftracker==0.2.1
 
 # homeassistant.components.fritz
 # homeassistant.components.fritzbox_callmonitor
@@ -1172,7 +1172,7 @@ habluetooth==5.8.0
 hanna-cloud==0.0.7
 
 # homeassistant.components.cloud
-hass-nabucasa==1.7.0
+hass-nabucasa==1.9.0
 
 # homeassistant.components.splunk
 hass-splunk==0.1.1
@@ -1216,7 +1216,7 @@ hole==0.9.0
 holidays==0.84
 
 # homeassistant.components.frontend
-home-assistant-frontend==20260107.0
+home-assistant-frontend==20260107.1
 
 # homeassistant.components.conversation
 home-assistant-intents==2026.1.6
@@ -1684,7 +1684,7 @@ openwrt-luci-rpc==1.1.17
 openwrt-ubus-rpc==0.0.2
 
 # homeassistant.components.opower
-opower==0.16.1
+opower==0.16.2
 
 # homeassistant.components.oralb
 oralb-ble==1.0.2
@@ -2481,7 +2481,7 @@ python-awair==0.2.5
 python-blockchain-api==0.0.2
 
 # homeassistant.components.bsblan
-python-bsblan==3.1.6
+python-bsblan==4.1.0
 
 # homeassistant.components.citybikes
 python-citybikes==0.3.3
@@ -2520,7 +2520,7 @@ python-google-weather-api==0.0.4
 python-homeassistant-analytics==0.9.0
 
 # homeassistant.components.homewizard
-python-homewizard-energy==10.0.0
+python-homewizard-energy==10.0.1
 
 # homeassistant.components.hp_ilo
 python-hpilo==4.4.3
@@ -2575,7 +2575,7 @@ python-overseerr==0.8.0
 python-picnic-api2==1.3.1
 
 # homeassistant.components.pooldose
-python-pooldose==0.8.1
+python-pooldose==0.8.2
 
 # homeassistant.components.rabbitair
 python-rabbitair==0.0.8
@@ -3081,7 +3081,7 @@ typedmonarchmoney==0.4.4
 uasiren==0.0.1
 
 # homeassistant.components.unifiprotect
-uiprotect==8.0.0
+uiprotect==8.1.1
 
 # homeassistant.components.landisgyr_heat_meter
 ultraheat-api==0.5.7
@@ -3116,7 +3116,7 @@ uvcclient==0.12.1
 vacuum-map-parser-roborock==0.1.4
 
 # homeassistant.components.vallox
-vallox-websocket-api==5.3.0
+vallox-websocket-api==6.0.0
 
 # homeassistant.components.vegehub
 vegehub==0.1.26
@@ -3219,7 +3219,7 @@ wyoming==1.7.2
 xiaomi-ble==1.4.1
 
 # homeassistant.components.knx
-xknx==3.13.0
+xknx==3.14.0
 
 # homeassistant.components.knx
 xknxproject==3.8.2
