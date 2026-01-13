@@ -35,12 +35,15 @@ from homeassistant.helpers.entity_platform import (
     AddConfigEntryEntitiesCallback,
     AddEntitiesCallback,
 )
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType, StateType
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import ConfigEntry
 from .const import DOMAIN, INTEGRATION_TITLE
+from .coordinator import OpenEVSEConfigEntry, OpenEVSEDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
+
+PARALLEL_UPDATES = 0
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -174,25 +177,19 @@ async def async_setup_platform(
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    entry: OpenEVSEConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Add sensors for passed config_entry in HA."""
+    """Set up OpenEVSE sensors based on config entry."""
+    coordinator = entry.runtime_data
+    identifier = entry.unique_id or entry.entry_id
     async_add_entities(
-        (
-            OpenEVSESensor(
-                config_entry.runtime_data,
-                description,
-                config_entry.entry_id,
-                config_entry.unique_id,
-            )
-            for description in SENSOR_TYPES
-        ),
-        True,
+        OpenEVSESensor(coordinator, description, identifier, entry.unique_id)
+        for description in SENSOR_TYPES
     )
 
 
-class OpenEVSESensor(SensorEntity):
+class OpenEVSESensor(CoordinatorEntity[OpenEVSEDataUpdateCoordinator], SensorEntity):
     """Implementation of an OpenEVSE sensor."""
 
     _attr_has_entity_name = True
@@ -200,16 +197,14 @@ class OpenEVSESensor(SensorEntity):
 
     def __init__(
         self,
-        charger: OpenEVSE,
+        coordinator: OpenEVSEDataUpdateCoordinator,
         description: OpenEVSESensorDescription,
-        entry_id: str,
+        identifier: str,
         unique_id: str | None,
     ) -> None:
         """Initialize the sensor."""
+        super().__init__(coordinator)
         self.entity_description = description
-        self.charger = charger
-
-        identifier = unique_id or entry_id
         self._attr_unique_id = f"{identifier}-{description.key}"
 
         self._attr_device_info = DeviceInfo(
@@ -222,12 +217,7 @@ class OpenEVSESensor(SensorEntity):
             }
             self._attr_device_info[ATTR_SERIAL_NUMBER] = unique_id
 
-    async def async_update(self) -> None:
-        """Get the monitored data from the charger."""
-        try:
-            await self.charger.update()
-        except TimeoutError:
-            _LOGGER.warning("Could not update status for %s", self.name)
-            return
-
-        self._attr_native_value = self.entity_description.value_fn(self.charger)
+    @property
+    def native_value(self) -> StateType:
+        """Return the state of the sensor."""
+        return self.entity_description.value_fn(self.coordinator.charger)
