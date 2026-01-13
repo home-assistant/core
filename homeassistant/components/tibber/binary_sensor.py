@@ -29,24 +29,24 @@ _LOGGER = logging.getLogger(__name__)
 class TibberBinarySensorEntityDescription(BinarySensorEntityDescription):
     """Describes Tibber binary sensor entity."""
 
-    is_on_fn: Callable[[int | float | str | None], bool | None]
+    is_on_fn: Callable[[str], bool | None]
 
 
 DATA_API_BINARY_SENSORS: tuple[TibberBinarySensorEntityDescription, ...] = (
     TibberBinarySensorEntityDescription(
         key="connector.status",
         device_class=BinarySensorDeviceClass.PLUG,
-        is_on_fn={"connected": True, "disconnected": False}.get,  # type: ignore[arg-type]
+        is_on_fn={"connected": True, "disconnected": False}.get,
     ),
     TibberBinarySensorEntityDescription(
         key="charging.status",
         device_class=BinarySensorDeviceClass.BATTERY_CHARGING,
-        is_on_fn={"charging": True, "idle": False}.get,  # type: ignore[arg-type]
+        is_on_fn={"charging": True, "idle": False}.get,
     ),
     TibberBinarySensorEntityDescription(
         key="onOff",
         device_class=BinarySensorDeviceClass.POWER,
-        is_on_fn={"on": True, "off": False}.get,  # type: ignore[arg-type]
+        is_on_fn={"on": True, "off": False}.get,
     ),
 )
 
@@ -94,7 +94,7 @@ class TibberDataAPIBinarySensor(
         self._device_id: str = device.id
         self.entity_description = entity_description
 
-        self._attr_unique_id = f"{device.external_id}_{entity_description.key}"
+        self._attr_unique_id = f"{device.id}_{entity_description.key}"
 
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, device.external_id)},
@@ -119,5 +119,5 @@ class TibberDataAPIBinarySensor(
     def is_on(self) -> bool | None:
         """Return the state of the binary sensor."""
         return self.entity_description.is_on_fn(
-            self.device[self.entity_description.key].value
+            str(self.device[self.entity_description.key].value)
         )

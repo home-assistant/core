@@ -67,7 +67,6 @@ def create_tibber_device(
             }
         )
 
-    # Add binary sensor capabilities
     if connector_status is not None:
         capabilities.append(
             {
