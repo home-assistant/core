@@ -7,7 +7,7 @@
   },
   "conditions": {
     "is_off": {
-      "description": "Test if a fan is off.",
+      "description": "Tests if one or more fans are off.",
       "fields": {
         "behavior": {
           "description": "[%key:component::fan::common::condition_behavior_description%]",
@@ -17,7 +17,7 @@
       "name": "If a fan is off"
     },
     "is_on": {
-      "description": "Test if a fan is on.",
+      "description": "Tests if one or more fans are on.",
       "fields": {
         "behavior": {
           "description": "[%key:component::fan::common::condition_behavior_description%]",
