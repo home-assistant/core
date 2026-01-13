@@ -69,9 +69,11 @@ def process_opening_status_string(status: StateType) -> StateType | None:
     return None
 
 
-def process_opening_status(module: Module, netatmo_name: str) -> StateType | None:
+def process_opening_status(
+    netatmo_device: Module, netatmo_name: str
+) -> StateType | None:
     """Process opening Module status and return bool."""
-    status = getattr(module, netatmo_name)
+    status = getattr(netatmo_device, netatmo_name)
     value = process_opening_status_string(status)
 
     _LOGGER.debug(
@@ -79,7 +81,7 @@ def process_opening_status(module: Module, netatmo_name: str) -> StateType | Non
         netatmo_name,
         status,
         value,
-        module.name,
+        netatmo_device.name,
     )
     return value
 
@@ -167,21 +169,49 @@ def process_opening_category(netatmo_device: NetatmoDevice) -> BinarySensorDevic
     return module_binary_sensor_class
 
 
+DEVICE_CLASS_TRANSLATIONS: Final[dict[BinarySensorDeviceClass, str]] = {
+    BinarySensorDeviceClass.OPENING: "Opening",
+    BinarySensorDeviceClass.DOOR: "Door",
+    BinarySensorDeviceClass.WINDOW: "Window",
+    BinarySensorDeviceClass.GARAGE_DOOR: "Garage Door",
+}
+
+
+def process_opening_name(netatmo_device: NetatmoDevice) -> str:
+    """Helper function to map Netatmo device opening category to Home Assistant device name."""
+    category: StateType = get_opening_category(netatmo_device)
+    module_binary_sensor_class: BinarySensorDeviceClass | None = (
+        process_opening_category_string(category)
+    )
+
+    if module_binary_sensor_class is None:
+        module_binary_sensor_class = BinarySensorDeviceClass.OPENING
+
+    name = DEVICE_CLASS_TRANSLATIONS.get(module_binary_sensor_class, "Opening")
+    _LOGGER.debug(
+        "Opening name is '%s' for module '%s'",
+        name,
+        netatmo_device.device.name,
+    )
+    return name
+
+
 @dataclass(frozen=True, kw_only=True)
 class NetatmoBinarySensorEntityDescription(BinarySensorEntityDescription):
     """Describes Netatmo binary sensor entity."""
 
+    key: str  # The key of the sensor
     name: str | None = None  # The default name of the sensor
-    netatmo_name: str  # The name used by Netatmo API for this sensor (exposed feature as attribute)
-    feature_name: str | None = (
-        None  # The feature key in the Module's features set (use this when attribute not exposed)
-    )
-    device_value_fn: Callable[[Module, str], StateType] | None = (
-        None  # This is a value_fn variant for not exposed attributes
+    netatmo_name: str | None = (
+        None  # The name used by Netatmo API for this sensor (exposed feature as attribute) if different than key
     )
     device_class_fn: Callable[[NetatmoDevice], BinarySensorDeviceClass] | None = (
-        None  # This function to calculate device_class
+        None  # This is a value_fn variant to calculate device_class
     )
+    device_name_fn: Callable[[NetatmoDevice], str] | None = (
+        None  # This is a value_fn variant to calculate name
+    )
+    value_fn: Callable[[StateType], StateType] = lambda x: x
 
 
 NETATMO_WEATHER_BINARY_SENSOR_DESCRIPTIONS: Final[
@@ -190,7 +220,6 @@ NETATMO_WEATHER_BINARY_SENSOR_DESCRIPTIONS: Final[
     NetatmoBinarySensorEntityDescription(
         key="reachable",
         name="Connectivity",
-        netatmo_name="reachable",
         device_class=BinarySensorDeviceClass.CONNECTIVITY,
     ),
 ]
@@ -222,7 +251,6 @@ NETATMO_OPENING_BINARY_SENSOR_DESCRIPTIONS: Final[
     NetatmoBinarySensorEntityDescription(
         key="reachable",
         name="Connectivity",
-        netatmo_name="reachable",
         device_class=BinarySensorDeviceClass.CONNECTIVITY,
     ),
     NetatmoBinarySensorEntityDescription(
@@ -230,9 +258,9 @@ NETATMO_OPENING_BINARY_SENSOR_DESCRIPTIONS: Final[
         name="Opening",
         device_class=BinarySensorDeviceClass.OPENING,
         netatmo_name="status",
-        feature_name="status",
-        device_value_fn=process_opening_status,
         device_class_fn=process_opening_category,
+        device_name_fn=process_opening_name,
+        value_fn=process_opening_status_string,
     ),
 ]
 
@@ -305,14 +333,14 @@ async def async_setup_entry(
 
         # Create binary sensors for module
         for description in descriptions_to_add:
-            # Actual check is simple for reachable
-            if description.feature_name is None:
+            if description.netatmo_name is None:
                 feature_check = description.key
             else:
-                feature_check = description.feature_name
+                feature_check = description.netatmo_name
             if feature_check in netatmo_device.device.features:
                 _LOGGER.debug(
-                    'Adding "%s" binary sensor for device %s',
+                    'Adding "%s" (native: "%s") binary sensor for device %s',
+                    description.name,
                     feature_check,
                     netatmo_device.device.name,
                 )
@@ -358,7 +386,7 @@ class NetatmoWeatherBinarySensor(NetatmoWeatherModuleEntity, BinarySensorEntity)
 
         value: StateType | None = None
 
-        value = getattr(self.device, self.entity_description.netatmo_name, None)
+        value = getattr(self.device, self.entity_description.key, None)
 
         if value is None:
             self._attr_available = False
@@ -401,6 +429,10 @@ class NetatmoBinarySensor(NetatmoModuleEntity, BinarySensorEntity):
         else:
             self._attr_device_class = description.device_class
 
+        # Name override if function provided (e.g. more specific Door instead of generic Opening)
+        if description.device_name_fn:
+            self._attr_name = description.device_name_fn(netatmo_device)
+
     @callback
     def async_update_callback(self) -> None:
         """Update the entity's state."""
@@ -415,16 +447,13 @@ class NetatmoBinarySensor(NetatmoModuleEntity, BinarySensorEntity):
             self.async_write_ha_state()
             return
 
-        raw_value = getattr(self.device, self.entity_description.netatmo_name, None)
+        if self.entity_description.netatmo_name is None:
+            raw_value = getattr(self.device, self.entity_description.key, None)
+        else:
+            raw_value = getattr(self.device, self.entity_description.netatmo_name, None)
 
         if raw_value is not None:
-            if self.entity_description.device_value_fn is None:
-                value = raw_value
-            else:
-                value = self.entity_description.device_value_fn(
-                    self.device,
-                    self.entity_description.netatmo_name,
-                )
+            value = self.entity_description.value_fn(raw_value)
         else:
             value = None
 
