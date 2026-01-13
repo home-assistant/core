@@ -882,12 +882,9 @@ class EntityPlatform:
             else:
                 device = None
 
-            calculated_object_id, is_calculated = _async_calculate_suggested_object_id(
+            suggested_object_id, calculated_object_id = _async_derive_object_ids(
                 entity, self
             )
-            if not is_calculated:
-                suggested_object_id = calculated_object_id
-                calculated_object_id = None
 
             disabled_by: RegistryEntryDisabler | None = None
             if not entity.entity_registry_enabled_default:
@@ -934,11 +931,13 @@ class EntityPlatform:
             if entity.entity_id is None or entity_registry.async_is_registered(
                 entity.entity_id
             ):
-                suggested_object_id, _ = _async_calculate_suggested_object_id(
+                suggested_object_id, calculated_object_id = _async_derive_object_ids(
                     entity, self
                 )
+                suggested_object_id = suggested_object_id or calculated_object_id
+                assert suggested_object_id is not None
                 entity.entity_id = entity_registry.async_generate_entity_id(
-                    self.domain, suggested_object_id or ""
+                    self.domain, suggested_object_id
                 )
 
         already_exists, restored = self._entity_id_already_exists(entity.entity_id)
@@ -1209,32 +1208,39 @@ class EntityPlatform:
 
 
 @callback
-def _async_calculate_suggested_object_id(
+def _async_derive_object_ids(
     entity: Entity, platform: EntityPlatform
-) -> tuple[str | None, bool]:
-    """Calculate the suggested object ID for an entity.
+) -> tuple[str | None, str | None]:
+    """Derive the object IDs for an entity.
 
-    Also returns if the object ID was calculated.
+    Dervives both suggested and calculated object IDs.
     """
-    calculated = True
-    suggested_object_id: str | None
+    is_calculated = True
+    object_id: str | None
 
     if entity.internal_integration_suggested_object_id is not None:
-        calculated = False
-        suggested_object_id = entity.internal_integration_suggested_object_id
+        is_calculated = False
+        object_id = entity.internal_integration_suggested_object_id
     else:
-        suggested_object_id = entity.suggested_object_id
+        object_id = entity.suggested_object_id
 
-    if entity.unique_id is None and not suggested_object_id:
-        suggested_object_id = DEVICE_DEFAULT_NAME
+    if entity.unique_id is None and not object_id:
+        object_id = DEVICE_DEFAULT_NAME
 
     if platform.entity_namespace is not None:
-        calculated = False
-        if entity.unique_id is not None and not suggested_object_id:
-            suggested_object_id = f"{platform.platform_name}_{entity.unique_id}"
-        suggested_object_id = f"{platform.entity_namespace} {suggested_object_id}"
+        is_calculated = False
+        if entity.unique_id is not None and not object_id:
+            object_id = f"{platform.platform_name}_{entity.unique_id}"
+        object_id = f"{platform.entity_namespace} {object_id}"
 
-    return suggested_object_id, calculated
+    suggested_object_id: str | None = None
+    calculated_object_id: str | None = None
+    if is_calculated:
+        calculated_object_id = object_id
+    else:
+        suggested_object_id = object_id
+
+    return suggested_object_id, calculated_object_id
 
 
 current_platform: ContextVar[EntityPlatform | None] = ContextVar(
