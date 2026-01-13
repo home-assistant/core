@@ -88,7 +88,6 @@ class ViaggiaTrenoSensor(SensorEntity):
         """Initialize the sensor."""
         self._state: StateType = NO_INFORMATION_STRING
         self._attributes: dict[str, Any] = {}
-        self._unit: UnitOfTime | None = None
         self._icon = ICON
         self._name = name
         self._line = train_line
@@ -113,7 +112,9 @@ class ViaggiaTrenoSensor(SensorEntity):
     @property
     def native_unit_of_measurement(self) -> str | None:
         """Return the unit of measurement."""
-        return self._unit
+        if isinstance(self.native_value, (int, float)):
+            return UnitOfTime.MINUTES
+        return None
 
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
@@ -153,7 +154,6 @@ class ViaggiaTrenoSensor(SensorEntity):
             }:
                 delay_minutes = self._tstatus.timetable.delay
                 self._state = delay_minutes
-                self._unit = UnitOfTime.MINUTES
                 self._icon = ICON
             else:
                 self._state = NO_INFORMATION_STRING
