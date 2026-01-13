@@ -13,7 +13,27 @@ from homeassistant import config_entries
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_HOST, CONF_MAC
 from homeassistant.helpers.device_registry import format_mac
-from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
+
+try:
+    from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
+except ImportError:
+    # Fallback for older Home Assistant versions (pre-2025.1)
+    try:
+        from homeassistant.components.dhcp import (
+            DhcpServiceInfo,  # type: ignore[no-redef]
+        )
+    except ImportError:
+        # If DHCP service info is not available, create a minimal stub
+        from dataclasses import dataclass
+
+        @dataclass
+        class DhcpServiceInfo:  # type: ignore[no-redef]
+            """Fallback DHCP service info for older Home Assistant versions."""
+
+            ip: str
+            hostname: str
+            macaddress: str
+
 
 from .const import DOMAIN
 

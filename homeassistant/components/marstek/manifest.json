@@ -16,5 +16,6 @@
   "integration_type": "device",
   "iot_class": "local_polling",
   "quality_scale": "bronze",
-  "requirements": ["py-marstek==0.2.0"]
+  "requirements": ["py-marstek==0.2.0"],
+  "version": "0.1.0"
 }

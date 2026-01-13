@@ -71,7 +71,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: MarstekConfigEntry) -> b
             get_es_mode(0),
             stored_ip,
             DEFAULT_UDP_PORT,
-            timeout=2.0,
+            timeout=5.0,  # Increased timeout for initial connection
         )
         # Connection successful - device is at the configured IP
         # Use device info from config_entry (saved during config flow)

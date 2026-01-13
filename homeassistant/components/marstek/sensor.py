@@ -17,9 +17,31 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
+
+try:
+    from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+except ImportError:
+    # Fallback for older Home Assistant versions
+    from collections.abc import Iterable
+    from typing import TYPE_CHECKING, Protocol
+
+    if TYPE_CHECKING:
+        from homeassistant.helpers.entity import Entity
+    else:
+        Entity = object  # type: ignore[assignment, misc]
+
+    class AddConfigEntryEntitiesCallback(Protocol):  # type: ignore[no-redef]
+        """Protocol type for EntityPlatform.add_entities callback (fallback)."""
+
+        def __call__(
+            self,
+            new_entities: Iterable[Entity],
+            update_before_add: bool = False,
+        ) -> None:
+            """Define add_entities type."""
+
 
 from . import MarstekConfigEntry
 from .const import DOMAIN

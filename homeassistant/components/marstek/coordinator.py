@@ -77,7 +77,7 @@ class MarstekDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             device_status = await self.udp_client.get_device_status(
                 current_ip,
                 port=DEFAULT_UDP_PORT,
-                timeout=2.5,
+                timeout=5.0,  # Increased timeout for device status requests
                 include_pv=True,
                 delay_between_requests=5.0,
             )
