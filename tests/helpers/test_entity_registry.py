@@ -426,25 +426,25 @@ async def test_loading_saving_data(
     assert new_entry2.unit_of_measurement == "initial-unit_of_measurement"
 
 
-def test_generate_entity_considers_registered_entities(
+def test_get_available_entity_id_considers_registered_entities(
     entity_registry: er.EntityRegistry,
 ) -> None:
     """Test that we don't create entity id that are already registered."""
     entry = entity_registry.async_get_or_create("light", "hue", "1234")
     assert entry.entity_id == "light.hue_1234"
     assert (
-        entity_registry.async_generate_entity_id("light", "hue_1234")
+        entity_registry.async_get_available_entity_id("light", "hue_1234")
         == "light.hue_1234_2"
     )
 
 
-def test_generate_entity_considers_existing_entities(
+def test_get_available_entity_id_considers_existing_entities(
     hass: HomeAssistant, entity_registry: er.EntityRegistry
 ) -> None:
     """Test that we don't create entity id that currently exists."""
     hass.states.async_set("light.kitchen", "on")
     assert (
-        entity_registry.async_generate_entity_id("light", "kitchen")
+        entity_registry.async_get_available_entity_id("light", "kitchen")
         == "light.kitchen_2"
     )
 
@@ -2752,7 +2752,7 @@ async def test_entity_max_length_exceeded(
     )
 
     with pytest.raises(MaxLengthExceeded) as exc_info:
-        entity_registry.async_generate_entity_id(long_domain_name, "sensor")
+        entity_registry.async_get_available_entity_id(long_domain_name, "sensor")
 
     assert exc_info.value.property_name == "domain"
     assert exc_info.value.max_length == 64
@@ -2766,13 +2766,19 @@ async def test_entity_max_length_exceeded(
         "1234567890123456789012345678901234567"
     )
 
-    new_id = entity_registry.async_generate_entity_id("sensor", long_entity_id_name)
+    new_id = entity_registry.async_get_available_entity_id(
+        "sensor", long_entity_id_name
+    )
     assert new_id == "sensor." + long_entity_id_name[: 255 - 7]
     hass.states.async_reserve(new_id)
-    new_id = entity_registry.async_generate_entity_id("sensor", long_entity_id_name)
+    new_id = entity_registry.async_get_available_entity_id(
+        "sensor", long_entity_id_name
+    )
     assert new_id == "sensor." + long_entity_id_name[: 255 - 7 - 2] + "_2"
     hass.states.async_reserve(new_id)
-    new_id = entity_registry.async_generate_entity_id("sensor", long_entity_id_name)
+    new_id = entity_registry.async_get_available_entity_id(
+        "sensor", long_entity_id_name
+    )
     assert new_id == "sensor." + long_entity_id_name[: 255 - 7 - 2] + "_3"
 
 

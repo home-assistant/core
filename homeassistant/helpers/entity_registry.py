@@ -58,6 +58,7 @@ from .device_registry import (
     EVENT_DEVICE_REGISTRY_UPDATED,
     EventDeviceRegistryUpdatedData,
 )
+from .frame import ReportBehavior, report_usage
 from .json import JSON_DUMP, find_paths_unserializable_data, json_bytes, json_fragment
 from .registry import BaseRegistry, BaseRegistryItems, RegistryIndexType
 from .singleton import singleton
@@ -914,9 +915,41 @@ class EntityRegistry(BaseRegistry):
         current_entity_id: str | None = None,
         reserved_entity_ids: set[str] | None = None,
     ) -> str:
-        """Generate an entity ID, that does not conflict.
+        """Get available entity ID.
 
-        Conflicts checked against registered and currently existing entities.
+        This function is deprecated. Use `async_get_available_entity_id` instead.
+
+        Entity ID conflicts are checked against registered and currently existing entities,
+        as well as provided `reserved_entity_ids`.
+        """
+        report_usage(
+            "calls `entity_registry.async_generate_entity_id`, "
+            "which is deprecated and will be removed in Home Assistant 2027.2; "
+            "use `entity_registry.async_get_available_entity_id` instead",
+            core_behavior=ReportBehavior.LOG,
+            breaks_in_ha_version="2027.2.0",
+        )
+
+        return self.async_get_available_entity_id(
+            domain,
+            suggested_object_id,
+            current_entity_id=current_entity_id,
+            reserved_entity_ids=reserved_entity_ids,
+        )
+
+    @callback
+    def async_get_available_entity_id(
+        self,
+        domain: str,
+        suggested_object_id: str,
+        *,
+        current_entity_id: str | None = None,
+        reserved_entity_ids: set[str] | None = None,
+    ) -> str:
+        """Get next available entity ID.
+
+        Entity ID conflicts are checked against registered and currently existing entities,
+        as well as provided `reserved_entity_ids`.
         """
         preferred_string = f"{domain}.{slugify(suggested_object_id)}"
 
@@ -952,9 +985,10 @@ class EntityRegistry(BaseRegistry):
         suggested_object_id: str | None,
         unique_id: str,
     ) -> str:
-        """Generate an entity ID, that does not conflict.
+        """Generate an entity ID, based on all the provided parameters.
 
-        Conflicts checked against registered and currently existing entities.
+        Entity ID conflicts are checked against registered and currently existing entities,
+        as well as provided `reserved_entity_ids`.
         """
         object_id: str | None
         use_device = False
@@ -979,7 +1013,7 @@ class EntityRegistry(BaseRegistry):
             platform=platform,
             unique_id=unique_id,
         )
-        return self.async_generate_entity_id(
+        return self.async_get_available_entity_id(
             domain,
             object_id,
             current_entity_id=current_entity_id,
@@ -993,9 +1027,10 @@ class EntityRegistry(BaseRegistry):
         *,
         reserved_entity_ids: set[str] | None = None,
     ) -> str:
-        """Regenerate an entity ID for an entry, that does not conflict.
+        """Regenerate an entity ID for an entry.
 
-        Conflicts checked against registered and currently existing entities.
+        Entity ID conflicts are checked against registered and currently existing entities,
+        as well as provided `reserved_entity_ids`.
         """
         return self._async_generate_entity_id(
             calculated_object_id=entry.calculated_object_id,

@@ -936,7 +936,7 @@ class EntityPlatform:
                 )
                 suggested_object_id = suggested_object_id or calculated_object_id
                 assert suggested_object_id is not None
-                entity.entity_id = entity_registry.async_generate_entity_id(
+                entity.entity_id = entity_registry.async_get_available_entity_id(
                     self.domain, suggested_object_id
                 )
 
