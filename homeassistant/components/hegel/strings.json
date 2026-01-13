@@ -19,18 +19,6 @@
         },
         "description": "Discovered Hegel amplifier **{name}** at `{host}`. Confirm the model to complete setup.",
         "title": "Confirm Hegel amplifier"
-      },
-      "reconfigure": {
-        "data": {
-          "host": "[%key:common::config_flow::data::host%]",
-          "model": "Model"
-        },
-        "data_description": {
-          "host": "The IP address or hostname of your Hegel amplifier",
-          "model": "Select your Hegel amplifier model for proper input mapping"
-        },
-        "description": "Update the connection settings for your Hegel amplifier.",
-        "title": "Reconfigure Hegel amplifier"
       }
     }
   }
