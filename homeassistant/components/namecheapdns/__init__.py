@@ -4,7 +4,6 @@ from datetime import timedelta
 import logging
 
 from aiohttp import ClientError, ClientSession
-import defusedxml.ElementTree as ET
 import voluptuous as vol
 
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
@@ -103,10 +102,8 @@ async def update_namecheapdns(
 
     resp = await session.get(UPDATE_URL, params=params)
     xml_string = await resp.text()
-    root = ET.fromstring(xml_string)
-    err_count = root.find("ErrCount").text
 
-    if int(err_count) != 0:
+    if "<ErrCount>0</ErrCount>" not in xml_string:
         _LOGGER.warning("Updating namecheap domain failed: %s", domain)
         return False
 

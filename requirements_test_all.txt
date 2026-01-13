@@ -694,7 +694,6 @@ debugpy==1.8.17
 deebot-client==17.0.1
 
 # homeassistant.components.ihc
-# homeassistant.components.namecheapdns
 # homeassistant.components.ohmconnect
 # homeassistant.components.sonos
 defusedxml==0.7.1
