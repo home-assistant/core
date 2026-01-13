@@ -347,9 +347,7 @@ class AirOSConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="configure_device",
             data_schema=STEP_DISCOVERY_DATA_SCHEMA,
             errors=self.errors,
-            description_placeholders={
-                "device_name": device_name
-            },
+            description_placeholders={"device_name": device_name},
         )
 
     async def _async_run_discovery_with_progress(self) -> None:
