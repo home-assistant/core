@@ -11,6 +11,7 @@ from syrupy.assertion import SnapshotAssertion
 from homeassistant.components.climate import ClimateEntityFeature, HVACAction, HVACMode
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import entity_registry as er
 
 from .common import (
@@ -451,7 +452,7 @@ async def test_thermostat_presets(
     ]
     assert state.attributes["preset_mode"] is None
 
-    # test return_to_base action
+    # test set_preset_mode action
     await hass.services.async_call(
         "climate",
         "set_preset_mode",
@@ -470,3 +471,142 @@ async def test_thermostat_presets(
             presetHandle=preset_handle
         ),
     )
+    matter_client.send_device_command.reset_mock()
+
+    # test set_preset_mode with invalid preset mode
+    # The climate platform validates preset modes before calling our method
+
+    with pytest.raises(
+        ServiceValidationError, match="Preset mode InvalidPreset is not valid"
+    ):
+        await hass.services.async_call(
+            "climate",
+            "set_preset_mode",
+            {
+                "entity_id": entity_id,
+                "preset_mode": "InvalidPreset",
+            },
+            blocking=True,
+        )
+
+    # Ensure no command was sent for invalid preset
+    assert matter_client.send_device_command.call_count == 0
+
+
+@pytest.mark.parametrize("node_fixture", ["eve_thermo_v5"])
+async def test_eve_thermo_v5_presets(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+) -> None:
+    """Test Eve Thermo v5 thermostat presets attributes and state updates."""
+    # test entity attributes
+    entity_id = "climate.eve_thermo_20ecd1701"
+    state = hass.states.get(entity_id)
+    assert state
+
+    # test supported features correctly parsed
+    mask = (
+        ClimateEntityFeature.TARGET_TEMPERATURE
+        | ClimateEntityFeature.TURN_OFF
+        | ClimateEntityFeature.PRESET_MODE
+    )
+    assert state.attributes["supported_features"] & mask == mask
+
+    # Test preset modes parsed correctly from Eve Thermo v5
+    assert state.attributes["preset_modes"] == [
+        "Home",
+        "Away",
+        "Sleep",
+        "Wake",
+        "Vacation",
+        "GoingToSleep",
+        "Eco",
+    ]
+    assert state.attributes["preset_mode"] is None
+
+    # Get presets from the node for dynamic testing
+    presets_attribute = matter_node.endpoints[1].get_attribute_value(
+        clusters.Thermostat.Attributes.Presets.cluster_id,
+        clusters.Thermostat.Attributes.Presets.attribute_id,
+    )
+    preset_by_name = {preset.name: preset.presetHandle for preset in presets_attribute}
+
+    # test set_preset_mode with "Home" preset
+    await hass.services.async_call(
+        "climate",
+        "set_preset_mode",
+        {
+            "entity_id": entity_id,
+            "preset_mode": "Home",
+        },
+        blocking=True,
+    )
+    assert matter_client.send_device_command.call_count == 1
+    assert matter_client.send_device_command.call_args == call(
+        node_id=matter_node.node_id,
+        endpoint_id=1,
+        command=clusters.Thermostat.Commands.SetActivePresetRequest(
+            presetHandle=preset_by_name["Home"]
+        ),
+    )
+    matter_client.send_device_command.reset_mock()
+
+    # test set_preset_mode with "Away" preset
+    await hass.services.async_call(
+        "climate",
+        "set_preset_mode",
+        {
+            "entity_id": entity_id,
+            "preset_mode": "Away",
+        },
+        blocking=True,
+    )
+    assert matter_client.send_device_command.call_count == 1
+    assert matter_client.send_device_command.call_args == call(
+        node_id=matter_node.node_id,
+        endpoint_id=1,
+        command=clusters.Thermostat.Commands.SetActivePresetRequest(
+            presetHandle=preset_by_name["Away"]
+        ),
+    )
+    matter_client.send_device_command.reset_mock()
+
+    # test set_preset_mode with "Eco" preset
+    await hass.services.async_call(
+        "climate",
+        "set_preset_mode",
+        {
+            "entity_id": entity_id,
+            "preset_mode": "Eco",
+        },
+        blocking=True,
+    )
+    assert matter_client.send_device_command.call_count == 1
+    assert matter_client.send_device_command.call_args == call(
+        node_id=matter_node.node_id,
+        endpoint_id=1,
+        command=clusters.Thermostat.Commands.SetActivePresetRequest(
+            presetHandle=preset_by_name["Eco"]
+        ),
+    )
+    matter_client.send_device_command.reset_mock()
+
+    # test set_preset_mode with invalid preset mode
+    # The climate platform validates preset modes before calling our method
+
+    with pytest.raises(
+        ServiceValidationError, match="Preset mode InvalidPreset is not valid"
+    ):
+        await hass.services.async_call(
+            "climate",
+            "set_preset_mode",
+            {
+                "entity_id": entity_id,
+                "preset_mode": "InvalidPreset",
+            },
+            blocking=True,
+        )
+
+    # Ensure no command was sent for invalid preset
+    assert matter_client.send_device_command.call_count == 0
