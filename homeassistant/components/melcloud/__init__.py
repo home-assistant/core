@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import asyncio
 from datetime import timedelta
+from http import HTTPStatus
 
 from aiohttp import ClientConnectionError, ClientResponseError
 from pymelcloud import get_devices
@@ -32,9 +33,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: MelCloudConfigEntry) -> 
                 device_set_debounce=timedelta(seconds=2),
             )
     except ClientResponseError as ex:
-        if ex.status in (401, 403):
+        if ex.status in (HTTPStatus.UNAUTHORIZED, HTTPStatus.FORBIDDEN):
             raise ConfigEntryAuthFailed from ex
-        if ex.status == 429:
+        if ex.status == HTTPStatus.TOO_MANY_REQUESTS:
             raise UpdateFailed(
                 "MELCloud rate limit exceeded. Your account may be temporarily blocked"
             ) from ex
