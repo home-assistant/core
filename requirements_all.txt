@@ -3146,7 +3146,7 @@ visionpluspython==1.0.2
 vobject==0.9.9
 
 # homeassistant.components.voip
-voip-utils==0.3.4
+voip-utils==0.3.5
 
 # homeassistant.components.volkszaehler
 volkszaehler==0.4.0
