@@ -1,9 +1,9 @@
 {
   "config": {
     "abort": {
-      "already_configured": "%key:common::config_flow::abort::already_configured_device%]",
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
       "invalid_config": "The YAML configuration is invalid and cannot be imported. Please check your configuration.yaml file and set up Splunk through the UI instead.",
-      "reauth_successful": "Re-authentication was successful."
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
@@ -21,12 +21,12 @@
       },
       "user": {
         "data": {
-          "host": "Host",
-          "name": "Name",
-          "port": "Port",
+          "host": "[%key:common::config_flow::data::host%]",
+          "name": "[%key:common::config_flow::data::name%]",
+          "port": "[%key:common::config_flow::data::port%]",
           "ssl": "Use SSL",
           "token": "HTTP Event Collector token",
-          "verify_ssl": "Verify SSL certificate"
+          "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]"
         },
         "data_description": {
           "host": "The hostname or IP address of your Splunk server",
