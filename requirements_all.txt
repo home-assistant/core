@@ -1011,7 +1011,7 @@ freebox-api==1.2.2
 freesms==0.2.0
 
 # homeassistant.components.fressnapf_tracker
-fressnapftracker==0.2.0
+fressnapftracker==0.2.1
 
 # homeassistant.components.fritz
 # homeassistant.components.fritzbox_callmonitor
@@ -1684,7 +1684,7 @@ openwrt-luci-rpc==1.1.17
 openwrt-ubus-rpc==0.0.2
 
 # homeassistant.components.opower
-opower==0.16.1
+opower==0.16.2
 
 # homeassistant.components.oralb
 oralb-ble==1.0.2
@@ -3219,7 +3219,7 @@ wyoming==1.7.2
 xiaomi-ble==1.4.1
 
 # homeassistant.components.knx
-xknx==3.13.0
+xknx==3.14.0
 
 # homeassistant.components.knx
 xknxproject==3.8.2
