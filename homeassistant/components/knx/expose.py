@@ -116,7 +116,7 @@ class KnxExposeOptions:
     dpt: type[DPTBase]
     respond_to_read: bool
     cooldown: float
-    periodic_send: int
+    periodic_send: float
     default: Any | None
     value_template: Template | None
 
