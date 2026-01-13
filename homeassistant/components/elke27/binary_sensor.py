@@ -20,6 +20,38 @@ from .hub import Elke27Hub
 
 _LOGGER = logging.getLogger(__name__)
 
+_ZONE_ICON_BY_DEFINITION = {
+    "UNDEFINED": "mdi:help-circle-outline",
+    "BURG EE DELAY": "mdi:door-closed-lock",
+    "BURG PERIM INST": "mdi:window-closed",
+    "BURG INTERIOR": "mdi:motion-sensor",
+    "BURG 24HR": "mdi:shield-alert",
+    "BURG BOX TAMPER": "mdi:shield-off-outline",
+    "FIRE": "mdi:fire",
+    "CARBON MONOXIDE": "mdi:molecule-co",
+    "PANIC": "mdi:alert-octagon",
+    "MEDICAL": "mdi:medical-bag",
+    "AUTOMATION": "mdi:home-automation",
+    "POWER SUPERVISION": "mdi:power",
+    "WATER": "mdi:water",
+    "HILO TEMP": "mdi:thermometer",
+}
+_ZONE_OPEN_ICON_BY_DEFINITION = {
+    "BURG EE DELAY": "mdi:door-open",
+    "BURG PERIM INST": "mdi:window-open",
+    "BURG INTERIOR": "mdi:motion-sensor",
+    "BURG 24HR": "mdi:shield-alert",
+    "BURG BOX TAMPER": "mdi:shield-off-outline",
+    "FIRE": "mdi:fire-alert",
+    "CARBON MONOXIDE": "mdi:molecule-co",
+    "PANIC": "mdi:alert-octagon",
+    "MEDICAL": "mdi:medical-bag",
+    "AUTOMATION": "mdi:home-automation",
+    "POWER SUPERVISION": "mdi:power-alert",
+    "WATER": "mdi:water-alert",
+    "HILO TEMP": "mdi:thermometer-alert",
+}
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -129,6 +161,20 @@ class Elke27ZoneBinarySensor(BinarySensorEntity):
         return bool(is_open) if isinstance(is_open, bool) else None
 
     @property
+    def icon(self) -> str | None:
+        """Return the icon based on zone definition and state."""
+        zone = _get_zone(self._hub.snapshot, self._zone_id)
+        if zone is None:
+            return None
+        definition = _zone_definition(zone)
+        if not definition:
+            return None
+        is_open = getattr(zone, "open", None)
+        if isinstance(is_open, bool) and is_open:
+            return _ZONE_OPEN_ICON_BY_DEFINITION.get(definition) or _ZONE_ICON_BY_DEFINITION.get(definition)
+        return _ZONE_ICON_BY_DEFINITION.get(definition)
+
+    @property
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return additional state attributes."""
         zone = _get_zone(self._hub.snapshot, self._zone_id)
@@ -168,6 +214,15 @@ def _get_zone(snapshot: Any, zone_id: int) -> Any | None:
         if getattr(zone, "zone_id", None) == zone_id:
             return zone
     return None
+
+
+def _zone_definition(zone: Any) -> str | None:
+    definition = (
+        zone.get("definition")
+        if isinstance(zone, Mapping)
+        else getattr(zone, "definition", None)
+    )
+    return str(definition) if definition else None
 
 
 def _zone_device_class(zone: Any) -> BinarySensorDeviceClass:
