@@ -30,22 +30,18 @@ class SwitchbotCloudButtonEntityDescription(ButtonEntityDescription):
     parameters: dict | str = "default"
 
 
-GENERAL_BUTTON_DESCRIPTION = SwitchbotCloudButtonEntityDescription(
-    key="Button",
-)
-
 BOT_BUTTON_DESCRIPTION = SwitchbotCloudButtonEntityDescription(
-    key="Button", command=BotCommands.PRESS
+    key="Button", command=BotCommands.PRESS, name=None
 )
 
 ART_FRAME_NEXT_BUTTON_DESCRIPTION = SwitchbotCloudButtonEntityDescription(
-    key="Next",
+    key="next",
     translation_key="art_frame_next_picture",
     command=ArtFrameCommands.NEXT,
 )
 
 ART_FRAME_PREVIOUS_BUTTON_DESCRIPTION = SwitchbotCloudButtonEntityDescription(
-    key="Previous",
+    key="previous",
     translation_key="art_frame_previous_picture",
     command=ArtFrameCommands.PREVIOUS,
 )
@@ -80,7 +76,6 @@ async def async_setup_entry(
 class SwitchBotCloudBot(SwitchBotCloudEntity, ButtonEntity):
     """Representation of a SwitchBot Bot."""
 
-    _attr_has_entity_name = True
     entity_description: SwitchbotCloudButtonEntityDescription
 
     def __init__(
@@ -94,9 +89,9 @@ class SwitchBotCloudBot(SwitchBotCloudEntity, ButtonEntity):
 
         super().__init__(api, device, coordinator)
         self.entity_description = description
-        self._attr_unique_id = f"{device.device_id}-{description.key}"
+        if description.key != "Button":
+            self._attr_unique_id = f"{device.device_id}-{description.key}"
         self._device_id = device.device_id
-        self._attr_name = description.key
 
     async def async_press(self, **kwargs: Any) -> None:
         """Button press command."""
