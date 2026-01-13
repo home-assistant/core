@@ -283,11 +283,15 @@ class CityBikesConfigFlow(ConfigFlow, domain=DOMAIN):
                     options=options,
                 )
 
-        # Create station options for checkboxes from filtered stations
-        station_options = [
-            SelectOptionDict(value=station["id"], label=station["name"])
-            for station in self.filtered_stations
-        ]
+        # Create station options for searchable dropdown from filtered stations
+        # Sort stations alphabetically for easier searching
+        station_options = sorted(
+            [
+                SelectOptionDict(value=station["id"], label=station["name"])
+                for station in self.filtered_stations
+            ],
+            key=lambda x: x["label"]
+        )
 
         # Use user_input values if available (form re-display after errors), otherwise use stored state
         if user_input is not None:
@@ -306,7 +310,8 @@ class CityBikesConfigFlow(ConfigFlow, domain=DOMAIN):
                     SelectSelectorConfig(
                         options=station_options,
                         multiple=True,
-                        mode=SelectSelectorMode.LIST,
+                        mode=SelectSelectorMode.DROPDOWN,
+                        sort=True,
                     )
                 ),
             }
