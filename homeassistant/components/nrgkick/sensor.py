@@ -600,6 +600,7 @@ SENSORS: tuple[NRGkickSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        entity_category=EntityCategory.DIAGNOSTIC,
         value_path=("values", "temperatures", "housing"),
     ),
     NRGkickSensorEntityDescription(
@@ -608,6 +609,7 @@ SENSORS: tuple[NRGkickSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        entity_category=EntityCategory.DIAGNOSTIC,
         value_path=("values", "temperatures", "connector_l1"),
     ),
     NRGkickSensorEntityDescription(
@@ -616,6 +618,7 @@ SENSORS: tuple[NRGkickSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        entity_category=EntityCategory.DIAGNOSTIC,
         value_path=("values", "temperatures", "connector_l2"),
     ),
     NRGkickSensorEntityDescription(
@@ -624,6 +627,7 @@ SENSORS: tuple[NRGkickSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        entity_category=EntityCategory.DIAGNOSTIC,
         value_path=("values", "temperatures", "connector_l3"),
     ),
     NRGkickSensorEntityDescription(
@@ -632,6 +636,7 @@ SENSORS: tuple[NRGkickSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        entity_category=EntityCategory.DIAGNOSTIC,
         value_path=("values", "temperatures", "domestic_plug_1"),
     ),
     NRGkickSensorEntityDescription(
@@ -640,6 +645,7 @@ SENSORS: tuple[NRGkickSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        entity_category=EntityCategory.DIAGNOSTIC,
         value_path=("values", "temperatures", "domestic_plug_2"),
     ),
 )
