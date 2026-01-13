@@ -23,14 +23,11 @@ PLATFORMS = [Platform.CLIMATE, Platform.SENSOR, Platform.WATER_HEATER]
 
 async def async_setup_entry(hass: HomeAssistant, entry: MelCloudConfigEntry) -> bool:
     """Establish connection with MELCloud."""
-    token = entry.data[CONF_TOKEN]
-    session = async_get_clientsession(hass)
-
     try:
         async with asyncio.timeout(10):
             all_devices = await get_devices(
-                token,
-                session,
+                token=entry.data[CONF_TOKEN],
+                session=async_get_clientsession(hass),
                 conf_update_interval=timedelta(minutes=30),
                 device_set_debounce=timedelta(seconds=2),
             )
