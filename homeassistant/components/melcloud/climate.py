@@ -360,7 +360,7 @@ class AtwDeviceZoneClimate(MelCloudClimate):
     @property
     def hvac_mode(self) -> HVACMode:
         """Return hvac operation ie. heat, cool mode."""
-        mode = self._zone.operation_mode
+        mode = self._zone.status
         if not self._device.power or mode is None:
             return HVACMode.OFF
         return ATW_ZONE_HVAC_MODE_LOOKUP.get(mode, HVACMode.OFF)
