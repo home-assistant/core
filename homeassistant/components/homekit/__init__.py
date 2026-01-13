@@ -90,6 +90,7 @@ from . import (  # noqa: F401
     type_cameras,
     type_covers,
     type_fans,
+    type_heatercooler,
     type_humidifiers,
     type_lights,
     type_locks,
