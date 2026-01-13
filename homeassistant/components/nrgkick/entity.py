@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any
+from typing import Any
 
 from homeassistant.helpers.device_registry import (
     CONNECTION_NETWORK_MAC,
@@ -12,7 +12,7 @@ from homeassistant.helpers.device_registry import (
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
-from .coordinator import NRGkickData, NRGkickDataUpdateCoordinator
+from .coordinator import NRGkickDataUpdateCoordinator
 
 
 class NRGkickEntity(CoordinatorEntity[NRGkickDataUpdateCoordinator]):
@@ -24,19 +24,15 @@ class NRGkickEntity(CoordinatorEntity[NRGkickDataUpdateCoordinator]):
         """Initialize the entity."""
         super().__init__(coordinator)
         self._key = key
-        self._setup_device_info()
 
-    def _setup_device_info(self) -> None:
-        """Set up device info and unique ID."""
-        data: NRGkickData | None = self.coordinator.data
+        data = self.coordinator.data
         info_data: dict[str, Any] = data.info if data else {}
         device_info: dict[str, Any] = info_data.get("general", {})
         network_info: dict[str, Any] = info_data.get("network", {})
 
         # The config flow requires a serial number and sets it as unique_id.
         serial = self.coordinator.config_entry.unique_id
-        if TYPE_CHECKING:
-            assert serial is not None
+        assert serial is not None
 
         # Get additional device info fields.
         versions: dict[str, Any] = info_data.get("versions", {})
