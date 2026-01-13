@@ -3,13 +3,14 @@
 from __future__ import annotations
 
 import contextlib
+import asyncio
 from enum import Enum
 import inspect
 import logging
 from typing import Any, Callable
 
 from elke27_lib import ClientConfig, Elke27Client, LinkKeys
-from elke27_lib.errors import Elke27PinRequiredError
+from elke27_lib.errors import Elke27LinkRequiredError, Elke27PinRequiredError
 
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
@@ -51,6 +52,11 @@ class Elke27Hub:
         self._output_listeners: list[Callable[[], None]] = []
         self._system_listeners: list[Callable[[], None]] = []
         self.snapshot: Any | None = None
+        self._connect_lock = asyncio.Lock()
+        self._reconnect_task: asyncio.Task[None] | None = None
+        self._reconnect_attempts = 0
+        self._stopping = False
+        self._unavailable_logged = False
 
     @property
     def client(self) -> Elke27Client | None:
@@ -128,44 +134,65 @@ class Elke27Hub:
 
     async def async_start(self) -> None:
         """Connect the client, then await readiness."""
-        link_keys = LinkKeys.from_json(self._link_keys_json)
-        client = Elke27Client(ClientConfig())
-        client_identity = build_client_identity(self._integration_serial)
-        # Elke27Client v2 does not expose a public identity setter yet.
-        coerce_identity = getattr(client, "_coerce_identity", None)
-        if callable(coerce_identity):
-            client._v2_client_identity = coerce_identity(client_identity)
-        self._client = client
-        try:
-            await client.async_connect(self._host, self._port, link_keys)
-            if self._panel_name is None:
-                panel_name = await self._async_discover_panel_name(client)
-                if panel_name:
-                    self._panel_name = panel_name
-                    _LOGGER.debug("Discovered panel name: %s", panel_name)
-            if self._pin:
-                auth_result = await client.async_execute(
-                    "control_authenticate", pin=int(self._pin)
-                )
-                if not getattr(auth_result, "ok", False):
-                    error = getattr(auth_result, "error", None)
-                    message = str(error) if error is not None else "Invalid PIN"
-                    raise ConfigEntryAuthFailed(message)
-            ready = await client.wait_ready(timeout_s=READY_TIMEOUT)
-            if not ready:
-                raise ConfigEntryNotReady(
-                    "The client did not become ready before timeout"
-                )
-            self._unsubscribe = client.subscribe(self._handle_event)
-            self.snapshot = client.snapshot
-        except Exception:
-            with contextlib.suppress(Exception):
-                await client.async_disconnect()
-            self._client = None
-            raise
+        self._stopping = False
+        await self._async_connect()
+
+    async def _async_connect(self) -> None:
+        """Connect the client, then await readiness."""
+        async with self._connect_lock:
+            await self._async_disconnect()
+            link_keys = LinkKeys.from_json(self._link_keys_json)
+            client = Elke27Client(ClientConfig())
+            client_identity = build_client_identity(self._integration_serial)
+            # Elke27Client v2 does not expose a public identity setter yet.
+            coerce_identity = getattr(client, "_coerce_identity", None)
+            if callable(coerce_identity):
+                client._v2_client_identity = coerce_identity(client_identity)
+            self._client = client
+            try:
+                await client.async_connect(self._host, self._port, link_keys)
+                if self._panel_name is None:
+                    panel_name = await self._async_discover_panel_name(client)
+                    if panel_name:
+                        self._panel_name = panel_name
+                        _LOGGER.debug("Discovered panel name: %s", panel_name)
+                if self._pin:
+                    auth_result = await client.async_execute(
+                        "control_authenticate", pin=int(self._pin)
+                    )
+                    if not getattr(auth_result, "ok", False):
+                        error = getattr(auth_result, "error", None)
+                        message = str(error) if error is not None else "Invalid PIN"
+                        raise ConfigEntryAuthFailed(message)
+                ready = await client.wait_ready(timeout_s=READY_TIMEOUT)
+                if not ready:
+                    raise ConfigEntryNotReady(
+                        "The client did not become ready before timeout"
+                    )
+                self._unsubscribe = client.subscribe(self._handle_event)
+                self.snapshot = client.snapshot
+                if self._unavailable_logged:
+                    _LOGGER.info("Panel connection restored")
+                    self._unavailable_logged = False
+            except Exception:
+                with contextlib.suppress(Exception):
+                    await client.async_disconnect()
+                self._client = None
+                raise
 
     async def async_stop(self) -> None:
         """Disconnect the client and unregister event handlers."""
+        self._stopping = True
+        if self._reconnect_task is not None:
+            self._reconnect_task.cancel()
+            with contextlib.suppress(asyncio.CancelledError):
+                await self._reconnect_task
+            self._reconnect_task = None
+        await self._async_disconnect()
+
+    async def _async_disconnect(self) -> None:
+        """Disconnect the client and unregister event handlers."""
+        was_connected = self._client is not None or self.snapshot is not None
         if self._unsubscribe is not None:
             self._unsubscribe()
             self._unsubscribe = None
@@ -173,6 +200,8 @@ class Elke27Hub:
             await self._client.async_disconnect()
         self._client = None
         self.snapshot = None
+        if was_connected:
+            self._log_unavailable()
 
     async def _async_discover_panel_name(self, client: Elke27Client) -> str | None:
         """Return the panel name from discovery if available."""
@@ -284,6 +313,11 @@ class Elke27Hub:
             return
         self.snapshot = self._client.snapshot
         event_type = _event_type(event)
+        if event_type == "DISCONNECTED":
+            self._log_unavailable()
+            self._schedule_reconnect()
+        elif event_type == "READY":
+            self._cancel_reconnect()
         self._dispatch(self._listeners)
         if event_type == "AREA":
             self._dispatch(self._area_listeners)
@@ -293,6 +327,50 @@ class Elke27Hub:
             self._dispatch(self._output_listeners)
         elif event_type in _SYSTEM_EVENT_TYPES:
             self._dispatch(self._system_listeners)
+
+    @callback
+    def _schedule_reconnect(self) -> None:
+        """Schedule reconnection attempts when the panel disconnects."""
+        if self._stopping:
+            return
+        if self._reconnect_task is not None and not self._reconnect_task.done():
+            return
+        self._reconnect_task = self._hass.async_create_task(
+            self._async_reconnect_loop()
+        )
+
+    @callback
+    def _cancel_reconnect(self) -> None:
+        """Cancel any scheduled reconnection attempts."""
+        if self._reconnect_task is None:
+            return
+        if not self._reconnect_task.done():
+            self._reconnect_task.cancel()
+        self._reconnect_task = None
+        self._reconnect_attempts = 0
+
+    def _log_unavailable(self) -> None:
+        """Log the panel as unavailable once."""
+        if self._unavailable_logged:
+            return
+        _LOGGER.info("Panel connection lost")
+        self._unavailable_logged = True
+
+    async def _async_reconnect_loop(self) -> None:
+        """Reconnect with exponential backoff until successful or stopped."""
+        while not self._stopping:
+            try:
+                await self._async_connect()
+                self._reconnect_attempts = 0
+                return
+            except (ConfigEntryAuthFailed, Elke27LinkRequiredError) as err:
+                _LOGGER.error("Reconnect aborted: %s", err)
+                return
+            except Exception as err:  # noqa: BLE001
+                _LOGGER.debug("Reconnect attempt failed: %s", err)
+            self._reconnect_attempts += 1
+            delay = min(300, 2 ** self._reconnect_attempts)
+            await asyncio.sleep(delay)
 
     @callback
     def _dispatch(self, listeners: list[Callable[[], None]]) -> None:
