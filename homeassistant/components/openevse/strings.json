@@ -9,6 +9,16 @@
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]"
     },
     "step": {
+      "auth": {
+        "data": {
+          "password": "[%key:common::config_flow::data::password%]",
+          "username": "[%key:common::config_flow::data::username%]"
+        },
+        "data_description": {
+          "password": "The password to access your OpenEVSE charger",
+          "username": "The username to access your OpenEVSE charger"
+        }
+      },
       "user": {
         "data": {
           "host": "[%key:common::config_flow::data::host%]"
