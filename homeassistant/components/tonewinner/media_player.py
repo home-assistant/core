@@ -251,6 +251,8 @@ class TonewinnerMediaPlayer(MediaPlayerEntity):
             new_state = MediaPlayerState.ON if power else MediaPlayerState.OFF
             _LOGGER.debug("State updated: %s", new_state)
             self._attr_state = new_state
+            if new_state == MediaPlayerState.OFF:
+                self._attr_source = None
 
         # Parse volume (device returns 0-80, convert to 0.0-1.0 for HA)
         if volume := ToneWinnerProtocol.parse_volume_status(response):
