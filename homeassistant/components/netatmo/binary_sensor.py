@@ -43,30 +43,22 @@ from .entity import NetatmoModuleEntity, NetatmoWeatherModuleEntity
 
 _LOGGER = logging.getLogger(__name__)
 
+OPENING_STATUS_TRANSLATIONS: Final[dict[StateType, StateType | None]] = {
+    DOORTAG_STATUS_NO_NEWS: None,
+    DOORTAG_STATUS_CALIBRATING: None,
+    DOORTAG_STATUS_UNDEFINED: None,
+    DOORTAG_STATUS_CLOSED: False,
+    DOORTAG_STATUS_OPEN: True,
+    DOORTAG_STATUS_CALIBRATION_FAILED: None,
+    DOORTAG_STATUS_MAINTENANCE: None,
+    DOORTAG_STATUS_WEAK_SIGNAL: None,
+}
+
 
 def process_opening_status_string(status: StateType) -> StateType | None:
     """Process opening status and return bool."""
-    _LOGGER.debug(
-        "Translated opening status: %s",
-        status,
-    )
-    if status == DOORTAG_STATUS_NO_NEWS:
-        return None
-    if status == DOORTAG_STATUS_CALIBRATING:
-        return None
-    if status == DOORTAG_STATUS_UNDEFINED:
-        return None
-    if status == DOORTAG_STATUS_CLOSED:
-        return False
-    if status == DOORTAG_STATUS_OPEN:
-        return True
-    if status == DOORTAG_STATUS_CALIBRATION_FAILED:
-        return None
-    if status == DOORTAG_STATUS_MAINTENANCE:
-        return None
-    if status == DOORTAG_STATUS_WEAK_SIGNAL:
-        return None
-    return None
+
+    return OPENING_STATUS_TRANSLATIONS.get(status, None)
 
 
 def process_opening_status(
@@ -74,41 +66,26 @@ def process_opening_status(
 ) -> StateType | None:
     """Process opening Module status and return bool."""
     status = getattr(netatmo_device, netatmo_name)
-    value = process_opening_status_string(status)
+    return process_opening_status_string(status)
 
-    _LOGGER.debug(
-        "Opening status (%s) translating from '%s' to '%s' for module '%s'",
-        netatmo_name,
-        status,
-        value,
-        netatmo_device.name,
-    )
-    return value
+
+OPENING_CATEGORY_TRANSLATIONS: Final[dict[StateType, BinarySensorDeviceClass]] = {
+    DOORTAG_CATEGORY_DOOR: BinarySensorDeviceClass.DOOR,
+    DOORTAG_CATEGORY_FURNITURE: BinarySensorDeviceClass.OPENING,
+    DOORTAG_CATEGORY_GARAGE: BinarySensorDeviceClass.GARAGE_DOOR,
+    DOORTAG_CATEGORY_GATE: BinarySensorDeviceClass.OPENING,
+    DOORTAG_CATEGORY_OTHER: BinarySensorDeviceClass.OPENING,
+    DOORTAG_CATEGORY_WINDOW: BinarySensorDeviceClass.WINDOW,
+}
 
 
 def process_opening_category_string(
     category: StateType,
 ) -> BinarySensorDeviceClass | None:
     """Helper function to map Netatmo opening category to Home Assistant device class."""
-    _LOGGER.debug(
-        "Translated opening category: %s",
-        category,
-    )
 
     # Use a specific device class if we have a match
-    if category == DOORTAG_CATEGORY_DOOR:
-        return BinarySensorDeviceClass.DOOR
-    if category == DOORTAG_CATEGORY_WINDOW:
-        return BinarySensorDeviceClass.WINDOW
-    if category == DOORTAG_CATEGORY_GARAGE:
-        return BinarySensorDeviceClass.GARAGE_DOOR
-    if category == DOORTAG_CATEGORY_GATE:
-        return BinarySensorDeviceClass.OPENING
-    if category == DOORTAG_CATEGORY_FURNITURE:
-        return BinarySensorDeviceClass.OPENING
-    if category == DOORTAG_CATEGORY_OTHER:
-        return BinarySensorDeviceClass.OPENING
-    return None
+    return OPENING_CATEGORY_TRANSLATIONS.get(category, None)
 
 
 def get_opening_category(netatmo_device: NetatmoDevice) -> StateType | None:
@@ -134,18 +111,6 @@ def get_opening_category(netatmo_device: NetatmoDevice) -> StateType | None:
                     if module.get("category") is not None:
                         category = module["category"]
 
-    if category is not None:
-        _LOGGER.debug(
-            "Found category '%s' for device '%s'",
-            category,
-            netatmo_device.device.name,
-        )
-    else:
-        _LOGGER.warning(
-            "Category not found for device_id: %s in raw data",
-            netatmo_device.device.name,
-        )
-
     return category
 
 
@@ -158,13 +123,6 @@ def process_opening_category(netatmo_device: NetatmoDevice) -> BinarySensorDevic
 
     if module_binary_sensor_class is None:
         module_binary_sensor_class = BinarySensorDeviceClass.OPENING
-
-    _LOGGER.debug(
-        "Opening category translated from '%s' to '%s' for module '%s'",
-        category,
-        module_binary_sensor_class,
-        netatmo_device.device.name,
-    )
 
     return module_binary_sensor_class
 
@@ -187,13 +145,7 @@ def process_opening_name(netatmo_device: NetatmoDevice) -> str:
     if module_binary_sensor_class is None:
         module_binary_sensor_class = BinarySensorDeviceClass.OPENING
 
-    name = DEVICE_CLASS_TRANSLATIONS.get(module_binary_sensor_class, "Opening")
-    _LOGGER.debug(
-        "Opening name is '%s' for module '%s'",
-        name,
-        netatmo_device.device.name,
-    )
-    return name
+    return DEVICE_CLASS_TRANSLATIONS.get(module_binary_sensor_class, "Opening")
 
 
 @dataclass(frozen=True, kw_only=True)
