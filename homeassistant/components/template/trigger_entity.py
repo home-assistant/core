@@ -72,7 +72,23 @@ class TriggerEntity(  # pylint: disable=hass-enforce-class-module
         on_update: Callable[[Any], None] | None = None,
         on_cancel: Callable[[], None] | None = None,
     ) -> None:
-        """Set up a template that manages any property or attribute of the entity."""
+        """Set up a template that manages any property or attribute of the entity.
+
+        Parameters
+        ----------
+        option
+            The configuration key provided by ConfigFlow or the yaml option
+        attribute
+            The name of the attribute to link to. This attribute must exist
+            unless a custom on_update method is supplied.
+        validator:
+            Optional function that validates the rendered result.
+        on_update:
+            Called to store the template result rather than storing it
+            the supplied attribute. Passed the result of the validator.
+        on_cancel:
+            Called when the template entity renders unknown or unavailable.
+        """
         self.setup_state_template(option, attribute, validator, on_update, on_cancel)
 
     @property
