@@ -41,6 +41,28 @@ TEST_UNITS: dict[str, dict[str, Any]] = {
         "clean_filter": True,
         "swing": "horizontal",
     },
+    "L1.102": {
+        "is_on": True,
+        "thermostat": 20,
+        "temperature": 25,
+        "temperature_unit": "celsius",
+        "fan_speed": "vlow",
+        "mode": "cool",
+        "error_code": None,
+        "clean_filter": False,
+        "swing": None,
+    },
+    "L1.103": {
+        "is_on": True,
+        "thermostat": 25,
+        "temperature": 25,
+        "temperature_unit": "celsius",
+        "fan_speed": "med",
+        "mode": "dry",
+        "error_code": None,
+        "clean_filter": False,
+        "swing": None,
+    },
 }
 
 
@@ -166,7 +188,12 @@ async def load_int(hass: HomeAssistant) -> MockConfigEntry:
         data={
             "host": "1.2.3.4",
             "port": 1234,
-            "supported_modes": [HVACMode.OFF, HVACMode.COOL, HVACMode.HEAT],
+            "supported_modes": [
+                HVACMode.OFF,
+                HVACMode.COOL,
+                HVACMode.HEAT,
+                HVACMode.DRY,
+            ],
         },
     )
 
@@ -190,7 +217,12 @@ async def config_entry_with_errors(hass: HomeAssistant) -> MockConfigEntry:
         data={
             "host": "1.2.3.4",
             "port": 1234,
-            "supported_modes": [HVACMode.OFF, HVACMode.COOL, HVACMode.HEAT],
+            "supported_modes": [
+                HVACMode.OFF,
+                HVACMode.COOL,
+                HVACMode.HEAT,
+                HVACMode.DRY,
+            ],
         },
     )
 
@@ -214,7 +246,12 @@ async def config_entry_with_empty_status(hass: HomeAssistant) -> MockConfigEntry
         data={
             "host": "1.2.3.4",
             "port": 1234,
-            "supported_modes": [HVACMode.OFF, HVACMode.COOL, HVACMode.HEAT],
+            "supported_modes": [
+                HVACMode.OFF,
+                HVACMode.COOL,
+                HVACMode.HEAT,
+                HVACMode.DRY,
+            ],
         },
     )
 
