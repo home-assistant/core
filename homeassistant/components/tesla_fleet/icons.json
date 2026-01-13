@@ -74,6 +74,12 @@
               "keep": "mdi:fan",
               "off": "mdi:power"
             }
+          },
+          "fan_mode": {
+            "state": {
+              "bioweapon": "mdi:biohazard",
+              "off": "mdi:power"
+            }
           }
         }
       }
