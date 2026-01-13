@@ -49,13 +49,21 @@ async def async_setup_entry(hass: HomeAssistant, entry: MelCloudConfigEntry) -> 
     coordinators: dict[str, list[MelCloudDeviceUpdateCoordinator]] = {}
     device_registry = dr.async_get(hass)
     for device_type, devices in all_devices.items():
-        coordinators[device_type] = []
-        for device in devices:
-            coordinator = MelCloudDeviceUpdateCoordinator(hass, device, entry)
-            # Perform initial refresh for this device
-            await coordinator.async_config_entry_first_refresh()
-            coordinators[device_type].append(coordinator)
-            # Register parent device now so zone entities can reference it via via_device
+        # Build coordinators for this device_type
+        coordinators[device_type] = [
+            MelCloudDeviceUpdateCoordinator(hass, device, entry) for device in devices
+        ]
+
+        # Perform initial refreshes concurrently
+        await asyncio.gather(
+            *(
+                coordinator.async_config_entry_first_refresh()
+                for coordinator in coordinators[device_type]
+            )
+        )
+
+        # Register parent devices so zone entities can reference via_device
+        for coordinator in coordinators[device_type]:
             device_registry.async_get_or_create(
                 config_entry_id=entry.entry_id,
                 **coordinator.device_info,
