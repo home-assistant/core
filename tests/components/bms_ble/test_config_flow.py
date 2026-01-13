@@ -25,7 +25,6 @@ from homeassistant.const import CONF_ADDRESS
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import entity_registry as er
-from homeassistant.helpers.device_registry import format_mac
 
 from .conftest import mock_config, mock_devinfo_min, mock_update_full, mock_update_min
 
@@ -80,9 +79,7 @@ async def test_bluetooth_discovery(
     )
     result: ConfigFlowResult = flowresults[0]
     assert result.get("step_id") == "bluetooth_confirm"
-    assert result.get("context", {}).get("unique_id") == format_mac(
-        advertisement.address
-    )
+    assert result.get("context", {}).get("unique_id") == advertisement.address
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], user_input={"not": "empty"}
