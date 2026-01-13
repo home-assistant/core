@@ -309,6 +309,11 @@ class Elke27Hub:
 
     def _handle_event(self, event: Any) -> None:
         """Handle events from the client."""
+        self._hass.loop.call_soon_threadsafe(self._handle_event_in_loop, event)
+
+    @callback
+    def _handle_event_in_loop(self, event: Any) -> None:
+        """Handle events from the client on the event loop."""
         if self._client is None:
             return
         self.snapshot = self._client.snapshot
