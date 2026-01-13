@@ -29,7 +29,12 @@ from yarl import URL
 
 from homeassistant import config_entries
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import HomeAssistantError, OAuth2RefreshTokenFailed
+from homeassistant.exceptions import (
+    HomeAssistantError,
+    OAuth2RefreshTokenError,
+    OAuth2RefreshTokenReauthError,
+    OAuth2RefreshTokenTransientError,
+)
 from homeassistant.loader import async_get_application_credentials
 from homeassistant.util.hass_dict import HassKey
 
@@ -239,7 +244,21 @@ class LocalOAuth2Implementation(AbstractOAuth2Implementation):
                 )
                 you_are_warned.add(self.client_id)
 
-            raise OAuth2RefreshTokenFailed(
+            def _handle_refresh_error(
+                err: ClientResponseError,
+            ) -> type[OAuth2RefreshTokenError]:
+                """Handle and determine the appropriate refresh token error type."""
+                if (
+                    err.status == HTTPStatus.TOO_MANY_REQUESTS
+                    or 500 <= err.status <= 599
+                ):
+                    return OAuth2RefreshTokenTransientError  # Recoverable
+                if 400 <= err.status <= 499:
+                    return OAuth2RefreshTokenReauthError  # Non-recoverable
+                return OAuth2RefreshTokenError  # Needed for linting
+
+            refresh_exception = _handle_refresh_error(err)
+            raise refresh_exception(
                 request_info=err.request_info,
                 history=err.history,
                 status=err.status,

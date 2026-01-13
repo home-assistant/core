@@ -221,7 +221,7 @@ class ConfigEntryAuthFailed(IntegrationError):
     """Error to indicate that config entry could not authenticate."""
 
 
-class OAuth2RefreshTokenFailed(ClientResponseError, IntegrationError):
+class OAuth2RefreshTokenError(ClientResponseError, IntegrationError):
     """Error to indicate that the OAuth 2.0 flow could not refresh token."""
 
     def __init__(
@@ -243,6 +243,14 @@ class OAuth2RefreshTokenFailed(ClientResponseError, IntegrationError):
             headers=headers,
         )
         IntegrationError.__init__(self, message)
+
+
+class OAuth2RefreshTokenTransientError(OAuth2RefreshTokenError):
+    """Error to indicate flow could not refresh token, but it's recoverable."""
+
+
+class OAuth2RefreshTokenReauthError(OAuth2RefreshTokenError):
+    """Error to indicate the flow could not refresh token, but not recoverable and re-authentication is required."""
 
 
 class InvalidStateError(HomeAssistantError):
