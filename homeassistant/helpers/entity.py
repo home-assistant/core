@@ -25,9 +25,9 @@ from homeassistant.const import (
     ATTR_ASSUMED_STATE,
     ATTR_ATTRIBUTION,
     ATTR_DEVICE_CLASS,
-    ATTR_ENTITY_ID,
     ATTR_ENTITY_PICTURE,
     ATTR_FRIENDLY_NAME,
+    ATTR_GROUP_ENTITIES,
     ATTR_ICON,
     ATTR_SUPPORTED_FEATURES,
     ATTR_UNIT_OF_MEASUREMENT,
@@ -1107,7 +1107,7 @@ class Entity(
                 ]
 
             capability_attr = capability_attr.copy() if capability_attr else {}
-            capability_attr[ATTR_ENTITY_ID] = self.included_entity_ids.copy()
+            capability_attr[ATTR_GROUP_ENTITIES] = self.included_entity_ids.copy()
 
         attr = capability_attr.copy() if capability_attr else {}
 
