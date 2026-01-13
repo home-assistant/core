@@ -318,11 +318,11 @@ class Elke27Hub:
             return
         self.snapshot = self._client.snapshot
         event_type = _event_type(event)
-        if event_type == "DISCONNECTED":
+        if event_type == "DISCONNECTED" or _is_disconnected_event(event):
             _LOGGER.debug("Panel disconnect event received; scheduling reconnect")
             self._log_unavailable()
             self._schedule_reconnect()
-        elif event_type == "READY":
+        elif event_type == "READY" or _is_connected_event(event):
             self._cancel_reconnect()
         self._dispatch(self._listeners)
         if event_type == "AREA":
@@ -414,3 +414,13 @@ def _event_type(event: Any) -> str | None:
                 return str(value.value).upper()
             return str(value).upper()
     return None
+
+
+def _is_disconnected_event(event: Any) -> bool:
+    connected = getattr(event, "connected", None)
+    return connected is False
+
+
+def _is_connected_event(event: Any) -> bool:
+    connected = getattr(event, "connected", None)
+    return connected is True
