@@ -29,6 +29,11 @@
         "name": "Zone {index}"
       }
     },
+    "climate": {
+      "thermostat": {
+        "name": "[%key:component::climate::entity_component::_::name%]"
+      }
+    },
     "sensor": {
       "sensor_input": {
         "name": "Input {index}",
