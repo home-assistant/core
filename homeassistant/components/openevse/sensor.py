@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable
+from dataclasses import dataclass
 import logging
 
 from openevsehttp.__main__ import OpenEVSE
@@ -40,54 +42,72 @@ from .const import DOMAIN, INTEGRATION_TITLE
 
 _LOGGER = logging.getLogger(__name__)
 
-SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
-    SensorEntityDescription(
+
+@dataclass(frozen=True, kw_only=True)
+class OpenEVSESensorDescription(SensorEntityDescription):
+    """Describes an OpenEVSE sensor entity."""
+
+    value_fn: Callable[[OpenEVSE], str | float | None]
+
+
+SENSOR_TYPES: tuple[OpenEVSESensorDescription, ...] = (
+    OpenEVSESensorDescription(
         key="status",
         translation_key="status",
+        value_fn=lambda ev: ev.status,
     ),
-    SensorEntityDescription(
+    OpenEVSESensorDescription(
         key="charge_time",
         translation_key="charge_time",
-        native_unit_of_measurement=UnitOfTime.MINUTES,
+        native_unit_of_measurement=UnitOfTime.SECONDS,
+        suggested_unit_of_measurement=UnitOfTime.MINUTES,
         device_class=SensorDeviceClass.DURATION,
         state_class=SensorStateClass.MEASUREMENT,
+        value_fn=lambda ev: ev.charge_time_elapsed,
     ),
-    SensorEntityDescription(
+    OpenEVSESensorDescription(
         key="ambient_temp",
         translation_key="ambient_temp",
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
+        value_fn=lambda ev: ev.ambient_temperature,
     ),
-    SensorEntityDescription(
+    OpenEVSESensorDescription(
         key="ir_temp",
         translation_key="ir_temp",
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
+        value_fn=lambda ev: ev.ir_temperature,
         entity_registry_enabled_default=False,
     ),
-    SensorEntityDescription(
+    OpenEVSESensorDescription(
         key="rtc_temp",
         translation_key="rtc_temp",
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
+        value_fn=lambda ev: ev.rtc_temperature,
         entity_registry_enabled_default=False,
     ),
-    SensorEntityDescription(
+    OpenEVSESensorDescription(
         key="usage_session",
         translation_key="usage_session",
-        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
+        suggested_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
+        value_fn=lambda ev: ev.usage_session,
     ),
-    SensorEntityDescription(
+    OpenEVSESensorDescription(
         key="usage_total",
         translation_key="usage_total",
-        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
+        suggested_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
+        value_fn=lambda ev: ev.usage_total,
     ),
 )
 
@@ -176,11 +196,12 @@ class OpenEVSESensor(SensorEntity):
     """Implementation of an OpenEVSE sensor."""
 
     _attr_has_entity_name = True
+    entity_description: OpenEVSESensorDescription
 
     def __init__(
         self,
         charger: OpenEVSE,
-        description: SensorEntityDescription,
+        description: OpenEVSESensorDescription,
         entry_id: str,
         unique_id: str | None,
     ) -> None:
@@ -209,20 +230,4 @@ class OpenEVSESensor(SensorEntity):
             _LOGGER.warning("Could not update status for %s", self.name)
             return
 
-        sensor_type = self.entity_description.key
-        if sensor_type == "status":
-            self._attr_native_value = self.charger.status
-        elif sensor_type == "charge_time":
-            self._attr_native_value = self.charger.charge_time_elapsed / 60
-        elif sensor_type == "ambient_temp":
-            self._attr_native_value = self.charger.ambient_temperature
-        elif sensor_type == "ir_temp":
-            self._attr_native_value = self.charger.ir_temperature
-        elif sensor_type == "rtc_temp":
-            self._attr_native_value = self.charger.rtc_temperature
-        elif sensor_type == "usage_session":
-            self._attr_native_value = float(self.charger.usage_session) / 1000
-        elif sensor_type == "usage_total":
-            self._attr_native_value = float(self.charger.usage_total) / 1000
-        else:
-            self._attr_native_value = "Unknown"
+        self._attr_native_value = self.entity_description.value_fn(self.charger)
