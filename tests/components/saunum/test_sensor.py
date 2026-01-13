@@ -52,7 +52,7 @@ async def test_sensor_not_created_when_value_is_none(
     assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    assert hass.states.get("sensor.saunum_leil_temperature") is None
+    assert hass.states.get("sensor.saunum_leil_current_temperature") is None
     assert hass.states.get("sensor.saunum_leil_heater_elements_active") is None
     assert hass.states.get("sensor.saunum_leil_on_time") is None
 
@@ -64,7 +64,7 @@ async def test_entity_unavailable_on_update_failure(
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test that entity becomes unavailable when coordinator update fails."""
-    entity_id = "sensor.saunum_leil_temperature"
+    entity_id = "sensor.saunum_leil_current_temperature"
 
     # Verify entity is initially available
     state = hass.states.get(entity_id)
