@@ -3802,7 +3802,7 @@
         'suggested_display_precision': 0,
       }),
     }),
-    'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
+    'original_device_class': <SensorDeviceClass.ENERGY_STORAGE: 'energy_storage'>,
     'original_icon': None,
     'original_name': 'Available battery energy',
     'platform': 'enphase_envoy',
@@ -3817,7 +3817,7 @@
 # name: test_sensor[envoy_acb_batt][sensor.envoy_1234_available_battery_energy-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'energy',
+      'device_class': 'energy_storage',
       'friendly_name': 'Envoy 1234 Available battery energy',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfEnergy.WATT_HOUR: 'Wh'>,
@@ -3968,7 +3968,7 @@
         'suggested_display_precision': 0,
       }),
     }),
-    'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
+    'original_device_class': <SensorDeviceClass.ENERGY_STORAGE: 'energy_storage'>,
     'original_icon': None,
     'original_name': 'Battery capacity',
     'platform': 'enphase_envoy',
@@ -3983,7 +3983,7 @@
 # name: test_sensor[envoy_acb_batt][sensor.envoy_1234_battery_capacity-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'energy',
+      'device_class': 'energy_storage',
       'friendly_name': 'Envoy 1234 Battery capacity',
       'unit_of_measurement': <UnitOfEnergy.WATT_HOUR: 'Wh'>,
     }),
@@ -7480,7 +7480,7 @@
         'suggested_display_precision': 0,
       }),
     }),
-    'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
+    'original_device_class': <SensorDeviceClass.ENERGY_STORAGE: 'energy_storage'>,
     'original_icon': None,
     'original_name': 'Reserve battery energy',
     'platform': 'enphase_envoy',
@@ -7495,7 +7495,7 @@
 # name: test_sensor[envoy_acb_batt][sensor.envoy_1234_reserve_battery_energy-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'energy',
+      'device_class': 'energy_storage',
       'friendly_name': 'Envoy 1234 Reserve battery energy',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfEnergy.WATT_HOUR: 'Wh'>,
@@ -9055,7 +9055,7 @@
         'suggested_display_precision': 0,
       }),
     }),
-    'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
+    'original_device_class': <SensorDeviceClass.ENERGY_STORAGE: 'energy_storage'>,
     'original_icon': None,
     'original_name': 'Available battery energy',
     'platform': 'enphase_envoy',
@@ -9070,7 +9070,7 @@
 # name: test_sensor[envoy_eu_batt][sensor.envoy_1234_available_battery_energy-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'energy',
+      'device_class': 'energy_storage',
       'friendly_name': 'Envoy 1234 Available battery energy',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfEnergy.WATT_HOUR: 'Wh'>,
@@ -9221,7 +9221,7 @@
         'suggested_display_precision': 0,
       }),
     }),
-    'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
+    'original_device_class': <SensorDeviceClass.ENERGY_STORAGE: 'energy_storage'>,
     'original_icon': None,
     'original_name': 'Battery capacity',
     'platform': 'enphase_envoy',
@@ -9236,7 +9236,7 @@
 # name: test_sensor[envoy_eu_batt][sensor.envoy_1234_battery_capacity-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'energy',
+      'device_class': 'energy_storage',
       'friendly_name': 'Envoy 1234 Battery capacity',
       'unit_of_measurement': <UnitOfEnergy.WATT_HOUR: 'Wh'>,
     }),
@@ -12733,7 +12733,7 @@
         'suggested_display_precision': 0,
       }),
     }),
-    'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
+    'original_device_class': <SensorDeviceClass.ENERGY_STORAGE: 'energy_storage'>,
     'original_icon': None,
     'original_name': 'Reserve battery energy',
     'platform': 'enphase_envoy',
@@ -12748,7 +12748,7 @@
 # name: test_sensor[envoy_eu_batt][sensor.envoy_1234_reserve_battery_energy-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'energy',
+      'device_class': 'energy_storage',
       'friendly_name': 'Envoy 1234 Reserve battery energy',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfEnergy.WATT_HOUR: 'Wh'>,
@@ -14711,7 +14711,7 @@
         'suggested_display_precision': 0,
       }),
     }),
-    'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
+    'original_device_class': <SensorDeviceClass.ENERGY_STORAGE: 'energy_storage'>,
     'original_icon': None,
     'original_name': 'Available battery energy',
     'platform': 'enphase_envoy',
@@ -14726,7 +14726,7 @@
 # name: test_sensor[envoy_metered_batt_relay][sensor.envoy_1234_available_battery_energy-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'energy',
+      'device_class': 'energy_storage',
       'friendly_name': 'Envoy 1234 Available battery energy',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfEnergy.WATT_HOUR: 'Wh'>,
@@ -15054,7 +15054,7 @@
         'suggested_display_precision': 0,
       }),
     }),
-    'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
+    'original_device_class': <SensorDeviceClass.ENERGY_STORAGE: 'energy_storage'>,
     'original_icon': None,
     'original_name': 'Battery capacity',
     'platform': 'enphase_envoy',
@@ -15069,7 +15069,7 @@
 # name: test_sensor[envoy_metered_batt_relay][sensor.envoy_1234_battery_capacity-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'energy',
+      'device_class': 'energy_storage',
       'friendly_name': 'Envoy 1234 Battery capacity',
       'unit_of_measurement': <UnitOfEnergy.WATT_HOUR: 'Wh'>,
     }),
@@ -21725,7 +21725,7 @@
         'suggested_display_precision': 0,
       }),
     }),
-    'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
+    'original_device_class': <SensorDeviceClass.ENERGY_STORAGE: 'energy_storage'>,
     'original_icon': None,
     'original_name': 'Reserve battery energy',
     'platform': 'enphase_envoy',
@@ -21740,7 +21740,7 @@
 # name: test_sensor[envoy_metered_batt_relay][sensor.envoy_1234_reserve_battery_energy-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'energy',
+      'device_class': 'energy_storage',
       'friendly_name': 'Envoy 1234 Reserve battery energy',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfEnergy.WATT_HOUR: 'Wh'>,
