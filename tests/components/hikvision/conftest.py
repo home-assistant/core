@@ -97,6 +97,7 @@ def mock_hikcamera() -> Generator[MagicMock]:
 
         # pyHik 0.4.0 methods
         camera.get_channels.return_value = [1]
+        camera.get_channel_name.return_value = None  # No custom name by default
         camera.get_snapshot.return_value = b"fake_image_data"
         camera.get_stream_url.return_value = (
             f"rtsp://{TEST_USERNAME}:{TEST_PASSWORD}"

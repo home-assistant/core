@@ -57,6 +57,43 @@ async def test_nvr_entities(
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_nvr_entities_with_channel_names(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_hikcamera: MagicMock,
+    entity_registry: er.EntityRegistry,
+    device_registry: dr.DeviceRegistry,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test NVR camera entities use custom channel names when available."""
+    mock_hikcamera.return_value.get_type = "NVR"
+    mock_hikcamera.return_value.get_channels.return_value = [1, 2]
+    # Return custom channel names - simulating user-configured names on the NVR
+    mock_hikcamera.return_value.get_channel_name.side_effect = lambda ch: {
+        1: "Front Door",
+        2: "Backyard",
+    }.get(ch)
+
+    with patch("random.SystemRandom.getrandbits", return_value=123123123123):
+        await setup_integration(hass, mock_config_entry)
+
+    await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
+
+    # Verify device names use channel names instead of "Channel N"
+    device_1 = device_registry.async_get_device(
+        identifiers={(DOMAIN, f"{TEST_DEVICE_ID}_1")}
+    )
+    assert device_1 is not None
+    assert device_1.name == "Front Door"
+
+    device_2 = device_registry.async_get_device(
+        identifiers={(DOMAIN, f"{TEST_DEVICE_ID}_2")}
+    )
+    assert device_2 is not None
+    assert device_2.name == "Backyard"
+
+
 async def test_camera_device_info(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
