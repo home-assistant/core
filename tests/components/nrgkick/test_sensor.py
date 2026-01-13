@@ -181,7 +181,7 @@ async def test_sensor_entities(
     coordinator.async_set_updated_data(coordinator.data)
     await hass.async_block_till_done()
 
-    state = get_state_by_key("l1_voltage")
+    state = get_state_by_key("charging_current")
     assert state is not None
     assert state.state == STATE_UNKNOWN
 

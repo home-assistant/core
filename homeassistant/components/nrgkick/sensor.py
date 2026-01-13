@@ -296,6 +296,8 @@ SENSORS: tuple[NRGkickSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfFrequency.HERTZ,
         suggested_display_precision=2,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
         value_path=("values", "powerflow", "grid_frequency"),
     ),
     NRGkickSensorEntityDescription(
@@ -305,6 +307,8 @@ SENSORS: tuple[NRGkickSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfPower.WATT,
         suggested_display_precision=2,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
         value_path=("values", "powerflow", "peak_power"),
     ),
     NRGkickSensorEntityDescription(
@@ -322,6 +326,8 @@ SENSORS: tuple[NRGkickSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.REACTIVE_POWER,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfReactivePower.VOLT_AMPERE_REACTIVE,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
         value_path=("values", "powerflow", "total_reactive_power"),
     ),
     NRGkickSensorEntityDescription(
@@ -330,6 +336,8 @@ SENSORS: tuple[NRGkickSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.APPARENT_POWER,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfApparentPower.VOLT_AMPERE,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
         value_path=("values", "powerflow", "total_apparent_power"),
     ),
     NRGkickSensorEntityDescription(
@@ -338,6 +346,8 @@ SENSORS: tuple[NRGkickSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.POWER_FACTOR,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=PERCENTAGE,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
         value_path=("values", "powerflow", "total_power_factor"),
     ),
     # VALUES - Powerflow L1
@@ -348,6 +358,8 @@ SENSORS: tuple[NRGkickSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfElectricPotential.VOLT,
         suggested_display_precision=2,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
         value_path=("values", "powerflow", "l1", "voltage"),
     ),
     NRGkickSensorEntityDescription(
@@ -374,6 +386,8 @@ SENSORS: tuple[NRGkickSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.REACTIVE_POWER,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfReactivePower.VOLT_AMPERE_REACTIVE,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
         value_path=("values", "powerflow", "l1", "reactive_power"),
     ),
     NRGkickSensorEntityDescription(
@@ -382,6 +396,8 @@ SENSORS: tuple[NRGkickSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.APPARENT_POWER,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfApparentPower.VOLT_AMPERE,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
         value_path=("values", "powerflow", "l1", "apparent_power"),
     ),
     NRGkickSensorEntityDescription(
@@ -390,6 +406,8 @@ SENSORS: tuple[NRGkickSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.POWER_FACTOR,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=PERCENTAGE,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
         value_path=("values", "powerflow", "l1", "power_factor"),
     ),
     # VALUES - Powerflow L2
@@ -400,6 +418,8 @@ SENSORS: tuple[NRGkickSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfElectricPotential.VOLT,
         suggested_display_precision=2,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
         value_path=("values", "powerflow", "l2", "voltage"),
     ),
     NRGkickSensorEntityDescription(
@@ -426,6 +446,8 @@ SENSORS: tuple[NRGkickSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.REACTIVE_POWER,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfReactivePower.VOLT_AMPERE_REACTIVE,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
         value_path=("values", "powerflow", "l2", "reactive_power"),
     ),
     NRGkickSensorEntityDescription(
@@ -434,6 +456,8 @@ SENSORS: tuple[NRGkickSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.APPARENT_POWER,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfApparentPower.VOLT_AMPERE,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
         value_path=("values", "powerflow", "l2", "apparent_power"),
     ),
     NRGkickSensorEntityDescription(
@@ -442,6 +466,8 @@ SENSORS: tuple[NRGkickSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.POWER_FACTOR,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=PERCENTAGE,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
         value_path=("values", "powerflow", "l2", "power_factor"),
     ),
     # VALUES - Powerflow L3
@@ -452,6 +478,8 @@ SENSORS: tuple[NRGkickSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfElectricPotential.VOLT,
         suggested_display_precision=2,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
         value_path=("values", "powerflow", "l3", "voltage"),
     ),
     NRGkickSensorEntityDescription(
@@ -478,6 +506,8 @@ SENSORS: tuple[NRGkickSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.REACTIVE_POWER,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfReactivePower.VOLT_AMPERE_REACTIVE,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
         value_path=("values", "powerflow", "l3", "reactive_power"),
     ),
     NRGkickSensorEntityDescription(
@@ -486,6 +516,8 @@ SENSORS: tuple[NRGkickSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.APPARENT_POWER,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfApparentPower.VOLT_AMPERE,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
         value_path=("values", "powerflow", "l3", "apparent_power"),
     ),
     NRGkickSensorEntityDescription(
@@ -494,6 +526,8 @@ SENSORS: tuple[NRGkickSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.POWER_FACTOR,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=PERCENTAGE,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
         value_path=("values", "powerflow", "l3", "power_factor"),
     ),
     # VALUES - Powerflow Neutral
@@ -504,6 +538,8 @@ SENSORS: tuple[NRGkickSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
         suggested_display_precision=2,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
         value_path=("values", "powerflow", "n", "current"),
     ),
     # VALUES - General
