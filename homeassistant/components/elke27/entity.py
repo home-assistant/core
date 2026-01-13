@@ -20,7 +20,8 @@ def sanitize_name(name: str | None) -> str | None:
     """Normalize entity names to Home Assistant-safe characters."""
     if name is None:
         return None
-    return _NAME_SAFE_RE.sub("_", name)
+    # return _NAME_SAFE_RE.sub("_", name)
+    return name
 
 
 def get_panel_field(hub: Elke27Hub, field: str) -> Any:
