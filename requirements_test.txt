@@ -15,7 +15,7 @@ librt==0.2.1
 license-expression==30.4.3
 mock-open==1.4.0
 mypy-dev==1.19.0a4
-pre-commit==4.2.0
+prek==0.2.26
 pydantic==2.12.2
 pylint==4.0.1
 pylint-per-file-ignores==1.4.0

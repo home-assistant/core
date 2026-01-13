@@ -46,7 +46,7 @@ repos:
       # Run `python-typing-update` hook manually from time to time
       # to update python typing syntax.
       # Will require manual work, before submitting changes!
-      # pre-commit run --hook-stage manual python-typing-update --all-files
+      # prek run --hook-stage manual python-typing-update --all-files
       - id: python-typing-update
         stages: [manual]
         args:

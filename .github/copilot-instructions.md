@@ -847,8 +847,8 @@ rules:
 ## Development Commands
 
 ### Code Quality & Linting
-- **Run all linters on all files**: `pre-commit run --all-files`
-- **Run linters on staged files only**: `pre-commit run`
+- **Run all linters on all files**: `prek run --all-files`
+- **Run linters on staged files only**: `prek run`
 - **PyLint on everything** (slow): `pylint homeassistant`
 - **PyLint on specific folder**: `pylint homeassistant/components/my_integration`
 - **MyPy type checking (whole project)**: `mypy homeassistant/`
