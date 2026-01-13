@@ -239,7 +239,7 @@ class LocalOAuth2Implementation(AbstractOAuth2Implementation):
                 "a recoverable or non-recoverable error based on the "
                 "HTTP status code. Please update your integration to handle "
                 "`OAuth2RefreshTokenError` gracefully (see "
-                f"{LINK_TO_DEVELOPER_DOCS})",
+                "https://developers.home-assistant.io)",
                 breaks_in_ha_version="2026.8",
                 core_behavior=ReportBehavior.LOG,
                 integration_domain=self._domain,
