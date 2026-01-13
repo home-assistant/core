@@ -22,6 +22,10 @@
           "password": "Password",
           "username": "Email"
         },
+        "data_description": {
+          "password": "Your Garmin Connect password",
+          "username": "Your Garmin Connect email address"
+        },
         "description": "Your Garmin Connect session has expired. Please log in again.",
         "title": "Reauthenticate"
       },
@@ -30,6 +34,10 @@
           "password": "Password",
           "username": "Email"
         },
+        "data_description": {
+          "password": "Your Garmin Connect password",
+          "username": "Your Garmin Connect email address"
+        },
         "description": "Update your Garmin Connect credentials.",
         "title": "Reconfigure Garmin Connect"
       },
@@ -37,6 +45,10 @@
         "data": {
           "password": "Password",
           "username": "Email"
+        },
+        "data_description": {
+          "password": "Your Garmin Connect password",
+          "username": "Your Garmin Connect email address"
         },
         "description": "Enter your Garmin Connect credentials."
       }

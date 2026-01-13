@@ -70,7 +70,7 @@ async def _setup_integration(
         mock_auth.refresh_tokens = AsyncMock()
 
         mock_client = mock_client_class.return_value
-        mock_client.get_data = AsyncMock(return_value=mock_sensor_data)
+        mock_client.fetch_core_data = AsyncMock(return_value=mock_sensor_data)
         mock_client.add_body_composition = AsyncMock(return_value={"success": True})
         mock_client.add_blood_pressure = AsyncMock(return_value={"success": True})
         mock_client.create_activity = AsyncMock(return_value={"activityId": 12345})
@@ -105,7 +105,7 @@ async def test_service_add_body_composition(
         mock_auth.refresh_tokens = AsyncMock()
 
         mock_client = mock_client_class.return_value
-        mock_client.get_data = AsyncMock(return_value=mock_sensor_data)
+        mock_client.fetch_core_data = AsyncMock(return_value=mock_sensor_data)
         mock_client.add_body_composition = AsyncMock(return_value={"success": True})
 
         await hass.config_entries.async_setup(mock_config_entry.entry_id)
@@ -146,7 +146,7 @@ async def test_service_add_blood_pressure(
         mock_auth.refresh_tokens = AsyncMock()
 
         mock_client = mock_client_class.return_value
-        mock_client.get_data = AsyncMock(return_value=mock_sensor_data)
+        mock_client.fetch_core_data = AsyncMock(return_value=mock_sensor_data)
         mock_client.add_blood_pressure = AsyncMock(return_value={"success": True})
 
         await hass.config_entries.async_setup(mock_config_entry.entry_id)
@@ -184,7 +184,7 @@ async def test_service_create_activity(
         mock_auth.refresh_tokens = AsyncMock()
 
         mock_client = mock_client_class.return_value
-        mock_client.get_data = AsyncMock(return_value=mock_sensor_data)
+        mock_client.fetch_core_data = AsyncMock(return_value=mock_sensor_data)
         mock_client.create_activity = AsyncMock(return_value={"activityId": 12345})
 
         await hass.config_entries.async_setup(mock_config_entry.entry_id)
@@ -242,7 +242,7 @@ async def test_services_registered(
         mock_auth.refresh_tokens = AsyncMock()
 
         mock_client = mock_client_class.return_value
-        mock_client.get_data = AsyncMock(return_value=mock_sensor_data)
+        mock_client.fetch_core_data = AsyncMock(return_value=mock_sensor_data)
 
         await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
@@ -277,7 +277,7 @@ async def test_services_unregistered_after_unload(
         mock_auth.refresh_tokens = AsyncMock()
 
         mock_client = mock_client_class.return_value
-        mock_client.get_data = AsyncMock(return_value=mock_sensor_data)
+        mock_client.fetch_core_data = AsyncMock(return_value=mock_sensor_data)
 
         await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
@@ -312,7 +312,7 @@ async def test_service_failure_raises_error(
         mock_auth.refresh_tokens = AsyncMock()
 
         mock_client = mock_client_class.return_value
-        mock_client.get_data = AsyncMock(return_value=mock_sensor_data)
+        mock_client.fetch_core_data = AsyncMock(return_value=mock_sensor_data)
         mock_client.add_body_composition = AsyncMock(side_effect=Exception("API Error"))
 
         await hass.config_entries.async_setup(mock_config_entry.entry_id)

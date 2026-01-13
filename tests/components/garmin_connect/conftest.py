@@ -53,8 +53,8 @@ def mock_client() -> Generator[MagicMock]:
         autospec=True,
     ) as mock:
         client = mock.return_value
-        # get_data() returns a flat dict with all sensor data
-        client.get_data = AsyncMock(
+        # fetch_core_data() returns a flat dict with all sensor data
+        client.fetch_core_data = AsyncMock(
             return_value={
                 "totalSteps": 10000,
                 "totalDistance": 8000.0,

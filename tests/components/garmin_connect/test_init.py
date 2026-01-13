@@ -44,7 +44,7 @@ async def test_setup_entry(
         mock_auth.refresh_tokens = AsyncMock()
 
         mock_client = mock_client_class.return_value
-        mock_client.get_data = AsyncMock(return_value=mock_data)
+        mock_client.fetch_core_data = AsyncMock(return_value=mock_data)
 
         await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
@@ -99,7 +99,7 @@ async def test_unload_entry(
         mock_auth.refresh_tokens = AsyncMock()
 
         mock_client = mock_client_class.return_value
-        mock_client.get_data = AsyncMock(return_value=mock_data)
+        mock_client.fetch_core_data = AsyncMock(return_value=mock_data)
 
         await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
