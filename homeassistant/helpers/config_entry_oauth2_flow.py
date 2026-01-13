@@ -143,7 +143,7 @@ class AbstractOAuth2Implementation(ABC):
     async def _async_refresh_token(self, token: dict) -> dict:
         """Refresh a token.
 
-        Should raise OAuth2RefreshTokenFailed on token refresh failure.
+        Should raise OAuth2RefreshTokenError on token refresh failure.
         """
 
 
@@ -223,7 +223,7 @@ class LocalOAuth2Implementation(AbstractOAuth2Implementation):
     async def _async_refresh_token(self, token: dict) -> dict:
         """Refresh a token.
 
-        Raises OAuth2RefreshTokenFailed on token refresh failure.
+        Raises OAuth2RefreshTokenError on token refresh failure.
         """
         try:
             new_token = await self._token_request(
