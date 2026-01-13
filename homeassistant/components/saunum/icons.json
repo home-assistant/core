@@ -1,0 +1,17 @@
+{
+  "entity": {
+    "number": {
+      "fan_duration": {
+        "default": "mdi:fan-clock"
+      },
+      "sauna_duration": {
+        "default": "mdi:clock-edit-outline"
+      }
+    },
+    "sensor": {
+      "heater_elements_active": {
+        "default": "mdi:radiator"
+      }
+    }
+  }
+}

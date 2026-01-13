@@ -577,8 +577,11 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
     }),
-    'original_device_class': None,
+    'original_device_class': <SensorDeviceClass.PRESSURE: 'pressure'>,
     'original_icon': None,
     'original_name': 'Diastolic blood pressure',
     'platform': 'withings',
@@ -587,15 +590,16 @@
     'supported_features': 0,
     'translation_key': 'diastolic_blood_pressure',
     'unique_id': 'withings_12345_diastolic_blood_pressure_mmhg',
-    'unit_of_measurement': 'mmhg',
+    'unit_of_measurement': <UnitOfPressure.MMHG: 'mmHg'>,
   })
 # ---
 # name: test_all_entities[sensor.henk_diastolic_blood_pressure-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'device_class': 'pressure',
       'friendly_name': 'henk Diastolic blood pressure',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'mmhg',
+      'unit_of_measurement': <UnitOfPressure.MMHG: 'mmHg'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.henk_diastolic_blood_pressure',
@@ -3643,8 +3647,11 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
     }),
-    'original_device_class': None,
+    'original_device_class': <SensorDeviceClass.PRESSURE: 'pressure'>,
     'original_icon': None,
     'original_name': 'Systolic blood pressure',
     'platform': 'withings',
@@ -3653,15 +3660,16 @@
     'supported_features': 0,
     'translation_key': 'systolic_blood_pressure',
     'unique_id': 'withings_12345_systolic_blood_pressure_mmhg',
-    'unit_of_measurement': 'mmhg',
+    'unit_of_measurement': <UnitOfPressure.MMHG: 'mmHg'>,
   })
 # ---
 # name: test_all_entities[sensor.henk_systolic_blood_pressure-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'device_class': 'pressure',
       'friendly_name': 'henk Systolic blood pressure',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'mmhg',
+      'unit_of_measurement': <UnitOfPressure.MMHG: 'mmHg'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.henk_systolic_blood_pressure',

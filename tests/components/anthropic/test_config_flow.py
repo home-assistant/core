@@ -16,8 +16,8 @@ import pytest
 
 from homeassistant import config_entries
 from homeassistant.components.anthropic.config_flow import (
-    RECOMMENDED_AI_TASK_OPTIONS,
-    RECOMMENDED_CONVERSATION_OPTIONS,
+    DEFAULT_AI_TASK_OPTIONS,
+    DEFAULT_CONVERSATION_OPTIONS,
 )
 from homeassistant.components.anthropic.const import (
     CONF_CHAT_MODEL,
@@ -33,12 +33,10 @@ from homeassistant.components.anthropic.const import (
     CONF_WEB_SEARCH_REGION,
     CONF_WEB_SEARCH_TIMEZONE,
     CONF_WEB_SEARCH_USER_LOCATION,
+    DEFAULT,
     DEFAULT_AI_TASK_NAME,
     DEFAULT_CONVERSATION_NAME,
     DOMAIN,
-    RECOMMENDED_CHAT_MODEL,
-    RECOMMENDED_MAX_TOKENS,
-    RECOMMENDED_THINKING_BUDGET,
 )
 from homeassistant.const import CONF_API_KEY, CONF_LLM_HASS_API, CONF_NAME
 from homeassistant.core import HomeAssistant
@@ -87,13 +85,13 @@ async def test_form(hass: HomeAssistant) -> None:
     assert result2["subentries"] == [
         {
             "subentry_type": "conversation",
-            "data": RECOMMENDED_CONVERSATION_OPTIONS,
+            "data": DEFAULT_CONVERSATION_OPTIONS,
             "title": DEFAULT_CONVERSATION_NAME,
             "unique_id": None,
         },
         {
             "subentry_type": "ai_task_data",
-            "data": RECOMMENDED_AI_TASK_OPTIONS,
+            "data": DEFAULT_AI_TASK_OPTIONS,
             "title": DEFAULT_AI_TASK_NAME,
             "unique_id": None,
         },
@@ -144,13 +142,13 @@ async def test_creating_conversation_subentry(
 
     result2 = await hass.config_entries.subentries.async_configure(
         result["flow_id"],
-        {CONF_NAME: "Mock name", **RECOMMENDED_CONVERSATION_OPTIONS},
+        {CONF_NAME: "Mock name", **DEFAULT_CONVERSATION_OPTIONS},
     )
 
     assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == "Mock name"
 
-    processed_options = RECOMMENDED_CONVERSATION_OPTIONS.copy()
+    processed_options = DEFAULT_CONVERSATION_OPTIONS.copy()
     processed_options[CONF_PROMPT] = processed_options[CONF_PROMPT].strip()
 
     assert result2["data"] == processed_options
@@ -265,7 +263,7 @@ async def test_subentry_web_search_user_location(
             "recommended": False,
         },
     )
-    assert options["type"] == FlowResultType.FORM
+    assert options["type"] is FlowResultType.FORM
     assert options["step_id"] == "advanced"
 
     # Configure advanced step
@@ -276,7 +274,7 @@ async def test_subentry_web_search_user_location(
             "chat_model": "claude-sonnet-4-5",
         },
     )
-    assert options["type"] == FlowResultType.FORM
+    assert options["type"] is FlowResultType.FORM
     assert options["step_id"] == "model"
 
     hass.config.country = "US"
@@ -356,9 +354,13 @@ async def test_model_list(
             "recommended": False,
         },
     )
-    assert options["type"] == FlowResultType.FORM
+    assert options["type"] is FlowResultType.FORM
     assert options["step_id"] == "advanced"
     assert options["data_schema"].schema["chat_model"].config["options"] == [
+        {
+            "label": "Claude Opus 4.5",
+            "value": "claude-opus-4-5",
+        },
         {
             "label": "Claude Haiku 4.5",
             "value": "claude-haiku-4-5",
@@ -381,11 +383,11 @@ async def test_model_list(
         },
         {
             "label": "Claude Sonnet 3.7",
-            "value": "claude-3-7-sonnet",
+            "value": "claude-3-7-sonnet-latest",
         },
         {
             "label": "Claude Haiku 3.5",
-            "value": "claude-3-5-haiku",
+            "value": "claude-3-5-haiku-latest",
         },
         {
             "label": "Claude Haiku 3",
@@ -427,7 +429,7 @@ async def test_model_list_error(
                 "recommended": False,
             },
         )
-    assert options["type"] == FlowResultType.FORM
+    assert options["type"] is FlowResultType.FORM
     assert options["step_id"] == "advanced"
     assert options["data_schema"].schema["chat_model"].config["options"] == []
 
@@ -475,7 +477,7 @@ async def test_model_list_error(
                 CONF_PROMPT: "Speak like a pirate",
                 CONF_TEMPERATURE: 1.0,
                 CONF_CHAT_MODEL: "claude-3-opus",
-                CONF_MAX_TOKENS: RECOMMENDED_MAX_TOKENS,
+                CONF_MAX_TOKENS: DEFAULT[CONF_MAX_TOKENS],
             },
         ),
         (  # Model with web search options
@@ -512,7 +514,7 @@ async def test_model_list_error(
                 CONF_PROMPT: "Speak like a pirate",
                 CONF_TEMPERATURE: 1.0,
                 CONF_CHAT_MODEL: "claude-3-5-haiku-latest",
-                CONF_MAX_TOKENS: RECOMMENDED_MAX_TOKENS,
+                CONF_MAX_TOKENS: DEFAULT[CONF_MAX_TOKENS],
                 CONF_WEB_SEARCH: False,
                 CONF_WEB_SEARCH_MAX_USES: 10,
                 CONF_WEB_SEARCH_USER_LOCATION: False,
@@ -550,7 +552,7 @@ async def test_model_list_error(
                 CONF_PROMPT: "Speak like a pirate",
                 CONF_TEMPERATURE: 1.0,
                 CONF_CHAT_MODEL: "claude-sonnet-4-5",
-                CONF_MAX_TOKENS: RECOMMENDED_MAX_TOKENS,
+                CONF_MAX_TOKENS: DEFAULT[CONF_MAX_TOKENS],
                 CONF_THINKING_BUDGET: 2048,
                 CONF_WEB_SEARCH: False,
                 CONF_WEB_SEARCH_MAX_USES: 10,
@@ -577,8 +579,8 @@ async def test_model_list_error(
                 CONF_RECOMMENDED: False,
                 CONF_PROMPT: "Speak like a pirate",
                 CONF_TEMPERATURE: 0.3,
-                CONF_CHAT_MODEL: RECOMMENDED_CHAT_MODEL,
-                CONF_MAX_TOKENS: RECOMMENDED_MAX_TOKENS,
+                CONF_CHAT_MODEL: DEFAULT[CONF_CHAT_MODEL],
+                CONF_MAX_TOKENS: DEFAULT[CONF_MAX_TOKENS],
                 CONF_WEB_SEARCH: False,
                 CONF_WEB_SEARCH_MAX_USES: 5,
                 CONF_WEB_SEARCH_USER_LOCATION: False,
@@ -589,9 +591,9 @@ async def test_model_list_error(
                 CONF_RECOMMENDED: False,
                 CONF_PROMPT: "Speak like a pirate",
                 CONF_TEMPERATURE: 0.3,
-                CONF_CHAT_MODEL: RECOMMENDED_CHAT_MODEL,
-                CONF_MAX_TOKENS: RECOMMENDED_MAX_TOKENS,
-                CONF_THINKING_BUDGET: RECOMMENDED_THINKING_BUDGET,
+                CONF_CHAT_MODEL: DEFAULT[CONF_CHAT_MODEL],
+                CONF_MAX_TOKENS: DEFAULT[CONF_MAX_TOKENS],
+                CONF_THINKING_BUDGET: DEFAULT[CONF_THINKING_BUDGET],
                 CONF_WEB_SEARCH: False,
                 CONF_WEB_SEARCH_MAX_USES: 5,
                 CONF_WEB_SEARCH_USER_LOCATION: False,
@@ -632,7 +634,7 @@ async def test_subentry_options_switching(
     assert subentry_flow["step_id"] == "init"
 
     for step_options in new_options:
-        assert subentry_flow["type"] == FlowResultType.FORM
+        assert subentry_flow["type"] is FlowResultType.FORM
         assert not subentry_flow["errors"]
 
         # Test that current options are showed as suggested values:

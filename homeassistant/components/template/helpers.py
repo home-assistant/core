@@ -1,6 +1,8 @@
 """Helpers for template integration."""
 
 from collections.abc import Callable
+from enum import StrEnum
+import hashlib
 import itertools
 import logging
 from typing import Any
@@ -10,11 +12,13 @@ import voluptuous as vol
 from homeassistant.components import blueprint
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
+    ATTR_ENTITY_ID,
     CONF_ENTITY_PICTURE_TEMPLATE,
     CONF_FRIENDLY_NAME,
     CONF_ICON,
     CONF_ICON_TEMPLATE,
     CONF_NAME,
+    CONF_PLATFORM,
     CONF_STATE,
     CONF_UNIQUE_ID,
     CONF_VALUE_TEMPLATE,
@@ -22,15 +26,19 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import PlatformNotReady
-from homeassistant.helpers import template
+from homeassistant.helpers import issue_registry as ir, template
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_platform import (
     AddConfigEntryEntitiesCallback,
     AddEntitiesCallback,
     async_get_platforms,
 )
+from homeassistant.helpers.issue_registry import IssueSeverity
+from homeassistant.helpers.script_variables import ScriptVariables
 from homeassistant.helpers.singleton import singleton
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.util import yaml as yaml_util
+from homeassistant.util.hass_dict import HassKey
 
 from .const import (
     CONF_ADVANCED_OPTIONS,
@@ -41,12 +49,16 @@ from .const import (
     CONF_DEFAULT_ENTITY_ID,
     CONF_PICTURE,
     DOMAIN,
+    PLATFORMS,
 )
 from .entity import AbstractTemplateEntity
 from .template_entity import TemplateEntity
 from .trigger_entity import TriggerEntity
 
+LEGACY_TEMPLATE_DEPRECATION_KEY = "deprecate_legacy_templates"
+
 DATA_BLUEPRINTS = "template_blueprints"
+DATA_DEPRECATION: HassKey[list[str]] = HassKey(LEGACY_TEMPLATE_DEPRECATION_KEY)
 
 LEGACY_FIELDS = {
     CONF_ICON_TEMPLATE: CONF_ICON,
@@ -122,6 +134,9 @@ def rewrite_legacy_to_modern_config(
     """Rewrite legacy config."""
     entity_cfg = {**entity_cfg}
 
+    # Remove deprecated entity_id field from legacy syntax
+    entity_cfg.pop(ATTR_ENTITY_ID, None)
+
     for from_key, to_key in itertools.chain(
         LEGACY_FIELDS.items(), extra_legacy_fields.items()
     ):
@@ -180,6 +195,107 @@ def async_create_template_tracking_entities(
     async_add_entities(entities)
 
 
+def _format_template(value: Any, field: str | None = None) -> Any:
+    if isinstance(value, template.Template):
+        return value.template
+
+    if isinstance(value, StrEnum):
+        return value.value
+
+    if isinstance(value, (int, float, str, bool)):
+        return value
+
+    return str(value)
+
+
+def format_migration_config(
+    config: ConfigType | list[ConfigType], depth: int = 0
+) -> ConfigType | list[ConfigType]:
+    """Recursive method to format templates as strings from ConfigType."""
+    if depth > 9:
+        raise RecursionError
+
+    if isinstance(config, list):
+        items = []
+        for item in config:
+            if isinstance(item, (dict, list)):
+                if len(item) > 0:
+                    items.append(format_migration_config(item, depth + 1))
+            else:
+                items.append(_format_template(item))
+        return items  # type: ignore[return-value]
+
+    formatted_config = {}
+    for field, value in config.items():
+        if isinstance(value, dict):
+            if len(value) > 0:
+                formatted_config[field] = format_migration_config(value, depth + 1)
+        elif isinstance(value, list):
+            if len(value) > 0:
+                formatted_config[field] = format_migration_config(value, depth + 1)
+            else:
+                formatted_config[field] = []
+        elif isinstance(value, ScriptVariables):
+            formatted_config[field] = format_migration_config(
+                value.as_dict(), depth + 1
+            )
+        else:
+            formatted_config[field] = _format_template(value)
+
+    return formatted_config
+
+
+def create_legacy_template_issue(
+    hass: HomeAssistant, config: ConfigType, domain: str
+) -> None:
+    """Create a repair for legacy template entities."""
+    if domain not in PLATFORMS:
+        return
+
+    breadcrumb = "Template Entity"
+    # Default entity id should be in most legacy configuration because
+    # it's created from the legacy slug. Vacuum and Lock do not have a
+    # slug, therefore we need to use the name or unique_id.
+    if (default_entity_id := config.get(CONF_DEFAULT_ENTITY_ID)) is not None:
+        breadcrumb = default_entity_id.split(".")[-1]
+    elif (unique_id := config.get(CONF_UNIQUE_ID)) is not None:
+        breadcrumb = f"unique_id: {unique_id}"
+    elif (name := config.get(CONF_NAME)) and isinstance(name, template.Template):
+        breadcrumb = name.template
+
+    issue_id = f"{LEGACY_TEMPLATE_DEPRECATION_KEY}_{domain}_{breadcrumb}_{hashlib.md5(','.join(config.keys()).encode()).hexdigest()}"
+
+    if (deprecation_list := hass.data.get(DATA_DEPRECATION)) is None:
+        hass.data[DATA_DEPRECATION] = deprecation_list = []
+
+    deprecation_list.append(issue_id)
+
+    try:
+        config.pop(CONF_PLATFORM, None)
+        modified_yaml = format_migration_config(config)
+        yaml_config = (
+            f"```\n{yaml_util.dump({DOMAIN: [{domain: [modified_yaml]}]})}\n```"
+        )
+    except RecursionError:
+        yaml_config = f"{DOMAIN}:\n  - {domain}:      - ..."
+
+    ir.async_create_issue(
+        hass,
+        DOMAIN,
+        issue_id,
+        breaks_in_ha_version="2026.6",
+        is_fixable=False,
+        severity=IssueSeverity.WARNING,
+        translation_key="deprecated_legacy_templates",
+        translation_placeholders={
+            "domain": domain,
+            "breadcrumb": breadcrumb,
+            "config": yaml_config,
+            "filename": "<filename>",
+        },
+    )
+
+
 async def async_setup_template_platform(
     hass: HomeAssistant,
     domain: str,
@@ -201,6 +317,10 @@ async def async_setup_template_platform(
                 )
             else:
                 configs = [rewrite_legacy_to_modern_config(hass, config, legacy_fields)]
+
+            for definition in configs:
+                create_legacy_template_issue(hass, definition, domain)
+
             async_create_template_tracking_entities(
                 state_entity_cls,
                 async_add_entities,
