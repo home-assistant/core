@@ -5,7 +5,7 @@ from __future__ import annotations
 from openevsehttp.__main__ import OpenEVSE
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_HOST, Platform
+from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryError
 
@@ -15,7 +15,11 @@ type OpenEVSEConfigEntry = ConfigEntry[OpenEVSE]
 async def async_setup_entry(hass: HomeAssistant, entry: OpenEVSEConfigEntry) -> bool:
     """Set up openevse from a config entry."""
 
-    entry.runtime_data = OpenEVSE(entry.data[CONF_HOST])
+    entry.runtime_data = OpenEVSE(
+        entry.data[CONF_HOST],
+        entry.data.get(CONF_USERNAME, None),
+        entry.data.get(CONF_PASSWORD, None),
+    )
     try:
         await entry.runtime_data.test_and_get()
     except TimeoutError as ex:
