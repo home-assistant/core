@@ -237,7 +237,7 @@ class LocalOAuth2Implementation(AbstractOAuth2Implementation):
             )
         except ClientResponseError as err:
             # Store the warning messages in memory during Home Assistant runtime
-            # This to prevent spamming for logs who are not ready, yet
+            # to prevent spamming logs
             you_are_warned: set[str] = self.hass.data.setdefault(
                 DATA_OAUTH2_REFRESHTOKEN_DEPRECATION_WARNING, set()
             )
