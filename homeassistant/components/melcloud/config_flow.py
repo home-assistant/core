@@ -60,6 +60,10 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason="cannot_connect")
         except (TimeoutError, ClientError):
             return self.async_abort(reason="cannot_connect")
+        except AttributeError:
+            # python-melcloud library bug: login() raises AttributeError on invalid
+            # credentials when API response doesn't contain expected "LoginData" key
+            return self.async_abort(reason="invalid_auth")
 
         return await self._create_entry(username, acquired_token)
 

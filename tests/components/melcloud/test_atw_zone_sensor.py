@@ -1,6 +1,6 @@
 """Test the MELCloud ATW zone sensor."""
 
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 import pytest
 
@@ -8,32 +8,45 @@ from homeassistant.components.melcloud.sensor import ATW_ZONE_SENSORS, AtwZoneSe
 
 
 @pytest.fixture
-def mock_device():
-    """Mock MELCloud device."""
-    with patch("homeassistant.components.melcloud.MelCloudDevice") as mock:
-        mock.name = "name"
-        mock.device.serial = 1234
-        mock.device.mac = "11:11:11:11:11:11"
+def mock_coordinator():
+    """Mock MELCloud coordinator."""
+    with patch(
+        "homeassistant.components.melcloud.coordinator.MelCloudDeviceUpdateCoordinator"
+    ) as mock:
         yield mock
+
+
+@pytest.fixture
+def mock_device(mock_coordinator):
+    """Mock MELCloud device."""
+    mock = MagicMock()
+    mock.name = "name"
+    mock.device.serial = 1234
+    mock.device.mac = "11:11:11:11:11:11"
+    mock.zone_device_info.return_value = {}
+    mock.coordinator = mock_coordinator
+    return mock
 
 
 @pytest.fixture
 def mock_zone_1():
     """Mock zone 1."""
-    with patch("pymelcloud.atw_device.Zone") as mock:
-        mock.zone_index = 1
-        yield mock
+    mock = MagicMock()
+    mock.zone_index = 1
+    return mock
 
 
 @pytest.fixture
 def mock_zone_2():
     """Mock zone 2."""
-    with patch("pymelcloud.atw_device.Zone") as mock:
-        mock.zone_index = 2
-        yield mock
+    mock = MagicMock()
+    mock.zone_index = 2
+    return mock
 
 
-def test_zone_unique_ids(mock_device, mock_zone_1, mock_zone_2) -> None:
+def test_zone_unique_ids(
+    mock_coordinator, mock_device, mock_zone_1, mock_zone_2
+) -> None:
     """Test unique id generation correctness."""
     sensor_1 = AtwZoneSensor(
         mock_device,
