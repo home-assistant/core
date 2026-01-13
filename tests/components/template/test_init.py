@@ -6,9 +6,11 @@ from unittest.mock import patch
 import pytest
 
 from homeassistant import config
+from homeassistant.components import labs
 from homeassistant.components.template import DOMAIN
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import SERVICE_RELOAD
-from homeassistant.core import HomeAssistant
+from homeassistant.core import Context, HomeAssistant
 from homeassistant.helpers import (
     device_registry as dr,
     entity_registry as er,
@@ -17,7 +19,14 @@ from homeassistant.helpers import (
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
-from tests.common import MockConfigEntry, async_fire_time_changed, get_fixture_path
+from tests.common import (
+    MockConfigEntry,
+    MockUser,
+    async_capture_events,
+    async_fire_time_changed,
+    get_fixture_path,
+)
+from tests.typing import WebSocketGenerator
 
 
 @pytest.mark.parametrize(("count", "domain"), [(1, "sensor")])
@@ -586,3 +595,240 @@ async def test_fail_non_numerical_number_settings(
         "The 'My template' number template needs to be reconfigured, "
         "max must be a number, got '{{ 100 }}'" in caplog.text
     )
+
+
+async def test_yaml_reload_when_labs_flag_changes(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    hass_admin_user: MockUser,
+    hass_read_only_user: MockUser,
+) -> None:
+    """Test templates are reloaded when labs flag changes."""
+    ws_client = await hass_ws_client(hass)
+
+    assert await async_setup_component(
+        hass,
+        DOMAIN,
+        {
+            DOMAIN: {
+                "triggers": {
+                    "trigger": "event",
+                    "event_type": "test_event",
+                },
+                "sensor": {
+                    "name": "hello",
+                    "state": "{{ trigger.event.data.stuff }}",
+                },
+            }
+        },
+    )
+    assert await async_setup_component(hass, labs.DOMAIN, {})
+    assert hass.states.get("sensor.hello") is not None
+    assert hass.states.get("sensor.bye") is None
+    listeners = hass.bus.async_listeners()
+    assert listeners.get("test_event") == 1
+    assert listeners.get("test_event2") is None
+
+    context = Context()
+    hass.bus.async_fire("test_event", {"stuff": "foo"}, context=context)
+    await hass.async_block_till_done()
+    assert hass.states.get("sensor.hello").state == "foo"
+
+    test_reload_event = async_capture_events(hass, "event_template_reloaded")
+
+    # Check we reload whenever the labs flag is set, even if it's already enabled
+    last_state = "unknown"
+    for enabled, set_state in (
+        (True, "foo"),
+        (True, "bar"),
+        (False, "beer"),
+        (False, "good"),
+    ):
+        test_reload_event.clear()
+
+        with patch(
+            "homeassistant.config.load_yaml_config_file",
+            autospec=True,
+            return_value={
+                DOMAIN: {
+                    "triggers": {
+                        "trigger": "event",
+                        "event_type": "test_event2",
+                    },
+                    "sensor": {
+                        "name": "bye",
+                        "state": "{{ trigger.event.data.stuff }}",
+                    },
+                }
+            },
+        ):
+            await ws_client.send_json_auto_id(
+                {
+                    "type": "labs/update",
+                    "domain": "automation",
+                    "preview_feature": "new_triggers_conditions",
+                    "enabled": enabled,
+                }
+            )
+
+            msg = await ws_client.receive_json()
+            assert msg["success"]
+            await hass.async_block_till_done()
+
+        assert len(test_reload_event) == 1
+
+        assert hass.states.get("sensor.hello") is None
+        assert hass.states.get("sensor.bye") is not None
+        listeners = hass.bus.async_listeners()
+        assert listeners.get("test_event") is None
+        assert listeners.get("test_event2") == 1
+
+        hass.bus.async_fire("test_event", {"stuff": "foo"}, context=context)
+        await hass.async_block_till_done()
+        assert hass.states.get("sensor.bye").state == last_state
+
+        hass.bus.async_fire("test_event2", {"stuff": set_state}, context=context)
+        await hass.async_block_till_done()
+        assert hass.states.get("sensor.bye").state == set_state
+        last_state = set_state
+
+
+async def test_config_entry_reload_when_labs_flag_changes(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    hass_admin_user: MockUser,
+    hass_read_only_user: MockUser,
+) -> None:
+    """Test templates are reloaded when labs flag changes."""
+    ws_client = await hass_ws_client(hass)
+
+    template_config_entry = MockConfigEntry(
+        data={},
+        domain=DOMAIN,
+        options={
+            "name": "hello",
+            "template_type": "sensor",
+            "state": "{{ 'foo' }}",
+        },
+        title="My template",
+    )
+    template_config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(template_config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert await async_setup_component(hass, labs.DOMAIN, {})
+
+    assert hass.states.get("sensor.hello") is not None
+    assert hass.states.get("sensor.hello").state == "foo"
+
+    # Check we reload whenever the labs flag is set, even if it's already enabled
+    for enabled, set_state in (
+        (True, "beer"),
+        (True, "is"),
+        (False, "very"),
+        (False, "good"),
+    ):
+        hass.config_entries.async_update_entry(
+            template_config_entry,
+            options={
+                "name": "hello",
+                "template_type": "sensor",
+                "state": f"{{{{ '{set_state}' }}}}",
+            },
+        )
+        with patch(
+            "homeassistant.config.load_yaml_config_file",
+            autospec=True,
+            return_value={},
+        ):
+            await ws_client.send_json_auto_id(
+                {
+                    "type": "labs/update",
+                    "domain": "automation",
+                    "preview_feature": "new_triggers_conditions",
+                    "enabled": enabled,
+                }
+            )
+
+            msg = await ws_client.receive_json()
+            assert msg["success"]
+            await hass.async_block_till_done()
+
+        assert hass.states.get("sensor.hello") is not None
+        assert hass.states.get("sensor.hello").state == set_state
+
+
+async def test_migration_1_1(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test migration from v1.1 removes template config entry from device."""
+
+    device_config_entry = MockConfigEntry()
+    device_config_entry.add_to_hass(hass)
+    device_entry = device_registry.async_get_or_create(
+        config_entry_id=device_config_entry.entry_id,
+        identifiers={("test", "identifier_test")},
+        connections={("mac", "30:31:32:33:34:35")},
+    )
+
+    template_config_entry = MockConfigEntry(
+        data={},
+        domain=DOMAIN,
+        options={
+            "name": "My template",
+            "template_type": "sensor",
+            "state": "{{ 'foo' }}",
+            "device_id": device_entry.id,
+        },
+        title="My template",
+        version=1,
+        minor_version=1,
+    )
+    template_config_entry.add_to_hass(hass)
+
+    # Add the helper config entry to the device
+    device_registry.async_update_device(
+        device_entry.id, add_config_entry_id=template_config_entry.entry_id
+    )
+
+    # Check preconditions
+    device_entry = device_registry.async_get(device_entry.id)
+    assert template_config_entry.entry_id in device_entry.config_entries
+
+    await hass.config_entries.async_setup(template_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert template_config_entry.state is ConfigEntryState.LOADED
+
+    # Check that the helper config entry is removed from the device and the helper
+    # entity is linked to the source device
+    device_entry = device_registry.async_get(device_entry.id)
+    assert template_config_entry.entry_id not in device_entry.config_entries
+    template_entity_entry = entity_registry.async_get("sensor.my_template")
+    assert template_entity_entry.device_id == device_entry.id
+
+    assert template_config_entry.version == 1
+    assert template_config_entry.minor_version == 2
+
+
+async def test_migration_from_future_version(
+    hass: HomeAssistant,
+) -> None:
+    """Test migration from future version."""
+    config_entry = MockConfigEntry(
+        data={},
+        domain=DOMAIN,
+        options={
+            "name": "hello",
+            "template_type": "sensor",
+            "state": "{{ 'foo' }}",
+        },
+        title="My template",
+        version=2,
+        minor_version=1,
+    )
+    config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert config_entry.state is ConfigEntryState.MIGRATION_ERROR

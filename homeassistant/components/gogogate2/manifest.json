@@ -12,6 +12,7 @@
   "homekit": {
     "models": ["iSmartGate"]
   },
+  "integration_type": "hub",
   "iot_class": "local_polling",
   "loggers": ["ismartgate"],
   "requirements": ["ismartgate==5.0.2"]

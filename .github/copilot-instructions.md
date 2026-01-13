@@ -51,6 +51,9 @@ rules:
 - **Missing imports** - We use static analysis tooling to catch that
 - **Code formatting** - We have ruff as a formatting tool that will catch those if needed (unless specifically instructed otherwise in these instructions)
 
+**Git commit practices during review:**
+- **Do NOT amend, squash, or rebase commits after review has started** - Reviewers need to see what changed since their last review
+
 ## Python Requirements
 
 - **Compatibility**: Python 3.13+
@@ -844,8 +847,8 @@ rules:
 ## Development Commands
 
 ### Code Quality & Linting
-- **Run all linters on all files**: `pre-commit run --all-files`
-- **Run linters on staged files only**: `pre-commit run`
+- **Run all linters on all files**: `prek run --all-files`
+- **Run linters on staged files only**: `prek run`
 - **PyLint on everything** (slow): `pylint homeassistant`
 - **PyLint on specific folder**: `pylint homeassistant/components/my_integration`
 - **MyPy type checking (whole project)**: `mypy homeassistant/`

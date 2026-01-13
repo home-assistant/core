@@ -1,6 +1,7 @@
 """Test light conditions."""
 
 from collections.abc import Generator
+from typing import Any
 from unittest.mock import patch
 
 import pytest
@@ -13,23 +14,17 @@ from homeassistant.const import (
     CONF_TARGET,
     STATE_OFF,
     STATE_ON,
-    STATE_UNAVAILABLE,
-    STATE_UNKNOWN,
 )
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.setup import async_setup_component
 
 from tests.components import (
+    ConditionStateDescription,
+    parametrize_condition_states,
     parametrize_target_entities,
     set_or_remove_state,
     target_entities,
 )
-
-INVALID_STATES = [
-    {"state": STATE_UNAVAILABLE, "attributes": {}},
-    {"state": STATE_UNKNOWN, "attributes": {}},
-    {"state": None, "attributes": {}},
-]
 
 
 @pytest.fixture(autouse=True, name="stub_blueprint_populate")
@@ -40,13 +35,13 @@ def stub_blueprint_populate_autouse(stub_blueprint_populate: None) -> None:
 @pytest.fixture
 async def target_lights(hass: HomeAssistant) -> list[str]:
     """Create multiple light entities associated with different targets."""
-    return await target_entities(hass, "light")
+    return (await target_entities(hass, "light"))["included"]
 
 
 @pytest.fixture
 async def target_switches(hass: HomeAssistant) -> list[str]:
     """Create multiple switch entities associated with different targets."""
-    return await target_entities(hass, "switch")
+    return (await target_entities(hass, "switch"))["included"]
 
 
 async def setup_automation_with_light_condition(
@@ -76,15 +71,15 @@ async def setup_automation_with_light_condition(
     )
 
 
-async def has_call_after_trigger(
+async def has_single_call_after_trigger(
     hass: HomeAssistant, service_calls: list[ServiceCall]
 ) -> bool:
-    """Check if there are service calls after the trigger event."""
+    """Check if there is a single service call after the trigger event."""
     hass.bus.async_fire("test_event")
     await hass.async_block_till_done()
-    has_calls = len(service_calls) == 1
+    num_calls = len(service_calls)
     service_calls.clear()
-    return has_calls
+    return num_calls == 1
 
 
 @pytest.fixture(name="enable_experimental_triggers_conditions")
@@ -125,17 +120,17 @@ async def test_light_conditions_gated_by_labs_flag(
     parametrize_target_entities("light"),
 )
 @pytest.mark.parametrize(
-    ("condition", "target_state", "other_state"),
+    ("condition", "condition_options", "states"),
     [
-        (
-            "light.is_on",
-            {"state": STATE_ON, "attributes": {}},
-            {"state": STATE_OFF, "attributes": {}},
+        *parametrize_condition_states(
+            condition="light.is_on",
+            target_states=[STATE_ON],
+            other_states=[STATE_OFF],
         ),
-        (
-            "light.is_off",
-            {"state": STATE_OFF, "attributes": {}},
-            {"state": STATE_ON, "attributes": {}},
+        *parametrize_condition_states(
+            condition="light.is_off",
+            target_states=[STATE_OFF],
+            other_states=[STATE_ON],
         ),
     ],
 )
@@ -148,17 +143,15 @@ async def test_light_state_condition_behavior_any(
     entity_id: str,
     entities_in_target: int,
     condition: str,
-    target_state: str,
-    other_state: str,
+    condition_options: dict[str, Any],
+    states: list[ConditionStateDescription],
 ) -> None:
     """Test the light state condition with the 'any' behavior."""
-    await async_setup_component(hass, "light", {})
-
     other_entity_ids = set(target_lights) - {entity_id}
 
     # Set all lights, including the tested light, to the initial state
     for eid in target_lights:
-        set_or_remove_state(hass, eid, other_state)
+        set_or_remove_state(hass, eid, states[0]["included"])
         await hass.async_block_till_done()
 
     await setup_automation_with_light_condition(
@@ -169,38 +162,29 @@ async def test_light_state_condition_behavior_any(
     )
 
     # Set state for switches to ensure that they don't impact the condition
-    for eid in target_switches:
-        set_or_remove_state(hass, eid, other_state)
-    await hass.async_block_till_done()
-    assert not await has_call_after_trigger(hass, service_calls)
+    for state in states:
+        for eid in target_switches:
+            set_or_remove_state(hass, eid, state["included"])
+            await hass.async_block_till_done()
+            assert not await has_single_call_after_trigger(hass, service_calls)
 
-    for eid in target_switches:
-        set_or_remove_state(hass, eid, target_state)
-    await hass.async_block_till_done()
-    assert not await has_call_after_trigger(hass, service_calls)
-
-    # Set one light to the condition state -> condition pass
-    set_or_remove_state(hass, entity_id, target_state)
-    assert await has_call_after_trigger(hass, service_calls)
-
-    # Set all remaining lights to the condition state -> condition pass
-    for eid in other_entity_ids:
-        set_or_remove_state(hass, eid, target_state)
-    assert await has_call_after_trigger(hass, service_calls)
-
-    for invalid_state in INVALID_STATES:
-        # Set one light to the invalid state -> condition pass if there are
-        # other lights in the condition state
-        set_or_remove_state(hass, entity_id, invalid_state)
-        assert await has_call_after_trigger(hass, service_calls) == bool(
-            entities_in_target - 1
+    for state in states:
+        included_state = state["included"]
+        set_or_remove_state(hass, entity_id, included_state)
+        await hass.async_block_till_done()
+        assert (
+            await has_single_call_after_trigger(hass, service_calls)
+            == state["condition_true"]
         )
 
-    for invalid_state in INVALID_STATES:
-        # Set all lights to invalid state -> condition fail
-        for eid in other_entity_ids:
-            set_or_remove_state(hass, eid, invalid_state)
-        assert not await has_call_after_trigger(hass, service_calls)
+        # Check if changing other lights also passes the condition
+        for other_entity_id in other_entity_ids:
+            set_or_remove_state(hass, other_entity_id, included_state)
+            await hass.async_block_till_done()
+        assert (
+            await has_single_call_after_trigger(hass, service_calls)
+            == state["condition_true"]
+        )
 
 
 @pytest.mark.usefixtures("enable_experimental_triggers_conditions")
@@ -209,17 +193,17 @@ async def test_light_state_condition_behavior_any(
     parametrize_target_entities("light"),
 )
 @pytest.mark.parametrize(
-    ("condition", "target_state", "other_state"),
+    ("condition", "condition_options", "states"),
     [
-        (
-            "light.is_on",
-            {"state": STATE_ON, "attributes": {}},
-            {"state": STATE_OFF, "attributes": {}},
+        *parametrize_condition_states(
+            condition="light.is_on",
+            target_states=[STATE_ON],
+            other_states=[STATE_OFF],
         ),
-        (
-            "light.is_off",
-            {"state": STATE_OFF, "attributes": {}},
-            {"state": STATE_ON, "attributes": {}},
+        *parametrize_condition_states(
+            condition="light.is_off",
+            target_states=[STATE_OFF],
+            other_states=[STATE_ON],
         ),
     ],
 )
@@ -231,12 +215,10 @@ async def test_light_state_condition_behavior_all(
     entity_id: str,
     entities_in_target: int,
     condition: str,
-    target_state: str,
-    other_state: str,
+    condition_options: dict[str, Any],
+    states: list[ConditionStateDescription],
 ) -> None:
     """Test the light state condition with the 'all' behavior."""
-    await async_setup_component(hass, "light", {})
-
     # Set state for two switches to ensure that they don't impact the condition
     hass.states.async_set("switch.label_switch_1", STATE_OFF)
     hass.states.async_set("switch.label_switch_2", STATE_ON)
@@ -245,7 +227,7 @@ async def test_light_state_condition_behavior_all(
 
     # Set all lights, including the tested light, to the initial state
     for eid in target_lights:
-        set_or_remove_state(hass, eid, other_state)
+        set_or_remove_state(hass, eid, states[0]["included"])
         await hass.async_block_till_done()
 
     await setup_automation_with_light_condition(
@@ -255,27 +237,22 @@ async def test_light_state_condition_behavior_all(
         behavior="all",
     )
 
-    # No lights on the condition state
-    assert not await has_call_after_trigger(hass, service_calls)
+    for state in states:
+        included_state = state["included"]
 
-    # Set one light to the condition state -> condition fail
-    set_or_remove_state(hass, entity_id, target_state)
-    assert await has_call_after_trigger(hass, service_calls) == (
-        entities_in_target == 1
-    )
+        set_or_remove_state(hass, entity_id, included_state)
+        await hass.async_block_till_done()
+        # The condition passes if all entities are either in a target state or invalid
+        assert await has_single_call_after_trigger(hass, service_calls) == (
+            (not state["state_valid"])
+            or (state["condition_true"] and entities_in_target == 1)
+        )
 
-    # Set all remaining lights to the condition state -> condition pass
-    for eid in other_entity_ids:
-        set_or_remove_state(hass, eid, target_state)
-    assert await has_call_after_trigger(hass, service_calls)
+        for other_entity_id in other_entity_ids:
+            set_or_remove_state(hass, other_entity_id, included_state)
+            await hass.async_block_till_done()
 
-    for invalid_state in INVALID_STATES:
-        # Set one light to the invalid state -> condition still pass
-        set_or_remove_state(hass, entity_id, invalid_state)
-        assert await has_call_after_trigger(hass, service_calls)
-
-    for invalid_state in INVALID_STATES:
-        # Set all lights to unavailable -> condition passes
-        for eid in other_entity_ids:
-            set_or_remove_state(hass, eid, invalid_state)
-        assert await has_call_after_trigger(hass, service_calls)
+        # The condition passes if all entities are either in a target state or invalid
+        assert await has_single_call_after_trigger(hass, service_calls) == (
+            (not state["state_valid"]) or state["condition_true"]
+        )

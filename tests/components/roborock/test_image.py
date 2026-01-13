@@ -7,7 +7,7 @@ import logging
 from unittest.mock import patch
 
 import pytest
-from roborock import RoborockException
+from roborock import MultiMapsList, RoborockException
 from roborock.data import RoborockStateCode
 from roborock.devices.traits.v1.map_content import MapContent
 
@@ -16,8 +16,15 @@ from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.util import dt as dt_util
 
-from .conftest import FakeDevice
-from .mock_data import MAP_DATA
+from .conftest import FakeDevice, make_home_trait
+from .mock_data import (
+    HOME_DATA,
+    MAP_DATA,
+    MULTI_MAP_LIST,
+    MULTI_MAP_LIST_NO_MAP_NAMES,
+    ROOM_MAPPING,
+    STATUS,
+)
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 from tests.typing import ClientSessionGenerator
@@ -161,3 +168,56 @@ async def test_map_status_change(
         body = await resp.read()
         assert body is not None
         assert body != old_body
+
+
+@pytest.mark.parametrize(
+    ("multi_maps_list", "expected_entity_ids"),
+    [
+        (
+            MULTI_MAP_LIST,
+            {
+                "image.roborock_s7_2_downstairs",
+                "image.roborock_s7_2_upstairs",
+                "image.roborock_s7_maxv_downstairs",
+                "image.roborock_s7_maxv_upstairs",
+            },
+        ),
+        (
+            MULTI_MAP_LIST_NO_MAP_NAMES,
+            {
+                "image.roborock_s7_2_downstairs",
+                "image.roborock_s7_2_upstairs",
+                # Expect default names based on map flags
+                "image.roborock_s7_maxv_map_0",
+                "image.roborock_s7_maxv_map_1",
+            },
+        ),
+    ],
+)
+async def test_image_entity_naming(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    mock_roborock_entry: MockConfigEntry,
+    fake_vacuum: FakeDevice,
+    multi_maps_list: MultiMapsList,
+    expected_entity_ids: set[str],
+) -> None:
+    """Test entity naming when no map name is set."""
+    # Override one of the vacuums multi map list response based on the
+    # test parameterization
+    assert fake_vacuum.v1_properties
+    fake_vacuum.v1_properties.home = make_home_trait(
+        map_info=multi_maps_list.map_info or [],
+        current_map=STATUS.current_map,
+        room_mapping=ROOM_MAPPING,
+        rooms=HOME_DATA.rooms,
+    )
+
+    # Setup the config entry
+    await hass.config_entries.async_setup(mock_roborock_entry.entry_id)
+    await hass.async_block_till_done()
+
+    # Verify the image entities are created with the expected names
+    assert {
+        state.entity_id for state in hass.states.async_all("image")
+    } == expected_entity_ids
