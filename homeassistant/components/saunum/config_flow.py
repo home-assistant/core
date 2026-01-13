@@ -30,7 +30,7 @@ async def validate_input(data: dict[str, Any]) -> None:
     """
     host = data[CONF_HOST]
 
-    client = await SaunumClient.create(host)
+    client = await SaunumClient.create(host)  # type: ignore[attr-defined]
 
     try:
         # Try to read data to verify communication

@@ -64,6 +64,9 @@
       }
     },
     "sensor": {
+      "current_temperature": {
+        "name": "Current temperature"
+      },
       "heater_elements_active": {
         "name": "Heater elements active",
         "unit_of_measurement": "heater elements"
