@@ -38,7 +38,7 @@ class HikvisionData:
     device_id: str
     device_name: str
     device_type: str
-    channels: list[VideoChannel] = field(default_factory=list)
+    channels: dict[int, VideoChannel] = field(default_factory=dict)
 
 
 type HikvisionConfigEntry = ConfigEntry[HikvisionData]
@@ -70,11 +70,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: HikvisionConfigEntry) ->
     device_type = camera.get_type or "Camera"
 
     # For NVRs, fetch video channel information
-    channels: list[VideoChannel] = []
+    channels: dict[int, VideoChannel] = {}
     if device_type == "NVR":
-        channels = await hass.async_add_executor_job(
+        channel_list = await hass.async_add_executor_job(
             get_video_channels, host, port, username, password, ssl
         )
+        channels = {ch.id: ch for ch in channel_list}
         _LOGGER.debug("Found %d video channels", len(channels))
 
     entry.runtime_data = HikvisionData(

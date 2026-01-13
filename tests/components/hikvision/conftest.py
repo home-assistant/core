@@ -78,6 +78,10 @@ def mock_hikcamera() -> Generator[MagicMock]:
             "homeassistant.components.hikvision.config_flow.HikCamera",
             new=hikcamera_mock,
         ),
+        patch(
+            "homeassistant.components.hikvision.get_video_channels",
+            return_value=[],  # Empty by default (non-NVR cameras)
+        ) as mock_get_video_channels,
     ):
         camera = hikcamera_mock.return_value
         camera.get_id = TEST_DEVICE_ID
@@ -97,12 +101,14 @@ def mock_hikcamera() -> Generator[MagicMock]:
 
         # pyHik 0.4.0 methods
         camera.get_channels.return_value = [1]
-        camera.get_channel_name.return_value = None  # No custom name by default
         camera.get_snapshot.return_value = b"fake_image_data"
         camera.get_stream_url.return_value = (
             f"rtsp://{TEST_USERNAME}:{TEST_PASSWORD}"
             f"@{TEST_HOST}:554/Streaming/Channels/1"
         )
+
+        # Attach mock for get_video_channels so tests can modify it
+        hikcamera_mock.mock_get_video_channels = mock_get_video_channels
 
         yield hikcamera_mock
 

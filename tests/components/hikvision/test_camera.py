@@ -49,7 +49,18 @@ async def test_nvr_entities(
 ) -> None:
     """Test NVR camera entities with multiple channels."""
     mock_hikcamera.return_value.get_type = "NVR"
-    mock_hikcamera.return_value.get_channels.return_value = [1, 2]
+
+    # Create mock VideoChannel objects
+    class MockVideoChannel:
+        def __init__(self, channel_id: int, name: str, enabled: bool = True) -> None:
+            self.id = channel_id
+            self.name = name
+            self.enabled = enabled
+
+    mock_hikcamera.mock_get_video_channels.return_value = [
+        MockVideoChannel(1, f"{TEST_DEVICE_NAME} Channel 1"),
+        MockVideoChannel(2, f"{TEST_DEVICE_NAME} Channel 2"),
+    ]
 
     with patch("random.SystemRandom.getrandbits", return_value=123123123123):
         await setup_integration(hass, mock_config_entry)
@@ -68,12 +79,18 @@ async def test_nvr_entities_with_channel_names(
 ) -> None:
     """Test NVR camera entities use custom channel names when available."""
     mock_hikcamera.return_value.get_type = "NVR"
-    mock_hikcamera.return_value.get_channels.return_value = [1, 2]
-    # Return custom channel names - simulating user-configured names on the NVR
-    mock_hikcamera.return_value.get_channel_name.side_effect = lambda ch: {
-        1: "Front Door",
-        2: "Backyard",
-    }.get(ch)
+
+    # Create mock VideoChannel objects with custom names
+    class MockVideoChannel:
+        def __init__(self, channel_id: int, name: str, enabled: bool = True) -> None:
+            self.id = channel_id
+            self.name = name
+            self.enabled = enabled
+
+    mock_hikcamera.mock_get_video_channels.return_value = [
+        MockVideoChannel(1, "Front Door"),
+        MockVideoChannel(2, "Backyard"),
+    ]
 
     with patch("random.SystemRandom.getrandbits", return_value=123123123123):
         await setup_integration(hass, mock_config_entry)
@@ -185,10 +202,20 @@ async def test_camera_stream_source_nvr(
 ) -> None:
     """Test NVR camera stream source URL."""
     mock_hikcamera.return_value.get_type = "NVR"
-    mock_hikcamera.return_value.get_channels.return_value = [2]
     mock_hikcamera.return_value.get_stream_url.return_value = (
         f"rtsp://admin:{TEST_PASSWORD}@{TEST_HOST}:554/Streaming/Channels/201"
     )
+
+    # Create mock VideoChannel for channel 2
+    class MockVideoChannel:
+        def __init__(self, channel_id: int, name: str, enabled: bool = True) -> None:
+            self.id = channel_id
+            self.name = name
+            self.enabled = enabled
+
+    mock_hikcamera.mock_get_video_channels.return_value = [
+        MockVideoChannel(2, f"{TEST_DEVICE_NAME} Channel 2"),
+    ]
 
     await setup_integration(hass, mock_config_entry)
 
