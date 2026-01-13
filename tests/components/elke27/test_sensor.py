@@ -191,7 +191,7 @@ async def test_sensor_updates_from_hub(hass: HomeAssistant) -> None:
 
     states = hass.states.async_all("sensor")
     assert len(states) == 2
-    assert {"Panel A", "ready"} == {state.state for state in states}
+    assert {"Panel A", "connected"} == {state.state for state in states}
 
     hub.snapshot = Snapshot(
         panel_info=PanelInfo(
@@ -205,4 +205,4 @@ async def test_sensor_updates_from_hub(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
 
     states = hass.states.async_all("sensor")
-    assert {"Panel B", "not_ready"} == {state.state for state in states}
+    assert {"Panel B", "disconnected"} == {state.state for state in states}

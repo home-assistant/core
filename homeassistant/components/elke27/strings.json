@@ -89,7 +89,7 @@
         "name": "Panel name"
       },
       "panel_ready": {
-        "name": "Panel ready"
+        "name": "Panel connection"
       }
     }
   }
