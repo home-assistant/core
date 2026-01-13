@@ -15,6 +15,38 @@
       "portseltx1": {
         "default": "mdi:hdmi-port"
       }
+    },
+    "switch": {
+      "autosw": {
+        "default": "mdi:import"
+      },
+      "htpcmode0": {
+        "default": "mdi:desktop-classic"
+      },
+      "htpcmode1": {
+        "default": "mdi:desktop-classic"
+      },
+      "htpcmode2": {
+        "default": "mdi:desktop-classic"
+      },
+      "htpcmode3": {
+        "default": "mdi:desktop-classic"
+      },
+      "iractive": {
+        "default": "mdi:remote"
+      },
+      "mutetx0": {
+        "default": "mdi:volume-mute"
+      },
+      "mutetx1": {
+        "default": "mdi:volume-mute"
+      },
+      "oled": {
+        "default": "mdi:cellphone-information"
+      },
+      "relay": {
+        "default": "mdi:electric-switch"
+      }
     }
   }
 }
