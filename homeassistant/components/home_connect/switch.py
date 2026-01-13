@@ -125,12 +125,44 @@ SWITCH_OPTIONS = (
         translation_key="fast_pre_heat",
     ),
     SwitchEntityDescription(
+        key=OptionKey.LAUNDRY_CARE_COMMON_SILENT_MODE,
+        translation_key="silent_mode",
+    ),
+    SwitchEntityDescription(
         key=OptionKey.LAUNDRY_CARE_WASHER_I_DOS_1_ACTIVE,
         translation_key="i_dos1_active",
     ),
     SwitchEntityDescription(
         key=OptionKey.LAUNDRY_CARE_WASHER_I_DOS_2_ACTIVE,
         translation_key="i_dos2_active",
+    ),
+    SwitchEntityDescription(
+        key=OptionKey.LAUNDRY_CARE_WASHER_INTENSIVE_PLUS,
+        translation_key="intensive_plus",
+    ),
+    SwitchEntityDescription(
+        key=OptionKey.LAUNDRY_CARE_WASHER_LESS_IRONING,
+        translation_key="less_ironing",
+    ),
+    SwitchEntityDescription(
+        key=OptionKey.LAUNDRY_CARE_WASHER_MINI_LOAD,
+        translation_key="mini_load",
+    ),
+    SwitchEntityDescription(
+        key=OptionKey.LAUNDRY_CARE_WASHER_PREWASH,
+        translation_key="prewash",
+    ),
+    SwitchEntityDescription(
+        key=OptionKey.LAUNDRY_CARE_WASHER_RINSE_HOLD,
+        translation_key="rinse_hold",
+    ),
+    SwitchEntityDescription(
+        key=OptionKey.LAUNDRY_CARE_WASHER_SOAK,
+        translation_key="soaking",
+    ),
+    SwitchEntityDescription(
+        key=OptionKey.LAUNDRY_CARE_WASHER_WATER_PLUS,
+        translation_key="water_plus",
     ),
 )
 

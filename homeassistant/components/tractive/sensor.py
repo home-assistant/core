@@ -35,6 +35,7 @@ from .const import (
     ATTR_SLEEP_LABEL,
     ATTR_TRACKER_STATE,
     TRACKER_HARDWARE_STATUS_UPDATED,
+    TRACKER_HEALTH_OVERVIEW_UPDATED,
     TRACKER_WELLNESS_STATUS_UPDATED,
 )
 from .entity import TractiveEntity
@@ -115,14 +116,14 @@ SENSOR_TYPES: tuple[TractiveSensorEntityDescription, ...] = (
         key=ATTR_MINUTES_ACTIVE,
         translation_key="activity_time",
         native_unit_of_measurement=UnitOfTime.MINUTES,
-        signal_prefix=TRACKER_WELLNESS_STATUS_UPDATED,
+        signal_prefix=TRACKER_HEALTH_OVERVIEW_UPDATED,
         state_class=SensorStateClass.TOTAL,
     ),
     TractiveSensorEntityDescription(
         key=ATTR_MINUTES_REST,
         translation_key="rest_time",
         native_unit_of_measurement=UnitOfTime.MINUTES,
-        signal_prefix=TRACKER_WELLNESS_STATUS_UPDATED,
+        signal_prefix=TRACKER_HEALTH_OVERVIEW_UPDATED,
         state_class=SensorStateClass.TOTAL,
     ),
     TractiveSensorEntityDescription(
@@ -136,20 +137,20 @@ SENSOR_TYPES: tuple[TractiveSensorEntityDescription, ...] = (
         key=ATTR_DAILY_GOAL,
         translation_key="daily_goal",
         native_unit_of_measurement=UnitOfTime.MINUTES,
-        signal_prefix=TRACKER_WELLNESS_STATUS_UPDATED,
+        signal_prefix=TRACKER_HEALTH_OVERVIEW_UPDATED,
     ),
     TractiveSensorEntityDescription(
         key=ATTR_MINUTES_DAY_SLEEP,
         translation_key="minutes_day_sleep",
         native_unit_of_measurement=UnitOfTime.MINUTES,
-        signal_prefix=TRACKER_WELLNESS_STATUS_UPDATED,
+        signal_prefix=TRACKER_HEALTH_OVERVIEW_UPDATED,
         state_class=SensorStateClass.TOTAL,
     ),
     TractiveSensorEntityDescription(
         key=ATTR_MINUTES_NIGHT_SLEEP,
         translation_key="minutes_night_sleep",
         native_unit_of_measurement=UnitOfTime.MINUTES,
-        signal_prefix=TRACKER_WELLNESS_STATUS_UPDATED,
+        signal_prefix=TRACKER_HEALTH_OVERVIEW_UPDATED,
         state_class=SensorStateClass.TOTAL,
     ),
     TractiveSensorEntityDescription(

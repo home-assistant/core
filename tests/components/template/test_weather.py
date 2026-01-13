@@ -37,13 +37,15 @@ from homeassistant.helpers.restore_state import STORAGE_KEY as RESTORE_STATE_KEY
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
-from .conftest import ConfigurationStyle
+from .conftest import ConfigurationStyle, async_get_flow_preview_state
 
 from tests.common import (
+    MockConfigEntry,
     assert_setup_component,
     async_mock_restore_state_shutdown_restart,
     mock_restore_cache_with_extra_data,
 )
+from tests.typing import WebSocketGenerator
 
 ATTR_FORECAST = "forecast"
 
@@ -119,6 +121,27 @@ async def setup_weather(
     if style == ConfigurationStyle.TRIGGER:
         await async_setup_trigger_format(
             hass, count, {"name": TEST_OBJECT_ID, **weather_config}
+        )
+
+
+@pytest.fixture
+async def setup_weather_single_attribute(
+    hass: HomeAssistant,
+    count: int,
+    style: ConfigurationStyle,
+    attribute: str,
+    attribute_template: str,
+    weather_config: dict[str, Any],
+) -> None:
+    """Do setup of weather integration."""
+    extra = {attribute: attribute_template}
+    if style == ConfigurationStyle.MODERN:
+        await async_setup_modern_format(
+            hass, count, {"name": TEST_OBJECT_ID, **weather_config, **extra}
+        )
+    if style == ConfigurationStyle.TRIGGER:
+        await async_setup_trigger_format(
+            hass, count, {"name": TEST_OBJECT_ID, **weather_config, **extra}
         )
 
 
@@ -1129,3 +1152,58 @@ async def test_templated_optional_config(
     state = hass.states.get(TEST_WEATHER)
 
     assert state.attributes[attribute] == expected
+
+
+async def test_setup_config_entry(
+    hass: HomeAssistant,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Tests creating a weather from a config entry."""
+
+    hass.states.async_set(
+        "weather.test_state",
+        "sunny",
+        {},
+    )
+
+    template_config_entry = MockConfigEntry(
+        data={},
+        domain=template.DOMAIN,
+        options={
+            "name": "My template",
+            "condition": "{{ states('sensor.test_sensor') }}",
+            "humidity": "{{ 50 }}",
+            "temperature": "{{ 20 }}",
+            "template_type": WEATHER_DOMAIN,
+        },
+        title="My template",
+    )
+    template_config_entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(template_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("weather.my_template")
+    assert state is not None
+    assert state == snapshot
+
+
+async def test_flow_preview(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test the config flow preview."""
+
+    state = await async_get_flow_preview_state(
+        hass,
+        hass_ws_client,
+        WEATHER_DOMAIN,
+        {
+            "name": "My template",
+            "condition": "{{ 'sunny' }}",
+            "humidity": "{{ 50 }}",
+            "temperature": "{{ 20 }}",
+        },
+    )
+
+    assert state["state"] == "sunny"
