@@ -1,7 +1,5 @@
 """Tests for the compit component."""
 
-from unittest.mock import MagicMock
-
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.const import Platform
@@ -12,7 +10,7 @@ from tests.common import MockConfigEntry
 
 
 async def setup_integration(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_connector: MagicMock
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
 ) -> None:
     """Set up the Compit integration for testing."""
     mock_config_entry.add_to_hass(hass)

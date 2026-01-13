@@ -47,6 +47,9 @@ def mock_connector():
 
     mock_device_1 = MagicMock()
     mock_device_1.definition.name = "Test Device 1"
+    mock_device_1.state = {
+        "op_mode": MagicMock(value=1),
+    }
     mock_device_1.definition.parameters = [
         MagicMock(
             type="Select",
@@ -66,6 +69,9 @@ def mock_connector():
     ]
 
     mock_device_2 = MagicMock()
+    mock_device_2.state = {
+        "fan_speed": MagicMock(value=2),
+    }
     mock_device_2.definition.name = "Test Device 2"
     mock_device_2.definition.parameters = [
         MagicMock(
@@ -89,11 +95,18 @@ def mock_connector():
     def mock_get_device(device_id: int):
         return all_devices.get(device_id)
 
+    def get_device_parameter(device_id: int, parameter_code: str):
+        return all_devices[device_id].state.get(parameter_code)
+
+    def set_device_parameter(device_id: int, parameter_code: str, value: int):
+        all_devices[device_id].state[parameter_code] = MagicMock(value=value)
+        return True
+
     mock_instance = MagicMock()
     mock_instance.init = AsyncMock(return_value=True)
     mock_instance.all_devices = all_devices
-    mock_instance.get_device_parameter = MagicMock()
-    mock_instance.set_device_parameter = AsyncMock()
+    mock_instance.get_device_parameter = MagicMock(side_effect=get_device_parameter)
+    mock_instance.set_device_parameter = AsyncMock(side_effect=set_device_parameter)
     mock_instance.update_state = AsyncMock()
     mock_instance.get_device = MagicMock(side_effect=mock_get_device)
 

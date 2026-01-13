@@ -4,6 +4,7 @@ from compit_inext_api import Parameter
 
 from homeassistant.components.select import SelectEntity
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -20,7 +21,7 @@ async def async_setup_entry(
     entry: CompitConfigEntry,
     async_add_devices: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Set up Compit select sensors from a config entry."""
+    """Set up Compit select entities from a config entry."""
 
     coordinator = entry.runtime_data
     select_entities = []
@@ -96,8 +97,10 @@ class CompitSelect(CoordinatorEntity[CompitDataUpdateCoordinator], SelectEntity)
 
     async def async_select_option(self, option: str) -> None:
         """Change the selected option."""
-        state_value = self.available_values.get(option, -1)
 
+        if option not in self.available_values:
+            raise HomeAssistantError(f"Invalid option '{option}' for {self._attr_name}")
+        state_value = self.available_values[option]
         await self.coordinator.connector.set_device_parameter(
             self.device_id, self.parameter.parameter_code, state_value
         )

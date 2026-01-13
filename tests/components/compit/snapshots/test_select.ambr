@@ -55,7 +55,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': 'Medium',
   })
 # ---
 # name: test_select_entities_snapshot[select.operation_mode-entry]
@@ -114,6 +114,6 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': 'Manual',
   })
 # ---

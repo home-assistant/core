@@ -22,23 +22,9 @@ async def test_select_entities_snapshot(
     snapshot: SnapshotAssertion,
 ) -> None:
     """Snapshot test for select entities creation, unique IDs, and device info."""
-    await setup_integration(hass, mock_config_entry, mock_connector)
+    await setup_integration(hass, mock_config_entry)
 
     snapshot_compit_entities(hass, entity_registry, snapshot, Platform.SELECT)
-
-
-async def test_select_valid_scenarios(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_connector: MagicMock
-) -> None:
-    """Test that select entity shows valid options when get_device_parameter returns valid values."""
-    mock_connector.get_device_parameter.side_effect = (
-        lambda device_id, parameter_code: MagicMock(value=1)
-    )
-    await setup_integration(hass, mock_config_entry, mock_connector)
-
-    state = hass.states.get("select.operation_mode")
-    assert state is not None
-    assert state.state == "Manual"
 
 
 @pytest.mark.parametrize(
@@ -49,7 +35,7 @@ async def test_select_valid_scenarios(
         (MagicMock(value=999), "parameter value not in options"),
     ],
 )
-async def test_select_unknown_scenarios(
+async def test_select_unknown_device_parameters(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_connector: MagicMock,
@@ -60,7 +46,7 @@ async def test_select_unknown_scenarios(
     mock_connector.get_device_parameter.side_effect = (
         lambda device_id, parameter_code: mock_return_value
     )
-    await setup_integration(hass, mock_config_entry, mock_connector)
+    await setup_integration(hass, mock_config_entry)
 
     state = hass.states.get("select.operation_mode")
     assert state is not None
@@ -71,15 +57,8 @@ async def test_select_option(
     hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_connector: MagicMock
 ) -> None:
     """Test selecting an option."""
-    current_value = MagicMock(value=1)
 
-    def set_param(device_id, parameter_code, value):
-        current_value.value = value
-        return True
-
-    mock_connector.set_device_parameter.side_effect = set_param
-
-    await setup_integration(hass, mock_config_entry, mock_connector)
+    await setup_integration(hass, mock_config_entry)
 
     await hass.services.async_call(
         "select",
@@ -89,6 +68,23 @@ async def test_select_option(
     )
 
     mock_connector.set_device_parameter.assert_called_once()
-    state = hass.states.get("select.operation_mode")
-    assert state is not None
-    assert current_value.value == 0  # 0 is Auto
+    assert (
+        mock_connector.get_device_parameter(1, "op_mode").value == 0
+    )  # 0 is Auto, it was Manual before
+
+
+async def test_select_invalid_option(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_connector: MagicMock
+) -> None:
+    """Test selecting an invalid option."""
+
+    await setup_integration(hass, mock_config_entry)
+
+    await hass.services.async_call(
+        "select",
+        "select_option",
+        {"entity_id": "select.operation_mode", "option": "Invalid"},
+        blocking=False,
+    )
+
+    mock_connector.set_device_parameter.assert_not_called()
