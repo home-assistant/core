@@ -27,7 +27,6 @@ def create_tibber_device(
     brand: str = "Tibber",
     model: str = "Gen1",
     home_id: str = "home-id",
-    value: float | None = None,
     state_of_charge: float | None = None,
     connector_status: str | None = None,
     charging_status: str | None = None,
@@ -42,17 +41,12 @@ def create_tibber_device(
         brand: Device brand.
         model: Device model.
         home_id: Home ID.
-        value: Battery state of charge (deprecated, use state_of_charge).
         state_of_charge: Battery state of charge (for regular sensors).
         connector_status: Connector status (for binary sensors).
         charging_status: Charging status (for binary sensors).
         device_status: Device on/off status (for binary sensors).
     """
     capabilities = []
-
-    # Handle backward compatibility for 'value' parameter
-    if value is not None:
-        state_of_charge = value
 
     # Add regular sensor capabilities
     if state_of_charge is not None:
