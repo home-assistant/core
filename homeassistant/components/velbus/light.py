@@ -24,10 +24,12 @@ from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.util.color import brightness_to_value, value_to_brightness
 
 from . import VelbusConfigEntry
 from .entity import VelbusEntity, api_call
 
+BRIGHTNESS_SCALE = (1, 100)
 PARALLEL_UPDATES = 0
 
 
@@ -65,7 +67,7 @@ class VelbusLight(VelbusEntity, LightEntity):
     @property
     def brightness(self) -> int:
         """Return the brightness of the light."""
-        return int((self._channel.get_dimmer_state() * 255) / 100)
+        return value_to_brightness(BRIGHTNESS_SCALE, self._channel.get_dimmer_state())
 
     @api_call
     async def async_turn_on(self, **kwargs: Any) -> None:
@@ -75,7 +77,10 @@ class VelbusLight(VelbusEntity, LightEntity):
             if kwargs[ATTR_BRIGHTNESS] == 0:
                 brightness = 0
             else:
-                brightness = max(int((kwargs[ATTR_BRIGHTNESS] * 100) / 255), 1)
+                brightness = max(
+                    1,
+                    int(brightness_to_value(BRIGHTNESS_SCALE, kwargs[ATTR_BRIGHTNESS])),
+                )
             attr, *args = (
                 "set_dimmer_state",
                 brightness,
@@ -108,6 +113,7 @@ class VelbusButtonLight(VelbusEntity, LightEntity):
     _attr_color_mode = ColorMode.ONOFF
     _attr_supported_color_modes = {ColorMode.ONOFF}
     _attr_supported_features = LightEntityFeature.FLASH
+    _attr_translation_key = "button_light"
 
     def __init__(self, channel: VelbusChannel) -> None:
         """Initialize the button light (led)."""
