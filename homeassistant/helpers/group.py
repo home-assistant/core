@@ -98,31 +98,3 @@ def get_entity_ids(
         return entity_ids
     domain_filter = f"{domain_filter.lower()}."
     return [ent_id for ent_id in entity_ids if ent_id.startswith(domain_filter)]
-
-
-def deduplicate_entity_ids(hass: HomeAssistant, entity_ids: list[str]) -> list[str]:
-    """Return entity IDs with group entity ids subsuming their members."""
-    group_entities = get_group_entities(hass)
-
-    all_child_entity_ids: set[str] = set()
-
-    def _get_all_child_entity_ids_rec(entity_ids: Iterable[str]) -> None:
-        nonlocal all_child_entity_ids
-
-        for entity_id in entity_ids:
-            if (entity := group_entities.get(entity_id)) is not None and (
-                entity.group_type is GroupType.INTEGRATION_SPECIFIC
-            ):
-                child_entity_ids = [
-                    child_entity_id
-                    for child_entity_id in entity.included_entity_ids
-                    if child_entity_id not in all_child_entity_ids
-                ]
-                all_child_entity_ids.update(child_entity_ids)
-                _get_all_child_entity_ids_rec(child_entity_ids)
-
-    _get_all_child_entity_ids_rec(entity_ids)
-
-    return [
-        entity_id for entity_id in entity_ids if entity_id not in all_child_entity_ids
-    ]
