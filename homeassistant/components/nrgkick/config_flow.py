@@ -133,7 +133,9 @@ class NRGkickConfigFlow(ConfigFlow, domain=DOMAIN):
                     _LOGGER.exception("Unexpected error")
                     errors["base"] = "unknown"
                 else:
-                    await self.async_set_unique_id(info["serial"], raise_on_progress=False)
+                    await self.async_set_unique_id(
+                        info["serial"], raise_on_progress=False
+                    )
                     self._abort_if_unique_id_configured()
                     return self.async_create_entry(
                         title=info["title"], data={CONF_HOST: host}

@@ -47,31 +47,12 @@ from .entity import NRGkickEntity
 PARALLEL_UPDATES = 0
 
 
-@dataclass(frozen=True, kw_only=True, init=False)
+@dataclass(frozen=True, kw_only=True)
 class NRGkickSensorEntityDescription(SensorEntityDescription):
     """Class describing NRGkick sensor entities."""
 
     value_path: tuple[str, ...]
     value_fn: Callable[[StateType], StateType] | None = None
-
-    def __init__(
-        self,
-        *,
-        value_path: tuple[str, ...],
-        value_fn: Callable[[StateType], StateType] | None = None,
-        **kwargs: Any,
-    ) -> None:
-        """Initialize the entity description.
-
-        Args:
-            value_path: Path segments to traverse inside coordinator data.
-            value_fn: Optional value transform.
-            **kwargs: Forwarded to Home Assistant's SensorEntityDescription.
-
-        """
-        super().__init__(**kwargs)
-        object.__setattr__(self, "value_path", value_path)
-        object.__setattr__(self, "value_fn", value_fn)
 
 
 def _map_code_to_translation_key(
@@ -90,14 +71,14 @@ def _map_code_to_translation_key(
     return mapping.get(value)
 
 
-def _enum_options_from_mapping(mapping: Mapping[int, str | None]) -> tuple[str, ...]:
+def _enum_options_from_mapping(mapping: Mapping[int, str | None]) -> list[str]:
     """Build stable enum options from a numeric->translation-key mapping."""
     # Keep ordering stable by sorting keys.
     unique_options: dict[str, None] = {}
     for key in sorted(mapping):
         if (option := mapping[key]) is not None:
             unique_options[option] = None
-    return tuple(unique_options)
+    return list(unique_options)
 
 
 async def async_setup_entry(
