@@ -89,6 +89,12 @@
     }
   },
   "selector": {
+    "condition_behavior": {
+      "options": {
+        "all": "All",
+        "any": "Any"
+      }
+    },
     "direction": {
       "options": {
         "forward": "Forward",
