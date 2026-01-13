@@ -173,6 +173,12 @@
               "keep": "Keep mode",
               "off": "[%key:common::state::normal%]"
             }
+          },
+          "fan_mode": {
+            "state": {
+              "bioweapon": "Bioweapon mode",
+              "off": "[%key:common::state::normal%]"
+            }
           }
         }
       }
