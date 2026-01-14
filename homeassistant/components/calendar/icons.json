@@ -15,5 +15,13 @@
     "get_events": {
       "service": "mdi:calendar-month"
     }
+  },
+  "triggers": {
+    "event_ended": {
+      "trigger": "mdi:calendar-end"
+    },
+    "event_started": {
+      "trigger": "mdi:calendar-start"
+    }
   }
 }
