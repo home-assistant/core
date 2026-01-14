@@ -18,7 +18,6 @@ from homeassistant.components.teslemetry.coordinator import VEHICLE_INTERVAL
 from homeassistant.components.teslemetry.models import TeslemetryData
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
-    CONF_ACCESS_TOKEN,
     STATE_OFF,
     STATE_ON,
     STATE_UNAVAILABLE,
@@ -319,9 +318,7 @@ async def test_migrate_from_version_1_success(hass: HomeAssistant) -> None:
         await hass.config_entries.async_setup(mock_entry.entry_id)
         await hass.async_block_till_done()
 
-        mock_migrate.assert_called_once_with(
-            CLIENT_ID, CONFIG_V1[CONF_ACCESS_TOKEN], hass.config.location_name
-        )
+        mock_migrate.assert_called_once_with(CLIENT_ID, hass.config.location_name)
 
     assert mock_entry is not None
     assert mock_entry.version == 2
@@ -356,9 +353,7 @@ async def test_migrate_from_version_1_token_endpoint_error(hass: HomeAssistant) 
         await hass.config_entries.async_setup(mock_entry.entry_id)
         await hass.async_block_till_done()
 
-        mock_migrate.assert_called_once_with(
-            CLIENT_ID, CONFIG_V1[CONF_ACCESS_TOKEN], hass.config.location_name
-        )
+        mock_migrate.assert_called_once_with(CLIENT_ID, hass.config.location_name)
 
     entry = hass.config_entries.async_get_entry(mock_entry.entry_id)
     assert entry is not None
