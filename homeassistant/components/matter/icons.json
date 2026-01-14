@@ -6,6 +6,9 @@
       }
     },
     "button": {
+      "calibration_mode": {
+        "default": "mdi:window-shutter-cog"
+      },
       "pause": {
         "default": "mdi:pause"
       },
