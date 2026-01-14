@@ -391,7 +391,7 @@
     'state': 'off',
   })
 # ---
-# name: test_binary_sensors[eve_thermo][binary_sensor.eve_thermo_local_temperature_remote_sensing-entry]
+# name: test_binary_sensors[eve_thermo_v4][binary_sensor.eve_thermo_20ebp1701_local_temperature_remote_sensing-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -404,7 +404,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'binary_sensor.eve_thermo_local_temperature_remote_sensing',
+    'entity_id': 'binary_sensor.eve_thermo_20ebp1701_local_temperature_remote_sensing',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -426,61 +426,13 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_binary_sensors[eve_thermo][binary_sensor.eve_thermo_local_temperature_remote_sensing-state]
+# name: test_binary_sensors[eve_thermo_v4][binary_sensor.eve_thermo_20ebp1701_local_temperature_remote_sensing-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Eve Thermo Local temperature remote sensing',
+      'friendly_name': 'Eve Thermo 20EBP1701 Local temperature remote sensing',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.eve_thermo_local_temperature_remote_sensing',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'off',
-  })
-# ---
-# name: test_binary_sensors[eve_thermo][binary_sensor.eve_thermo_outdoor_temperature_remote_sensing-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'binary_sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'binary_sensor.eve_thermo_outdoor_temperature_remote_sensing',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'Outdoor temperature remote sensing',
-    'platform': 'matter',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'thermostat_remote_sensing_outdoor_temperature',
-    'unique_id': '00000000000004D2-0000000000000021-MatterNodeDevice-1-ThermostatRemoteSensing_OutdoorTemperature-513-26',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_binary_sensors[eve_thermo][binary_sensor.eve_thermo_outdoor_temperature_remote_sensing-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'Eve Thermo Outdoor temperature remote sensing',
-    }),
-    'context': <ANY>,
-    'entity_id': 'binary_sensor.eve_thermo_outdoor_temperature_remote_sensing',
+    'entity_id': 'binary_sensor.eve_thermo_20ebp1701_local_temperature_remote_sensing',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -529,54 +481,6 @@
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.eve_thermo_20ecd1701_local_temperature_remote_sensing',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'off',
-  })
-# ---
-# name: test_binary_sensors[eve_thermo_v5][binary_sensor.eve_thermo_20ecd1701_outdoor_temperature_remote_sensing-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'binary_sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'binary_sensor.eve_thermo_20ecd1701_outdoor_temperature_remote_sensing',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'Outdoor temperature remote sensing',
-    'platform': 'matter',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'thermostat_remote_sensing_outdoor_temperature',
-    'unique_id': '00000000000004D2-000000000000000C-MatterNodeDevice-1-ThermostatRemoteSensing_OutdoorTemperature-513-26',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_binary_sensors[eve_thermo_v5][binary_sensor.eve_thermo_20ecd1701_outdoor_temperature_remote_sensing-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'Eve Thermo 20ECD1701 Outdoor temperature remote sensing',
-    }),
-    'context': <ANY>,
-    'entity_id': 'binary_sensor.eve_thermo_20ecd1701_outdoor_temperature_remote_sensing',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
