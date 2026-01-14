@@ -26,8 +26,8 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN, MANUFACTURER, HomevoltConfigEntry
-from .coordinator import HomevoltDataUpdateCoordinator
+from .const import DOMAIN, MANUFACTURER
+from .coordinator import HomevoltConfigEntry, HomevoltDataUpdateCoordinator
 
 PARALLEL_UPDATES = 0  # Coordinator-based updates
 

@@ -12,17 +12,22 @@ from homevolt import (
     HomevoltError,
 )
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import DOMAIN, SCAN_INTERVAL, HomevoltConfigEntry
+from .const import DOMAIN, SCAN_INTERVAL
+
+type HomevoltConfigEntry = ConfigEntry[HomevoltDataUpdateCoordinator]
 
 _LOGGER = logging.getLogger(__name__)
 
 
 class HomevoltDataUpdateCoordinator(DataUpdateCoordinator[Device]):
     """Class to manage fetching Homevolt data."""
+
+    config_entry: HomevoltConfigEntry
 
     def __init__(
         self,

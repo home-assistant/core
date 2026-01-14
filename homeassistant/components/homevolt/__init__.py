@@ -8,8 +8,7 @@ from homeassistant.const import CONF_HOST, CONF_PASSWORD, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import HomevoltConfigEntry
-from .coordinator import HomevoltDataUpdateCoordinator
+from .coordinator import HomevoltConfigEntry, HomevoltDataUpdateCoordinator
 
 PLATFORMS: list[Platform] = [Platform.SENSOR]
 
