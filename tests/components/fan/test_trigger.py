@@ -10,7 +10,7 @@ from homeassistant.const import ATTR_LABEL_ID, CONF_ENTITY_ID, STATE_OFF, STATE_
 from homeassistant.core import HomeAssistant, ServiceCall
 
 from tests.components import (
-    StateDescription,
+    TriggerStateDescription,
     arm_trigger,
     parametrize_target_entities,
     parametrize_trigger_states,
@@ -89,7 +89,7 @@ async def test_fan_state_trigger_behavior_any(
     entities_in_target: int,
     trigger: str,
     trigger_options: dict[str, Any],
-    states: list[StateDescription],
+    states: list[TriggerStateDescription],
 ) -> None:
     """Test that the fan state trigger fires when any fan state changes to a specific state."""
     other_entity_ids = set(target_fans) - {entity_id}
@@ -147,7 +147,7 @@ async def test_fan_state_trigger_behavior_first(
     entities_in_target: int,
     trigger: str,
     trigger_options: dict[str, Any],
-    states: list[StateDescription],
+    states: list[TriggerStateDescription],
 ) -> None:
     """Test that the fan state trigger fires when the first fan changes to a specific state."""
     other_entity_ids = set(target_fans) - {entity_id}
@@ -204,7 +204,7 @@ async def test_fan_state_trigger_behavior_last(
     entities_in_target: int,
     trigger: str,
     trigger_options: dict[str, Any],
-    states: list[StateDescription],
+    states: list[TriggerStateDescription],
 ) -> None:
     """Test that the fan state trigger fires when the last fan changes to a specific state."""
     other_entity_ids = set(target_fans) - {entity_id}

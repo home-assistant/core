@@ -15,7 +15,7 @@ from homeassistant.const import ATTR_LABEL_ID, CONF_ENTITY_ID, STATE_OFF, STATE_
 from homeassistant.core import HomeAssistant, ServiceCall
 
 from tests.components import (
-    StateDescription,
+    TriggerStateDescription,
     arm_trigger,
     parametrize_numerical_attribute_changed_trigger_states,
     parametrize_numerical_attribute_crossed_threshold_trigger_states,
@@ -100,7 +100,7 @@ async def test_humidifier_state_trigger_behavior_any(
     entities_in_target: int,
     trigger: str,
     trigger_options: dict[str, Any],
-    states: list[StateDescription],
+    states: list[TriggerStateDescription],
 ) -> None:
     """Test that the humidifier state trigger fires when any humidifier state changes to a specific state."""
     other_entity_ids = set(target_humidifiers) - {entity_id}
@@ -166,7 +166,7 @@ async def test_humidifier_state_attribute_trigger_behavior_any(
     entities_in_target: int,
     trigger: str,
     trigger_options: dict[str, Any],
-    states: list[StateDescription],
+    states: list[TriggerStateDescription],
 ) -> None:
     """Test that the humidifier state trigger fires when any humidifier state changes to a specific state."""
     other_entity_ids = set(target_humidifiers) - {entity_id}
@@ -224,7 +224,7 @@ async def test_humidifier_state_trigger_behavior_first(
     entities_in_target: int,
     trigger: str,
     trigger_options: dict[str, Any],
-    states: list[StateDescription],
+    states: list[TriggerStateDescription],
 ) -> None:
     """Test that the humidifier state trigger fires when the first humidifier changes to a specific state."""
     other_entity_ids = set(target_humidifiers) - {entity_id}
@@ -345,7 +345,7 @@ async def test_humidifier_state_trigger_behavior_last(
     entities_in_target: int,
     trigger: str,
     trigger_options: dict[str, Any],
-    states: list[StateDescription],
+    states: list[TriggerStateDescription],
 ) -> None:
     """Test that the humidifier state trigger fires when the last humidifier changes to a specific state."""
     other_entity_ids = set(target_humidifiers) - {entity_id}

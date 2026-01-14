@@ -11,7 +11,7 @@ from homeassistant.const import ATTR_LABEL_ID, CONF_ENTITY_ID, STATE_OFF, STATE_
 from homeassistant.core import HomeAssistant, ServiceCall
 
 from tests.components import (
-    StateDescription,
+    TriggerStateDescription,
     arm_trigger,
     parametrize_numerical_attribute_changed_trigger_states,
     parametrize_numerical_attribute_crossed_threshold_trigger_states,
@@ -94,7 +94,7 @@ async def test_light_state_trigger_behavior_any(
     entities_in_target: int,
     trigger: str,
     trigger_options: dict[str, Any],
-    states: list[StateDescription],
+    states: list[TriggerStateDescription],
 ) -> None:
     """Test that the light state trigger fires when any light state changes to a specific state."""
     other_entity_ids = set(target_lights) - {entity_id}
@@ -148,7 +148,7 @@ async def test_light_state_attribute_trigger_behavior_any(
     entities_in_target: int,
     trigger: str,
     trigger_options: dict[str, Any],
-    states: list[StateDescription],
+    states: list[TriggerStateDescription],
 ) -> None:
     """Test that the light state trigger fires when any light state changes to a specific state."""
     other_entity_ids = set(target_lights) - {entity_id}
@@ -206,7 +206,7 @@ async def test_light_state_trigger_behavior_first(
     entities_in_target: int,
     trigger: str,
     trigger_options: dict[str, Any],
-    states: list[StateDescription],
+    states: list[TriggerStateDescription],
 ) -> None:
     """Test that the light state trigger fires when the first light changes to a specific state."""
     other_entity_ids = set(target_lights) - {entity_id}
@@ -315,7 +315,7 @@ async def test_light_state_trigger_behavior_last(
     entities_in_target: int,
     trigger: str,
     trigger_options: dict[str, Any],
-    states: list[StateDescription],
+    states: list[TriggerStateDescription],
 ) -> None:
     """Test that the light state trigger fires when the last light changes to a specific state."""
     other_entity_ids = set(target_lights) - {entity_id}

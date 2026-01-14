@@ -11,7 +11,7 @@ from homeassistant.const import ATTR_LABEL_ID, CONF_ENTITY_ID, STATE_OFF, STATE_
 from homeassistant.core import HomeAssistant, ServiceCall
 
 from tests.components import (
-    StateDescription,
+    TriggerStateDescription,
     arm_trigger,
     parametrize_target_entities,
     parametrize_trigger_states,
@@ -90,7 +90,7 @@ async def test_siren_state_trigger_behavior_any(
     entities_in_target: int,
     trigger: str,
     trigger_options: dict[str, Any],
-    states: list[StateDescription],
+    states: list[TriggerStateDescription],
 ) -> None:
     """Test that the siren state trigger fires when any siren state changes to a specific state."""
     other_entity_ids = set(target_sirens) - {entity_id}
@@ -148,7 +148,7 @@ async def test_siren_state_trigger_behavior_first(
     entities_in_target: int,
     trigger: str,
     trigger_options: dict[str, Any],
-    states: list[StateDescription],
+    states: list[TriggerStateDescription],
 ) -> None:
     """Test that the siren state trigger fires when the first siren changes to a specific state."""
     other_entity_ids = set(target_sirens) - {entity_id}
@@ -205,7 +205,7 @@ async def test_siren_state_trigger_behavior_last(
     entities_in_target: int,
     trigger: str,
     trigger_options: dict[str, Any],
-    states: list[StateDescription],
+    states: list[TriggerStateDescription],
 ) -> None:
     """Test that the siren state trigger fires when the last siren changes to a specific state."""
     other_entity_ids = set(target_sirens) - {entity_id}

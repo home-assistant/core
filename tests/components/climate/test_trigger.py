@@ -28,7 +28,7 @@ from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers.trigger import async_validate_trigger_config
 
 from tests.components import (
-    StateDescription,
+    TriggerStateDescription,
     arm_trigger,
     other_states,
     parametrize_numerical_attribute_changed_trigger_states,
@@ -191,7 +191,7 @@ async def test_climate_state_trigger_behavior_any(
     entities_in_target: int,
     trigger: str,
     trigger_options: dict[str, Any],
-    states: list[StateDescription],
+    states: list[TriggerStateDescription],
 ) -> None:
     """Test that the climate state trigger fires when any climate state changes to a specific state."""
     other_entity_ids = set(target_climates) - {entity_id}
@@ -286,7 +286,7 @@ async def test_climate_state_attribute_trigger_behavior_any(
     entities_in_target: int,
     trigger: str,
     trigger_options: dict[str, Any],
-    states: list[StateDescription],
+    states: list[TriggerStateDescription],
 ) -> None:
     """Test that the climate state trigger fires when any climate state changes to a specific state."""
     other_entity_ids = set(target_climates) - {entity_id}
@@ -359,7 +359,7 @@ async def test_climate_state_trigger_behavior_first(
     entity_id: str,
     trigger: str,
     trigger_options: dict[str, Any],
-    states: list[StateDescription],
+    states: list[TriggerStateDescription],
 ) -> None:
     """Test that the climate state trigger fires when the first climate changes to a specific state."""
     other_entity_ids = set(target_climates) - {entity_id}
@@ -515,7 +515,7 @@ async def test_climate_state_trigger_behavior_last(
     entity_id: str,
     trigger: str,
     trigger_options: dict[str, Any],
-    states: list[StateDescription],
+    states: list[TriggerStateDescription],
 ) -> None:
     """Test that the climate state trigger fires when the last climate changes to a specific state."""
     other_entity_ids = set(target_climates) - {entity_id}

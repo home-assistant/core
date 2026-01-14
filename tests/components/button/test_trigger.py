@@ -14,7 +14,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, ServiceCall
 
 from tests.components import (
-    StateDescription,
+    TriggerStateDescription,
     arm_trigger,
     parametrize_target_entities,
     set_or_remove_state,
@@ -163,7 +163,7 @@ async def test_button_state_trigger_behavior_any(
     entity_id: str,
     entities_in_target: int,
     trigger: str,
-    states: list[StateDescription],
+    states: list[TriggerStateDescription],
 ) -> None:
     """Test that the button state trigger fires when any button state changes to a specific state."""
     other_entity_ids = set(target_buttons) - {entity_id}

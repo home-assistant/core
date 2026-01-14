@@ -16,7 +16,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, ServiceCall
 
 from tests.components import (
-    StateDescription,
+    TriggerStateDescription,
     arm_trigger,
     parametrize_target_entities,
     parametrize_trigger_states,
@@ -94,7 +94,7 @@ async def test_person_home_trigger_behavior_any(
     entities_in_target: int,
     trigger: str,
     trigger_options: dict[str, Any],
-    states: list[StateDescription],
+    states: list[TriggerStateDescription],
 ) -> None:
     """Test that the person home triggers when any person changes to a specific state."""
     other_entity_ids = set(target_persons) - {entity_id}
@@ -152,7 +152,7 @@ async def test_person_state_trigger_behavior_first(
     entities_in_target: int,
     trigger: str,
     trigger_options: dict[str, Any],
-    states: list[StateDescription],
+    states: list[TriggerStateDescription],
 ) -> None:
     """Test that the person home triggers when the first person changes to a specific state."""
     other_entity_ids = set(target_persons) - {entity_id}
@@ -209,7 +209,7 @@ async def test_person_state_trigger_behavior_last(
     entities_in_target: int,
     trigger: str,
     trigger_options: dict[str, Any],
-    states: list[StateDescription],
+    states: list[TriggerStateDescription],
 ) -> None:
     """Test that the person home triggers when the last person changes to a specific state."""
     other_entity_ids = set(target_persons) - {entity_id}

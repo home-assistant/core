@@ -14,7 +14,7 @@ from homeassistant.const import ATTR_LABEL_ID, ATTR_SUPPORTED_FEATURES, CONF_ENT
 from homeassistant.core import HomeAssistant, ServiceCall
 
 from tests.components import (
-    StateDescription,
+    TriggerStateDescription,
     arm_trigger,
     other_states,
     parametrize_target_entities,
@@ -152,7 +152,7 @@ async def test_alarm_control_panel_state_trigger_behavior_any(
     entities_in_target: int,
     trigger: str,
     trigger_options: dict[str, Any],
-    states: list[StateDescription],
+    states: list[TriggerStateDescription],
 ) -> None:
     """Test that the alarm control panel state trigger fires when any alarm control panel state changes to a specific state."""
     other_entity_ids = set(target_alarm_control_panels) - {entity_id}
@@ -263,7 +263,7 @@ async def test_alarm_control_panel_state_trigger_behavior_first(
     entities_in_target: int,
     trigger: str,
     trigger_options: dict[str, Any],
-    states: list[StateDescription],
+    states: list[TriggerStateDescription],
 ) -> None:
     """Test that the alarm control panel state trigger fires when the first alarm control panel changes to a specific state."""
     other_entity_ids = set(target_alarm_control_panels) - {entity_id}
@@ -373,7 +373,7 @@ async def test_alarm_control_panel_state_trigger_behavior_last(
     entities_in_target: int,
     trigger: str,
     trigger_options: dict[str, Any],
-    states: list[StateDescription],
+    states: list[TriggerStateDescription],
 ) -> None:
     """Test that the alarm_control_panel state trigger fires when the last alarm_control_panel changes to a specific state."""
     other_entity_ids = set(target_alarm_control_panels) - {entity_id}
