@@ -20,7 +20,7 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Line Crossing',
+    'object_id_base': 'Line crossing',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.MOTION: 'motion'>,
