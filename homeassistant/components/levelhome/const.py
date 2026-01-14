@@ -2,6 +2,8 @@
 
 DOMAIN = "levelhome"
 
+COMMAND_STATE_TIMEOUT = 15.0  # Seconds to wait for state confirmation after command
+
 # Config keys
 CONF_OAUTH2_BASE_URL = "oauth2_base_url"
 CONF_PARTNER_BASE_URL = "partner_base_url"

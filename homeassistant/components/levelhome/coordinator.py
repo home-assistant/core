@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 from collections.abc import Callable
 from dataclasses import dataclass, replace
 from datetime import timedelta
@@ -14,6 +15,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from ._lib.level_ha import WebsocketManager as LevelWebsocketManager
+from .const import COMMAND_STATE_TIMEOUT
 
 LOGGER = logging.getLogger(__name__)
 SCAN_INTERVAL: timedelta | None = None  # Use push updates; no periodic polling
@@ -110,6 +112,8 @@ class LevelLocksCoordinator(DataUpdateCoordinator[dict[str, LevelLockDevice]]):
         self._last_command_time: dict[str, float] = {}
         self._known_device_ids: set[str] = set()
         self._new_device_callbacks: list[Callable[[list[str]], None]] = []
+        self._pending_confirmations: dict[str, asyncio.Task[None]] = {}
+        self._refreshing_devices: set[str] = set()
 
     def register_new_device_callback(
         self, callback: Callable[[list[str]], None]
@@ -117,6 +121,10 @@ class LevelLocksCoordinator(DataUpdateCoordinator[dict[str, LevelLockDevice]]):
         """Register a callback to be called when new devices are added."""
         self._known_device_ids = set(self.data.keys()) if self.data else set()
         self._new_device_callbacks.append(callback)
+
+    def is_device_refreshing(self, lock_id: str) -> bool:
+        """Check if a device is currently refreshing state after a timeout."""
+        return lock_id in self._refreshing_devices
 
     async def _async_update_data(self) -> dict[str, LevelLockDevice]:
         try:
@@ -208,11 +216,25 @@ class LevelLocksCoordinator(DataUpdateCoordinator[dict[str, LevelLockDevice]]):
                 updated_device.state,
             )
             self.async_set_updated_data(current)
+            if (
+                new_state
+                and new_state.lower() in ("locked", "unlocked")
+                and device.lock_id in self._pending_confirmations
+            ):
+                self._pending_confirmations[device.lock_id].cancel()
+                self._pending_confirmations.pop(device.lock_id, None)
+                LOGGER.debug(
+                    "Cancelled timeout for %s - received final state %s",
+                    device.lock_id,
+                    new_state,
+                )
 
     async def async_send_command(self, lock_id: str, command: str) -> None:
         """Send a command via WebSocket."""
         if command in ("lock", "unlock"):
             self._last_command_time[lock_id] = time.monotonic()
+            if lock_id in self._pending_confirmations:
+                self._pending_confirmations[lock_id].cancel()
             try:
                 await self._ws_manager.async_send_command(
                     lock_id,
@@ -220,6 +242,67 @@ class LevelLocksCoordinator(DataUpdateCoordinator[dict[str, LevelLockDevice]]):
                 )
             except Exception as err:
                 raise UpdateFailed(f"Command failed: {err}") from err
+            self._pending_confirmations[lock_id] = asyncio.create_task(
+                self._async_handle_command_timeout(lock_id, command)
+            )
+
+    async def _async_handle_command_timeout(self, lock_id: str, command: str) -> None:
+        """Handle timeout waiting for state confirmation after a command."""
+        try:
+            await asyncio.sleep(COMMAND_STATE_TIMEOUT)
+        except asyncio.CancelledError:
+            return
+        self._pending_confirmations.pop(lock_id, None)
+        device = self.data.get(lock_id) if self.data else None
+        if device is None:
+            return
+        current_state = device.state.lower() if device.state else None
+        if current_state not in ("locking", "unlocking"):
+            return
+        LOGGER.warning(
+            "Timeout waiting for state confirmation for %s after %s command; "
+            "fetching latest state",
+            lock_id,
+            command,
+        )
+        self._refreshing_devices.add(lock_id)
+        self.async_set_updated_data(dict(self.data))
+        device_state = await self._ws_manager.async_get_device_state(lock_id)
+        self._refreshing_devices.discard(lock_id)
+        if device_state:
+            bolt_state = device_state.get("bolt_state")
+            if bolt_state:
+                is_locked = str(bolt_state).lower() == "locked"
+                new_state = str(bolt_state).lower()
+                current_data = dict(self.data or {})
+                if lock_id in current_data:
+                    updated_device = replace(
+                        current_data[lock_id],
+                        is_locked=is_locked,
+                        state=new_state,
+                    )
+                    current_data[lock_id] = updated_device
+                    LOGGER.info(
+                        "Updated device %s after timeout: is_locked=%s, state=%s",
+                        lock_id,
+                        is_locked,
+                        new_state,
+                    )
+                    self.async_set_updated_data(current_data)
+                    return
+        LOGGER.warning(
+            "Failed to fetch state for %s after timeout; device may be unavailable",
+            lock_id,
+        )
+        current_data = dict(self.data or {})
+        if lock_id in current_data:
+            updated_device = replace(
+                current_data[lock_id],
+                is_locked=None,
+                state=None,
+            )
+            current_data[lock_id] = updated_device
+            self.async_set_updated_data(current_data)
 
     async def async_handle_devices_update(self, devices: list[dict[str, Any]]) -> None:
         """Handle a device list update from the WebSocket."""

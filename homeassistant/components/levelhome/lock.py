@@ -75,6 +75,7 @@ class LevelLockEntity(CoordinatorEntity[LevelLocksCoordinator], LockEntity):
         return (
             self.coordinator.last_update_success
             and self._lock_id in self.coordinator.data
+            and not self.coordinator.is_device_refreshing(self._lock_id)
         )
 
     @property
