@@ -19,7 +19,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import CONF_BAUD_RATE, CONF_SERIAL_PORT, DOMAIN
+from .const import CONF_BAUD_RATE, CONF_SERIAL_PORT, CONF_SOURCE_MAPPINGS, DOMAIN
 from .protocol import TonewinnerCommands, TonewinnerProtocol
 
 _LOGGER = logging.getLogger(__name__)
@@ -105,19 +105,19 @@ async def async_setup_entry(
 class TonewinnerSerialProtocol(asyncio.Protocol):
     """Tonewinner AT-500 protocol implementation."""
 
-    def __init__(self, entity):
+    def __init__(self, entity) -> None:
         """Initialize TonewinnerProtocol."""
         self.entity = entity
         self.transport = None
         self.buffer = b""
 
-    def connection_made(self, transport):
+    def connection_made(self, transport) -> None:
         """Connection made."""
         self.transport = transport
         _LOGGER.debug("Connection established successfully")
         self.entity.set_available(True)
 
-    def data_received(self, data):
+    def data_received(self, data) -> None:
         """Data received."""
         _LOGGER.debug("Raw RX data: %s", data.hex())
         self.buffer += data
@@ -150,7 +150,7 @@ class TonewinnerSerialProtocol(asyncio.Protocol):
             # Remove processed message from buffer
             self.buffer = self.buffer[end_idx + 1 :]
 
-    def connection_lost(self, exc):
+    def connection_lost(self, exc) -> None:
         """Connection lost."""
         _LOGGER.debug("Connection lost: %s", exc)
         self.entity.set_available(False)
@@ -199,7 +199,24 @@ class TonewinnerMediaPlayer(MediaPlayerEntity):
         self._attr_is_volume_muted = False
         self._attr_source = None
         self._attr_sound_mode = None
-        self._attr_source_list = list(INPUT_SOURCES.keys())
+
+        # Build source mappings from options
+        self._source_code_to_custom_name = {}
+        self._custom_name_to_source_code = {}
+        source_mappings = entry.options.get(CONF_SOURCE_MAPPINGS, {})
+        self._attr_source_list = []
+        for source_name, source_code in INPUT_SOURCES.items():
+            mapping = source_mappings.get(source_code, {})
+            if not mapping.get("enabled", True):
+                _LOGGER.debug("Source disabled: %s (%s)", source_name, source_code)
+                continue
+            custom_name = mapping.get("name", source_name)
+            self._source_code_to_custom_name[source_code] = custom_name
+            self._custom_name_to_source_code[custom_name] = source_code
+            self._attr_source_list.append(custom_name)
+            _LOGGER.debug(
+                "Source mapped: %s -> %s (%s)", source_name, custom_name, source_code
+            )
         self._attr_sound_mode_list = list(SOUND_MODES.keys())
 
     async def async_added_to_hass(self) -> None:
@@ -281,9 +298,16 @@ class TonewinnerMediaPlayer(MediaPlayerEntity):
             self._attr_is_volume_muted = mute
 
         # Parse input source
-        if source := TonewinnerProtocol.parse_input_source(response):
-            _LOGGER.debug("Source updated: %s", source)
-            self._attr_source = source
+        if source_code := TonewinnerProtocol.parse_input_source(response):
+            _LOGGER.debug("Source code received: %s", source_code)
+            # Map source code to custom name
+            custom_name = self._source_code_to_custom_name.get(source_code)
+            if custom_name:
+                _LOGGER.debug("Source updated: %s -> %s", source_code, custom_name)
+                self._attr_source = custom_name
+            else:
+                _LOGGER.warning("Unknown source code: %s", source_code)
+                self._attr_source = source_code
 
         # Parse sound mode
         if mode := TonewinnerProtocol.parse_sound_mode(response):
@@ -358,10 +382,13 @@ class TonewinnerMediaPlayer(MediaPlayerEntity):
 
     async def async_select_source(self, source: str) -> None:
         """Select input source."""
-        if source not in INPUT_SOURCES:
+        if source not in self._custom_name_to_source_code:
             raise ValueError(f"Unknown source: {source}")
-        command = f"SI {INPUT_SOURCES[source]}"
-        _LOGGER.debug("Selecting source: %s (command: %s)", source, command)
+        source_code = self._custom_name_to_source_code[source]
+        command = f"SI {source_code}"
+        _LOGGER.debug(
+            "Selecting source: %s -> %s (command: %s)", source, source_code, command
+        )
         await self.send_raw_command(command)
         self.async_write_ha_state()
 
