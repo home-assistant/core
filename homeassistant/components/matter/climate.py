@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from enum import IntEnum
+import logging
 from typing import Any
 
 from chip.clusters import Objects as clusters
@@ -31,6 +32,8 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from .entity import MatterEntity, MatterEntityDescription
 from .helpers import get_matter
 from .models import MatterDiscoverySchema
+
+_LOGGER = logging.getLogger(__name__)
 
 HUMIDITY_SCALING_FACTOR = 100
 TEMPERATURE_SCALING_FACTOR = 100
@@ -256,6 +259,12 @@ class MatterClimate(MatterEntity, ClimateEntity):
         preset_handle = self._preset_handle_by_name.get(preset_mode)
 
         if preset_handle is None:
+            _LOGGER.debug(
+                "Preset lookup failed. Requested: '%s', Available: %s, Dictionary keys: %s",
+                preset_mode,
+                self.preset_modes,
+                list(self._preset_handle_by_name.keys()),
+            )
             raise ValueError(
                 f"Preset mode '{preset_mode}' not found. "
                 f"Available presets: {self.preset_modes}"
@@ -321,7 +330,7 @@ class MatterClimate(MatterEntity, ClimateEntity):
         presets = []
         if self.matter_presets:
             for i, preset in enumerate(self.matter_presets, start=1):
-                name = preset.name or f"Preset{i}"
+                name = (preset.name.strip() if preset.name else None) or f"Preset{i}"
                 presets.append(name)
                 self._preset_handle_by_name[name] = preset.presetHandle
         self._attr_preset_modes = presets
