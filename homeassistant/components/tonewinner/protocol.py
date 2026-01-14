@@ -240,7 +240,7 @@ class ToneWinnerProtocol:
         _LOGGER.debug("Input source raw data: '%s'", source)
 
         # Strip `V=(<video>\w+) A=(<audio>\w+)$` from the end using regex, extracting their params to log
-        match = re.search(r"(?P<name>(\w+) V=(?P<video>\w+) A=(?P<audio>\w+)$", source)
+        match = re.search(r"(?P<name>\w+) V=(?P<video>\w+) A=(?P<audio>\w+)$", source)
         if match:
             source_name = match.group("name")
             video_source = match.group("video")
