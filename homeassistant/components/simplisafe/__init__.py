@@ -11,6 +11,7 @@ from simplipy import API
 from simplipy.errors import (
     EndpointUnavailableError,
     InvalidCredentialsError,
+    RequestError,
     SimplipyError,
     WebsocketError,
 )
@@ -625,22 +626,42 @@ class SimpliSafe:
         """Get updated data from SimpliSafe."""
 
         async def async_update_system(system: SystemType) -> None:
-            """Update a system."""
+            """Update a single system and process notifications."""
             await system.async_update(cached=system.version != 3)
             self._async_process_new_notifications(system)
 
         tasks = [async_update_system(system) for system in self.systems.values()]
-        results = await asyncio.gather(*tasks, return_exceptions=True)
 
-        for result in results:
-            if isinstance(result, InvalidCredentialsError):
-                raise ConfigEntryAuthFailed("Invalid credentials") from result
-
-            if isinstance(result, EndpointUnavailableError):
-                # In case the user attempts an action not allowed in their current plan,
-                # we merely log that message at INFO level (so the user is aware,
-                # but not spammed with ERROR messages that they cannot change):
-                LOGGER.debug(result)
-
-            if isinstance(result, SimplipyError):
-                raise UpdateFailed(f"SimpliSafe error while updating: {result}")
+        try:
+            # Gather all system updates; exceptions will propagate
+            await asyncio.gather(*tasks, return_exceptions=False)
+        except InvalidCredentialsError as err:
+            # Stop websocket immediately on auth failure
+            if self._websocket_reconnect_task:
+                await self._async_cancel_websocket_loop()
+            # Signal HA that credentials are invalid; user intervention is required
+            raise ConfigEntryAuthFailed("Invalid credentials") from err
+        except RequestError as err:
+            # Cloud-level request errors: wrap aiohttp errors
+            if self._websocket_reconnect_task:
+                await self._async_cancel_websocket_loop()
+            raise UpdateFailed(
+                f"Request error while updating all systems: {err}"
+            ) from err
+        except EndpointUnavailableError as err:
+            # Currently not raised by the API; included for future-proofing.
+            # Informational per-system (e.g., user plan restrictions)
+            LOGGER.debug("Endpoint unavailable: %s", err)
+        except SimplipyError as err:
+            # Any other SimplipyError not caught per-system
+            raise UpdateFailed(f"SimpliSafe error while updating: {err}") from err
+        else:
+            # Restart websocket only if last update succeeded
+            if self.coordinator and self.coordinator.last_update_success:
+                if (
+                    not self._websocket_reconnect_task
+                    or self._websocket_reconnect_task.done()
+                ):
+                    self._websocket_reconnect_task = self._hass.async_create_task(
+                        self._async_start_websocket_loop()
+                    )
