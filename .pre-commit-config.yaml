@@ -39,7 +39,7 @@ repos:
       - id: prettier
         additional_dependencies:
           - prettier@3.6.2
-          - prettier-plugin-sort-json@4.1.1
+          - prettier-plugin-sort-json@4.2.0
   - repo: https://github.com/cdce8p/python-typing-update
     rev: v0.6.0
     hooks:
