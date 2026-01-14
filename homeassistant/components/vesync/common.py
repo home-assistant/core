@@ -67,7 +67,7 @@ def is_purifier(device: VeSyncBaseDevice) -> TypeGuard[VeSyncPurifier]:
     return device.product_type == ProductTypes.PURIFIER
 
 
-def is_air_fryer(device: VeSyncBaseDevice) -> bool:
+def is_air_fryer(device: VeSyncBaseDevice) -> TypeGuard[VeSyncFryer]:
     """Check if the device represents an air fryer."""
 
-    return isinstance(device, VeSyncFryer)
+    return device.product_type == ProductTypes.AIR_FRYER
