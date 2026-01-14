@@ -62,7 +62,11 @@ class HikvisionCamera(Camera):
             self._attr_device_info = DeviceInfo(
                 identifiers={(DOMAIN, f"{self._data.device_id}_{channel}")},
                 via_device=(DOMAIN, self._data.device_id),
-                name=f"{self._data.device_name} Channel {channel}",
+                translation_key="nvr_channel",
+                translation_placeholders={
+                    "device_name": self._data.device_name,
+                    "channel_number": str(channel),
+                },
                 manufacturer="Hikvision",
                 model="NVR Channel",
             )

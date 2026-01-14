@@ -92,7 +92,7 @@
     'attributes': ReadOnlyDict({
       'access_token': '1caab5c3b3',
       'entity_picture': '/api/camera_proxy/camera.front_camera_channel_1?token=1caab5c3b3',
-      'friendly_name': 'Front Camera Channel 1',
+      'friendly_name': 'Front Camera channel 1',
       'supported_features': <CameraEntityFeature: 2>,
     }),
     'context': <ANY>,
@@ -144,7 +144,7 @@
     'attributes': ReadOnlyDict({
       'access_token': '1caab5c3b3',
       'entity_picture': '/api/camera_proxy/camera.front_camera_channel_2?token=1caab5c3b3',
-      'friendly_name': 'Front Camera Channel 2',
+      'friendly_name': 'Front Camera channel 2',
       'supported_features': <CameraEntityFeature: 2>,
     }),
     'context': <ANY>,
