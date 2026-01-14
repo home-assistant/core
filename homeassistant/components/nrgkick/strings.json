@@ -173,18 +173,6 @@
           "voltage_drop_detected": "Voltage drop detected"
         }
       },
-      "gps_accuracy": {
-        "name": "GPS accuracy"
-      },
-      "gps_altitude": {
-        "name": "GPS altitude"
-      },
-      "gps_latitude": {
-        "name": "GPS latitude"
-      },
-      "gps_longitude": {
-        "name": "GPS longitude"
-      },
       "grid_frequency": {
         "name": "Grid frequency"
       },

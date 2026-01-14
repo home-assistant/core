@@ -254,7 +254,7 @@ async def test_cellular_and_gps_entities_are_gated_by_model_type(
     model_type: str,
     expect_optional_entities: bool,
 ) -> None:
-    """Test that cellular/GPS entities are only created for SIM-capable models."""
+    """Test that cellular/GPS entities are only created for SIM-capable models (GPS to be added later)."""
     mock_config_entry.add_to_hass(hass)
 
     mock_info_data["general"]["model_type"] = model_type
@@ -262,12 +262,6 @@ async def test_cellular_and_gps_entities_are_gated_by_model_type(
     # Include example payload sections. Even if values are missing/None, the
     # sensors should still be created when the model supports the modules.
     mock_info_data["cellular"] = {"mode": None, "rssi": None, "operator": None}
-    mock_info_data["gps"] = {
-        "latitude": None,
-        "longitude": None,
-        "altitude": None,
-        "accuracy": None,
-    }
 
     mock_nrgkick_api.get_info.return_value = mock_info_data
     mock_nrgkick_api.get_control.return_value = mock_control_data
@@ -287,10 +281,6 @@ async def test_cellular_and_gps_entities_are_gated_by_model_type(
         "cellular_mode",
         "cellular_rssi",
         "cellular_operator",
-        "gps_latitude",
-        "gps_longitude",
-        "gps_altitude",
-        "gps_accuracy",
     )
     for key in optional_keys:
         unique_id = f"TEST123456_{key}"
