@@ -125,6 +125,7 @@ NEW_TRIGGERS_CONDITIONS_FEATURE_FLAG = "new_triggers_conditions"
 _EXPERIMENTAL_CONDITION_PLATFORMS = {
     "fan",
     "light",
+    "switch",
 }
 
 _EXPERIMENTAL_TRIGGER_PLATFORMS = {
