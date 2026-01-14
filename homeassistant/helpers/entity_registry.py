@@ -987,10 +987,12 @@ class EntityRegistry(BaseRegistry):
     ) -> str:
         """Generate an entity ID, based on all the provided parameters.
 
+        `name` is the name set by the user, not the original name from the integration.
         `name` has priority over `suggested_object_id`, which has priority
         over `object_id_base`.
-        `name` and `suggested_object_id` do not cause the use of device name,
-        `object_id_base` does if `has_entity_name` is True.
+        `name` and `suggested_object_id` will never be prefixed with the device name,
+        `object_id_base` will be if `has_entity_name` is True.
+
         Entity ID conflicts are checked against registered and currently
         existing entities, as well as provided `reserved_entity_ids`.
         """
