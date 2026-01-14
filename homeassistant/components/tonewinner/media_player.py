@@ -161,6 +161,7 @@ class TonewinnerMediaPlayer(MediaPlayerEntity):
 
     _transport: None | serial_asyncio_fast.SerialTransport
     _protocol: None | asyncio.Protocol
+    _source_check_task: None | asyncio.Task[None]
 
     _attr_device_class = MediaPlayerDeviceClass.RECEIVER
     _attr_supported_features = (
@@ -199,6 +200,7 @@ class TonewinnerMediaPlayer(MediaPlayerEntity):
         self._attr_is_volume_muted = False
         self._attr_source = None
         self._attr_sound_mode = None
+        self._was_off = True  # Track if device was off to detect power transitions
 
         # Build source mappings from options
         self._source_code_to_custom_name = {}
@@ -225,11 +227,21 @@ class TonewinnerMediaPlayer(MediaPlayerEntity):
         # Query initial state
         await self._query_all_state()
 
+    async def _query_input_source(self) -> None:
+        """Query device for current input source."""
+        if self._attr_state != MediaPlayerState.ON:
+            _LOGGER.debug("Device is not ON, skipping input source query")
+            return
+        _LOGGER.info("Querying input source from device")
+        await self.send_raw_command(TonewinnerCommands.INPUT_QUERY)
+        # Wait a bit for response to be processed
+        await asyncio.sleep(0.2)
+
     async def _query_all_state(self) -> None:
         """Query device for current state."""
         _LOGGER.debug("Querying initial state from device")
         await self.send_raw_command(TonewinnerCommands.POWER_QUERY)
-        await asyncio.sleep(0.1)  # Wait for response
+        await asyncio.sleep(0.3)  # Wait for power state response
         await self.send_raw_command(TonewinnerCommands.VOLUME_QUERY)
         await asyncio.sleep(0.1)  # Wait for response
         await self.send_raw_command(TonewinnerCommands.MUTE_QUERY)
@@ -282,9 +294,19 @@ class TonewinnerMediaPlayer(MediaPlayerEntity):
         if power := TonewinnerProtocol.parse_power_status(response):
             new_state = MediaPlayerState.ON if power else MediaPlayerState.OFF
             _LOGGER.debug("State updated: %s", new_state)
-            self._attr_state = new_state
-            if new_state == MediaPlayerState.OFF:
+
+            # When power transitions from OFF to ON, query input source
+            if new_state == MediaPlayerState.ON and self._was_off:
+                _LOGGER.debug("Power turned on (was OFF), querying input source")
+                self._was_off = False
+                task = asyncio.create_task(self._query_input_source())
+                _ = task  # Avoid linting error about unused task
+            elif new_state == MediaPlayerState.OFF:
+                _LOGGER.debug("Power turned off, clearing source")
                 self._attr_source = None
+                self._was_off = True
+
+            self._attr_state = new_state
 
         # Parse volume (device returns 0-80, convert to 0.0-1.0 for HA)
         if volume := TonewinnerProtocol.parse_volume_status(response):
@@ -299,14 +321,22 @@ class TonewinnerMediaPlayer(MediaPlayerEntity):
 
         # Parse input source
         if source_code := TonewinnerProtocol.parse_input_source(response):
-            _LOGGER.debug("Source code received: %s", source_code)
+            _LOGGER.debug("Source code received from device: '%s'", source_code)
+            _LOGGER.debug("Available mappings: %s", self._source_code_to_custom_name)
             # Map source code to custom name
             custom_name = self._source_code_to_custom_name.get(source_code)
             if custom_name:
-                _LOGGER.debug("Source updated: %s -> %s", source_code, custom_name)
+                _LOGGER.info("Source updated: '%s' -> '%s'", source_code, custom_name)
                 self._attr_source = custom_name
             else:
-                _LOGGER.warning("Unknown source code: %s", source_code)
+                _LOGGER.warning(
+                    "Unknown source code received: '%s', mapping it directly",
+                    source_code,
+                )
+                _LOGGER.warning(
+                    "Available source codes: %s",
+                    list(self._source_code_to_custom_name.keys()),
+                )
                 self._attr_source = source_code
 
         # Parse sound mode
@@ -323,6 +353,31 @@ class TonewinnerMediaPlayer(MediaPlayerEntity):
             self._attr_sound_mode,
         )
         self.async_write_ha_state()
+
+        # Periodically check for source if device is ON but source is unknown
+        if self._attr_state == MediaPlayerState.ON and not self._attr_source:
+            if self._source_check_task is None or self._source_check_task.done():
+                _LOGGER.debug("Device ON but source unknown, scheduling periodic check")
+                self._source_check_task = asyncio.create_task(
+                    self._periodic_source_check()
+                )
+
+    async def _periodic_source_check(self) -> None:
+        """Periodically check for input source when device is ON but source is unknown."""
+        max_attempts = 5
+        attempt = 0
+        while self._attr_state == MediaPlayerState.ON and attempt < max_attempts:
+            if self._attr_source:
+                _LOGGER.debug("Source now known, stopping periodic check")
+                break
+            attempt += 1
+            _LOGGER.debug(
+                "Periodic source check (attempt %d/%d)", attempt, max_attempts
+            )
+            await self._query_input_source()
+            # Wait 3 seconds before next check
+            await asyncio.sleep(3)
+        _LOGGER.debug("Periodic source check completed after %d attempts", attempt)
 
     async def send_raw_command(self, command: str):
         """Service handler: send raw command."""
@@ -349,11 +404,20 @@ class TonewinnerMediaPlayer(MediaPlayerEntity):
         """Turn the media player on."""
         _LOGGER.debug("Turning on receiver")
         await self.send_raw_command(TonewinnerCommands.POWER_ON)
+        # Wait for power on, then query input source
+        # Note: The device should respond to POWER_ON with the actual power state,
+        # which will trigger the input source query in handle_response
+        # We also query here as a backup in case the response is missed
+        await asyncio.sleep(2.0)
+        await self._query_input_source()
 
     async def async_turn_off(self):
         """Turn the media player off."""
         _LOGGER.debug("Turning off receiver")
         await self.send_raw_command(TonewinnerCommands.POWER_OFF)
+        # Clear source state when turning off
+        self._attr_source = None
+        self.async_write_ha_state()
 
     async def async_set_volume_level(self, volume: float) -> None:
         """Set volume level (HA 0.0-1.0, device 0-80)."""

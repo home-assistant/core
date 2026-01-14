@@ -256,6 +256,13 @@ class TonewinnerProtocol:
             )
             return source_name
 
+        # If no match for V= A= format, try just returning the source name directly
+        # Some responses may just be "SI CO1" or similar
+        source_stripped = source.strip()
+        if source_stripped:
+            _LOGGER.debug("Input source (simple format): %s", source_stripped)
+            return source_stripped
+
         _LOGGER.debug("Invalid input source format: %s", source)
         return None
 
