@@ -39,6 +39,7 @@ async def async_setup_entry(
     coordinator: Elke27DataUpdateCoordinator = data[DATA_COORDINATOR]
     known_output_ids: set[int] = set()
     known_zone_ids: set[int] = set()
+    skipped_zone_ids: set[int] = set()
 
     def _async_add_outputs() -> None:
         snapshot = coordinator.data
@@ -82,17 +83,17 @@ async def async_setup_entry(
             zone_definition = _zone_definition_entry(snapshot, zone_id)
             definition = _zone_definition_value(zone, zone_definition)
             if definition == "UNDEFINED":
-                zone_name = (
-                    _zone_name(zone, zone_definition)
-                )
-                _LOGGER.debug(
-                    "Skipping zone bypass entity %s (%s): definition=UNDEFINED",
-                    zone_id,
-                    zone_name,
-                )
+                if zone_id not in skipped_zone_ids:
+                    zone_name = _zone_name(zone, zone_definition)
+                    _LOGGER.debug(
+                        "Skipping zone bypass entity %s (%s): definition=UNDEFINED",
+                        zone_id,
+                        zone_name,
+                    )
+                    skipped_zone_ids.add(zone_id)
                 skipped += 1
-                known_zone_ids.add(zone_id)
                 continue
+            skipped_zone_ids.discard(zone_id)
             if zone_id in known_zone_ids:
                 continue
             known_zone_ids.add(zone_id)

@@ -70,6 +70,7 @@ async def async_setup_entry(
     hub: Elke27Hub = data[DATA_HUB]
     coordinator: Elke27DataUpdateCoordinator = data[DATA_COORDINATOR]
     known_ids: set[int] = set()
+    skipped_zone_ids: set[int] = set()
 
     def _async_add_zones() -> None:
         snapshot = coordinator.data
@@ -90,19 +91,21 @@ async def async_setup_entry(
             zone_definition = _zone_definition_entry(snapshot, zone_id)
             definition = _zone_definition_value(zone, zone_definition)
             if definition == "UNDEFINED":
-                zone_name = (
-                    zone.get("name")
-                    if isinstance(zone, Mapping)
-                    else getattr(zone, "name", None)
-                )
-                _LOGGER.debug(
-                    "Skipping zone entity %s (%s): definition=UNDEFINED",
-                    zone_id,
-                    zone_name,
-                )
+                if zone_id not in skipped_zone_ids:
+                    zone_name = (
+                        zone.get("name")
+                        if isinstance(zone, Mapping)
+                        else getattr(zone, "name", None)
+                    )
+                    _LOGGER.debug(
+                        "Skipping zone entity %s (%s): definition=UNDEFINED",
+                        zone_id,
+                        zone_name,
+                    )
+                    skipped_zone_ids.add(zone_id)
                 skipped += 1
-                known_ids.add(zone_id)
                 continue
+            skipped_zone_ids.discard(zone_id)
             if zone_id in known_ids:
                 continue
             known_ids.add(zone_id)
