@@ -1076,8 +1076,8 @@ build.json @home-assistant/supervisor
 /tests/components/nasweb/ @nasWebio
 /homeassistant/components/nederlandse_spoorwegen/ @YarmoM @heindrichpaul
 /tests/components/nederlandse_spoorwegen/ @YarmoM @heindrichpaul
-/homeassistant/components/ness_alarm/ @nickw444
-/tests/components/ness_alarm/ @nickw444
+/homeassistant/components/ness_alarm/ @nickw444 @Poshy163
+/tests/components/ness_alarm/ @nickw444 @Poshy163
 /homeassistant/components/nest/ @allenporter
 /tests/components/nest/ @allenporter
 /homeassistant/components/netatmo/ @cgtobi

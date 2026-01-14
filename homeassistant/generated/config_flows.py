@@ -448,6 +448,7 @@ FLOWS = {
         "nasweb",
         "neato",
         "nederlandse_spoorwegen",
+        "ness_alarm",
         "nest",
         "netatmo",
         "netgear",
