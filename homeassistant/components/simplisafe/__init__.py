@@ -638,12 +638,14 @@ class SimpliSafe:
         except InvalidCredentialsError as err:
             # Stop websocket immediately on auth failure
             if self._websocket_reconnect_task:
+                LOGGER.debug("Cancelling websocket loop due to invalid credentials")
                 await self._async_cancel_websocket_loop()
             # Signal HA that credentials are invalid; user intervention is required
             raise ConfigEntryAuthFailed("Invalid credentials") from err
         except RequestError as err:
             # Cloud-level request errors: wrap aiohttp errors
             if self._websocket_reconnect_task:
+                LOGGER.debug("Cancelling websocket loop due to request error")
                 await self._async_cancel_websocket_loop()
             raise UpdateFailed(
                 f"Request error while updating all systems: {err}"
@@ -662,6 +664,7 @@ class SimpliSafe:
                     not self._websocket_reconnect_task
                     or self._websocket_reconnect_task.done()
                 ):
+                    LOGGER.debug("Restarting websocket loop after successful update")
                     self._websocket_reconnect_task = self._hass.async_create_task(
                         self._async_start_websocket_loop()
                     )
