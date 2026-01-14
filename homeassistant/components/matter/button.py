@@ -57,19 +57,14 @@ class WindowCoveringCalibrationModeButton(MatterEntity, ButtonEntity):
 
     async def async_press(self) -> None:
         """Enable calibration mode by setting the CalibrationMode bit (bit 1)."""
-        calibration_bit = int(
-            clusters.WindowCovering.Bitmaps.Mode.kCalibrationMode
-        )
-
+        calibration_bit = int(clusters.WindowCovering.Bitmaps.Mode.kCalibrationMode)
         current_mode = self.get_matter_attribute_value(
             clusters.WindowCovering.Attributes.Mode
         )
 
         if not isinstance(current_mode, int):
             current_mode = 0
-
         new_mode = current_mode | calibration_bit
-
         await self.write_attribute(new_mode, clusters.WindowCovering.Attributes.Mode)
 
 
