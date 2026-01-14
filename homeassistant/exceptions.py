@@ -243,8 +243,8 @@ class OAuth2RefreshTokenError(ClientResponseError, HomeAssistantError):
             message=message,
             headers=headers,
         )
+        HomeAssistantError.__init__(self)
         self.domain = domain
-        HomeAssistantError.__init__(self, message)
 
 
 class OAuth2RefreshTokenTransientError(OAuth2RefreshTokenError):
