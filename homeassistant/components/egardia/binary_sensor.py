@@ -75,6 +75,6 @@ class EgardiaBinarySensor(BinarySensorEntity):
         return self._state == STATE_ON
 
     @property
-    def device_class(self):
+    def device_class(self) -> BinarySensorDeviceClass | None:
         """Return the device class."""
         return self._device_class
