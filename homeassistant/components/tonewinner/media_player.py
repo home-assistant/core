@@ -205,6 +205,21 @@ class TonewinnerMediaPlayer(MediaPlayerEntity):
     async def async_added_to_hass(self) -> None:
         """Connect when entity is added."""
         await self.connect()
+        # Query initial state
+        await self._query_all_state()
+
+    async def _query_all_state(self) -> None:
+        """Query device for current state."""
+        _LOGGER.debug("Querying initial state from device")
+        await self.send_raw_command(ToneWinnerCommands.POWER_QUERY)
+        await asyncio.sleep(0.1)  # Wait for response
+        await self.send_raw_command(ToneWinnerCommands.VOLUME_QUERY)
+        await asyncio.sleep(0.1)  # Wait for response
+        await self.send_raw_command(ToneWinnerCommands.MUTE_QUERY)
+        await asyncio.sleep(0.1)  # Wait for response
+        await self.send_raw_command(ToneWinnerCommands.INPUT_QUERY)
+        await asyncio.sleep(0.1)  # Wait for response
+        await self.send_raw_command(ToneWinnerCommands.MODE_QUERY)
 
     async def connect(self):
         """Establish serial connection."""
