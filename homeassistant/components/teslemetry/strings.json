@@ -1127,6 +1127,15 @@
     "no_vehicle_data_for_device": {
       "message": "No vehicle data for device ID: {device_id}"
     },
+    "set_scheduled_charging_time": {
+      "message": "Scheduled charging time is required when enabling"
+    },
+    "set_scheduled_departure_off_peak": {
+      "message": "Off-peak charging end time is required when enabling"
+    },
+    "set_scheduled_departure_preconditioning": {
+      "message": "Preconditioning departure time is required when enabling"
+    },
     "wake_up_failed": {
       "message": "Failed to wake up vehicle: {message}"
     },
