@@ -16,8 +16,14 @@ from .const import DOMAIN
 from .hub import Elke27Hub
 
 try:  # pragma: no cover - optional import for local test runs without the lib.
-    from elke27_lib.events import CsmSnapshotUpdated, DomainCsmChanged, TableCsmChanged
+    from elke27_lib.events import (
+        ConnectionStateChanged,
+        CsmSnapshotUpdated,
+        DomainCsmChanged,
+        TableCsmChanged,
+    )
 except ModuleNotFoundError:  # pragma: no cover - handled via class name fallback.
+    ConnectionStateChanged = None
     CsmSnapshotUpdated = None
     DomainCsmChanged = None
     TableCsmChanged = None
@@ -77,6 +83,10 @@ class Elke27DataUpdateCoordinator(DataUpdateCoordinator[PanelSnapshot]):
     @callback
     def _process_event(self, event: Any) -> None:
         """Process an event from the hub."""
+        if _is_event(event, ConnectionStateChanged, "ConnectionStateChanged"):
+            if getattr(event, "connected", False):
+                self.hass.async_create_task(self.async_refresh_now())
+            return
         if _is_event(event, CsmSnapshotUpdated, "CsmSnapshotUpdated"):
             self._set_snapshot(self._hub.get_snapshot())
             return

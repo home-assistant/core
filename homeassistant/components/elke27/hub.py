@@ -48,6 +48,9 @@ class Elke27Hub:
         self._reconnect_attempts = 0
         self._stopping = False
         self._unavailable_logged = False
+        self._typed_callbacks: dict[
+            Callable[[Any], None], Callable[[], None] | None
+        ] = {}
 
     @property
     def client(self) -> Elke27Client | None:
@@ -106,6 +109,7 @@ class Elke27Hub:
                 self._connection_unsubscribe = client.subscribe(
                     self._handle_connection_event
                 )
+                self._resubscribe_typed_callbacks()
                 if self._unavailable_logged:
                     _LOGGER.info("Panel connection restored")
                     self._unavailable_logged = False
@@ -134,6 +138,7 @@ class Elke27Hub:
         if self._client is not None:
             await self._client.async_disconnect()
         self._client = None
+        self._clear_typed_subscriptions()
         if was_connected:
             self._log_unavailable()
 
@@ -175,13 +180,20 @@ class Elke27Hub:
 
     def subscribe_typed(self, callback: Callable[[Any], None]) -> Callable[[], None]:
         """Subscribe to typed client events."""
+        if callback not in self._typed_callbacks:
+            self._typed_callbacks[callback] = None
         client = self._client
-        if client is None:
-            raise HomeAssistantError("Client is not connected.")
-        return client.subscribe_typed(callback)
+        if client is not None:
+            self._typed_callbacks[callback] = client.subscribe_typed(callback)
+        return lambda: self.unsubscribe_typed(callback)
 
     def unsubscribe_typed(self, callback: Callable[[Any], None]) -> bool:
         """Unsubscribe from typed client events."""
+        if callback in self._typed_callbacks:
+            unsubscribe = self._typed_callbacks.pop(callback)
+            if unsubscribe is not None:
+                unsubscribe()
+            return True
         client = self._client
         if client is None:
             return False
@@ -305,6 +317,21 @@ class Elke27Hub:
                 ) from error
             return False
         return True
+
+    def _resubscribe_typed_callbacks(self) -> None:
+        """Re-register typed callbacks on a new client connection."""
+        client = self._client
+        if client is None or not self._typed_callbacks:
+            return
+        for callback in list(self._typed_callbacks):
+            self._typed_callbacks[callback] = client.subscribe_typed(callback)
+
+    def _clear_typed_subscriptions(self) -> None:
+        """Clear typed subscriptions when the client disconnects."""
+        for callback, unsubscribe in list(self._typed_callbacks.items()):
+            if unsubscribe is not None:
+                unsubscribe()
+            self._typed_callbacks[callback] = None
 
     async def async_disarm_area(self, area_id: int, pin: str | None) -> bool:
         """Request an area disarming change if supported."""
