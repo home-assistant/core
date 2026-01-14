@@ -24,7 +24,7 @@ from homeassistant.components.climate import (
     ClimateEntityFeature,
     HVACMode,
 )
-from homeassistant.components.coolmaster.climate import FAN_MODES, HVAC_MODES
+from homeassistant.components.coolmaster.climate import FAN_MODES
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_ENTITY_ID,

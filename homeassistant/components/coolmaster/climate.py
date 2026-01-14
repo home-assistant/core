@@ -35,8 +35,6 @@ CM_TO_HA_STATE = {
 
 HA_STATE_TO_CM = {value: key for key, value in CM_TO_HA_STATE.items()}
 
-HVAC_MODES = list(CM_TO_HA_STATE.values())
-
 # these are modes supported by Coolmaster that have no direct HA equivalent.
 COOLMASTER_ONLY_MODES = ["vlow", "top"]
 
