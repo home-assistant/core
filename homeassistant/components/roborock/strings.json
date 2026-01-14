@@ -31,11 +31,11 @@
       },
       "user": {
         "data": {
-          "region": "Region",
+          "region": "Roborock server region",
           "username": "[%key:common::config_flow::data::email%]"
         },
         "data_description": {
-          "region": "The region your Roborock account is registered in. Auto is recommended unless you are having issues.",
+          "region": "The server region your Roborock account is registered in when setting up the app. Auto is recommended unless you are having issues.",
           "username": "The email address used to sign in to the Roborock app."
         },
         "description": "Enter your Roborock email address."
