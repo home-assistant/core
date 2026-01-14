@@ -22,6 +22,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Temperature tag parameter 1',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
