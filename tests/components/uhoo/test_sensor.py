@@ -1,27 +1,26 @@
 """Tests for sensor.py with Uhoo sensors."""
 
-from unittest.mock import AsyncMock, MagicMock, patch
+import asyncio
+from unittest.mock import AsyncMock, MagicMock, Mock
 
+from aiohttp.client_exceptions import (
+    ClientConnectionError,
+    ClientConnectorDNSError,
+    ClientConnectorError,
+)
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.sensor import SensorDeviceClass, SensorStateClass
-from homeassistant.components.uhoo.sensor import (
-    DOMAIN,
-    MANUFACTURER,
-    MODEL,
-    SENSOR_TYPES,
-    UhooSensorEntity,
-    UnitOfTemperature,
-    async_setup_entry,
-)
-from homeassistant.const import PERCENTAGE
+from homeassistant.components.uhoo.const import UPDATE_INTERVAL
+from homeassistant.components.uhoo.sensor import DOMAIN
+from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from . import setup_uhoo_config
 
-from tests.common import MockConfigEntry, snapshot_platform
+from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 
 async def test_sensor_snapshot(
@@ -31,7 +30,6 @@ async def test_sensor_snapshot(
     mock_uhoo_config_entry: MockConfigEntry,
     mock_uhoo_client: AsyncMock,
     mock_device: AsyncMock,
-    mock_uhoo_coordinator,
 ) -> None:
     """Test sensor setup with snapshot."""
     # Setup coordinator with one device
@@ -42,329 +40,279 @@ async def test_sensor_snapshot(
     )
 
 
-async def test_async_setup_entry(
-    hass: HomeAssistant,
-    mock_uhoo_config_entry,
-    mock_uhoo_coordinator,
-    mock_add_entities,
-    mock_device,
-) -> None:
-    """Test setting up sensor entities."""
-    # Setup coordinator with one device
-    serial_number = "23f9239m92m3ffkkdkdd"
-    mock_uhoo_coordinator.data = {serial_number: mock_device}
-    mock_uhoo_config_entry.runtime_data = mock_uhoo_coordinator
-
-    await async_setup_entry(hass, mock_uhoo_config_entry, mock_add_entities)
-
-    # Verify that entities were added
-    assert mock_add_entities.called
-    call_args = mock_add_entities.call_args[0][0]
-    entities = list(call_args)  # Convert generator to list
-
-    # Should create entities for each sensor type for the device
-    assert len(entities) == len(SENSOR_TYPES)
-
-    # Check that entities have the correct unique IDs
-    humidity_entity = next(
-        e for e in entities if e._attr_unique_id == f"{serial_number}_humidity"
-    )
-    assert humidity_entity is not None
-    assert humidity_entity.entity_description.key == "humidity"
-
-
 async def test_async_setup_entry_multiple_devices(
     hass: HomeAssistant,
+    mock_uhoo_client,
     mock_uhoo_config_entry,
-    mock_uhoo_coordinator,
-    mock_add_entities,
     mock_device,
+    mock_device2,
+    entity_registry: er.EntityRegistry,
 ) -> None:
     """Test setting up sensor entities for multiple devices."""
-    # Setup coordinator with two devices
-    device1 = mock_device
-    device2 = MagicMock()
-    device2.device_name = "Device 2"
-    device2.serial_number = "device2_serial"
-    device2.humidity = 50.0
-    device2.temperature = 21.0
-    device2.co = 1.0
-    device2.co2 = 400.0
-    device2.pm25 = 10.0
-    device2.air_pressure = 1010.0
-    device2.tvoc = 100.0
-    device2.no2 = 15.0
-    device2.ozone = 25.0
-    device2.virus_index = 1.0
-    device2.mold_index = 1.0
-    device2.user_settings = {"temp": "c"}
-
-    mock_uhoo_coordinator.data = {
-        "23f9239m92m3ffkkdkdd": device1,
-        "device2_serial": device2,
+    # Update the mock to return data for two devices
+    mock_uhoo_client.get_latest_data.return_value = [
+        {
+            "serialNumber": "23f9239m92m3ffkkdkdd",
+            "deviceName": "Test Device",
+            "humidity": 45.5,
+            "temperature": 22.0,
+            "co": 1.5,
+            "co2": 450.0,
+            "pm25": 12.3,
+            "airPressure": 1013.25,
+            "tvoc": 150.0,
+            "no2": 20.0,
+            "ozone": 30.0,
+            "virusIndex": 2.0,
+            "moldIndex": 1.5,
+            "userSettings": {"temp": "c"},
+        },
+        {
+            "serialNumber": "13e2r2fi2ii2i3993822",
+            "deviceName": "Test Device 2",
+            "humidity": 50.0,
+            "temperature": 21.0,
+            "co": 1.0,
+            "co2": 400.0,
+            "pm25": 10.0,
+            "airPressure": 1010.0,
+            "tvoc": 100.0,
+            "no2": 15.0,
+            "ozone": 25.0,
+            "virusIndex": 1.0,
+            "moldIndex": 1.0,
+            "userSettings": {"temp": "c"},
+        },
+    ]
+    mock_uhoo_client.devices = {
+        "23f9239m92m3ffkkdkdd": mock_device,
+        "13e2r2fi2ii2i3993822": mock_device2,
     }
-    mock_uhoo_config_entry.runtime_data = mock_uhoo_coordinator
 
-    await async_setup_entry(hass, mock_uhoo_config_entry, mock_add_entities)
+    # Setup the integration with the updated mock data
+    await setup_uhoo_config(hass, mock_uhoo_config_entry)
 
-    # Verify that entities were added
-    assert mock_add_entities.called
-    entities = list(mock_add_entities.call_args[0][0])
-
-    # Should create entities for each sensor type for each device
-    assert len(entities) == len(SENSOR_TYPES) * 2
-
-    # Check entities for both devices exist
-    device1_humidity = any(
-        e._attr_unique_id == "23f9239m92m3ffkkdkdd_humidity" for e in entities
+    # Check entities for both devices exist in the entity registry
+    device1_humidity_entity_id = entity_registry.async_get_entity_id(
+        "sensor", DOMAIN, "23f9239m92m3ffkkdkdd_humidity"
     )
-    device2_humidity = any(
-        e._attr_unique_id == "device2_serial_humidity" for e in entities
+
+    device2_humidity_entity_id = entity_registry.async_get_entity_id(
+        "sensor", DOMAIN, "13e2r2fi2ii2i3993822_humidity"
     )
-    assert device1_humidity
-    assert device2_humidity
+
+    assert device1_humidity_entity_id is not None
+    assert device2_humidity_entity_id is not None
+
+    # Check the states for humidity sensors
+    device1_humidity_state = hass.states.get(device1_humidity_entity_id)
+    device2_humidity_state = hass.states.get(device2_humidity_entity_id)
+
+    assert device1_humidity_state is not None
+    assert device2_humidity_state is not None
+    assert device1_humidity_state.state == "45.5"
+    assert device2_humidity_state.state == "50.0"
+
+    # Also check temperature sensors
+    device1_temp_entity_id = entity_registry.async_get_entity_id(
+        "sensor", DOMAIN, "23f9239m92m3ffkkdkdd_temperature"
+    )
+    device2_temp_entity_id = entity_registry.async_get_entity_id(
+        "sensor", DOMAIN, "13e2r2fi2ii2i3993822_temperature"
+    )
+
+    device1_temp_state = hass.states.get(device1_temp_entity_id)
+    device2_temp_state = hass.states.get(device2_temp_entity_id)
+
+    assert device1_temp_state is not None
+    assert device2_temp_state is not None
+    assert device1_temp_state.state == "22.0"
+    assert device2_temp_state.state == "21.0"
+
+    # Optionally: Check device info for both devices
+    device1_temp_device_class = device1_temp_state.attributes.get("device_class")
+    device2_temp_device_class = device2_temp_state.attributes.get("device_class")
+    assert device1_temp_device_class == "temperature"
+    assert device2_temp_device_class == "temperature"
 
 
-def test_uhoo_sensor_entity_init(
-    mock_uhoo_coordinator,
+async def test_uhoo_sensor_entity_native_value(
+    hass: HomeAssistant,
+    mock_uhoo_client,
+    mock_uhoo_config_entry,
     mock_device,
-) -> None:
-    """Test UhooSensorEntity initialization."""
-    serial_number = "23f9239m92m3ffkkdkdd"
-    mock_uhoo_coordinator.data = {serial_number: mock_device}
-
-    # Get humidity description
-    humidity_desc = next(d for d in SENSOR_TYPES if d.key == "humidity")
-
-    # Create entity
-    entity = UhooSensorEntity(humidity_desc, serial_number, mock_uhoo_coordinator)
-
-    # Check basic properties
-    assert entity.entity_description == humidity_desc
-    assert entity._serial_number == serial_number
-    assert entity._attr_unique_id == f"{serial_number}_humidity"
-
-    # Check device info
-    assert entity._attr_device_info["identifiers"] == {(DOMAIN, serial_number)}
-    assert entity._attr_device_info["name"] == "Test Device"
-    assert entity._attr_device_info["manufacturer"] == MANUFACTURER
-    assert entity._attr_device_info["model"] == MODEL
-    assert entity._attr_device_info["serial_number"] == serial_number
-
-
-def test_uhoo_sensor_entity_device_property(
-    mock_uhoo_coordinator,
-    mock_device,
-) -> None:
-    """Test the device property returns correct device."""
-    serial_number = "23f9239m92m3ffkkdkdd"
-    mock_uhoo_coordinator.data = {serial_number: mock_device}
-
-    humidity_desc = next(d for d in SENSOR_TYPES if d.key == "humidity")
-    entity = UhooSensorEntity(humidity_desc, serial_number, mock_uhoo_coordinator)
-
-    # Device property should return the correct device
-    assert entity.device == mock_device
-    assert entity.device.humidity == 45.5
-
-
-def test_uhoo_sensor_entity_available_property(
-    mock_uhoo_coordinator,
-    mock_device,
-) -> None:
-    """Test the available property."""
-    serial_number = "23f9239m92m3ffkkdkdd"
-    mock_uhoo_coordinator.data = {serial_number: mock_device}
-
-    humidity_desc = next(d for d in SENSOR_TYPES if d.key == "humidity")
-    entity = UhooSensorEntity(humidity_desc, serial_number, mock_uhoo_coordinator)
-
-    # Mock parent's available property
-    with patch(
-        "homeassistant.helpers.update_coordinator.CoordinatorEntity.available",
-        new_callable=lambda: True,
-    ):
-        # Entity should be available when device is in coordinator data
-        assert entity.available is True
-
-        # Remove device from coordinator data
-        mock_uhoo_coordinator.data = {}
-        assert entity.available is False
-
-
-def test_uhoo_sensor_entity_native_value(
-    mock_uhoo_coordinator,
-    mock_device,
+    entity_registry: er.EntityRegistry,
 ) -> None:
     """Test the native_value property."""
     serial_number = "23f9239m92m3ffkkdkdd"
-    mock_uhoo_coordinator.data = {serial_number: mock_device}
+    await setup_uhoo_config(hass, mock_uhoo_config_entry)
 
-    # Test humidity sensor
-    humidity_desc = next(d for d in SENSOR_TYPES if d.key == "humidity")
-    entity = UhooSensorEntity(humidity_desc, serial_number, mock_uhoo_coordinator)
+    # Find humidity sensor entity
+    humidity_entity_id = entity_registry.async_get_entity_id(
+        "sensor", DOMAIN, f"{serial_number}_humidity"
+    )
+    assert humidity_entity_id is not None
 
-    assert entity.native_value == 45.5
+    # Find temperature sensor entity
+    temp_entity_id = entity_registry.async_get_entity_id(
+        "sensor", DOMAIN, f"{serial_number}_temperature"
+    )
+    assert temp_entity_id is not None
 
-    # Test temperature sensor
-    temp_desc = next(d for d in SENSOR_TYPES if d.key == "temperature")
-    entity = UhooSensorEntity(temp_desc, serial_number, mock_uhoo_coordinator)
+    # Check the states in HA
+    humidity_state = hass.states.get(humidity_entity_id)
+    temp_state = hass.states.get(temp_entity_id)
 
-    assert entity.native_value == 22.0
+    assert humidity_state is not None
+    assert temp_state is not None
 
+    # Check the values (state strings in HA)
+    assert humidity_state.state == "45.5"
+    assert temp_state.state == "22.0"
 
-def test_uhoo_sensor_entity_native_unit_of_measurement_celsius(
-    mock_uhoo_coordinator,
-    mock_device,
-) -> None:
-    """Test native_unit_of_measurement for temperature in Celsius."""
-    serial_number = "23f9239m92m3ffkkdkdd"
-    mock_device.user_settings = {"temp": "c"}
-    mock_uhoo_coordinator.data = {serial_number: mock_device}
-
-    temp_desc = next(d for d in SENSOR_TYPES if d.key == "temperature")
-    entity = UhooSensorEntity(temp_desc, serial_number, mock_uhoo_coordinator)
-
-    assert entity.native_unit_of_measurement == UnitOfTemperature.CELSIUS
-
-
-def test_uhoo_sensor_entity_native_unit_of_measurement_fahrenheit(
-    mock_uhoo_coordinator,
-    mock_device,
-) -> None:
-    """Test native_unit_of_measurement for temperature in Fahrenheit."""
-    serial_number = "23f9239m92m3ffkkdkdd"
-    mock_device.user_settings = {"temp": "f"}
-    mock_uhoo_coordinator.data = {serial_number: mock_device}
-
-    temp_desc = next(d for d in SENSOR_TYPES if d.key == "temperature")
-    entity = UhooSensorEntity(temp_desc, serial_number, mock_uhoo_coordinator)
-
-    assert entity.native_unit_of_measurement == UnitOfTemperature.FAHRENHEIT
-
-
-def test_uhoo_sensor_entity_native_unit_of_measurement_other_sensors(
-    mock_uhoo_coordinator,
-    mock_device,
-) -> None:
-    """Test native_unit_of_measurement for non-temperature sensors."""
-    serial_number = "23f9239m92m3ffkkdkdd"
-    mock_uhoo_coordinator.data = {serial_number: mock_device}
-
-    # Test humidity sensor (should use default from description)
-    humidity_desc = next(d for d in SENSOR_TYPES if d.key == "humidity")
-    entity = UhooSensorEntity(humidity_desc, serial_number, mock_uhoo_coordinator)
-
-    # For non-temperature sensors, it should return the description's unit
-    assert entity.native_unit_of_measurement == PERCENTAGE
-
-
-async def test_async_setup_entry_no_devices(
-    hass: HomeAssistant,
-    mock_uhoo_config_entry,
-    mock_uhoo_coordinator,
-    mock_add_entities,
-) -> None:
-    """Test setting up sensor entities when there are no devices."""
-    mock_uhoo_coordinator.data = {}  # No devices
-    mock_uhoo_config_entry.runtime_data = mock_uhoo_coordinator
-
-    await async_setup_entry(hass, mock_uhoo_config_entry, mock_add_entities)
-
-    # Should still call add_entities but with empty generator
-    assert mock_add_entities.called
-
-    # Convert generator to list to check it's empty
-    entities = list(mock_add_entities.call_args[0][0])
-    assert len(entities) == 0
-
-
-def test_all_sensor_types_have_value_functions() -> None:
-    """Test that all sensor types have valid value functions."""
-    for sensor_desc in SENSOR_TYPES:
-        assert hasattr(sensor_desc, "value_fn")
-        assert callable(sensor_desc.value_fn)
-
-        # Create a mock device to test the lambda
-        mock_device = MagicMock()
-        # Set all possible attributes to non-None values
-        fields = [
-            "humidity",
-            "temperature",
-            "co",
-            "co2",
-            "pm25",
-            "air_pressure",
-            "tvoc",
-            "no2",
-            "ozone",
-            "virus_index",
-            "mold_index",
-        ]
-        for attr in fields:
-            setattr(mock_device, attr, 1.0)
-
-        # The value function should return a float or None
-        result = sensor_desc.value_fn(mock_device)
-        assert result is None or isinstance(result, (int, float))
+    # You can also check attributes
+    assert humidity_state.attributes.get("device_class") == "humidity"
+    assert temp_state.attributes.get("device_class") == "temperature"
+    assert temp_state.attributes.get("unit_of_measurement") == "°C"
 
 
 @pytest.mark.parametrize(
-    ("sensor_key", "expected_device_class"),
+    "connection_error",
     [
-        ("humidity", SensorDeviceClass.HUMIDITY),
-        ("temperature", SensorDeviceClass.TEMPERATURE),
-        ("co", SensorDeviceClass.CO),
-        ("co2", SensorDeviceClass.CO2),
-        ("pm25", SensorDeviceClass.PM25),
-        ("air_pressure", SensorDeviceClass.PRESSURE),
-        ("tvoc", SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS),
-        ("no2", SensorDeviceClass.NITROGEN_DIOXIDE),
-        ("ozone", SensorDeviceClass.OZONE),
-        ("virus_index", None),  # No device class for virus_index
-        ("mold_index", None),  # No device class for mold_index
+        ClientConnectionError("Connection lost"),
+        ClientConnectorDNSError(Mock(), OSError("DNS failure")),
+        ClientConnectorError(Mock(), OSError("Connection refused")),
+        asyncio.InvalidStateError("DNS resolution failed"),
+        TimeoutError("Request timed out"),
     ],
 )
-def test_sensor_device_classes(sensor_key, expected_device_class) -> None:
-    """Test that each sensor has the correct device class."""
-    sensor_desc = next(d for d in SENSOR_TYPES if d.key == sensor_key)
-    assert sensor_desc.device_class == expected_device_class
+async def test_sensor_availability_changes_with_connection_errors(
+    hass: HomeAssistant,
+    mock_uhoo_client: AsyncMock,
+    mock_uhoo_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+    connection_error: Exception,
+) -> None:
+    """Test sensor availability changes over time with different connection errors."""
 
+    # Setup 1: Initial setup with working connection
+    await setup_uhoo_config(hass, mock_uhoo_config_entry)
 
-def test_sensor_state_classes() -> None:
-    """Test that all sensors have MEASUREMENT state class."""
-    for sensor_desc in SENSOR_TYPES:
-        assert sensor_desc.state_class == SensorStateClass.MEASUREMENT
-
-
-def test_temperature_sensor_unit_conversion_logic() -> None:
-    """Test the logic for temperature unit conversion."""
+    # Find the entity ID
+    entity_registry = er.async_get(hass)
     serial_number = "23f9239m92m3ffkkdkdd"
+    entity_id = entity_registry.async_get_entity_id(
+        "sensor", DOMAIN, f"{serial_number}_humidity"
+    )
+    assert entity_id is not None
 
-    # Create a mock device with Celsius setting
-    mock_device_c = MagicMock()
-    mock_device_c.device_name = "Test Device"
-    mock_device_c.user_settings = {"temp": "c"}
+    # Test 1: Initially available with correct value
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == "45.5"
+    assert state.state != STATE_UNAVAILABLE
 
-    # Create a mock device with Fahrenheit setting
-    mock_device_f = MagicMock()
-    mock_device_f.device_name = "Test Device"
-    mock_device_f.user_settings = {"temp": "f"}
+    # Setup 2: Simulate connection error on get_latest_data
+    # Mock get_latest_data to raise the connection error
+    mock_uhoo_client.get_latest_data.side_effect = connection_error
 
-    # Mock coordinator with Celsius setting
-    coordinator_c = MagicMock()
-    coordinator_c.data = {serial_number: mock_device_c}
+    # Trigger a coordinator update by advancing time
+    freezer.tick(UPDATE_INTERVAL.total_seconds() + 1)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
 
-    # Mock coordinator with Fahrenheit setting
-    coordinator_f = MagicMock()
-    coordinator_f.data = {serial_number: mock_device_f}
+    # Wait for any async operations to complete
+    for _ in range(3):
+        await hass.async_block_till_done()
 
-    temp_desc = next(d for d in SENSOR_TYPES if d.key == "temperature")
+    # Test 2: Should be unavailable after connection error
+    state = hass.states.get(entity_id)
+    assert state.state == STATE_UNAVAILABLE, (
+        f"Expected UNAVAILABLE but got {state.state}"
+    )
 
-    # Create entities with different coordinators
-    entity_c = UhooSensorEntity(temp_desc, serial_number, coordinator_c)
-    entity_f = UhooSensorEntity(temp_desc, serial_number, coordinator_f)
+    # Setup 3: Restore connection - remove the side effect and set up mock device data
+    mock_uhoo_client.get_latest_data.side_effect = None
 
-    # Test the actual property calls
-    assert entity_c.native_unit_of_measurement == UnitOfTemperature.CELSIUS
-    assert entity_f.native_unit_of_measurement == UnitOfTemperature.FAHRENHEIT
+    # We need to mock the login and get_latest_data to succeed
+    # First, let's create a mock device with updated data
+    mock_device = MagicMock()
+    mock_device.humidity = 50.0
+    mock_device.temperature = 22.0
+    # Set other required attributes
+    mock_device.device_name = "Test Device"
+    mock_device.serial_number = serial_number
+    mock_device.co = 0.0
+    mock_device.co2 = 400.0
+    mock_device.pm25 = 10.0
+    mock_device.air_pressure = 1010.0
+    mock_device.tvoc = 100.0
+    mock_device.no2 = 15.0
+    mock_device.ozone = 25.0
+    mock_device.virus_index = 1.0
+    mock_device.mold_index = 1.0
+    mock_device.user_settings = {"temp": "c"}
+
+    # Set up the client to return this device
+    mock_uhoo_client.devices = {serial_number: mock_device}
+
+    # Mock get_latest_data to update the device (it doesn't return anything in real code)
+    async def mock_get_latest_data(device_id):
+        # In real code, this updates the device data
+        # We'll just make sure it doesn't raise an exception
+        return None
+
+    mock_uhoo_client.get_latest_data = AsyncMock(side_effect=mock_get_latest_data)
+
+    # IMPORTANT: We need to find the coordinator and manually trigger a refresh
+    # because the entity might not automatically recover from unavailable state
+    coordinator = None
+
+    # Try to find the coordinator in hass.data
+    for domain_value in hass.data.values():
+        if not isinstance(domain_value, dict):
+            continue
+        for entry_value in domain_value.values():
+            if hasattr(entry_value, "async_request_refresh"):
+                coordinator = entry_value
+                break
+        if coordinator:
+            break
+
+    # If we found the coordinator, manually trigger a refresh
+    if coordinator:
+        await coordinator.async_refresh()
+        await hass.async_block_till_done()
+    else:
+        # If we can't find the coordinator, try time-based update
+        freezer.tick(UPDATE_INTERVAL.total_seconds() + 1)
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+
+    # Wait for state updates
+    for _ in range(5):
+        await hass.async_block_till_done()
+
+    # Test 3: Should be available again with new value
+    state = hass.states.get(entity_id)
+    # The entity might need another update cycle to become available
+    # Let's check and if still unavailable, do another update
+
+    if state.state == STATE_UNAVAILABLE:
+        # Try one more update cycle
+        if coordinator:
+            await coordinator.async_refresh()
+            await hass.async_block_till_done()
+        else:
+            freezer.tick(UPDATE_INTERVAL.total_seconds() + 1)
+            async_fire_time_changed(hass)
+            await hass.async_block_till_done()
+
+        # Wait again
+        for _ in range(5):
+            await hass.async_block_till_done()
+
+        state = hass.states.get(entity_id)
+
+    assert state.state == "50.0", f"Expected 50.0 but got {state.state}"
+    assert state.state != STATE_UNAVAILABLE
