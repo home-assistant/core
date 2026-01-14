@@ -3,7 +3,7 @@
   "name": "SmartThings",
   "codeowners": ["@joostlek"],
   "config_flow": true,
-  "dependencies": ["application_credentials"],
+  "dependencies": ["application_credentials", "http", "ffmpeg"],
   "dhcp": [
     {
       "hostname": "st*",
@@ -27,8 +27,9 @@
     }
   ],
   "documentation": "https://www.home-assistant.io/integrations/smartthings",
+  "integration_type": "hub",
   "iot_class": "cloud_push",
   "loggers": ["pysmartthings"],
   "quality_scale": "bronze",
-  "requirements": ["pysmartthings==3.3.1"]
+  "requirements": ["pysmartthings==3.5.1"]
 }

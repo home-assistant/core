@@ -13,8 +13,8 @@ rules:
     status: todo
     comment: See if we can catch more specific exceptions in get_device_info.
   dependency-transparency:
-    status: todo
-    comment: stringcase is not built and published to PyPI from a public CI pipeline. huawei-lte-api is from https://gitlab.salamek.cz/Mirrors/huawei-lte-api, see https://github.com/Salamek/huawei-lte-api/issues/253
+    status: done
+    comment: huawei-lte-api is from https://gitlab.salamek.cz/Mirrors/huawei-lte-api, see https://github.com/Salamek/huawei-lte-api/issues/253
   docs-actions: done
   docs-high-level-description: done
   docs-installation-instructions: done
@@ -61,9 +61,7 @@ rules:
   entity-category: done
   entity-device-class: done
   entity-disabled-by-default: done
-  entity-translations:
-    status: todo
-    comment: Buttons and selects are lacking translations.
+  entity-translations: done
   exception-translations: todo
   icon-translations:
     status: done
@@ -84,5 +82,4 @@ rules:
     status: exempt
     comment: Underlying huawei-lte-api does not use aiohttp or httpx, so this does not apply.
   strict-typing:
-    status: todo
-    comment: Integration is strictly typechecked already, and huawei-lte-api and url-normalize are in order. stringcase is not typed.
+    status: done

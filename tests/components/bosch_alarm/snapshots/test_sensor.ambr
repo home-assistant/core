@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_sensor[None-amax_3000][sensor.area1_burglary_alarm_issues-entry]
+# name: test_sensor[amax_3000-None][sensor.area1_burglary_alarm_issues-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -20,6 +20,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Burglary alarm issues',
     'options': dict({
     }),
     'original_device_class': None,
@@ -34,7 +35,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensor[None-amax_3000][sensor.area1_burglary_alarm_issues-state]
+# name: test_sensor[amax_3000-None][sensor.area1_burglary_alarm_issues-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Area1 Burglary alarm issues',
@@ -47,7 +48,7 @@
     'state': 'no_issues',
   })
 # ---
-# name: test_sensor[None-amax_3000][sensor.area1_faulting_points-entry]
+# name: test_sensor[amax_3000-None][sensor.area1_faulting_points-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -68,6 +69,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Faulting points',
     'options': dict({
     }),
     'original_device_class': None,
@@ -82,7 +84,7 @@
     'unit_of_measurement': 'points',
   })
 # ---
-# name: test_sensor[None-amax_3000][sensor.area1_faulting_points-state]
+# name: test_sensor[amax_3000-None][sensor.area1_faulting_points-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Area1 Faulting points',
@@ -96,7 +98,7 @@
     'state': '0',
   })
 # ---
-# name: test_sensor[None-amax_3000][sensor.area1_fire_alarm_issues-entry]
+# name: test_sensor[amax_3000-None][sensor.area1_fire_alarm_issues-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -117,6 +119,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Fire alarm issues',
     'options': dict({
     }),
     'original_device_class': None,
@@ -131,7 +134,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensor[None-amax_3000][sensor.area1_fire_alarm_issues-state]
+# name: test_sensor[amax_3000-None][sensor.area1_fire_alarm_issues-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Area1 Fire alarm issues',
@@ -144,7 +147,7 @@
     'state': 'no_issues',
   })
 # ---
-# name: test_sensor[None-amax_3000][sensor.area1_gas_alarm_issues-entry]
+# name: test_sensor[amax_3000-None][sensor.area1_gas_alarm_issues-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -165,6 +168,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Gas alarm issues',
     'options': dict({
     }),
     'original_device_class': None,
@@ -179,7 +183,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensor[None-amax_3000][sensor.area1_gas_alarm_issues-state]
+# name: test_sensor[amax_3000-None][sensor.area1_gas_alarm_issues-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Area1 Gas alarm issues',
@@ -192,7 +196,7 @@
     'state': 'no_issues',
   })
 # ---
-# name: test_sensor[None-b5512][sensor.area1_burglary_alarm_issues-entry]
+# name: test_sensor[b5512-None][sensor.area1_burglary_alarm_issues-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -213,6 +217,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Burglary alarm issues',
     'options': dict({
     }),
     'original_device_class': None,
@@ -227,7 +232,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensor[None-b5512][sensor.area1_burglary_alarm_issues-state]
+# name: test_sensor[b5512-None][sensor.area1_burglary_alarm_issues-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Area1 Burglary alarm issues',
@@ -240,7 +245,7 @@
     'state': 'no_issues',
   })
 # ---
-# name: test_sensor[None-b5512][sensor.area1_faulting_points-entry]
+# name: test_sensor[b5512-None][sensor.area1_faulting_points-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -261,6 +266,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Faulting points',
     'options': dict({
     }),
     'original_device_class': None,
@@ -275,7 +281,7 @@
     'unit_of_measurement': 'points',
   })
 # ---
-# name: test_sensor[None-b5512][sensor.area1_faulting_points-state]
+# name: test_sensor[b5512-None][sensor.area1_faulting_points-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Area1 Faulting points',
@@ -289,7 +295,7 @@
     'state': '0',
   })
 # ---
-# name: test_sensor[None-b5512][sensor.area1_fire_alarm_issues-entry]
+# name: test_sensor[b5512-None][sensor.area1_fire_alarm_issues-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -310,6 +316,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Fire alarm issues',
     'options': dict({
     }),
     'original_device_class': None,
@@ -324,7 +331,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensor[None-b5512][sensor.area1_fire_alarm_issues-state]
+# name: test_sensor[b5512-None][sensor.area1_fire_alarm_issues-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Area1 Fire alarm issues',
@@ -337,7 +344,7 @@
     'state': 'no_issues',
   })
 # ---
-# name: test_sensor[None-b5512][sensor.area1_gas_alarm_issues-entry]
+# name: test_sensor[b5512-None][sensor.area1_gas_alarm_issues-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -358,6 +365,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Gas alarm issues',
     'options': dict({
     }),
     'original_device_class': None,
@@ -372,7 +380,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensor[None-b5512][sensor.area1_gas_alarm_issues-state]
+# name: test_sensor[b5512-None][sensor.area1_gas_alarm_issues-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Area1 Gas alarm issues',
@@ -385,7 +393,7 @@
     'state': 'no_issues',
   })
 # ---
-# name: test_sensor[None-solution_3000][sensor.area1_burglary_alarm_issues-entry]
+# name: test_sensor[solution_3000-None][sensor.area1_burglary_alarm_issues-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -406,6 +414,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Burglary alarm issues',
     'options': dict({
     }),
     'original_device_class': None,
@@ -420,7 +429,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensor[None-solution_3000][sensor.area1_burglary_alarm_issues-state]
+# name: test_sensor[solution_3000-None][sensor.area1_burglary_alarm_issues-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Area1 Burglary alarm issues',
@@ -433,7 +442,7 @@
     'state': 'no_issues',
   })
 # ---
-# name: test_sensor[None-solution_3000][sensor.area1_faulting_points-entry]
+# name: test_sensor[solution_3000-None][sensor.area1_faulting_points-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -454,6 +463,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Faulting points',
     'options': dict({
     }),
     'original_device_class': None,
@@ -468,7 +478,7 @@
     'unit_of_measurement': 'points',
   })
 # ---
-# name: test_sensor[None-solution_3000][sensor.area1_faulting_points-state]
+# name: test_sensor[solution_3000-None][sensor.area1_faulting_points-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Area1 Faulting points',
@@ -482,7 +492,7 @@
     'state': '0',
   })
 # ---
-# name: test_sensor[None-solution_3000][sensor.area1_fire_alarm_issues-entry]
+# name: test_sensor[solution_3000-None][sensor.area1_fire_alarm_issues-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -503,6 +513,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Fire alarm issues',
     'options': dict({
     }),
     'original_device_class': None,
@@ -517,7 +528,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensor[None-solution_3000][sensor.area1_fire_alarm_issues-state]
+# name: test_sensor[solution_3000-None][sensor.area1_fire_alarm_issues-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Area1 Fire alarm issues',
@@ -530,7 +541,7 @@
     'state': 'no_issues',
   })
 # ---
-# name: test_sensor[None-solution_3000][sensor.area1_gas_alarm_issues-entry]
+# name: test_sensor[solution_3000-None][sensor.area1_gas_alarm_issues-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -551,6 +562,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Gas alarm issues',
     'options': dict({
     }),
     'original_device_class': None,
@@ -565,7 +577,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensor[None-solution_3000][sensor.area1_gas_alarm_issues-state]
+# name: test_sensor[solution_3000-None][sensor.area1_gas_alarm_issues-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Area1 Gas alarm issues',

@@ -25,7 +25,7 @@ from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_plat
 
 @pytest.fixture(autouse=True)
 def squeezebox_alarm_platform():
-    """Only set up the media_player platform for squeezebox tests."""
+    """Only set up the switch platform for squeezebox tests."""
     with patch("homeassistant.components.squeezebox.PLATFORMS", [Platform.SWITCH]):
         yield
 

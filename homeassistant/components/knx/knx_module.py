@@ -54,8 +54,9 @@ from .const import (
     TELEGRAM_LOG_DEFAULT,
 )
 from .device import KNXInterfaceDevice
-from .expose import KNXExposeSensor, KNXExposeTime
+from .expose import KnxExposeEntity, KnxExposeTime
 from .project import KNXProject
+from .repairs import data_secure_group_key_issue_dispatcher
 from .storage.config_store import KNXConfigStore
 from .telegrams import Telegrams
 
@@ -72,8 +73,8 @@ class KNXModule:
         self.hass = hass
         self.config_yaml = config
         self.connected = False
-        self.exposures: list[KNXExposeSensor | KNXExposeTime] = []
-        self.service_exposures: dict[str, KNXExposeSensor | KNXExposeTime] = {}
+        self.yaml_exposures: list[KnxExposeEntity | KnxExposeTime] = []
+        self.service_exposures: dict[str, KnxExposeEntity | KnxExposeTime] = {}
         self.entry = entry
 
         self.project = KNXProject(hass=hass, entry=entry)
@@ -107,8 +108,12 @@ class KNXModule:
 
         self._address_filter_transcoder: dict[AddressFilter, type[DPTBase]] = {}
         self.group_address_transcoder: dict[DeviceGroupAddress, type[DPTBase]] = {}
+        self.group_address_entities: dict[
+            DeviceGroupAddress, set[tuple[str, str]]  # {(platform, unique_id),}
+        ] = {}
         self.knx_event_callback: TelegramQueue.Callback = self.register_event_callback()
 
+        self.entry.async_on_unload(data_secure_group_key_issue_dispatcher(self))
         self.entry.async_on_unload(
             self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, self.stop)
         )
@@ -224,6 +229,29 @@ class KNXModule:
             ),
             threaded=True,
         )
+
+    def add_to_group_address_entities(
+        self,
+        group_addresses: set[DeviceGroupAddress],
+        identifier: tuple[str, str],  # (platform, unique_id)
+    ) -> None:
+        """Register entity in group_address_entities map."""
+        for ga in group_addresses:
+            if ga not in self.group_address_entities:
+                self.group_address_entities[ga] = set()
+            self.group_address_entities[ga].add(identifier)
+
+    def remove_from_group_address_entities(
+        self,
+        group_addresses: set[DeviceGroupAddress],
+        identifier: tuple[str, str],
+    ) -> None:
+        """Unregister entity from group_address_entities map."""
+        for ga in group_addresses:
+            if ga in self.group_address_entities:
+                self.group_address_entities[ga].discard(identifier)
+                if not self.group_address_entities[ga]:
+                    del self.group_address_entities[ga]
 
     def connection_state_changed_cb(self, state: XknxConnectionState) -> None:
         """Call invoked after a KNX connection state change was received."""
