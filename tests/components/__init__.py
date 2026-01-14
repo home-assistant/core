@@ -158,18 +158,103 @@ def parametrize_target_entities(domain: str) -> list[tuple[dict, str, int]]:
 
 
 class _StateDescription(TypedDict):
-    """Test state and expected service call count."""
+    """Test state with attributes."""
 
     state: str | None
     attributes: dict
 
 
-class StateDescription(TypedDict):
+class TriggerStateDescription(TypedDict):
     """Test state and expected service call count."""
 
-    included: _StateDescription
-    excluded: _StateDescription
-    count: int
+    included: _StateDescription  # State for entities meant to be targeted
+    excluded: _StateDescription  # State for entities not meant to be targeted
+    count: int  # Expected service call count
+
+
+class ConditionStateDescription(TypedDict):
+    """Test state and expected condition evaluation."""
+
+    included: _StateDescription  # State for entities meant to be targeted
+    excluded: _StateDescription  # State for entities not meant to be targeted
+    state_valid: bool  # False if the state of the included entities is missing (None), unavailable or unknown
+
+    condition_true: bool  # If the condition is expected to evaluate to true
+
+
+def parametrize_condition_states(
+    *,
+    condition: str,
+    condition_options: dict[str, Any] | None = None,
+    target_states: list[str | None | tuple[str | None, dict]],
+    other_states: list[str | None | tuple[str | None, dict]],
+    additional_attributes: dict | None = None,
+) -> list[tuple[str, dict[str, Any], list[ConditionStateDescription]]]:
+    """Parametrize states and expected condition evaluations.
+
+    The target_states and other_states iterables are either iterables of
+    states or iterables of (state, attributes) tuples.
+
+    Returns a list of tuples with (condition, condition options, list of states),
+    where states is a list of ConditionStateDescription dicts.
+    """
+
+    additional_attributes = additional_attributes or {}
+    condition_options = condition_options or {}
+
+    def state_with_attributes(
+        state: str | None | tuple[str | None, dict],
+        condition_true: bool,
+        state_valid: bool,
+    ) -> ConditionStateDescription:
+        """Return ConditionStateDescription dict."""
+        if isinstance(state, str) or state is None:
+            return {
+                "included": {
+                    "state": state,
+                    "attributes": additional_attributes,
+                },
+                "excluded": {
+                    "state": state,
+                    "attributes": {},
+                },
+                "condition_true": condition_true,
+                "state_valid": state_valid,
+            }
+        return {
+            "included": {
+                "state": state[0],
+                "attributes": state[1] | additional_attributes,
+            },
+            "excluded": {
+                "state": state[0],
+                "attributes": state[1],
+            },
+            "condition_true": condition_true,
+            "state_valid": state_valid,
+        }
+
+    return [
+        (
+            condition,
+            condition_options,
+            list(
+                itertools.chain(
+                    (state_with_attributes(None, False, False),),
+                    (state_with_attributes(STATE_UNAVAILABLE, False, False),),
+                    (state_with_attributes(STATE_UNKNOWN, False, False),),
+                    (
+                        state_with_attributes(other_state, False, True)
+                        for other_state in other_states
+                    ),
+                    (
+                        state_with_attributes(target_state, True, True)
+                        for target_state in target_states
+                    ),
+                )
+            ),
+        ),
+    ]
 
 
 def parametrize_trigger_states(
@@ -181,7 +266,7 @@ def parametrize_trigger_states(
     additional_attributes: dict | None = None,
     trigger_from_none: bool = True,
     retrigger_on_target_state: bool = False,
-) -> list[tuple[str, dict[str, Any], list[StateDescription]]]:
+) -> list[tuple[str, dict[str, Any], list[TriggerStateDescription]]]:
     """Parametrize states and expected service call counts.
 
     The target_states and other_states iterables are either iterables of
@@ -194,7 +279,7 @@ def parametrize_trigger_states(
     when the state changes to another target state.
 
     Returns a list of tuples with (trigger, list of states),
-    where states is a list of StateDescription dicts.
+    where states is a list of TriggerStateDescription dicts.
     """
 
     additional_attributes = additional_attributes or {}
@@ -202,8 +287,8 @@ def parametrize_trigger_states(
 
     def state_with_attributes(
         state: str | None | tuple[str | None, dict], count: int
-    ) -> dict:
-        """Return (state, attributes) dict."""
+    ) -> TriggerStateDescription:
+        """Return TriggerStateDescription dict."""
         if isinstance(state, str) or state is None:
             return {
                 "included": {
@@ -353,7 +438,7 @@ def parametrize_trigger_states(
 
 def parametrize_numerical_attribute_changed_trigger_states(
     trigger: str, state: str, attribute: str
-) -> list[tuple[str, dict[str, Any], list[StateDescription]]]:
+) -> list[tuple[str, dict[str, Any], list[TriggerStateDescription]]]:
     """Parametrize states and expected service call counts for numerical changed triggers."""
     return [
         *parametrize_trigger_states(
@@ -398,7 +483,7 @@ def parametrize_numerical_attribute_changed_trigger_states(
 
 def parametrize_numerical_attribute_crossed_threshold_trigger_states(
     trigger: str, state: str, attribute: str
-) -> list[tuple[str, dict[str, Any], list[StateDescription]]]:
+) -> list[tuple[str, dict[str, Any], list[TriggerStateDescription]]]:
     """Parametrize states and expected service call counts for numerical crossed threshold triggers."""
     return [
         *parametrize_trigger_states(
@@ -503,7 +588,7 @@ async def arm_trigger(
 def set_or_remove_state(
     hass: HomeAssistant,
     entity_id: str,
-    state: StateDescription,
+    state: TriggerStateDescription,
 ) -> None:
     """Set or remove the state of an entity."""
     if state["state"] is None:

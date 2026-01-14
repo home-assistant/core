@@ -83,6 +83,9 @@
       'sensor': dict({
         'suggested_display_precision': 2,
       }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
+      }),
     }),
     'object_id_base': 'Charge time elapsed',
     'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
@@ -303,6 +306,9 @@
       'sensor': dict({
         'suggested_display_precision': 2,
       }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+      }),
     }),
     'object_id_base': 'Total energy usage',
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
@@ -359,6 +365,9 @@
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
       }),
     }),
     'object_id_base': 'Usage this session',
