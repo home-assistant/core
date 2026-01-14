@@ -66,7 +66,7 @@ class HMBinarySensor(HMDevice, BinarySensorEntity):
         return bool(self._hm_get_state())
 
     @property
-    def device_class(self):
+    def device_class(self) -> BinarySensorDeviceClass | None:
         """Return the class of this sensor from DEVICE_CLASSES."""
         # If state is MOTION (Only RemoteMotion working)
         if self._state == "MOTION":

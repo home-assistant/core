@@ -408,6 +408,7 @@ homeassistant.components.person.*
 homeassistant.components.pi_hole.*
 homeassistant.components.ping.*
 homeassistant.components.plugwise.*
+homeassistant.components.pooldose.*
 homeassistant.components.portainer.*
 homeassistant.components.powerfox.*
 homeassistant.components.powerwall.*
