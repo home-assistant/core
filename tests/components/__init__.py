@@ -638,10 +638,10 @@ def other_states(state: StrEnum | Iterable[StrEnum]) -> list[str]:
     return sorted({s.value for s in enum_class} - excluded_values)
 
 
-async def help_test_condition_gated_by_labs_flag(
+async def assert_condition_gated_by_labs_flag(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture, condition: str
 ) -> None:
-    """Help test a condition is gated by the labs flag."""
+    """Helper to check that a condition is gated by the labs flag."""
 
     # Local include to avoid importing the automation component unnecessarily
     from homeassistant.components import automation  # noqa: PLC0415

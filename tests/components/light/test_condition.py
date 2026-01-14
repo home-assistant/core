@@ -9,8 +9,8 @@ from homeassistant.core import HomeAssistant, ServiceCall
 
 from tests.components import (
     ConditionStateDescription,
+    assert_condition_gated_by_labs_flag,
     create_target_condition,
-    help_test_condition_gated_by_labs_flag,
     parametrize_condition_states,
     parametrize_target_entities,
     set_or_remove_state,
@@ -46,7 +46,7 @@ async def test_light_conditions_gated_by_labs_flag(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture, condition: str
 ) -> None:
     """Test the light conditions are gated by the labs flag."""
-    await help_test_condition_gated_by_labs_flag(hass, caplog, condition)
+    await assert_condition_gated_by_labs_flag(hass, caplog, condition)
 
 
 @pytest.mark.usefixtures("enable_labs_preview_features")
