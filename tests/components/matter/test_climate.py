@@ -479,6 +479,10 @@ async def test_eve_thermo_v5_presets(
             presetHandle=preset_by_name["Home"]
         ),
     )
+    # Verify preset_mode is optimistically updated
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.attributes["preset_mode"] == "Home"
     matter_client.send_device_command.reset_mock()
 
     # test set_preset_mode with "Away" preset
@@ -499,6 +503,10 @@ async def test_eve_thermo_v5_presets(
             presetHandle=preset_by_name["Away"]
         ),
     )
+    # Verify preset_mode is optimistically updated
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.attributes["preset_mode"] == "Away"
     matter_client.send_device_command.reset_mock()
 
     # test set_preset_mode with "Eco" preset
@@ -539,3 +547,41 @@ async def test_eve_thermo_v5_presets(
 
     # Ensure no command was sent for invalid preset
     assert matter_client.send_device_command.call_count == 0
+    # Test that preset_mode is updated when ActivePresetHandle is set from device
+    set_node_attribute(
+        matter_node,
+        1,
+        513,
+        clusters.Thermostat.Attributes.ActivePresetHandle.attribute_id,
+        preset_by_name["Home"],
+    )
+    await trigger_subscription_callback(hass, matter_client)
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.attributes["preset_mode"] == "Home"
+
+    # Test that preset_mode is updated when ActivePresetHandle changes to different preset
+    set_node_attribute(
+        matter_node,
+        1,
+        513,
+        clusters.Thermostat.Attributes.ActivePresetHandle.attribute_id,
+        preset_by_name["Away"],
+    )
+    await trigger_subscription_callback(hass, matter_client)
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.attributes["preset_mode"] == "Away"
+
+    # Test that preset_mode is None when ActivePresetHandle is cleared
+    set_node_attribute(
+        matter_node,
+        1,
+        513,
+        clusters.Thermostat.Attributes.ActivePresetHandle.attribute_id,
+        None,
+    )
+    await trigger_subscription_callback(hass, matter_client)
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.attributes["preset_mode"] is None
