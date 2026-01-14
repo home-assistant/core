@@ -54,6 +54,7 @@
       'labels': set({
       }),
       'name': None,
+      'object_id_base': 'Air quality',
       'options': dict({
       }),
       'original_device_class': None,
@@ -89,6 +90,7 @@
       'labels': set({
       }),
       'name': None,
+      'object_id_base': 'Filter lifetime',
       'options': dict({
       }),
       'original_device_class': None,
@@ -189,6 +191,7 @@
       'labels': set({
       }),
       'name': None,
+      'object_id_base': 'Filter lifetime',
       'options': dict({
       }),
       'original_device_class': None,
@@ -274,6 +277,7 @@
       'labels': set({
       }),
       'name': None,
+      'object_id_base': 'Air quality',
       'options': dict({
       }),
       'original_device_class': None,
@@ -309,6 +313,7 @@
       'labels': set({
       }),
       'name': None,
+      'object_id_base': 'PM2.5',
       'options': dict({
       }),
       'original_device_class': <SensorDeviceClass.PM25: 'pm25'>,
@@ -344,6 +349,7 @@
       'labels': set({
       }),
       'name': None,
+      'object_id_base': 'Filter lifetime',
       'options': dict({
       }),
       'original_device_class': None,
@@ -458,6 +464,7 @@
       'labels': set({
       }),
       'name': None,
+      'object_id_base': 'Air quality',
       'options': dict({
       }),
       'original_device_class': None,
@@ -493,6 +500,7 @@
       'labels': set({
       }),
       'name': None,
+      'object_id_base': 'PM2.5',
       'options': dict({
       }),
       'original_device_class': <SensorDeviceClass.PM25: 'pm25'>,
@@ -528,6 +536,7 @@
       'labels': set({
       }),
       'name': None,
+      'object_id_base': 'Filter lifetime',
       'options': dict({
       }),
       'original_device_class': None,
@@ -644,6 +653,7 @@
       'labels': set({
       }),
       'name': None,
+      'object_id_base': 'Current temperature',
       'options': dict({
         'sensor': dict({
           'suggested_display_precision': 1,
@@ -682,6 +692,7 @@
       'labels': set({
       }),
       'name': None,
+      'object_id_base': 'Cooking set temperature',
       'options': dict({
         'sensor': dict({
           'suggested_display_precision': 1,
@@ -718,6 +729,7 @@
       'labels': set({
       }),
       'name': None,
+      'object_id_base': 'Cooking set time',
       'options': dict({
         'sensor': dict({
           'suggested_display_precision': 2,
@@ -754,6 +766,7 @@
       'labels': set({
       }),
       'name': None,
+      'object_id_base': 'Preheating set time',
       'options': dict({
         'sensor': dict({
           'suggested_display_precision': 2,
@@ -801,6 +814,7 @@
       'labels': set({
       }),
       'name': None,
+      'object_id_base': 'Cooking status',
       'options': dict({
       }),
       'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -959,6 +973,7 @@
       'labels': set({
       }),
       'name': None,
+      'object_id_base': 'Current temperature',
       'options': dict({
       }),
       'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
@@ -994,6 +1009,7 @@
       'labels': set({
       }),
       'name': None,
+      'object_id_base': 'Cooking set temperature',
       'options': dict({
       }),
       'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
@@ -1027,6 +1043,7 @@
       'labels': set({
       }),
       'name': None,
+      'object_id_base': 'Cooking set time',
       'options': dict({
         'sensor': dict({
           'suggested_display_precision': 2,
@@ -1063,6 +1080,7 @@
       'labels': set({
       }),
       'name': None,
+      'object_id_base': 'Preheating set time',
       'options': dict({
         'sensor': dict({
           'suggested_display_precision': 2,
@@ -1110,6 +1128,7 @@
       'labels': set({
       }),
       'name': None,
+      'object_id_base': 'Cooking status',
       'options': dict({
       }),
       'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -1340,6 +1359,7 @@
       'labels': set({
       }),
       'name': None,
+      'object_id_base': 'Humidity',
       'options': dict({
       }),
       'original_device_class': <SensorDeviceClass.HUMIDITY: 'humidity'>,
@@ -1428,6 +1448,7 @@
       'labels': set({
       }),
       'name': None,
+      'object_id_base': 'Humidity',
       'options': dict({
       }),
       'original_device_class': <SensorDeviceClass.HUMIDITY: 'humidity'>,
@@ -1463,6 +1484,7 @@
       'labels': set({
       }),
       'name': None,
+      'object_id_base': 'Temperature',
       'options': dict({
         'sensor': dict({
           'suggested_display_precision': 1,
@@ -1501,6 +1523,7 @@
       'labels': set({
       }),
       'name': None,
+      'object_id_base': 'Filter lifetime',
       'options': dict({
       }),
       'original_device_class': None,
@@ -1620,6 +1643,7 @@
       'labels': set({
       }),
       'name': None,
+      'object_id_base': 'Humidity',
       'options': dict({
       }),
       'original_device_class': <SensorDeviceClass.HUMIDITY: 'humidity'>,
@@ -1708,6 +1732,7 @@
       'labels': set({
       }),
       'name': None,
+      'object_id_base': 'Energy use today',
       'options': dict({
         'sensor': dict({
           'suggested_display_precision': 2,
@@ -1746,6 +1771,7 @@
       'labels': set({
       }),
       'name': None,
+      'object_id_base': 'Energy use weekly',
       'options': dict({
         'sensor': dict({
           'suggested_display_precision': 2,
@@ -1784,6 +1810,7 @@
       'labels': set({
       }),
       'name': None,
+      'object_id_base': 'Energy use monthly',
       'options': dict({
         'sensor': dict({
           'suggested_display_precision': 2,
@@ -1822,6 +1849,7 @@
       'labels': set({
       }),
       'name': None,
+      'object_id_base': 'Energy use yearly',
       'options': dict({
         'sensor': dict({
           'suggested_display_precision': 2,
@@ -1860,6 +1888,7 @@
       'labels': set({
       }),
       'name': None,
+      'object_id_base': 'Current voltage',
       'options': dict({
         'sensor': dict({
           'suggested_display_precision': 0,
@@ -1898,6 +1927,7 @@
       'labels': set({
       }),
       'name': None,
+      'object_id_base': 'Current power',
       'options': dict({
         'sensor': dict({
           'suggested_display_precision': 0,
