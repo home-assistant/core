@@ -5,7 +5,10 @@ from __future__ import annotations
 import datetime
 import logging
 
-from homeassistant.components.binary_sensor import BinarySensorEntity
+from homeassistant.components.binary_sensor import (
+    BinarySensorDeviceClass,
+    BinarySensorEntity,
+)
 from homeassistant.const import ATTR_LAST_TRIP_TIME
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -102,7 +105,7 @@ class EnvisalinkBinarySensor(EnvisalinkEntity, BinarySensorEntity):
         return self._info["status"]["open"]
 
     @property
-    def device_class(self):
+    def device_class(self) -> BinarySensorDeviceClass:
         """Return the class of this sensor, from DEVICE_CLASSES."""
         return self._zone_type
 

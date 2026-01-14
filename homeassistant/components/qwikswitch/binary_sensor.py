@@ -6,7 +6,10 @@ import logging
 
 from pyqwikswitch.qwikswitch import SENSORS
 
-from homeassistant.components.binary_sensor import BinarySensorEntity
+from homeassistant.components.binary_sensor import (
+    BinarySensorDeviceClass,
+    BinarySensorEntity,
+)
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
@@ -76,6 +79,6 @@ class QSBinarySensor(QSEntity, BinarySensorEntity):
         return f"qs{self.qsid}:{self.channel}"
 
     @property
-    def device_class(self):
+    def device_class(self) -> BinarySensorDeviceClass:
         """Return the class of this sensor."""
         return self._class

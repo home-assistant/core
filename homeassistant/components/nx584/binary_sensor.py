@@ -96,7 +96,7 @@ class NX584ZoneSensor(BinarySensorEntity):
         self._zone_type = zone_type
 
     @property
-    def device_class(self):
+    def device_class(self) -> BinarySensorDeviceClass:
         """Return the class of this sensor, from DEVICE_CLASSES."""
         return self._zone_type
 
