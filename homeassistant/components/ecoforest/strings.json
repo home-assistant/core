@@ -25,6 +25,9 @@
     "number": {
       "power_level": {
         "name": "Power level"
+      },
+      "setpoint_temperature": {
+        "name": "Setpoint temperature"
       }
     },
     "sensor": {
