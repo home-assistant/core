@@ -143,8 +143,8 @@ class PortainerCoordinator(DataUpdateCoordinator[dict[int, PortainerCoordinatorD
                 continue
 
             try:
-                containers = await self.portainer.get_containers(endpoint.id)
-                docker_version, docker_info = await asyncio.gather(
+                containers, docker_version, docker_info = await asyncio.gather(
+                    self.portainer.get_containers(endpoint.id),
                     self.portainer.docker_version(endpoint.id),
                     self.portainer.docker_info(endpoint.id),
                 )
