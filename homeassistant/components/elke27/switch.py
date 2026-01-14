@@ -258,6 +258,23 @@ class Elke27ZoneBypassSwitch(
         self._missing_logged = True
         _LOGGER.debug("Zone %s missing from snapshot", self._zone_id)
 
+    @property
+    def _diagnostic_bypassed(self) -> bool | None:
+        """Return the bypassed state for diagnostics."""
+        zone = _get_zone(self.coordinator.data, self._zone_id)
+        if zone is None:
+            return None
+        return getattr(zone, "bypassed", None)
+
+    def _handle_coordinator_update(self) -> None:
+        """Handle updated data from the coordinator."""
+        _LOGGER.debug(
+            "Zone bypass update %s: bypassed=%s",
+            self._zone_id,
+            self._diagnostic_bypassed,
+        )
+        super()._handle_coordinator_update()
+
 
 def _iter_zones(snapshot: Any) -> Iterable[Any]:
     zones = getattr(snapshot, "zones", None)
