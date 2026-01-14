@@ -11,7 +11,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from .client import HidromoticClient
+from pyhidromotic import HidromoticClient
 from .const import DOMAIN, INITIAL_DATA_WAIT_SECONDS
 
 _LOGGER = logging.getLogger(__name__)

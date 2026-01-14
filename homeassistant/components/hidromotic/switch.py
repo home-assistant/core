@@ -11,8 +11,10 @@ from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
+from pyhidromotic import STATE_ON
+
 from . import HidromoticConfigEntry
-from .const import DOMAIN, STATE_ON
+from .const import DOMAIN
 from .coordinator import HidromoticCoordinator
 
 _LOGGER = logging.getLogger(__name__)

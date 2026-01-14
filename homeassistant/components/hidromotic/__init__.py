@@ -9,7 +9,7 @@ from homeassistant.const import CONF_HOST, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 
-from .client import HidromoticClient
+from pyhidromotic import HidromoticClient
 from .coordinator import HidromoticCoordinator
 
 _LOGGER = logging.getLogger(__name__)
