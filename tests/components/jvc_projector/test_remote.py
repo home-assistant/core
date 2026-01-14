@@ -64,7 +64,7 @@ async def test_commands(
     await hass.services.async_call(
         REMOTE_DOMAIN,
         SERVICE_SEND_COMMAND,
-        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_COMMAND: ["hdmi_1"]},
+        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_COMMAND: ["hdmi1"]},
         blocking=True,
     )
     assert mock_device.remote.call_count == 2
@@ -76,6 +76,14 @@ async def test_commands(
         blocking=True,
     )
     assert mock_device.remote.call_count == 3
+
+    await hass.services.async_call(
+        REMOTE_DOMAIN,
+        SERVICE_SEND_COMMAND,
+        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_COMMAND: ["picture_mode"]},
+        blocking=True,
+    )
+    assert mock_device.remote.call_count == 4
 
 
 async def test_unknown_command(
