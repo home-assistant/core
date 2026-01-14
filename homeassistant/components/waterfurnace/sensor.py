@@ -116,7 +116,15 @@ def setup_platform(
     if discovery_info is None:
         return
 
-    client = hass.data[DOMAIN]
+    unit = discovery_info.get("unit")
+    if not unit:
+        return
+        
+    data_key = f"{DOMAIN}_{unit}"
+    client = hass.data[DOMAIN].get(data_key)
+    
+    if not client:
+        return
 
     add_entities(WaterFurnaceSensor(client, description) for description in SENSORS)
 
@@ -142,7 +150,7 @@ class WaterFurnaceSensor(SensorEntity):
         """Register callbacks."""
         self.async_on_remove(
             async_dispatcher_connect(
-                self.hass, UPDATE_TOPIC, self.async_update_callback
+                self.hass, f"{UPDATE_TOPIC}_{self.client.unit}", self.async_update_callback
             )
         )
 

@@ -30,14 +30,22 @@ MAX_FAILS = 10
 NOTIFICATION_ID = "waterfurnace_website_notification"
 NOTIFICATION_TITLE = "WaterFurnace website status"
 
+CONF_UNIT = "unit"
+
+# Support both single config and list of configs
+WATERFURNACE_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_PASSWORD): cv.string,
+        vol.Required(CONF_USERNAME): cv.string,
+        vol.Optional(CONF_UNIT): cv.string,
+    }
+)
 
 CONFIG_SCHEMA = vol.Schema(
     {
-        DOMAIN: vol.Schema(
-            {
-                vol.Required(CONF_PASSWORD): cv.string,
-                vol.Required(CONF_USERNAME): cv.string,
-            }
+        DOMAIN: vol.Any(
+            WATERFURNACE_SCHEMA,
+            vol.All(cv.ensure_list, [WATERFURNACE_SCHEMA]),
         )
     },
     extra=vol.ALLOW_EXTRA,
@@ -48,24 +56,61 @@ def setup(hass: HomeAssistant, base_config: ConfigType) -> bool:
     """Set up waterfurnace platform."""
 
     config = base_config[DOMAIN]
+    
+    # Convert single config to list for uniform processing
+    configs = config if isinstance(config, list) else [config]
+    
+    hass.data[DOMAIN] = {}
+    
+    for idx, entry_config in enumerate(configs):
+        username = entry_config[CONF_USERNAME]
+        password = entry_config[CONF_PASSWORD]
+        unit = entry_config.get(CONF_UNIT)
 
-    username = config[CONF_USERNAME]
-    password = config[CONF_PASSWORD]
+        wfconn = WaterFurnace(username, password)
+        
+        # NOTE(sdague): login will throw an exception if this doesn't
+        # work, which will abort the setup.
+        try:
+            wfconn.login()
+        except WFCredentialError:
+            _LOGGER.error("Invalid credentials for waterfurnace login (%s)", username)
+            continue
 
-    wfconn = WaterFurnace(username, password)
-    # NOTE(sdague): login will throw an exception if this doesn't
-    # work, which will abort the setup.
-    try:
-        wfconn.login()
-    except WFCredentialError:
-        _LOGGER.error("Invalid credentials for waterfurnace login")
-        return False
+        # If unit specified, verify it exists and use it
+        # If not specified and multiple units exist, log error
+        if unit:
+            if unit != wfconn.gwid:
+                _LOGGER.error(
+                    "Specified unit %s does not match connected unit %s for %s",
+                    unit,
+                    wfconn.gwid,
+                    username,
+                )
+                continue
+        else:
+            # If no unit specified, use the connected one
+            # In the future, could detect multiple units and require specification
+            unit = wfconn.gwid
+        
+        # Create unique key for this unit
+        data_key = f"{DOMAIN}_{unit}"
+        
+        if data_key in hass.data[DOMAIN]:
+            _LOGGER.error(
+                "Unit %s already configured, skipping duplicate entry", unit
+            )
+            continue
+            
+        hass.data[DOMAIN][data_key] = WaterFurnaceData(hass, wfconn)
+        hass.data[DOMAIN][data_key].start()
 
-    hass.data[DOMAIN] = WaterFurnaceData(hass, wfconn)
-    hass.data[DOMAIN].start()
-
-    discovery.load_platform(hass, Platform.SENSOR, DOMAIN, {}, config)
-    return True
+        discovery.load_platform(
+            hass, Platform.SENSOR, DOMAIN, {"unit": unit}, entry_config
+        )
+    
+    # Return True if at least one unit was set up successfully
+    return len(hass.data[DOMAIN]) > 0
 
 
 class WaterFurnaceData(threading.Thread):
@@ -102,7 +147,7 @@ class WaterFurnaceData(threading.Thread):
                     "the maximum number of times. Thread has stopped"
                 ),
                 title=NOTIFICATION_TITLE,
-                notification_id=NOTIFICATION_ID,
+                notification_id=f"{NOTIFICATION_ID}_{self.unit}",
             )
 
             self._shutdown = True
@@ -160,5 +205,5 @@ class WaterFurnaceData(threading.Thread):
                 self._reconnect()
 
             else:
-                dispatcher_send(self.hass, UPDATE_TOPIC)
+                dispatcher_send(self.hass, f"{UPDATE_TOPIC}_{self.unit}")
                 time.sleep(SCAN_INTERVAL.total_seconds())
