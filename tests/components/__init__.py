@@ -597,7 +597,7 @@ async def create_target_condition(
     target: dict,
     behavior: str,
 ) -> ConditionCheckerTypeOptional:
-    """Create a fan state condition."""
+    """Create a target condition."""
     return await async_condition_from_config(
         hass,
         {
