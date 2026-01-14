@@ -296,6 +296,20 @@ class MatterClimate(MatterEntity, ClimateEntity):
         """Update from device."""
         self._calculate_features()
 
+        self._attr_current_temperature = self._get_temperature_in_degrees(
+            clusters.Thermostat.Attributes.LocalTemperature
+        )
+        self._attr_current_humidity = (
+            int(raw_measured_humidity) / HUMIDITY_SCALING_FACTOR
+            if (
+                raw_measured_humidity := self.get_matter_attribute_value(
+                    clusters.RelativeHumidityMeasurement.Attributes.MeasuredValue
+                )
+            )
+            is not None
+            else None
+        )
+
         self.matter_presets_types = self.get_matter_attribute_value(
             clusters.Thermostat.Attributes.PresetTypes
         )
@@ -322,25 +336,6 @@ class MatterClimate(MatterEntity, ClimateEntity):
                     break
         else:
             self._attr_preset_mode = None
-
-        self._attr_current_temperature = self._get_temperature_in_degrees(
-            clusters.Thermostat.Attributes.LocalTemperature
-        )
-
-        self._attr_current_temperature = self._get_temperature_in_degrees(
-            clusters.Thermostat.Attributes.LocalTemperature
-        )
-
-        self._attr_current_humidity = (
-            int(raw_measured_humidity) / HUMIDITY_SCALING_FACTOR
-            if (
-                raw_measured_humidity := self.get_matter_attribute_value(
-                    clusters.RelativeHumidityMeasurement.Attributes.MeasuredValue
-                )
-            )
-            is not None
-            else None
-        )
 
         if self.get_matter_attribute_value(clusters.OnOff.Attributes.OnOff) is False:
             # special case: the appliance has a dedicated Power switch on the OnOff cluster
