@@ -20,6 +20,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Reset filter condition',
     'options': dict({
     }),
     'original_device_class': None,
@@ -68,6 +69,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Reset filter condition',
     'options': dict({
     }),
     'original_device_class': None,
@@ -116,6 +118,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Identify',
     'options': dict({
     }),
     'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
@@ -165,6 +168,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Identify (1)',
     'options': dict({
     }),
     'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
@@ -214,6 +218,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Identify (2)',
     'options': dict({
     }),
     'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
@@ -263,6 +268,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Identify (1)',
     'options': dict({
     }),
     'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
@@ -312,6 +318,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Identify (2)',
     'options': dict({
     }),
     'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
@@ -361,6 +368,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Identify (3)',
     'options': dict({
     }),
     'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
@@ -410,6 +418,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Identify (4)',
     'options': dict({
     }),
     'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
@@ -459,6 +468,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Identify (1)',
     'options': dict({
     }),
     'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
@@ -508,6 +518,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Identify (2)',
     'options': dict({
     }),
     'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
@@ -557,6 +568,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Identify (3)',
     'options': dict({
     }),
     'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
@@ -606,6 +618,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Identify (4)',
     'options': dict({
     }),
     'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
@@ -655,6 +668,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Identify (5)',
     'options': dict({
     }),
     'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
@@ -704,6 +718,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Identify (1)',
     'options': dict({
     }),
     'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
@@ -753,6 +768,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Identify (2)',
     'options': dict({
     }),
     'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
@@ -802,6 +818,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Identify',
     'options': dict({
     }),
     'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
@@ -851,6 +868,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Identify',
     'options': dict({
     }),
     'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
@@ -900,6 +918,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Identify',
     'options': dict({
     }),
     'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
@@ -949,6 +968,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Identify',
     'options': dict({
     }),
     'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
@@ -998,6 +1018,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Identify',
     'options': dict({
     }),
     'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
@@ -1047,6 +1068,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Identify (0)',
     'options': dict({
     }),
     'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
@@ -1096,6 +1118,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Identify (1)',
     'options': dict({
     }),
     'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
@@ -1145,6 +1168,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Identify',
     'options': dict({
     }),
     'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
@@ -1194,6 +1218,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Identify (bottom)',
     'options': dict({
     }),
     'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
@@ -1243,6 +1268,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Identify (top)',
     'options': dict({
     }),
     'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
@@ -1292,6 +1318,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Identify',
     'options': dict({
     }),
     'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
@@ -1341,6 +1368,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Identify',
     'options': dict({
     }),
     'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
@@ -1438,6 +1466,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Identify',
     'options': dict({
     }),
     'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
@@ -1466,7 +1495,7 @@
     'state': 'unknown',
   })
 # ---
-# name: test_buttons[eve_thermo][button.eve_thermo_identify-entry]
+# name: test_buttons[eve_thermo_v4][button.eve_thermo_20ebp1701_identify-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1479,7 +1508,7 @@
     'disabled_by': None,
     'domain': 'button',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'button.eve_thermo_identify',
+    'entity_id': 'button.eve_thermo_20ebp1701_identify',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1487,6 +1516,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Identify',
     'options': dict({
     }),
     'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
@@ -1501,14 +1531,64 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_buttons[eve_thermo][button.eve_thermo_identify-state]
+# name: test_buttons[eve_thermo_v4][button.eve_thermo_20ebp1701_identify-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'identify',
-      'friendly_name': 'Eve Thermo Identify',
+      'friendly_name': 'Eve Thermo 20EBP1701 Identify',
     }),
     'context': <ANY>,
-    'entity_id': 'button.eve_thermo_identify',
+    'entity_id': 'button.eve_thermo_20ebp1701_identify',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_buttons[eve_thermo_v5][button.eve_thermo_20ecd1701_identify-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'button.eve_thermo_20ecd1701_identify',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Identify',
+    'options': dict({
+    }),
+    'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
+    'original_icon': None,
+    'original_name': 'Identify',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '00000000000004D2-000000000000000C-MatterNodeDevice-1-IdentifyButton-3-1',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_buttons[eve_thermo_v5][button.eve_thermo_20ecd1701_identify-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'identify',
+      'friendly_name': 'Eve Thermo 20ECD1701 Identify',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.eve_thermo_20ecd1701_identify',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -1536,6 +1616,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Identify (1)',
     'options': dict({
     }),
     'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
@@ -1585,6 +1666,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Identify (2)',
     'options': dict({
     }),
     'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
@@ -1634,6 +1716,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Identify',
     'options': dict({
     }),
     'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
@@ -1683,6 +1766,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Reset filter condition',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1731,6 +1815,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Reset filter condition',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1779,6 +1864,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Identify (Fan)',
     'options': dict({
     }),
     'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
@@ -1828,6 +1914,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Identify (1)',
     'options': dict({
     }),
     'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
@@ -1877,6 +1964,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Identify (1)',
     'options': dict({
     }),
     'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
@@ -1926,6 +2014,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Identify',
     'options': dict({
     }),
     'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
@@ -1975,6 +2064,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Identify (Load Control)',
     'options': dict({
     }),
     'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
@@ -2024,6 +2114,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Pause',
     'options': dict({
     }),
     'original_device_class': None,
@@ -2072,6 +2163,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Resume',
     'options': dict({
     }),
     'original_device_class': None,
@@ -2120,6 +2212,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Start',
     'options': dict({
     }),
     'original_device_class': None,
@@ -2168,6 +2261,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Stop',
     'options': dict({
     }),
     'original_device_class': None,
@@ -2216,6 +2310,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Identify',
     'options': dict({
     }),
     'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
@@ -2265,6 +2360,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Pause',
     'options': dict({
     }),
     'original_device_class': None,
@@ -2313,6 +2409,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Resume',
     'options': dict({
     }),
     'original_device_class': None,
@@ -2361,6 +2458,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Start',
     'options': dict({
     }),
     'original_device_class': None,
@@ -2409,6 +2507,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Stop',
     'options': dict({
     }),
     'original_device_class': None,
@@ -2457,6 +2556,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Identify',
     'options': dict({
     }),
     'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
@@ -2506,6 +2606,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Identify (0)',
     'options': dict({
     }),
     'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
@@ -2555,6 +2656,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Identify (1)',
     'options': dict({
     }),
     'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
@@ -2604,6 +2706,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Identify (1)',
     'options': dict({
     }),
     'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
@@ -2653,6 +2756,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Identify (2)',
     'options': dict({
     }),
     'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
@@ -2702,6 +2806,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Identify (6)',
     'options': dict({
     }),
     'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
@@ -2751,6 +2856,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Identify (Config)',
     'options': dict({
     }),
     'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
@@ -2800,6 +2906,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Identify (Down)',
     'options': dict({
     }),
     'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
@@ -2849,6 +2956,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Identify (Up)',
     'options': dict({
     }),
     'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
@@ -2898,6 +3006,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Identify',
     'options': dict({
     }),
     'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
@@ -2947,6 +3056,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Identify',
     'options': dict({
     }),
     'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
@@ -2996,6 +3106,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Identify',
     'options': dict({
     }),
     'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
@@ -3045,6 +3156,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Identify',
     'options': dict({
     }),
     'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
@@ -3094,6 +3206,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Identify',
     'options': dict({
     }),
     'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
@@ -3143,6 +3256,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Pause',
     'options': dict({
     }),
     'original_device_class': None,
@@ -3191,6 +3305,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Start',
     'options': dict({
     }),
     'original_device_class': None,
@@ -3239,6 +3354,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Stop',
     'options': dict({
     }),
     'original_device_class': None,
@@ -3287,6 +3403,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Identify',
     'options': dict({
     }),
     'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
@@ -3336,6 +3453,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Pause',
     'options': dict({
     }),
     'original_device_class': None,
@@ -3384,6 +3502,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Resume',
     'options': dict({
     }),
     'original_device_class': None,
@@ -3432,6 +3551,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Start',
     'options': dict({
     }),
     'original_device_class': None,
@@ -3480,6 +3600,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Stop',
     'options': dict({
     }),
     'original_device_class': None,
@@ -3528,6 +3649,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Identify (1)',
     'options': dict({
     }),
     'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
@@ -3577,6 +3699,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Identify',
     'options': dict({
     }),
     'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
@@ -3626,6 +3749,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Cancel boost',
     'options': dict({
     }),
     'original_device_class': None,
@@ -3674,6 +3798,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Identify',
     'options': dict({
     }),
     'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
@@ -3723,6 +3848,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Self-test',
     'options': dict({
     }),
     'original_device_class': None,
@@ -3771,6 +3897,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Identify',
     'options': dict({
     }),
     'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
@@ -3820,6 +3947,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Identify',
     'options': dict({
     }),
     'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
@@ -3869,6 +3997,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Identify',
     'options': dict({
     }),
     'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
@@ -4062,6 +4191,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Identify',
     'options': dict({
     }),
     'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
@@ -4207,6 +4337,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Identify',
     'options': dict({
     }),
     'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,

@@ -13,10 +13,12 @@ from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorStateClass,
 )
+from homeassistant.components.text import TextMode
 from homeassistant.const import (
     CONF_DEVICE_CLASS,
     CONF_ENTITY_CATEGORY,
     CONF_ENTITY_ID,
+    CONF_MODE,
     CONF_NAME,
     CONF_PLATFORM,
     CONF_UNIT_OF_MEASUREMENT,
@@ -40,6 +42,7 @@ from ..const import (
     CoverConf,
     FanConf,
     FanZeroMode,
+    SceneConf,
 )
 from ..dpt import get_supported_dpts
 from .const import (
@@ -82,6 +85,7 @@ from .const import (
     CONF_GA_RED_BRIGHTNESS,
     CONF_GA_RED_SWITCH,
     CONF_GA_SATURATION,
+    CONF_GA_SCENE,
     CONF_GA_SENSOR,
     CONF_GA_SETPOINT_SHIFT,
     CONF_GA_SPEED,
@@ -90,6 +94,7 @@ from .const import (
     CONF_GA_SWITCH,
     CONF_GA_TEMPERATURE_CURRENT,
     CONF_GA_TEMPERATURE_TARGET,
+    CONF_GA_TEXT,
     CONF_GA_TIME,
     CONF_GA_UP_DOWN,
     CONF_GA_VALVE,
@@ -419,10 +424,43 @@ LIGHT_KNX_SCHEMA = AllSerializeFirst(
     ),
 )
 
+SCENE_KNX_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_GA_SCENE): GASelector(
+            state=False,
+            passive=False,
+            write_required=True,
+            valid_dpt=["17.001", "18.001"],
+        ),
+        vol.Required(SceneConf.SCENE_NUMBER): AllSerializeFirst(
+            selector.NumberSelector(
+                selector.NumberSelectorConfig(
+                    min=1, max=64, step=1, mode=selector.NumberSelectorMode.BOX
+                )
+            ),
+            vol.Coerce(int),
+        ),
+    },
+)
+
 SWITCH_KNX_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_GA_SWITCH): GASelector(write_required=True, valid_dpt="1"),
         vol.Optional(CONF_INVERT, default=False): selector.BooleanSelector(),
+        vol.Optional(CONF_RESPOND_TO_READ, default=False): selector.BooleanSelector(),
+        vol.Optional(CONF_SYNC_STATE, default=True): SyncStateSelector(),
+    },
+)
+
+TEXT_KNX_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_GA_TEXT): GASelector(write_required=True, dpt=["string"]),
+        vol.Required(CONF_MODE, default=TextMode.TEXT): selector.SelectSelector(
+            selector.SelectSelectorConfig(
+                options=list(TextMode),
+                translation_key="component.knx.config_panel.entities.create.text.knx.mode",
+            ),
+        ),
         vol.Optional(CONF_RESPOND_TO_READ, default=False): selector.BooleanSelector(),
         vol.Optional(CONF_SYNC_STATE, default=True): SyncStateSelector(),
     },
@@ -694,8 +732,10 @@ KNX_SCHEMA_FOR_PLATFORM = {
     Platform.DATETIME: DATETIME_KNX_SCHEMA,
     Platform.FAN: FAN_KNX_SCHEMA,
     Platform.LIGHT: LIGHT_KNX_SCHEMA,
+    Platform.SCENE: SCENE_KNX_SCHEMA,
     Platform.SENSOR: SENSOR_KNX_SCHEMA,
     Platform.SWITCH: SWITCH_KNX_SCHEMA,
+    Platform.TEXT: TEXT_KNX_SCHEMA,
     Platform.TIME: TIME_KNX_SCHEMA,
 }
 

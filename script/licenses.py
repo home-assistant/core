@@ -181,6 +181,7 @@ EXCEPTIONS = {
     "PySwitchmate",  # https://github.com/Danielhiversen/pySwitchmate/pull/16
     "PyXiaomiGateway",  # https://github.com/Danielhiversen/PyXiaomiGateway/pull/201
     "chacha20poly1305",  # LGPL
+    "caio",  # Apache 2 https://github.com/mosquito/caio/?tab=Apache-2.0-1-ov-file#readme
     "commentjson",  # https://github.com/vaidik/commentjson/pull/55
     "crownstone-cloud",  # https://github.com/crownstone/crownstone-lib-python-cloud/pull/5
     "crownstone-core",  # https://github.com/crownstone/crownstone-lib-python-core/pull/6

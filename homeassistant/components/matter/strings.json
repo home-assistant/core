@@ -220,6 +220,9 @@
       "led_indicator_intensity_on": {
         "name": "LED on intensity"
       },
+      "occupied_setback": {
+        "name": "Occupied setback"
+      },
       "off_transition_time": {
         "name": "Off transition time"
       },
