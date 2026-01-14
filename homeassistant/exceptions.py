@@ -221,7 +221,7 @@ class ConfigEntryAuthFailed(IntegrationError):
     """Error to indicate that config entry could not authenticate."""
 
 
-class OAuth2RefreshTokenError(ClientResponseError, HomeAssistantError):
+class OAuth2RefreshTokenError(ClientResponseError, IntegrationError):
     """Error to indicate that the OAuth 2.0 flow could not refresh token."""
 
     def __init__(
@@ -243,8 +243,12 @@ class OAuth2RefreshTokenError(ClientResponseError, HomeAssistantError):
             message=message,
             headers=headers,
         )
-        HomeAssistantError.__init__(self)
+        IntegrationError.__init__(self, message)
         self.domain = domain
+        self.translation_domain = "homeassistant"
+        self.translation_key = "oauth2_helper_refresh_failed"
+        self.translation_placeholders = {"domain": domain}
+        self.generate_message = True
 
 
 class OAuth2RefreshTokenTransientError(OAuth2RefreshTokenError):
