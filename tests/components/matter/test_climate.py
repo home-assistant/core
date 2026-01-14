@@ -452,7 +452,7 @@ async def test_eve_thermo_v5_presets(
         "GoingToSleep",
         "Eco",
     ]
-    assert state.attributes["preset_mode"] is None
+    assert state.attributes["preset_mode"] == "Home"
 
     # Get presets from the node for dynamic testing
     presets_attribute = matter_node.endpoints[1].get_attribute_value(
