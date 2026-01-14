@@ -1,11 +1,10 @@
 {
   "domain": "tonewinner",
-  "name": "ToneWinner AT-500",
+  "name": "Tonewinner",
   "codeowners": ["@emma-sg"],
   "config_flow": true,
-  "documentation": "",
+  "documentation": "https://www.home-assistant.io/integrations/tonewinner",
   "iot_class": "local_push",
-  "issue_tracker": "",
   "loggers": ["custom_components.tonewinner"],
   "version": "0.1.0"
 }

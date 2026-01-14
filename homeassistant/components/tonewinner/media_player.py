@@ -20,7 +20,7 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import CONF_BAUD_RATE, CONF_SERIAL_PORT, DOMAIN
-from .protocol import ToneWinnerCommands, ToneWinnerProtocol
+from .protocol import TonewinnerCommands, TonewinnerProtocol
 
 _LOGGER = logging.getLogger(__name__)
 _LOGGER.info("Tonewinner media_player module loaded!")
@@ -49,7 +49,7 @@ INPUT_SOURCES = {
 
 # Map sound mode names to command codes
 SOUND_MODES = {
-    mode.label: command for command, mode in ToneWinnerCommands.MODES.items()
+    mode.label: command for command, mode in TonewinnerCommands.MODES.items()
 }
 
 
@@ -102,7 +102,7 @@ async def async_setup_entry(
     _LOGGER.info("Tonewinner media player platform setup complete")
 
 
-class TonewinnerProtocol(asyncio.Protocol):
+class TonewinnerSerialProtocol(asyncio.Protocol):
     """Tonewinner AT-500 protocol implementation."""
 
     def __init__(self, entity):
@@ -211,15 +211,15 @@ class TonewinnerMediaPlayer(MediaPlayerEntity):
     async def _query_all_state(self) -> None:
         """Query device for current state."""
         _LOGGER.debug("Querying initial state from device")
-        await self.send_raw_command(ToneWinnerCommands.POWER_QUERY)
+        await self.send_raw_command(TonewinnerCommands.POWER_QUERY)
         await asyncio.sleep(0.1)  # Wait for response
-        await self.send_raw_command(ToneWinnerCommands.VOLUME_QUERY)
+        await self.send_raw_command(TonewinnerCommands.VOLUME_QUERY)
         await asyncio.sleep(0.1)  # Wait for response
-        await self.send_raw_command(ToneWinnerCommands.MUTE_QUERY)
+        await self.send_raw_command(TonewinnerCommands.MUTE_QUERY)
         await asyncio.sleep(0.1)  # Wait for response
-        await self.send_raw_command(ToneWinnerCommands.INPUT_QUERY)
+        await self.send_raw_command(TonewinnerCommands.INPUT_QUERY)
         await asyncio.sleep(0.1)  # Wait for response
-        await self.send_raw_command(ToneWinnerCommands.MODE_QUERY)
+        await self.send_raw_command(TonewinnerCommands.MODE_QUERY)
 
     async def connect(self):
         """Establish serial connection."""
@@ -235,7 +235,7 @@ class TonewinnerMediaPlayer(MediaPlayerEntity):
             loop = asyncio.get_event_loop()
             connection = serial_asyncio_fast.create_serial_connection(
                 loop,
-                lambda: TonewinnerProtocol(self),
+                lambda: TonewinnerSerialProtocol(self),
                 self.port,
                 baudrate=self.baud,
                 bytesize=SERIAL_CONFIG["bytesize"],
@@ -262,7 +262,7 @@ class TonewinnerMediaPlayer(MediaPlayerEntity):
         _LOGGER.debug("RX: %s", response)
 
         # Parse power status
-        if power := ToneWinnerProtocol.parse_power_status(response):
+        if power := TonewinnerProtocol.parse_power_status(response):
             new_state = MediaPlayerState.ON if power else MediaPlayerState.OFF
             _LOGGER.debug("State updated: %s", new_state)
             self._attr_state = new_state
@@ -270,23 +270,23 @@ class TonewinnerMediaPlayer(MediaPlayerEntity):
                 self._attr_source = None
 
         # Parse volume (device returns 0-80, convert to 0.0-1.0 for HA)
-        if volume := ToneWinnerProtocol.parse_volume_status(response):
+        if volume := TonewinnerProtocol.parse_volume_status(response):
             ha_volume = volume / 80.0
             _LOGGER.debug("Volume updated: device=%.2f, ha=%.2f", volume, ha_volume)
             self._attr_volume_level = ha_volume
 
         # Parse mute status
-        if mute := ToneWinnerProtocol.parse_mute_status(response):
+        if mute := TonewinnerProtocol.parse_mute_status(response):
             _LOGGER.debug("Mute updated: %s", mute)
             self._attr_is_volume_muted = mute
 
         # Parse input source
-        if source := ToneWinnerProtocol.parse_input_source(response):
+        if source := TonewinnerProtocol.parse_input_source(response):
             _LOGGER.debug("Source updated: %s", source)
             self._attr_source = source
 
         # Parse sound mode
-        if mode := ToneWinnerProtocol.parse_sound_mode(response):
+        if mode := TonewinnerProtocol.parse_sound_mode(response):
             _LOGGER.debug("Sound mode updated: %s", mode)
             self._attr_sound_mode = mode
 
@@ -312,7 +312,7 @@ class TonewinnerMediaPlayer(MediaPlayerEntity):
         else:
             # Wrap in protocol markers if not already present
             if not command.startswith("##"):
-                command = ToneWinnerProtocol.build_command(command)
+                command = TonewinnerProtocol.build_command(command)
             data = command.encode("ascii")
 
         _LOGGER.debug("TX bytes: %s", data.hex())
@@ -324,12 +324,12 @@ class TonewinnerMediaPlayer(MediaPlayerEntity):
     async def async_turn_on(self):
         """Turn the media player on."""
         _LOGGER.debug("Turning on receiver")
-        await self.send_raw_command(ToneWinnerCommands.POWER_ON)
+        await self.send_raw_command(TonewinnerCommands.POWER_ON)
 
     async def async_turn_off(self):
         """Turn the media player off."""
         _LOGGER.debug("Turning off receiver")
-        await self.send_raw_command(ToneWinnerCommands.POWER_OFF)
+        await self.send_raw_command(TonewinnerCommands.POWER_OFF)
 
     async def async_set_volume_level(self, volume: float) -> None:
         """Set volume level (HA 0.0-1.0, device 0-80)."""
@@ -342,16 +342,16 @@ class TonewinnerMediaPlayer(MediaPlayerEntity):
     async def async_volume_up(self):
         """Volume up media player."""
         _LOGGER.debug("Volume up")
-        await self.send_raw_command(ToneWinnerCommands.VOLUME_UP)
+        await self.send_raw_command(TonewinnerCommands.VOLUME_UP)
 
     async def async_volume_down(self):
         """Volume down media player."""
         _LOGGER.debug("Volume down")
-        await self.send_raw_command(ToneWinnerCommands.VOLUME_DOWN)
+        await self.send_raw_command(TonewinnerCommands.VOLUME_DOWN)
 
     async def async_mute_volume(self, mute: bool) -> None:
         """Mute or unmute media player."""
-        command = ToneWinnerCommands.MUTE_ON if mute else ToneWinnerCommands.MUTE_OFF
+        command = TonewinnerCommands.MUTE_ON if mute else TonewinnerCommands.MUTE_OFF
         _LOGGER.debug("Setting mute: %s", mute)
         await self.send_raw_command(command)
         self.async_write_ha_state()
@@ -369,7 +369,7 @@ class TonewinnerMediaPlayer(MediaPlayerEntity):
         """Select sound mode."""
         if sound_mode not in SOUND_MODES:
             raise ValueError(f"Unknown sound mode: {sound_mode}")
-        command = f"{ToneWinnerCommands.MODE_PREFIX} {SOUND_MODES[sound_mode]}"
+        command = f"{TonewinnerCommands.MODE_PREFIX} {SOUND_MODES[sound_mode]}"
         _LOGGER.debug("Selecting sound mode: %s (command: %s)", sound_mode, command)
         await self.send_raw_command(command)
         self.async_write_ha_state()

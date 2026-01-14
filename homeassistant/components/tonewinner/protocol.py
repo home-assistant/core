@@ -1,4 +1,4 @@
-"""ToneWinner RS232 Protocol Handler."""
+"""Tonewinner RS232 Protocol Handler."""
 
 from __future__ import annotations
 
@@ -15,7 +15,7 @@ RESPONSE_OK = "OK"
 RESPONSE_ERROR = "ERR"
 
 # Device Categories
-# These commands should work across all ToneWinner AV devices (AT-500, AD-7300, etc.)
+# These commands should work across all Tonewinner AV devices (AT-500, AD-7300, etc.)
 
 
 @dataclass
@@ -26,8 +26,8 @@ class Mode:
     label: str
 
 
-class ToneWinnerCommands:
-    """All available RS232 commands for ToneWinner devices."""
+class TonewinnerCommands:
+    """All available RS232 commands for Tonewinner devices."""
 
     # Power Commands
     POWER_ON = "POWER ON"
@@ -160,8 +160,8 @@ class ToneWinnerCommands:
     # PRESET_SAVE_3 = "PRM13"
 
 
-class ToneWinnerProtocol:
-    """Protocol handler for ToneWinner RS232 communication."""
+class TonewinnerProtocol:
+    """Protocol handler for Tonewinner RS232 communication."""
 
     @staticmethod
     def build_command(command_code: str) -> str:
@@ -187,7 +187,7 @@ class ToneWinnerProtocol:
         # Convert 0-100 to 0-80 hex
         vol_value = int((volume_level / 100) * 128)
         vol_hex = f"{vol_value}"
-        return f"{ToneWinnerCommands.VOLUME_SET_PREFIX} {vol_hex}"
+        return f"{TonewinnerCommands.VOLUME_SET_PREFIX} {vol_hex}"
 
     @staticmethod
     def parse_power_status(response: str) -> bool | None:
@@ -269,7 +269,7 @@ class ToneWinnerProtocol:
 
         mode_code = response[5:]
         _LOGGER.debug("Sound mode code: '%s'", mode_code)
-        mode = ToneWinnerCommands.MODES.get(mode_code)
+        mode = TonewinnerCommands.MODES.get(mode_code)
         result = mode.label if mode else f"Unknown ({mode_code})"
         _LOGGER.debug("Sound mode parsed: %s", result)
         return result
