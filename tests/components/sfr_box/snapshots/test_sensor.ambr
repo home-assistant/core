@@ -22,6 +22,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'DSL attenuation down',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.SIGNAL_STRENGTH: 'signal_strength'>,
@@ -75,6 +76,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'DSL attenuation up',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.SIGNAL_STRENGTH: 'signal_strength'>,
@@ -126,6 +128,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'DSL connect count',
     'options': dict({
     }),
     'original_device_class': None,
@@ -175,6 +178,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'DSL CRC error count',
     'options': dict({
     }),
     'original_device_class': None,
@@ -224,6 +228,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'DSL line mode',
     'options': dict({
     }),
     'original_device_class': None,
@@ -280,6 +285,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'DSL line status',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -338,6 +344,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'DSL noise down',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.SIGNAL_STRENGTH: 'signal_strength'>,
@@ -391,6 +398,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'DSL noise up',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.SIGNAL_STRENGTH: 'signal_strength'>,
@@ -444,6 +452,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'DSL rate down',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -500,6 +509,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'DSL rate up',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -566,6 +576,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'DSL training',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -632,6 +643,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Network infrastructure',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -688,6 +700,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -744,6 +757,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Voltage',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -805,6 +819,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'WAN mode',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,

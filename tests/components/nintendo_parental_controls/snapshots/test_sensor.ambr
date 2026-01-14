@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_sensor[sensor.home_assistant_test_ha_gamer_used_screen_time-entry]
+# name: test_sensor[sensor.home_assistant_test_extended_screen_time-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -14,7 +14,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.home_assistant_test_ha_gamer_used_screen_time',
+    'entity_id': 'sensor.home_assistant_test_extended_screen_time',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -22,6 +22,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Extended screen time',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -29,39 +30,30 @@
     }),
     'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
     'original_icon': None,
-    'original_name': 'HA Gamer used screen time',
+    'original_name': 'Extended screen time',
     'platform': 'nintendo_parental_controls',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': <NintendoParentalControlsSensor.PLAYER_PLAYING_TIME: 'player_playing_time'>,
-    'unique_id': 'testplayerid_player_playing_time',
+    'translation_key': <NintendoParentalControlsSensor.TIME_EXTENDED: 'time_extended'>,
+    'unique_id': 'testdevid_time_extended',
     'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
   })
 # ---
-# name: test_sensor[sensor.home_assistant_test_ha_gamer_used_screen_time-state]
+# name: test_sensor[sensor.home_assistant_test_extended_screen_time-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'duration',
-      'entity_picture': 'http://localhost/image.png',
-      'friendly_name': 'Home Assistant Test HA Gamer used screen time',
-      'games': list([
-        dict({
-          'image': 'http://localhost/medium.png',
-          'playing_time': 15,
-          'shop': 'http://localhost/shop-test-game-name',
-          'title': 'Test Game Name',
-        }),
-      ]),
+      'friendly_name': 'Home Assistant Test Extended screen time',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.home_assistant_test_ha_gamer_used_screen_time',
+    'entity_id': 'sensor.home_assistant_test_extended_screen_time',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '110',
+    'state': '30',
   })
 # ---
 # name: test_sensor[sensor.home_assistant_test_screen_time_remaining-entry]
@@ -87,6 +79,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Screen time remaining',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -143,6 +136,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Used screen time',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,

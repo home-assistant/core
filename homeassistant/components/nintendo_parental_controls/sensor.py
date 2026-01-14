@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass
+from datetime import datetime
 from enum import StrEnum
 from typing import Any
 
@@ -32,13 +33,15 @@ class NintendoParentalControlsSensor(StrEnum):
     PLAYING_TIME = "playing_time"
     PLAYER_PLAYING_TIME = "player_playing_time"
     TIME_REMAINING = "time_remaining"
+    TIME_EXTENDED = "time_extended"
 
 
 @dataclass(kw_only=True, frozen=True)
 class NintendoParentalControlsDeviceSensorEntityDescription(SensorEntityDescription):
     """Description for Nintendo parental controls device sensor entities."""
 
-    value_fn: Callable[[Device], int | float | None]
+    value_fn: Callable[[Device], datetime | int | float | None]
+    available_fn: Callable[[Device], bool] = lambda device: True
 
 
 @dataclass(kw_only=True, frozen=True)
@@ -66,6 +69,15 @@ DEVICE_SENSOR_DESCRIPTIONS: tuple[
         device_class=SensorDeviceClass.DURATION,
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda device: device.today_time_remaining,
+    ),
+    NintendoParentalControlsSensorEntityDescription(
+        key=NintendoParentalControlsSensor.TIME_EXTENDED,
+        translation_key=NintendoParentalControlsSensor.TIME_EXTENDED,
+        native_unit_of_measurement=UnitOfTime.MINUTES,
+        device_class=SensorDeviceClass.DURATION,
+        state_class=SensorStateClass.MEASUREMENT,
+        value_fn=lambda device: device.extra_playing_time,
+        available_fn=lambda device: device.extra_playing_time is not None,
     ),
 )
 
@@ -120,9 +132,14 @@ class NintendoParentalControlsDeviceSensorEntity(NintendoDevice, SensorEntity):
         self.entity_description = description
 
     @property
-    def native_value(self) -> int | float | None:
+    def native_value(self) -> datetime | int | float | None:
         """Return the native value."""
         return self.entity_description.value_fn(self._device)
+
+    @property
+    def available(self) -> bool:
+        """Return if the sensor is available."""
+        return super().available and self.entity_description.available_fn(self._device)
 
 
 class NintendoParentalControlsPlayerSensorEntity(NintendoDevice, SensorEntity):

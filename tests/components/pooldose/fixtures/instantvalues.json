@@ -18,7 +18,7 @@
     },
     "flow_rate": {
       "value": 150,
-      "unit": "l/s"
+      "unit": "L/s"
     },
     "ph_type_dosing": {
       "value": "alcalyne",
@@ -198,7 +198,28 @@
   },
   "select": {
     "water_meter_unit": {
-      "value": "m³"
+      "value": "m3"
+    },
+    "flow_rate_unit": {
+      "value": "L/s"
+    },
+    "ph_type_dosing_set": {
+      "value": "acid"
+    },
+    "ph_type_dosing_method": {
+      "value": "proportional"
+    },
+    "orp_type_dosing_set": {
+      "value": "low"
+    },
+    "orp_type_dosing_method": {
+      "value": "on_off"
+    },
+    "cl_type_dosing_set": {
+      "value": "high"
+    },
+    "cl_type_dosing_method": {
+      "value": "timed"
     }
   }
 }

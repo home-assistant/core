@@ -1,6 +1,7 @@
 """Test media player trigger."""
 
 from collections.abc import Generator
+from typing import Any
 from unittest.mock import patch
 
 import pytest
@@ -10,7 +11,7 @@ from homeassistant.const import ATTR_LABEL_ID, CONF_ENTITY_ID
 from homeassistant.core import HomeAssistant, ServiceCall
 
 from tests.components import (
-    StateDescription,
+    TriggerStateDescription,
     arm_trigger,
     parametrize_target_entities,
     parametrize_trigger_states,
@@ -65,7 +66,7 @@ async def test_media_player_triggers_gated_by_labs_flag(
     parametrize_target_entities("media_player"),
 )
 @pytest.mark.parametrize(
-    ("trigger", "states"),
+    ("trigger", "trigger_options", "states"),
     [
         *parametrize_trigger_states(
             trigger="media_player.stopped_playing",
@@ -90,7 +91,8 @@ async def test_media_player_state_trigger_behavior_any(
     entity_id: str,
     entities_in_target: int,
     trigger: str,
-    states: list[StateDescription],
+    trigger_options: dict[str, Any],
+    states: list[TriggerStateDescription],
 ) -> None:
     """Test that the media player state trigger fires when any media player state changes to a specific state."""
     other_entity_ids = set(target_media_players) - {entity_id}
@@ -125,7 +127,7 @@ async def test_media_player_state_trigger_behavior_any(
     parametrize_target_entities("media_player"),
 )
 @pytest.mark.parametrize(
-    ("trigger", "states"),
+    ("trigger", "trigger_options", "states"),
     [
         *parametrize_trigger_states(
             trigger="media_player.stopped_playing",
@@ -150,7 +152,8 @@ async def test_media_player_state_trigger_behavior_first(
     entity_id: str,
     entities_in_target: int,
     trigger: str,
-    states: list[StateDescription],
+    trigger_options: dict[str, Any],
+    states: list[TriggerStateDescription],
 ) -> None:
     """Test that the media player state trigger fires when the first media player changes to a specific state."""
     other_entity_ids = set(target_media_players) - {entity_id}
@@ -184,7 +187,7 @@ async def test_media_player_state_trigger_behavior_first(
     parametrize_target_entities("media_player"),
 )
 @pytest.mark.parametrize(
-    ("trigger", "states"),
+    ("trigger", "trigger_options", "states"),
     [
         *parametrize_trigger_states(
             trigger="media_player.stopped_playing",
@@ -209,7 +212,8 @@ async def test_media_player_state_trigger_behavior_last(
     entity_id: str,
     entities_in_target: int,
     trigger: str,
-    states: list[StateDescription],
+    trigger_options: dict[str, Any],
+    states: list[TriggerStateDescription],
 ) -> None:
     """Test that the media player state trigger fires when the last media player changes to a specific state."""
     other_entity_ids = set(target_media_players) - {entity_id}

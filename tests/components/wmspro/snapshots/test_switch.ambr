@@ -1,0 +1,46 @@
+# serializer version: 1
+# name: test_switch_device
+  DeviceRegistryEntrySnapshot({
+    'area_id': 'terasse',
+    'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
+    'configuration_url': 'http://webcontrol/control',
+    'connections': set({
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'wmspro',
+        '499120',
+      ),
+    }),
+    'labels': set({
+    }),
+    'manufacturer': 'WAREMA Renkhoff SE',
+    'model': 'Switch',
+    'model_id': None,
+    'name': 'HEIZUNG LINKS',
+    'name_by_user': None,
+    'primary_config_entry': <ANY>,
+    'serial_number': '499120',
+    'sw_version': None,
+    'via_device_id': <ANY>,
+  })
+# ---
+# name: test_switch_update
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Data provided by WMS WebControl pro API',
+      'friendly_name': 'HEIZUNG LINKS',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.heizung_links',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---

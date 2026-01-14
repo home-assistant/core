@@ -1,6 +1,7 @@
 """Test device_tracker trigger."""
 
 from collections.abc import Generator
+from typing import Any
 from unittest.mock import patch
 
 import pytest
@@ -14,7 +15,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, ServiceCall
 
 from tests.components import (
-    StateDescription,
+    TriggerStateDescription,
     arm_trigger,
     parametrize_target_entities,
     parametrize_trigger_states,
@@ -69,7 +70,7 @@ async def test_device_tracker_triggers_gated_by_labs_flag(
     parametrize_target_entities("device_tracker"),
 )
 @pytest.mark.parametrize(
-    ("trigger", "states"),
+    ("trigger", "trigger_options", "states"),
     [
         *parametrize_trigger_states(
             trigger="device_tracker.entered_home",
@@ -91,7 +92,8 @@ async def test_device_tracker_home_trigger_behavior_any(
     entity_id: str,
     entities_in_target: int,
     trigger: str,
-    states: list[StateDescription],
+    trigger_options: dict[str, Any],
+    states: list[TriggerStateDescription],
 ) -> None:
     """Test that the device_tracker home triggers when any device_tracker changes to a specific state."""
     other_entity_ids = set(target_device_trackers) - {entity_id}
@@ -126,7 +128,7 @@ async def test_device_tracker_home_trigger_behavior_any(
     parametrize_target_entities("device_tracker"),
 )
 @pytest.mark.parametrize(
-    ("trigger", "states"),
+    ("trigger", "trigger_options", "states"),
     [
         *parametrize_trigger_states(
             trigger="device_tracker.entered_home",
@@ -148,7 +150,8 @@ async def test_device_tracker_state_trigger_behavior_first(
     entity_id: str,
     entities_in_target: int,
     trigger: str,
-    states: list[StateDescription],
+    trigger_options: dict[str, Any],
+    states: list[TriggerStateDescription],
 ) -> None:
     """Test that the device_tracker home triggers when the first device_tracker changes to a specific state."""
     other_entity_ids = set(target_device_trackers) - {entity_id}
@@ -182,7 +185,7 @@ async def test_device_tracker_state_trigger_behavior_first(
     parametrize_target_entities("device_tracker"),
 )
 @pytest.mark.parametrize(
-    ("trigger", "states"),
+    ("trigger", "trigger_options", "states"),
     [
         *parametrize_trigger_states(
             trigger="device_tracker.entered_home",
@@ -204,7 +207,8 @@ async def test_device_tracker_state_trigger_behavior_last(
     entity_id: str,
     entities_in_target: int,
     trigger: str,
-    states: list[StateDescription],
+    trigger_options: dict[str, Any],
+    states: list[TriggerStateDescription],
 ) -> None:
     """Test that the device_tracker home triggers when the last device_tracker changes to a specific state."""
     other_entity_ids = set(target_device_trackers) - {entity_id}
