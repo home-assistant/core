@@ -694,7 +694,6 @@ debugpy==1.8.17
 deebot-client==17.0.1
 
 # homeassistant.components.ihc
-# homeassistant.components.namecheapdns
 # homeassistant.components.ohmconnect
 # homeassistant.components.sonos
 defusedxml==0.7.1
@@ -1735,7 +1734,7 @@ pyfibaro==0.8.3
 pyfido==2.1.2
 
 # homeassistant.components.firefly_iii
-pyfirefly==0.1.10
+pyfirefly==0.1.11
 
 # homeassistant.components.fireservicerota
 pyfireservicerota==0.0.46
@@ -2497,7 +2496,7 @@ temperusb==1.6.1
 # homeassistant.components.tesla_fleet
 # homeassistant.components.teslemetry
 # homeassistant.components.tessie
-tesla-fleet-api==1.3.2
+tesla-fleet-api==1.4.2
 
 # homeassistant.components.powerwall
 tesla-powerwall==0.5.2
