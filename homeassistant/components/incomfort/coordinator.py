@@ -99,7 +99,6 @@ class InComfortDataCoordinator(DataUpdateCoordinator[InComfortData]):
         )
         self.client = client
         self.unique_id = config_entry.unique_id
-        self.incomfort_data: InComfortData | None = None
 
     async def _async_setup(self) -> None:
         """Set up the Incomfort coordinator."""
