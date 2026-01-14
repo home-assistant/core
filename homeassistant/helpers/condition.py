@@ -351,7 +351,7 @@ class EntityStateConditionBase(Condition):
         if TYPE_CHECKING:
             assert config.target
             assert config.options
-        self._target = config.target
+        self._target_selection = TargetSelection(config.target)
         self._behavior = config.options[ATTR_BEHAVIOR]
 
     def entity_filter(self, entities: set[str]) -> set[str]:
@@ -382,9 +382,8 @@ class EntityStateConditionBase(Condition):
 
         def test_state(**kwargs: Unpack[ConditionCheckParams]) -> bool:
             """Test state condition."""
-            target_selection = TargetSelection(self._target)
             targeted_entities = async_extract_referenced_entity_ids(
-                self._hass, target_selection, expand_group=False
+                self._hass, self._target_selection, expand_group=False
             )
             referenced_entity_ids = targeted_entities.referenced.union(
                 targeted_entities.indirectly_referenced

@@ -785,7 +785,6 @@ decora-wifi==1.4
 deebot-client==17.0.1
 
 # homeassistant.components.ihc
-# homeassistant.components.namecheapdns
 # homeassistant.components.ohmconnect
 # homeassistant.components.sonos
 defusedxml==0.7.1
@@ -1011,7 +1010,7 @@ freebox-api==1.2.2
 freesms==0.2.0
 
 # homeassistant.components.fressnapf_tracker
-fressnapftracker==0.2.0
+fressnapftracker==0.2.1
 
 # homeassistant.components.fritz
 # homeassistant.components.fritzbox_callmonitor
@@ -2022,7 +2021,7 @@ pyegps==0.2.5
 pyemoncms==0.1.3
 
 # homeassistant.components.enphase_envoy
-pyenphase==2.4.2
+pyenphase==2.4.3
 
 # homeassistant.components.envisalink
 pyenvisalink==4.7
@@ -2046,7 +2045,7 @@ pyfibaro==0.8.3
 pyfido==2.1.2
 
 # homeassistant.components.firefly_iii
-pyfirefly==0.1.10
+pyfirefly==0.1.11
 
 # homeassistant.components.fireservicerota
 pyfireservicerota==0.0.46
@@ -2201,6 +2200,9 @@ pymediaroom==0.6.5.4
 # homeassistant.components.meteoclimatic
 pymeteoclimatic==0.1.0
 
+# homeassistant.components.assist_pipeline
+pymicro-vad==1.0.1
+
 # homeassistant.components.miele
 pymiele==0.6.1
 
@@ -2318,7 +2320,7 @@ pyplaato==0.0.19
 pypoint==3.0.0
 
 # homeassistant.components.portainer
-pyportainer==1.0.22
+pyportainer==1.0.23
 
 # homeassistant.components.probe_plus
 pyprobeplus==1.1.2
@@ -2407,9 +2409,6 @@ pysiaalarm==3.1.1
 
 # homeassistant.components.signal_messenger
 pysignalclirestapi==0.3.24
-
-# homeassistant.components.assist_pipeline
-pysilero-vad==3.2.0
 
 # homeassistant.components.sky_hub
 pyskyqhub==0.1.4
@@ -2708,7 +2707,7 @@ qbittorrent-api==2024.9.67
 qbusmqttapi==1.4.2
 
 # homeassistant.components.qingping
-qingping-ble==1.0.1
+qingping-ble==1.1.0
 
 # homeassistant.components.qnap
 qnapstats==0.4.0
@@ -2991,7 +2990,7 @@ temperusb==1.6.1
 # homeassistant.components.tesla_fleet
 # homeassistant.components.teslemetry
 # homeassistant.components.tessie
-tesla-fleet-api==1.3.2
+tesla-fleet-api==1.4.2
 
 # homeassistant.components.powerwall
 tesla-powerwall==0.5.2
@@ -3146,7 +3145,7 @@ visionpluspython==1.0.2
 vobject==0.9.9
 
 # homeassistant.components.voip
-voip-utils==0.3.4
+voip-utils==0.3.5
 
 # homeassistant.components.volkszaehler
 volkszaehler==0.4.0
@@ -3219,7 +3218,7 @@ wyoming==1.7.2
 xiaomi-ble==1.4.1
 
 # homeassistant.components.knx
-xknx==3.13.0
+xknx==3.14.0
 
 # homeassistant.components.knx
 xknxproject==3.8.2
@@ -3292,7 +3291,7 @@ ziggo-mediabox-xl==1.1.0
 zm-py==0.5.4
 
 # homeassistant.components.zwave_js
-zwave-js-server-python==0.67.1
+zwave-js-server-python==0.68.0
 
 # homeassistant.components.zwave_me
 zwave-me-ws==0.4.3
