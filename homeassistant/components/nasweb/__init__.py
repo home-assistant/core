@@ -21,6 +21,7 @@ from .nasweb_data import NASwebData
 
 PLATFORMS: list[Platform] = [
     Platform.ALARM_CONTROL_PANEL,
+    Platform.CLIMATE,
     Platform.SENSOR,
     Platform.SWITCH,
 ]

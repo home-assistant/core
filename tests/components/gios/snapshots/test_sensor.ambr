@@ -29,6 +29,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Air quality index',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -89,6 +90,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Benzene',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -145,6 +147,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Carbon monoxide',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -201,6 +204,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Nitrogen dioxide',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -265,6 +269,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Nitrogen dioxide index',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -325,6 +330,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Nitrogen monoxide',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -382,6 +388,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Nitrogen oxides',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -438,6 +445,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Ozone',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -502,6 +510,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Ozone index',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -562,6 +571,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'PM10',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -626,6 +636,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'PM10 index',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -686,6 +697,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'PM2.5',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -750,6 +762,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'PM2.5 index',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -810,6 +823,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Sulphur dioxide',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -874,6 +888,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Sulphur dioxide index',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,

@@ -1,5 +1,7 @@
 """Tests for the SmartThings integration."""
 
+import sys
+import types
 from typing import Any
 from unittest.mock import AsyncMock
 
@@ -90,3 +92,38 @@ async def trigger_health_update(
         if call[0][0] == device_id:
             call[0][1](event)
     await hass.async_block_till_done()
+
+
+def ensure_haffmpeg_stubs() -> None:
+    """Ensure haffmpeg stubs are available for SmartThings tests."""
+    if "haffmpeg" in sys.modules:
+        return
+
+    haffmpeg_module = types.ModuleType("haffmpeg")
+    haffmpeg_core_module = types.ModuleType("haffmpeg.core")
+    haffmpeg_tools_module = types.ModuleType("haffmpeg.tools")
+
+    class _StubHAFFmpeg: ...
+
+    class _StubFFVersion:
+        def __init__(self, bin_path: str | None = None) -> None:
+            self.bin_path = bin_path
+
+        async def get_version(self) -> str:
+            return "4.0.0"
+
+    class _StubImageFrame: ...
+
+    haffmpeg_core_module.HAFFmpeg = _StubHAFFmpeg
+    haffmpeg_tools_module.IMAGE_JPEG = b""
+    haffmpeg_tools_module.FFVersion = _StubFFVersion
+    haffmpeg_tools_module.ImageFrame = _StubImageFrame
+    haffmpeg_module.core = haffmpeg_core_module
+    haffmpeg_module.tools = haffmpeg_tools_module
+
+    sys.modules["haffmpeg"] = haffmpeg_module
+    sys.modules["haffmpeg.core"] = haffmpeg_core_module
+    sys.modules["haffmpeg.tools"] = haffmpeg_tools_module
+
+
+ensure_haffmpeg_stubs()

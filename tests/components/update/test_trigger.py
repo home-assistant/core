@@ -11,7 +11,7 @@ from homeassistant.const import ATTR_LABEL_ID, CONF_ENTITY_ID, STATE_OFF, STATE_
 from homeassistant.core import HomeAssistant, ServiceCall
 
 from tests.components import (
-    StateDescription,
+    TriggerStateDescription,
     arm_trigger,
     parametrize_target_entities,
     parametrize_trigger_states,
@@ -84,7 +84,7 @@ async def test_update_state_trigger_behavior_any(
     entities_in_target: int,
     trigger: str,
     trigger_options: dict[str, Any],
-    states: list[StateDescription],
+    states: list[TriggerStateDescription],
 ) -> None:
     """Test that the update state trigger fires when any update state changes to a specific state."""
     other_entity_ids = set(target_updates) - {entity_id}
@@ -137,7 +137,7 @@ async def test_update_state_trigger_behavior_first(
     entities_in_target: int,
     trigger: str,
     trigger_options: dict[str, Any],
-    states: list[StateDescription],
+    states: list[TriggerStateDescription],
 ) -> None:
     """Test that the update state trigger fires when the first update changes to a specific state."""
     other_entity_ids = set(target_updates) - {entity_id}
@@ -189,7 +189,7 @@ async def test_update_state_trigger_behavior_last(
     entities_in_target: int,
     trigger: str,
     trigger_options: dict[str, Any],
-    states: list[StateDescription],
+    states: list[TriggerStateDescription],
 ) -> None:
     """Test that the update state trigger fires when the last update changes to a specific state."""
     other_entity_ids = set(target_updates) - {entity_id}
