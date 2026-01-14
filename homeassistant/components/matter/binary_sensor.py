@@ -490,7 +490,7 @@ DISCOVERY_SCHEMAS = [
         platform=Platform.BINARY_SENSOR,
         entity_description=MatterBinarySensorEntityDescription(
             key="WindowCoveringConfigStatusOperational",
-            translation_key="window_covering_config_status_operational",
+            translation_key="config_status",
             device_class=BinarySensorDeviceClass.PROBLEM,
             entity_category=EntityCategory.DIAGNOSTIC,
             # ConfigStatus is a bitmap – return True (problem) when the 'Operational' bit is NOT set

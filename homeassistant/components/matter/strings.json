@@ -56,6 +56,9 @@
       "boost_state": {
         "name": "Boost state"
       },
+      "config_status": {
+        "name": "Config status"
+      },
       "dishwasher_alarm_inflow": {
         "name": "Inflow alarm"
       },

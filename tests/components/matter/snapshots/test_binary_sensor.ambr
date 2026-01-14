@@ -372,7 +372,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'window_covering_config_status_operational',
+    'translation_key': 'config_status',
     'unique_id': '00000000000004D2-0000000000000094-MatterNodeDevice-1-WindowCoveringConfigStatusOperational-258-7',
     'unit_of_measurement': None,
   })
@@ -1595,7 +1595,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'window_covering_config_status_operational',
+    'translation_key': 'config_status',
     'unique_id': '00000000000004D2-0000000000000032-MatterNodeDevice-1-WindowCoveringConfigStatusOperational-258-7',
     'unit_of_measurement': None,
   })
@@ -1644,7 +1644,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'window_covering_config_status_operational',
+    'translation_key': 'config_status',
     'unique_id': '00000000000004D2-0000000000000032-MatterNodeDevice-1-WindowCoveringConfigStatusOperational-258-7',
     'unit_of_measurement': None,
   })
@@ -1693,7 +1693,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'window_covering_config_status_operational',
+    'translation_key': 'config_status',
     'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-WindowCoveringConfigStatusOperational-258-7',
     'unit_of_measurement': None,
   })
@@ -1742,7 +1742,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'window_covering_config_status_operational',
+    'translation_key': 'config_status',
     'unique_id': '00000000000004D2-0000000000000032-MatterNodeDevice-1-WindowCoveringConfigStatusOperational-258-7',
     'unit_of_measurement': None,
   })
@@ -1791,7 +1791,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'window_covering_config_status_operational',
+    'translation_key': 'config_status',
     'unique_id': '00000000000004D2-0000000000000032-MatterNodeDevice-1-WindowCoveringConfigStatusOperational-258-7',
     'unit_of_measurement': None,
   })
@@ -1840,7 +1840,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'window_covering_config_status_operational',
+    'translation_key': 'config_status',
     'unique_id': '00000000000004D2-000000000000007A-MatterNodeDevice-1-WindowCoveringConfigStatusOperational-258-7',
     'unit_of_measurement': None,
   })
