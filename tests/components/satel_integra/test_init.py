@@ -12,6 +12,7 @@ from homeassistant.components.satel_integra.const import DOMAIN
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.config_entries import ConfigSubentry
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.device_registry import DeviceRegistry
 from homeassistant.helpers.entity_registry import EntityRegistry
 
 from . import (
@@ -120,3 +121,20 @@ async def test_unique_id_migration_from_single_config(
     assert entity.unique_id == new_id
 
     assert entity == snapshot
+
+
+async def test_parent_device_exists(
+    hass: HomeAssistant,
+    snapshot: SnapshotAssertion,
+    mock_satel: AsyncMock,
+    device_registry: DeviceRegistry,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test that a parent device is created for the alarm panel."""
+
+    await setup_integration(hass, mock_config_entry)
+
+    device_entry = device_registry.async_get_device(
+        identifiers={(DOMAIN, MOCK_ENTRY_ID)}
+    )
+    assert device_entry == snapshot(name="parent-device")
