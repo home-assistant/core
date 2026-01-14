@@ -3,7 +3,7 @@
   "name": "SmartThings",
   "codeowners": ["@joostlek"],
   "config_flow": true,
-  "dependencies": ["application_credentials"],
+  "dependencies": ["application_credentials", "http", "ffmpeg"],
   "dhcp": [
     {
       "hostname": "st*",
