@@ -511,6 +511,7 @@ class SimpliSafe:
                 await self._websocket_reconnect_task
             except asyncio.CancelledError:
                 LOGGER.debug("Websocket reconnection task successfully canceled")
+            finally:
                 self._websocket_reconnect_task = None
 
             assert self._api.websocket
@@ -658,8 +659,8 @@ class SimpliSafe:
             # Any other SimplipyError not caught per-system
             raise UpdateFailed(f"SimpliSafe error while updating: {err}") from err
         else:
-            # Restart websocket only if last update succeeded
-            if self.coordinator and self.coordinator.last_update_success:
+            # Restart websocket only if last update failed
+            if self.coordinator and not self.coordinator.last_update_success:
                 if (
                     not self._websocket_reconnect_task
                     or self._websocket_reconnect_task.done()

@@ -1,10 +1,15 @@
 """Define tests for SimpliSafe setup."""
 
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
+
+import pytest
+from simplipy.errors import InvalidCredentialsError, RequestError, SimplipyError
 
 from homeassistant.components.simplisafe import DOMAIN
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers.update_coordinator import UpdateFailed
 from homeassistant.setup import async_setup_component
 
 
@@ -48,3 +53,69 @@ async def test_base_station_migration(
 
     assert device_registry.async_get_device(identifiers={old_identifers}) is None
     assert device_registry.async_get_device(identifiers={new_identifiers}) is not None
+
+
+async def _trigger_requesterror_and_refresh(simpli) -> None:
+    """Simulate RequestError on all systems and run coordinator refresh."""
+    for system in simpli.systems.values():
+        system.async_update = AsyncMock(side_effect=RequestError("Connection failed"))
+
+    await simpli.coordinator.async_refresh()
+
+
+@pytest.mark.asyncio
+async def test_requesterror_shuts_down_websocket(
+    hass: HomeAssistant, setup_simplisafe_integration, config_entry
+) -> None:
+    """RequestError cancels the websocket task."""
+    simpli = hass.data[DOMAIN][config_entry.entry_id]
+    await _trigger_requesterror_and_refresh(simpli)
+    # Websocket task should be cancelled
+    assert simpli._websocket_reconnect_task is None
+
+
+@pytest.mark.asyncio
+async def test_websocket_restarts_after_successful_update(
+    hass: HomeAssistant, setup_simplisafe_integration, config_entry
+) -> None:
+    """Websocket loop is restarted after successful update."""
+    simpli = hass.data[DOMAIN][config_entry.entry_id]
+    # First, simulate failure to stop websocket
+    await _trigger_requesterror_and_refresh(simpli)
+    assert simpli._websocket_reconnect_task is None
+
+    # Then patch systems to succeed
+    for system in simpli.systems.values():
+        system.async_update = AsyncMock(return_value=None)
+
+    await simpli.coordinator.async_refresh()
+    assert simpli._websocket_reconnect_task is not None
+
+
+@pytest.mark.asyncio
+async def test_invalid_credentials_raises_configentryauthfailed(
+    hass: HomeAssistant, setup_simplisafe_integration, config_entry
+) -> None:
+    """InvalidCredentialsError triggers ConfigEntryAuthFailed."""
+    simpli = hass.data[DOMAIN][config_entry.entry_id]
+
+    for system in simpli.systems.values():
+        system.async_update = AsyncMock(
+            side_effect=InvalidCredentialsError("Bad token")
+        )
+    await simpli.coordinator.async_refresh()
+    assert isinstance(simpli.coordinator.last_exception, ConfigEntryAuthFailed)
+
+
+@pytest.mark.asyncio
+async def test_simplipyerror_propagates(
+    hass: HomeAssistant, setup_simplisafe_integration, config_entry
+) -> None:
+    """Other SimplipyError exceptions raise UpdateFailed."""
+    simpli = hass.data[DOMAIN][config_entry.entry_id]
+
+    for system in simpli.systems.values():
+        system.async_update = AsyncMock(side_effect=SimplipyError("Some error"))
+
+    await simpli.coordinator.async_refresh()
+    assert isinstance(simpli.coordinator.last_exception, UpdateFailed)

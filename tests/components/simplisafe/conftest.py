@@ -1,6 +1,5 @@
 """Define test fixtures for SimpliSafe."""
 
-from collections.abc import AsyncGenerator
 from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
@@ -98,11 +97,9 @@ def reauth_config_fixture() -> dict[str, str]:
     }
 
 
-@pytest.fixture(name="setup_simplisafe")
-async def setup_simplisafe_fixture(
-    hass: HomeAssistant, api: Mock, config: dict[str, str]
-) -> AsyncGenerator[None]:
-    """Define a fixture to set up SimpliSafe."""
+@pytest.fixture(name="patch_simplisafe_api")
+def patch_simplisafe_api_fixture(api: Mock):
+    """Patch the SimpliSafe API creation methods and websocket loop."""
     with (
         patch(
             "homeassistant.components.simplisafe.config_flow.API.async_from_auth",
@@ -119,14 +116,26 @@ async def setup_simplisafe_fixture(
         patch(
             "homeassistant.components.simplisafe.SimpliSafe._async_start_websocket_loop"
         ),
-        patch(
-            "homeassistant.components.simplisafe.PLATFORMS",
-            [],
-        ),
     ):
-        assert await async_setup_component(hass, DOMAIN, config)
-        await hass.async_block_till_done()
         yield
+
+
+@pytest.fixture(name="setup_simplisafe")
+async def setup_simplisafe_fixture(
+    hass: HomeAssistant, api: Mock, config: dict[str, str], patch_simplisafe_api
+) -> None:
+    """Define a fixture to set up SimpliSafe for config flow tests."""
+    assert await async_setup_component(hass, DOMAIN, config)
+    await hass.async_block_till_done()
+
+
+@pytest.fixture(name="setup_simplisafe_integration")
+async def setup_simplisafe_integration(
+    hass: HomeAssistant, api: Mock, config_entry, patch_simplisafe_api
+) -> None:
+    """Define a fixture to set up SimpliSafe for integration tests."""
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
 
 
 @pytest.fixture(name="sms_config")
