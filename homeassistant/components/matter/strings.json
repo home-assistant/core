@@ -626,7 +626,7 @@
       "name": "Open commissioning window"
     },
     "set_presets": {
-      "description": "Set the preset for a Matter thermostat.",
+      "description": "Sets the preset for a Matter thermostat.",
       "fields": {
         "preset": {
           "description": "The preset mode to set.",
