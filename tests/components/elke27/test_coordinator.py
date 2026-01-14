@@ -3,39 +3,27 @@
 from __future__ import annotations
 
 import asyncio
-from dataclasses import dataclass
+from datetime import UTC, datetime
 from types import SimpleNamespace
 from typing import Any
 
-import pytest
+from elke27_lib.events import (
+    CsmSnapshotUpdated,
+    DomainCsmChanged,
+    TableCsmChanged,
+    UNSET_AT,
+    UNSET_CLASSIFICATION,
+    UNSET_ROUTE,
+    UNSET_SEQ,
+    UNSET_SESSION_ID,
+)
+from elke27_lib.types import CsmSnapshot
 
 from homeassistant.core import HomeAssistant
 
 from homeassistant.components.elke27.const import DOMAIN
-from homeassistant.components.elke27 import coordinator as coordinator_module
 from homeassistant.components.elke27.coordinator import Elke27DataUpdateCoordinator
 from tests.common import MockConfigEntry
-
-
-@dataclass(frozen=True, slots=True)
-class _CsmSnapshot:
-    domain_csms: dict[str, int]
-    table_csms: dict[str, int]
-
-
-class CsmSnapshotUpdated:
-    def __init__(self, snapshot: _CsmSnapshot) -> None:
-        self.snapshot = snapshot
-
-
-class DomainCsmChanged:
-    def __init__(self, domain: str) -> None:
-        self.domain = domain
-
-
-class TableCsmChanged:
-    def __init__(self, domain: str) -> None:
-        self.domain = domain
 
 
 class _FakeHub:
@@ -77,14 +65,6 @@ class _FakeHub:
             self._subscribe_typed(event)
 
 
-@pytest.fixture(autouse=True)
-def _force_fallback_event_matching(monkeypatch: pytest.MonkeyPatch) -> None:
-    """Force fallback matching so test event classes are recognized."""
-    monkeypatch.setattr(coordinator_module, "CsmSnapshotUpdated", None)
-    monkeypatch.setattr(coordinator_module, "DomainCsmChanged", None)
-    monkeypatch.setattr(coordinator_module, "TableCsmChanged", None)
-
-
 async def test_coordinator_subscribes_and_sets_snapshot(hass: HomeAssistant) -> None:
     """Verify the coordinator subscribes and stores the initial snapshot."""
     entry = MockConfigEntry(domain=DOMAIN, data={})
@@ -104,7 +84,17 @@ async def test_domain_csm_change_refreshes_domain(hass: HomeAssistant) -> None:
     coordinator = Elke27DataUpdateCoordinator(hass, hub, entry, debounce_seconds=0)
 
     await coordinator.async_start()
-    hub.emit(DomainCsmChanged("zone"))
+    hub.emit(
+        DomainCsmChanged(
+            kind=DomainCsmChanged.KIND,
+            at=UNSET_AT,
+            seq=UNSET_SEQ,
+            classification=UNSET_CLASSIFICATION,
+            route=UNSET_ROUTE,
+            session_id=UNSET_SESSION_ID,
+            domain="zone",
+        )
+    )
     await hass.async_block_till_done()
 
     assert hub.refresh_domains == ["zone"]
@@ -118,11 +108,28 @@ async def test_csm_snapshot_event_updates_data(hass: HomeAssistant) -> None:
     coordinator = Elke27DataUpdateCoordinator(hass, hub, entry, debounce_seconds=0.05)
 
     await coordinator.async_start()
-    snapshot = _CsmSnapshot({"zone": 2}, {"zone": 11})
-    hub.emit(CsmSnapshotUpdated(snapshot))
+    updated_snapshot = SimpleNamespace(version=2)
+    hub._snapshot = updated_snapshot
+    snapshot_event = CsmSnapshot(
+        domain_csms={"zone": 2},
+        table_csms={"zone": 11},
+        version=2,
+        updated_at=datetime.now(tz=UTC),
+    )
+    hub.emit(
+        CsmSnapshotUpdated(
+            kind=CsmSnapshotUpdated.KIND,
+            at=UNSET_AT,
+            seq=UNSET_SEQ,
+            classification=UNSET_CLASSIFICATION,
+            route=UNSET_ROUTE,
+            session_id=UNSET_SESSION_ID,
+            snapshot=snapshot_event,
+        )
+    )
     await hass.async_block_till_done()
 
-    assert coordinator.data == snapshot
+    assert coordinator.data == updated_snapshot
 
 
 async def test_csm_change_event_coalesces_refresh(hass: HomeAssistant) -> None:
@@ -132,8 +139,28 @@ async def test_csm_change_event_coalesces_refresh(hass: HomeAssistant) -> None:
     coordinator = Elke27DataUpdateCoordinator(hass, hub, entry, debounce_seconds=0.05)
 
     await coordinator.async_start()
-    hub.emit(DomainCsmChanged("zone"))
-    hub.emit(TableCsmChanged("zone"))
+    hub.emit(
+        DomainCsmChanged(
+            kind=DomainCsmChanged.KIND,
+            at=UNSET_AT,
+            seq=UNSET_SEQ,
+            classification=UNSET_CLASSIFICATION,
+            route=UNSET_ROUTE,
+            session_id=UNSET_SESSION_ID,
+            domain="zone",
+        )
+    )
+    hub.emit(
+        TableCsmChanged(
+            kind=TableCsmChanged.KIND,
+            at=UNSET_AT,
+            seq=UNSET_SEQ,
+            classification=UNSET_CLASSIFICATION,
+            route=UNSET_ROUTE,
+            session_id=UNSET_SESSION_ID,
+            domain="zone",
+        )
+    )
 
     await asyncio.sleep(0.1)
     await hass.async_block_till_done()

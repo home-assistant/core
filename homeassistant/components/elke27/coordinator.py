@@ -78,7 +78,7 @@ class Elke27DataUpdateCoordinator(DataUpdateCoordinator[PanelSnapshot]):
     def _process_event(self, event: Any) -> None:
         """Process an event from the hub."""
         if _is_event(event, CsmSnapshotUpdated, "CsmSnapshotUpdated"):
-            self._set_snapshot(getattr(event, "snapshot", None))
+            self._set_snapshot(self._hub.get_snapshot())
             return
         if _is_event(event, DomainCsmChanged, "DomainCsmChanged"):
             domain = getattr(event, "domain", None)
@@ -90,7 +90,7 @@ class Elke27DataUpdateCoordinator(DataUpdateCoordinator[PanelSnapshot]):
             if domain:
                 self._queue_domain_refresh({str(domain)})
             return
-        _LOGGER.debug("Unhandled event received: %s", event)
+        self._set_snapshot(self._hub.get_snapshot())
 
     def _queue_domain_refresh(self, domains: Iterable[str]) -> None:
         """Queue a refresh for the given domains and debounce updates."""
