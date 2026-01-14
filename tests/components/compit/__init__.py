@@ -26,7 +26,10 @@ def snapshot_compit_entities(
     platform: Platform,
 ) -> None:
     """Snapshot Compit entities."""
-    entities = hass.states.async_all(platform)
+    entities = sorted(
+        hass.states.async_all(platform),
+        key=lambda state: state.entity_id,
+    )
     for entity_state in entities:
         entity_entry = entity_registry.async_get(entity_state.entity_id)
         assert entity_entry and entity_entry == snapshot(
