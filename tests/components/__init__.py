@@ -12,6 +12,7 @@ from homeassistant.const import (
     ATTR_LABEL_ID,
     CONF_ABOVE,
     CONF_BELOW,
+    CONF_CONDITION,
     CONF_ENTITY_ID,
     CONF_OPTIONS,
     CONF_PLATFORM,
@@ -26,6 +27,10 @@ from homeassistant.helpers import (
     entity_registry as er,
     floor_registry as fr,
     label_registry as lr,
+)
+from homeassistant.helpers.condition import (
+    ConditionCheckerTypeOptional,
+    async_from_config as async_condition_from_config,
 )
 from homeassistant.helpers.trigger import (
     CONF_LOWER_LIMIT,
@@ -581,6 +586,24 @@ async def arm_trigger(
                     "data_template": {CONF_ENTITY_ID: "{{ trigger.entity_id }}"},
                 },
             }
+        },
+    )
+
+
+async def create_target_condition(
+    hass: HomeAssistant,
+    *,
+    condition: str,
+    target: dict,
+    behavior: str,
+) -> ConditionCheckerTypeOptional:
+    """Create a target condition."""
+    return await async_condition_from_config(
+        hass,
+        {
+            CONF_CONDITION: condition,
+            CONF_TARGET: target,
+            CONF_OPTIONS: {"behavior": behavior},
         },
     )
 
