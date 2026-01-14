@@ -45,10 +45,9 @@ async def validate_input(data: dict[str, Any]) -> None:
     """
     host = data[CONF_HOST]
 
-    client = SaunumClient(host=host)
+    client = await SaunumClient.create(host)
 
     try:
-        await client.connect()
         # Try to read data to verify communication
         await client.async_get_data()
     finally:
