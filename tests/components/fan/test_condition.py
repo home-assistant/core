@@ -1,8 +1,6 @@
 """Test fan conditions."""
 
-from collections.abc import Generator
 from typing import Any
-from unittest.mock import patch
 
 import pytest
 
@@ -37,16 +35,6 @@ async def target_switches(hass: HomeAssistant) -> list[str]:
     return (await target_entities(hass, "switch"))["included"]
 
 
-@pytest.fixture(name="enable_experimental_triggers_conditions")
-def enable_experimental_triggers_conditions() -> Generator[None]:
-    """Enable experimental triggers and conditions."""
-    with patch(
-        "homeassistant.components.labs.async_is_preview_feature_enabled",
-        return_value=True,
-    ):
-        yield
-
-
 @pytest.mark.parametrize(
     "condition",
     [
@@ -61,7 +49,7 @@ async def test_fan_conditions_gated_by_labs_flag(
     await help_test_condition_gated_by_labs_flag(hass, caplog, condition)
 
 
-@pytest.mark.usefixtures("enable_experimental_triggers_conditions")
+@pytest.mark.usefixtures("enable_labs_preview_features")
 @pytest.mark.parametrize(
     ("condition_target_config", "entity_id", "entities_in_target"),
     parametrize_target_entities("fan"),
@@ -127,7 +115,7 @@ async def test_fan_state_condition_behavior_any(
         assert condition(hass) == state["condition_true"]
 
 
-@pytest.mark.usefixtures("enable_experimental_triggers_conditions")
+@pytest.mark.usefixtures("enable_labs_preview_features")
 @pytest.mark.parametrize(
     ("condition_target_config", "entity_id", "entities_in_target"),
     parametrize_target_entities("fan"),
