@@ -91,6 +91,7 @@ class SwitchBotCloudBot(SwitchBotCloudEntity, ButtonEntity):
         self.entity_description = description
         if description.key != "Button":
             self._attr_unique_id = f"{device.device_id}-{description.key}"
+            self._attr_name = description.key
         self._device_id = device.device_id
 
     async def async_press(self, **kwargs: Any) -> None:
