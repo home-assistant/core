@@ -654,7 +654,6 @@ INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
     "mythicbeastsdns",
     "nad",
     "nam",
-    "namecheapdns",
     "nanoleaf",
     "nasweb",
     "neato",
