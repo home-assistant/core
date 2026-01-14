@@ -24,6 +24,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Dimmable light',
     'options': dict({
     }),
     'original_device_class': None,
@@ -91,6 +92,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,
@@ -178,6 +180,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'RGB light',
     'options': dict({
     }),
     'original_device_class': None,
@@ -258,6 +261,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Tunable white light',
     'options': dict({
     }),
     'original_device_class': None,
@@ -336,6 +340,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Dimmable light',
     'options': dict({
     }),
     'original_device_class': None,
@@ -403,6 +408,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,
@@ -490,6 +496,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'RGB light',
     'options': dict({
     }),
     'original_device_class': None,
@@ -570,6 +577,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Tunable white light',
     'options': dict({
     }),
     'original_device_class': None,
@@ -648,6 +656,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Dimmable light',
     'options': dict({
     }),
     'original_device_class': None,
@@ -715,6 +724,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,
@@ -802,6 +812,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'RGB light',
     'options': dict({
     }),
     'original_device_class': None,
@@ -882,6 +893,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Tunable white light',
     'options': dict({
     }),
     'original_device_class': None,
@@ -969,6 +981,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Hue Go',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1062,6 +1075,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Hue Ensis',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1164,6 +1178,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'LIDL xmas light',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1259,6 +1274,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Hue White Ambiance',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1337,6 +1353,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Hue Filament',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1396,6 +1413,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Simple Light',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1468,6 +1486,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Gradient light',
     'options': dict({
     }),
     'original_device_class': None,
