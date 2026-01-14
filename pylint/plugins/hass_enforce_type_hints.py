@@ -954,6 +954,7 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
                 TypeHintMatch(
                     function_name="device_class",
                     return_type=["ButtonDeviceClass", None],
+                    mandatory=True,
                 ),
                 TypeHintMatch(
                     function_name="press",
@@ -1366,6 +1367,7 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
                 TypeHintMatch(
                     function_name="device_class",
                     return_type=["CoverDeviceClass", None],
+                    mandatory=True,
                 ),
                 TypeHintMatch(
                     function_name="current_cover_position",
@@ -1991,6 +1993,7 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
                 TypeHintMatch(
                     function_name="device_class",
                     return_type=["MediaPlayerDeviceClass", None],
+                    mandatory=True,
                 ),
                 TypeHintMatch(
                     function_name="state",
@@ -2334,6 +2337,7 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
                 TypeHintMatch(
                     function_name="device_class",
                     return_type=["NumberDeviceClass", None],
+                    mandatory=True,
                 ),
                 TypeHintMatch(
                     function_name="capability_attributes",
@@ -2633,6 +2637,7 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
                 TypeHintMatch(
                     function_name="device_class",
                     return_type=["SwitchDeviceClass", None],
+                    mandatory=True,
                 ),
             ],
         ),
@@ -2737,6 +2742,7 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
                 TypeHintMatch(
                     function_name="device_class",
                     return_type=["UpdateDeviceClass", None],
+                    mandatory=True,
                 ),
                 TypeHintMatch(
                     function_name="in_progress",
