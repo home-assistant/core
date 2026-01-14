@@ -5,7 +5,7 @@ from __future__ import annotations
 import datetime
 import logging
 
-from homeassistant.components.sensor import SensorEntity
+from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
@@ -96,7 +96,7 @@ class EbusdSensor(SensorEntity):
         return None
 
     @property
-    def device_class(self):
+    def device_class(self) -> SensorDeviceClass | None:
         """Return the class of this device, from component DEVICE_CLASSES."""
         return self._device_class
 
