@@ -5,6 +5,7 @@ from typing import TypeGuard
 
 from pyvesync.base_devices import VeSyncHumidifier
 from pyvesync.base_devices.fan_base import VeSyncFanBase
+from pyvesync.base_devices.fryer_base import VeSyncFryer
 from pyvesync.base_devices.outlet_base import VeSyncOutlet
 from pyvesync.base_devices.purifier_base import VeSyncPurifier
 from pyvesync.base_devices.vesyncbasedevice import VeSyncBaseDevice
@@ -14,7 +15,7 @@ from pyvesync.devices.vesyncswitch import VeSyncWallSwitch
 _LOGGER = logging.getLogger(__name__)
 
 
-def rgetattr(obj: object, attr: str):
+def rgetattr(obj: object, attr: str) -> object | str | None:
     """Return a string in the form word.1.2.3 and return the item as 3. Note that this last value could be in a dict as well."""
     _this_func = rgetattr
     sp = attr.split(".", 1)
@@ -64,3 +65,9 @@ def is_purifier(device: VeSyncBaseDevice) -> TypeGuard[VeSyncPurifier]:
     """Check if the device represents an air purifier."""
 
     return device.product_type == ProductTypes.PURIFIER
+
+
+def is_air_fryer(device: VeSyncBaseDevice) -> bool:
+    """Check if the device represents an air fryer."""
+
+    return isinstance(device, VeSyncFryer)

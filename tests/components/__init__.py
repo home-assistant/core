@@ -10,6 +10,8 @@ from homeassistant.const import (
     ATTR_DEVICE_ID,
     ATTR_FLOOR_ID,
     ATTR_LABEL_ID,
+    CONF_ABOVE,
+    CONF_BELOW,
     CONF_ENTITY_ID,
     CONF_OPTIONS,
     CONF_PLATFORM,
@@ -24,6 +26,12 @@ from homeassistant.helpers import (
     entity_registry as er,
     floor_registry as fr,
     label_registry as lr,
+)
+from homeassistant.helpers.trigger import (
+    CONF_LOWER_LIMIT,
+    CONF_THRESHOLD_TYPE,
+    CONF_UPPER_LIMIT,
+    ThresholdType,
 )
 from homeassistant.setup import async_setup_component
 
@@ -164,6 +172,90 @@ class StateDescription(TypedDict):
     count: int
 
 
+class ConditionStateDescription(TypedDict):
+    """Test state and expected service call count."""
+
+    included: _StateDescription
+    excluded: _StateDescription
+    condition_true: bool
+    state_valid: bool
+
+
+def parametrize_condition_states(
+    *,
+    condition: str,
+    condition_options: dict[str, Any] | None = None,
+    target_states: list[str | None | tuple[str | None, dict]],
+    other_states: list[str | None | tuple[str | None, dict]],
+    additional_attributes: dict | None = None,
+) -> list[tuple[str, dict[str, Any], list[ConditionStateDescription]]]:
+    """Parametrize states and expected service call counts.
+
+    The target_states and other_states iterables are either iterables of
+    states or iterables of (state, attributes) tuples.
+
+    Returns a list of tuples with (condition, condition options, list of states),
+    where states is a list of ConditionStateDescription dicts.
+    """
+
+    additional_attributes = additional_attributes or {}
+    condition_options = condition_options or {}
+
+    def state_with_attributes(
+        state: str | None | tuple[str | None, dict],
+        condition_true: bool,
+        state_valid: bool,
+    ) -> ConditionStateDescription:
+        """Return (state, attributes) dict."""
+        if isinstance(state, str) or state is None:
+            return {
+                "included": {
+                    "state": state,
+                    "attributes": additional_attributes,
+                },
+                "excluded": {
+                    "state": state,
+                    "attributes": {},
+                },
+                "condition_true": condition_true,
+                "state_valid": state_valid,
+            }
+        return {
+            "included": {
+                "state": state[0],
+                "attributes": state[1] | additional_attributes,
+            },
+            "excluded": {
+                "state": state[0],
+                "attributes": state[1],
+            },
+            "condition_true": condition_true,
+            "state_valid": state_valid,
+        }
+
+    return [
+        (
+            condition,
+            condition_options,
+            list(
+                itertools.chain(
+                    (state_with_attributes(None, False, False),),
+                    (state_with_attributes(STATE_UNAVAILABLE, False, False),),
+                    (state_with_attributes(STATE_UNKNOWN, False, False),),
+                    (
+                        state_with_attributes(other_state, False, True)
+                        for other_state in other_states
+                    ),
+                    (
+                        state_with_attributes(target_state, True, True)
+                        for target_state in target_states
+                    ),
+                )
+            ),
+        ),
+    ]
+
+
 def parametrize_trigger_states(
     *,
     trigger: str,
@@ -194,7 +286,7 @@ def parametrize_trigger_states(
 
     def state_with_attributes(
         state: str | None | tuple[str | None, dict], count: int
-    ) -> dict:
+    ) -> StateDescription:
         """Return (state, attributes) dict."""
         if isinstance(state, str) or state is None:
             return {
@@ -341,6 +433,123 @@ def parametrize_trigger_states(
         )
 
     return tests
+
+
+def parametrize_numerical_attribute_changed_trigger_states(
+    trigger: str, state: str, attribute: str
+) -> list[tuple[str, dict[str, Any], list[StateDescription]]]:
+    """Parametrize states and expected service call counts for numerical changed triggers."""
+    return [
+        *parametrize_trigger_states(
+            trigger=trigger,
+            trigger_options={},
+            target_states=[
+                (state, {attribute: 0}),
+                (state, {attribute: 50}),
+                (state, {attribute: 100}),
+            ],
+            other_states=[(state, {attribute: None})],
+            retrigger_on_target_state=True,
+        ),
+        *parametrize_trigger_states(
+            trigger=trigger,
+            trigger_options={CONF_ABOVE: 10},
+            target_states=[
+                (state, {attribute: 50}),
+                (state, {attribute: 100}),
+            ],
+            other_states=[
+                (state, {attribute: None}),
+                (state, {attribute: 0}),
+            ],
+            retrigger_on_target_state=True,
+        ),
+        *parametrize_trigger_states(
+            trigger=trigger,
+            trigger_options={CONF_BELOW: 90},
+            target_states=[
+                (state, {attribute: 0}),
+                (state, {attribute: 50}),
+            ],
+            other_states=[
+                (state, {attribute: None}),
+                (state, {attribute: 100}),
+            ],
+            retrigger_on_target_state=True,
+        ),
+    ]
+
+
+def parametrize_numerical_attribute_crossed_threshold_trigger_states(
+    trigger: str, state: str, attribute: str
+) -> list[tuple[str, dict[str, Any], list[StateDescription]]]:
+    """Parametrize states and expected service call counts for numerical crossed threshold triggers."""
+    return [
+        *parametrize_trigger_states(
+            trigger=trigger,
+            trigger_options={
+                CONF_THRESHOLD_TYPE: ThresholdType.BETWEEN,
+                CONF_LOWER_LIMIT: 10,
+                CONF_UPPER_LIMIT: 90,
+            },
+            target_states=[
+                (state, {attribute: 50}),
+                (state, {attribute: 60}),
+            ],
+            other_states=[
+                (state, {attribute: None}),
+                (state, {attribute: 0}),
+                (state, {attribute: 100}),
+            ],
+        ),
+        *parametrize_trigger_states(
+            trigger=trigger,
+            trigger_options={
+                CONF_THRESHOLD_TYPE: ThresholdType.OUTSIDE,
+                CONF_LOWER_LIMIT: 10,
+                CONF_UPPER_LIMIT: 90,
+            },
+            target_states=[
+                (state, {attribute: 0}),
+                (state, {attribute: 100}),
+            ],
+            other_states=[
+                (state, {attribute: None}),
+                (state, {attribute: 50}),
+                (state, {attribute: 60}),
+            ],
+        ),
+        *parametrize_trigger_states(
+            trigger=trigger,
+            trigger_options={
+                CONF_THRESHOLD_TYPE: ThresholdType.ABOVE,
+                CONF_LOWER_LIMIT: 10,
+            },
+            target_states=[
+                (state, {attribute: 50}),
+                (state, {attribute: 100}),
+            ],
+            other_states=[
+                (state, {attribute: None}),
+                (state, {attribute: 0}),
+            ],
+        ),
+        *parametrize_trigger_states(
+            trigger=trigger,
+            trigger_options={
+                CONF_THRESHOLD_TYPE: ThresholdType.BELOW,
+                CONF_UPPER_LIMIT: 90,
+            },
+            target_states=[
+                (state, {attribute: 0}),
+                (state, {attribute: 50}),
+            ],
+            other_states=[
+                (state, {attribute: None}),
+                (state, {attribute: 100}),
+            ],
+        ),
+    ]
 
 
 async def arm_trigger(

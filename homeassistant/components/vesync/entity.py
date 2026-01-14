@@ -32,7 +32,7 @@ class VeSyncBaseEntity(CoordinatorEntity[VeSyncDataCoordinator], Generic[T]):
         )
 
     @property
-    def base_unique_id(self):
+    def base_unique_id(self) -> str:
         """Return the ID of this device."""
         # The unique_id property may be overridden in subclasses, such as in
         # sensors. Maintaining base_unique_id allows us to group related

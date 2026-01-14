@@ -43,6 +43,13 @@ BUTTON_TYPES: tuple[AirobotButtonEntityDescription, ...] = (
         entity_category=EntityCategory.CONFIG,
         press_fn=lambda coordinator: coordinator.client.reboot_thermostat(),
     ),
+    AirobotButtonEntityDescription(
+        key="recalibrate_co2",
+        translation_key="recalibrate_co2",
+        entity_category=EntityCategory.CONFIG,
+        entity_registry_enabled_default=False,
+        press_fn=lambda coordinator: coordinator.client.recalibrate_co2_sensor(),
+    ),
 )
 
 
