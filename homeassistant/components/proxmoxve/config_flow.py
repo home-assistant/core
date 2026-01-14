@@ -86,9 +86,9 @@ def _get_nodes_data(data: dict[str, Any]) -> list[dict[str, Any]]:
 
         nodes_data.append(
             {
-                "node": node["node"],
-                "vms": vms,
-                "containers": containers,
+                CONF_NODE: node["node"],
+                CONF_VMS: [vm["vmid"] for vm in vms],
+                CONF_CONTAINERS: [container["vmid"] for container in containers],
             }
         )
 
@@ -122,22 +122,11 @@ class ProxmoxveConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "no_nodes_found"
 
             if not errors:
-                nodes = [
-                    {
-                        CONF_NODE: node["node"],
-                        CONF_VMS: [vm["vmid"] for vm in node["vms"]],
-                        CONF_CONTAINERS: [
-                            container["vmid"] for container in node["containers"]
-                        ],
-                    }
-                    for node in proxmox_nodes
-                ]
-
                 await self.async_set_unique_id(user_input[CONF_HOST])
                 self._abort_if_unique_id_configured()
                 return self.async_create_entry(
                     title=user_input[CONF_HOST],
-                    data={**user_input, CONF_NODES: nodes},
+                    data={**user_input, CONF_NODES: proxmox_nodes},
                 )
 
         return self.async_show_form(
