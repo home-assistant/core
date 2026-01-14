@@ -240,7 +240,10 @@ async def test_set_swing_mode_error(
         )
 
 
-async def test_set_hvac_mode(hass: HomeAssistant, load_int: ConfigEntry) -> None:
+async def test_set_hvac_mode(
+    hass: HomeAssistant,
+    load_int: ConfigEntry,
+) -> None:
     """Test the Coolmaster climate set hvac mode."""
     assert hass.states.get("climate.l1_100").state == HVACMode.OFF
     await hass.services.async_call(

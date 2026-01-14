@@ -194,11 +194,7 @@ async def load_int(hass: HomeAssistant) -> MockConfigEntry:
         data={
             "host": "1.2.3.4",
             "port": 1234,
-            "supported_modes": [
-                HVACMode.OFF,
-                HVACMode.COOL,
-                HVACMode.HEAT,
-            ],
+            "supported_modes": [HVACMode.OFF, HVACMode.COOL, HVACMode.HEAT],
         },
     )
 
@@ -222,11 +218,7 @@ async def config_entry_with_errors(hass: HomeAssistant) -> MockConfigEntry:
         data={
             "host": "1.2.3.4",
             "port": 1234,
-            "supported_modes": [
-                HVACMode.OFF,
-                HVACMode.COOL,
-                HVACMode.HEAT,
-            ],
+            "supported_modes": [HVACMode.OFF, HVACMode.COOL, HVACMode.HEAT],
         },
     )
 
@@ -250,11 +242,7 @@ async def config_entry_with_empty_status(hass: HomeAssistant) -> MockConfigEntry
         data={
             "host": "1.2.3.4",
             "port": 1234,
-            "supported_modes": [
-                HVACMode.OFF,
-                HVACMode.COOL,
-                HVACMode.HEAT,
-            ],
+            "supported_modes": [HVACMode.OFF, HVACMode.COOL, HVACMode.HEAT],
         },
     )
 
