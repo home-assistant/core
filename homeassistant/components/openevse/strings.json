@@ -34,23 +34,131 @@
       "ambient_temp": {
         "name": "Ambient temperature"
       },
+      "available_current": {
+        "name": "Available current"
+      },
+      "charge_mode": {
+        "name": "Charge mode"
+      },
+      "charge_rate": {
+        "name": "Charge rate"
+      },
       "charge_time": {
         "name": "Charge time elapsed"
+      },
+      "charging_current": {
+        "name": "Charging current"
+      },
+      "charging_power": {
+        "name": "Charging power"
+      },
+      "charging_voltage": {
+        "name": "Charging voltage"
+      },
+      "current_capacity": {
+        "name": "Current capacity"
+      },
+      "current_power": {
+        "name": "Current power"
+      },
+      "divert_mode": {
+        "name": "Divert mode"
+      },
+      "esp_temp": {
+        "name": "ESP temperature"
+      },
+      "freeram": {
+        "name": "Free memory"
+      },
+      "gfi_trip_count": {
+        "name": "GFCI trip count"
       },
       "ir_temp": {
         "name": "IR temperature"
       },
+      "manual_override": {
+        "name": "Manual override"
+      },
+      "max_amps": {
+        "name": "Maximum amperage"
+      },
+      "max_current": {
+        "name": "Maximum current"
+      },
+      "min_amps": {
+        "name": "Minimum amperage"
+      },
+      "mode": {
+        "name": "Mode"
+      },
+      "no_gnd_trip_count": {
+        "name": "No ground trip count"
+      },
+      "ota_update": {
+        "name": "OTA update"
+      },
       "rtc_temp": {
         "name": "RTC temperature"
       },
+      "service_level": {
+        "name": "Service level"
+      },
+      "shaper_available_current": {
+        "name": "Shaper available current"
+      },
+      "shaper_live_power": {
+        "name": "Shaper live power"
+      },
+      "shaper_max_power": {
+        "name": "Shaper maximum power"
+      },
+      "smoothed_available_current": {
+        "name": "Smoothed available current"
+      },
+      "state": {
+        "name": "State"
+      },
       "status": {
         "name": "Charging status"
+      },
+      "stuck_relay_trip_count": {
+        "name": "Stuck relay trip count"
+      },
+      "total_day": {
+        "name": "Daily energy usage"
+      },
+      "total_month": {
+        "name": "Monthly energy usage"
+      },
+      "total_week": {
+        "name": "Weekly energy usage"
+      },
+      "total_year": {
+        "name": "Yearly energy usage"
+      },
+      "uptime": {
+        "name": "Uptime"
       },
       "usage_session": {
         "name": "Usage this session"
       },
       "usage_total": {
         "name": "Total energy usage"
+      },
+      "vehicle": {
+        "name": "Vehicle connected"
+      },
+      "vehicle_eta": {
+        "name": "Vehicle charge completion"
+      },
+      "vehicle_range": {
+        "name": "Vehicle range"
+      },
+      "vehicle_soc": {
+        "name": "Vehicle state of charge"
+      },
+      "wifi_signal": {
+        "name": "WiFi signal strength"
       }
     }
   },
