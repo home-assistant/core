@@ -84,7 +84,7 @@ class OASATelematicsSensor(SensorEntity):
         return self._name
 
     @property
-    def device_class(self):
+    def device_class(self) -> SensorDeviceClass:
         """Return the class of this sensor."""
         return SensorDeviceClass.TIMESTAMP
 
