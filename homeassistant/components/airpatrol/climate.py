@@ -89,19 +89,9 @@ class AirPatrolClimate(AirPatrolEntity, ClimateEntity):
         self._attr_unique_id = f"{coordinator.config_entry.unique_id}-{unit_id}"
 
     @property
-    def climate_data(self) -> dict[str, Any]:
-        """Return the climate data."""
-        return self.device_data.get("climate") or {}
-
-    @property
     def params(self) -> dict[str, Any]:
         """Return the current parameters for the climate entity."""
         return self.climate_data.get("ParametersData") or {}
-
-    @property
-    def available(self) -> bool:
-        """Return if entity is available."""
-        return super().available and bool(self.climate_data)
 
     @property
     def current_humidity(self) -> float | None:
