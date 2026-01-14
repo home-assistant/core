@@ -6,7 +6,7 @@
     },
     "error": {
       "cannot_connect": "Unable to connect to the panel. Confirm the host is reachable and the panel is online.",
-      "invalid_auth": "The access code or passphrase is invalid.",
+      "invalid_auth": "Unable to authenticate with the panel. Check the access code, passphrase, and network connectivity.",
       "invalid_pin": "The user PIN is invalid.",
       "link_required": "The panel requires linking. Enter the access code and passphrase again.",
       "unknown": "[%key:common::config_flow::error::unknown%]"

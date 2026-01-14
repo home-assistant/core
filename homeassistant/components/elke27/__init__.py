@@ -22,8 +22,11 @@ from .const import (
     CONF_LINK_KEYS_JSON,
     CONF_PANEL,
     CONF_PIN,
+    DATA_COORDINATOR,
+    DATA_HUB,
     DOMAIN,
 )
+from .coordinator import Elke27DataUpdateCoordinator
 from .hub import Elke27Hub
 from .identity import async_get_integration_serial
 
@@ -65,7 +68,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         panel_name,
     )
     try:
-        await hub.async_start()
+        await hub.async_connect()
     except Elke27LinkRequiredError as err:
         raise ConfigEntryAuthFailed(
             "Linking credentials are invalid; relink required"
@@ -73,12 +76,18 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     except (Elke27ConnectionError, Elke27TimeoutError, Elke27DisconnectedError) as err:
         _LOGGER.exception("Failed to set up connection to %s:%s", host, port)
         with contextlib.suppress(Exception):
-            await hub.async_stop()
+            await hub.async_disconnect()
         raise ConfigEntryNotReady(
             "The client did not become ready; check host and port"
         ) from err
 
-    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = hub
+    coordinator = Elke27DataUpdateCoordinator(hass, hub, entry)
+    await coordinator.async_start()
+    await coordinator.async_refresh_now()
+    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = {
+        DATA_HUB: hub,
+        DATA_COORDINATOR: coordinator,
+    }
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True
 
@@ -86,9 +95,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload an Elke27 config entry."""
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-    hub: Elke27Hub | None = hass.data.get(DOMAIN, {}).pop(entry.entry_id, None)
-    if hub is not None:
-        await hub.async_stop()
+    data = hass.data.get(DOMAIN, {}).pop(entry.entry_id, None)
+    if data is not None:
+        coordinator: Elke27DataUpdateCoordinator | None = data.get(DATA_COORDINATOR)
+        hub: Elke27Hub | None = data.get(DATA_HUB)
+        if coordinator is not None:
+            await coordinator.async_stop()
+        if hub is not None:
+            await hub.async_disconnect()
     return unload_ok
 
 

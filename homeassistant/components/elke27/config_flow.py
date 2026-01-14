@@ -18,6 +18,7 @@ from elke27_lib.errors import (
     Elke27PermissionError,
     Elke27PinRequiredError,
     Elke27TimeoutError,
+    InvalidCredentials,
     InvalidPin,
     InvalidPinError,
     MissingPinError,
@@ -214,8 +215,10 @@ class Elke27ConfigFlow(ConfigFlow, domain=DOMAIN):
                 getattr(snapshot, "panel_info", None) or getattr(snapshot, "panel", None)
             )
             table_info = _snapshot_to_dict(getattr(snapshot, "table_info", None))
-        except Elke27AuthError:
+        except InvalidCredentials:
             errors["base"] = "invalid_auth"
+        except Elke27AuthError:
+            errors["base"] = "cannot_connect"
         except (Elke27ConnectionError, Elke27TimeoutError, Elke27DisconnectedError):
             errors["base"] = "cannot_connect"
         except Elke27LinkRequiredError:

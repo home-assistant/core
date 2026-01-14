@@ -10,12 +10,19 @@ from elke27_lib.errors import Elke27PinRequiredError
 
 from homeassistant.components.light import ColorMode, LightEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN
-from .entity import device_info_for_entry, sanitize_name, unique_base
+from .const import DATA_COORDINATOR, DATA_HUB, DOMAIN
+from .coordinator import Elke27DataUpdateCoordinator
+from .entity import (
+    build_unique_id,
+    device_info_for_entry,
+    sanitize_name,
+    unique_base,
+)
 from .hub import Elke27Hub
 
 _LOGGER = logging.getLogger(__name__)
@@ -27,12 +34,13 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Elke27 output lights from a config entry."""
-    hub: Elke27Hub = hass.data[DOMAIN][entry.entry_id]
+    data = hass.data[DOMAIN][entry.entry_id]
+    hub: Elke27Hub = data[DATA_HUB]
+    coordinator: Elke27DataUpdateCoordinator = data[DATA_COORDINATOR]
     known_ids: set[int] = set()
 
-    @callback
     def _async_add_outputs() -> None:
-        snapshot = hub.snapshot
+        snapshot = coordinator.data
         if snapshot is None:
             _LOGGER.debug("Output entities skipped because snapshot is unavailable")
             return
@@ -48,15 +56,17 @@ async def async_setup_entry(
             if output_id in known_ids:
                 continue
             known_ids.add(output_id)
-            entities.append(Elke27OutputLight(hub, entry, output_id, output))
+            entities.append(
+                Elke27OutputLight(coordinator, hub, entry, output_id, output)
+            )
         if entities:
             async_add_entities(entities)
 
     _async_add_outputs()
-    entry.async_on_unload(hub.async_add_output_listener(_async_add_outputs))
+    entry.async_on_unload(coordinator.async_add_listener(_async_add_outputs))
 
 
-class Elke27OutputLight(LightEntity):
+class Elke27OutputLight(CoordinatorEntity[Elke27DataUpdateCoordinator], LightEntity):
     """Representation of an Elke27 output."""
 
     _attr_color_mode = ColorMode.ONOFF
@@ -66,35 +76,32 @@ class Elke27OutputLight(LightEntity):
 
     def __init__(
         self,
+        coordinator: Elke27DataUpdateCoordinator,
         hub: Elke27Hub,
         entry: ConfigEntry,
         output_id: int,
         output: Any,
     ) -> None:
         """Initialize the output entity."""
+        super().__init__(coordinator)
         self._hub = hub
         self._entry = entry
         self._output_id = output_id
         self._attr_name = (
             sanitize_name(getattr(output, "name", None)) or f"Output {output_id}"
         )
-        self._attr_unique_id = f"{unique_base(hub, entry)}_output_{output_id}"
-        self._attr_device_info = device_info_for_entry(hub, entry)
+        self._attr_unique_id = build_unique_id(
+            unique_base(hub, coordinator, entry),
+            "output_light",
+            output_id,
+        )
+        self._attr_device_info = device_info_for_entry(hub, coordinator, entry)
         self._missing_logged = False
-
-    async def async_added_to_hass(self) -> None:
-        """Register for hub updates."""
-        self.async_on_remove(self._hub.async_add_output_listener(self._handle_update))
-
-    @callback
-    def _handle_update(self) -> None:
-        """Write updated state."""
-        self.async_write_ha_state()
 
     @property
     def is_on(self) -> bool | None:
         """Return if the output is on."""
-        output = _get_output(self._hub.snapshot, self._output_id)
+        output = _get_output(self.coordinator.data, self._output_id)
         if output is None:
             self._log_missing()
             return None
@@ -106,7 +113,7 @@ class Elke27OutputLight(LightEntity):
         """Return if the entity is available."""
         return (
             self._hub.is_ready
-            and _get_output(self._hub.snapshot, self._output_id) is not None
+            and _get_output(self.coordinator.data, self._output_id) is not None
         )
 
     async def async_turn_on(self, **kwargs: Any) -> None:

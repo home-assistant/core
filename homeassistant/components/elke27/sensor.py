@@ -12,11 +12,18 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN
-from .entity import device_info_for_entry, get_panel_field, unique_base
+from .const import DATA_COORDINATOR, DATA_HUB, DOMAIN
+from .coordinator import Elke27DataUpdateCoordinator
+from .entity import (
+    build_unique_id,
+    device_info_for_entry,
+    get_panel_field,
+    unique_base,
+)
 from .hub import Elke27Hub
 
 
@@ -25,20 +32,25 @@ class Elke27SensorDescription(SensorEntityDescription):
     """Describe an Elke27 sensor."""
 
     key: str
-    value_fn: Callable[[Elke27Hub], Any]
+    numeric_id: int
+    value_fn: Callable[[Elke27Hub, Any | None], Any]
 
 
 SENSORS: tuple[Elke27SensorDescription, ...] = (
     Elke27SensorDescription(
         key="panel_name",
+        numeric_id=1,
         translation_key="panel_name",
-        value_fn=lambda hub: get_panel_field(hub, "name"),
+        value_fn=lambda hub, snapshot: get_panel_field(snapshot, hub.panel_name, "name"),
     ),
     Elke27SensorDescription(
         key="panel_ready",
+        numeric_id=2,
         translation_key="panel_ready",
         device_class=SensorDeviceClass.ENUM,
-        value_fn=lambda hub: "connected" if hub.is_ready else "disconnected",
+        value_fn=lambda hub, snapshot: (
+            "connected" if hub.is_ready else "disconnected"
+        ),
     ),
 )
 
@@ -49,40 +61,42 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Elke27 sensors from a config entry."""
-    hub: Elke27Hub = hass.data[DOMAIN][entry.entry_id]
+    data = hass.data[DOMAIN][entry.entry_id]
+    hub: Elke27Hub = data[DATA_HUB]
+    coordinator: Elke27DataUpdateCoordinator = data[DATA_COORDINATOR]
     async_add_entities(
-        Elke27Sensor(hub, entry, description) for description in SENSORS
+        Elke27Sensor(coordinator, hub, entry, description) for description in SENSORS
     )
 
 
-class Elke27Sensor(SensorEntity):
+class Elke27Sensor(CoordinatorEntity[Elke27DataUpdateCoordinator], SensorEntity):
     """Representation of an Elke27 sensor."""
 
     _attr_entity_category = EntityCategory.DIAGNOSTIC
     _attr_has_entity_name = True
 
     def __init__(
-        self, hub: Elke27Hub, entry: ConfigEntry, description: Elke27SensorDescription
+        self,
+        coordinator: Elke27DataUpdateCoordinator,
+        hub: Elke27Hub,
+        entry: ConfigEntry,
+        description: Elke27SensorDescription,
     ) -> None:
         """Initialize the sensor."""
+        super().__init__(coordinator)
         self._hub = hub
         self._entry = entry
         self.entity_description = description
         self._attr_device_class = description.device_class
         self._attr_translation_key = description.translation_key
-        self._attr_unique_id = f"{unique_base(hub, entry)}_{description.key}"
-        self._attr_device_info = device_info_for_entry(hub, entry)
-
-    async def async_added_to_hass(self) -> None:
-        """Register for hub updates."""
-        self.async_on_remove(self._hub.async_add_listener(self._handle_update))
-
-    @callback
-    def _handle_update(self) -> None:
-        """Write updated state."""
-        self.async_write_ha_state()
+        self._attr_unique_id = build_unique_id(
+            unique_base(hub, coordinator, entry),
+            "panel",
+            description.numeric_id,
+        )
+        self._attr_device_info = device_info_for_entry(hub, coordinator, entry)
 
     @property
     def native_value(self) -> Any:
         """Return the current value."""
-        return self.entity_description.value_fn(self._hub)
+        return self.entity_description.value_fn(self._hub, self.coordinator.data)
