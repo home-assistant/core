@@ -52,6 +52,7 @@ async def test_full_flow(
         },
     }
     assert result["result"].unique_id == TEST_UNIQUE_ID
+    assert result["title"] == "HomeLink"
 
 
 async def test_unique_configurations(
