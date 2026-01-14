@@ -35,15 +35,12 @@ CM_TO_HA_STATE = {
 
 HA_STATE_TO_CM = {value: key for key, value in CM_TO_HA_STATE.items()}
 
-# these are modes supported by Coolmaster that have no direct HA equivalent.
-COOLMASTER_ONLY_MODES = ["vlow", "top"]
-
 CM_TO_HA_FAN = {
     "low": FAN_LOW,
     "med": FAN_MEDIUM,
     "high": FAN_HIGH,
     "auto": FAN_AUTO,
-} | {mode: mode for mode in COOLMASTER_ONLY_MODES}
+}
 
 HA_FAN_TO_CM = {value: key for key, value in CM_TO_HA_FAN.items()}
 
