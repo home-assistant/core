@@ -11,7 +11,7 @@ from homeassistant.const import ATTR_LABEL_ID, CONF_ENTITY_ID
 from homeassistant.core import HomeAssistant, ServiceCall
 
 from tests.components import (
-    StateDescription,
+    TriggerStateDescription,
     arm_trigger,
     other_states,
     parametrize_target_entities,
@@ -103,7 +103,7 @@ async def test_vacuum_state_trigger_behavior_any(
     entities_in_target: int,
     trigger: str,
     trigger_options: dict[str, Any],
-    states: list[StateDescription],
+    states: list[TriggerStateDescription],
 ) -> None:
     """Test that the vacuum state trigger fires when any vacuum state changes to a specific state."""
     other_entity_ids = set(target_vacuums) - {entity_id}
@@ -171,7 +171,7 @@ async def test_vacuum_state_trigger_behavior_first(
     entities_in_target: int,
     trigger: str,
     trigger_options: dict[str, Any],
-    states: list[StateDescription],
+    states: list[TriggerStateDescription],
 ) -> None:
     """Test that the vacuum state trigger fires when the first vacuum changes to a specific state."""
     other_entity_ids = set(target_vacuums) - {entity_id}
@@ -238,7 +238,7 @@ async def test_vacuum_state_trigger_behavior_last(
     entities_in_target: int,
     trigger: str,
     trigger_options: dict[str, Any],
-    states: list[StateDescription],
+    states: list[TriggerStateDescription],
 ) -> None:
     """Test that the vacuum state trigger fires when the last vacuum changes to a specific state."""
     other_entity_ids = set(target_vacuums) - {entity_id}
