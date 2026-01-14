@@ -53,7 +53,6 @@ def mock_homevolt_client() -> Generator[MagicMock]:
         client = homevolt_mock.return_value
         client.base_url = "http://127.0.0.1"
         client.update_info = AsyncMock()
-        client.close_connection = AsyncMock()
 
         # Create a mock Device with sensors
         device = MagicMock(spec=Device)
