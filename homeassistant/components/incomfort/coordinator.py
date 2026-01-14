@@ -1,6 +1,5 @@
 """Datacoordinator for InComfort integration."""
 
-import asyncio
 from dataclasses import dataclass, field
 from datetime import timedelta
 from http import HTTPStatus
@@ -134,7 +133,8 @@ class InComfortDataCoordinator(DataUpdateCoordinator[InComfortData]):
         """Fetch data from Incomfort."""
         try:
             heaters = await self.client.heaters()
-            await asyncio.gather(*(heater.update() for heater in heaters))
+            for heater in heaters:
+                await heater.update()
         except InvalidGateway as exc:
             raise ConfigEntryAuthFailed(
                 translation_domain=DOMAIN,
