@@ -20,6 +20,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,
@@ -70,6 +71,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Active alerts',
     'options': dict({
     }),
     'original_device_class': None,
@@ -120,6 +122,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Black toner level',
     'options': dict({
     }),
     'original_device_class': None,
@@ -174,6 +177,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Cyan toner level',
     'options': dict({
     }),
     'original_device_class': None,
@@ -228,6 +232,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Input tray 1',
     'options': dict({
     }),
     'original_device_class': None,
@@ -285,6 +290,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Magenta toner level',
     'options': dict({
     }),
     'original_device_class': None,
@@ -339,6 +345,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Output tray 1',
     'options': dict({
     }),
     'original_device_class': None,
@@ -391,6 +398,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Yellow toner level',
     'options': dict({
     }),
     'original_device_class': None,

@@ -25,6 +25,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Brew by weight dose 1',
     'options': dict({
     }),
     'original_device_class': <NumberDeviceClass.WEIGHT: 'weight'>,
@@ -65,6 +66,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Brew by weight dose 2',
     'options': dict({
     }),
     'original_device_class': <NumberDeviceClass.WEIGHT: 'weight'>,
@@ -162,6 +164,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Coffee target temperature',
     'options': dict({
     }),
     'original_device_class': <NumberDeviceClass.TEMPERATURE: 'temperature'>,
@@ -221,6 +224,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Smart standby time',
     'options': dict({
     }),
     'original_device_class': <NumberDeviceClass.DURATION: 'duration'>,
@@ -280,6 +284,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Prebrew off time',
     'options': dict({
     }),
     'original_device_class': <NumberDeviceClass.DURATION: 'duration'>,
@@ -339,6 +344,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Prebrew on time',
     'options': dict({
     }),
     'original_device_class': <NumberDeviceClass.DURATION: 'duration'>,
@@ -398,6 +404,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Preinfusion time',
     'options': dict({
     }),
     'original_device_class': <NumberDeviceClass.DURATION: 'duration'>,
@@ -457,6 +464,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Steam target temperature',
     'options': dict({
     }),
     'original_device_class': <NumberDeviceClass.TEMPERATURE: 'temperature'>,

@@ -22,6 +22,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -79,6 +80,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Pressure',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -136,6 +138,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -193,6 +196,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Counter A',
     'options': dict({
     }),
     'original_device_class': None,
@@ -245,6 +249,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Counter B',
     'options': dict({
     }),
     'original_device_class': None,
@@ -297,6 +302,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Latest voltage A',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -354,6 +360,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Latest voltage B',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -411,6 +418,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Latest voltage C',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -468,6 +476,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Latest voltage D',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -525,6 +534,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Voltage A',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -582,6 +592,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Voltage B',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -639,6 +650,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Voltage C',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -696,6 +708,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Voltage D',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -753,6 +766,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -810,6 +824,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'HIH3600 humidity',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.HUMIDITY: 'humidity'>,
@@ -864,6 +879,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'HIH4000 humidity',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.HUMIDITY: 'humidity'>,
@@ -918,6 +934,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'HIH5030 humidity',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.HUMIDITY: 'humidity'>,
@@ -972,6 +989,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'HTM1735 humidity',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.HUMIDITY: 'humidity'>,
@@ -1026,6 +1044,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Humidity',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.HUMIDITY: 'humidity'>,
@@ -1080,6 +1099,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Illuminance',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ILLUMINANCE: 'illuminance'>,
@@ -1134,6 +1154,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Pressure',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -1191,6 +1212,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -1248,6 +1270,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'VAD voltage',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -1305,6 +1328,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'VDD voltage',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -1362,6 +1386,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'VIS voltage difference',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -1419,6 +1444,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -1476,6 +1502,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -1533,6 +1560,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -1590,6 +1618,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -1647,6 +1676,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Thermocouple K temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -1704,6 +1734,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'VIS voltage gradient',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -1761,6 +1792,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Voltage',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -1818,6 +1850,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -1875,6 +1908,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -1932,6 +1966,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Humidity',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.HUMIDITY: 'humidity'>,
@@ -1986,6 +2021,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Illuminance',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ILLUMINANCE: 'illuminance'>,
@@ -2040,6 +2076,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Pressure',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -2097,6 +2134,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -2154,6 +2192,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Pressure',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -2211,6 +2250,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -2268,6 +2308,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Humidity',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.HUMIDITY: 'humidity'>,
@@ -2322,6 +2363,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -2379,6 +2421,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'HIH3600 humidity',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.HUMIDITY: 'humidity'>,
@@ -2433,6 +2476,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'HIH4000 humidity',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.HUMIDITY: 'humidity'>,
@@ -2487,6 +2531,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'HIH5030 humidity',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.HUMIDITY: 'humidity'>,
@@ -2541,6 +2586,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'HTM1735 humidity',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.HUMIDITY: 'humidity'>,
@@ -2595,6 +2641,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Humidity',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.HUMIDITY: 'humidity'>,
@@ -2649,6 +2696,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Illuminance',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ILLUMINANCE: 'illuminance'>,
@@ -2703,6 +2751,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Pressure',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -2760,6 +2809,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -2817,6 +2867,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'VAD voltage',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -2874,6 +2925,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'VDD voltage',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -2931,6 +2983,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'VIS voltage difference',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -2988,6 +3041,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Humidity',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.HUMIDITY: 'humidity'>,
@@ -3042,6 +3096,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Raw humidity',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.HUMIDITY: 'humidity'>,
@@ -3096,6 +3151,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -3153,6 +3209,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Moisture 2',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -3210,6 +3267,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Moisture 3',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -3267,6 +3325,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Wetness 0',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.HUMIDITY: 'humidity'>,
@@ -3321,6 +3380,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Wetness 1',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.HUMIDITY: 'humidity'>,

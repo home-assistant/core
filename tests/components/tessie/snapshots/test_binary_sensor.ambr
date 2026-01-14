@@ -20,6 +20,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Backup capable',
     'options': dict({
     }),
     'original_device_class': None,
@@ -68,6 +69,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Grid services active',
     'options': dict({
     }),
     'original_device_class': None,
@@ -116,6 +118,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Grid services enabled',
     'options': dict({
     }),
     'original_device_class': None,
@@ -164,6 +167,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Storm watch active',
     'options': dict({
     }),
     'original_device_class': None,
@@ -212,6 +216,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Auto seat climate left',
     'options': dict({
     }),
     'original_device_class': None,
@@ -260,6 +265,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Auto seat climate right',
     'options': dict({
     }),
     'original_device_class': None,
@@ -308,6 +314,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Auto steering wheel heater',
     'options': dict({
     }),
     'original_device_class': None,
@@ -356,6 +363,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery heater',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.HEAT: 'heat'>,
@@ -405,6 +413,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Cabin overheat protection',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.RUNNING: 'running'>,
@@ -454,6 +463,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Cabin overheat protection actively cooling',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.HEAT: 'heat'>,
@@ -503,6 +513,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Charge cable',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.CONNECTIVITY: 'connectivity'>,
@@ -552,6 +563,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Charging',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.BATTERY_CHARGING: 'battery_charging'>,
@@ -601,6 +613,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Dashcam',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.RUNNING: 'running'>,
@@ -650,6 +663,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Front driver door',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.DOOR: 'door'>,
@@ -699,6 +713,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Front driver window',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.WINDOW: 'window'>,
@@ -748,6 +763,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Front passenger door',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.DOOR: 'door'>,
@@ -797,6 +813,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Front passenger window',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.WINDOW: 'window'>,
@@ -846,6 +863,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Preconditioning enabled',
     'options': dict({
     }),
     'original_device_class': None,
@@ -894,6 +912,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Rear driver door',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.DOOR: 'door'>,
@@ -943,6 +962,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Rear driver window',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.WINDOW: 'window'>,
@@ -992,6 +1012,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Rear passenger door',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.DOOR: 'door'>,
@@ -1041,6 +1062,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Rear passenger window',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.WINDOW: 'window'>,
@@ -1090,6 +1112,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Scheduled charging pending',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1138,6 +1161,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Status',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.CONNECTIVITY: 'connectivity'>,
@@ -1187,6 +1211,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Tire pressure warning front left',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
@@ -1236,6 +1261,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Tire pressure warning front right',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
@@ -1285,6 +1311,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Tire pressure warning rear left',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
@@ -1334,6 +1361,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Tire pressure warning rear right',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
@@ -1383,6 +1411,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Trip charging',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1431,6 +1460,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'User present',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.OCCUPANCY: 'occupancy'>,

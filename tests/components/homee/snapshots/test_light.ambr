@@ -28,6 +28,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,
@@ -110,6 +111,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Light 1',
     'options': dict({
     }),
     'original_device_class': None,
@@ -193,6 +195,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Light 2',
     'options': dict({
     }),
     'original_device_class': None,
@@ -261,6 +264,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Light 3',
     'options': dict({
     }),
     'original_device_class': None,
@@ -319,6 +323,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Light 4',
     'options': dict({
     }),
     'original_device_class': None,

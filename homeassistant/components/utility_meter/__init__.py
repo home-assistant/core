@@ -250,7 +250,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     else:
         # Create tariff selection + one meter sensor for each tariff
         entity_entry = entity_registry.async_get_or_create(
-            Platform.SELECT, DOMAIN, entry.entry_id, suggested_object_id=entry.title
+            Platform.SELECT, DOMAIN, entry.entry_id, object_id_base=entry.title
         )
         hass.data[DATA_UTILITY][entry.entry_id][CONF_TARIFF_ENTITY] = (
             entity_entry.entity_id

@@ -27,6 +27,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,
@@ -91,6 +92,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,
@@ -155,6 +157,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,
@@ -219,6 +222,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,
@@ -283,6 +287,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Freezer',
     'options': dict({
     }),
     'original_device_class': None,
@@ -347,6 +352,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Freezer',
     'options': dict({
     }),
     'original_device_class': None,
@@ -411,6 +417,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Refrigerator',
     'options': dict({
     }),
     'original_device_class': None,
@@ -475,6 +482,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Refrigerator',
     'options': dict({
     }),
     'original_device_class': None,
@@ -539,6 +547,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Zone 3',
     'options': dict({
     }),
     'original_device_class': None,
@@ -603,6 +612,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Zone 3',
     'options': dict({
     }),
     'original_device_class': None,
@@ -667,6 +677,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Freezer',
     'options': dict({
     }),
     'original_device_class': None,
@@ -731,6 +742,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Freezer',
     'options': dict({
     }),
     'original_device_class': None,
@@ -795,6 +807,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Refrigerator',
     'options': dict({
     }),
     'original_device_class': None,
@@ -859,6 +872,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Refrigerator',
     'options': dict({
     }),
     'original_device_class': None,
@@ -923,6 +937,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Zone 3',
     'options': dict({
     }),
     'original_device_class': None,
@@ -987,6 +1002,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Zone 3',
     'options': dict({
     }),
     'original_device_class': None,

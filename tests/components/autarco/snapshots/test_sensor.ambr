@@ -22,6 +22,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Charged month',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -78,6 +79,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Charged today',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -134,6 +136,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Charged total',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -190,6 +193,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Discharged month',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -246,6 +250,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Discharged today',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -302,6 +307,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Discharged total',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -358,6 +364,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Flow now',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -414,6 +421,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'State of charge',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
@@ -467,6 +475,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Energy AC output total',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -523,6 +532,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power AC output',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -579,6 +589,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Energy AC output total',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -635,6 +646,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power AC output',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -691,6 +703,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Energy production month',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -747,6 +760,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Energy production today',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -803,6 +817,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Energy production total',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -859,6 +874,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power production',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,

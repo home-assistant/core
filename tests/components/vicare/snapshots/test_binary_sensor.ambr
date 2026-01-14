@@ -20,6 +20,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Burner',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.RUNNING: 'running'>,
@@ -69,6 +70,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Circulation pump',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.RUNNING: 'running'>,
@@ -118,6 +120,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Circulation pump',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.RUNNING: 'running'>,
@@ -167,6 +170,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'DHW charging',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.RUNNING: 'running'>,
@@ -216,6 +220,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'DHW circulation pump',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.RUNNING: 'running'>,
@@ -265,6 +270,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'DHW pump',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.RUNNING: 'running'>,
@@ -314,6 +320,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Frost protection',
     'options': dict({
     }),
     'original_device_class': None,
@@ -362,6 +369,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Frost protection',
     'options': dict({
     }),
     'original_device_class': None,
@@ -410,6 +418,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'One-time charge',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.RUNNING: 'running'>,
@@ -459,6 +468,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Child safety lock',
     'options': dict({
     }),
     'original_device_class': None,
@@ -507,6 +517,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Identification mode',
     'options': dict({
     }),
     'original_device_class': None,
@@ -555,6 +566,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Mounting mode',
     'options': dict({
     }),
     'original_device_class': None,
@@ -603,6 +615,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Valve',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.DOOR: 'door'>,
@@ -652,6 +665,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Identification mode',
     'options': dict({
     }),
     'original_device_class': None,
@@ -700,6 +714,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Identification mode',
     'options': dict({
     }),
     'original_device_class': None,
@@ -748,6 +763,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Valve',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.DOOR: 'door'>,

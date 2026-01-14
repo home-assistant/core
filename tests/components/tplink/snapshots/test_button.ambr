@@ -20,6 +20,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Pair new device',
     'options': dict({
     }),
     'original_device_class': None,
@@ -68,6 +69,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Pan left',
     'options': dict({
     }),
     'original_device_class': None,
@@ -116,6 +118,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Pan right',
     'options': dict({
     }),
     'original_device_class': None,
@@ -164,6 +167,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Reset charging contacts consumable',
     'options': dict({
     }),
     'original_device_class': None,
@@ -199,6 +203,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Reset filter consumable',
     'options': dict({
     }),
     'original_device_class': None,
@@ -234,6 +239,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Reset main brush consumable',
     'options': dict({
     }),
     'original_device_class': None,
@@ -269,6 +275,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Reset sensor consumable',
     'options': dict({
     }),
     'original_device_class': None,
@@ -304,6 +311,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Reset side brush consumable',
     'options': dict({
     }),
     'original_device_class': None,
@@ -339,6 +347,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Restart',
     'options': dict({
     }),
     'original_device_class': <ButtonDeviceClass.RESTART: 'restart'>,
@@ -374,6 +383,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Stop alarm',
     'options': dict({
     }),
     'original_device_class': None,
@@ -381,7 +391,7 @@
     'original_name': 'Stop alarm',
     'platform': 'tplink',
     'previous_unique_id': None,
-    'suggested_object_id': 'my_device_stop_alarm',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'stop_alarm',
     'unique_id': '123456789ABCDEFGH_stop_alarm',
@@ -422,6 +432,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Test alarm',
     'options': dict({
     }),
     'original_device_class': None,
@@ -429,7 +440,7 @@
     'original_name': 'Test alarm',
     'platform': 'tplink',
     'previous_unique_id': None,
-    'suggested_object_id': 'my_device_test_alarm',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'test_alarm',
     'unique_id': '123456789ABCDEFGH_test_alarm',
@@ -470,6 +481,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Tilt down',
     'options': dict({
     }),
     'original_device_class': None,
@@ -518,6 +530,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Tilt up',
     'options': dict({
     }),
     'original_device_class': None,
@@ -566,6 +579,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Unpair device',
     'options': dict({
     }),
     'original_device_class': None,

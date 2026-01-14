@@ -20,6 +20,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Calibrate',
     'options': dict({
     }),
     'original_device_class': None,
@@ -68,6 +69,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Restart',
     'options': dict({
     }),
     'original_device_class': <ButtonDeviceClass.RESTART: 'restart'>,
@@ -117,6 +119,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Button',
     'options': dict({
     }),
     'original_device_class': None,
@@ -165,6 +168,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Turn off the screen',
     'options': dict({
     }),
     'original_device_class': None,
@@ -213,6 +217,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Turn on the screen',
     'options': dict({
     }),
     'original_device_class': None,
@@ -261,6 +266,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Button',
     'options': dict({
     }),
     'original_device_class': None,

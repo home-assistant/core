@@ -1201,6 +1201,7 @@ async def test_devices_payload_with_entities(
         entity_category=EntityCategory.CONFIG,
         has_entity_name=True,
         original_device_class=NumberDeviceClass.TEMPERATURE,
+        suggested_object_id="hue_1",
     )
     hass.states.async_set("number.hue_1", "2")
     # Entity with assumed state
@@ -1210,6 +1211,7 @@ async def test_devices_payload_with_entities(
         unique_id="2",
         device_id=device_entry.id,
         has_entity_name=True,
+        suggested_object_id="hue_2",
     )
     hass.states.async_set("light.hue_2", "on", {ATTR_ASSUMED_STATE: True})
     # Entity from a different integration

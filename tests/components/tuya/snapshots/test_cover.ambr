@@ -20,6 +20,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Curtain',
     'options': dict({
     }),
     'original_device_class': <CoverDeviceClass.CURTAIN: 'curtain'>,
@@ -71,6 +72,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Curtain',
     'options': dict({
     }),
     'original_device_class': <CoverDeviceClass.CURTAIN: 'curtain'>,
@@ -122,6 +124,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Curtain',
     'options': dict({
     }),
     'original_device_class': <CoverDeviceClass.CURTAIN: 'curtain'>,
@@ -173,6 +176,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Curtain',
     'options': dict({
     }),
     'original_device_class': <CoverDeviceClass.CURTAIN: 'curtain'>,
@@ -223,6 +227,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Curtain',
     'options': dict({
     }),
     'original_device_class': <CoverDeviceClass.CURTAIN: 'curtain'>,
@@ -274,6 +279,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Door 1',
     'options': dict({
     }),
     'original_device_class': <CoverDeviceClass.GARAGE: 'garage'>,
@@ -324,6 +330,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Curtain',
     'options': dict({
     }),
     'original_device_class': <CoverDeviceClass.CURTAIN: 'curtain'>,
@@ -374,6 +381,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Blind',
     'options': dict({
     }),
     'original_device_class': <CoverDeviceClass.BLIND: 'blind'>,
@@ -425,6 +433,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Curtain',
     'options': dict({
     }),
     'original_device_class': <CoverDeviceClass.CURTAIN: 'curtain'>,
@@ -476,6 +485,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Curtain',
     'options': dict({
     }),
     'original_device_class': <CoverDeviceClass.CURTAIN: 'curtain'>,
@@ -527,6 +537,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Curtain',
     'options': dict({
     }),
     'original_device_class': <CoverDeviceClass.CURTAIN: 'curtain'>,
@@ -578,6 +589,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Curtain',
     'options': dict({
     }),
     'original_device_class': <CoverDeviceClass.CURTAIN: 'curtain'>,
@@ -629,6 +641,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Curtain',
     'options': dict({
     }),
     'original_device_class': <CoverDeviceClass.CURTAIN: 'curtain'>,
@@ -680,6 +693,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Curtain',
     'options': dict({
     }),
     'original_device_class': <CoverDeviceClass.CURTAIN: 'curtain'>,
@@ -731,6 +745,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Curtain',
     'options': dict({
     }),
     'original_device_class': <CoverDeviceClass.CURTAIN: 'curtain'>,
@@ -782,6 +797,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Curtain',
     'options': dict({
     }),
     'original_device_class': <CoverDeviceClass.CURTAIN: 'curtain'>,

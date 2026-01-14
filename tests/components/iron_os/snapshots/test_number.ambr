@@ -25,6 +25,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Boost temperature',
     'options': dict({
     }),
     'original_device_class': None,
@@ -83,6 +84,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Calibration offset',
     'options': dict({
     }),
     'original_device_class': None,
@@ -141,6 +143,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Display brightness',
     'options': dict({
     }),
     'original_device_class': None,
@@ -198,6 +201,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Hall effect sensitivity',
     'options': dict({
     }),
     'original_device_class': None,
@@ -255,6 +259,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Hall sensor sleep timeout',
     'options': dict({
     }),
     'original_device_class': None,
@@ -313,6 +318,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Keep-awake pulse delay',
     'options': dict({
     }),
     'original_device_class': None,
@@ -371,6 +377,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Keep-awake pulse duration',
     'options': dict({
     }),
     'original_device_class': None,
@@ -429,6 +436,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Keep-awake pulse intensity',
     'options': dict({
     }),
     'original_device_class': None,
@@ -487,6 +495,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Long-press temperature step',
     'options': dict({
     }),
     'original_device_class': None,
@@ -545,6 +554,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Min. voltage per cell',
     'options': dict({
     }),
     'original_device_class': None,
@@ -603,6 +613,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Motion sensitivity',
     'options': dict({
     }),
     'original_device_class': None,
@@ -660,6 +671,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power Delivery timeout',
     'options': dict({
     }),
     'original_device_class': <NumberDeviceClass.DURATION: 'duration'>,
@@ -719,6 +731,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power limit',
     'options': dict({
     }),
     'original_device_class': None,
@@ -777,6 +790,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Quick Charge voltage',
     'options': dict({
     }),
     'original_device_class': <NumberDeviceClass.VOLTAGE: 'voltage'>,
@@ -836,6 +850,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Setpoint temperature',
     'options': dict({
     }),
     'original_device_class': None,
@@ -894,6 +909,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Short-press temperature step',
     'options': dict({
     }),
     'original_device_class': None,
@@ -952,6 +968,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Shutdown timeout',
     'options': dict({
     }),
     'original_device_class': <NumberDeviceClass.DURATION: 'duration'>,
@@ -1011,6 +1028,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Sleep temperature',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1069,6 +1087,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Sleep timeout',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1127,6 +1146,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Voltage divider',
     'options': dict({
     }),
     'original_device_class': None,

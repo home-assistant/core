@@ -25,6 +25,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Fan speed',
     'options': dict({
     }),
     'original_device_class': None,
@@ -82,6 +83,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Freezer temperature',
     'options': dict({
     }),
     'original_device_class': <NumberDeviceClass.TEMPERATURE: 'temperature'>,
@@ -141,6 +143,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Fridge temperature',
     'options': dict({
     }),
     'original_device_class': <NumberDeviceClass.TEMPERATURE: 'temperature'>,
@@ -200,6 +203,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Freezer temperature',
     'options': dict({
     }),
     'original_device_class': <NumberDeviceClass.TEMPERATURE: 'temperature'>,
@@ -259,6 +263,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Fridge temperature',
     'options': dict({
     }),
     'original_device_class': <NumberDeviceClass.TEMPERATURE: 'temperature'>,
@@ -318,6 +323,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Freezer temperature',
     'options': dict({
     }),
     'original_device_class': <NumberDeviceClass.TEMPERATURE: 'temperature'>,
@@ -377,6 +383,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Fridge temperature',
     'options': dict({
     }),
     'original_device_class': <NumberDeviceClass.TEMPERATURE: 'temperature'>,
@@ -436,6 +443,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Target temperature',
     'options': dict({
     }),
     'original_device_class': <NumberDeviceClass.TEMPERATURE: 'temperature'>,
@@ -495,6 +503,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Rinse cycles',
     'options': dict({
     }),
     'original_device_class': None,
@@ -553,6 +562,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Rinse cycles',
     'options': dict({
     }),
     'original_device_class': None,
@@ -611,6 +621,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Rinse cycles',
     'options': dict({
     }),
     'original_device_class': None,

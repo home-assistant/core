@@ -20,6 +20,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Warning: Aach 1',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.SAFETY: 'safety'>,
@@ -80,6 +81,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Warning: Aach 2',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.SAFETY: 'safety'>,
@@ -129,6 +131,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Warning: Aach 3',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.SAFETY: 'safety'>,
@@ -178,6 +181,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Warning: Aach 4',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.SAFETY: 'safety'>,
@@ -227,6 +231,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Warning: Aach 5',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.SAFETY: 'safety'>,

@@ -20,6 +20,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'End time',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -94,6 +95,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'State',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -177,6 +179,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Lower oven cook mode',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -238,6 +241,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Lower oven current temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -298,6 +302,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Lower oven state',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -354,6 +359,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Lower oven target temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -419,6 +425,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Upper oven cook mode',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -480,6 +487,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Upper oven current temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -540,6 +548,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Upper oven state',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -596,6 +605,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Upper oven target temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -661,6 +671,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Cook mode',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -722,6 +733,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Current temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -782,6 +794,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'State',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -838,6 +851,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Target temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -900,6 +914,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Detergent level',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -956,6 +971,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'End time',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -1034,6 +1050,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'State',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,

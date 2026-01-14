@@ -22,6 +22,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Estimated energy consumption - Current hour',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -81,6 +82,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Estimated energy consumption - Next hour',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -140,6 +142,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Estimated energy consumption - Today',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -199,6 +202,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Estimated energy consumption - Today remaining',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -258,6 +262,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Estimated energy consumption - Tomorrow',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -317,6 +322,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Estimated energy consumption - Yesterday',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -376,6 +382,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Estimated energy production - Current hour',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -435,6 +442,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Estimated energy production - Next hour',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -494,6 +502,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Estimated energy production - Today',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -553,6 +562,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Estimated energy production - Today remaining',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -612,6 +622,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Estimated energy production - Tomorrow',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -671,6 +682,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Estimated energy production - Yesterday',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -728,6 +740,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Highest consumption peak time - Today',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -777,6 +790,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Highest consumption peak time - Tomorrow',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -826,6 +840,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Highest consumption peak time - Yesterday',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -875,6 +890,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Highest peak time - Today',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -924,6 +940,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Highest peak time - Tomorrow',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -973,6 +990,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Highest peak time - Yesterday',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
