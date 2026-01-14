@@ -147,7 +147,9 @@ def _filter_hvac_mode_mappings(tuya_range: list[str]) -> dict[str, HVACMode | No
     If multiple Tuya modes map to the same HA mode, set the mapping to None to avoid
     ambiguity when converting back from HA to Tuya modes.
     """
-    modes_in_range = {tuya_mode: TUYA_HVAC_TO_HA.get(tuya_mode) for tuya_mode in tuya_range}
+    modes_in_range = {
+        tuya_mode: TUYA_HVAC_TO_HA.get(tuya_mode) for tuya_mode in tuya_range
+    }
     modes_occurrences = collections.Counter(modes_in_range.values())
     for key, value in modes_in_range.items():
         if value is not None and modes_occurrences[value] > 1:
