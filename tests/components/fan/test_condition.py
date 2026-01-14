@@ -15,7 +15,11 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
 )
-from homeassistant.core import HomeAssistant, ServiceCall
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.condition import (
+    ConditionCheckerTypeOptional,
+    async_from_config,
+)
 from homeassistant.setup import async_setup_component
 
 from tests.components import (
@@ -71,15 +75,22 @@ async def setup_automation_with_fan_condition(
     )
 
 
-async def has_single_call_after_trigger(
-    hass: HomeAssistant, service_calls: list[ServiceCall]
-) -> bool:
-    """Check if there is a single service call after the trigger event."""
-    hass.bus.async_fire("test_event")
-    await hass.async_block_till_done()
-    num_calls = len(service_calls)
-    service_calls.clear()
-    return num_calls == 1
+async def create_condition(
+    hass: HomeAssistant,
+    *,
+    condition: str,
+    target: dict,
+    behavior: str,
+) -> ConditionCheckerTypeOptional:
+    """Create a light state condition."""
+    return await async_from_config(
+        hass,
+        {
+            CONF_CONDITION: condition,
+            CONF_TARGET: target,
+            CONF_OPTIONS: {"behavior": behavior},
+        },
+    )
 
 
 @pytest.fixture(name="enable_experimental_triggers_conditions")
@@ -136,7 +147,6 @@ async def test_fan_conditions_gated_by_labs_flag(
 )
 async def test_fan_state_condition_behavior_any(
     hass: HomeAssistant,
-    service_calls: list[ServiceCall],
     target_fans: list[str],
     target_switches: list[str],
     condition_target_config: dict,
@@ -154,7 +164,7 @@ async def test_fan_state_condition_behavior_any(
         set_or_remove_state(hass, eid, states[0]["included"])
         await hass.async_block_till_done()
 
-    await setup_automation_with_fan_condition(
+    condition = await create_condition(
         hass,
         condition=condition,
         target=condition_target_config,
@@ -165,26 +175,20 @@ async def test_fan_state_condition_behavior_any(
     for state in states:
         for eid in target_switches:
             set_or_remove_state(hass, eid, state["included"])
-        await hass.async_block_till_done()
-        assert not await has_single_call_after_trigger(hass, service_calls)
+            await hass.async_block_till_done()
+            assert condition(hass) is False
 
     for state in states:
         included_state = state["included"]
         set_or_remove_state(hass, entity_id, included_state)
         await hass.async_block_till_done()
-        assert (
-            await has_single_call_after_trigger(hass, service_calls)
-            == state["condition_true"]
-        )
+        assert condition(hass) == state["condition_true"]
 
         # Check if changing other fans also passes the condition
         for other_entity_id in other_entity_ids:
             set_or_remove_state(hass, other_entity_id, included_state)
             await hass.async_block_till_done()
-        assert (
-            await has_single_call_after_trigger(hass, service_calls)
-            == state["condition_true"]
-        )
+        assert condition(hass) == state["condition_true"]
 
 
 @pytest.mark.usefixtures("enable_experimental_triggers_conditions")
@@ -209,7 +213,6 @@ async def test_fan_state_condition_behavior_any(
 )
 async def test_fan_state_condition_behavior_all(
     hass: HomeAssistant,
-    service_calls: list[ServiceCall],
     target_fans: list[str],
     condition_target_config: dict,
     entity_id: str,
@@ -230,7 +233,7 @@ async def test_fan_state_condition_behavior_all(
         set_or_remove_state(hass, eid, states[0]["included"])
         await hass.async_block_till_done()
 
-    await setup_automation_with_fan_condition(
+    condition = await create_condition(
         hass,
         condition=condition,
         target=condition_target_config,
@@ -243,7 +246,7 @@ async def test_fan_state_condition_behavior_all(
         set_or_remove_state(hass, entity_id, included_state)
         await hass.async_block_till_done()
         # The condition passes if all entities are either in a target state or invalid
-        assert await has_single_call_after_trigger(hass, service_calls) == (
+        assert condition(hass) == (
             (not state["state_valid"])
             or (state["condition_true"] and entities_in_target == 1)
         )
@@ -253,6 +256,6 @@ async def test_fan_state_condition_behavior_all(
             await hass.async_block_till_done()
 
         # The condition passes if all entities are either in a target state or invalid
-        assert await has_single_call_after_trigger(hass, service_calls) == (
+        assert condition(hass) == (
             (not state["state_valid"]) or state["condition_true"]
         )
