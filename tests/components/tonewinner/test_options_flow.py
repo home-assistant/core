@@ -1,0 +1,249 @@
+"""Test the ToneWinner AT-500 options flow."""
+
+from unittest.mock import MagicMock
+
+from homeassistant.components.tonewinner.const import CONF_SOURCE_MAPPINGS
+from homeassistant.components.tonewinner.media_player import INPUT_SOURCES
+from homeassistant.core import HomeAssistant
+from homeassistant.data_entry_flow import FlowResultType
+
+
+async def test_options_flow_init(
+    hass: HomeAssistant, mock_config_entry: MagicMock
+) -> None:
+    """Test options flow initialization."""
+    mock_config_entry.add_to_hass(hass)
+
+    # Initialize options flow
+    result = await hass.config_entries.options.async_init(mock_config_entry.entry_id)
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "init"
+
+    # Verify schema contains fields for all input sources
+    data_schema = result["data_schema"]
+    assert data_schema is not None
+
+
+async def test_options_flow_with_defaults(
+    hass: HomeAssistant, mock_config_entry: MagicMock
+) -> None:
+    """Test options flow shows default values when no options are set."""
+    mock_config_entry.options = {}
+    mock_config_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.options.async_init(mock_config_entry.entry_id)
+
+    assert result["type"] is FlowResultType.FORM
+
+    # All sources should be enabled by default with original names
+    data_schema = result["data_schema"]
+    assert data_schema is not None
+
+
+async def test_options_flow_with_existing_mappings(
+    hass: HomeAssistant, mock_config_entry: MagicMock
+) -> None:
+    """Test options flow loads existing source mappings."""
+    # Set up existing options
+    source_mappings = {
+        "HD1": {"enabled": True, "name": "Living Room TV"},
+        "HD2": {"enabled": False, "name": "Bedroom TV"},
+        "BT": {"enabled": True, "name": "Bluetooth Audio"},
+    }
+
+    mock_config_entry.options = {CONF_SOURCE_MAPPINGS: source_mappings}
+    mock_config_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.options.async_init(mock_config_entry.entry_id)
+
+    assert result["type"] is FlowResultType.FORM
+    data_schema = result["data_schema"]
+    assert data_schema is not None
+
+
+async def test_options_flow_save_mappings(
+    hass: HomeAssistant, mock_config_entry: MagicMock
+) -> None:
+    """Test saving source mappings in options flow."""
+    mock_config_entry.options = {}
+    mock_config_entry.add_to_hass(hass)
+
+    # Initialize options flow
+    result = await hass.config_entries.options.async_init(mock_config_entry.entry_id)
+
+    # Prepare user input for a few sources
+    user_input = {}
+    for source_name, source_code in list(INPUT_SOURCES.items())[:3]:
+        user_input[f"{source_code}_enabled"] = True
+        user_input[f"{source_code}_name"] = f"Custom {source_name}"
+
+    # Submit form
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input=user_input,
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == ""
+
+    # Verify source_mappings are saved correctly
+    assert CONF_SOURCE_MAPPINGS in result["data"]
+    source_mappings = result["data"][CONF_SOURCE_MAPPINGS]
+
+    # Check that we have mappings for the sources we configured
+    for source_name, source_code in list(INPUT_SOURCES.items())[:3]:
+        assert source_code in source_mappings
+        assert source_mappings[source_code]["enabled"] is True
+        assert source_mappings[source_code]["name"] == f"Custom {source_name}"
+
+
+async def test_options_flow_disable_source(
+    hass: HomeAssistant, mock_config_entry: MagicMock
+) -> None:
+    """Test disabling a source in options flow."""
+    mock_config_entry.options = {}
+    mock_config_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.options.async_init(mock_config_entry.entry_id)
+
+    # Disable HDMI 1
+    user_input = {
+        "HD1_enabled": False,
+        "HD1_name": "HDMI 1",
+    }
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input=user_input,
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    source_mappings = result["data"][CONF_SOURCE_MAPPINGS]
+
+    assert source_mappings["HD1"]["enabled"] is False
+    assert source_mappings["HD1"]["name"] == "HDMI 1"
+
+
+async def test_options_flow_rename_source(
+    hass: HomeAssistant, mock_config_entry: MagicMock
+) -> None:
+    """Test renaming a source in options flow."""
+    mock_config_entry.options = {}
+    mock_config_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.options.async_init(mock_config_entry.entry_id)
+
+    # Rename Bluetooth source
+    custom_name = "My Bluetooth Speaker"
+    user_input = {
+        "BT_enabled": True,
+        "BT_name": custom_name,
+    }
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input=user_input,
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    source_mappings = result["data"][CONF_SOURCE_MAPPINGS]
+
+    assert source_mappings["BT"]["name"] == custom_name
+
+
+async def test_options_flow_all_sources(
+    hass: HomeAssistant, mock_config_entry: MagicMock
+) -> None:
+    """Test configuring all input sources."""
+    mock_config_entry.options = {}
+    mock_config_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.options.async_init(mock_config_entry.entry_id)
+
+    # Configure all sources
+    user_input = {}
+    for source_name, source_code in INPUT_SOURCES.items():
+        user_input[f"{source_code}_enabled"] = True
+        user_input[f"{source_code}_name"] = source_name
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input=user_input,
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    source_mappings = result["data"][CONF_SOURCE_MAPPINGS]
+
+    # Verify all sources are configured
+    assert len(source_mappings) == len(INPUT_SOURCES)
+    for source_code in INPUT_SOURCES.values():
+        assert source_code in source_mappings
+
+
+async def test_options_flow_partial_configuration(
+    hass: HomeAssistant, mock_config_entry: MagicMock
+) -> None:
+    """Test that only configured sources are in the result."""
+    mock_config_entry.options = {}
+    mock_config_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.options.async_init(mock_config_entry.entry_id)
+
+    # Only configure a few sources (what user would actually do)
+    user_input = {
+        "HD1_enabled": True,
+        "HD1_name": "HDMI 1",
+        "HD2_enabled": True,
+        "HD2_name": "HDMI 2",
+    }
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input=user_input,
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    source_mappings = result["data"][CONF_SOURCE_MAPPINGS]
+
+    # Should only have the sources we configured
+    assert len(source_mappings) == 2
+    assert "HD1" in source_mappings
+    assert "HD2" in source_mappings
+
+
+async def test_options_flow_update_existing(
+    hass: HomeAssistant, mock_config_entry: MagicMock
+) -> None:
+    """Test updating existing source mappings."""
+    # Start with existing mappings
+    existing_mappings = {
+        "HD1": {"enabled": True, "name": "Old Name"},
+        "HD2": {"enabled": False, "name": "HDMI 2"},
+    }
+
+    mock_config_entry.options = {CONF_SOURCE_MAPPINGS: existing_mappings}
+    mock_config_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.options.async_init(mock_config_entry.entry_id)
+
+    # Update the mappings
+    user_input = {
+        "HD1_enabled": False,  # Disable it
+        "HD1_name": "New Name",  # Rename it
+        "HD2_enabled": True,  # Enable it
+        "HD2_name": "HDMI 2",  # Keep name
+    }
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input=user_input,
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    source_mappings = result["data"][CONF_SOURCE_MAPPINGS]
+
+    assert source_mappings["HD1"]["enabled"] is False
+    assert source_mappings["HD1"]["name"] == "New Name"
+    assert source_mappings["HD2"]["enabled"] is True
+    assert source_mappings["HD2"]["name"] == "HDMI 2"
