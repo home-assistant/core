@@ -86,9 +86,6 @@
         "name": "Charge count",
         "unit_of_measurement": "cycles"
       },
-      "charge_permitted": {
-        "name": "Charge permitted"
-      },
       "charged_energy": {
         "name": "Charged energy"
       },

@@ -562,11 +562,6 @@ SENSORS: tuple[NRGkickSensorEntityDescription, ...] = (
         value_fn=lambda value: _map_code_to_translation_key(value, STATUS_MAP),
     ),
     NRGkickSensorEntityDescription(
-        key="charge_permitted",
-        translation_key="charge_permitted",
-        value_path=("values", "general", "charge_permitted"),
-    ),
-    NRGkickSensorEntityDescription(
         key="charge_count",
         translation_key="charge_count",
         entity_category=EntityCategory.DIAGNOSTIC,

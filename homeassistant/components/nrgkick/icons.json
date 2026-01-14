@@ -4,9 +4,6 @@
       "charge_count": {
         "default": "mdi:counter"
       },
-      "charge_permitted": {
-        "default": "mdi:check-circle"
-      },
       "charged_energy": {
         "default": "mdi:lightning-bolt"
       },

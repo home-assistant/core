@@ -71,7 +71,6 @@ def mock_values_data_sensor():
             "vehicle_connect_time": 100,
             "vehicle_charging_time": 50,
             "charge_count": 5,
-            "charge_permitted": True,
             "rcd_trigger": RcdTriggerStatus.NO_FAULT,
             "warning_code": WarningCode.NO_WARNING,
             "error_code": ErrorCode.NO_ERROR,

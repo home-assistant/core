@@ -148,7 +148,6 @@ def mock_values_data():
         },
         "status": {
             "charging_status": 3,
-            "charge_permitted": True,
         },
         "temperatures": {
             "housing": 35.0,
