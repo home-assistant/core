@@ -1135,6 +1135,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Master update',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -1846,6 +1847,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Startup time',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,

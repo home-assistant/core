@@ -120,7 +120,7 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'printer Internet Access',
+    'object_id_base': 'Internet access',
     'options': dict({
     }),
     'original_device_class': None,
@@ -269,7 +269,7 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'printer Internet Access',
+    'object_id_base': 'Internet access',
     'options': dict({
     }),
     'original_device_class': None,
@@ -418,7 +418,7 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'printer Internet Access',
+    'object_id_base': 'Internet access',
     'options': dict({
     }),
     'original_device_class': None,
@@ -573,7 +573,7 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'printer Internet Access',
+    'object_id_base': 'Internet access',
     'options': dict({
     }),
     'original_device_class': None,

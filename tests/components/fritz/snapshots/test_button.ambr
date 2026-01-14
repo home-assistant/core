@@ -219,7 +219,7 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'printer Wake on LAN',
+    'object_id_base': 'Wake on LAN',
     'options': dict({
     }),
     'original_device_class': None,

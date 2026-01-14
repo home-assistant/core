@@ -22,6 +22,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Ammonia',
     'options': dict({
     }),
     'original_device_class': None,
@@ -75,6 +76,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Benzene',
     'options': dict({
     }),
     'original_device_class': None,
@@ -367,6 +369,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Nitrogen monoxide',
     'options': dict({
     }),
     'original_device_class': None,
@@ -420,6 +423,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Non-methane hydrocarbons',
     'options': dict({
     }),
     'original_device_class': None,
