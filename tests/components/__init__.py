@@ -5,6 +5,8 @@ from enum import StrEnum
 import itertools
 from typing import Any, TypedDict
 
+import pytest
+
 from homeassistant.const import (
     ATTR_AREA_ID,
     ATTR_DEVICE_ID,
@@ -634,3 +636,37 @@ def other_states(state: StrEnum | Iterable[StrEnum]) -> list[str]:
         enum_class = list(state)[0].__class__
 
     return sorted({s.value for s in enum_class} - excluded_values)
+
+
+async def help_test_condition_gated_by_labs_flag(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture, condition: str
+) -> None:
+    """Help test a condition is gated by the labs flag."""
+
+    # Local include to avoid importing the automation component unnecessarily
+    from homeassistant.components import automation  # noqa: PLC0415
+
+    await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: {
+                "trigger": {"platform": "event", "event_type": "test_event"},
+                "condition": {
+                    CONF_CONDITION: condition,
+                    CONF_TARGET: {ATTR_LABEL_ID: "test_label"},
+                    CONF_OPTIONS: {"behavior": "any"},
+                },
+                "action": {
+                    "service": "test.automation",
+                },
+            }
+        },
+    )
+
+    assert (
+        "Unnamed automation failed to setup conditions and has been disabled: "
+        f"Condition '{condition}' requires the experimental 'New triggers and "
+        "conditions' feature to be enabled in Home Assistant Labs settings "
+        "(feature flag: 'new_triggers_conditions')"
+    ) in caplog.text
