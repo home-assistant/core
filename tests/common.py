@@ -684,7 +684,6 @@ def mock_registry(
 class RegistryEntryWithDefaults(er.RegistryEntry):
     """Helper to create a registry entry with defaults."""
 
-    calculated_object_id: str | None = attr.ib(default=None)
     capabilities: Mapping[str, Any] | None = attr.ib(default=None)
     config_entry_id: str | None = attr.ib(default=None)
     config_subentry_id: str | None = attr.ib(default=None)
@@ -698,6 +697,7 @@ class RegistryEntryWithDefaults(er.RegistryEntry):
         converter=attr.converters.default_if_none(factory=uuid_util.random_uuid_hex),  # type: ignore[misc]
     )
     has_entity_name: bool = attr.ib(default=False)
+    object_id_base: str | None = attr.ib(default=None)
     options: er.ReadOnlyEntityOptionsType = attr.ib(
         default=None, converter=er._protect_entity_options
     )

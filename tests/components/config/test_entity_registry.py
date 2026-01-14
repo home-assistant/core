@@ -1350,7 +1350,7 @@ async def test_get_automatic_entity_ids(
                 entity_id="test_domain.test_1",
                 unique_id="uniq1",
                 platform="test_domain",
-                calculated_object_id="test_1",
+                object_id_base="test_1",
             ),
             "test_domain.test_2": RegistryEntryWithDefaults(
                 entity_id="test_domain.test_2",
@@ -1484,7 +1484,7 @@ async def test_get_automatic_entity_ids(
     assert msg["success"]
     assert msg["result"] == {
         # No entity object for test_domain.test_1,
-        # but still works thanks to stored calculated_object_id
+        # but still works thanks to stored object_id_base
         "test_domain.test_1": "test_domain.test_1",
         # The suggested_object_id is taken, fall back to suggested_object_id + _2
         "test_domain.test_2": "test_domain.collision_2",

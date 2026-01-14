@@ -186,7 +186,6 @@ class RegistryEntry:
     previous_unique_id: str | None = attr.ib(default=None)
     aliases: set[str] = attr.ib(factory=set)
     area_id: str | None = attr.ib(default=None)
-    calculated_object_id: str | None = attr.ib()
     categories: dict[str, str] = attr.ib(factory=dict)
     capabilities: Mapping[str, Any] | None = attr.ib()
     config_entry_id: str | None = attr.ib()
@@ -206,6 +205,7 @@ class RegistryEntry:
     labels: set[str] = attr.ib(factory=set)
     modified_at: datetime = attr.ib(factory=utcnow)
     name: str | None = attr.ib(default=None)
+    object_id_base: str | None = attr.ib()
     options: ReadOnlyEntityOptionsType = attr.ib(converter=_protect_entity_options)
     # As set by integration
     original_device_class: str | None = attr.ib()
@@ -351,7 +351,6 @@ class RegistryEntry:
                 {
                     "aliases": list(self.aliases),
                     "area_id": self.area_id,
-                    "calculated_object_id": self.calculated_object_id,
                     "categories": self.categories,
                     "capabilities": self.capabilities,
                     "config_entry_id": self.config_entry_id,
@@ -369,6 +368,7 @@ class RegistryEntry:
                     "labels": list(self.labels),
                     "modified_at": self.modified_at,
                     "name": self.name,
+                    "object_id_base": self.object_id_base,
                     "options": self.options,
                     "original_device_class": self.original_device_class,
                     "original_icon": self.original_icon,
@@ -648,9 +648,9 @@ class EntityRegistryStore(storage.Store[dict[str, list[dict[str, Any]]]]):
                     entity["options_undefined"] = set_to_undefined
 
             if old_minor_version < 20:
-                # Version 1.20 adds calculated_object_id to entities
+                # Version 1.20 adds object_id_base to entities
                 for entity in data["entities"]:
-                    entity["calculated_object_id"] = entity["original_name"]
+                    entity["object_id_base"] = entity["original_name"]
 
         if old_major_version > 1:
             raise NotImplementedError
@@ -974,12 +974,12 @@ class EntityRegistry(BaseRegistry):
     def _async_generate_entity_id(
         self,
         *,
-        calculated_object_id: str | None,
         current_entity_id: str | None,
         device_id: str | None,
         domain: str,
         has_entity_name: bool,
         name: str | None,
+        object_id_base: str | None,
         platform: str,
         reserved_entity_ids: set[str] | None = None,
         suggested_object_id: str | None,
@@ -988,9 +988,9 @@ class EntityRegistry(BaseRegistry):
         """Generate an entity ID, based on all the provided parameters.
 
         `name` has priority over `suggested_object_id`, which has priority
-        over `calculated_object_id`.
+        over `object_id_base`.
         `name` and `suggested_object_id` do not cause the use of device name,
-        `calculated_object_id` does if `has_entity_name` is True.
+        `object_id_base` does if `has_entity_name` is True.
         Entity ID conflicts are checked against registered and currently
         existing entities, as well as provided `reserved_entity_ids`.
         """
@@ -1001,7 +1001,7 @@ class EntityRegistry(BaseRegistry):
         elif suggested_object_id is not None:
             object_id = suggested_object_id
         else:
-            object_id = calculated_object_id
+            object_id = object_id_base
             if has_entity_name:
                 use_device = True
 
@@ -1037,12 +1037,12 @@ class EntityRegistry(BaseRegistry):
         as well as provided `reserved_entity_ids`.
         """
         return self._async_generate_entity_id(
-            calculated_object_id=entry.calculated_object_id,
             current_entity_id=entry.entity_id,
             device_id=entry.device_id,
             domain=entry.domain,
             has_entity_name=entry.has_entity_name,
             name=entry.name,
+            object_id_base=entry.object_id_base,
             platform=entry.platform,
             reserved_entity_ids=reserved_entity_ids,
             suggested_object_id=entry.suggested_object_id,
@@ -1057,8 +1057,8 @@ class EntityRegistry(BaseRegistry):
         unique_id: str,
         *,
         # Used for entity ID generation, if entity gets created.
-        # `suggested_object_id` has priority over `calculated_object_id`.
-        calculated_object_id: str | None | UndefinedType = UNDEFINED,
+        # `suggested_object_id` has priority over `object_id_base`.
+        object_id_base: str | None | UndefinedType = UNDEFINED,
         suggested_object_id: str | None | UndefinedType = UNDEFINED,
         # To disable or hide an entity if it gets created, does not affect
         # existing entities
@@ -1094,13 +1094,13 @@ class EntityRegistry(BaseRegistry):
         if entity_id:
             return self._async_update_entity(
                 entity_id,
-                calculated_object_id=calculated_object_id,
                 capabilities=capabilities,
                 config_entry_id=config_entry_id,
                 config_subentry_id=config_subentry_id,
                 device_id=device_id,
                 entity_category=entity_category,
                 has_entity_name=has_entity_name,
+                object_id_base=object_id_base,
                 original_device_class=original_device_class,
                 original_icon=original_icon,
                 original_name=original_name,
@@ -1174,17 +1174,17 @@ class EntityRegistry(BaseRegistry):
 
         device_id = none_if_undefined(device_id)
         has_entity_name_bool = none_if_undefined(has_entity_name) or False
-        calculated_object_id = none_if_undefined(calculated_object_id)
+        object_id_base = none_if_undefined(object_id_base)
         suggested_object_id = none_if_undefined(suggested_object_id)
 
         if entity_id is None:
             entity_id = self._async_generate_entity_id(
-                calculated_object_id=calculated_object_id,
                 current_entity_id=None,
                 device_id=device_id,
                 domain=domain,
                 has_entity_name=has_entity_name_bool,
                 name=name,
+                object_id_base=object_id_base,
                 platform=platform,
                 suggested_object_id=suggested_object_id,
                 unique_id=unique_id,
@@ -1201,7 +1201,6 @@ class EntityRegistry(BaseRegistry):
         entry = RegistryEntry(
             aliases=aliases,
             area_id=area_id,
-            calculated_object_id=calculated_object_id,
             categories=categories,
             capabilities=none_if_undefined(capabilities),
             config_entry_id=none_if_undefined(config_entry_id),
@@ -1218,6 +1217,7 @@ class EntityRegistry(BaseRegistry):
             id=entity_registry_id,
             labels=labels,
             name=name,
+            object_id_base=object_id_base,
             options=options,
             original_device_class=none_if_undefined(original_device_class),
             original_icon=none_if_undefined(original_icon),
@@ -1397,7 +1397,6 @@ class EntityRegistry(BaseRegistry):
         *,
         aliases: set[str] | UndefinedType = UNDEFINED,
         area_id: str | None | UndefinedType = UNDEFINED,
-        calculated_object_id: str | None | UndefinedType = UNDEFINED,
         categories: dict[str, str] | UndefinedType = UNDEFINED,
         capabilities: Mapping[str, Any] | None | UndefinedType = UNDEFINED,
         config_entry_id: str | None | UndefinedType = UNDEFINED,
@@ -1413,6 +1412,7 @@ class EntityRegistry(BaseRegistry):
         name: str | None | UndefinedType = UNDEFINED,
         new_entity_id: str | UndefinedType = UNDEFINED,
         new_unique_id: str | UndefinedType = UNDEFINED,
+        object_id_base: str | None | UndefinedType = UNDEFINED,
         options: EntityOptionsType | UndefinedType = UNDEFINED,
         original_device_class: str | None | UndefinedType = UNDEFINED,
         original_icon: str | None | UndefinedType = UNDEFINED,
@@ -1432,7 +1432,6 @@ class EntityRegistry(BaseRegistry):
         for attr_name, value in (
             ("aliases", aliases),
             ("area_id", area_id),
-            ("calculated_object_id", calculated_object_id),
             ("categories", categories),
             ("capabilities", capabilities),
             ("config_entry_id", config_entry_id),
@@ -1446,6 +1445,7 @@ class EntityRegistry(BaseRegistry):
             ("has_entity_name", has_entity_name),
             ("labels", labels),
             ("name", name),
+            ("object_id_base", object_id_base),
             ("options", options),
             ("original_device_class", original_device_class),
             ("original_icon", original_icon),
@@ -1690,7 +1690,6 @@ class EntityRegistry(BaseRegistry):
                 entities[entity["entity_id"]] = RegistryEntry(
                     aliases=set(entity["aliases"]),
                     area_id=entity["area_id"],
-                    calculated_object_id=entity.get("calculated_object_id"),
                     categories=entity["categories"],
                     capabilities=entity["capabilities"],
                     config_entry_id=entity["config_entry_id"],
@@ -1714,6 +1713,7 @@ class EntityRegistry(BaseRegistry):
                     labels=set(entity["labels"]),
                     modified_at=datetime.fromisoformat(entity["modified_at"]),
                     name=entity["name"],
+                    object_id_base=entity.get("object_id_base"),
                     options=entity["options"],
                     original_device_class=entity["original_device_class"],
                     original_icon=entity["original_icon"],

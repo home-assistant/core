@@ -882,9 +882,7 @@ class EntityPlatform:
             else:
                 device = None
 
-            suggested_object_id, calculated_object_id = _async_derive_object_ids(
-                entity, self
-            )
+            suggested_object_id, object_id_base = _async_derive_object_ids(entity, self)
 
             disabled_by: RegistryEntryDisabler | None = None
             if not entity.entity_registry_enabled_default:
@@ -898,7 +896,6 @@ class EntityPlatform:
                 self.domain,
                 self.platform_name,
                 entity.unique_id,
-                calculated_object_id=calculated_object_id,
                 capabilities=entity.capability_attributes,
                 config_entry=self.config_entry,
                 config_subentry_id=config_subentry_id,
@@ -908,6 +905,7 @@ class EntityPlatform:
                 get_initial_options=entity.get_initial_entity_options,
                 has_entity_name=entity.has_entity_name,
                 hidden_by=hidden_by,
+                object_id_base=object_id_base,
                 original_device_class=entity.device_class,
                 original_icon=entity.icon,
                 original_name=entity_name,
@@ -1226,13 +1224,13 @@ def _async_derive_object_ids(
 ) -> tuple[str | None, str | None]:
     """Derive the object IDs for an entity.
 
-    Derives both suggested and calculated object IDs.
+    Derives both suggested and base object IDs.
     """
-    is_calculated = True
+    is_base = True
     object_id: str | None
 
     if entity.internal_integration_suggested_object_id is not None:
-        is_calculated = False
+        is_base = False
         object_id = entity.internal_integration_suggested_object_id
     else:
         object_id = entity.suggested_object_id
@@ -1241,19 +1239,19 @@ def _async_derive_object_ids(
         object_id = fallback_object_id
 
     if platform.entity_namespace is not None:
-        is_calculated = False
+        is_base = False
         if entity.unique_id is not None and not object_id:
             object_id = f"{platform.platform_name}_{entity.unique_id}"
         object_id = f"{platform.entity_namespace} {object_id}"
 
     suggested_object_id: str | None = None
-    calculated_object_id: str | None = None
-    if is_calculated:
-        calculated_object_id = object_id
+    object_id_base: str | None = None
+    if is_base:
+        object_id_base = object_id
     else:
         suggested_object_id = object_id
 
-    return suggested_object_id, calculated_object_id
+    return suggested_object_id, object_id_base
 
 
 current_platform: ContextVar[EntityPlatform | None] = ContextVar(

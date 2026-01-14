@@ -1515,13 +1515,13 @@ async def test_entity_info_added_to_entity_registry(
     await component.async_setup({})
 
     entity_default = MockEntity(
-        calculated_object_id="best name",
         capability_attributes={"max": 100},
         device_class="mock-device-class",
         entity_category=EntityCategory.CONFIG,
         has_entity_name=True,
         icon="nice:icon",
         name="best name",
+        object_id_base="best name",
         supported_features=5,
         translation_key="my_translation_key",
         unique_id="default",
@@ -1535,7 +1535,6 @@ async def test_entity_info_added_to_entity_registry(
         entity_id="test_domain.best_name",
         unique_id="default",
         platform="test_domain",
-        calculated_object_id="best name",
         capabilities={"max": 100},
         config_entry_id=None,
         config_subentry_id=None,
@@ -1550,6 +1549,7 @@ async def test_entity_info_added_to_entity_registry(
         id=ANY,
         modified_at=dt_util.utcnow(),
         name=None,
+        object_id_base="best name",
         original_device_class="mock-device-class",
         original_icon="nice:icon",
         original_name="best name",
