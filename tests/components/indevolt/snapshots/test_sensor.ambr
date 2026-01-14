@@ -35,7 +35,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'ac_input_power',
-    'unique_id': 'indevolt_indevolt_test_gen1_2101',
+    'unique_id': 'BK1600-12345678_2101',
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
 # ---
@@ -52,7 +52,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0.0',
+    'state': '0',
   })
 # ---
 # name: test_sensor[1][sensor.indevolt_bk1600_ac_output_power-entry]
@@ -91,7 +91,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'ac_output_power',
-    'unique_id': 'indevolt_indevolt_test_gen1_2108',
+    'unique_id': 'BK1600-12345678_2108',
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
 # ---
@@ -108,7 +108,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0.0',
+    'state': '0',
   })
 # ---
 # name: test_sensor[1][sensor.indevolt_bk1600_battery_charge_discharge_state-entry]
@@ -148,7 +148,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'battery_charge_discharge_state',
-    'unique_id': 'indevolt_indevolt_test_gen1_6001',
+    'unique_id': 'BK1600-12345678_6001',
     'unit_of_measurement': None,
   })
 # ---
@@ -207,7 +207,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'battery_power',
-    'unique_id': 'indevolt_indevolt_test_gen1_6000',
+    'unique_id': 'BK1600-12345678_6000',
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
 # ---
@@ -224,7 +224,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0.0',
+    'state': '0',
   })
 # ---
 # name: test_sensor[1][sensor.indevolt_bk1600_battery_soc-entry]
@@ -260,7 +260,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'battery_soc',
-    'unique_id': 'indevolt_indevolt_test_gen1_6002',
+    'unique_id': 'BK1600-12345678_6002',
     'unit_of_measurement': '%',
   })
 # ---
@@ -277,7 +277,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '92.0',
+    'state': '92',
   })
 # ---
 # name: test_sensor[1][sensor.indevolt_bk1600_cumulative_production-entry]
@@ -307,6 +307,9 @@
       'sensor': dict({
         'suggested_display_precision': 2,
       }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
@@ -316,7 +319,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'cumulative_production',
-    'unique_id': 'indevolt_indevolt_test_gen1_1505',
+    'unique_id': 'BK1600-12345678_1505',
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
@@ -372,7 +375,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'daily_production',
-    'unique_id': 'indevolt_indevolt_test_gen1_1502',
+    'unique_id': 'BK1600-12345678_1502',
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
@@ -389,7 +392,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0.0',
+    'state': '0',
   })
 # ---
 # name: test_sensor[1][sensor.indevolt_bk1600_dc_input_power_1-entry]
@@ -428,7 +431,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'dc_input_power_1',
-    'unique_id': 'indevolt_indevolt_test_gen1_1664',
+    'unique_id': 'BK1600-12345678_1664',
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
 # ---
@@ -445,7 +448,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0.0',
+    'state': '0',
   })
 # ---
 # name: test_sensor[1][sensor.indevolt_bk1600_dc_input_power_2-entry]
@@ -484,7 +487,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'dc_input_power_2',
-    'unique_id': 'indevolt_indevolt_test_gen1_1665',
+    'unique_id': 'BK1600-12345678_1665',
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
 # ---
@@ -501,7 +504,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0.0',
+    'state': '0',
   })
 # ---
 # name: test_sensor[1][sensor.indevolt_bk1600_dc_output_power-entry]
@@ -540,7 +543,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'dc_output_power',
-    'unique_id': 'indevolt_indevolt_test_gen1_1501',
+    'unique_id': 'BK1600-12345678_1501',
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
 # ---
@@ -557,65 +560,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0.0',
-  })
-# ---
-# name: test_sensor[1][sensor.indevolt_bk1600_meter_connection_status-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'options': list([
-        'off',
-        'on',
-      ]),
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.indevolt_bk1600_meter_connection_status',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
-    'original_icon': None,
-    'original_name': 'Meter connection status',
-    'platform': 'indevolt',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'meter_connection_status',
-    'unique_id': 'indevolt_indevolt_test_gen1_7120',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_sensor[1][sensor.indevolt_bk1600_meter_connection_status-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'enum',
-      'friendly_name': 'INDEVOLT BK1600 Meter connection status',
-      'options': list([
-        'off',
-        'on',
-      ]),
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.indevolt_bk1600_meter_connection_status',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'off',
+    'state': '0',
   })
 # ---
 # name: test_sensor[1][sensor.indevolt_bk1600_meter_power-entry]
@@ -654,7 +599,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'meter_power',
-    'unique_id': 'indevolt_indevolt_test_gen1_21028',
+    'unique_id': 'BK1600-12345678_21028',
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
 # ---
@@ -671,7 +616,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0.0',
+    'state': '0',
   })
 # ---
 # name: test_sensor[1][sensor.indevolt_bk1600_rated_capacity-entry]
@@ -710,7 +655,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'rated_capacity',
-    'unique_id': 'indevolt_indevolt_test_gen1_6105',
+    'unique_id': 'BK1600-12345678_6105',
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
@@ -727,55 +672,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '5.0',
-  })
-# ---
-# name: test_sensor[1][sensor.indevolt_bk1600_serial_number-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.indevolt_bk1600_serial_number',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'Serial number',
-    'platform': 'indevolt',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'serial_number',
-    'unique_id': 'indevolt_indevolt_test_gen1_0',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_sensor[1][sensor.indevolt_bk1600_serial_number-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'INDEVOLT BK1600 Serial number',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.indevolt_bk1600_serial_number',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'BK1600-12345678',
+    'state': '5',
   })
 # ---
 # name: test_sensor[1][sensor.indevolt_bk1600_total_ac_input_energy-entry]
@@ -814,7 +711,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'total_ac_input_energy',
-    'unique_id': 'indevolt_indevolt_test_gen1_2107',
+    'unique_id': 'BK1600-12345678_2107',
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
@@ -872,7 +769,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'working_mode',
-    'unique_id': 'indevolt_indevolt_test_gen1_7101',
+    'unique_id': 'BK1600-12345678_7101',
     'unit_of_measurement': None,
   })
 # ---
@@ -932,7 +829,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'ac_input_power',
-    'unique_id': 'indevolt_indevolt_test_gen2_2101',
+    'unique_id': 'SolidFlex2000-87654321_2101',
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
 # ---
@@ -949,7 +846,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0.0',
+    'state': '0',
   })
 # ---
 # name: test_sensor[2][sensor.indevolt_cms_sf2000_ac_output_power-entry]
@@ -988,7 +885,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'ac_output_power',
-    'unique_id': 'indevolt_indevolt_test_gen2_2108',
+    'unique_id': 'SolidFlex2000-87654321_2108',
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
 # ---
@@ -1005,7 +902,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0.0',
+    'state': '0',
   })
 # ---
 # name: test_sensor[2][sensor.indevolt_cms_sf2000_battery_charge_discharge_state-entry]
@@ -1045,7 +942,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'battery_charge_discharge_state',
-    'unique_id': 'indevolt_indevolt_test_gen2_6001',
+    'unique_id': 'SolidFlex2000-87654321_6001',
     'unit_of_measurement': None,
   })
 # ---
@@ -1104,7 +1001,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'battery_daily_charging_energy',
-    'unique_id': 'indevolt_indevolt_test_gen2_6004',
+    'unique_id': 'SolidFlex2000-87654321_6004',
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
@@ -1160,7 +1057,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'battery_daily_discharging_energy',
-    'unique_id': 'indevolt_indevolt_test_gen2_6005',
+    'unique_id': 'SolidFlex2000-87654321_6005',
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
@@ -1177,7 +1074,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0.0',
+    'state': '0',
   })
 # ---
 # name: test_sensor[2][sensor.indevolt_cms_sf2000_battery_pack_1_current-entry]
@@ -1216,7 +1113,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'battery_pack_1_current',
-    'unique_id': 'indevolt_indevolt_test_gen2_19173',
+    'unique_id': 'SolidFlex2000-87654321_19173',
     'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
   })
 # ---
@@ -1267,7 +1164,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'battery_pack_1_serial_number',
-    'unique_id': 'indevolt_indevolt_test_gen2_9032',
+    'unique_id': 'SolidFlex2000-87654321_9032',
     'unit_of_measurement': None,
   })
 # ---
@@ -1317,7 +1214,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'battery_pack_1_soc',
-    'unique_id': 'indevolt_indevolt_test_gen2_9016',
+    'unique_id': 'SolidFlex2000-87654321_9016',
     'unit_of_measurement': '%',
   })
 # ---
@@ -1373,7 +1270,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'battery_pack_1_temperature',
-    'unique_id': 'indevolt_indevolt_test_gen2_9030',
+    'unique_id': 'SolidFlex2000-87654321_9030',
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
@@ -1429,7 +1326,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'battery_pack_1_voltage',
-    'unique_id': 'indevolt_indevolt_test_gen2_9020',
+    'unique_id': 'SolidFlex2000-87654321_9020',
     'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
   })
 # ---
@@ -1485,7 +1382,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'battery_pack_2_current',
-    'unique_id': 'indevolt_indevolt_test_gen2_19174',
+    'unique_id': 'SolidFlex2000-87654321_19174',
     'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
   })
 # ---
@@ -1536,7 +1433,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'battery_pack_2_serial_number',
-    'unique_id': 'indevolt_indevolt_test_gen2_9051',
+    'unique_id': 'SolidFlex2000-87654321_9051',
     'unit_of_measurement': None,
   })
 # ---
@@ -1586,7 +1483,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'battery_pack_2_soc',
-    'unique_id': 'indevolt_indevolt_test_gen2_9035',
+    'unique_id': 'SolidFlex2000-87654321_9035',
     'unit_of_measurement': '%',
   })
 # ---
@@ -1642,7 +1539,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'battery_pack_2_temperature',
-    'unique_id': 'indevolt_indevolt_test_gen2_9049',
+    'unique_id': 'SolidFlex2000-87654321_9049',
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
@@ -1698,7 +1595,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'battery_pack_2_voltage',
-    'unique_id': 'indevolt_indevolt_test_gen2_9039',
+    'unique_id': 'SolidFlex2000-87654321_9039',
     'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
   })
 # ---
@@ -1754,7 +1651,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'battery_pack_3_current',
-    'unique_id': 'indevolt_indevolt_test_gen2_19175',
+    'unique_id': 'SolidFlex2000-87654321_19175',
     'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
   })
 # ---
@@ -1805,7 +1702,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'battery_pack_3_serial_number',
-    'unique_id': 'indevolt_indevolt_test_gen2_9070',
+    'unique_id': 'SolidFlex2000-87654321_9070',
     'unit_of_measurement': None,
   })
 # ---
@@ -1855,7 +1752,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'battery_pack_3_soc',
-    'unique_id': 'indevolt_indevolt_test_gen2_9054',
+    'unique_id': 'SolidFlex2000-87654321_9054',
     'unit_of_measurement': '%',
   })
 # ---
@@ -1911,7 +1808,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'battery_pack_3_temperature',
-    'unique_id': 'indevolt_indevolt_test_gen2_9068',
+    'unique_id': 'SolidFlex2000-87654321_9068',
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
@@ -1967,7 +1864,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'battery_pack_3_voltage',
-    'unique_id': 'indevolt_indevolt_test_gen2_9058',
+    'unique_id': 'SolidFlex2000-87654321_9058',
     'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
   })
 # ---
@@ -2023,7 +1920,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'battery_pack_4_current',
-    'unique_id': 'indevolt_indevolt_test_gen2_19176',
+    'unique_id': 'SolidFlex2000-87654321_19176',
     'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
   })
 # ---
@@ -2074,7 +1971,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'battery_pack_4_serial_number',
-    'unique_id': 'indevolt_indevolt_test_gen2_9165',
+    'unique_id': 'SolidFlex2000-87654321_9165',
     'unit_of_measurement': None,
   })
 # ---
@@ -2124,7 +2021,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'battery_pack_4_soc',
-    'unique_id': 'indevolt_indevolt_test_gen2_9149',
+    'unique_id': 'SolidFlex2000-87654321_9149',
     'unit_of_measurement': '%',
   })
 # ---
@@ -2180,7 +2077,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'battery_pack_4_temperature',
-    'unique_id': 'indevolt_indevolt_test_gen2_9163',
+    'unique_id': 'SolidFlex2000-87654321_9163',
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
@@ -2236,7 +2133,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'battery_pack_4_voltage',
-    'unique_id': 'indevolt_indevolt_test_gen2_9153',
+    'unique_id': 'SolidFlex2000-87654321_9153',
     'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
   })
 # ---
@@ -2292,7 +2189,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'battery_pack_5_current',
-    'unique_id': 'indevolt_indevolt_test_gen2_19177',
+    'unique_id': 'SolidFlex2000-87654321_19177',
     'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
   })
 # ---
@@ -2343,7 +2240,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'battery_pack_5_serial_number',
-    'unique_id': 'indevolt_indevolt_test_gen2_9218',
+    'unique_id': 'SolidFlex2000-87654321_9218',
     'unit_of_measurement': None,
   })
 # ---
@@ -2393,7 +2290,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'battery_pack_5_soc',
-    'unique_id': 'indevolt_indevolt_test_gen2_9202',
+    'unique_id': 'SolidFlex2000-87654321_9202',
     'unit_of_measurement': '%',
   })
 # ---
@@ -2449,7 +2346,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'battery_pack_5_temperature',
-    'unique_id': 'indevolt_indevolt_test_gen2_9216',
+    'unique_id': 'SolidFlex2000-87654321_9216',
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
@@ -2505,7 +2402,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'battery_pack_5_voltage',
-    'unique_id': 'indevolt_indevolt_test_gen2_9206',
+    'unique_id': 'SolidFlex2000-87654321_9206',
     'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
   })
 # ---
@@ -2561,7 +2458,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'battery_power',
-    'unique_id': 'indevolt_indevolt_test_gen2_6000',
+    'unique_id': 'SolidFlex2000-87654321_6000',
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
 # ---
@@ -2578,7 +2475,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0.0',
+    'state': '0',
   })
 # ---
 # name: test_sensor[2][sensor.indevolt_cms_sf2000_battery_soc-entry]
@@ -2614,7 +2511,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'battery_soc',
-    'unique_id': 'indevolt_indevolt_test_gen2_6002',
+    'unique_id': 'SolidFlex2000-87654321_6002',
     'unit_of_measurement': '%',
   })
 # ---
@@ -2631,7 +2528,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '92.0',
+    'state': '92',
   })
 # ---
 # name: test_sensor[2][sensor.indevolt_cms_sf2000_battery_total_charging_energy-entry]
@@ -2670,7 +2567,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'battery_total_charging_energy',
-    'unique_id': 'indevolt_indevolt_test_gen2_6006',
+    'unique_id': 'SolidFlex2000-87654321_6006',
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
@@ -2726,7 +2623,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'battery_total_discharging_energy',
-    'unique_id': 'indevolt_indevolt_test_gen2_6007',
+    'unique_id': 'SolidFlex2000-87654321_6007',
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
@@ -2782,7 +2679,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'bypass_input_energy',
-    'unique_id': 'indevolt_indevolt_test_gen2_11034',
+    'unique_id': 'SolidFlex2000-87654321_11034',
     'unit_of_measurement': <UnitOfEnergy.WATT_HOUR: 'Wh'>,
   })
 # ---
@@ -2799,7 +2696,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '100.0',
+    'state': '100',
   })
 # ---
 # name: test_sensor[2][sensor.indevolt_cms_sf2000_bypass_power-entry]
@@ -2838,7 +2735,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'bypass_power',
-    'unique_id': 'indevolt_indevolt_test_gen2_667',
+    'unique_id': 'SolidFlex2000-87654321_667',
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
 # ---
@@ -2855,7 +2752,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0.0',
+    'state': '0',
   })
 # ---
 # name: test_sensor[2][sensor.indevolt_cms_sf2000_daily_production-entry]
@@ -2894,7 +2791,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'daily_production',
-    'unique_id': 'indevolt_indevolt_test_gen2_1502',
+    'unique_id': 'SolidFlex2000-87654321_1502',
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
@@ -2911,7 +2808,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0.0',
+    'state': '0',
   })
 # ---
 # name: test_sensor[2][sensor.indevolt_cms_sf2000_dc_input_current_1-entry]
@@ -2950,7 +2847,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'dc_input_current_1',
-    'unique_id': 'indevolt_indevolt_test_gen2_1632',
+    'unique_id': 'SolidFlex2000-87654321_1632',
     'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
   })
 # ---
@@ -3006,7 +2903,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'dc_input_current_2',
-    'unique_id': 'indevolt_indevolt_test_gen2_1633',
+    'unique_id': 'SolidFlex2000-87654321_1633',
     'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
   })
 # ---
@@ -3062,7 +2959,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'dc_input_current_3',
-    'unique_id': 'indevolt_indevolt_test_gen2_1634',
+    'unique_id': 'SolidFlex2000-87654321_1634',
     'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
   })
 # ---
@@ -3118,7 +3015,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'dc_input_current_4',
-    'unique_id': 'indevolt_indevolt_test_gen2_1635',
+    'unique_id': 'SolidFlex2000-87654321_1635',
     'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
   })
 # ---
@@ -3174,7 +3071,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'dc_input_power_1',
-    'unique_id': 'indevolt_indevolt_test_gen2_1664',
+    'unique_id': 'SolidFlex2000-87654321_1664',
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
 # ---
@@ -3191,7 +3088,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0.0',
+    'state': '0',
   })
 # ---
 # name: test_sensor[2][sensor.indevolt_cms_sf2000_dc_input_power_2-entry]
@@ -3230,7 +3127,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'dc_input_power_2',
-    'unique_id': 'indevolt_indevolt_test_gen2_1665',
+    'unique_id': 'SolidFlex2000-87654321_1665',
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
 # ---
@@ -3247,7 +3144,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0.0',
+    'state': '0',
   })
 # ---
 # name: test_sensor[2][sensor.indevolt_cms_sf2000_dc_input_power_3-entry]
@@ -3286,7 +3183,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'dc_input_power_3',
-    'unique_id': 'indevolt_indevolt_test_gen2_1666',
+    'unique_id': 'SolidFlex2000-87654321_1666',
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
 # ---
@@ -3303,7 +3200,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0.0',
+    'state': '0',
   })
 # ---
 # name: test_sensor[2][sensor.indevolt_cms_sf2000_dc_input_power_4-entry]
@@ -3342,7 +3239,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'dc_input_power_4',
-    'unique_id': 'indevolt_indevolt_test_gen2_1667',
+    'unique_id': 'SolidFlex2000-87654321_1667',
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
 # ---
@@ -3359,7 +3256,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0.0',
+    'state': '0',
   })
 # ---
 # name: test_sensor[2][sensor.indevolt_cms_sf2000_dc_input_voltage_1-entry]
@@ -3398,7 +3295,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'dc_input_voltage_1',
-    'unique_id': 'indevolt_indevolt_test_gen2_1600',
+    'unique_id': 'SolidFlex2000-87654321_1600',
     'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
   })
 # ---
@@ -3454,7 +3351,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'dc_input_voltage_2',
-    'unique_id': 'indevolt_indevolt_test_gen2_1601',
+    'unique_id': 'SolidFlex2000-87654321_1601',
     'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
   })
 # ---
@@ -3510,7 +3407,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'dc_input_voltage_3',
-    'unique_id': 'indevolt_indevolt_test_gen2_1602',
+    'unique_id': 'SolidFlex2000-87654321_1602',
     'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
   })
 # ---
@@ -3566,7 +3463,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'dc_input_voltage_4',
-    'unique_id': 'indevolt_indevolt_test_gen2_1603',
+    'unique_id': 'SolidFlex2000-87654321_1603',
     'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
   })
 # ---
@@ -3622,7 +3519,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'dc_output_power',
-    'unique_id': 'indevolt_indevolt_test_gen2_1501',
+    'unique_id': 'SolidFlex2000-87654321_1501',
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
 # ---
@@ -3639,7 +3536,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0.0',
+    'state': '0',
   })
 # ---
 # name: test_sensor[2][sensor.indevolt_cms_sf2000_grid_frequency-entry]
@@ -3678,7 +3575,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'grid_frequency',
-    'unique_id': 'indevolt_indevolt_test_gen2_2612',
+    'unique_id': 'SolidFlex2000-87654321_2612',
     'unit_of_measurement': <UnitOfFrequency.HERTZ: 'Hz'>,
   })
 # ---
@@ -3734,7 +3631,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'grid_voltage',
-    'unique_id': 'indevolt_indevolt_test_gen2_2600',
+    'unique_id': 'SolidFlex2000-87654321_2600',
     'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
   })
 # ---
@@ -3751,7 +3648,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '1200.0',
+    'state': '1200',
   })
 # ---
 # name: test_sensor[2][sensor.indevolt_cms_sf2000_master_current-entry]
@@ -3790,7 +3687,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'master_current',
-    'unique_id': 'indevolt_indevolt_test_gen2_9013',
+    'unique_id': 'SolidFlex2000-87654321_9013',
     'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
   })
 # ---
@@ -3841,7 +3738,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'master_serial_number',
-    'unique_id': 'indevolt_indevolt_test_gen2_9008',
+    'unique_id': 'SolidFlex2000-87654321_9008',
     'unit_of_measurement': None,
   })
 # ---
@@ -3891,7 +3788,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'master_soc',
-    'unique_id': 'indevolt_indevolt_test_gen2_9000',
+    'unique_id': 'SolidFlex2000-87654321_9000',
     'unit_of_measurement': '%',
   })
 # ---
@@ -3947,7 +3844,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'master_temperature',
-    'unique_id': 'indevolt_indevolt_test_gen2_9012',
+    'unique_id': 'SolidFlex2000-87654321_9012',
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
@@ -4003,7 +3900,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'master_voltage',
-    'unique_id': 'indevolt_indevolt_test_gen2_9004',
+    'unique_id': 'SolidFlex2000-87654321_9004',
     'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
   })
 # ---
@@ -4021,64 +3918,6 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '51.2',
-  })
-# ---
-# name: test_sensor[2][sensor.indevolt_cms_sf2000_meter_connection_status-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'options': list([
-        'off',
-        'on',
-      ]),
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.indevolt_cms_sf2000_meter_connection_status',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
-    'original_icon': None,
-    'original_name': 'Meter connection status',
-    'platform': 'indevolt',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'meter_connection_status',
-    'unique_id': 'indevolt_indevolt_test_gen2_7120',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_sensor[2][sensor.indevolt_cms_sf2000_meter_connection_status-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'enum',
-      'friendly_name': 'INDEVOLT CMS-SF2000 Meter connection status',
-      'options': list([
-        'off',
-        'on',
-      ]),
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.indevolt_cms_sf2000_meter_connection_status',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'off',
   })
 # ---
 # name: test_sensor[2][sensor.indevolt_cms_sf2000_meter_power-entry]
@@ -4117,7 +3956,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'meter_power',
-    'unique_id': 'indevolt_indevolt_test_gen2_11016',
+    'unique_id': 'SolidFlex2000-87654321_11016',
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
 # ---
@@ -4134,7 +3973,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0.0',
+    'state': '0',
   })
 # ---
 # name: test_sensor[2][sensor.indevolt_cms_sf2000_off_grid_output_energy-entry]
@@ -4173,7 +4012,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'off_grid_output_energy',
-    'unique_id': 'indevolt_indevolt_test_gen2_2105',
+    'unique_id': 'SolidFlex2000-87654321_2105',
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
@@ -4190,7 +4029,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '2000.0',
+    'state': '2000',
   })
 # ---
 # name: test_sensor[2][sensor.indevolt_cms_sf2000_rated_capacity-entry]
@@ -4229,7 +4068,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'rated_capacity',
-    'unique_id': 'indevolt_indevolt_test_gen2_142',
+    'unique_id': 'SolidFlex2000-87654321_142',
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
@@ -4247,54 +4086,6 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '1.79',
-  })
-# ---
-# name: test_sensor[2][sensor.indevolt_cms_sf2000_serial_number-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.indevolt_cms_sf2000_serial_number',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'Serial number',
-    'platform': 'indevolt',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'serial_number',
-    'unique_id': 'indevolt_indevolt_test_gen2_0',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_sensor[2][sensor.indevolt_cms_sf2000_serial_number-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'INDEVOLT CMS-SF2000 Serial number',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.indevolt_cms_sf2000_serial_number',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'SolidFlex2000-87654321',
   })
 # ---
 # name: test_sensor[2][sensor.indevolt_cms_sf2000_total_ac_input_energy-entry]
@@ -4333,7 +4124,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'total_ac_input_energy',
-    'unique_id': 'indevolt_indevolt_test_gen2_2107',
+    'unique_id': 'SolidFlex2000-87654321_2107',
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
@@ -4389,7 +4180,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'total_ac_output_energy',
-    'unique_id': 'indevolt_indevolt_test_gen2_2104',
+    'unique_id': 'SolidFlex2000-87654321_2104',
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
@@ -4406,7 +4197,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '1500.0',
+    'state': '1500',
   })
 # ---
 # name: test_sensor[2][sensor.indevolt_cms_sf2000_working_mode-entry]
@@ -4447,7 +4238,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'working_mode',
-    'unique_id': 'indevolt_indevolt_test_gen2_7101',
+    'unique_id': 'SolidFlex2000-87654321_7101',
     'unit_of_measurement': None,
   })
 # ---

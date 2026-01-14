@@ -22,35 +22,28 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import IndevoltConfigEntry
-from .const import DOMAIN
+from .coordinator import IndevoltCoordinator
+from .entity import IndevoltEntity
 
 _LOGGER = logging.getLogger(__name__)
+
+PARALLEL_UPDATES = 0
 
 
 @dataclass(frozen=True, kw_only=True)
 class IndevoltSensorEntityDescription(SensorEntityDescription):
     """Custom entity description class for Indevolt sensors."""
 
-    coefficient: float = 1.0
     state_mapping: dict[int, str] = field(default_factory=dict)
     generation: list[int] = field(default_factory=lambda: [1, 2])
 
 
 SENSORS: Final = (
-    IndevoltSensorEntityDescription(
-        key="0",
-        generation=[1, 2],
-        translation_key="serial_number",
-        entity_category=EntityCategory.DIAGNOSTIC,
-        entity_registry_enabled_default=False,
-    ),
     # System Operating Information
     IndevoltSensorEntityDescription(
         key="7101",
-        generation=[1, 2],
         translation_key="working_mode",
         state_mapping={
             0: "outdoor_portable",
@@ -78,7 +71,6 @@ SENSORS: Final = (
     ),
     IndevoltSensorEntityDescription(
         key="2101",
-        generation=[1, 2],
         translation_key="ac_input_power",
         native_unit_of_measurement=UnitOfPower.WATT,
         device_class=SensorDeviceClass.POWER,
@@ -86,7 +78,6 @@ SENSORS: Final = (
     ),
     IndevoltSensorEntityDescription(
         key="2108",
-        generation=[1, 2],
         translation_key="ac_output_power",
         native_unit_of_measurement=UnitOfPower.WATT,
         device_class=SensorDeviceClass.POWER,
@@ -103,7 +94,6 @@ SENSORS: Final = (
     # Electrical Energy Information
     IndevoltSensorEntityDescription(
         key="2107",
-        generation=[1, 2],
         translation_key="total_ac_input_energy",
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
@@ -167,13 +157,6 @@ SENSORS: Final = (
     ),
     # Electricity Meter Status
     IndevoltSensorEntityDescription(
-        key="7120",
-        generation=[1, 2],
-        translation_key="meter_connection_status",
-        state_mapping={1000: "on", 1001: "off"},
-        device_class=SensorDeviceClass.ENUM,
-    ),
-    IndevoltSensorEntityDescription(
         key="11016",
         generation=[2],
         translation_key="meter_power",
@@ -211,7 +194,6 @@ SENSORS: Final = (
     # Battery Pack Operating Parameters
     IndevoltSensorEntityDescription(
         key="6000",
-        generation=[1, 2],
         translation_key="battery_power",
         native_unit_of_measurement=UnitOfPower.WATT,
         device_class=SensorDeviceClass.POWER,
@@ -219,14 +201,12 @@ SENSORS: Final = (
     ),
     IndevoltSensorEntityDescription(
         key="6001",
-        generation=[1, 2],
         translation_key="battery_charge_discharge_state",
         state_mapping={1000: "static", 1001: "charging", 1002: "discharging"},
         device_class=SensorDeviceClass.ENUM,
     ),
     IndevoltSensorEntityDescription(
         key="6002",
-        generation=[1, 2],
         translation_key="battery_soc",
         native_unit_of_measurement=PERCENTAGE,
         device_class=SensorDeviceClass.BATTERY,
@@ -235,7 +215,6 @@ SENSORS: Final = (
     # PV Operating Parameters
     IndevoltSensorEntityDescription(
         key="1501",
-        generation=[1, 2],
         translation_key="dc_output_power",
         native_unit_of_measurement=UnitOfPower.WATT,
         device_class=SensorDeviceClass.POWER,
@@ -243,7 +222,6 @@ SENSORS: Final = (
     ),
     IndevoltSensorEntityDescription(
         key="1502",
-        generation=[1, 2],
         translation_key="daily_production",
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
@@ -253,8 +231,8 @@ SENSORS: Final = (
         key="1505",
         generation=[1],
         translation_key="cumulative_production",
-        coefficient=0.001,
-        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
+        suggested_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
     ),
@@ -278,7 +256,6 @@ SENSORS: Final = (
     ),
     IndevoltSensorEntityDescription(
         key="1664",
-        generation=[1, 2],
         translation_key="dc_input_power_1",
         native_unit_of_measurement=UnitOfPower.WATT,
         device_class=SensorDeviceClass.POWER,
@@ -305,7 +282,6 @@ SENSORS: Final = (
     ),
     IndevoltSensorEntityDescription(
         key="1665",
-        generation=[1, 2],
         translation_key="dc_input_power_2",
         native_unit_of_measurement=UnitOfPower.WATT,
         device_class=SensorDeviceClass.POWER,
@@ -379,35 +355,30 @@ SENSORS: Final = (
         generation=[2],
         translation_key="battery_pack_1_serial_number",
         entity_category=EntityCategory.DIAGNOSTIC,
-        entity_registry_enabled_default=False,
     ),
     IndevoltSensorEntityDescription(
         key="9051",
         generation=[2],
         translation_key="battery_pack_2_serial_number",
         entity_category=EntityCategory.DIAGNOSTIC,
-        entity_registry_enabled_default=False,
     ),
     IndevoltSensorEntityDescription(
         key="9070",
         generation=[2],
         translation_key="battery_pack_3_serial_number",
         entity_category=EntityCategory.DIAGNOSTIC,
-        entity_registry_enabled_default=False,
     ),
     IndevoltSensorEntityDescription(
         key="9165",
         generation=[2],
         translation_key="battery_pack_4_serial_number",
         entity_category=EntityCategory.DIAGNOSTIC,
-        entity_registry_enabled_default=False,
     ),
     IndevoltSensorEntityDescription(
         key="9218",
         generation=[2],
         translation_key="battery_pack_5_serial_number",
         entity_category=EntityCategory.DIAGNOSTIC,
-        entity_registry_enabled_default=False,
     ),
     # Battery Pack SOC
     IndevoltSensorEntityDescription(
@@ -643,6 +614,15 @@ SENSORS: Final = (
     ),
 )
 
+# Sensors per battery pack (SN, SOC, Temperature, Voltage, Current)
+BATTERY_PACK_SENSOR_KEYS = [
+    ("9032", "9016", "9030", "9020", "19173"),  # Battery Pack 1
+    ("9051", "9035", "9049", "9039", "19174"),  # Battery Pack 2
+    ("9070", "9054", "9068", "9058", "19175"),  # Battery Pack 3
+    ("9165", "9149", "9163", "9153", "19176"),  # Battery Pack 4
+    ("9218", "9202", "9216", "9206", "19177"),  # Battery Pack 5
+]
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -651,44 +631,61 @@ async def async_setup_entry(
 ) -> None:
     """Set up the sensor platform for Indevolt."""
     coordinator = entry.runtime_data
-    device_gen = entry.data.get("generation", 1)
+    device_gen = coordinator.device_info_data.get("generation", 1)
 
-    entities = [
-        IndevoltSensorEntity(coordinator=coordinator, description=description)
+    # Initialize sensor values (first fetch), required to check available battery packs
+    initial_keys = [
+        description.key
         for description in SENSORS
         if device_gen in description.generation
     ]
+    coordinator.set_initial_sensor_keys(initial_keys)
+    await coordinator.async_config_entry_first_refresh()
 
-    async_add_entities(entities)
+    # Sensor initialization
+    async_add_entities(
+        [
+            IndevoltSensorEntity(coordinator=coordinator, description=description)
+            for description in SENSORS
+            if device_gen in description.generation
+        ]
+    )
 
 
-class IndevoltSensorEntity(CoordinatorEntity, SensorEntity):
+def _find_battery_pack_sn_key(sensor_key: str) -> str | None:
+    """Return the SN key for the battery pack this sensor belongs to, or None."""
+    for pack_keys in BATTERY_PACK_SENSOR_KEYS:
+        if sensor_key in pack_keys:
+            return pack_keys[0]
+    return None
+
+
+class IndevoltSensorEntity(IndevoltEntity, SensorEntity):
     """Represents a sensor entity for Indevolt devices."""
 
-    _attr_has_entity_name = True
     entity_description: IndevoltSensorEntityDescription
 
     def __init__(
-        self, coordinator, description: IndevoltSensorEntityDescription
+        self,
+        coordinator: IndevoltCoordinator,
+        description: IndevoltSensorEntityDescription,
     ) -> None:
         """Initialize the Indevolt sensor entity."""
-        super().__init__(coordinator)
+        super().__init__(coordinator, context=description.key)
 
         self.entity_description = description
-        self._attr_unique_id = (
-            f"{DOMAIN}_{coordinator.config_entry.entry_id}_{description.key}"
-        )
-        self._attr_device_info = coordinator.device_info
+        self._attr_unique_id = f"{self.serial_number}_{description.key}"
 
+        # Sort options (prevent randomization) for ENUM values
         if description.device_class == SensorDeviceClass.ENUM:
             self._attr_options = sorted(set(description.state_mapping.values()))
 
-    @property
-    def available(self) -> bool:
-        """Return if entity is available."""
-        return (
-            super().available and self.entity_description.key in self.coordinator.data
-        )
+        # Dynamically disable sensors for missing battery packs (no SN)
+        self._battery_pack_sn_key = _find_battery_pack_sn_key(description.key)
+        if self._battery_pack_sn_key is not None:
+            battery_pack_sn = self.coordinator.data.get(self._battery_pack_sn_key)
+            if not battery_pack_sn:
+                self._attr_entity_registry_enabled_default = False
 
     @property
     def native_value(self) -> str | int | float | None:
@@ -698,10 +695,8 @@ class IndevoltSensorEntity(CoordinatorEntity, SensorEntity):
         if raw_value is None:
             return None
 
-        if self.entity_description.entity_category == EntityCategory.DIAGNOSTIC:
-            return raw_value
-
+        # Return descriptions for ENUM values
         if self.entity_description.device_class == SensorDeviceClass.ENUM:
             return self.entity_description.state_mapping.get(raw_value)
 
-        return raw_value * self.entity_description.coefficient
+        return raw_value

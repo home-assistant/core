@@ -42,7 +42,7 @@ async def test_sensor_availability(
         await setup_integration(hass, mock_config_entry)
 
     assert (state := hass.states.get("sensor.indevolt_cms_sf2000_battery_soc"))
-    assert state.state == "92.0"
+    assert state.state == "92"
 
     mock_indevolt.fetch_data.side_effect = ConnectionError
     async_fire_time_changed(hass, utcnow() + timedelta(seconds=SCAN_INTERVAL))

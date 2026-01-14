@@ -46,19 +46,16 @@ def mock_config_entry(generation: int) -> MockConfigEntry:
     return MockConfigEntry(
         domain=DOMAIN,
         title=f"{device_info['device']} ({TEST_HOST})",
-        version=2,
-        minor_version=1,
+        version=1,
         entry_id=f"indevolt_test_gen{generation}",
         data={
             "host": TEST_HOST,
-            "port": TEST_PORT,
             "sn": device_info["sn"],
-            "fw_version": TEST_FW_VERSION,
             "device_model": device_info["device"],
             "generation": device_info["generation"],
         },
         source="user",
-        unique_id=f"{device_info['device']}_{device_info['sn']}",
+        unique_id=device_info["sn"],
     )
 
 
@@ -81,18 +78,23 @@ def mock_indevolt(generation: int) -> Generator[AsyncMock]:
         # Mock coordinator API (get_data)
         client = mock_client.return_value
         client.fetch_data.return_value = fixture_data
+        client.get_config.return_value = {
+            "device": {
+                "sn": device_info["sn"],
+                "type": device_info["device"],
+                "generation": device_info["generation"],
+                "fw": TEST_FW_VERSION,
+            }
+        }
 
         # Mock config flow API (get_config)
         config_flow_client = mock_config_flow_client.return_value
         config_flow_client.get_config.return_value = {
             "device": {
                 "sn": device_info["sn"],
-                "fw": TEST_FW_VERSION,
-                "device_model": device_info["device"],
+                "type": device_info["device"],
                 "generation": device_info["generation"],
-                "hostname": f"indevolt-{device_info['sn'][-8:]}",
-                "mac": "AA:BB:CC:DD:EE:FF",
-                "timezone": "Europe/Amsterdam",
+                "fw": TEST_FW_VERSION,
             }
         }
 

@@ -12,7 +12,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
-from .conftest import TEST_DEVICE_SN_GEN2, TEST_FW_VERSION, TEST_HOST, TEST_PORT
+from .conftest import TEST_DEVICE_SN_GEN2, TEST_HOST, TEST_PORT
 
 from tests.common import MockConfigEntry
 
@@ -31,7 +31,6 @@ async def test_user_flow_success(hass: HomeAssistant) -> None:
         return_value={
             "device": {
                 "sn": TEST_DEVICE_SN_GEN2,
-                "fw": TEST_FW_VERSION,
                 "type": "CMS-SF2000",
                 "generation": 2,
             }
@@ -39,15 +38,13 @@ async def test_user_flow_success(hass: HomeAssistant) -> None:
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {"host": TEST_HOST, "port": TEST_PORT},
+            {"host": TEST_HOST},
         )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == f"INDEVOLT CMS-SF2000 ({TEST_HOST})"
     assert result["data"]["host"] == TEST_HOST
-    assert result["data"]["port"] == TEST_PORT
     assert result["data"]["sn"] == TEST_DEVICE_SN_GEN2
-    assert result["data"]["fw_version"] == TEST_FW_VERSION
     assert result["data"]["device_model"] == "CMS-SF2000"
     assert result["data"]["generation"] == 2
 
@@ -76,7 +73,7 @@ async def test_user_flow_error(
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {"host": TEST_HOST, "port": TEST_PORT},
+            {"host": TEST_HOST},
         )
 
     assert result["type"] == FlowResultType.FORM
@@ -90,13 +87,11 @@ async def test_user_flow_duplicate_entry(hass: HomeAssistant) -> None:
         title="INDEVOLT CMS-SF2000 (192.168.1.100)",
         data={
             "host": TEST_HOST,
-            "port": TEST_PORT,
             "sn": TEST_DEVICE_SN_GEN2,
-            "fw_version": TEST_FW_VERSION,
             "device_model": "CMS-SF2000",
             "generation": 2,
         },
-        unique_id=f"CMS-SF2000_{TEST_DEVICE_SN_GEN2}",
+        unique_id=TEST_DEVICE_SN_GEN2,
     )
     mock_entry.add_to_hass(hass)
 
@@ -110,7 +105,6 @@ async def test_user_flow_duplicate_entry(hass: HomeAssistant) -> None:
         return_value={
             "device": {
                 "sn": TEST_DEVICE_SN_GEN2,
-                "fw": TEST_FW_VERSION,
                 "type": "CMS-SF2000",
                 "generation": 2,
             }
@@ -118,7 +112,7 @@ async def test_user_flow_duplicate_entry(hass: HomeAssistant) -> None:
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {"host": TEST_HOST, "port": TEST_PORT},
+            {"host": TEST_HOST},
         )
 
     assert result["type"] == FlowResultType.ABORT
@@ -133,7 +127,6 @@ async def test_zeroconf_flow_success(hass: HomeAssistant) -> None:
         return_value={
             "device": {
                 "sn": TEST_DEVICE_SN_GEN2,
-                "fw": TEST_FW_VERSION,
                 "type": "CMS-SF2000",
                 "generation": 2,
             }
@@ -164,7 +157,6 @@ async def test_zeroconf_flow_success(hass: HomeAssistant) -> None:
         return_value={
             "device": {
                 "sn": TEST_DEVICE_SN_GEN2,
-                "fw": TEST_FW_VERSION,
                 "type": "CMS-SF2000",
                 "generation": 2,
             }
@@ -178,7 +170,6 @@ async def test_zeroconf_flow_success(hass: HomeAssistant) -> None:
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == f"INDEVOLT CMS-SF2000 ({TEST_HOST})"
     assert result["data"]["host"] == TEST_HOST
-    assert result["data"]["port"] == TEST_PORT
     assert result["data"]["sn"] == TEST_DEVICE_SN_GEN2
 
 
@@ -189,13 +180,11 @@ async def test_zeroconf_already_configured(hass: HomeAssistant) -> None:
         title="INDEVOLT CMS-SF2000 (192.168.1.100)",
         data={
             "host": TEST_HOST,
-            "port": TEST_PORT,
             "sn": TEST_DEVICE_SN_GEN2,
-            "fw_version": TEST_FW_VERSION,
             "device_model": "CMS-SF2000",
             "generation": 2,
         },
-        unique_id=f"CMS-SF2000_{TEST_DEVICE_SN_GEN2}",
+        unique_id=TEST_DEVICE_SN_GEN2,
     )
     mock_entry.add_to_hass(hass)
 
@@ -205,7 +194,6 @@ async def test_zeroconf_already_configured(hass: HomeAssistant) -> None:
         return_value={
             "device": {
                 "sn": TEST_DEVICE_SN_GEN2,
-                "fw": TEST_FW_VERSION,
                 "type": "CMS-SF2000",
                 "generation": 2,
             }
@@ -236,13 +224,11 @@ async def test_zeroconf_ip_change(hass: HomeAssistant) -> None:
         title="INDEVOLT CMS-SF2000 (192.168.1.100)",
         data={
             "host": TEST_HOST,
-            "port": TEST_PORT,
             "sn": TEST_DEVICE_SN_GEN2,
-            "fw_version": TEST_FW_VERSION,
             "device_model": "CMS-SF2000",
             "generation": 2,
         },
-        unique_id=f"CMS-SF2000_{TEST_DEVICE_SN_GEN2}",
+        unique_id=TEST_DEVICE_SN_GEN2,
     )
     mock_entry.add_to_hass(hass)
     assert mock_entry.data["host"] == TEST_HOST
@@ -254,7 +240,6 @@ async def test_zeroconf_ip_change(hass: HomeAssistant) -> None:
         return_value={
             "device": {
                 "sn": TEST_DEVICE_SN_GEN2,
-                "fw": TEST_FW_VERSION,
                 "type": "CMS-SF2000",
                 "generation": 2,
             }
