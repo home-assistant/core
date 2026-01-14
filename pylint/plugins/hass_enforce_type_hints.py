@@ -16,7 +16,7 @@ from homeassistant.const import Platform
 
 if TYPE_CHECKING:
     # InferenceResult is available only from astroid >= 2.12.0
-    # pre-commit should still work on out of date environments
+    # prek should still work on out of date environments
     from astroid.typing import InferenceResult
 
 _COMMON_ARGUMENTS: dict[str, list[str]] = {
