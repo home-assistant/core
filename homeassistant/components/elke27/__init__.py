@@ -16,6 +16,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PORT, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
+from homeassistant.helpers import entity_registry as er
 
 from .const import (
     CONF_INTEGRATION_SERIAL,
@@ -27,6 +28,7 @@ from .const import (
     DOMAIN,
 )
 from .coordinator import Elke27DataUpdateCoordinator
+from .entity import unique_base
 from .hub import Elke27Hub
 from .identity import async_get_integration_serial
 
@@ -84,6 +86,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     coordinator = Elke27DataUpdateCoordinator(hass, hub, entry)
     await coordinator.async_start()
     await coordinator.async_refresh_now()
+    await _async_migrate_unique_ids(hass, entry, unique_base(hub, coordinator, entry))
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = {
         DATA_HUB: hub,
         DATA_COORDINATOR: coordinator,
@@ -110,3 +113,32 @@ def _panel_name_from_entry(panel: object | None) -> str | None:
     if isinstance(panel, dict):
         return panel.get("panel_name") or panel.get("name")
     return None
+
+
+async def _async_migrate_unique_ids(
+    hass: HomeAssistant, entry: ConfigEntry, base: str
+) -> None:
+    """Migrate legacy unique IDs to the <base>:<domain>:<id> format."""
+    registry = er.async_get(hass)
+    prefix = f"{base}_"
+    for entity in registry.entities.values():
+        if entity.platform != DOMAIN:
+            continue
+        if entity.config_entry_id != entry.entry_id:
+            continue
+        unique_id = entity.unique_id
+        if not unique_id.startswith(prefix):
+            continue
+        rest = unique_id[len(prefix) :]
+        if "_" not in rest:
+            continue
+        domain, numeric_id = rest.rsplit("_", 1)
+        new_unique_id = f"{base}:{domain}:{numeric_id}"
+        if registry.async_get_entity_id(entity.domain, DOMAIN, new_unique_id):
+            _LOGGER.debug(
+                "Unique ID migration skipped for %s; %s already exists",
+                entity.entity_id,
+                new_unique_id,
+            )
+            continue
+        registry.async_update_entity(entity.entity_id, new_unique_id=new_unique_id)
