@@ -221,7 +221,7 @@ class ConfigEntryAuthFailed(IntegrationError):
     """Error to indicate that config entry could not authenticate."""
 
 
-class OAuth2RefreshTokenError(ClientResponseError, IntegrationError):
+class OAuth2RefreshTokenError(ClientResponseError, HomeAssistantError):
     """Error to indicate that the OAuth 2.0 flow could not refresh token."""
 
     def __init__(
@@ -232,6 +232,7 @@ class OAuth2RefreshTokenError(ClientResponseError, IntegrationError):
         status: int = 0,
         message: str = "OAuth 2.0 token refresh failed",
         headers: MultiMapping[str] | None = None,
+        domain: str,
     ) -> None:
         """Initialize OAuth2RefreshTokenFailed."""
         ClientResponseError.__init__(
@@ -242,11 +243,20 @@ class OAuth2RefreshTokenError(ClientResponseError, IntegrationError):
             message=message,
             headers=headers,
         )
-        IntegrationError.__init__(self, message)
+        self.domain = domain
+        HomeAssistantError.__init__(self, message)
 
 
 class OAuth2RefreshTokenTransientError(OAuth2RefreshTokenError):
     """Recoverable error to indicate flow could not refresh token."""
+
+    def __init__(self, *, domain: str, **kwargs: Any) -> None:
+        """Initialize OAuth2RefreshTokenTransientError."""
+        super().__init__(domain=domain, **kwargs)
+        self.translation_domain = "homeassistant"
+        self.translation_key = "oauth2_helper_refresh_transient"
+        self.translation_placeholders = {"domain": domain}
+        self.generate_message = True
 
 
 class OAuth2RefreshTokenReauthError(OAuth2RefreshTokenError):
@@ -254,6 +264,14 @@ class OAuth2RefreshTokenReauthError(OAuth2RefreshTokenError):
 
     Re-authentication is required.
     """
+
+    def __init__(self, *, domain: str, **kwargs: Any) -> None:
+        """Initialize OAuth2RefreshTokenTransientError."""
+        super().__init__(domain=domain, **kwargs)
+        self.translation_domain = "homeassistant"
+        self.translation_key = "oauth2_helper_refresh_failed"
+        self.translation_placeholders = {"domain": domain}
+        self.generate_message = True
 
 
 class InvalidStateError(HomeAssistantError):

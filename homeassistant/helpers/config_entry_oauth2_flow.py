@@ -235,8 +235,8 @@ class LocalOAuth2Implementation(AbstractOAuth2Implementation):
             )
         except ClientResponseError as err:
             report_usage(
-                "is now catchable via `OAuth2RefreshTokenError`, throwing "
-                "a recoverable or non-recoverable error based on the "
+                "is using the `OAuth2 config entry helper` and this can now throw `OAuth2RefreshTokenError` exceptions. "
+                "It can be a recoverable or non-recoverable error based on the "
                 "HTTP status code. Please update your integration to handle "
                 "`OAuth2RefreshTokenError` gracefully (see "
                 "https://developers.home-assistant.io)",
@@ -253,6 +253,7 @@ class LocalOAuth2Implementation(AbstractOAuth2Implementation):
                     status=err.status,
                     message=err.message,
                     headers=err.headers,
+                    domain=self._domain,
                 ) from err
             if 400 <= err.status <= 499:
                 # Non-recoverable error
@@ -262,6 +263,7 @@ class LocalOAuth2Implementation(AbstractOAuth2Implementation):
                     status=err.status,
                     message=err.message,
                     headers=err.headers,
+                    domain=self._domain,
                 ) from err
 
             raise OAuth2RefreshTokenError(
@@ -270,6 +272,7 @@ class LocalOAuth2Implementation(AbstractOAuth2Implementation):
                 status=err.status,
                 message=err.message,
                 headers=err.headers,
+                domain=self._domain,
             ) from err
 
         return {**token, **new_token}

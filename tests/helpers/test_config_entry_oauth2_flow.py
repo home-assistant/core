@@ -16,7 +16,7 @@ from homeassistant.exceptions import (
     OAuth2RefreshTokenReauthError,
     OAuth2RefreshTokenTransientError,
 )
-from homeassistant.helpers import config_entry_oauth2_flow, frame
+from homeassistant.helpers import config_entry_oauth2_flow
 from homeassistant.helpers.network import NoURLAvailableError
 
 from tests.common import MockConfigEntry, MockModule, mock_integration, mock_platform
@@ -992,7 +992,6 @@ async def test_oauth_session_refresh_failure_exceptions(
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test OAuth2 session refresh failures raise mapped exceptions."""
-    frame._REPORTED_INTEGRATIONS.clear()
     mock_integration(hass, MockModule(domain=TEST_DOMAIN))
 
     flow_handler.async_register_implementation(hass, local_impl)
@@ -1025,11 +1024,10 @@ async def test_oauth_session_refresh_failure_exceptions(
 
     assert err.value.status == status_code
     assert (
-        f"Detected that integration '{TEST_DOMAIN}' is now catchable via `OAuth2RefreshTokenError`"
+        f"Detected that integration '{TEST_DOMAIN}' is using the `OAuth2 config entry helper` and this can now throw `OAuth2RefreshTokenError` exceptions"
         in caplog.text
     )
 
-    # This is a following from _token_request, to ensure we also hit there
     assert f"Token request for {TEST_DOMAIN} failed" in caplog.text
 
 
