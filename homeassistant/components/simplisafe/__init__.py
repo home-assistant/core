@@ -554,7 +554,7 @@ class SimpliSafe:
         assert self._api.websocket
 
         self._api.websocket.add_event_callback(self._async_websocket_on_event)
-        self._websocket_reconnect_task = asyncio.create_task(
+        self._websocket_reconnect_task = self._hass.async_create_task(
             self._async_start_websocket_loop()
         )
 
