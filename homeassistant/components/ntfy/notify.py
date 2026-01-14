@@ -54,7 +54,9 @@ MSG_ATTACHMENT = "Only one attachment source is allowed: URL or local file"
 
 def validate_filename(params: dict[str, Any]) -> dict[str, Any]:
     """Validate filename."""
-    if ATTR_FILENAME in params and ATTR_ATTACH_FILE not in params:
+    if ATTR_FILENAME in params and not (
+        ATTR_ATTACH_FILE in params or ATTR_ATTACH in params
+    ):
         raise vol.Invalid("Filename only allowed when attachment is provided")
     return params
 

@@ -348,7 +348,7 @@
           "name": "Forward to email"
         },
         "filename": {
-          "description": "Specify a custom filename for the attachment, including the file extension (for example, attachment.jpg). If not provided, the original filename from local file will be used.",
+          "description": "Specify a custom filename for the attachment, including the file extension (for example, attachment.jpg). If not provided, the original filename will be used.",
           "name": "Attachment filename"
         },
         "icon": {
