@@ -339,6 +339,21 @@ class MatterClimate(MatterEntity, ClimateEntity):
         if active_preset_handle := self.get_matter_attribute_value(
             clusters.Thermostat.Attributes.ActivePresetHandle
         ):
+            # Debug: log the type and value of active_preset_handle
+            _LOGGER.debug(
+                "Active preset handle - type: %s, repr: %s, value: %s",
+                type(active_preset_handle).__name__,
+                repr(active_preset_handle),
+                active_preset_handle,
+            )
+            # Debug: log all stored preset handles
+            _LOGGER.debug(
+                "Stored preset handles: %s",
+                {
+                    name: (type(h).__name__, repr(h))
+                    for name, h in self._preset_handle_by_name.items()
+                },
+            )
             for preset_name, handle in self._preset_handle_by_name.items():
                 if handle == active_preset_handle:
                     self._attr_preset_mode = preset_name
