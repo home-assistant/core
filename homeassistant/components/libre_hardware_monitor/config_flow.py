@@ -108,6 +108,7 @@ class LibreHardwareMonitorConfigFlow(ConfigFlow, domain=DOMAIN):
         """Confirm (re)authentication dialog."""
         errors: dict[str, str] = {}
 
+        # we use this step both for initial auth and for re-auth
         reauth_entry: ConfigEntry | None = None
         if self.source == SOURCE_REAUTH:
             reauth_entry = self._get_reauth_entry()
