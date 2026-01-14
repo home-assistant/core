@@ -312,6 +312,17 @@ class MatterClimate(MatterEntity, ClimateEntity):
                 self._preset_handle_by_name[name] = preset.presetHandle
         self._attr_preset_modes = presets
 
+        # Update active preset mode
+        if active_preset_handle := self.get_matter_attribute_value(
+            clusters.Thermostat.Attributes.ActivePresetHandle
+        ):
+            for preset_name, handle in self._preset_handle_by_name.items():
+                if handle == active_preset_handle:
+                    self._attr_preset_mode = preset_name
+                    break
+        else:
+            self._attr_preset_mode = None
+
         self._attr_current_temperature = self._get_temperature_in_degrees(
             clusters.Thermostat.Attributes.LocalTemperature
         )
