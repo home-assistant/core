@@ -4,7 +4,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Backup Manager state',
     'capabilities': dict({
       'options': list([
         'idle',
@@ -31,6 +30,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Backup Manager state',
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
     'original_name': 'Backup Manager state',
@@ -69,7 +69,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Last attempted automatic backup',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -88,6 +87,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Last attempted automatic backup',
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
     'original_icon': None,
     'original_name': 'Last attempted automatic backup',
@@ -119,7 +119,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Last successful automatic backup',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -138,6 +137,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Last successful automatic backup',
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
     'original_icon': None,
     'original_name': 'Last successful automatic backup',
@@ -169,7 +169,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Next scheduled automatic backup',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -188,6 +187,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Next scheduled automatic backup',
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
     'original_icon': None,
     'original_name': 'Next scheduled automatic backup',

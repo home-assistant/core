@@ -4,7 +4,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'LanDevice1',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -23,6 +22,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'LanDevice1',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'LanDevice1',
@@ -57,7 +57,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'WifiDevice0',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -76,6 +75,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'WifiDevice0',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'WifiDevice0',

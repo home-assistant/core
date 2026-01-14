@@ -4,7 +4,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Avg gas hourly consumption - today',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -26,6 +25,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'Avg gas hourly consumption - today',
     'original_device_class': <SensorDeviceClass.GAS: 'gas'>,
     'original_icon': None,
     'original_name': 'Avg gas hourly consumption - today',
@@ -58,7 +58,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Avg gas hourly energy - today',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -80,6 +79,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'Avg gas hourly energy - today',
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
     'original_name': 'Avg gas hourly energy - today',
@@ -112,7 +112,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Gas consumption energy - this hour',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -134,6 +133,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'Gas consumption energy - this hour',
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
     'original_name': 'Gas consumption energy - this hour',
@@ -166,7 +166,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Gas consumption energy - today',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -190,6 +189,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'Gas consumption energy - today',
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
     'original_name': 'Gas consumption energy - today',
@@ -223,7 +223,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Gas consumption - this hour',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -245,6 +244,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'Gas consumption - this hour',
     'original_device_class': <SensorDeviceClass.GAS: 'gas'>,
     'original_icon': None,
     'original_name': 'Gas consumption - this hour',
@@ -277,7 +277,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Gas consumption - today',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -301,6 +300,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'Gas consumption - today',
     'original_device_class': <SensorDeviceClass.GAS: 'gas'>,
     'original_icon': None,
     'original_name': 'Gas consumption - today',
@@ -334,7 +334,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Gas cost - today',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -358,6 +357,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'Gas cost - today',
     'original_device_class': <SensorDeviceClass.MONETARY: 'monetary'>,
     'original_icon': None,
     'original_name': 'Gas cost - today',
@@ -391,7 +391,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Max gas hourly consumption - today',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -413,6 +412,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'Max gas hourly consumption - today',
     'original_device_class': <SensorDeviceClass.GAS: 'gas'>,
     'original_icon': None,
     'original_name': 'Max gas hourly consumption - today',
@@ -445,7 +445,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Max gas hourly cost - today',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -467,6 +466,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'Max gas hourly cost - today',
     'original_device_class': <SensorDeviceClass.MONETARY: 'monetary'>,
     'original_icon': None,
     'original_name': 'Max gas hourly cost - today',
@@ -499,7 +499,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Max gas hourly energy - today',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -521,6 +520,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'Max gas hourly energy - today',
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
     'original_name': 'Max gas hourly energy - today',
@@ -553,7 +553,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Min gas hourly consumption - today',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -575,6 +574,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'Min gas hourly consumption - today',
     'original_device_class': <SensorDeviceClass.GAS: 'gas'>,
     'original_icon': None,
     'original_name': 'Min gas hourly consumption - today',
@@ -607,7 +607,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Min gas hourly energy - today',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -629,6 +628,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'Min gas hourly energy - today',
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
     'original_name': 'Min gas hourly energy - today',
@@ -661,7 +661,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Delta energy',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -683,6 +682,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'Delta energy',
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
     'original_name': 'Delta energy',
@@ -715,7 +715,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Delta volume',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -737,6 +736,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'Delta volume',
     'original_device_class': <SensorDeviceClass.WATER: 'water'>,
     'original_icon': None,
     'original_name': 'Delta volume',
@@ -769,7 +769,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Total energy',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -793,6 +792,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'Total energy',
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
     'original_name': 'Total energy',
@@ -826,7 +826,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Total volume',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -850,6 +849,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'Total volume',
     'original_device_class': <SensorDeviceClass.WATER: 'water'>,
     'original_icon': None,
     'original_name': 'Total volume',
@@ -883,7 +883,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Energy return',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -907,6 +906,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'Energy return',
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
     'original_name': 'Energy return',
@@ -940,7 +940,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Energy usage',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -964,6 +963,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'Energy usage',
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
     'original_name': 'Energy usage',
@@ -997,7 +997,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Energy usage high tariff',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -1021,6 +1020,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'Energy usage high tariff',
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
     'original_name': 'Energy usage high tariff',
@@ -1054,7 +1054,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Energy usage low tariff',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -1078,6 +1077,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'Energy usage low tariff',
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
     'original_name': 'Energy usage low tariff',
@@ -1111,7 +1111,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Power',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1135,6 +1134,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'Power',
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
     'original_icon': None,
     'original_name': 'Power',
@@ -1168,7 +1168,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Cold water',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -1192,6 +1191,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'Cold water',
     'original_device_class': <SensorDeviceClass.WATER: 'water'>,
     'original_icon': None,
     'original_name': 'Cold water',
@@ -1225,7 +1225,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Warm water',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -1249,6 +1248,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'Warm water',
     'original_device_class': <SensorDeviceClass.WATER: 'water'>,
     'original_icon': None,
     'original_name': 'Warm water',

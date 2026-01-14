@@ -4,7 +4,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Boost temperature',
     'capabilities': dict({
       'max': 450,
       'min': 250,
@@ -28,6 +27,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Boost temperature',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Boost temperature',
@@ -63,7 +63,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Calibration offset',
     'capabilities': dict({
       'max': 2500,
       'min': 100,
@@ -87,6 +86,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Calibration offset',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Calibration offset',
@@ -122,7 +122,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Display brightness',
     'capabilities': dict({
       'max': 5,
       'min': 1,
@@ -146,6 +145,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Display brightness',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Display brightness',
@@ -180,7 +180,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Hall effect sensitivity',
     'capabilities': dict({
       'max': 9,
       'min': 0,
@@ -204,6 +203,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Hall effect sensitivity',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Hall effect sensitivity',
@@ -238,7 +238,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Hall sensor sleep timeout',
     'capabilities': dict({
       'max': 60,
       'min': 0,
@@ -262,6 +261,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Hall sensor sleep timeout',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Hall sensor sleep timeout',
@@ -297,7 +297,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Keep-awake pulse delay',
     'capabilities': dict({
       'max': 22.5,
       'min': 2.5,
@@ -321,6 +320,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Keep-awake pulse delay',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Keep-awake pulse delay',
@@ -356,7 +356,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Keep-awake pulse duration',
     'capabilities': dict({
       'max': 2250,
       'min': 250,
@@ -380,6 +379,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Keep-awake pulse duration',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Keep-awake pulse duration',
@@ -415,7 +415,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Keep-awake pulse intensity',
     'capabilities': dict({
       'max': 9.9,
       'min': 0,
@@ -439,6 +438,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Keep-awake pulse intensity',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Keep-awake pulse intensity',
@@ -474,7 +474,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Long-press temperature step',
     'capabilities': dict({
       'max': 90,
       'min': 5,
@@ -498,6 +497,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Long-press temperature step',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Long-press temperature step',
@@ -533,7 +533,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Min. voltage per cell',
     'capabilities': dict({
       'max': 3.8,
       'min': 2.4,
@@ -557,6 +556,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Min. voltage per cell',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Min. voltage per cell',
@@ -592,7 +592,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Motion sensitivity',
     'capabilities': dict({
       'max': 9,
       'min': 0,
@@ -616,6 +615,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Motion sensitivity',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Motion sensitivity',
@@ -650,7 +650,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Power Delivery timeout',
     'capabilities': dict({
       'max': 5.0,
       'min': 0,
@@ -674,6 +673,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Power Delivery timeout',
     'original_device_class': <NumberDeviceClass.DURATION: 'duration'>,
     'original_icon': None,
     'original_name': 'Power Delivery timeout',
@@ -710,7 +710,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Power limit',
     'capabilities': dict({
       'max': 120,
       'min': 0,
@@ -734,6 +733,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Power limit',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Power limit',
@@ -769,7 +769,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Quick Charge voltage',
     'capabilities': dict({
       'max': 22.0,
       'min': 9.0,
@@ -793,6 +792,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Quick Charge voltage',
     'original_device_class': <NumberDeviceClass.VOLTAGE: 'voltage'>,
     'original_icon': None,
     'original_name': 'Quick Charge voltage',
@@ -829,7 +829,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Setpoint temperature',
     'capabilities': dict({
       'max': 450,
       'min': 10,
@@ -853,6 +852,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Setpoint temperature',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Setpoint temperature',
@@ -888,7 +888,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Short-press temperature step',
     'capabilities': dict({
       'max': 50,
       'min': 1,
@@ -912,6 +911,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Short-press temperature step',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Short-press temperature step',
@@ -947,7 +947,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Shutdown timeout',
     'capabilities': dict({
       'max': 60,
       'min': 0,
@@ -971,6 +970,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Shutdown timeout',
     'original_device_class': <NumberDeviceClass.DURATION: 'duration'>,
     'original_icon': None,
     'original_name': 'Shutdown timeout',
@@ -1007,7 +1007,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Sleep temperature',
     'capabilities': dict({
       'max': 450,
       'min': 10,
@@ -1031,6 +1030,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Sleep temperature',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Sleep temperature',
@@ -1066,7 +1066,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Sleep timeout',
     'capabilities': dict({
       'max': 15,
       'min': 0,
@@ -1090,6 +1089,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Sleep timeout',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Sleep timeout',
@@ -1125,7 +1125,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Voltage divider',
     'capabilities': dict({
       'max': 900,
       'min': 360,
@@ -1149,6 +1148,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Voltage divider',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Voltage divider',

@@ -4,7 +4,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'SMA Device Name Battery Capacity A',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -23,6 +22,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'SMA Device Name Battery Capacity A',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'SMA Device Name Battery Capacity A',
@@ -54,7 +54,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'SMA Device Name Battery Capacity B',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -73,6 +72,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'SMA Device Name Battery Capacity B',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'SMA Device Name Battery Capacity B',
@@ -104,7 +104,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'SMA Device Name Battery Capacity C',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -123,6 +122,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'SMA Device Name Battery Capacity C',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'SMA Device Name Battery Capacity C',
@@ -154,7 +154,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'SMA Device Name Battery Capacity Total',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -173,6 +172,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'SMA Device Name Battery Capacity Total',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'SMA Device Name Battery Capacity Total',
@@ -204,7 +204,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'SMA Device Name Battery Charge A',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -228,6 +227,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'SMA Device Name Battery Charge A',
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
     'original_name': 'SMA Device Name Battery Charge A',
@@ -261,7 +261,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'SMA Device Name Battery Charge B',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -285,6 +284,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'SMA Device Name Battery Charge B',
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
     'original_name': 'SMA Device Name Battery Charge B',
@@ -318,7 +318,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'SMA Device Name Battery Charge C',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -342,6 +341,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'SMA Device Name Battery Charge C',
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
     'original_name': 'SMA Device Name Battery Charge C',
@@ -375,7 +375,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'SMA Device Name Battery Charge Total',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -399,6 +398,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'SMA Device Name Battery Charge Total',
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
     'original_name': 'SMA Device Name Battery Charge Total',
@@ -432,7 +432,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'SMA Device Name Battery Charging Voltage A',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -456,6 +455,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'SMA Device Name Battery Charging Voltage A',
     'original_device_class': <SensorDeviceClass.VOLTAGE: 'voltage'>,
     'original_icon': None,
     'original_name': 'SMA Device Name Battery Charging Voltage A',
@@ -489,7 +489,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'SMA Device Name Battery Charging Voltage B',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -513,6 +512,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'SMA Device Name Battery Charging Voltage B',
     'original_device_class': <SensorDeviceClass.VOLTAGE: 'voltage'>,
     'original_icon': None,
     'original_name': 'SMA Device Name Battery Charging Voltage B',
@@ -546,7 +546,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'SMA Device Name Battery Charging Voltage C',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -570,6 +569,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'SMA Device Name Battery Charging Voltage C',
     'original_device_class': <SensorDeviceClass.VOLTAGE: 'voltage'>,
     'original_icon': None,
     'original_name': 'SMA Device Name Battery Charging Voltage C',
@@ -603,7 +603,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'SMA Device Name Battery Current A',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -627,6 +626,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'SMA Device Name Battery Current A',
     'original_device_class': <SensorDeviceClass.CURRENT: 'current'>,
     'original_icon': None,
     'original_name': 'SMA Device Name Battery Current A',
@@ -660,7 +660,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'SMA Device Name Battery Current B',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -684,6 +683,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'SMA Device Name Battery Current B',
     'original_device_class': <SensorDeviceClass.CURRENT: 'current'>,
     'original_icon': None,
     'original_name': 'SMA Device Name Battery Current B',
@@ -717,7 +717,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'SMA Device Name Battery Current C',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -741,6 +740,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'SMA Device Name Battery Current C',
     'original_device_class': <SensorDeviceClass.CURRENT: 'current'>,
     'original_icon': None,
     'original_name': 'SMA Device Name Battery Current C',
@@ -774,7 +774,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'SMA Device Name Battery Discharge A',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -798,6 +797,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'SMA Device Name Battery Discharge A',
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
     'original_name': 'SMA Device Name Battery Discharge A',
@@ -831,7 +831,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'SMA Device Name Battery Discharge B',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -855,6 +854,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'SMA Device Name Battery Discharge B',
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
     'original_name': 'SMA Device Name Battery Discharge B',
@@ -888,7 +888,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'SMA Device Name Battery Discharge C',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -912,6 +911,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'SMA Device Name Battery Discharge C',
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
     'original_name': 'SMA Device Name Battery Discharge C',
@@ -945,7 +945,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'SMA Device Name Battery Discharge Total',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -969,6 +968,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'SMA Device Name Battery Discharge Total',
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
     'original_name': 'SMA Device Name Battery Discharge Total',
@@ -1002,7 +1002,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'SMA Device Name Battery Power Charge A',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1026,6 +1025,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'SMA Device Name Battery Power Charge A',
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
     'original_icon': None,
     'original_name': 'SMA Device Name Battery Power Charge A',
@@ -1059,7 +1059,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'SMA Device Name Battery Power Charge B',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1083,6 +1082,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'SMA Device Name Battery Power Charge B',
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
     'original_icon': None,
     'original_name': 'SMA Device Name Battery Power Charge B',
@@ -1116,7 +1116,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'SMA Device Name Battery Power Charge C',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1140,6 +1139,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'SMA Device Name Battery Power Charge C',
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
     'original_icon': None,
     'original_name': 'SMA Device Name Battery Power Charge C',
@@ -1173,7 +1173,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'SMA Device Name Battery Power Charge Total',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1197,6 +1196,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'SMA Device Name Battery Power Charge Total',
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
     'original_icon': None,
     'original_name': 'SMA Device Name Battery Power Charge Total',
@@ -1230,7 +1230,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'SMA Device Name Battery Power Discharge A',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1254,6 +1253,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'SMA Device Name Battery Power Discharge A',
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
     'original_icon': None,
     'original_name': 'SMA Device Name Battery Power Discharge A',
@@ -1287,7 +1287,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'SMA Device Name Battery Power Discharge B',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1311,6 +1310,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'SMA Device Name Battery Power Discharge B',
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
     'original_icon': None,
     'original_name': 'SMA Device Name Battery Power Discharge B',
@@ -1344,7 +1344,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'SMA Device Name Battery Power Discharge C',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1368,6 +1367,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'SMA Device Name Battery Power Discharge C',
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
     'original_icon': None,
     'original_name': 'SMA Device Name Battery Power Discharge C',
@@ -1401,7 +1401,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'SMA Device Name Battery Power Discharge Total',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1425,6 +1424,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'SMA Device Name Battery Power Discharge Total',
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
     'original_icon': None,
     'original_name': 'SMA Device Name Battery Power Discharge Total',
@@ -1458,7 +1458,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'SMA Device Name Battery SOC A',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1479,6 +1478,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'SMA Device Name Battery SOC A',
     'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
     'original_icon': None,
     'original_name': 'SMA Device Name Battery SOC A',
@@ -1512,7 +1512,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'SMA Device Name Battery SOC B',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1533,6 +1532,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'SMA Device Name Battery SOC B',
     'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
     'original_icon': None,
     'original_name': 'SMA Device Name Battery SOC B',
@@ -1566,7 +1566,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'SMA Device Name Battery SOC C',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1587,6 +1586,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'SMA Device Name Battery SOC C',
     'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
     'original_icon': None,
     'original_name': 'SMA Device Name Battery SOC C',
@@ -1620,7 +1620,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'SMA Device Name Battery SOC Total',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1641,6 +1640,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'SMA Device Name Battery SOC Total',
     'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
     'original_icon': None,
     'original_name': 'SMA Device Name Battery SOC Total',
@@ -1674,7 +1674,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'SMA Device Name Battery Status Operating Mode',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1693,6 +1692,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'SMA Device Name Battery Status Operating Mode',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'SMA Device Name Battery Status Operating Mode',
@@ -1723,7 +1723,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'SMA Device Name Battery Temp A',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1747,6 +1746,7 @@
         'suggested_display_precision': 1,
       }),
     }),
+    'object_id_base': 'SMA Device Name Battery Temp A',
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'SMA Device Name Battery Temp A',
@@ -1780,7 +1780,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'SMA Device Name Battery Temp B',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1804,6 +1803,7 @@
         'suggested_display_precision': 1,
       }),
     }),
+    'object_id_base': 'SMA Device Name Battery Temp B',
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'SMA Device Name Battery Temp B',
@@ -1837,7 +1837,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'SMA Device Name Battery Temp C',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1861,6 +1860,7 @@
         'suggested_display_precision': 1,
       }),
     }),
+    'object_id_base': 'SMA Device Name Battery Temp C',
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'SMA Device Name Battery Temp C',
@@ -1894,7 +1894,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'SMA Device Name Battery Voltage A',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1918,6 +1917,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'SMA Device Name Battery Voltage A',
     'original_device_class': <SensorDeviceClass.VOLTAGE: 'voltage'>,
     'original_icon': None,
     'original_name': 'SMA Device Name Battery Voltage A',
@@ -1951,7 +1951,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'SMA Device Name Battery Voltage B',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1975,6 +1974,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'SMA Device Name Battery Voltage B',
     'original_device_class': <SensorDeviceClass.VOLTAGE: 'voltage'>,
     'original_icon': None,
     'original_name': 'SMA Device Name Battery Voltage B',
@@ -2008,7 +2008,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'SMA Device Name Battery Voltage C',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2032,6 +2031,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'SMA Device Name Battery Voltage C',
     'original_device_class': <SensorDeviceClass.VOLTAGE: 'voltage'>,
     'original_icon': None,
     'original_name': 'SMA Device Name Battery Voltage C',
@@ -2065,7 +2065,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'SMA Device Name Current L1',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2089,6 +2088,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'SMA Device Name Current L1',
     'original_device_class': <SensorDeviceClass.CURRENT: 'current'>,
     'original_icon': None,
     'original_name': 'SMA Device Name Current L1',
@@ -2122,7 +2122,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'SMA Device Name Current L2',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2146,6 +2145,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'SMA Device Name Current L2',
     'original_device_class': <SensorDeviceClass.CURRENT: 'current'>,
     'original_icon': None,
     'original_name': 'SMA Device Name Current L2',
@@ -2179,7 +2179,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'SMA Device Name Current L3',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2203,6 +2202,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'SMA Device Name Current L3',
     'original_device_class': <SensorDeviceClass.CURRENT: 'current'>,
     'original_icon': None,
     'original_name': 'SMA Device Name Current L3',
@@ -2236,7 +2236,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'SMA Device Name Current Total',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2260,6 +2259,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'SMA Device Name Current Total',
     'original_device_class': <SensorDeviceClass.CURRENT: 'current'>,
     'original_icon': None,
     'original_name': 'SMA Device Name Current Total',
@@ -2293,7 +2293,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'SMA Device Name Daily Yield',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -2317,6 +2316,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'SMA Device Name Daily Yield',
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
     'original_name': 'SMA Device Name Daily Yield',
@@ -2350,7 +2350,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'SMA Device Name Frequency',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2374,6 +2373,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'SMA Device Name Frequency',
     'original_device_class': <SensorDeviceClass.FREQUENCY: 'frequency'>,
     'original_icon': None,
     'original_name': 'SMA Device Name Frequency',
@@ -2407,7 +2407,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'SMA Device Name Grid Apparent Power',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2431,6 +2430,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'SMA Device Name Grid Apparent Power',
     'original_device_class': <SensorDeviceClass.APPARENT_POWER: 'apparent_power'>,
     'original_icon': None,
     'original_name': 'SMA Device Name Grid Apparent Power',
@@ -2464,7 +2464,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'SMA Device Name Grid Apparent Power L1',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2488,6 +2487,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'SMA Device Name Grid Apparent Power L1',
     'original_device_class': <SensorDeviceClass.APPARENT_POWER: 'apparent_power'>,
     'original_icon': None,
     'original_name': 'SMA Device Name Grid Apparent Power L1',
@@ -2521,7 +2521,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'SMA Device Name Grid Apparent Power L2',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2545,6 +2544,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'SMA Device Name Grid Apparent Power L2',
     'original_device_class': <SensorDeviceClass.APPARENT_POWER: 'apparent_power'>,
     'original_icon': None,
     'original_name': 'SMA Device Name Grid Apparent Power L2',
@@ -2578,7 +2578,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'SMA Device Name Grid Apparent Power L3',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2602,6 +2601,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'SMA Device Name Grid Apparent Power L3',
     'original_device_class': <SensorDeviceClass.APPARENT_POWER: 'apparent_power'>,
     'original_icon': None,
     'original_name': 'SMA Device Name Grid Apparent Power L3',
@@ -2635,7 +2635,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'SMA Device Name Grid Connection Status',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2654,6 +2653,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'SMA Device Name Grid Connection Status',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'SMA Device Name Grid Connection Status',
@@ -2684,7 +2684,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'SMA Device Name Grid Power',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2708,6 +2707,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'SMA Device Name Grid Power',
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
     'original_icon': None,
     'original_name': 'SMA Device Name Grid Power',
@@ -2741,7 +2741,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'SMA Device Name Grid Power Factor',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2762,6 +2761,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'SMA Device Name Grid Power Factor',
     'original_device_class': <SensorDeviceClass.POWER_FACTOR: 'power_factor'>,
     'original_icon': None,
     'original_name': 'SMA Device Name Grid Power Factor',
@@ -2794,7 +2794,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'SMA Device Name Grid Power Factor Excitation',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2813,6 +2812,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'SMA Device Name Grid Power Factor Excitation',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'SMA Device Name Grid Power Factor Excitation',
@@ -2843,7 +2843,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'SMA Device Name Grid Reactive Power',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2867,6 +2866,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'SMA Device Name Grid Reactive Power',
     'original_device_class': <SensorDeviceClass.REACTIVE_POWER: 'reactive_power'>,
     'original_icon': None,
     'original_name': 'SMA Device Name Grid Reactive Power',
@@ -2900,7 +2900,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'SMA Device Name Grid Reactive Power L1',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2924,6 +2923,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'SMA Device Name Grid Reactive Power L1',
     'original_device_class': <SensorDeviceClass.REACTIVE_POWER: 'reactive_power'>,
     'original_icon': None,
     'original_name': 'SMA Device Name Grid Reactive Power L1',
@@ -2957,7 +2957,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'SMA Device Name Grid Reactive Power L2',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2981,6 +2980,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'SMA Device Name Grid Reactive Power L2',
     'original_device_class': <SensorDeviceClass.REACTIVE_POWER: 'reactive_power'>,
     'original_icon': None,
     'original_name': 'SMA Device Name Grid Reactive Power L2',
@@ -3014,7 +3014,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'SMA Device Name Grid Reactive Power L3',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -3038,6 +3037,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'SMA Device Name Grid Reactive Power L3',
     'original_device_class': <SensorDeviceClass.REACTIVE_POWER: 'reactive_power'>,
     'original_icon': None,
     'original_name': 'SMA Device Name Grid Reactive Power L3',
@@ -3071,7 +3071,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'SMA Device Name Grid Relay Status',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -3090,6 +3089,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'SMA Device Name Grid Relay Status',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'SMA Device Name Grid Relay Status',
@@ -3120,7 +3120,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'SMA Device Name Insulation Residual Current',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -3144,6 +3143,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'SMA Device Name Insulation Residual Current',
     'original_device_class': <SensorDeviceClass.CURRENT: 'current'>,
     'original_icon': None,
     'original_name': 'SMA Device Name Insulation Residual Current',
@@ -3177,7 +3177,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'SMA Device Name Inverter Condition',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -3196,6 +3195,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'SMA Device Name Inverter Condition',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'SMA Device Name Inverter Condition',
@@ -3226,7 +3226,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'SMA Device Name Inverter Power Limit',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -3250,6 +3249,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'SMA Device Name Inverter Power Limit',
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
     'original_icon': None,
     'original_name': 'SMA Device Name Inverter Power Limit',
@@ -3283,7 +3283,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'SMA Device Name Inverter System Init',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -3302,6 +3301,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'SMA Device Name Inverter System Init',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'SMA Device Name Inverter System Init',
@@ -3332,7 +3332,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'SMA Device Name Metering Active Power Draw L1',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -3356,6 +3355,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'SMA Device Name Metering Active Power Draw L1',
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
     'original_icon': None,
     'original_name': 'SMA Device Name Metering Active Power Draw L1',
@@ -3389,7 +3389,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'SMA Device Name Metering Active Power Draw L2',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -3413,6 +3412,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'SMA Device Name Metering Active Power Draw L2',
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
     'original_icon': None,
     'original_name': 'SMA Device Name Metering Active Power Draw L2',
@@ -3446,7 +3446,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'SMA Device Name Metering Active Power Draw L3',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -3470,6 +3469,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'SMA Device Name Metering Active Power Draw L3',
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
     'original_icon': None,
     'original_name': 'SMA Device Name Metering Active Power Draw L3',
@@ -3503,7 +3503,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'SMA Device Name Metering Active Power Feed L1',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -3527,6 +3526,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'SMA Device Name Metering Active Power Feed L1',
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
     'original_icon': None,
     'original_name': 'SMA Device Name Metering Active Power Feed L1',
@@ -3560,7 +3560,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'SMA Device Name Metering Active Power Feed L2',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -3584,6 +3583,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'SMA Device Name Metering Active Power Feed L2',
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
     'original_icon': None,
     'original_name': 'SMA Device Name Metering Active Power Feed L2',
@@ -3617,7 +3617,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'SMA Device Name Metering Active Power Feed L3',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -3641,6 +3640,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'SMA Device Name Metering Active Power Feed L3',
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
     'original_icon': None,
     'original_name': 'SMA Device Name Metering Active Power Feed L3',
@@ -3674,7 +3674,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'SMA Device Name Metering Current Consumption',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -3698,6 +3697,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'SMA Device Name Metering Current Consumption',
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
     'original_icon': None,
     'original_name': 'SMA Device Name Metering Current Consumption',
@@ -3731,7 +3731,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'SMA Device Name Metering Current L1',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -3755,6 +3754,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'SMA Device Name Metering Current L1',
     'original_device_class': <SensorDeviceClass.CURRENT: 'current'>,
     'original_icon': None,
     'original_name': 'SMA Device Name Metering Current L1',
@@ -3788,7 +3788,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'SMA Device Name Metering Current L2',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -3812,6 +3811,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'SMA Device Name Metering Current L2',
     'original_device_class': <SensorDeviceClass.CURRENT: 'current'>,
     'original_icon': None,
     'original_name': 'SMA Device Name Metering Current L2',
@@ -3845,7 +3845,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'SMA Device Name Metering Current L3',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -3869,6 +3868,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'SMA Device Name Metering Current L3',
     'original_device_class': <SensorDeviceClass.CURRENT: 'current'>,
     'original_icon': None,
     'original_name': 'SMA Device Name Metering Current L3',
@@ -3902,7 +3902,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'SMA Device Name Metering Frequency',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -3926,6 +3925,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'SMA Device Name Metering Frequency',
     'original_device_class': <SensorDeviceClass.FREQUENCY: 'frequency'>,
     'original_icon': None,
     'original_name': 'SMA Device Name Metering Frequency',
@@ -3959,7 +3959,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'SMA Device Name Metering Power Absorbed',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -3983,6 +3982,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'SMA Device Name Metering Power Absorbed',
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
     'original_icon': None,
     'original_name': 'SMA Device Name Metering Power Absorbed',
@@ -4016,7 +4016,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'SMA Device Name Metering Power Supplied',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -4040,6 +4039,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'SMA Device Name Metering Power Supplied',
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
     'original_icon': None,
     'original_name': 'SMA Device Name Metering Power Supplied',
@@ -4073,7 +4073,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'SMA Device Name Metering Total Absorbed',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -4097,6 +4096,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'SMA Device Name Metering Total Absorbed',
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
     'original_name': 'SMA Device Name Metering Total Absorbed',
@@ -4130,7 +4130,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'SMA Device Name Metering Total Consumption',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -4154,6 +4153,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'SMA Device Name Metering Total Consumption',
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
     'original_name': 'SMA Device Name Metering Total Consumption',
@@ -4187,7 +4187,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'SMA Device Name Metering Total Yield',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -4211,6 +4210,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'SMA Device Name Metering Total Yield',
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
     'original_name': 'SMA Device Name Metering Total Yield',
@@ -4244,7 +4244,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'SMA Device Name Metering Voltage L1',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -4268,6 +4267,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'SMA Device Name Metering Voltage L1',
     'original_device_class': <SensorDeviceClass.VOLTAGE: 'voltage'>,
     'original_icon': None,
     'original_name': 'SMA Device Name Metering Voltage L1',
@@ -4301,7 +4301,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'SMA Device Name Metering Voltage L2',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -4325,6 +4324,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'SMA Device Name Metering Voltage L2',
     'original_device_class': <SensorDeviceClass.VOLTAGE: 'voltage'>,
     'original_icon': None,
     'original_name': 'SMA Device Name Metering Voltage L2',
@@ -4358,7 +4358,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'SMA Device Name Metering Voltage L3',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -4382,6 +4381,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'SMA Device Name Metering Voltage L3',
     'original_device_class': <SensorDeviceClass.VOLTAGE: 'voltage'>,
     'original_icon': None,
     'original_name': 'SMA Device Name Metering Voltage L3',
@@ -4415,7 +4415,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'SMA Device Name Operating Status',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -4434,6 +4433,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'SMA Device Name Operating Status',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'SMA Device Name Operating Status',
@@ -4464,7 +4464,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'SMA Device Name Operating Status General',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -4483,6 +4482,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'SMA Device Name Operating Status General',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'SMA Device Name Operating Status General',
@@ -4513,7 +4513,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'SMA Device Name Optimizer Current',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -4537,6 +4536,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'SMA Device Name Optimizer Current',
     'original_device_class': <SensorDeviceClass.CURRENT: 'current'>,
     'original_icon': None,
     'original_name': 'SMA Device Name Optimizer Current',
@@ -4570,7 +4570,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'SMA Device Name Optimizer Power',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -4594,6 +4593,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'SMA Device Name Optimizer Power',
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
     'original_icon': None,
     'original_name': 'SMA Device Name Optimizer Power',
@@ -4627,7 +4627,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'SMA Device Name Optimizer Temp',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -4651,6 +4650,7 @@
         'suggested_display_precision': 1,
       }),
     }),
+    'object_id_base': 'SMA Device Name Optimizer Temp',
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'SMA Device Name Optimizer Temp',
@@ -4684,7 +4684,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'SMA Device Name Optimizer Voltage',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -4708,6 +4707,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'SMA Device Name Optimizer Voltage',
     'original_device_class': <SensorDeviceClass.VOLTAGE: 'voltage'>,
     'original_icon': None,
     'original_name': 'SMA Device Name Optimizer Voltage',
@@ -4741,7 +4741,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'SMA Device Name Power L1',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -4765,6 +4764,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'SMA Device Name Power L1',
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
     'original_icon': None,
     'original_name': 'SMA Device Name Power L1',
@@ -4798,7 +4798,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'SMA Device Name Power L2',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -4822,6 +4821,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'SMA Device Name Power L2',
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
     'original_icon': None,
     'original_name': 'SMA Device Name Power L2',
@@ -4855,7 +4855,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'SMA Device Name Power L3',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -4879,6 +4878,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'SMA Device Name Power L3',
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
     'original_icon': None,
     'original_name': 'SMA Device Name Power L3',
@@ -4912,7 +4912,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'SMA Device Name PV Current A',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -4936,6 +4935,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'SMA Device Name PV Current A',
     'original_device_class': <SensorDeviceClass.CURRENT: 'current'>,
     'original_icon': None,
     'original_name': 'SMA Device Name PV Current A',
@@ -4969,7 +4969,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'SMA Device Name PV Current B',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -4993,6 +4992,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'SMA Device Name PV Current B',
     'original_device_class': <SensorDeviceClass.CURRENT: 'current'>,
     'original_icon': None,
     'original_name': 'SMA Device Name PV Current B',
@@ -5026,7 +5026,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'SMA Device Name PV Current C',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -5050,6 +5049,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'SMA Device Name PV Current C',
     'original_device_class': <SensorDeviceClass.CURRENT: 'current'>,
     'original_icon': None,
     'original_name': 'SMA Device Name PV Current C',
@@ -5083,7 +5083,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'SMA Device Name PV Gen Meter',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -5107,6 +5106,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'SMA Device Name PV Gen Meter',
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
     'original_name': 'SMA Device Name PV Gen Meter',
@@ -5140,7 +5140,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'SMA Device Name PV Isolation Resistance',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -5161,6 +5160,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'SMA Device Name PV Isolation Resistance',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'SMA Device Name PV Isolation Resistance',
@@ -5193,7 +5193,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'SMA Device Name PV Power',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -5217,6 +5216,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'SMA Device Name PV Power',
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
     'original_icon': None,
     'original_name': 'SMA Device Name PV Power',
@@ -5250,7 +5250,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'SMA Device Name PV Power A',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -5274,6 +5273,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'SMA Device Name PV Power A',
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
     'original_icon': None,
     'original_name': 'SMA Device Name PV Power A',
@@ -5307,7 +5307,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'SMA Device Name PV Power B',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -5331,6 +5330,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'SMA Device Name PV Power B',
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
     'original_icon': None,
     'original_name': 'SMA Device Name PV Power B',
@@ -5364,7 +5364,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'SMA Device Name PV Power C',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -5388,6 +5387,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'SMA Device Name PV Power C',
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
     'original_icon': None,
     'original_name': 'SMA Device Name PV Power C',
@@ -5421,7 +5421,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'SMA Device Name PV Voltage A',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -5445,6 +5444,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'SMA Device Name PV Voltage A',
     'original_device_class': <SensorDeviceClass.VOLTAGE: 'voltage'>,
     'original_icon': None,
     'original_name': 'SMA Device Name PV Voltage A',
@@ -5478,7 +5478,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'SMA Device Name PV Voltage B',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -5502,6 +5501,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'SMA Device Name PV Voltage B',
     'original_device_class': <SensorDeviceClass.VOLTAGE: 'voltage'>,
     'original_icon': None,
     'original_name': 'SMA Device Name PV Voltage B',
@@ -5535,7 +5535,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'SMA Device Name PV Voltage C',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -5559,6 +5558,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'SMA Device Name PV Voltage C',
     'original_device_class': <SensorDeviceClass.VOLTAGE: 'voltage'>,
     'original_icon': None,
     'original_name': 'SMA Device Name PV Voltage C',
@@ -5592,7 +5592,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'SMA Device Name Secure Power Supply Current',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -5616,6 +5615,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'SMA Device Name Secure Power Supply Current',
     'original_device_class': <SensorDeviceClass.CURRENT: 'current'>,
     'original_icon': None,
     'original_name': 'SMA Device Name Secure Power Supply Current',
@@ -5649,7 +5649,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'SMA Device Name Secure Power Supply Power',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -5673,6 +5672,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'SMA Device Name Secure Power Supply Power',
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
     'original_icon': None,
     'original_name': 'SMA Device Name Secure Power Supply Power',
@@ -5706,7 +5706,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'SMA Device Name Secure Power Supply Voltage',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -5730,6 +5729,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'SMA Device Name Secure Power Supply Voltage',
     'original_device_class': <SensorDeviceClass.VOLTAGE: 'voltage'>,
     'original_icon': None,
     'original_name': 'SMA Device Name Secure Power Supply Voltage',
@@ -5763,7 +5763,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'SMA Device Name Status',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -5782,6 +5781,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'SMA Device Name Status',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'SMA Device Name Status',
@@ -5812,7 +5812,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'SMA Device Name Total Yield',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -5836,6 +5835,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'SMA Device Name Total Yield',
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
     'original_name': 'SMA Device Name Total Yield',
@@ -5869,7 +5869,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'SMA Device Name Voltage L1',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -5893,6 +5892,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'SMA Device Name Voltage L1',
     'original_device_class': <SensorDeviceClass.VOLTAGE: 'voltage'>,
     'original_icon': None,
     'original_name': 'SMA Device Name Voltage L1',
@@ -5926,7 +5926,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'SMA Device Name Voltage L2',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -5950,6 +5949,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'SMA Device Name Voltage L2',
     'original_device_class': <SensorDeviceClass.VOLTAGE: 'voltage'>,
     'original_icon': None,
     'original_name': 'SMA Device Name Voltage L2',
@@ -5983,7 +5983,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'SMA Device Name Voltage L3',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -6007,6 +6006,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'SMA Device Name Voltage L3',
     'original_device_class': <SensorDeviceClass.VOLTAGE: 'voltage'>,
     'original_icon': None,
     'original_name': 'SMA Device Name Voltage L3',

@@ -4,7 +4,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Fan speed',
     'capabilities': dict({
       'max': 3,
       'min': 0,
@@ -28,6 +27,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Fan speed',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Fan speed',
@@ -62,7 +62,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Freezer temperature',
     'capabilities': dict({
       'max': -15.0,
       'min': -23.0,
@@ -86,6 +85,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Freezer temperature',
     'original_device_class': <NumberDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Freezer temperature',
@@ -122,7 +122,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Fridge temperature',
     'capabilities': dict({
       'max': 7.0,
       'min': 1.0,
@@ -146,6 +145,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Fridge temperature',
     'original_device_class': <NumberDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Fridge temperature',
@@ -182,7 +182,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Freezer temperature',
     'capabilities': dict({
       'max': -15.0,
       'min': -23.0,
@@ -206,6 +205,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Freezer temperature',
     'original_device_class': <NumberDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Freezer temperature',
@@ -242,7 +242,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Fridge temperature',
     'capabilities': dict({
       'max': 7.0,
       'min': 1.0,
@@ -266,6 +265,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Fridge temperature',
     'original_device_class': <NumberDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Fridge temperature',
@@ -302,7 +302,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Freezer temperature',
     'capabilities': dict({
       'max': -15.0,
       'min': -23.0,
@@ -326,6 +325,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Freezer temperature',
     'original_device_class': <NumberDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Freezer temperature',
@@ -362,7 +362,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Fridge temperature',
     'capabilities': dict({
       'max': 7.0,
       'min': 1.0,
@@ -386,6 +385,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Fridge temperature',
     'original_device_class': <NumberDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Fridge temperature',
@@ -422,7 +422,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Target temperature',
     'capabilities': dict({
       'max': 7,
       'min': 1,
@@ -446,6 +445,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Target temperature',
     'original_device_class': <NumberDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Target temperature',
@@ -482,7 +482,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Rinse cycles',
     'capabilities': dict({
       'max': 5,
       'min': 0,
@@ -506,6 +505,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Rinse cycles',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Rinse cycles',
@@ -541,7 +541,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Rinse cycles',
     'capabilities': dict({
       'max': 5,
       'min': 0,
@@ -565,6 +564,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Rinse cycles',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Rinse cycles',
@@ -600,7 +600,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Rinse cycles',
     'capabilities': dict({
       'max': 5,
       'min': 0,
@@ -624,6 +623,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Rinse cycles',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Rinse cycles',

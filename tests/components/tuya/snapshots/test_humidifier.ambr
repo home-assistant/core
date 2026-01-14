@@ -4,7 +4,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': None,
     'capabilities': dict({
       'max_humidity': 100,
       'min_humidity': 0,
@@ -26,6 +25,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': None,
     'original_device_class': <HumidifierDeviceClass.DEHUMIDIFIER: 'dehumidifier'>,
     'original_icon': None,
     'original_name': None,
@@ -61,7 +61,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': None,
     'capabilities': dict({
       'max_humidity': 80,
       'min_humidity': 25,
@@ -83,6 +82,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': None,
     'original_device_class': <HumidifierDeviceClass.DEHUMIDIFIER: 'dehumidifier'>,
     'original_icon': None,
     'original_name': None,
@@ -117,7 +117,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': None,
     'capabilities': dict({
       'max_humidity': 70,
       'min_humidity': 35,
@@ -139,6 +138,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': None,
     'original_device_class': <HumidifierDeviceClass.DEHUMIDIFIER: 'dehumidifier'>,
     'original_icon': None,
     'original_name': None,
@@ -175,7 +175,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': None,
     'capabilities': dict({
       'max_humidity': 80,
       'min_humidity': 30,
@@ -197,6 +196,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': None,
     'original_device_class': <HumidifierDeviceClass.DEHUMIDIFIER: 'dehumidifier'>,
     'original_icon': None,
     'original_name': None,
@@ -233,7 +233,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': None,
     'capabilities': dict({
       'max_humidity': 100,
       'min_humidity': 0,
@@ -255,6 +254,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': None,
     'original_device_class': <HumidifierDeviceClass.HUMIDIFIER: 'humidifier'>,
     'original_icon': None,
     'original_name': None,
@@ -289,7 +289,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': None,
     'capabilities': dict({
       'max_humidity': 80,
       'min_humidity': 25,
@@ -311,6 +310,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': None,
     'original_device_class': <HumidifierDeviceClass.DEHUMIDIFIER: 'dehumidifier'>,
     'original_icon': None,
     'original_name': None,

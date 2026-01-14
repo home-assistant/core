@@ -4,7 +4,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Burglary alarm issues',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -23,6 +22,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Burglary alarm issues',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Burglary alarm issues',
@@ -53,7 +53,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Faulting points',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -72,6 +71,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Faulting points',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Faulting points',
@@ -103,7 +103,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Fire alarm issues',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -122,6 +121,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Fire alarm issues',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Fire alarm issues',
@@ -152,7 +152,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Gas alarm issues',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -171,6 +170,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Gas alarm issues',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Gas alarm issues',
@@ -201,7 +201,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Burglary alarm issues',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -220,6 +219,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Burglary alarm issues',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Burglary alarm issues',
@@ -250,7 +250,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Faulting points',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -269,6 +268,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Faulting points',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Faulting points',
@@ -300,7 +300,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Fire alarm issues',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -319,6 +318,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Fire alarm issues',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Fire alarm issues',
@@ -349,7 +349,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Gas alarm issues',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -368,6 +367,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Gas alarm issues',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Gas alarm issues',
@@ -398,7 +398,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Burglary alarm issues',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -417,6 +416,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Burglary alarm issues',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Burglary alarm issues',
@@ -447,7 +447,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Faulting points',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -466,6 +465,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Faulting points',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Faulting points',
@@ -497,7 +497,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Fire alarm issues',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -516,6 +515,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Fire alarm issues',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Fire alarm issues',
@@ -546,7 +546,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Gas alarm issues',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -565,6 +564,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Gas alarm issues',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Gas alarm issues',

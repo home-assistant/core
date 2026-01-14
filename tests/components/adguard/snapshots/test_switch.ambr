@@ -4,7 +4,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Filtering',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -23,6 +22,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Filtering',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Filtering',
@@ -53,7 +53,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Parental control',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -72,6 +71,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Parental control',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Parental control',
@@ -102,7 +102,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Protection',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -121,6 +120,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Protection',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Protection',
@@ -151,7 +151,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Query log',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -170,6 +169,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Query log',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Query log',
@@ -200,7 +200,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Safe browsing',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -219,6 +218,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Safe browsing',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Safe browsing',
@@ -249,7 +249,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Safe search',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -268,6 +267,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Safe search',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Safe search',

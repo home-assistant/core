@@ -4,7 +4,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -28,6 +27,7 @@
         'suggested_display_precision': 1,
       }),
     }),
+    'object_id_base': 'Temperature',
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Temperature',
@@ -62,7 +62,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Pressure',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -86,6 +85,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'Pressure',
     'original_device_class': <SensorDeviceClass.PRESSURE: 'pressure'>,
     'original_icon': None,
     'original_name': 'Pressure',
@@ -120,7 +120,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -144,6 +143,7 @@
         'suggested_display_precision': 1,
       }),
     }),
+    'object_id_base': 'Temperature',
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Temperature',
@@ -178,7 +178,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Counter A',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -199,6 +198,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Counter A',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Counter A',
@@ -231,7 +231,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Counter B',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -252,6 +251,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Counter B',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Counter B',
@@ -284,7 +284,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Latest voltage A',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -308,6 +307,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'Latest voltage A',
     'original_device_class': <SensorDeviceClass.VOLTAGE: 'voltage'>,
     'original_icon': None,
     'original_name': 'Latest voltage A',
@@ -342,7 +342,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Latest voltage B',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -366,6 +365,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'Latest voltage B',
     'original_device_class': <SensorDeviceClass.VOLTAGE: 'voltage'>,
     'original_icon': None,
     'original_name': 'Latest voltage B',
@@ -400,7 +400,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Latest voltage C',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -424,6 +423,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'Latest voltage C',
     'original_device_class': <SensorDeviceClass.VOLTAGE: 'voltage'>,
     'original_icon': None,
     'original_name': 'Latest voltage C',
@@ -458,7 +458,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Latest voltage D',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -482,6 +481,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'Latest voltage D',
     'original_device_class': <SensorDeviceClass.VOLTAGE: 'voltage'>,
     'original_icon': None,
     'original_name': 'Latest voltage D',
@@ -516,7 +516,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Voltage A',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -540,6 +539,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'Voltage A',
     'original_device_class': <SensorDeviceClass.VOLTAGE: 'voltage'>,
     'original_icon': None,
     'original_name': 'Voltage A',
@@ -574,7 +574,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Voltage B',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -598,6 +597,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'Voltage B',
     'original_device_class': <SensorDeviceClass.VOLTAGE: 'voltage'>,
     'original_icon': None,
     'original_name': 'Voltage B',
@@ -632,7 +632,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Voltage C',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -656,6 +655,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'Voltage C',
     'original_device_class': <SensorDeviceClass.VOLTAGE: 'voltage'>,
     'original_icon': None,
     'original_name': 'Voltage C',
@@ -690,7 +690,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Voltage D',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -714,6 +713,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'Voltage D',
     'original_device_class': <SensorDeviceClass.VOLTAGE: 'voltage'>,
     'original_icon': None,
     'original_name': 'Voltage D',
@@ -748,7 +748,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -772,6 +771,7 @@
         'suggested_display_precision': 1,
       }),
     }),
+    'object_id_base': 'Temperature',
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Temperature',
@@ -806,7 +806,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'HIH3600 humidity',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -827,6 +826,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'HIH3600 humidity',
     'original_device_class': <SensorDeviceClass.HUMIDITY: 'humidity'>,
     'original_icon': None,
     'original_name': 'HIH3600 humidity',
@@ -861,7 +861,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'HIH4000 humidity',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -882,6 +881,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'HIH4000 humidity',
     'original_device_class': <SensorDeviceClass.HUMIDITY: 'humidity'>,
     'original_icon': None,
     'original_name': 'HIH4000 humidity',
@@ -916,7 +916,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'HIH5030 humidity',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -937,6 +936,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'HIH5030 humidity',
     'original_device_class': <SensorDeviceClass.HUMIDITY: 'humidity'>,
     'original_icon': None,
     'original_name': 'HIH5030 humidity',
@@ -971,7 +971,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'HTM1735 humidity',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -992,6 +991,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'HTM1735 humidity',
     'original_device_class': <SensorDeviceClass.HUMIDITY: 'humidity'>,
     'original_icon': None,
     'original_name': 'HTM1735 humidity',
@@ -1026,7 +1026,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Humidity',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1047,6 +1046,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Humidity',
     'original_device_class': <SensorDeviceClass.HUMIDITY: 'humidity'>,
     'original_icon': None,
     'original_name': 'Humidity',
@@ -1081,7 +1081,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Illuminance',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1102,6 +1101,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Illuminance',
     'original_device_class': <SensorDeviceClass.ILLUMINANCE: 'illuminance'>,
     'original_icon': None,
     'original_name': 'Illuminance',
@@ -1136,7 +1136,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Pressure',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1160,6 +1159,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'Pressure',
     'original_device_class': <SensorDeviceClass.PRESSURE: 'pressure'>,
     'original_icon': None,
     'original_name': 'Pressure',
@@ -1194,7 +1194,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1218,6 +1217,7 @@
         'suggested_display_precision': 1,
       }),
     }),
+    'object_id_base': 'Temperature',
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Temperature',
@@ -1252,7 +1252,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'VAD voltage',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1276,6 +1275,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'VAD voltage',
     'original_device_class': <SensorDeviceClass.VOLTAGE: 'voltage'>,
     'original_icon': None,
     'original_name': 'VAD voltage',
@@ -1310,7 +1310,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'VDD voltage',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1334,6 +1333,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'VDD voltage',
     'original_device_class': <SensorDeviceClass.VOLTAGE: 'voltage'>,
     'original_icon': None,
     'original_name': 'VDD voltage',
@@ -1368,7 +1368,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'VIS voltage difference',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1392,6 +1391,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'VIS voltage difference',
     'original_device_class': <SensorDeviceClass.VOLTAGE: 'voltage'>,
     'original_icon': None,
     'original_name': 'VIS voltage difference',
@@ -1426,7 +1426,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1450,6 +1449,7 @@
         'suggested_display_precision': 1,
       }),
     }),
+    'object_id_base': 'Temperature',
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Temperature',
@@ -1484,7 +1484,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1508,6 +1507,7 @@
         'suggested_display_precision': 1,
       }),
     }),
+    'object_id_base': 'Temperature',
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Temperature',
@@ -1542,7 +1542,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1566,6 +1565,7 @@
         'suggested_display_precision': 1,
       }),
     }),
+    'object_id_base': 'Temperature',
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Temperature',
@@ -1600,7 +1600,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1624,6 +1623,7 @@
         'suggested_display_precision': 1,
       }),
     }),
+    'object_id_base': 'Temperature',
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Temperature',
@@ -1658,7 +1658,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Thermocouple K temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1682,6 +1681,7 @@
         'suggested_display_precision': 1,
       }),
     }),
+    'object_id_base': 'Thermocouple K temperature',
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Thermocouple K temperature',
@@ -1716,7 +1716,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'VIS voltage gradient',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1740,6 +1739,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'VIS voltage gradient',
     'original_device_class': <SensorDeviceClass.VOLTAGE: 'voltage'>,
     'original_icon': None,
     'original_name': 'VIS voltage gradient',
@@ -1774,7 +1774,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Voltage',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1798,6 +1797,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'Voltage',
     'original_device_class': <SensorDeviceClass.VOLTAGE: 'voltage'>,
     'original_icon': None,
     'original_name': 'Voltage',
@@ -1832,7 +1832,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1856,6 +1855,7 @@
         'suggested_display_precision': 1,
       }),
     }),
+    'object_id_base': 'Temperature',
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Temperature',
@@ -1890,7 +1890,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1914,6 +1913,7 @@
         'suggested_display_precision': 1,
       }),
     }),
+    'object_id_base': 'Temperature',
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Temperature',
@@ -1948,7 +1948,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Humidity',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1969,6 +1968,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Humidity',
     'original_device_class': <SensorDeviceClass.HUMIDITY: 'humidity'>,
     'original_icon': None,
     'original_name': 'Humidity',
@@ -2003,7 +2003,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Illuminance',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2024,6 +2023,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Illuminance',
     'original_device_class': <SensorDeviceClass.ILLUMINANCE: 'illuminance'>,
     'original_icon': None,
     'original_name': 'Illuminance',
@@ -2058,7 +2058,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Pressure',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2082,6 +2081,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'Pressure',
     'original_device_class': <SensorDeviceClass.PRESSURE: 'pressure'>,
     'original_icon': None,
     'original_name': 'Pressure',
@@ -2116,7 +2116,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2140,6 +2139,7 @@
         'suggested_display_precision': 1,
       }),
     }),
+    'object_id_base': 'Temperature',
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Temperature',
@@ -2174,7 +2174,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Pressure',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2198,6 +2197,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'Pressure',
     'original_device_class': <SensorDeviceClass.PRESSURE: 'pressure'>,
     'original_icon': None,
     'original_name': 'Pressure',
@@ -2232,7 +2232,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2256,6 +2255,7 @@
         'suggested_display_precision': 1,
       }),
     }),
+    'object_id_base': 'Temperature',
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Temperature',
@@ -2290,7 +2290,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'HIH3600 humidity',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2311,6 +2310,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'HIH3600 humidity',
     'original_device_class': <SensorDeviceClass.HUMIDITY: 'humidity'>,
     'original_icon': None,
     'original_name': 'HIH3600 humidity',
@@ -2345,7 +2345,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'HIH4000 humidity',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2366,6 +2365,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'HIH4000 humidity',
     'original_device_class': <SensorDeviceClass.HUMIDITY: 'humidity'>,
     'original_icon': None,
     'original_name': 'HIH4000 humidity',
@@ -2400,7 +2400,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'HIH5030 humidity',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2421,6 +2420,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'HIH5030 humidity',
     'original_device_class': <SensorDeviceClass.HUMIDITY: 'humidity'>,
     'original_icon': None,
     'original_name': 'HIH5030 humidity',
@@ -2455,7 +2455,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'HTM1735 humidity',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2476,6 +2475,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'HTM1735 humidity',
     'original_device_class': <SensorDeviceClass.HUMIDITY: 'humidity'>,
     'original_icon': None,
     'original_name': 'HTM1735 humidity',
@@ -2510,7 +2510,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Humidity',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2531,6 +2530,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Humidity',
     'original_device_class': <SensorDeviceClass.HUMIDITY: 'humidity'>,
     'original_icon': None,
     'original_name': 'Humidity',
@@ -2565,7 +2565,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Illuminance',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2586,6 +2585,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Illuminance',
     'original_device_class': <SensorDeviceClass.ILLUMINANCE: 'illuminance'>,
     'original_icon': None,
     'original_name': 'Illuminance',
@@ -2620,7 +2620,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Pressure',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2644,6 +2643,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'Pressure',
     'original_device_class': <SensorDeviceClass.PRESSURE: 'pressure'>,
     'original_icon': None,
     'original_name': 'Pressure',
@@ -2678,7 +2678,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2702,6 +2701,7 @@
         'suggested_display_precision': 1,
       }),
     }),
+    'object_id_base': 'Temperature',
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Temperature',
@@ -2736,7 +2736,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'VAD voltage',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2760,6 +2759,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'VAD voltage',
     'original_device_class': <SensorDeviceClass.VOLTAGE: 'voltage'>,
     'original_icon': None,
     'original_name': 'VAD voltage',
@@ -2794,7 +2794,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'VDD voltage',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2818,6 +2817,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'VDD voltage',
     'original_device_class': <SensorDeviceClass.VOLTAGE: 'voltage'>,
     'original_icon': None,
     'original_name': 'VDD voltage',
@@ -2852,7 +2852,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'VIS voltage difference',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2876,6 +2875,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'VIS voltage difference',
     'original_device_class': <SensorDeviceClass.VOLTAGE: 'voltage'>,
     'original_icon': None,
     'original_name': 'VIS voltage difference',
@@ -2910,7 +2910,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Humidity',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2931,6 +2930,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Humidity',
     'original_device_class': <SensorDeviceClass.HUMIDITY: 'humidity'>,
     'original_icon': None,
     'original_name': 'Humidity',
@@ -2965,7 +2965,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Raw humidity',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2986,6 +2985,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Raw humidity',
     'original_device_class': <SensorDeviceClass.HUMIDITY: 'humidity'>,
     'original_icon': None,
     'original_name': 'Raw humidity',
@@ -3020,7 +3020,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -3044,6 +3043,7 @@
         'suggested_display_precision': 1,
       }),
     }),
+    'object_id_base': 'Temperature',
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Temperature',
@@ -3078,7 +3078,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Moisture 2',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -3102,6 +3101,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'Moisture 2',
     'original_device_class': <SensorDeviceClass.PRESSURE: 'pressure'>,
     'original_icon': None,
     'original_name': 'Moisture 2',
@@ -3136,7 +3136,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Moisture 3',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -3160,6 +3159,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'Moisture 3',
     'original_device_class': <SensorDeviceClass.PRESSURE: 'pressure'>,
     'original_icon': None,
     'original_name': 'Moisture 3',
@@ -3194,7 +3194,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Wetness 0',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -3215,6 +3214,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Wetness 0',
     'original_device_class': <SensorDeviceClass.HUMIDITY: 'humidity'>,
     'original_icon': None,
     'original_name': 'Wetness 0',
@@ -3249,7 +3249,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Wetness 1',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -3270,6 +3269,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Wetness 1',
     'original_device_class': <SensorDeviceClass.HUMIDITY: 'humidity'>,
     'original_icon': None,
     'original_name': 'Wetness 1',

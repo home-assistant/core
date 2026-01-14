@@ -932,7 +932,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Dailies',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -951,6 +950,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Dailies',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Dailies',
@@ -988,7 +988,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Daily reminders',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1007,6 +1006,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Daily reminders',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Daily reminders',
@@ -1043,7 +1043,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'To-do reminders',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1062,6 +1061,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'To-do reminders',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'To-do reminders',
@@ -1098,7 +1098,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': "To-Do's",
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1117,6 +1116,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': "To-Do's",
     'original_device_class': None,
     'original_icon': None,
     'original_name': "To-Do's",

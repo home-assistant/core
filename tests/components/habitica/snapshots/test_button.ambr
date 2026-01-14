@@ -4,7 +4,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Allocate all stat points',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -23,6 +22,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Allocate all stat points',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Allocate all stat points',
@@ -53,7 +53,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Blessing',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -72,6 +71,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Blessing',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Blessing',
@@ -103,7 +103,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Buy a health potion',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -122,6 +121,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Buy a health potion',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Buy a health potion',
@@ -153,7 +153,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Healing light',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -172,6 +171,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Healing light',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Healing light',
@@ -203,7 +203,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Protective aura',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -222,6 +221,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Protective aura',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Protective aura',
@@ -253,7 +253,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Revive from death',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -272,6 +271,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Revive from death',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Revive from death',
@@ -302,7 +302,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Searing brightness',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -321,6 +320,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Searing brightness',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Searing brightness',
@@ -352,7 +352,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Start my day',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -371,6 +370,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Start my day',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Start my day',
@@ -401,7 +401,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Allocate all stat points',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -420,6 +419,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Allocate all stat points',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Allocate all stat points',
@@ -450,7 +450,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Buy a health potion',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -469,6 +468,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Buy a health potion',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Buy a health potion',
@@ -500,7 +500,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Revive from death',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -519,6 +518,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Revive from death',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Revive from death',
@@ -549,7 +549,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Start my day',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -568,6 +567,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Start my day',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Start my day',
@@ -598,7 +598,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Stealth',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -617,6 +616,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Stealth',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Stealth',
@@ -648,7 +648,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Tools of the trade',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -667,6 +666,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Tools of the trade',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Tools of the trade',
@@ -698,7 +698,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Allocate all stat points',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -717,6 +716,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Allocate all stat points',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Allocate all stat points',
@@ -747,7 +747,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Buy a health potion',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -766,6 +765,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Buy a health potion',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Buy a health potion',
@@ -797,7 +797,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Defensive stance',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -816,6 +815,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Defensive stance',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Defensive stance',
@@ -847,7 +847,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Intimidating gaze',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -866,6 +865,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Intimidating gaze',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Intimidating gaze',
@@ -897,7 +897,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Revive from death',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -916,6 +915,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Revive from death',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Revive from death',
@@ -946,7 +946,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Start my day',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -965,6 +964,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Start my day',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Start my day',
@@ -995,7 +995,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Valorous presence',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1014,6 +1013,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Valorous presence',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Valorous presence',
@@ -1045,7 +1045,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Allocate all stat points',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1064,6 +1063,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Allocate all stat points',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Allocate all stat points',
@@ -1094,7 +1094,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Buy a health potion',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1113,6 +1112,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Buy a health potion',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Buy a health potion',
@@ -1144,7 +1144,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Chilling frost',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1163,6 +1162,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Chilling frost',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Chilling frost',
@@ -1194,7 +1194,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Earthquake',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1213,6 +1212,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Earthquake',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Earthquake',
@@ -1244,7 +1244,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Ethereal surge',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1263,6 +1262,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Ethereal surge',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Ethereal surge',
@@ -1294,7 +1294,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Revive from death',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1313,6 +1312,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Revive from death',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Revive from death',
@@ -1343,7 +1343,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Start my day',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1362,6 +1361,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Start my day',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Start my day',

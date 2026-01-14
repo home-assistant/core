@@ -4,7 +4,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Balance',
     'capabilities': dict({
       'max': 10,
       'min': -10,
@@ -28,6 +27,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Balance',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Balance',
@@ -62,7 +62,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Bass',
     'capabilities': dict({
       'max': 10,
       'min': -10,
@@ -86,6 +85,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Bass',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Bass',
@@ -120,7 +120,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Treble',
     'capabilities': dict({
       'max': 10,
       'min': -10,
@@ -144,6 +143,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Treble',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Treble',
@@ -178,7 +178,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Turn-on volume',
     'capabilities': dict({
       'max': 100,
       'min': 0,
@@ -202,6 +201,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Turn-on volume',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Turn-on volume',
@@ -236,7 +236,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Balance',
     'capabilities': dict({
       'max': 10,
       'min': -10,
@@ -260,6 +259,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Balance',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Balance',
@@ -294,7 +294,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Bass',
     'capabilities': dict({
       'max': 10,
       'min': -10,
@@ -318,6 +317,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Bass',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Bass',
@@ -352,7 +352,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Treble',
     'capabilities': dict({
       'max': 10,
       'min': -10,
@@ -376,6 +375,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Treble',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Treble',
@@ -410,7 +410,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Turn-on volume',
     'capabilities': dict({
       'max': 100,
       'min': 0,
@@ -434,6 +433,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Turn-on volume',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Turn-on volume',
@@ -468,7 +468,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Balance',
     'capabilities': dict({
       'max': 10,
       'min': -10,
@@ -492,6 +491,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Balance',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Balance',
@@ -526,7 +526,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Bass',
     'capabilities': dict({
       'max': 10,
       'min': -10,
@@ -550,6 +549,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Bass',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Bass',
@@ -584,7 +584,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Treble',
     'capabilities': dict({
       'max': 10,
       'min': -10,
@@ -608,6 +607,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Treble',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Treble',
@@ -642,7 +642,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Turn-on volume',
     'capabilities': dict({
       'max': 100,
       'min': 0,
@@ -666,6 +665,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Turn-on volume',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Turn-on volume',
@@ -700,7 +700,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Balance',
     'capabilities': dict({
       'max': 10,
       'min': -10,
@@ -724,6 +723,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Balance',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Balance',
@@ -758,7 +758,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Bass',
     'capabilities': dict({
       'max': 10,
       'min': -10,
@@ -782,6 +781,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Bass',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Bass',
@@ -816,7 +816,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Treble',
     'capabilities': dict({
       'max': 10,
       'min': -10,
@@ -840,6 +839,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Treble',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Treble',
@@ -874,7 +874,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Turn-on volume',
     'capabilities': dict({
       'max': 100,
       'min': 0,
@@ -898,6 +897,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Turn-on volume',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Turn-on volume',

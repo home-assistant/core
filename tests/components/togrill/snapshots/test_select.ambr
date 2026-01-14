@@ -4,7 +4,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Grill type',
     'capabilities': dict({
       'options': list([
         'none',
@@ -42,6 +41,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Grill type',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Grill type',
@@ -90,7 +90,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Taste',
     'capabilities': dict({
       'options': list([
         'none',
@@ -118,6 +117,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Taste',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Taste',
@@ -156,7 +156,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Grill type',
     'capabilities': dict({
       'options': list([
         'none',
@@ -194,6 +193,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Grill type',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Grill type',
@@ -242,7 +242,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Taste',
     'capabilities': dict({
       'options': list([
         'none',
@@ -270,6 +269,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Taste',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Taste',
@@ -308,7 +308,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Grill type',
     'capabilities': dict({
       'options': list([
         'none',
@@ -346,6 +345,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Grill type',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Grill type',
@@ -394,7 +394,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Taste',
     'capabilities': dict({
       'options': list([
         'none',
@@ -422,6 +421,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Taste',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Taste',
@@ -460,7 +460,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Grill type',
     'capabilities': dict({
       'options': list([
         'none',
@@ -498,6 +497,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Grill type',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Grill type',
@@ -546,7 +546,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Taste',
     'capabilities': dict({
       'options': list([
         'none',
@@ -574,6 +573,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Taste',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Taste',
@@ -612,7 +612,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Grill type',
     'capabilities': dict({
       'options': list([
         'none',
@@ -650,6 +649,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Grill type',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Grill type',
@@ -698,7 +698,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Taste',
     'capabilities': dict({
       'options': list([
         'none',
@@ -726,6 +725,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Taste',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Taste',
@@ -764,7 +764,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Grill type',
     'capabilities': dict({
       'options': list([
         'none',
@@ -802,6 +801,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Grill type',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Grill type',
@@ -850,7 +850,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Taste',
     'capabilities': dict({
       'options': list([
         'none',
@@ -878,6 +877,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Taste',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Taste',

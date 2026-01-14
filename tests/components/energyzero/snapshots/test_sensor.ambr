@@ -4,7 +4,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -23,6 +22,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': None,
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Average - today',
@@ -55,7 +55,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -76,6 +75,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': None,
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Current hour',
@@ -109,7 +109,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -128,6 +127,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': None,
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
     'original_icon': None,
     'original_name': 'Time of highest price - today',
@@ -160,7 +160,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -179,6 +178,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': None,
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Hours priced equal or lower than current - today',
@@ -211,7 +211,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -230,6 +229,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': None,
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
     'original_icon': None,
     'original_name': 'Time of lowest price - today',
@@ -262,7 +262,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -281,6 +280,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': None,
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Highest price - today',
@@ -313,7 +313,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -332,6 +331,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': None,
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Lowest price - today',
@@ -364,7 +364,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -383,6 +382,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': None,
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Next hour',
@@ -415,7 +415,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -434,6 +433,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': None,
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Current percentage of highest price - today',
@@ -466,7 +466,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -487,6 +486,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': None,
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Current hour',
@@ -520,7 +520,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -539,6 +538,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': None,
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Next hour',

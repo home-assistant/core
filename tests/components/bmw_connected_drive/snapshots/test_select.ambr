@@ -4,7 +4,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Charging mode',
     'capabilities': dict({
       'options': list([
         'immediate_charging',
@@ -29,6 +28,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Charging mode',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Charging mode',
@@ -64,7 +64,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'AC charging limit',
     'capabilities': dict({
       'options': list([
         '6',
@@ -99,6 +98,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'AC charging limit',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'AC charging limit',
@@ -145,7 +145,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Charging mode',
     'capabilities': dict({
       'options': list([
         'immediate_charging',
@@ -170,6 +169,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Charging mode',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Charging mode',
@@ -205,7 +205,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'AC charging limit',
     'capabilities': dict({
       'options': list([
         '6',
@@ -240,6 +239,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'AC charging limit',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'AC charging limit',
@@ -286,7 +286,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Charging mode',
     'capabilities': dict({
       'options': list([
         'immediate_charging',
@@ -311,6 +310,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Charging mode',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Charging mode',

@@ -18,7 +18,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Identify',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -37,6 +36,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Identify',
     'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
     'original_icon': None,
     'original_name': 'Identify',
@@ -103,7 +103,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Restart',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -122,6 +121,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Restart',
     'original_device_class': <ButtonDeviceClass.RESTART: 'restart'>,
     'original_icon': None,
     'original_name': 'Restart',

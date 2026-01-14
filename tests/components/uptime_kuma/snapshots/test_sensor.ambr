@@ -4,7 +4,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Certificate expiry',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -26,6 +25,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'Certificate expiry',
     'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
     'original_icon': None,
     'original_name': 'Certificate expiry',
@@ -58,7 +58,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Monitor type',
     'capabilities': dict({
       'options': list([
         'http',
@@ -107,6 +106,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Monitor type',
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
     'original_name': 'Monitor type',
@@ -167,7 +167,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Monitored URL',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -186,6 +185,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Monitored URL',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Monitored URL',
@@ -216,7 +216,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Response time',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -238,6 +237,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'Response time',
     'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
     'original_icon': None,
     'original_name': 'Response time',
@@ -270,7 +270,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Status',
     'capabilities': dict({
       'options': list([
         'down',
@@ -296,6 +295,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Status',
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
     'original_name': 'Status',
@@ -333,7 +333,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Monitor type',
     'capabilities': dict({
       'options': list([
         'http',
@@ -382,6 +381,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Monitor type',
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
     'original_name': 'Monitor type',
@@ -442,7 +442,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Monitored hostname',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -461,6 +460,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Monitored hostname',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Monitored hostname',
@@ -491,7 +491,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Monitored port',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -510,6 +509,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Monitored port',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Monitored port',
@@ -540,7 +540,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Response time',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -562,6 +561,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'Response time',
     'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
     'original_icon': None,
     'original_name': 'Response time',
@@ -594,7 +594,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Status',
     'capabilities': dict({
       'options': list([
         'down',
@@ -620,6 +619,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Status',
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
     'original_name': 'Status',
@@ -657,7 +657,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Certificate expiry',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -679,6 +678,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'Certificate expiry',
     'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
     'original_icon': None,
     'original_name': 'Certificate expiry',
@@ -711,7 +711,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Monitor type',
     'capabilities': dict({
       'options': list([
         'http',
@@ -760,6 +759,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Monitor type',
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
     'original_name': 'Monitor type',
@@ -820,7 +820,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Monitored URL',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -839,6 +838,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Monitored URL',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Monitored URL',
@@ -869,7 +869,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Response time',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -891,6 +890,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'Response time',
     'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
     'original_icon': None,
     'original_name': 'Response time',
@@ -923,7 +923,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Status',
     'capabilities': dict({
       'options': list([
         'down',
@@ -949,6 +948,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Status',
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
     'original_name': 'Status',

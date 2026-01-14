@@ -4,7 +4,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Reset filter condition',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -23,6 +22,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Reset filter condition',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Reset filter condition',
@@ -53,7 +53,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Reset filter condition',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -72,6 +71,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Reset filter condition',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Reset filter condition',
@@ -102,7 +102,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Identify',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -121,6 +120,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Identify',
     'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
     'original_icon': None,
     'original_name': 'Identify',
@@ -152,7 +152,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Identify (1)',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -171,6 +170,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Identify (1)',
     'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
     'original_icon': None,
     'original_name': 'Identify (1)',
@@ -202,7 +202,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Identify (2)',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -221,6 +220,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Identify (2)',
     'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
     'original_icon': None,
     'original_name': 'Identify (2)',
@@ -252,7 +252,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Identify (1)',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -271,6 +270,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Identify (1)',
     'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
     'original_icon': None,
     'original_name': 'Identify (1)',
@@ -302,7 +302,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Identify (2)',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -321,6 +320,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Identify (2)',
     'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
     'original_icon': None,
     'original_name': 'Identify (2)',
@@ -352,7 +352,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Identify (3)',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -371,6 +370,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Identify (3)',
     'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
     'original_icon': None,
     'original_name': 'Identify (3)',
@@ -402,7 +402,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Identify (4)',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -421,6 +420,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Identify (4)',
     'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
     'original_icon': None,
     'original_name': 'Identify (4)',
@@ -452,7 +452,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Identify (1)',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -471,6 +470,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Identify (1)',
     'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
     'original_icon': None,
     'original_name': 'Identify (1)',
@@ -502,7 +502,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Identify (2)',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -521,6 +520,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Identify (2)',
     'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
     'original_icon': None,
     'original_name': 'Identify (2)',
@@ -552,7 +552,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Identify (3)',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -571,6 +570,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Identify (3)',
     'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
     'original_icon': None,
     'original_name': 'Identify (3)',
@@ -602,7 +602,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Identify (4)',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -621,6 +620,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Identify (4)',
     'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
     'original_icon': None,
     'original_name': 'Identify (4)',
@@ -652,7 +652,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Identify (5)',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -671,6 +670,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Identify (5)',
     'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
     'original_icon': None,
     'original_name': 'Identify (5)',
@@ -702,7 +702,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Identify (1)',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -721,6 +720,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Identify (1)',
     'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
     'original_icon': None,
     'original_name': 'Identify (1)',
@@ -752,7 +752,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Identify (2)',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -771,6 +770,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Identify (2)',
     'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
     'original_icon': None,
     'original_name': 'Identify (2)',
@@ -802,7 +802,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Identify',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -821,6 +820,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Identify',
     'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
     'original_icon': None,
     'original_name': 'Identify',
@@ -852,7 +852,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Identify',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -871,6 +870,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Identify',
     'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
     'original_icon': None,
     'original_name': 'Identify',
@@ -902,7 +902,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Identify',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -921,6 +920,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Identify',
     'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
     'original_icon': None,
     'original_name': 'Identify',
@@ -952,7 +952,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Identify',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -971,6 +970,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Identify',
     'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
     'original_icon': None,
     'original_name': 'Identify',
@@ -1002,7 +1002,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Identify',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1021,6 +1020,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Identify',
     'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
     'original_icon': None,
     'original_name': 'Identify',
@@ -1052,7 +1052,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Identify (0)',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1071,6 +1070,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Identify (0)',
     'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
     'original_icon': None,
     'original_name': 'Identify (0)',
@@ -1102,7 +1102,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Identify (1)',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1121,6 +1120,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Identify (1)',
     'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
     'original_icon': None,
     'original_name': 'Identify (1)',
@@ -1152,7 +1152,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Identify',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1171,6 +1170,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Identify',
     'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
     'original_icon': None,
     'original_name': 'Identify',
@@ -1202,7 +1202,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Identify (bottom)',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1221,6 +1220,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Identify (bottom)',
     'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
     'original_icon': None,
     'original_name': 'Identify (bottom)',
@@ -1252,7 +1252,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Identify (top)',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1271,6 +1270,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Identify (top)',
     'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
     'original_icon': None,
     'original_name': 'Identify (top)',
@@ -1302,7 +1302,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Identify',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1321,6 +1320,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Identify',
     'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
     'original_icon': None,
     'original_name': 'Identify',
@@ -1352,7 +1352,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Identify',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1371,6 +1370,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Identify',
     'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
     'original_icon': None,
     'original_name': 'Identify',
@@ -1402,7 +1402,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Identify',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1421,6 +1420,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Identify',
     'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
     'original_icon': None,
     'original_name': 'Identify',
@@ -1452,7 +1452,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Identify',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1471,6 +1470,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Identify',
     'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
     'original_icon': None,
     'original_name': 'Identify',
@@ -1502,7 +1502,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Identify (1)',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1521,6 +1520,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Identify (1)',
     'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
     'original_icon': None,
     'original_name': 'Identify (1)',
@@ -1552,7 +1552,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Identify (2)',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1571,6 +1570,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Identify (2)',
     'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
     'original_icon': None,
     'original_name': 'Identify (2)',
@@ -1602,7 +1602,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Identify',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1621,6 +1620,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Identify',
     'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
     'original_icon': None,
     'original_name': 'Identify',
@@ -1652,7 +1652,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Reset filter condition',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1671,6 +1670,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Reset filter condition',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Reset filter condition',
@@ -1701,7 +1701,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Reset filter condition',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1720,6 +1719,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Reset filter condition',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Reset filter condition',
@@ -1750,7 +1750,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Identify (Fan)',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1769,6 +1768,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Identify (Fan)',
     'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
     'original_icon': None,
     'original_name': 'Identify (Fan)',
@@ -1800,7 +1800,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Identify (1)',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1819,6 +1818,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Identify (1)',
     'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
     'original_icon': None,
     'original_name': 'Identify (1)',
@@ -1850,7 +1850,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Identify (1)',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1869,6 +1868,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Identify (1)',
     'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
     'original_icon': None,
     'original_name': 'Identify (1)',
@@ -1900,7 +1900,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Identify',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1919,6 +1918,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Identify',
     'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
     'original_icon': None,
     'original_name': 'Identify',
@@ -1950,7 +1950,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Identify (Load Control)',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1969,6 +1968,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Identify (Load Control)',
     'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
     'original_icon': None,
     'original_name': 'Identify (Load Control)',
@@ -2000,7 +2000,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Pause',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2019,6 +2018,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Pause',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Pause',
@@ -2049,7 +2049,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Resume',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2068,6 +2067,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Resume',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Resume',
@@ -2098,7 +2098,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Start',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2117,6 +2116,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Start',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Start',
@@ -2147,7 +2147,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Stop',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2166,6 +2165,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Stop',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Stop',
@@ -2196,7 +2196,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Identify',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2215,6 +2214,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Identify',
     'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
     'original_icon': None,
     'original_name': 'Identify',
@@ -2246,7 +2246,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Pause',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2265,6 +2264,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Pause',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Pause',
@@ -2295,7 +2295,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Resume',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2314,6 +2313,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Resume',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Resume',
@@ -2344,7 +2344,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Start',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2363,6 +2362,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Start',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Start',
@@ -2393,7 +2393,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Stop',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2412,6 +2411,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Stop',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Stop',
@@ -2442,7 +2442,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Identify',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2461,6 +2460,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Identify',
     'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
     'original_icon': None,
     'original_name': 'Identify',
@@ -2492,7 +2492,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Identify (0)',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2511,6 +2510,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Identify (0)',
     'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
     'original_icon': None,
     'original_name': 'Identify (0)',
@@ -2542,7 +2542,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Identify (1)',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2561,6 +2560,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Identify (1)',
     'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
     'original_icon': None,
     'original_name': 'Identify (1)',
@@ -2592,7 +2592,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Identify (1)',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2611,6 +2610,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Identify (1)',
     'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
     'original_icon': None,
     'original_name': 'Identify (1)',
@@ -2642,7 +2642,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Identify (2)',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2661,6 +2660,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Identify (2)',
     'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
     'original_icon': None,
     'original_name': 'Identify (2)',
@@ -2692,7 +2692,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Identify (6)',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2711,6 +2710,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Identify (6)',
     'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
     'original_icon': None,
     'original_name': 'Identify (6)',
@@ -2742,7 +2742,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Identify (Config)',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2761,6 +2760,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Identify (Config)',
     'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
     'original_icon': None,
     'original_name': 'Identify (Config)',
@@ -2792,7 +2792,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Identify (Down)',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2811,6 +2810,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Identify (Down)',
     'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
     'original_icon': None,
     'original_name': 'Identify (Down)',
@@ -2842,7 +2842,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Identify (Up)',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2861,6 +2860,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Identify (Up)',
     'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
     'original_icon': None,
     'original_name': 'Identify (Up)',
@@ -2892,7 +2892,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Identify',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2911,6 +2910,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Identify',
     'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
     'original_icon': None,
     'original_name': 'Identify',
@@ -2942,7 +2942,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Identify',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2961,6 +2960,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Identify',
     'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
     'original_icon': None,
     'original_name': 'Identify',
@@ -2992,7 +2992,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Identify',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -3011,6 +3010,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Identify',
     'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
     'original_icon': None,
     'original_name': 'Identify',
@@ -3042,7 +3042,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Identify',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -3061,6 +3060,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Identify',
     'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
     'original_icon': None,
     'original_name': 'Identify',
@@ -3092,7 +3092,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Identify',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -3111,6 +3110,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Identify',
     'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
     'original_icon': None,
     'original_name': 'Identify',
@@ -3142,7 +3142,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Pause',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -3161,6 +3160,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Pause',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Pause',
@@ -3191,7 +3191,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Start',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -3210,6 +3209,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Start',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Start',
@@ -3240,7 +3240,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Stop',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -3259,6 +3258,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Stop',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Stop',
@@ -3289,7 +3289,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Identify',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -3308,6 +3307,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Identify',
     'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
     'original_icon': None,
     'original_name': 'Identify',
@@ -3339,7 +3339,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Pause',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -3358,6 +3357,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Pause',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Pause',
@@ -3388,7 +3388,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Resume',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -3407,6 +3406,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Resume',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Resume',
@@ -3437,7 +3437,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Start',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -3456,6 +3455,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Start',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Start',
@@ -3486,7 +3486,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Stop',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -3505,6 +3504,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Stop',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Stop',
@@ -3535,7 +3535,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Identify (1)',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -3554,6 +3553,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Identify (1)',
     'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
     'original_icon': None,
     'original_name': 'Identify (1)',
@@ -3585,7 +3585,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Identify',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -3604,6 +3603,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Identify',
     'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
     'original_icon': None,
     'original_name': 'Identify',
@@ -3635,7 +3635,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Cancel boost',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -3654,6 +3653,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Cancel boost',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Cancel boost',
@@ -3684,7 +3684,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Identify',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -3703,6 +3702,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Identify',
     'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
     'original_icon': None,
     'original_name': 'Identify',
@@ -3734,7 +3734,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Self-test',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -3753,6 +3752,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Self-test',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Self-test',
@@ -3783,7 +3783,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Identify',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -3802,6 +3801,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Identify',
     'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
     'original_icon': None,
     'original_name': 'Identify',
@@ -3833,7 +3833,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Identify',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -3852,6 +3851,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Identify',
     'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
     'original_icon': None,
     'original_name': 'Identify',
@@ -3883,7 +3883,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Identify',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -3902,6 +3901,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Identify',
     'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
     'original_icon': None,
     'original_name': 'Identify',
@@ -3933,7 +3933,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Identify',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -3952,6 +3951,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Identify',
     'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
     'original_icon': None,
     'original_name': 'Identify',
@@ -3983,7 +3983,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Identify',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -4002,6 +4001,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Identify',
     'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
     'original_icon': None,
     'original_name': 'Identify',

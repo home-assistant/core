@@ -4,7 +4,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Temperature offset',
     'capabilities': dict({
       'max': 2.0,
       'min': -2.0,
@@ -28,6 +27,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Temperature offset',
     'original_device_class': <NumberDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Temperature offset',
@@ -64,7 +64,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Temperature offset',
     'capabilities': dict({
       'max': 2.0,
       'min': -2.0,
@@ -88,6 +87,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Temperature offset',
     'original_device_class': <NumberDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Temperature offset',
@@ -124,7 +124,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Temperature offset',
     'capabilities': dict({
       'max': 2.0,
       'min': -2.0,
@@ -148,6 +147,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Temperature offset',
     'original_device_class': <NumberDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Temperature offset',
@@ -184,7 +184,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Temperature offset',
     'capabilities': dict({
       'max': 2.0,
       'min': -2.0,
@@ -208,6 +207,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Temperature offset',
     'original_device_class': <NumberDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Temperature offset',
@@ -244,7 +244,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Temperature offset',
     'capabilities': dict({
       'max': 2.0,
       'min': -2.0,
@@ -268,6 +267,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Temperature offset',
     'original_device_class': <NumberDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Temperature offset',
@@ -304,7 +304,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Temperature offset',
     'capabilities': dict({
       'max': 2.0,
       'min': -2.0,
@@ -328,6 +327,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Temperature offset',
     'original_device_class': <NumberDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Temperature offset',
@@ -364,7 +364,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Temperature offset',
     'capabilities': dict({
       'max': 2.0,
       'min': -2.0,
@@ -388,6 +387,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Temperature offset',
     'original_device_class': <NumberDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Temperature offset',
@@ -424,7 +424,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Temperature offset',
     'capabilities': dict({
       'max': 2.0,
       'min': -2.0,
@@ -448,6 +447,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Temperature offset',
     'original_device_class': <NumberDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Temperature offset',
@@ -484,7 +484,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Temperature offset',
     'capabilities': dict({
       'max': 2.0,
       'min': -2.0,
@@ -508,6 +507,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Temperature offset',
     'original_device_class': <NumberDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Temperature offset',
@@ -544,7 +544,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Temperature offset',
     'capabilities': dict({
       'max': 2.0,
       'min': -2.0,
@@ -568,6 +567,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Temperature offset',
     'original_device_class': <NumberDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Temperature offset',
@@ -604,7 +604,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Domestic hot water setpoint',
     'capabilities': dict({
       'max': 60.0,
       'min': 35.0,
@@ -628,6 +627,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Domestic hot water setpoint',
     'original_device_class': <NumberDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Domestic hot water setpoint',
@@ -664,7 +664,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Maximum boiler temperature setpoint',
     'capabilities': dict({
       'max': 100.0,
       'min': 0.0,
@@ -688,6 +687,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Maximum boiler temperature setpoint',
     'original_device_class': <NumberDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Maximum boiler temperature setpoint',

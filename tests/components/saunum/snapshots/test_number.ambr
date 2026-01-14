@@ -4,7 +4,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Fan duration',
     'capabilities': dict({
       'max': 30,
       'min': 1,
@@ -28,6 +27,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Fan duration',
     'original_device_class': <NumberDeviceClass.DURATION: 'duration'>,
     'original_icon': None,
     'original_name': 'Fan duration',
@@ -64,7 +64,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Sauna duration',
     'capabilities': dict({
       'max': 720,
       'min': 1,
@@ -88,6 +87,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Sauna duration',
     'original_device_class': <NumberDeviceClass.DURATION: 'duration'>,
     'original_icon': None,
     'original_name': 'Sauna duration',

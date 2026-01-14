@@ -4,7 +4,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Disk free inodes /',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -25,6 +24,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Disk free inodes /',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Disk free inodes /',
@@ -56,7 +56,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Disk free inodes /media/disk1',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -77,6 +76,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Disk free inodes /media/disk1',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Disk free inodes /media/disk1',
@@ -108,7 +108,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Disk free inodes /media/disk2',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -129,6 +128,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Disk free inodes /media/disk2',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Disk free inodes /media/disk2',
@@ -160,7 +160,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Disk free space /',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -187,6 +186,7 @@
         'suggested_unit_of_measurement': <UnitOfInformation.GIBIBYTES: 'GiB'>,
       }),
     }),
+    'object_id_base': 'Disk free space /',
     'original_device_class': <SensorDeviceClass.DATA_SIZE: 'data_size'>,
     'original_icon': None,
     'original_name': 'Disk free space /',
@@ -220,7 +220,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Disk free space /media/disk1',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -247,6 +246,7 @@
         'suggested_unit_of_measurement': <UnitOfInformation.GIBIBYTES: 'GiB'>,
       }),
     }),
+    'object_id_base': 'Disk free space /media/disk1',
     'original_device_class': <SensorDeviceClass.DATA_SIZE: 'data_size'>,
     'original_icon': None,
     'original_name': 'Disk free space /media/disk1',
@@ -280,7 +280,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Disk free space /media/disk2',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -307,6 +306,7 @@
         'suggested_unit_of_measurement': <UnitOfInformation.GIBIBYTES: 'GiB'>,
       }),
     }),
+    'object_id_base': 'Disk free space /media/disk2',
     'original_device_class': <SensorDeviceClass.DATA_SIZE: 'data_size'>,
     'original_icon': None,
     'original_name': 'Disk free space /media/disk2',
@@ -340,7 +340,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Disk inode usage /',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -361,6 +360,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Disk inode usage /',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Disk inode usage /',
@@ -393,7 +393,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Disk inode usage /media/disk1',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -414,6 +413,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Disk inode usage /media/disk1',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Disk inode usage /media/disk1',
@@ -446,7 +446,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Disk inode usage /media/disk2',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -467,6 +466,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Disk inode usage /media/disk2',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Disk inode usage /media/disk2',
@@ -499,7 +499,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Disk total inodes /',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -520,6 +519,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Disk total inodes /',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Disk total inodes /',
@@ -551,7 +551,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Disk total inodes /media/disk1',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -572,6 +571,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Disk total inodes /media/disk1',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Disk total inodes /media/disk1',
@@ -603,7 +603,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Disk total inodes /media/disk2',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -624,6 +623,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Disk total inodes /media/disk2',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Disk total inodes /media/disk2',
@@ -655,7 +655,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Disk total space /',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -682,6 +681,7 @@
         'suggested_unit_of_measurement': <UnitOfInformation.GIBIBYTES: 'GiB'>,
       }),
     }),
+    'object_id_base': 'Disk total space /',
     'original_device_class': <SensorDeviceClass.DATA_SIZE: 'data_size'>,
     'original_icon': None,
     'original_name': 'Disk total space /',
@@ -715,7 +715,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Disk total space /media/disk1',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -742,6 +741,7 @@
         'suggested_unit_of_measurement': <UnitOfInformation.GIBIBYTES: 'GiB'>,
       }),
     }),
+    'object_id_base': 'Disk total space /media/disk1',
     'original_device_class': <SensorDeviceClass.DATA_SIZE: 'data_size'>,
     'original_icon': None,
     'original_name': 'Disk total space /media/disk1',
@@ -775,7 +775,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Disk total space /media/disk2',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -802,6 +801,7 @@
         'suggested_unit_of_measurement': <UnitOfInformation.GIBIBYTES: 'GiB'>,
       }),
     }),
+    'object_id_base': 'Disk total space /media/disk2',
     'original_device_class': <SensorDeviceClass.DATA_SIZE: 'data_size'>,
     'original_icon': None,
     'original_name': 'Disk total space /media/disk2',
@@ -835,7 +835,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Disk usage /',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -856,6 +855,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Disk usage /',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Disk usage /',
@@ -888,7 +888,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Disk usage /media/disk1',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -909,6 +908,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Disk usage /media/disk1',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Disk usage /media/disk1',
@@ -941,7 +941,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Disk usage /media/disk2',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -962,6 +961,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Disk usage /media/disk2',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Disk usage /media/disk2',
@@ -994,7 +994,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Disk used inodes /',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1015,6 +1014,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Disk used inodes /',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Disk used inodes /',
@@ -1046,7 +1046,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Disk used inodes /media/disk1',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1067,6 +1066,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Disk used inodes /media/disk1',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Disk used inodes /media/disk1',
@@ -1098,7 +1098,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Disk used inodes /media/disk2',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1119,6 +1118,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Disk used inodes /media/disk2',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Disk used inodes /media/disk2',
@@ -1150,7 +1150,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Disk used space /',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1177,6 +1176,7 @@
         'suggested_unit_of_measurement': <UnitOfInformation.GIBIBYTES: 'GiB'>,
       }),
     }),
+    'object_id_base': 'Disk used space /',
     'original_device_class': <SensorDeviceClass.DATA_SIZE: 'data_size'>,
     'original_icon': None,
     'original_name': 'Disk used space /',
@@ -1210,7 +1210,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Disk used space /media/disk1',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1237,6 +1236,7 @@
         'suggested_unit_of_measurement': <UnitOfInformation.GIBIBYTES: 'GiB'>,
       }),
     }),
+    'object_id_base': 'Disk used space /media/disk1',
     'original_device_class': <SensorDeviceClass.DATA_SIZE: 'data_size'>,
     'original_icon': None,
     'original_name': 'Disk used space /media/disk1',
@@ -1270,7 +1270,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Disk used space /media/disk2',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1297,6 +1296,7 @@
         'suggested_unit_of_measurement': <UnitOfInformation.GIBIBYTES: 'GiB'>,
       }),
     }),
+    'object_id_base': 'Disk used space /media/disk2',
     'original_device_class': <SensorDeviceClass.DATA_SIZE: 'data_size'>,
     'original_icon': None,
     'original_name': 'Disk used space /media/disk2',
@@ -1330,7 +1330,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Disks free space',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1357,6 +1356,7 @@
         'suggested_unit_of_measurement': <UnitOfInformation.GIBIBYTES: 'GiB'>,
       }),
     }),
+    'object_id_base': 'Disks free space',
     'original_device_class': <SensorDeviceClass.DATA_SIZE: 'data_size'>,
     'original_icon': None,
     'original_name': 'Disks free space',
@@ -1390,7 +1390,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Disks total space',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1417,6 +1416,7 @@
         'suggested_unit_of_measurement': <UnitOfInformation.GIBIBYTES: 'GiB'>,
       }),
     }),
+    'object_id_base': 'Disks total space',
     'original_device_class': <SensorDeviceClass.DATA_SIZE: 'data_size'>,
     'original_icon': None,
     'original_name': 'Disks total space',
@@ -1450,7 +1450,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Disks used space',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1477,6 +1476,7 @@
         'suggested_unit_of_measurement': <UnitOfInformation.GIBIBYTES: 'GiB'>,
       }),
     }),
+    'object_id_base': 'Disks used space',
     'original_device_class': <SensorDeviceClass.DATA_SIZE: 'data_size'>,
     'original_icon': None,
     'original_name': 'Disks used space',
@@ -1510,7 +1510,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Load (15 min)',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1531,6 +1530,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Load (15 min)',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Load (15 min)',
@@ -1562,7 +1562,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Load (1 min)',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1583,6 +1582,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Load (1 min)',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Load (1 min)',
@@ -1614,7 +1614,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Load (5 min)',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1635,6 +1634,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Load (5 min)',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Load (5 min)',
@@ -1666,7 +1666,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Memory free',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1693,6 +1692,7 @@
         'suggested_unit_of_measurement': <UnitOfInformation.GIBIBYTES: 'GiB'>,
       }),
     }),
+    'object_id_base': 'Memory free',
     'original_device_class': <SensorDeviceClass.DATA_SIZE: 'data_size'>,
     'original_icon': None,
     'original_name': 'Memory free',
@@ -1726,7 +1726,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Memory total',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1753,6 +1752,7 @@
         'suggested_unit_of_measurement': <UnitOfInformation.GIBIBYTES: 'GiB'>,
       }),
     }),
+    'object_id_base': 'Memory total',
     'original_device_class': <SensorDeviceClass.DATA_SIZE: 'data_size'>,
     'original_icon': None,
     'original_name': 'Memory total',
@@ -1786,7 +1786,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Swap free',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1813,6 +1812,7 @@
         'suggested_unit_of_measurement': <UnitOfInformation.GIBIBYTES: 'GiB'>,
       }),
     }),
+    'object_id_base': 'Swap free',
     'original_device_class': <SensorDeviceClass.DATA_SIZE: 'data_size'>,
     'original_icon': None,
     'original_name': 'Swap free',
@@ -1846,7 +1846,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Swap total',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1873,6 +1872,7 @@
         'suggested_unit_of_measurement': <UnitOfInformation.GIBIBYTES: 'GiB'>,
       }),
     }),
+    'object_id_base': 'Swap total',
     'original_device_class': <SensorDeviceClass.DATA_SIZE: 'data_size'>,
     'original_icon': None,
     'original_name': 'Swap total',

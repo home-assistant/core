@@ -4,7 +4,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Current streak',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -28,6 +27,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'Current streak',
     'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
     'original_icon': None,
     'original_name': 'Current streak',
@@ -61,7 +61,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Highest streak',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -85,6 +84,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'Highest streak',
     'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
     'original_icon': None,
     'original_name': 'Highest streak',
@@ -118,7 +118,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Last played',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -137,6 +136,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Last played',
     'original_device_class': <SensorDeviceClass.DATE: 'date'>,
     'original_icon': None,
     'original_name': 'Last played',
@@ -168,7 +168,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Played',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -189,6 +188,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Played',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Played',
@@ -221,7 +221,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Won',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -242,6 +241,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Won',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Won',
@@ -274,7 +274,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Played',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -295,6 +294,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Played',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Played',
@@ -327,7 +327,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Total pangrams found',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -348,6 +347,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Total pangrams found',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Total pangrams found',
@@ -380,7 +380,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Total words found',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -401,6 +400,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Total words found',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Total words found',
@@ -433,7 +433,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Current streak',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -457,6 +456,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'Current streak',
     'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
     'original_icon': None,
     'original_name': 'Current streak',
@@ -490,7 +490,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Highest streak',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -514,6 +513,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'Highest streak',
     'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
     'original_icon': None,
     'original_name': 'Highest streak',
@@ -547,7 +547,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Played',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -568,6 +567,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Played',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Played',
@@ -600,7 +600,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Won',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -621,6 +620,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Won',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Won',

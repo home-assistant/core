@@ -4,7 +4,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'test_client_1 Snapcast Client',
     'capabilities': dict({
       'source_list': list([
         'Test Stream 1',
@@ -28,6 +27,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'test_client_1 Snapcast Client',
     'original_device_class': <MediaPlayerDeviceClass.SPEAKER: 'speaker'>,
     'original_icon': None,
     'original_name': 'test_client_1 Snapcast Client',
@@ -80,7 +80,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'test_client_2 Snapcast Client',
     'capabilities': dict({
       'source_list': list([
         'Test Stream 1',
@@ -104,6 +103,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'test_client_2 Snapcast Client',
     'original_device_class': <MediaPlayerDeviceClass.SPEAKER: 'speaker'>,
     'original_icon': None,
     'original_name': 'test_client_2 Snapcast Client',
@@ -148,7 +148,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Test Group 1 Snapcast Group',
     'capabilities': dict({
       'source_list': list([
         'Test Stream 1',
@@ -172,6 +171,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Test Group 1 Snapcast Group',
     'original_device_class': <MediaPlayerDeviceClass.SPEAKER: 'speaker'>,
     'original_icon': None,
     'original_name': 'Test Group 1 Snapcast Group',
@@ -220,7 +220,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Test Group 2 Snapcast Group',
     'capabilities': dict({
       'source_list': list([
         'Test Stream 1',
@@ -244,6 +243,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Test Group 2 Snapcast Group',
     'original_device_class': <MediaPlayerDeviceClass.SPEAKER: 'speaker'>,
     'original_icon': None,
     'original_name': 'Test Group 2 Snapcast Group',

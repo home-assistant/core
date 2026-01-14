@@ -4,7 +4,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Freeze protection temperature',
     'capabilities': dict({
       'options': list([
         '0°C',
@@ -30,6 +29,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Freeze protection temperature',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Freeze protection temperature',

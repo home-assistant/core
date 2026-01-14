@@ -4,7 +4,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Attachment bandwidth limit',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -29,6 +28,7 @@
         'suggested_unit_of_measurement': <UnitOfInformation.MEBIBYTES: 'MiB'>,
       }),
     }),
+    'object_id_base': 'Attachment bandwidth limit',
     'original_device_class': <SensorDeviceClass.DATA_SIZE: 'data_size'>,
     'original_icon': None,
     'original_name': 'Attachment bandwidth limit',
@@ -61,7 +61,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Attachment expiry duration',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -86,6 +85,7 @@
         'suggested_unit_of_measurement': <UnitOfTime.HOURS: 'h'>,
       }),
     }),
+    'object_id_base': 'Attachment expiry duration',
     'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
     'original_icon': None,
     'original_name': 'Attachment expiry duration',
@@ -118,7 +118,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Attachment file size limit',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -143,6 +142,7 @@
         'suggested_unit_of_measurement': <UnitOfInformation.MEBIBYTES: 'MiB'>,
       }),
     }),
+    'object_id_base': 'Attachment file size limit',
     'original_device_class': <SensorDeviceClass.DATA_SIZE: 'data_size'>,
     'original_icon': None,
     'original_name': 'Attachment file size limit',
@@ -175,7 +175,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Attachment storage',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -200,6 +199,7 @@
         'suggested_unit_of_measurement': <UnitOfInformation.MEBIBYTES: 'MiB'>,
       }),
     }),
+    'object_id_base': 'Attachment storage',
     'original_device_class': <SensorDeviceClass.DATA_SIZE: 'data_size'>,
     'original_icon': None,
     'original_name': 'Attachment storage',
@@ -232,7 +232,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Attachment storage limit',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -257,6 +256,7 @@
         'suggested_unit_of_measurement': <UnitOfInformation.MEBIBYTES: 'MiB'>,
       }),
     }),
+    'object_id_base': 'Attachment storage limit',
     'original_device_class': <SensorDeviceClass.DATA_SIZE: 'data_size'>,
     'original_icon': None,
     'original_name': 'Attachment storage limit',
@@ -289,7 +289,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Attachment storage remaining',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -314,6 +313,7 @@
         'suggested_unit_of_measurement': <UnitOfInformation.MEBIBYTES: 'MiB'>,
       }),
     }),
+    'object_id_base': 'Attachment storage remaining',
     'original_device_class': <SensorDeviceClass.DATA_SIZE: 'data_size'>,
     'original_icon': None,
     'original_name': 'Attachment storage remaining',
@@ -346,7 +346,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Email usage limit',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -365,6 +364,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Email usage limit',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Email usage limit',
@@ -396,7 +396,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Emails remaining',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -415,6 +414,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Emails remaining',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Emails remaining',
@@ -446,7 +446,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Emails sent',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -465,6 +464,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Emails sent',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Emails sent',
@@ -496,7 +496,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Messages expiry duration',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -521,6 +520,7 @@
         'suggested_unit_of_measurement': <UnitOfTime.HOURS: 'h'>,
       }),
     }),
+    'object_id_base': 'Messages expiry duration',
     'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
     'original_icon': None,
     'original_name': 'Messages expiry duration',
@@ -553,7 +553,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Messages published',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -572,6 +571,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Messages published',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Messages published',
@@ -603,7 +603,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Messages remaining',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -622,6 +621,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Messages remaining',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Messages remaining',
@@ -653,7 +653,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Messages usage limit',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -672,6 +671,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Messages usage limit',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Messages usage limit',
@@ -703,7 +703,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Phone calls made',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -722,6 +721,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Phone calls made',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Phone calls made',
@@ -753,7 +753,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Phone calls remaining',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -772,6 +771,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Phone calls remaining',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Phone calls remaining',
@@ -803,7 +803,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Phone calls usage limit',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -822,6 +821,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Phone calls usage limit',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Phone calls usage limit',
@@ -853,7 +853,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Reserved topics',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -872,6 +871,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Reserved topics',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Reserved topics',
@@ -903,7 +903,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Reserved topics limit',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -922,6 +921,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Reserved topics limit',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Reserved topics limit',
@@ -953,7 +953,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Reserved topics remaining',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -972,6 +971,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Reserved topics remaining',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Reserved topics remaining',
@@ -1003,7 +1003,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Subscription tier',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1022,6 +1021,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Subscription tier',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Subscription tier',

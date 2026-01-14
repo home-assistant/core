@@ -4,7 +4,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Atmospheric pressure',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -31,6 +30,7 @@
         'suggested_unit_of_measurement': <UnitOfPressure.HPA: 'hPa'>,
       }),
     }),
+    'object_id_base': 'Atmospheric pressure',
     'original_device_class': <SensorDeviceClass.ATMOSPHERIC_PRESSURE: 'atmospheric_pressure'>,
     'original_icon': None,
     'original_name': 'Atmospheric pressure',
@@ -67,7 +67,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Carbon dioxide',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -88,6 +87,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Carbon dioxide',
     'original_device_class': <SensorDeviceClass.CO2: 'carbon_dioxide'>,
     'original_icon': None,
     'original_name': 'Carbon dioxide',
@@ -124,7 +124,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Health index',
     'capabilities': dict({
       'options': list([
         'healthy',
@@ -151,6 +150,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Health index',
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
     'original_name': 'Health index',
@@ -192,7 +192,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Humidity',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -213,6 +212,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Humidity',
     'original_device_class': <SensorDeviceClass.HUMIDITY: 'humidity'>,
     'original_icon': None,
     'original_name': 'Humidity',
@@ -249,7 +249,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Noise',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -273,6 +272,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'Noise',
     'original_device_class': <SensorDeviceClass.SOUND_PRESSURE: 'sound_pressure'>,
     'original_icon': None,
     'original_name': 'Noise',
@@ -309,7 +309,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Pressure trend',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -328,6 +327,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Pressure trend',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Pressure trend',
@@ -361,7 +361,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Reachability',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -380,6 +379,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Reachability',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Reachability',
@@ -413,7 +413,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -437,6 +436,7 @@
         'suggested_display_precision': 1,
       }),
     }),
+    'object_id_base': 'Temperature',
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Temperature',
@@ -473,7 +473,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Temperature trend',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -492,6 +491,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Temperature trend',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Temperature trend',
@@ -525,7 +525,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Wi-Fi strength',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -544,6 +543,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Wi-Fi strength',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Wi-Fi strength',
@@ -577,7 +577,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Atmospheric pressure',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -604,6 +603,7 @@
         'suggested_unit_of_measurement': <UnitOfPressure.HPA: 'hPa'>,
       }),
     }),
+    'object_id_base': 'Atmospheric pressure',
     'original_device_class': <SensorDeviceClass.ATMOSPHERIC_PRESSURE: 'atmospheric_pressure'>,
     'original_icon': None,
     'original_name': 'Atmospheric pressure',
@@ -638,7 +638,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Carbon dioxide',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -659,6 +658,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Carbon dioxide',
     'original_device_class': <SensorDeviceClass.CO2: 'carbon_dioxide'>,
     'original_icon': None,
     'original_name': 'Carbon dioxide',
@@ -693,7 +693,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Health index',
     'capabilities': dict({
       'options': list([
         'healthy',
@@ -720,6 +719,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Health index',
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
     'original_name': 'Health index',
@@ -759,7 +759,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Humidity',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -780,6 +779,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Humidity',
     'original_device_class': <SensorDeviceClass.HUMIDITY: 'humidity'>,
     'original_icon': None,
     'original_name': 'Humidity',
@@ -814,7 +814,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Noise',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -838,6 +837,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'Noise',
     'original_device_class': <SensorDeviceClass.SOUND_PRESSURE: 'sound_pressure'>,
     'original_icon': None,
     'original_name': 'Noise',
@@ -872,7 +872,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Pressure trend',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -891,6 +890,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Pressure trend',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Pressure trend',
@@ -922,7 +922,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Reachability',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -941,6 +940,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Reachability',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Reachability',
@@ -974,7 +974,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -998,6 +997,7 @@
         'suggested_display_precision': 1,
       }),
     }),
+    'object_id_base': 'Temperature',
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Temperature',
@@ -1032,7 +1032,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Temperature trend',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1051,6 +1050,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Temperature trend',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Temperature trend',
@@ -1082,7 +1082,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Wi-Fi strength',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1101,6 +1100,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Wi-Fi strength',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Wi-Fi strength',
@@ -1134,7 +1134,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Battery',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1155,6 +1154,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Battery',
     'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
     'original_icon': None,
     'original_name': 'Battery',
@@ -1189,7 +1189,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1208,6 +1207,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': None,
     'original_device_class': None,
     'original_icon': None,
     'original_name': None,
@@ -1239,7 +1239,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1258,6 +1257,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': None,
     'original_device_class': None,
     'original_icon': None,
     'original_name': None,
@@ -1289,7 +1289,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Power',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1313,6 +1312,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'Power',
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
     'original_icon': None,
     'original_name': 'Power',
@@ -1347,7 +1347,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Humidity',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1368,6 +1367,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Humidity',
     'original_device_class': <SensorDeviceClass.HUMIDITY: 'humidity'>,
     'original_icon': None,
     'original_name': 'Humidity',
@@ -1402,7 +1402,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1421,6 +1420,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': None,
     'original_device_class': None,
     'original_icon': None,
     'original_name': None,
@@ -1452,7 +1452,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1471,6 +1470,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': None,
     'original_device_class': None,
     'original_icon': None,
     'original_name': None,
@@ -1502,7 +1502,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Atmospheric pressure',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1529,6 +1528,7 @@
         'suggested_unit_of_measurement': <UnitOfPressure.HPA: 'hPa'>,
       }),
     }),
+    'object_id_base': 'Atmospheric pressure',
     'original_device_class': <SensorDeviceClass.ATMOSPHERIC_PRESSURE: 'atmospheric_pressure'>,
     'original_icon': None,
     'original_name': 'Atmospheric pressure',
@@ -1565,7 +1565,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Gust angle',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT_ANGLE: 'measurement_angle'>,
     }),
@@ -1586,6 +1585,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Gust angle',
     'original_device_class': <SensorDeviceClass.WIND_DIRECTION: 'wind_direction'>,
     'original_icon': None,
     'original_name': 'Gust angle',
@@ -1622,7 +1622,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Gust strength',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1646,6 +1645,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'Gust strength',
     'original_device_class': <SensorDeviceClass.WIND_SPEED: 'wind_speed'>,
     'original_icon': None,
     'original_name': 'Gust strength',
@@ -1682,7 +1682,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Humidity',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1703,6 +1702,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Humidity',
     'original_device_class': <SensorDeviceClass.HUMIDITY: 'humidity'>,
     'original_icon': None,
     'original_name': 'Humidity',
@@ -1739,7 +1739,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Precipitation',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1763,6 +1762,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'Precipitation',
     'original_device_class': <SensorDeviceClass.PRECIPITATION: 'precipitation'>,
     'original_icon': None,
     'original_name': 'Precipitation',
@@ -1799,7 +1799,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Precipitation last hour',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -1823,6 +1822,7 @@
         'suggested_display_precision': 1,
       }),
     }),
+    'object_id_base': 'Precipitation last hour',
     'original_device_class': <SensorDeviceClass.PRECIPITATION: 'precipitation'>,
     'original_icon': None,
     'original_name': 'Precipitation last hour',
@@ -1859,7 +1859,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Precipitation today',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -1883,6 +1882,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'Precipitation today',
     'original_device_class': <SensorDeviceClass.PRECIPITATION: 'precipitation'>,
     'original_icon': None,
     'original_name': 'Precipitation today',
@@ -1919,7 +1919,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1943,6 +1942,7 @@
         'suggested_display_precision': 1,
       }),
     }),
+    'object_id_base': 'Temperature',
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Temperature',
@@ -1979,7 +1979,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Wind direction',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT_ANGLE: 'measurement_angle'>,
     }),
@@ -2000,6 +1999,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Wind direction',
     'original_device_class': <SensorDeviceClass.WIND_DIRECTION: 'wind_direction'>,
     'original_icon': None,
     'original_name': 'Wind direction',
@@ -2036,7 +2036,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Wind speed',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2060,6 +2059,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'Wind speed',
     'original_device_class': <SensorDeviceClass.WIND_SPEED: 'wind_speed'>,
     'original_icon': None,
     'original_name': 'Wind speed',
@@ -2096,7 +2096,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Atmospheric pressure',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2123,6 +2122,7 @@
         'suggested_unit_of_measurement': <UnitOfPressure.HPA: 'hPa'>,
       }),
     }),
+    'object_id_base': 'Atmospheric pressure',
     'original_device_class': <SensorDeviceClass.ATMOSPHERIC_PRESSURE: 'atmospheric_pressure'>,
     'original_icon': None,
     'original_name': 'Atmospheric pressure',
@@ -2159,7 +2159,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Gust angle',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT_ANGLE: 'measurement_angle'>,
     }),
@@ -2180,6 +2179,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Gust angle',
     'original_device_class': <SensorDeviceClass.WIND_DIRECTION: 'wind_direction'>,
     'original_icon': None,
     'original_name': 'Gust angle',
@@ -2216,7 +2216,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Gust strength',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2240,6 +2239,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'Gust strength',
     'original_device_class': <SensorDeviceClass.WIND_SPEED: 'wind_speed'>,
     'original_icon': None,
     'original_name': 'Gust strength',
@@ -2276,7 +2276,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Humidity',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2297,6 +2296,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Humidity',
     'original_device_class': <SensorDeviceClass.HUMIDITY: 'humidity'>,
     'original_icon': None,
     'original_name': 'Humidity',
@@ -2333,7 +2333,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Precipitation',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2357,6 +2356,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'Precipitation',
     'original_device_class': <SensorDeviceClass.PRECIPITATION: 'precipitation'>,
     'original_icon': None,
     'original_name': 'Precipitation',
@@ -2393,7 +2393,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Precipitation last hour',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -2417,6 +2416,7 @@
         'suggested_display_precision': 1,
       }),
     }),
+    'object_id_base': 'Precipitation last hour',
     'original_device_class': <SensorDeviceClass.PRECIPITATION: 'precipitation'>,
     'original_icon': None,
     'original_name': 'Precipitation last hour',
@@ -2453,7 +2453,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Precipitation today',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -2477,6 +2476,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'Precipitation today',
     'original_device_class': <SensorDeviceClass.PRECIPITATION: 'precipitation'>,
     'original_icon': None,
     'original_name': 'Precipitation today',
@@ -2513,7 +2513,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2537,6 +2536,7 @@
         'suggested_display_precision': 1,
       }),
     }),
+    'object_id_base': 'Temperature',
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Temperature',
@@ -2573,7 +2573,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Wind direction',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT_ANGLE: 'measurement_angle'>,
     }),
@@ -2594,6 +2593,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Wind direction',
     'original_device_class': <SensorDeviceClass.WIND_DIRECTION: 'wind_direction'>,
     'original_icon': None,
     'original_name': 'Wind direction',
@@ -2630,7 +2630,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Wind speed',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2654,6 +2653,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'Wind speed',
     'original_device_class': <SensorDeviceClass.WIND_SPEED: 'wind_speed'>,
     'original_icon': None,
     'original_name': 'Wind speed',
@@ -2690,7 +2690,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Atmospheric pressure',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2717,6 +2716,7 @@
         'suggested_unit_of_measurement': <UnitOfPressure.HPA: 'hPa'>,
       }),
     }),
+    'object_id_base': 'Atmospheric pressure',
     'original_device_class': <SensorDeviceClass.ATMOSPHERIC_PRESSURE: 'atmospheric_pressure'>,
     'original_icon': None,
     'original_name': 'Atmospheric pressure',
@@ -2753,7 +2753,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Gust angle',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT_ANGLE: 'measurement_angle'>,
     }),
@@ -2774,6 +2773,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Gust angle',
     'original_device_class': <SensorDeviceClass.WIND_DIRECTION: 'wind_direction'>,
     'original_icon': None,
     'original_name': 'Gust angle',
@@ -2810,7 +2810,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Gust strength',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2834,6 +2833,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'Gust strength',
     'original_device_class': <SensorDeviceClass.WIND_SPEED: 'wind_speed'>,
     'original_icon': None,
     'original_name': 'Gust strength',
@@ -2870,7 +2870,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Humidity',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2891,6 +2890,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Humidity',
     'original_device_class': <SensorDeviceClass.HUMIDITY: 'humidity'>,
     'original_icon': None,
     'original_name': 'Humidity',
@@ -2927,7 +2927,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Precipitation',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2951,6 +2950,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'Precipitation',
     'original_device_class': <SensorDeviceClass.PRECIPITATION: 'precipitation'>,
     'original_icon': None,
     'original_name': 'Precipitation',
@@ -2987,7 +2987,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Precipitation last hour',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -3011,6 +3010,7 @@
         'suggested_display_precision': 1,
       }),
     }),
+    'object_id_base': 'Precipitation last hour',
     'original_device_class': <SensorDeviceClass.PRECIPITATION: 'precipitation'>,
     'original_icon': None,
     'original_name': 'Precipitation last hour',
@@ -3047,7 +3047,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Precipitation today',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -3071,6 +3070,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'Precipitation today',
     'original_device_class': <SensorDeviceClass.PRECIPITATION: 'precipitation'>,
     'original_icon': None,
     'original_name': 'Precipitation today',
@@ -3107,7 +3107,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -3131,6 +3130,7 @@
         'suggested_display_precision': 1,
       }),
     }),
+    'object_id_base': 'Temperature',
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Temperature',
@@ -3167,7 +3167,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Wind direction',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT_ANGLE: 'measurement_angle'>,
     }),
@@ -3188,6 +3187,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Wind direction',
     'original_device_class': <SensorDeviceClass.WIND_DIRECTION: 'wind_direction'>,
     'original_icon': None,
     'original_name': 'Wind direction',
@@ -3224,7 +3224,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Wind speed',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -3248,6 +3247,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'Wind speed',
     'original_device_class': <SensorDeviceClass.WIND_SPEED: 'wind_speed'>,
     'original_icon': None,
     'original_name': 'Wind speed',
@@ -3284,7 +3284,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -3303,6 +3302,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': None,
     'original_device_class': None,
     'original_icon': None,
     'original_name': None,
@@ -3334,7 +3334,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Atmospheric pressure',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -3361,6 +3360,7 @@
         'suggested_unit_of_measurement': <UnitOfPressure.HPA: 'hPa'>,
       }),
     }),
+    'object_id_base': 'Atmospheric pressure',
     'original_device_class': <SensorDeviceClass.ATMOSPHERIC_PRESSURE: 'atmospheric_pressure'>,
     'original_icon': None,
     'original_name': 'Atmospheric pressure',
@@ -3397,7 +3397,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Carbon dioxide',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -3418,6 +3417,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Carbon dioxide',
     'original_device_class': <SensorDeviceClass.CO2: 'carbon_dioxide'>,
     'original_icon': None,
     'original_name': 'Carbon dioxide',
@@ -3454,7 +3454,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Health index',
     'capabilities': dict({
       'options': list([
         'healthy',
@@ -3481,6 +3480,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Health index',
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
     'original_name': 'Health index',
@@ -3522,7 +3522,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Humidity',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -3543,6 +3542,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Humidity',
     'original_device_class': <SensorDeviceClass.HUMIDITY: 'humidity'>,
     'original_icon': None,
     'original_name': 'Humidity',
@@ -3579,7 +3579,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Noise',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -3603,6 +3602,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'Noise',
     'original_device_class': <SensorDeviceClass.SOUND_PRESSURE: 'sound_pressure'>,
     'original_icon': None,
     'original_name': 'Noise',
@@ -3639,7 +3639,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Pressure trend',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -3658,6 +3657,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Pressure trend',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Pressure trend',
@@ -3691,7 +3691,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Reachability',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -3710,6 +3709,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Reachability',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Reachability',
@@ -3743,7 +3743,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -3767,6 +3766,7 @@
         'suggested_display_precision': 1,
       }),
     }),
+    'object_id_base': 'Temperature',
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Temperature',
@@ -3803,7 +3803,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Temperature trend',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -3822,6 +3821,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Temperature trend',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Temperature trend',
@@ -3855,7 +3855,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Wi-Fi strength',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -3874,6 +3873,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Wi-Fi strength',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Wi-Fi strength',
@@ -3907,7 +3907,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -3926,6 +3925,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': None,
     'original_device_class': None,
     'original_icon': None,
     'original_name': None,
@@ -3957,7 +3957,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -3976,6 +3975,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': None,
     'original_device_class': None,
     'original_icon': None,
     'original_name': None,
@@ -4007,7 +4007,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -4026,6 +4025,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': None,
     'original_device_class': None,
     'original_icon': None,
     'original_name': None,
@@ -4057,7 +4057,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -4076,6 +4075,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': None,
     'original_device_class': None,
     'original_icon': None,
     'original_name': None,
@@ -4107,7 +4107,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -4126,6 +4125,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': None,
     'original_device_class': None,
     'original_icon': None,
     'original_name': None,
@@ -4157,7 +4157,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Atmospheric pressure',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -4184,6 +4183,7 @@
         'suggested_unit_of_measurement': <UnitOfPressure.HPA: 'hPa'>,
       }),
     }),
+    'object_id_base': 'Atmospheric pressure',
     'original_device_class': <SensorDeviceClass.ATMOSPHERIC_PRESSURE: 'atmospheric_pressure'>,
     'original_icon': None,
     'original_name': 'Atmospheric pressure',
@@ -4220,7 +4220,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Battery',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -4241,6 +4240,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Battery',
     'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
     'original_icon': None,
     'original_name': 'Battery',
@@ -4275,7 +4275,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Carbon dioxide',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -4296,6 +4295,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Carbon dioxide',
     'original_device_class': <SensorDeviceClass.CO2: 'carbon_dioxide'>,
     'original_icon': None,
     'original_name': 'Carbon dioxide',
@@ -4332,7 +4332,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Health index',
     'capabilities': dict({
       'options': list([
         'healthy',
@@ -4359,6 +4358,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Health index',
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
     'original_name': 'Health index',
@@ -4400,7 +4400,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Humidity',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -4421,6 +4420,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Humidity',
     'original_device_class': <SensorDeviceClass.HUMIDITY: 'humidity'>,
     'original_icon': None,
     'original_name': 'Humidity',
@@ -4457,7 +4457,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Noise',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -4481,6 +4480,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'Noise',
     'original_device_class': <SensorDeviceClass.SOUND_PRESSURE: 'sound_pressure'>,
     'original_icon': None,
     'original_name': 'Noise',
@@ -4517,7 +4517,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Pressure trend',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -4536,6 +4535,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Pressure trend',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Pressure trend',
@@ -4569,7 +4569,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Reachability',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -4588,6 +4587,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Reachability',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Reachability',
@@ -4621,7 +4621,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -4645,6 +4644,7 @@
         'suggested_display_precision': 1,
       }),
     }),
+    'object_id_base': 'Temperature',
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Temperature',
@@ -4681,7 +4681,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Temperature trend',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -4700,6 +4699,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Temperature trend',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Temperature trend',
@@ -4733,7 +4733,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Wi-Fi strength',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -4752,6 +4751,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Wi-Fi strength',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Wi-Fi strength',
@@ -4785,7 +4785,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Atmospheric pressure',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -4812,6 +4811,7 @@
         'suggested_unit_of_measurement': <UnitOfPressure.HPA: 'hPa'>,
       }),
     }),
+    'object_id_base': 'Atmospheric pressure',
     'original_device_class': <SensorDeviceClass.ATMOSPHERIC_PRESSURE: 'atmospheric_pressure'>,
     'original_icon': None,
     'original_name': 'Atmospheric pressure',
@@ -4848,7 +4848,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Carbon dioxide',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -4869,6 +4868,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Carbon dioxide',
     'original_device_class': <SensorDeviceClass.CO2: 'carbon_dioxide'>,
     'original_icon': None,
     'original_name': 'Carbon dioxide',
@@ -4905,7 +4905,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Health index',
     'capabilities': dict({
       'options': list([
         'healthy',
@@ -4932,6 +4931,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Health index',
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
     'original_name': 'Health index',
@@ -4973,7 +4973,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Humidity',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -4994,6 +4993,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Humidity',
     'original_device_class': <SensorDeviceClass.HUMIDITY: 'humidity'>,
     'original_icon': None,
     'original_name': 'Humidity',
@@ -5030,7 +5030,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Noise',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -5054,6 +5053,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'Noise',
     'original_device_class': <SensorDeviceClass.SOUND_PRESSURE: 'sound_pressure'>,
     'original_icon': None,
     'original_name': 'Noise',
@@ -5090,7 +5090,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Pressure trend',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -5109,6 +5108,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Pressure trend',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Pressure trend',
@@ -5142,7 +5142,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Reachability',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -5161,6 +5160,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Reachability',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Reachability',
@@ -5194,7 +5194,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -5218,6 +5217,7 @@
         'suggested_display_precision': 1,
       }),
     }),
+    'object_id_base': 'Temperature',
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Temperature',
@@ -5254,7 +5254,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Temperature trend',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -5273,6 +5272,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Temperature trend',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Temperature trend',
@@ -5306,7 +5306,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Wi-Fi strength',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -5325,6 +5324,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Wi-Fi strength',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Wi-Fi strength',
@@ -5358,7 +5358,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -5377,6 +5376,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': None,
     'original_device_class': None,
     'original_icon': None,
     'original_name': None,
@@ -5408,7 +5408,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Power',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -5432,6 +5431,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'Power',
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
     'original_icon': None,
     'original_name': 'Power',
@@ -5466,7 +5466,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -5485,6 +5484,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': None,
     'original_device_class': None,
     'original_icon': None,
     'original_name': None,
@@ -5516,7 +5516,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Battery',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -5537,6 +5536,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Battery',
     'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
     'original_icon': None,
     'original_name': 'Battery',
@@ -5571,7 +5571,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Battery',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -5592,6 +5591,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Battery',
     'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
     'original_icon': None,
     'original_name': 'Battery',
@@ -5626,7 +5626,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Atmospheric pressure',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -5653,6 +5652,7 @@
         'suggested_unit_of_measurement': <UnitOfPressure.HPA: 'hPa'>,
       }),
     }),
+    'object_id_base': 'Atmospheric pressure',
     'original_device_class': <SensorDeviceClass.ATMOSPHERIC_PRESSURE: 'atmospheric_pressure'>,
     'original_icon': None,
     'original_name': 'Atmospheric pressure',
@@ -5689,7 +5689,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Battery',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -5710,6 +5709,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Battery',
     'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
     'original_icon': None,
     'original_name': 'Battery',
@@ -5744,7 +5744,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Carbon dioxide',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -5765,6 +5764,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Carbon dioxide',
     'original_device_class': <SensorDeviceClass.CO2: 'carbon_dioxide'>,
     'original_icon': None,
     'original_name': 'Carbon dioxide',
@@ -5799,7 +5799,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Humidity',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -5820,6 +5819,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Humidity',
     'original_device_class': <SensorDeviceClass.HUMIDITY: 'humidity'>,
     'original_icon': None,
     'original_name': 'Humidity',
@@ -5854,7 +5854,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Reachability',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -5873,6 +5872,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Reachability',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Reachability',
@@ -5904,7 +5904,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'RF strength',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -5923,6 +5922,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'RF strength',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'RF strength',
@@ -5954,7 +5954,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -5978,6 +5977,7 @@
         'suggested_display_precision': 1,
       }),
     }),
+    'object_id_base': 'Temperature',
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Temperature',
@@ -6012,7 +6012,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Temperature trend',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -6031,6 +6030,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Temperature trend',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Temperature trend',
@@ -6062,7 +6062,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Battery',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -6083,6 +6082,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Battery',
     'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
     'original_icon': None,
     'original_name': 'Battery',
@@ -6117,7 +6117,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Carbon dioxide',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -6138,6 +6137,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Carbon dioxide',
     'original_device_class': <SensorDeviceClass.CO2: 'carbon_dioxide'>,
     'original_icon': None,
     'original_name': 'Carbon dioxide',
@@ -6172,7 +6172,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Humidity',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -6193,6 +6192,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Humidity',
     'original_device_class': <SensorDeviceClass.HUMIDITY: 'humidity'>,
     'original_icon': None,
     'original_name': 'Humidity',
@@ -6227,7 +6227,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Reachability',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -6246,6 +6245,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Reachability',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Reachability',
@@ -6277,7 +6277,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'RF strength',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -6296,6 +6295,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'RF strength',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'RF strength',
@@ -6327,7 +6327,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -6351,6 +6350,7 @@
         'suggested_display_precision': 1,
       }),
     }),
+    'object_id_base': 'Temperature',
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Temperature',
@@ -6385,7 +6385,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Temperature trend',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -6404,6 +6403,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Temperature trend',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Temperature trend',
@@ -6435,7 +6435,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Carbon dioxide',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -6456,6 +6455,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Carbon dioxide',
     'original_device_class': <SensorDeviceClass.CO2: 'carbon_dioxide'>,
     'original_icon': None,
     'original_name': 'Carbon dioxide',
@@ -6492,7 +6492,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Battery',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -6513,6 +6512,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Battery',
     'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
     'original_icon': None,
     'original_name': 'Battery',
@@ -6547,7 +6547,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Gust angle',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT_ANGLE: 'measurement_angle'>,
     }),
@@ -6568,6 +6567,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Gust angle',
     'original_device_class': <SensorDeviceClass.WIND_DIRECTION: 'wind_direction'>,
     'original_icon': None,
     'original_name': 'Gust angle',
@@ -6602,7 +6602,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Gust direction',
     'capabilities': dict({
       'options': list([
         'n',
@@ -6632,6 +6631,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Gust direction',
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
     'original_name': 'Gust direction',
@@ -6674,7 +6674,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Gust strength',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -6698,6 +6697,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'Gust strength',
     'original_device_class': <SensorDeviceClass.WIND_SPEED: 'wind_speed'>,
     'original_icon': None,
     'original_name': 'Gust strength',
@@ -6732,7 +6732,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Reachability',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -6751,6 +6750,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Reachability',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Reachability',
@@ -6782,7 +6782,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'RF strength',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -6801,6 +6800,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'RF strength',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'RF strength',
@@ -6832,7 +6832,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Wind angle',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT_ANGLE: 'measurement_angle'>,
     }),
@@ -6853,6 +6852,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Wind angle',
     'original_device_class': <SensorDeviceClass.WIND_DIRECTION: 'wind_direction'>,
     'original_icon': None,
     'original_name': 'Wind angle',
@@ -6887,7 +6887,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Wind direction',
     'capabilities': dict({
       'options': list([
         'n',
@@ -6917,6 +6916,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Wind direction',
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
     'original_name': 'Wind direction',
@@ -6959,7 +6959,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Wind speed',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -6983,6 +6982,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'Wind speed',
     'original_device_class': <SensorDeviceClass.WIND_SPEED: 'wind_speed'>,
     'original_icon': None,
     'original_name': 'Wind speed',
@@ -7017,7 +7017,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Humidity',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -7038,6 +7037,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Humidity',
     'original_device_class': <SensorDeviceClass.HUMIDITY: 'humidity'>,
     'original_icon': None,
     'original_name': 'Humidity',
@@ -7074,7 +7074,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Noise',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -7098,6 +7097,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'Noise',
     'original_device_class': <SensorDeviceClass.SOUND_PRESSURE: 'sound_pressure'>,
     'original_icon': None,
     'original_name': 'Noise',
@@ -7134,7 +7134,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Battery',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -7155,6 +7154,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Battery',
     'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
     'original_icon': None,
     'original_name': 'Battery',
@@ -7189,7 +7189,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Humidity',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -7210,6 +7209,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Humidity',
     'original_device_class': <SensorDeviceClass.HUMIDITY: 'humidity'>,
     'original_icon': None,
     'original_name': 'Humidity',
@@ -7244,7 +7244,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Reachability',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -7263,6 +7262,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Reachability',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Reachability',
@@ -7294,7 +7294,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'RF strength',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -7313,6 +7312,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'RF strength',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'RF strength',
@@ -7344,7 +7344,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -7368,6 +7367,7 @@
         'suggested_display_precision': 1,
       }),
     }),
+    'object_id_base': 'Temperature',
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Temperature',
@@ -7402,7 +7402,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Temperature trend',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -7421,6 +7420,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Temperature trend',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Temperature trend',
@@ -7452,7 +7452,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Pressure trend',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -7471,6 +7470,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Pressure trend',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Pressure trend',
@@ -7504,7 +7504,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Battery',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -7525,6 +7524,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Battery',
     'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
     'original_icon': None,
     'original_name': 'Battery',
@@ -7559,7 +7559,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Precipitation',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -7583,6 +7582,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'Precipitation',
     'original_device_class': <SensorDeviceClass.PRECIPITATION: 'precipitation'>,
     'original_icon': None,
     'original_name': 'Precipitation',
@@ -7617,7 +7617,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Precipitation last hour',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -7641,6 +7640,7 @@
         'suggested_display_precision': 1,
       }),
     }),
+    'object_id_base': 'Precipitation last hour',
     'original_device_class': <SensorDeviceClass.PRECIPITATION: 'precipitation'>,
     'original_icon': None,
     'original_name': 'Precipitation last hour',
@@ -7675,7 +7675,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Precipitation today',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -7699,6 +7698,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'Precipitation today',
     'original_device_class': <SensorDeviceClass.PRECIPITATION: 'precipitation'>,
     'original_icon': None,
     'original_name': 'Precipitation today',
@@ -7733,7 +7733,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Reachability',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -7752,6 +7751,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Reachability',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Reachability',
@@ -7783,7 +7783,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'RF strength',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -7802,6 +7801,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'RF strength',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'RF strength',
@@ -7833,7 +7833,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Reachability',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -7852,6 +7851,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Reachability',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Reachability',
@@ -7885,7 +7885,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -7909,6 +7908,7 @@
         'suggested_display_precision': 1,
       }),
     }),
+    'object_id_base': 'Temperature',
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Temperature',
@@ -7945,7 +7945,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Temperature trend',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -7964,6 +7963,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Temperature trend',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Temperature trend',
@@ -7997,7 +7997,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Wi-Fi strength',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -8016,6 +8015,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Wi-Fi strength',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Wi-Fi strength',

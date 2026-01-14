@@ -4,7 +4,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Dehumidifier',
     'capabilities': dict({
       'available_modes': list([
         'normal',
@@ -30,6 +29,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Dehumidifier',
     'original_device_class': <HumidifierDeviceClass.DEHUMIDIFIER: 'dehumidifier'>,
     'original_icon': None,
     'original_name': 'Dehumidifier',
@@ -72,7 +72,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Humidifier',
     'capabilities': dict({
       'available_modes': list([
         'normal',
@@ -98,6 +97,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Humidifier',
     'original_device_class': <HumidifierDeviceClass.HUMIDIFIER: 'humidifier'>,
     'original_icon': None,
     'original_name': 'Humidifier',

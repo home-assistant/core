@@ -4,7 +4,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Charging',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -23,6 +22,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Charging',
     'original_device_class': <BinarySensorDeviceClass.BATTERY_CHARGING: 'battery_charging'>,
     'original_icon': None,
     'original_name': 'Charging',
@@ -54,7 +54,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Cleaning',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -73,6 +72,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Cleaning',
     'original_device_class': <BinarySensorDeviceClass.RUNNING: 'running'>,
     'original_icon': None,
     'original_name': 'Cleaning',
@@ -104,7 +104,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Mop attached',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -123,6 +122,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Mop attached',
     'original_device_class': <BinarySensorDeviceClass.CONNECTIVITY: 'connectivity'>,
     'original_icon': None,
     'original_name': 'Mop attached',
@@ -154,7 +154,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Water box attached',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -173,6 +172,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Water box attached',
     'original_device_class': <BinarySensorDeviceClass.CONNECTIVITY: 'connectivity'>,
     'original_icon': None,
     'original_name': 'Water box attached',
@@ -204,7 +204,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Water shortage',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -223,6 +222,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Water shortage',
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
     'original_icon': None,
     'original_name': 'Water shortage',
@@ -254,7 +254,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Charging',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -273,6 +272,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Charging',
     'original_device_class': <BinarySensorDeviceClass.BATTERY_CHARGING: 'battery_charging'>,
     'original_icon': None,
     'original_name': 'Charging',
@@ -304,7 +304,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Cleaning',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -323,6 +322,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Cleaning',
     'original_device_class': <BinarySensorDeviceClass.RUNNING: 'running'>,
     'original_icon': None,
     'original_name': 'Cleaning',
@@ -354,7 +354,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Mop attached',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -373,6 +372,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Mop attached',
     'original_device_class': <BinarySensorDeviceClass.CONNECTIVITY: 'connectivity'>,
     'original_icon': None,
     'original_name': 'Mop attached',
@@ -404,7 +404,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Water box attached',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -423,6 +422,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Water box attached',
     'original_device_class': <BinarySensorDeviceClass.CONNECTIVITY: 'connectivity'>,
     'original_icon': None,
     'original_name': 'Water box attached',
@@ -454,7 +454,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Water shortage',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -473,6 +472,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Water shortage',
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
     'original_icon': None,
     'original_name': 'Water shortage',

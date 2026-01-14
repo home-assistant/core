@@ -4,7 +4,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Freeze prevent',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -23,6 +22,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Freeze prevent',
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
     'original_icon': None,
     'original_name': 'Freeze prevent',
@@ -54,7 +54,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Standby',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -73,6 +72,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Standby',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Standby',
@@ -103,7 +103,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Watering running',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -122,6 +121,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Watering running',
     'original_device_class': <BinarySensorDeviceClass.RUNNING: 'running'>,
     'original_icon': None,
     'original_name': 'Watering running',
@@ -153,7 +153,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Zone 1 enabled',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -172,6 +171,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Zone 1 enabled',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Zone 1 enabled',
@@ -202,7 +202,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Zone 2 enabled',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -221,6 +220,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Zone 2 enabled',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Zone 2 enabled',

@@ -4,7 +4,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Line Crossing',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -23,6 +22,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Line Crossing',
     'original_device_class': <BinarySensorDeviceClass.MOTION: 'motion'>,
     'original_icon': None,
     'original_name': 'Line Crossing',
@@ -55,7 +55,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Motion',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -74,6 +73,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Motion',
     'original_device_class': <BinarySensorDeviceClass.MOTION: 'motion'>,
     'original_icon': None,
     'original_name': 'Motion',

@@ -4,7 +4,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Light',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -23,6 +22,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Light',
     'original_device_class': <BinarySensorDeviceClass.LIGHT: 'light'>,
     'original_icon': None,
     'original_name': 'Light',
@@ -54,7 +54,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Motion',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -73,6 +72,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Motion',
     'original_device_class': <BinarySensorDeviceClass.MOTION: 'motion'>,
     'original_icon': None,
     'original_name': 'Motion',
@@ -104,7 +104,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Opening',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -123,6 +122,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Opening',
     'original_device_class': <BinarySensorDeviceClass.OPENING: 'opening'>,
     'original_icon': None,
     'original_name': 'Opening',
@@ -154,7 +154,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Light',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -173,6 +172,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Light',
     'original_device_class': <BinarySensorDeviceClass.LIGHT: 'light'>,
     'original_icon': None,
     'original_name': 'Light',
@@ -204,7 +204,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Motion',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -223,6 +222,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Motion',
     'original_device_class': <BinarySensorDeviceClass.MOTION: 'motion'>,
     'original_icon': None,
     'original_name': 'Motion',
@@ -254,7 +254,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Opening',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -273,6 +272,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Opening',
     'original_device_class': <BinarySensorDeviceClass.OPENING: 'opening'>,
     'original_icon': None,
     'original_name': 'Opening',
@@ -304,7 +304,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Motion',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -323,6 +322,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Motion',
     'original_device_class': <BinarySensorDeviceClass.MOTION: 'motion'>,
     'original_icon': None,
     'original_name': 'Motion',
@@ -354,7 +354,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Motion',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -373,6 +372,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Motion',
     'original_device_class': <BinarySensorDeviceClass.MOTION: 'motion'>,
     'original_icon': None,
     'original_name': 'Motion',
@@ -404,7 +404,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Moisture',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -423,6 +422,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Moisture',
     'original_device_class': <BinarySensorDeviceClass.MOISTURE: 'moisture'>,
     'original_icon': None,
     'original_name': 'Moisture',

@@ -4,7 +4,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Allow charging from grid',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -23,6 +22,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Allow charging from grid',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Allow charging from grid',
@@ -53,7 +53,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Storm watch',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -72,6 +71,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Storm watch',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Storm watch',
@@ -102,7 +102,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Charge',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -121,6 +120,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Charge',
     'original_device_class': <SwitchDeviceClass.SWITCH: 'switch'>,
     'original_icon': None,
     'original_name': 'Charge',
@@ -152,7 +152,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Defrost mode',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -171,6 +170,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Defrost mode',
     'original_device_class': <SwitchDeviceClass.SWITCH: 'switch'>,
     'original_icon': None,
     'original_name': 'Defrost mode',
@@ -202,7 +202,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Sentry mode',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -221,6 +220,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Sentry mode',
     'original_device_class': <SwitchDeviceClass.SWITCH: 'switch'>,
     'original_icon': None,
     'original_name': 'Sentry mode',
@@ -252,7 +252,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Steering wheel heater',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -271,6 +270,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Steering wheel heater',
     'original_device_class': <SwitchDeviceClass.SWITCH: 'switch'>,
     'original_icon': None,
     'original_name': 'Steering wheel heater',
@@ -302,7 +302,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Valet mode',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -321,6 +320,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Valet mode',
     'original_device_class': <SwitchDeviceClass.SWITCH: 'switch'>,
     'original_icon': None,
     'original_name': 'Valet mode',

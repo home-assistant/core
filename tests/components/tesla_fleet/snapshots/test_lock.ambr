@@ -4,7 +4,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Charge cable lock',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -23,6 +22,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Charge cable lock',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Charge cable lock',
@@ -54,7 +54,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Lock',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -73,6 +72,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Lock',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Lock',

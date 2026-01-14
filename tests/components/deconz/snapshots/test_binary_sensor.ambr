@@ -4,7 +4,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Alarm 10',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -23,6 +22,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Alarm 10',
     'original_device_class': <BinarySensorDeviceClass.SAFETY: 'safety'>,
     'original_icon': None,
     'original_name': 'Alarm 10',
@@ -56,7 +56,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Cave CO',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -75,6 +74,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Cave CO',
     'original_device_class': <BinarySensorDeviceClass.CO: 'carbon_monoxide'>,
     'original_icon': None,
     'original_name': 'Cave CO',
@@ -107,7 +107,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Cave CO Low Battery',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -126,6 +125,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Cave CO Low Battery',
     'original_device_class': <BinarySensorDeviceClass.BATTERY: 'battery'>,
     'original_icon': None,
     'original_name': 'Cave CO Low Battery',
@@ -157,7 +157,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Cave CO Tampered',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -176,6 +175,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Cave CO Tampered',
     'original_device_class': <BinarySensorDeviceClass.TAMPER: 'tamper'>,
     'original_icon': None,
     'original_name': 'Cave CO Tampered',
@@ -207,7 +207,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Presence sensor',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -226,6 +225,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Presence sensor',
     'original_device_class': <BinarySensorDeviceClass.MOTION: 'motion'>,
     'original_icon': None,
     'original_name': 'Presence sensor',
@@ -260,7 +260,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Presence sensor Low Battery',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -279,6 +278,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Presence sensor Low Battery',
     'original_device_class': <BinarySensorDeviceClass.BATTERY: 'battery'>,
     'original_icon': None,
     'original_name': 'Presence sensor Low Battery',
@@ -310,7 +310,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Presence sensor Tampered',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -329,6 +328,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Presence sensor Tampered',
     'original_device_class': <BinarySensorDeviceClass.TAMPER: 'tamper'>,
     'original_icon': None,
     'original_name': 'Presence sensor Tampered',
@@ -360,7 +360,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'sensor_kitchen_smoke',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -379,6 +378,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'sensor_kitchen_smoke',
     'original_device_class': <BinarySensorDeviceClass.SMOKE: 'smoke'>,
     'original_icon': None,
     'original_name': 'sensor_kitchen_smoke',
@@ -411,7 +411,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'sensor_kitchen_smoke Test Mode',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -430,6 +429,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'sensor_kitchen_smoke Test Mode',
     'original_device_class': <BinarySensorDeviceClass.SMOKE: 'smoke'>,
     'original_icon': None,
     'original_name': 'sensor_kitchen_smoke Test Mode',
@@ -461,7 +461,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'sensor_kitchen_smoke',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -480,6 +479,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'sensor_kitchen_smoke',
     'original_device_class': <BinarySensorDeviceClass.SMOKE: 'smoke'>,
     'original_icon': None,
     'original_name': 'sensor_kitchen_smoke',
@@ -512,7 +512,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'sensor_kitchen_smoke Test Mode',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -531,6 +530,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'sensor_kitchen_smoke Test Mode',
     'original_device_class': <BinarySensorDeviceClass.SMOKE: 'smoke'>,
     'original_icon': None,
     'original_name': 'sensor_kitchen_smoke Test Mode',
@@ -562,7 +562,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Kitchen Switch',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -581,6 +580,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Kitchen Switch',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Kitchen Switch',
@@ -612,7 +612,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Back Door',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -631,6 +630,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Back Door',
     'original_device_class': <BinarySensorDeviceClass.OPENING: 'opening'>,
     'original_icon': None,
     'original_name': 'Back Door',
@@ -664,7 +664,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Motion sensor 4',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -683,6 +682,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Motion sensor 4',
     'original_device_class': <BinarySensorDeviceClass.MOTION: 'motion'>,
     'original_icon': None,
     'original_name': 'Motion sensor 4',
@@ -716,7 +716,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'water2',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -735,6 +734,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'water2',
     'original_device_class': <BinarySensorDeviceClass.MOISTURE: 'moisture'>,
     'original_icon': None,
     'original_name': 'water2',
@@ -768,7 +768,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'water2 Low Battery',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -787,6 +786,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'water2 Low Battery',
     'original_device_class': <BinarySensorDeviceClass.BATTERY: 'battery'>,
     'original_icon': None,
     'original_name': 'water2 Low Battery',
@@ -818,7 +818,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'water2 Tampered',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -837,6 +836,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'water2 Tampered',
     'original_device_class': <BinarySensorDeviceClass.TAMPER: 'tamper'>,
     'original_icon': None,
     'original_name': 'water2 Tampered',
@@ -868,7 +868,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Vibration 1',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -887,6 +886,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Vibration 1',
     'original_device_class': <BinarySensorDeviceClass.VIBRATION: 'vibration'>,
     'original_icon': None,
     'original_name': 'Vibration 1',
@@ -927,7 +927,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Presence sensor',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -946,6 +945,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Presence sensor',
     'original_device_class': <BinarySensorDeviceClass.MOTION: 'motion'>,
     'original_icon': None,
     'original_name': 'Presence sensor',
@@ -980,7 +980,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Presence sensor Low Battery',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -999,6 +998,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Presence sensor Low Battery',
     'original_device_class': <BinarySensorDeviceClass.BATTERY: 'battery'>,
     'original_icon': None,
     'original_name': 'Presence sensor Low Battery',
@@ -1030,7 +1030,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Presence sensor Tampered',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1049,6 +1048,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Presence sensor Tampered',
     'original_device_class': <BinarySensorDeviceClass.TAMPER: 'tamper'>,
     'original_icon': None,
     'original_name': 'Presence sensor Tampered',

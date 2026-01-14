@@ -39,7 +39,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Alarm sound',
     'capabilities': dict({
       'options': list([
         'Doorbell Ring 1',
@@ -80,6 +79,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Alarm sound',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Alarm sound',
@@ -131,7 +131,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Alarm volume',
     'capabilities': dict({
       'options': list([
         'low',
@@ -156,6 +155,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Alarm volume',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Alarm volume',
@@ -191,7 +191,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Light preset',
     'capabilities': dict({
       'options': list([
         'Off',
@@ -216,6 +215,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Light preset',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Light preset',

@@ -4,7 +4,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Energy price',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -25,6 +24,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Energy price',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Energy price',
@@ -59,7 +59,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Power demand',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -83,6 +82,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'Power demand',
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
     'original_icon': None,
     'original_name': 'Power demand',
@@ -116,7 +116,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Signal strength',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -137,6 +136,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Signal strength',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Signal strength',
@@ -170,7 +170,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Total energy delivered',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -194,6 +193,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'Total energy delivered',
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
     'original_name': 'Total energy delivered',
@@ -227,7 +227,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Total energy received',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -251,6 +250,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'Total energy received',
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
     'original_name': 'Total energy received',

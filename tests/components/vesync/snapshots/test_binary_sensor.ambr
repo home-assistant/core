@@ -362,7 +362,6 @@
       'aliases': set({
       }),
       'area_id': None,
-      'calculated_object_id': 'Low water',
       'capabilities': None,
       'config_entry_id': <ANY>,
       'config_subentry_id': <ANY>,
@@ -381,6 +380,7 @@
       'name': None,
       'options': dict({
       }),
+      'object_id_base': 'Low water',
       'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
       'original_icon': None,
       'original_name': 'Low water',
@@ -396,7 +396,6 @@
       'aliases': set({
       }),
       'area_id': None,
-      'calculated_object_id': 'Water tank lifted',
       'capabilities': None,
       'config_entry_id': <ANY>,
       'config_subentry_id': <ANY>,
@@ -415,6 +414,7 @@
       'name': None,
       'options': dict({
       }),
+      'object_id_base': 'Water tank lifted',
       'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
       'original_icon': None,
       'original_name': 'Water tank lifted',
@@ -495,7 +495,6 @@
       'aliases': set({
       }),
       'area_id': None,
-      'calculated_object_id': 'Low water',
       'capabilities': None,
       'config_entry_id': <ANY>,
       'config_subentry_id': <ANY>,
@@ -514,6 +513,7 @@
       'name': None,
       'options': dict({
       }),
+      'object_id_base': 'Low water',
       'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
       'original_icon': None,
       'original_name': 'Low water',
@@ -529,7 +529,6 @@
       'aliases': set({
       }),
       'area_id': None,
-      'calculated_object_id': 'Water tank lifted',
       'capabilities': None,
       'config_entry_id': <ANY>,
       'config_subentry_id': <ANY>,
@@ -548,6 +547,7 @@
       'name': None,
       'options': dict({
       }),
+      'object_id_base': 'Water tank lifted',
       'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
       'original_icon': None,
       'original_name': 'Water tank lifted',
@@ -628,7 +628,6 @@
       'aliases': set({
       }),
       'area_id': None,
-      'calculated_object_id': 'Low water',
       'capabilities': None,
       'config_entry_id': <ANY>,
       'config_subentry_id': <ANY>,
@@ -647,6 +646,7 @@
       'name': None,
       'options': dict({
       }),
+      'object_id_base': 'Low water',
       'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
       'original_icon': None,
       'original_name': 'Low water',
@@ -662,7 +662,6 @@
       'aliases': set({
       }),
       'area_id': None,
-      'calculated_object_id': 'Water tank lifted',
       'capabilities': None,
       'config_entry_id': <ANY>,
       'config_subentry_id': <ANY>,
@@ -681,6 +680,7 @@
       'name': None,
       'options': dict({
       }),
+      'object_id_base': 'Water tank lifted',
       'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
       'original_icon': None,
       'original_name': 'Water tank lifted',

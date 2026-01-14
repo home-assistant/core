@@ -4,7 +4,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Button (3)',
     'capabilities': dict({
       'event_types': list([
         'multi_press_1',
@@ -30,6 +29,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Button (3)',
     'original_device_class': <EventDeviceClass.BUTTON: 'button'>,
     'original_icon': None,
     'original_name': 'Button (3)',
@@ -68,7 +68,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Button (4)',
     'capabilities': dict({
       'event_types': list([
         'multi_press_1',
@@ -94,6 +93,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Button (4)',
     'original_device_class': <EventDeviceClass.BUTTON: 'button'>,
     'original_icon': None,
     'original_name': 'Button (4)',
@@ -132,7 +132,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Button (5)',
     'capabilities': dict({
       'event_types': list([
         'multi_press_1',
@@ -158,6 +157,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Button (5)',
     'original_device_class': <EventDeviceClass.BUTTON: 'button'>,
     'original_icon': None,
     'original_name': 'Button (5)',
@@ -196,7 +196,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Button',
     'capabilities': dict({
       'event_types': list([
         'initial_press',
@@ -222,6 +221,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Button',
     'original_device_class': <EventDeviceClass.BUTTON: 'button'>,
     'original_icon': None,
     'original_name': 'Button',
@@ -260,7 +260,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Button (1)',
     'capabilities': dict({
       'event_types': list([
         'multi_press_1',
@@ -286,6 +285,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Button (1)',
     'original_device_class': <EventDeviceClass.BUTTON: 'button'>,
     'original_icon': None,
     'original_name': 'Button (1)',
@@ -324,7 +324,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Button (2)',
     'capabilities': dict({
       'event_types': list([
         'multi_press_1',
@@ -352,6 +351,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Button (2)',
     'original_device_class': <EventDeviceClass.BUTTON: 'button'>,
     'original_icon': None,
     'original_name': 'Button (2)',
@@ -392,7 +392,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Button (1)',
     'capabilities': dict({
       'event_types': list([
         'multi_press_1',
@@ -418,6 +417,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Button (1)',
     'original_device_class': <EventDeviceClass.BUTTON: 'button'>,
     'original_icon': None,
     'original_name': 'Button (1)',
@@ -456,7 +456,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Button (2)',
     'capabilities': dict({
       'event_types': list([
         'multi_press_1',
@@ -482,6 +481,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Button (2)',
     'original_device_class': <EventDeviceClass.BUTTON: 'button'>,
     'original_icon': None,
     'original_name': 'Button (2)',
@@ -520,7 +520,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Button (3)',
     'capabilities': dict({
       'event_types': list([
         'multi_press_1',
@@ -546,6 +545,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Button (3)',
     'original_device_class': <EventDeviceClass.BUTTON: 'button'>,
     'original_icon': None,
     'original_name': 'Button (3)',
@@ -584,7 +584,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Button (4)',
     'capabilities': dict({
       'event_types': list([
         'multi_press_1',
@@ -610,6 +609,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Button (4)',
     'original_device_class': <EventDeviceClass.BUTTON: 'button'>,
     'original_icon': None,
     'original_name': 'Button (4)',
@@ -648,7 +648,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Button (5)',
     'capabilities': dict({
       'event_types': list([
         'multi_press_1',
@@ -674,6 +673,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Button (5)',
     'original_device_class': <EventDeviceClass.BUTTON: 'button'>,
     'original_icon': None,
     'original_name': 'Button (5)',
@@ -712,7 +712,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Button (6)',
     'capabilities': dict({
       'event_types': list([
         'multi_press_1',
@@ -738,6 +737,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Button (6)',
     'original_device_class': <EventDeviceClass.BUTTON: 'button'>,
     'original_icon': None,
     'original_name': 'Button (6)',
@@ -776,7 +776,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Button (1)',
     'capabilities': dict({
       'event_types': list([
         'multi_press_1',
@@ -806,6 +805,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Button (1)',
     'original_device_class': <EventDeviceClass.BUTTON: 'button'>,
     'original_icon': None,
     'original_name': 'Button (1)',
@@ -848,7 +848,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Button (2)',
     'capabilities': dict({
       'event_types': list([
         'multi_press_1',
@@ -878,6 +877,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Button (2)',
     'original_device_class': <EventDeviceClass.BUTTON: 'button'>,
     'original_icon': None,
     'original_name': 'Button (2)',
@@ -920,7 +920,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Button (3)',
     'capabilities': dict({
       'event_types': list([
         'multi_press_1',
@@ -947,6 +946,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Button (3)',
     'original_device_class': <EventDeviceClass.BUTTON: 'button'>,
     'original_icon': None,
     'original_name': 'Button (3)',
@@ -986,7 +986,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Button (4)',
     'capabilities': dict({
       'event_types': list([
         'multi_press_1',
@@ -1016,6 +1015,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Button (4)',
     'original_device_class': <EventDeviceClass.BUTTON: 'button'>,
     'original_icon': None,
     'original_name': 'Button (4)',
@@ -1058,7 +1058,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Button (5)',
     'capabilities': dict({
       'event_types': list([
         'multi_press_1',
@@ -1088,6 +1087,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Button (5)',
     'original_device_class': <EventDeviceClass.BUTTON: 'button'>,
     'original_icon': None,
     'original_name': 'Button (5)',
@@ -1130,7 +1130,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Button (6)',
     'capabilities': dict({
       'event_types': list([
         'multi_press_1',
@@ -1157,6 +1156,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Button (6)',
     'original_device_class': <EventDeviceClass.BUTTON: 'button'>,
     'original_icon': None,
     'original_name': 'Button (6)',
@@ -1196,7 +1196,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Button (7)',
     'capabilities': dict({
       'event_types': list([
         'multi_press_1',
@@ -1226,6 +1225,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Button (7)',
     'original_device_class': <EventDeviceClass.BUTTON: 'button'>,
     'original_icon': None,
     'original_name': 'Button (7)',
@@ -1268,7 +1268,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Button (8)',
     'capabilities': dict({
       'event_types': list([
         'multi_press_1',
@@ -1298,6 +1297,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Button (8)',
     'original_device_class': <EventDeviceClass.BUTTON: 'button'>,
     'original_icon': None,
     'original_name': 'Button (8)',
@@ -1340,7 +1340,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Button (9)',
     'capabilities': dict({
       'event_types': list([
         'multi_press_1',
@@ -1367,6 +1366,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Button (9)',
     'original_device_class': <EventDeviceClass.BUTTON: 'button'>,
     'original_icon': None,
     'original_name': 'Button (9)',
@@ -1406,7 +1406,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Button (Config)',
     'capabilities': dict({
       'event_types': list([
         'multi_press_1',
@@ -1435,6 +1434,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Button (Config)',
     'original_device_class': <EventDeviceClass.BUTTON: 'button'>,
     'original_icon': None,
     'original_name': 'Button (Config)',
@@ -1476,7 +1476,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Button (Down)',
     'capabilities': dict({
       'event_types': list([
         'multi_press_1',
@@ -1505,6 +1504,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Button (Down)',
     'original_device_class': <EventDeviceClass.BUTTON: 'button'>,
     'original_icon': None,
     'original_name': 'Button (Down)',
@@ -1546,7 +1546,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Button (Up)',
     'capabilities': dict({
       'event_types': list([
         'multi_press_1',
@@ -1575,6 +1574,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Button (Up)',
     'original_device_class': <EventDeviceClass.BUTTON: 'button'>,
     'original_icon': None,
     'original_name': 'Button (Up)',
@@ -1616,7 +1616,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Button (Config)',
     'capabilities': dict({
       'event_types': list([
         'multi_press_1',
@@ -1645,6 +1644,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Button (Config)',
     'original_device_class': <EventDeviceClass.BUTTON: 'button'>,
     'original_icon': None,
     'original_name': 'Button (Config)',
@@ -1686,7 +1686,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Button (Down)',
     'capabilities': dict({
       'event_types': list([
         'multi_press_1',
@@ -1715,6 +1714,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Button (Down)',
     'original_device_class': <EventDeviceClass.BUTTON: 'button'>,
     'original_icon': None,
     'original_name': 'Button (Down)',
@@ -1756,7 +1756,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Button (Up)',
     'capabilities': dict({
       'event_types': list([
         'multi_press_1',
@@ -1785,6 +1784,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Button (Up)',
     'original_device_class': <EventDeviceClass.BUTTON: 'button'>,
     'original_icon': None,
     'original_name': 'Button (Up)',
@@ -1826,7 +1826,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Button',
     'capabilities': dict({
       'event_types': list([
         'initial_press',
@@ -1850,6 +1849,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Button',
     'original_device_class': <EventDeviceClass.BUTTON: 'button'>,
     'original_icon': None,
     'original_name': 'Button',

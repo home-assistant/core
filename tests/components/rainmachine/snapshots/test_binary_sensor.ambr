@@ -4,7 +4,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Freeze restrictions',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -23,6 +22,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Freeze restrictions',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Freeze restrictions',
@@ -53,7 +53,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Hourly restrictions',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -72,6 +71,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Hourly restrictions',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Hourly restrictions',
@@ -102,7 +102,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Month restrictions',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -121,6 +120,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Month restrictions',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Month restrictions',
@@ -151,7 +151,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Rain delay restrictions',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -170,6 +169,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Rain delay restrictions',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Rain delay restrictions',
@@ -200,7 +200,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Rain sensor restrictions',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -219,6 +218,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Rain sensor restrictions',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Rain sensor restrictions',
@@ -249,7 +249,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Weekday restrictions',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -268,6 +267,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Weekday restrictions',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Weekday restrictions',

@@ -4,7 +4,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Color palette',
     'capabilities': dict({
       'options': list([
         '* Color 1',
@@ -97,6 +96,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Color palette',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Color palette',
@@ -200,7 +200,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Live override',
     'capabilities': dict({
       'options': list([
         '0',
@@ -225,6 +224,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Live override',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Live override',
@@ -260,7 +260,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Playlist',
     'capabilities': dict({
       'options': list([
       ]),
@@ -282,6 +281,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Playlist',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Playlist',
@@ -314,7 +314,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Preset',
     'capabilities': dict({
       'options': list([
       ]),
@@ -336,6 +335,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Preset',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Preset',
@@ -368,7 +368,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Segment 1 color palette',
     'capabilities': dict({
       'options': list([
         '* Color 1',
@@ -461,6 +460,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Segment 1 color palette',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Segment 1 color palette',

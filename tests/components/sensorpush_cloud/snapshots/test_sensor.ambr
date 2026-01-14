@@ -4,7 +4,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Altitude',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -31,6 +30,7 @@
         'suggested_unit_of_measurement': <UnitOfLength.METERS: 'm'>,
       }),
     }),
+    'object_id_base': 'Altitude',
     'original_device_class': <SensorDeviceClass.DISTANCE: 'distance'>,
     'original_icon': None,
     'original_name': 'Altitude',
@@ -64,7 +64,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Atmospheric pressure',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -91,6 +90,7 @@
         'suggested_unit_of_measurement': <UnitOfPressure.HPA: 'hPa'>,
       }),
     }),
+    'object_id_base': 'Atmospheric pressure',
     'original_device_class': <SensorDeviceClass.ATMOSPHERIC_PRESSURE: 'atmospheric_pressure'>,
     'original_icon': None,
     'original_name': 'Atmospheric pressure',
@@ -124,7 +124,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Battery voltage',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -148,6 +147,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'Battery voltage',
     'original_device_class': <SensorDeviceClass.VOLTAGE: 'voltage'>,
     'original_icon': None,
     'original_name': 'Battery voltage',
@@ -181,7 +181,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Dew point',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -205,6 +204,7 @@
         'suggested_display_precision': 1,
       }),
     }),
+    'object_id_base': 'Dew point',
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Dew point',
@@ -238,7 +238,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Humidity',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -259,6 +258,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Humidity',
     'original_device_class': <SensorDeviceClass.HUMIDITY: 'humidity'>,
     'original_icon': None,
     'original_name': 'Humidity',
@@ -292,7 +292,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Signal strength',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -313,6 +312,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Signal strength',
     'original_device_class': <SensorDeviceClass.SIGNAL_STRENGTH: 'signal_strength'>,
     'original_icon': None,
     'original_name': 'Signal strength',
@@ -346,7 +346,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -370,6 +369,7 @@
         'suggested_display_precision': 1,
       }),
     }),
+    'object_id_base': 'Temperature',
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Temperature',
@@ -403,7 +403,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Vapor pressure',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -427,6 +426,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'Vapor pressure',
     'original_device_class': <SensorDeviceClass.PRESSURE: 'pressure'>,
     'original_icon': None,
     'original_name': 'Vapor pressure',
@@ -460,7 +460,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Altitude',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -487,6 +486,7 @@
         'suggested_unit_of_measurement': <UnitOfLength.METERS: 'm'>,
       }),
     }),
+    'object_id_base': 'Altitude',
     'original_device_class': <SensorDeviceClass.DISTANCE: 'distance'>,
     'original_icon': None,
     'original_name': 'Altitude',
@@ -520,7 +520,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Atmospheric pressure',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -547,6 +546,7 @@
         'suggested_unit_of_measurement': <UnitOfPressure.HPA: 'hPa'>,
       }),
     }),
+    'object_id_base': 'Atmospheric pressure',
     'original_device_class': <SensorDeviceClass.ATMOSPHERIC_PRESSURE: 'atmospheric_pressure'>,
     'original_icon': None,
     'original_name': 'Atmospheric pressure',
@@ -580,7 +580,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Battery voltage',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -604,6 +603,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'Battery voltage',
     'original_device_class': <SensorDeviceClass.VOLTAGE: 'voltage'>,
     'original_icon': None,
     'original_name': 'Battery voltage',
@@ -637,7 +637,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Dew point',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -661,6 +660,7 @@
         'suggested_display_precision': 1,
       }),
     }),
+    'object_id_base': 'Dew point',
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Dew point',
@@ -694,7 +694,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Humidity',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -715,6 +714,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Humidity',
     'original_device_class': <SensorDeviceClass.HUMIDITY: 'humidity'>,
     'original_icon': None,
     'original_name': 'Humidity',
@@ -748,7 +748,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Signal strength',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -769,6 +768,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Signal strength',
     'original_device_class': <SensorDeviceClass.SIGNAL_STRENGTH: 'signal_strength'>,
     'original_icon': None,
     'original_name': 'Signal strength',
@@ -802,7 +802,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -826,6 +825,7 @@
         'suggested_display_precision': 1,
       }),
     }),
+    'object_id_base': 'Temperature',
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Temperature',
@@ -859,7 +859,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Vapor pressure',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -883,6 +882,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'Vapor pressure',
     'original_device_class': <SensorDeviceClass.PRESSURE: 'pressure'>,
     'original_icon': None,
     'original_name': 'Vapor pressure',
@@ -916,7 +916,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Altitude',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -943,6 +942,7 @@
         'suggested_unit_of_measurement': <UnitOfLength.METERS: 'm'>,
       }),
     }),
+    'object_id_base': 'Altitude',
     'original_device_class': <SensorDeviceClass.DISTANCE: 'distance'>,
     'original_icon': None,
     'original_name': 'Altitude',
@@ -976,7 +976,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Atmospheric pressure',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1003,6 +1002,7 @@
         'suggested_unit_of_measurement': <UnitOfPressure.HPA: 'hPa'>,
       }),
     }),
+    'object_id_base': 'Atmospheric pressure',
     'original_device_class': <SensorDeviceClass.ATMOSPHERIC_PRESSURE: 'atmospheric_pressure'>,
     'original_icon': None,
     'original_name': 'Atmospheric pressure',
@@ -1036,7 +1036,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Battery voltage',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1060,6 +1059,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'Battery voltage',
     'original_device_class': <SensorDeviceClass.VOLTAGE: 'voltage'>,
     'original_icon': None,
     'original_name': 'Battery voltage',
@@ -1093,7 +1093,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Dew point',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1117,6 +1116,7 @@
         'suggested_display_precision': 1,
       }),
     }),
+    'object_id_base': 'Dew point',
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Dew point',
@@ -1150,7 +1150,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Humidity',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1171,6 +1170,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Humidity',
     'original_device_class': <SensorDeviceClass.HUMIDITY: 'humidity'>,
     'original_icon': None,
     'original_name': 'Humidity',
@@ -1204,7 +1204,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Signal strength',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1225,6 +1224,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Signal strength',
     'original_device_class': <SensorDeviceClass.SIGNAL_STRENGTH: 'signal_strength'>,
     'original_icon': None,
     'original_name': 'Signal strength',
@@ -1258,7 +1258,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1282,6 +1281,7 @@
         'suggested_display_precision': 1,
       }),
     }),
+    'object_id_base': 'Temperature',
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Temperature',
@@ -1315,7 +1315,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Vapor pressure',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1339,6 +1338,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'Vapor pressure',
     'original_device_class': <SensorDeviceClass.PRESSURE: 'pressure'>,
     'original_icon': None,
     'original_name': 'Vapor pressure',

@@ -4,7 +4,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Max output',
     'capabilities': dict({
       'max': 1000,
       'min': 0,
@@ -28,6 +27,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Max output',
     'original_device_class': <NumberDeviceClass.POWER: 'power'>,
     'original_icon': None,
     'original_name': 'Max output',

@@ -4,7 +4,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Safety',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -23,6 +22,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Safety',
     'original_device_class': <BinarySensorDeviceClass.SAFETY: 'safety'>,
     'original_icon': None,
     'original_name': 'Safety',
@@ -54,7 +54,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Door',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -73,6 +72,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Door',
     'original_device_class': <BinarySensorDeviceClass.DOOR: 'door'>,
     'original_icon': None,
     'original_name': 'Door',
@@ -104,7 +104,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Feeding',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -123,6 +122,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Feeding',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Feeding',
@@ -153,7 +153,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Defrost',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -172,6 +171,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Defrost',
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
     'original_icon': None,
     'original_name': 'Defrost',
@@ -203,7 +203,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Tank full',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -222,6 +221,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Tank full',
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
     'original_icon': None,
     'original_name': 'Tank full',
@@ -253,7 +253,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Defrost',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -272,6 +271,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Defrost',
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
     'original_icon': None,
     'original_name': 'Defrost',
@@ -303,7 +303,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Tank full',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -322,6 +321,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Tank full',
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
     'original_icon': None,
     'original_name': 'Tank full',
@@ -353,7 +353,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Wet',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -372,6 +371,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Wet',
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
     'original_icon': None,
     'original_name': 'Wet',
@@ -403,7 +403,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Door',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -422,6 +421,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Door',
     'original_device_class': <BinarySensorDeviceClass.DOOR: 'door'>,
     'original_icon': None,
     'original_name': 'Door',
@@ -453,7 +453,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Door',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -472,6 +471,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Door',
     'original_device_class': <BinarySensorDeviceClass.DOOR: 'door'>,
     'original_icon': None,
     'original_name': 'Door',
@@ -503,7 +503,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Tamper',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -522,6 +521,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Tamper',
     'original_device_class': <BinarySensorDeviceClass.TAMPER: 'tamper'>,
     'original_icon': None,
     'original_name': 'Tamper',
@@ -553,7 +553,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Door',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -572,6 +571,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Door',
     'original_device_class': <BinarySensorDeviceClass.DOOR: 'door'>,
     'original_icon': None,
     'original_name': 'Door',
@@ -603,7 +603,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Gas',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -622,6 +621,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Gas',
     'original_device_class': <BinarySensorDeviceClass.GAS: 'gas'>,
     'original_icon': None,
     'original_name': 'Gas',
@@ -653,7 +653,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Problem',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -672,6 +671,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Problem',
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
     'original_icon': None,
     'original_name': 'Problem',
@@ -703,7 +703,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Problem',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -722,6 +721,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Problem',
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
     'original_icon': None,
     'original_name': 'Problem',
@@ -753,7 +753,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Occupancy',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -772,6 +771,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Occupancy',
     'original_device_class': <BinarySensorDeviceClass.OCCUPANCY: 'occupancy'>,
     'original_icon': None,
     'original_name': 'Occupancy',
@@ -803,7 +803,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Moisture',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -822,6 +821,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Moisture',
     'original_device_class': <BinarySensorDeviceClass.MOISTURE: 'moisture'>,
     'original_icon': None,
     'original_name': 'Moisture',
@@ -853,7 +853,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Bag full',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -872,6 +871,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Bag full',
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
     'original_icon': None,
     'original_name': 'Bag full',
@@ -903,7 +903,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Cover off',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -922,6 +921,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Cover off',
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
     'original_icon': None,
     'original_name': 'Cover off',
@@ -953,7 +953,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Problem',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -972,6 +971,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Problem',
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
     'original_icon': None,
     'original_name': 'Problem',
@@ -1003,7 +1003,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Motion',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1022,6 +1021,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Motion',
     'original_device_class': <BinarySensorDeviceClass.MOTION: 'motion'>,
     'original_icon': None,
     'original_name': 'Motion',
@@ -1053,7 +1053,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Tamper',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1072,6 +1071,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Tamper',
     'original_device_class': <BinarySensorDeviceClass.TAMPER: 'tamper'>,
     'original_icon': None,
     'original_name': 'Tamper',
@@ -1103,7 +1103,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Motion',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1122,6 +1121,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Motion',
     'original_device_class': <BinarySensorDeviceClass.MOTION: 'motion'>,
     'original_icon': None,
     'original_name': 'Motion',
@@ -1153,7 +1153,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Motion',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1172,6 +1171,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Motion',
     'original_device_class': <BinarySensorDeviceClass.MOTION: 'motion'>,
     'original_icon': None,
     'original_name': 'Motion',
@@ -1203,7 +1203,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Tamper',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1222,6 +1221,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Tamper',
     'original_device_class': <BinarySensorDeviceClass.TAMPER: 'tamper'>,
     'original_icon': None,
     'original_name': 'Tamper',
@@ -1253,7 +1253,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Smoke',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1272,6 +1271,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Smoke',
     'original_device_class': <BinarySensorDeviceClass.SMOKE: 'smoke'>,
     'original_icon': None,
     'original_name': 'Smoke',
@@ -1303,7 +1303,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Smoke',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1322,6 +1321,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Smoke',
     'original_device_class': <BinarySensorDeviceClass.SMOKE: 'smoke'>,
     'original_icon': None,
     'original_name': 'Smoke',
@@ -1353,7 +1353,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Charging',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1372,6 +1371,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Charging',
     'original_device_class': <BinarySensorDeviceClass.BATTERY_CHARGING: 'battery_charging'>,
     'original_icon': None,
     'original_name': 'Charging',
@@ -1403,7 +1403,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Tamper',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1422,6 +1421,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Tamper',
     'original_device_class': <BinarySensorDeviceClass.TAMPER: 'tamper'>,
     'original_icon': None,
     'original_name': 'Tamper',
@@ -1453,7 +1453,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Valve',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1472,6 +1471,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Valve',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Valve',
@@ -1502,7 +1502,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Safety',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1521,6 +1520,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Safety',
     'original_device_class': <BinarySensorDeviceClass.SAFETY: 'safety'>,
     'original_icon': None,
     'original_name': 'Safety',
@@ -1552,7 +1552,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Smoke',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1571,6 +1570,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Smoke',
     'original_device_class': <BinarySensorDeviceClass.SMOKE: 'smoke'>,
     'original_icon': None,
     'original_name': 'Smoke',
@@ -1602,7 +1602,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Smoke',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1621,6 +1620,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Smoke',
     'original_device_class': <BinarySensorDeviceClass.SMOKE: 'smoke'>,
     'original_icon': None,
     'original_name': 'Smoke',
@@ -1652,7 +1652,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Occupancy',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1671,6 +1670,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Occupancy',
     'original_device_class': <BinarySensorDeviceClass.OCCUPANCY: 'occupancy'>,
     'original_icon': None,
     'original_name': 'Occupancy',
@@ -1702,7 +1702,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Door',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1721,6 +1720,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Door',
     'original_device_class': <BinarySensorDeviceClass.DOOR: 'door'>,
     'original_icon': None,
     'original_name': 'Door',
@@ -1752,7 +1752,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Moisture',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1771,6 +1770,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Moisture',
     'original_device_class': <BinarySensorDeviceClass.MOISTURE: 'moisture'>,
     'original_icon': None,
     'original_name': 'Moisture',
@@ -1802,7 +1802,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Smoke',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1821,6 +1820,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Smoke',
     'original_device_class': <BinarySensorDeviceClass.SMOKE: 'smoke'>,
     'original_icon': None,
     'original_name': 'Smoke',
@@ -1852,7 +1852,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Door',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1871,6 +1870,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Door',
     'original_device_class': <BinarySensorDeviceClass.DOOR: 'door'>,
     'original_icon': None,
     'original_name': 'Door',
@@ -1902,7 +1902,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Problem',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1921,6 +1920,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Problem',
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
     'original_icon': None,
     'original_name': 'Problem',

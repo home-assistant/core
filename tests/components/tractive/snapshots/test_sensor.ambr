@@ -4,7 +4,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Activity',
     'capabilities': dict({
       'options': list([
         'good',
@@ -29,6 +28,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Activity',
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
     'original_name': 'Activity',
@@ -65,7 +65,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Activity time',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -86,6 +85,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Activity time',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Activity time',
@@ -118,7 +118,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Calories burned',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -139,6 +138,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Calories burned',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Calories burned',
@@ -171,7 +171,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Daily goal',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -190,6 +189,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Daily goal',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Daily goal',
@@ -221,7 +221,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Day sleep',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -242,6 +241,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Day sleep',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Day sleep',
@@ -274,7 +274,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Night sleep',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -295,6 +294,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Night sleep',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Night sleep',
@@ -327,7 +327,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Rest time',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -348,6 +347,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Rest time',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Rest time',
@@ -380,7 +380,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Sleep',
     'capabilities': dict({
       'options': list([
         'good',
@@ -405,6 +404,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Sleep',
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
     'original_name': 'Sleep',
@@ -441,7 +441,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Tracker battery',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -460,6 +459,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Tracker battery',
     'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
     'original_icon': None,
     'original_name': 'Tracker battery',
@@ -492,7 +492,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Tracker state',
     'capabilities': dict({
       'options': list([
         'inaccurate_position',
@@ -519,6 +518,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Tracker state',
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
     'original_name': 'Tracker state',

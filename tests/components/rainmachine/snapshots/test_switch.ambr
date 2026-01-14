@@ -4,7 +4,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Evening',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -23,6 +22,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Evening',
     'original_device_class': None,
     'original_icon': 'mdi:water',
     'original_name': 'Evening',
@@ -79,7 +79,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Evening enabled',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -98,6 +97,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Evening enabled',
     'original_device_class': None,
     'original_icon': 'mdi:cog',
     'original_name': 'Evening enabled',
@@ -130,7 +130,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Extra water on hot days',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -149,6 +148,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Extra water on hot days',
     'original_device_class': None,
     'original_icon': 'mdi:heat-wave',
     'original_name': 'Extra water on hot days',
@@ -180,7 +180,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Flower box',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -199,6 +198,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Flower box',
     'original_device_class': None,
     'original_icon': 'mdi:water',
     'original_name': 'Flower box',
@@ -244,7 +244,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Flower box enabled',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -263,6 +262,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Flower box enabled',
     'original_device_class': None,
     'original_icon': 'mdi:cog',
     'original_name': 'Flower box enabled',
@@ -295,7 +295,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Freeze protection',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -314,6 +313,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Freeze protection',
     'original_device_class': None,
     'original_icon': 'mdi:snowflake-alert',
     'original_name': 'Freeze protection',
@@ -345,7 +345,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Landscaping',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -364,6 +363,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Landscaping',
     'original_device_class': None,
     'original_icon': 'mdi:water',
     'original_name': 'Landscaping',
@@ -409,7 +409,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Landscaping enabled',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -428,6 +427,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Landscaping enabled',
     'original_device_class': None,
     'original_icon': 'mdi:cog',
     'original_name': 'Landscaping enabled',
@@ -460,7 +460,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Morning',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -479,6 +478,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Morning',
     'original_device_class': None,
     'original_icon': 'mdi:water',
     'original_name': 'Morning',
@@ -535,7 +535,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Morning enabled',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -554,6 +553,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Morning enabled',
     'original_device_class': None,
     'original_icon': 'mdi:cog',
     'original_name': 'Morning enabled',
@@ -586,7 +586,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Test',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -605,6 +604,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Test',
     'original_device_class': None,
     'original_icon': 'mdi:water',
     'original_name': 'Test',
@@ -650,7 +650,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Test enabled',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -669,6 +668,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Test enabled',
     'original_device_class': None,
     'original_icon': 'mdi:cog',
     'original_name': 'Test enabled',
@@ -701,7 +701,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Zone 10',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -720,6 +719,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Zone 10',
     'original_device_class': None,
     'original_icon': 'mdi:water',
     'original_name': 'Zone 10',
@@ -765,7 +765,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Zone 10 enabled',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -784,6 +783,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Zone 10 enabled',
     'original_device_class': None,
     'original_icon': 'mdi:cog',
     'original_name': 'Zone 10 enabled',
@@ -816,7 +816,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Zone 11',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -835,6 +834,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Zone 11',
     'original_device_class': None,
     'original_icon': 'mdi:water',
     'original_name': 'Zone 11',
@@ -880,7 +880,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Zone 11 enabled',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -899,6 +898,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Zone 11 enabled',
     'original_device_class': None,
     'original_icon': 'mdi:cog',
     'original_name': 'Zone 11 enabled',
@@ -931,7 +931,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Zone 12',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -950,6 +949,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Zone 12',
     'original_device_class': None,
     'original_icon': 'mdi:water',
     'original_name': 'Zone 12',
@@ -995,7 +995,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Zone 12 enabled',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1014,6 +1013,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Zone 12 enabled',
     'original_device_class': None,
     'original_icon': 'mdi:cog',
     'original_name': 'Zone 12 enabled',
@@ -1046,7 +1046,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Zone 4',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1065,6 +1064,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Zone 4',
     'original_device_class': None,
     'original_icon': 'mdi:water',
     'original_name': 'Zone 4',
@@ -1110,7 +1110,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Zone 4 enabled',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1129,6 +1128,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Zone 4 enabled',
     'original_device_class': None,
     'original_icon': 'mdi:cog',
     'original_name': 'Zone 4 enabled',
@@ -1161,7 +1161,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Zone 5',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1180,6 +1179,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Zone 5',
     'original_device_class': None,
     'original_icon': 'mdi:water',
     'original_name': 'Zone 5',
@@ -1225,7 +1225,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Zone 5 enabled',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1244,6 +1243,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Zone 5 enabled',
     'original_device_class': None,
     'original_icon': 'mdi:cog',
     'original_name': 'Zone 5 enabled',
@@ -1276,7 +1276,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Zone 6',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1295,6 +1294,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Zone 6',
     'original_device_class': None,
     'original_icon': 'mdi:water',
     'original_name': 'Zone 6',
@@ -1340,7 +1340,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Zone 6 enabled',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1359,6 +1358,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Zone 6 enabled',
     'original_device_class': None,
     'original_icon': 'mdi:cog',
     'original_name': 'Zone 6 enabled',
@@ -1391,7 +1391,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Zone 7',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1410,6 +1409,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Zone 7',
     'original_device_class': None,
     'original_icon': 'mdi:water',
     'original_name': 'Zone 7',
@@ -1455,7 +1455,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Zone 7 enabled',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1474,6 +1473,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Zone 7 enabled',
     'original_device_class': None,
     'original_icon': 'mdi:cog',
     'original_name': 'Zone 7 enabled',
@@ -1506,7 +1506,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Zone 8',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1525,6 +1524,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Zone 8',
     'original_device_class': None,
     'original_icon': 'mdi:water',
     'original_name': 'Zone 8',
@@ -1570,7 +1570,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Zone 8 enabled',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1589,6 +1588,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Zone 8 enabled',
     'original_device_class': None,
     'original_icon': 'mdi:cog',
     'original_name': 'Zone 8 enabled',
@@ -1621,7 +1621,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Zone 9',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1640,6 +1639,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Zone 9',
     'original_device_class': None,
     'original_icon': 'mdi:water',
     'original_name': 'Zone 9',
@@ -1685,7 +1685,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Zone 9 enabled',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1704,6 +1703,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Zone 9 enabled',
     'original_device_class': None,
     'original_icon': 'mdi:cog',
     'original_name': 'Zone 9 enabled',

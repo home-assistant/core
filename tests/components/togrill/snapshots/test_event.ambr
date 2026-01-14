@@ -4,7 +4,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Event',
     'capabilities': dict({
       'event_types': list([
         'probe_acknowledge',
@@ -38,6 +37,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Event',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Event',
@@ -83,7 +83,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Event',
     'capabilities': dict({
       'event_types': list([
         'probe_acknowledge',
@@ -117,6 +116,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Event',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Event',
@@ -162,7 +162,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Event',
     'capabilities': dict({
       'event_types': list([
         'probe_acknowledge',
@@ -196,6 +195,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Event',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Event',
@@ -241,7 +241,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Event',
     'capabilities': dict({
       'event_types': list([
         'probe_acknowledge',
@@ -275,6 +274,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Event',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Event',
@@ -320,7 +320,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Event',
     'capabilities': dict({
       'event_types': list([
         'probe_acknowledge',
@@ -354,6 +353,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Event',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Event',
@@ -399,7 +399,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Event',
     'capabilities': dict({
       'event_types': list([
         'probe_acknowledge',
@@ -433,6 +432,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Event',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Event',

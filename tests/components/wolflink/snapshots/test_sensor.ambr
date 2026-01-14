@@ -35,7 +35,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Energy Parameter',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -57,6 +56,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'Energy Parameter',
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
     'original_name': 'Energy Parameter',
@@ -92,7 +92,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Flow Parameter',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -114,6 +113,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'Flow Parameter',
     'original_device_class': <SensorDeviceClass.VOLUME_FLOW_RATE: 'volume_flow_rate'>,
     'original_icon': None,
     'original_name': 'Flow Parameter',
@@ -149,7 +149,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Frequency Parameter',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -171,6 +170,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'Frequency Parameter',
     'original_device_class': <SensorDeviceClass.FREQUENCY: 'frequency'>,
     'original_icon': None,
     'original_name': 'Frequency Parameter',
@@ -206,7 +206,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Hours Parameter',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -225,6 +224,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Hours Parameter',
     'original_device_class': None,
     'original_icon': 'mdi:clock',
     'original_name': 'Hours Parameter',
@@ -260,7 +260,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'List Item Parameter',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -279,6 +278,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'List Item Parameter',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'List Item Parameter',
@@ -312,7 +312,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Percentage Parameter',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -331,6 +330,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Percentage Parameter',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Percentage Parameter',
@@ -365,7 +365,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Power Parameter',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -387,6 +386,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'Power Parameter',
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
     'original_icon': None,
     'original_name': 'Power Parameter',
@@ -422,7 +422,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Pressure Parameter',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -444,6 +443,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'Pressure Parameter',
     'original_device_class': <SensorDeviceClass.PRESSURE: 'pressure'>,
     'original_icon': None,
     'original_name': 'Pressure Parameter',
@@ -479,7 +479,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'RPM Parameter',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -500,6 +499,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'RPM Parameter',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'RPM Parameter',
@@ -535,7 +535,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Simple Parameter',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -554,6 +553,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Simple Parameter',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Simple Parameter',
@@ -587,7 +587,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Temperature Parameter',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -609,6 +608,7 @@
         'suggested_display_precision': 1,
       }),
     }),
+    'object_id_base': 'Temperature Parameter',
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Temperature Parameter',

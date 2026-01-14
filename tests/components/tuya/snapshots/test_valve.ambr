@@ -4,7 +4,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Valve',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -23,6 +22,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Valve',
     'original_device_class': <ValveDeviceClass.WATER: 'water'>,
     'original_icon': None,
     'original_name': 'Valve',
@@ -55,7 +55,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Valve',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -74,6 +73,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Valve',
     'original_device_class': <ValveDeviceClass.WATER: 'water'>,
     'original_icon': None,
     'original_name': 'Valve',
@@ -106,7 +106,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Valve 1',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -125,6 +124,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Valve 1',
     'original_device_class': <ValveDeviceClass.WATER: 'water'>,
     'original_icon': None,
     'original_name': 'Valve 1',
@@ -157,7 +157,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Valve 2',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -176,6 +175,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Valve 2',
     'original_device_class': <ValveDeviceClass.WATER: 'water'>,
     'original_icon': None,
     'original_name': 'Valve 2',
@@ -208,7 +208,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Valve 3',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -227,6 +226,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Valve 3',
     'original_device_class': <ValveDeviceClass.WATER: 'water'>,
     'original_icon': None,
     'original_name': 'Valve 3',
@@ -259,7 +259,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Valve 4',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -278,6 +277,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Valve 4',
     'original_device_class': <ValveDeviceClass.WATER: 'water'>,
     'original_icon': None,
     'original_name': 'Valve 4',
@@ -310,7 +310,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Valve 5',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -329,6 +328,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Valve 5',
     'original_device_class': <ValveDeviceClass.WATER: 'water'>,
     'original_icon': None,
     'original_name': 'Valve 5',
@@ -361,7 +361,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Valve 6',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -380,6 +379,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Valve 6',
     'original_device_class': <ValveDeviceClass.WATER: 'water'>,
     'original_icon': None,
     'original_name': 'Valve 6',
@@ -412,7 +412,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Valve 7',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -431,6 +430,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Valve 7',
     'original_device_class': <ValveDeviceClass.WATER: 'water'>,
     'original_icon': None,
     'original_name': 'Valve 7',
@@ -463,7 +463,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Valve 8',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -482,6 +481,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Valve 8',
     'original_device_class': <ValveDeviceClass.WATER: 'water'>,
     'original_icon': None,
     'original_name': 'Valve 8',
@@ -514,7 +514,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Valve',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -533,6 +532,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Valve',
     'original_device_class': <ValveDeviceClass.WATER: 'water'>,
     'original_icon': None,
     'original_name': 'Valve',
@@ -565,7 +565,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Valve',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -584,6 +583,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Valve',
     'original_device_class': <ValveDeviceClass.WATER: 'water'>,
     'original_icon': None,
     'original_name': 'Valve',
@@ -616,7 +616,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Valve',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -635,6 +634,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Valve',
     'original_device_class': <ValveDeviceClass.WATER: 'water'>,
     'original_icon': None,
     'original_name': 'Valve',

@@ -4,7 +4,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Delay',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -26,6 +25,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'Delay',
     'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
     'original_icon': None,
     'original_name': 'Delay',
@@ -59,7 +59,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Departure',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -78,6 +77,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Departure',
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
     'original_icon': None,
     'original_name': 'Departure',
@@ -110,7 +110,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Departure +1',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -129,6 +128,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Departure +1',
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
     'original_icon': None,
     'original_name': 'Departure +1',
@@ -161,7 +161,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Departure +2',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -180,6 +179,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Departure +2',
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
     'original_icon': None,
     'original_name': 'Departure +2',
@@ -212,7 +212,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Line',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -231,6 +230,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Line',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Line',
@@ -262,7 +262,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Platform',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -281,6 +280,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Platform',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Platform',
@@ -312,7 +312,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Transfers',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -331,6 +330,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Transfers',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Transfers',
@@ -362,7 +362,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Trip duration',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -387,6 +386,7 @@
         'suggested_unit_of_measurement': <UnitOfTime.HOURS: 'h'>,
       }),
     }),
+    'object_id_base': 'Trip duration',
     'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
     'original_icon': None,
     'original_name': 'Trip duration',

@@ -4,7 +4,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Inverter mode',
     'capabilities': dict({
       'options': list([
         'smart_grid',
@@ -30,6 +29,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Inverter mode',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Inverter mode',

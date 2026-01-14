@@ -4,7 +4,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Average electricity price today',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -28,6 +27,7 @@
         'suggested_display_precision': 3,
       }),
     }),
+    'object_id_base': 'Average electricity price today',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Average electricity price today',
@@ -61,7 +61,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Current electricity market price',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -85,6 +84,7 @@
         'suggested_display_precision': 3,
       }),
     }),
+    'object_id_base': 'Current electricity market price',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Current electricity market price',
@@ -118,7 +118,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Current electricity price',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -142,6 +141,7 @@
         'suggested_display_precision': 3,
       }),
     }),
+    'object_id_base': 'Current electricity price',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Current electricity price',
@@ -175,7 +175,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Current electricity price excl. VAT',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -199,6 +198,7 @@
         'suggested_display_precision': 3,
       }),
     }),
+    'object_id_base': 'Current electricity price excl. VAT',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Current electricity price excl. VAT',
@@ -232,7 +232,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Current electricity purchasing fee',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -256,6 +255,7 @@
         'suggested_display_precision': 3,
       }),
     }),
+    'object_id_base': 'Current electricity purchasing fee',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Current electricity purchasing fee',
@@ -289,7 +289,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Current electricity tax',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -313,6 +312,7 @@
         'suggested_display_precision': 3,
       }),
     }),
+    'object_id_base': 'Current electricity tax',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Current electricity tax',
@@ -346,7 +346,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Current electricity VAT',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -370,6 +369,7 @@
         'suggested_display_precision': 3,
       }),
     }),
+    'object_id_base': 'Current electricity VAT',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Current electricity VAT',
@@ -403,7 +403,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Current gas market price',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -427,6 +426,7 @@
         'suggested_display_precision': 3,
       }),
     }),
+    'object_id_base': 'Current gas market price',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Current gas market price',
@@ -460,7 +460,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Current gas price',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -484,6 +483,7 @@
         'suggested_display_precision': 3,
       }),
     }),
+    'object_id_base': 'Current gas price',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Current gas price',
@@ -517,7 +517,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Current gas price excl. VAT',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -541,6 +540,7 @@
         'suggested_display_precision': 3,
       }),
     }),
+    'object_id_base': 'Current gas price excl. VAT',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Current gas price excl. VAT',
@@ -574,7 +574,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Current gas purchasing fee',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -598,6 +597,7 @@
         'suggested_display_precision': 3,
       }),
     }),
+    'object_id_base': 'Current gas purchasing fee',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Current gas purchasing fee',
@@ -631,7 +631,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Current gas tax',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -655,6 +654,7 @@
         'suggested_display_precision': 3,
       }),
     }),
+    'object_id_base': 'Current gas tax',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Current gas tax',
@@ -688,7 +688,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Current gas VAT',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -712,6 +711,7 @@
         'suggested_display_precision': 3,
       }),
     }),
+    'object_id_base': 'Current gas VAT',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Current gas VAT',
@@ -745,7 +745,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Highest electricity price today',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -769,6 +768,7 @@
         'suggested_display_precision': 3,
       }),
     }),
+    'object_id_base': 'Highest electricity price today',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Highest electricity price today',
@@ -802,7 +802,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Lowest electricity price today',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -826,6 +825,7 @@
         'suggested_display_precision': 3,
       }),
     }),
+    'object_id_base': 'Lowest electricity price today',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Lowest electricity price today',
@@ -859,7 +859,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Next electricity price',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -883,6 +882,7 @@
         'suggested_display_precision': 3,
       }),
     }),
+    'object_id_base': 'Next electricity price',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Next electricity price',
@@ -916,7 +916,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Next gas price',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -940,6 +939,7 @@
         'suggested_display_precision': 3,
       }),
     }),
+    'object_id_base': 'Next gas price',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Next gas price',

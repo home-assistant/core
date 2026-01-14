@@ -4,7 +4,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Flash',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -23,6 +22,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Flash',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Flash',
@@ -53,7 +53,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Honk',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -72,6 +71,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Honk',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Honk',
@@ -102,7 +102,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Honk & flash',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -121,6 +120,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Honk & flash',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Honk & flash',
@@ -151,7 +151,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Lock reduced guard',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -170,6 +169,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Lock reduced guard',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Lock reduced guard',
@@ -200,7 +200,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Start climatization',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -219,6 +218,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Start climatization',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Start climatization',
@@ -249,7 +249,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Stop climatization',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -268,6 +267,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Stop climatization',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Stop climatization',
@@ -298,7 +298,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Flash',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -317,6 +316,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Flash',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Flash',
@@ -347,7 +347,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Honk',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -366,6 +365,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Honk',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Honk',
@@ -396,7 +396,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Honk & flash',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -415,6 +414,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Honk & flash',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Honk & flash',
@@ -445,7 +445,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Lock reduced guard',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -464,6 +463,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Lock reduced guard',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Lock reduced guard',
@@ -494,7 +494,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Start climatization',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -513,6 +512,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Start climatization',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Start climatization',
@@ -543,7 +543,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Stop climatization',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -562,6 +561,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Stop climatization',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Stop climatization',
@@ -592,7 +592,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Flash',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -611,6 +610,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Flash',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Flash',
@@ -641,7 +641,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Honk',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -660,6 +659,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Honk',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Honk',
@@ -690,7 +690,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Honk & flash',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -709,6 +708,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Honk & flash',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Honk & flash',
@@ -739,7 +739,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Lock reduced guard',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -758,6 +757,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Lock reduced guard',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Lock reduced guard',
@@ -788,7 +788,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Start climatization',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -807,6 +806,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Start climatization',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Start climatization',
@@ -837,7 +837,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Stop climatization',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -856,6 +855,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Stop climatization',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Stop climatization',
@@ -886,7 +886,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Flash',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -905,6 +904,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Flash',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Flash',
@@ -935,7 +935,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Honk',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -954,6 +953,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Honk',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Honk',
@@ -984,7 +984,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Honk & flash',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1003,6 +1002,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Honk & flash',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Honk & flash',
@@ -1033,7 +1033,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Lock reduced guard',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1052,6 +1051,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Lock reduced guard',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Lock reduced guard',
@@ -1082,7 +1082,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Start climatization',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1101,6 +1100,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Start climatization',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Start climatization',
@@ -1131,7 +1131,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Start engine',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1150,6 +1149,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Start engine',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Start engine',
@@ -1180,7 +1180,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Stop climatization',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1199,6 +1198,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Stop climatization',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Stop climatization',
@@ -1229,7 +1229,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Stop engine',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1248,6 +1247,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Stop engine',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Stop engine',

@@ -4,7 +4,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Loudness',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -23,6 +22,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Loudness',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Loudness',
@@ -53,7 +53,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Loudness',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -72,6 +71,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Loudness',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Loudness',
@@ -102,7 +102,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Loudness',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -121,6 +120,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Loudness',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Loudness',
@@ -151,7 +151,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Loudness',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -170,6 +169,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Loudness',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Loudness',

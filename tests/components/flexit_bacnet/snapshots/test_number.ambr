@@ -4,7 +4,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Away extract fan setpoint',
     'capabilities': dict({
       'max': 70,
       'min': 30,
@@ -28,6 +27,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Away extract fan setpoint',
     'original_device_class': <NumberDeviceClass.POWER_FACTOR: 'power_factor'>,
     'original_icon': None,
     'original_name': 'Away extract fan setpoint',
@@ -64,7 +64,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Away supply fan setpoint',
     'capabilities': dict({
       'max': 74,
       'min': 30,
@@ -88,6 +87,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Away supply fan setpoint',
     'original_device_class': <NumberDeviceClass.POWER_FACTOR: 'power_factor'>,
     'original_icon': None,
     'original_name': 'Away supply fan setpoint',
@@ -124,7 +124,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Cooker hood extract fan setpoint',
     'capabilities': dict({
       'max': 100,
       'min': 30,
@@ -148,6 +147,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Cooker hood extract fan setpoint',
     'original_device_class': <NumberDeviceClass.POWER_FACTOR: 'power_factor'>,
     'original_icon': None,
     'original_name': 'Cooker hood extract fan setpoint',
@@ -184,7 +184,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Cooker hood supply fan setpoint',
     'capabilities': dict({
       'max': 100,
       'min': 30,
@@ -208,6 +207,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Cooker hood supply fan setpoint',
     'original_device_class': <NumberDeviceClass.POWER_FACTOR: 'power_factor'>,
     'original_icon': None,
     'original_name': 'Cooker hood supply fan setpoint',
@@ -244,7 +244,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Fireplace extract fan setpoint',
     'capabilities': dict({
       'max': 100,
       'min': 30,
@@ -268,6 +267,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Fireplace extract fan setpoint',
     'original_device_class': <NumberDeviceClass.POWER_FACTOR: 'power_factor'>,
     'original_icon': None,
     'original_name': 'Fireplace extract fan setpoint',
@@ -304,7 +304,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Fireplace mode runtime',
     'capabilities': dict({
       'max': 360,
       'min': 1,
@@ -328,6 +327,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Fireplace mode runtime',
     'original_device_class': <NumberDeviceClass.DURATION: 'duration'>,
     'original_icon': None,
     'original_name': 'Fireplace mode runtime',
@@ -364,7 +364,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Fireplace supply fan setpoint',
     'capabilities': dict({
       'max': 100,
       'min': 30,
@@ -388,6 +387,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Fireplace supply fan setpoint',
     'original_device_class': <NumberDeviceClass.POWER_FACTOR: 'power_factor'>,
     'original_icon': None,
     'original_name': 'Fireplace supply fan setpoint',
@@ -424,7 +424,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'High extract fan setpoint',
     'capabilities': dict({
       'max': 100,
       'min': 70,
@@ -448,6 +447,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'High extract fan setpoint',
     'original_device_class': <NumberDeviceClass.POWER_FACTOR: 'power_factor'>,
     'original_icon': None,
     'original_name': 'High extract fan setpoint',
@@ -484,7 +484,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'High supply fan setpoint',
     'capabilities': dict({
       'max': 100,
       'min': 74,
@@ -508,6 +507,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'High supply fan setpoint',
     'original_device_class': <NumberDeviceClass.POWER_FACTOR: 'power_factor'>,
     'original_icon': None,
     'original_name': 'High supply fan setpoint',
@@ -544,7 +544,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Home extract fan setpoint',
     'capabilities': dict({
       'max': 100,
       'min': 40,
@@ -568,6 +567,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Home extract fan setpoint',
     'original_device_class': <NumberDeviceClass.POWER_FACTOR: 'power_factor'>,
     'original_icon': None,
     'original_name': 'Home extract fan setpoint',
@@ -604,7 +604,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Home supply fan setpoint',
     'capabilities': dict({
       'max': 100,
       'min': 42,
@@ -628,6 +627,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Home supply fan setpoint',
     'original_device_class': <NumberDeviceClass.POWER_FACTOR: 'power_factor'>,
     'original_icon': None,
     'original_name': 'Home supply fan setpoint',

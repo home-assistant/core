@@ -4,7 +4,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Cut direction',
     'capabilities': dict({
       'max': 180,
       'min': 0,
@@ -28,6 +27,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Cut direction',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Cut direction',
@@ -63,7 +63,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Volume',
     'capabilities': dict({
       'max': 11,
       'min': 0,
@@ -87,6 +86,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Volume',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Volume',
@@ -121,7 +121,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Clean count',
     'capabilities': dict({
       'max': 4,
       'min': 1,
@@ -145,6 +144,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Clean count',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Clean count',
@@ -179,7 +179,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Volume',
     'capabilities': dict({
       'max': 11,
       'min': 0,
@@ -203,6 +202,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Volume',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Volume',
@@ -237,7 +237,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Water flow level',
     'capabilities': dict({
       'max': 50,
       'min': 0,
@@ -261,6 +260,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Water flow level',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Water flow level',
@@ -295,7 +295,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Volume',
     'capabilities': dict({
       'max': 11,
       'min': 0,
@@ -319,6 +318,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Volume',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Volume',

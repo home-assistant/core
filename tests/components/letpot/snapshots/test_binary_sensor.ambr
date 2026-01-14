@@ -4,7 +4,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Low water',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -23,6 +22,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Low water',
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
     'original_icon': None,
     'original_name': 'Low water',
@@ -54,7 +54,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Pump',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -73,6 +72,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Pump',
     'original_device_class': <BinarySensorDeviceClass.RUNNING: 'running'>,
     'original_icon': None,
     'original_name': 'Pump',
@@ -104,7 +104,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Pump error',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -123,6 +122,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Pump error',
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
     'original_icon': None,
     'original_name': 'Pump error',
@@ -154,7 +154,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Low nutrients',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -173,6 +172,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Low nutrients',
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
     'original_icon': None,
     'original_name': 'Low nutrients',
@@ -204,7 +204,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Low water',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -223,6 +222,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Low water',
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
     'original_icon': None,
     'original_name': 'Low water',
@@ -254,7 +254,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Pump',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -273,6 +272,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Pump',
     'original_device_class': <BinarySensorDeviceClass.RUNNING: 'running'>,
     'original_icon': None,
     'original_name': 'Pump',
@@ -304,7 +304,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Refill error',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -323,6 +322,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Refill error',
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
     'original_icon': None,
     'original_name': 'Refill error',

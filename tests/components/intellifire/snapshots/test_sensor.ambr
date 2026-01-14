@@ -4,7 +4,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Connection quality',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -23,6 +22,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Connection quality',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Connection quality',
@@ -54,7 +54,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Downtime',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -73,6 +72,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Downtime',
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
     'original_icon': None,
     'original_name': 'Downtime',
@@ -105,7 +105,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'ECM latency',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -124,6 +123,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'ECM latency',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'ECM latency',
@@ -155,7 +155,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Fan speed',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -176,6 +175,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Fan speed',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Fan speed',
@@ -208,7 +208,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Flame height',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -229,6 +228,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Flame height',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Flame height',
@@ -261,7 +261,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'IP address',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -280,6 +279,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'IP address',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'IP address',
@@ -311,7 +311,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Target temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -335,6 +334,7 @@
         'suggested_display_precision': 1,
       }),
     }),
+    'object_id_base': 'Target temperature',
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Target temperature',
@@ -369,7 +369,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -393,6 +392,7 @@
         'suggested_display_precision': 1,
       }),
     }),
+    'object_id_base': 'Temperature',
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Temperature',
@@ -427,7 +427,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Timer end',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -448,6 +447,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Timer end',
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
     'original_icon': None,
     'original_name': 'Timer end',
@@ -481,7 +481,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Uptime',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -500,6 +499,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Uptime',
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
     'original_icon': None,
     'original_name': 'Uptime',

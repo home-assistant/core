@@ -4,7 +4,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Charge port door',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -23,6 +22,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Charge port door',
     'original_device_class': <CoverDeviceClass.DOOR: 'door'>,
     'original_icon': None,
     'original_name': 'Charge port door',
@@ -55,7 +55,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Frunk',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -74,6 +73,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Frunk',
     'original_device_class': <CoverDeviceClass.DOOR: 'door'>,
     'original_icon': None,
     'original_name': 'Frunk',
@@ -106,7 +106,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Sunroof',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -125,6 +124,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Sunroof',
     'original_device_class': <CoverDeviceClass.WINDOW: 'window'>,
     'original_icon': None,
     'original_name': 'Sunroof',
@@ -157,7 +157,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Trunk',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -176,6 +175,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Trunk',
     'original_device_class': <CoverDeviceClass.DOOR: 'door'>,
     'original_icon': None,
     'original_name': 'Trunk',
@@ -208,7 +208,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Windows',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -227,6 +226,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Windows',
     'original_device_class': <CoverDeviceClass.WINDOW: 'window'>,
     'original_icon': None,
     'original_name': 'Windows',
@@ -259,7 +259,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Charge port door',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -278,6 +277,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Charge port door',
     'original_device_class': <CoverDeviceClass.DOOR: 'door'>,
     'original_icon': None,
     'original_name': 'Charge port door',
@@ -310,7 +310,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Frunk',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -329,6 +328,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Frunk',
     'original_device_class': <CoverDeviceClass.DOOR: 'door'>,
     'original_icon': None,
     'original_name': 'Frunk',
@@ -361,7 +361,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Trunk',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -380,6 +379,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Trunk',
     'original_device_class': <CoverDeviceClass.DOOR: 'door'>,
     'original_icon': None,
     'original_name': 'Trunk',
@@ -412,7 +412,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Windows',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -431,6 +430,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Windows',
     'original_device_class': <CoverDeviceClass.WINDOW: 'window'>,
     'original_icon': None,
     'original_name': 'Windows',
@@ -463,7 +463,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Charge port door',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -482,6 +481,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Charge port door',
     'original_device_class': <CoverDeviceClass.DOOR: 'door'>,
     'original_icon': None,
     'original_name': 'Charge port door',
@@ -514,7 +514,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Frunk',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -533,6 +532,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Frunk',
     'original_device_class': <CoverDeviceClass.DOOR: 'door'>,
     'original_icon': None,
     'original_name': 'Frunk',
@@ -565,7 +565,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Sunroof',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -584,6 +583,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Sunroof',
     'original_device_class': <CoverDeviceClass.WINDOW: 'window'>,
     'original_icon': None,
     'original_name': 'Sunroof',
@@ -616,7 +616,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Trunk',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -635,6 +634,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Trunk',
     'original_device_class': <CoverDeviceClass.DOOR: 'door'>,
     'original_icon': None,
     'original_name': 'Trunk',
@@ -667,7 +667,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Windows',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -686,6 +685,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Windows',
     'original_device_class': <CoverDeviceClass.WINDOW: 'window'>,
     'original_icon': None,
     'original_name': 'Windows',

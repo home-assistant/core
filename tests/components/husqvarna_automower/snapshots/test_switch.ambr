@@ -4,7 +4,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Avoid Danger Zone',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -23,6 +22,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Avoid Danger Zone',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Avoid Danger Zone',
@@ -53,7 +53,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Avoid Springflowers',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -72,6 +71,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Avoid Springflowers',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Avoid Springflowers',
@@ -102,7 +102,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Back lawn',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -121,6 +120,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Back lawn',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Back lawn',
@@ -151,7 +151,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Enable schedule',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -170,6 +169,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Enable schedule',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Enable schedule',
@@ -200,7 +200,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Front lawn',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -219,6 +218,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Front lawn',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Front lawn',
@@ -249,7 +249,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'My lawn',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -268,6 +267,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'My lawn',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'My lawn',
@@ -298,7 +298,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Enable schedule',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -317,6 +316,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Enable schedule',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Enable schedule',

@@ -4,7 +4,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -23,6 +22,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': None,
     'original_device_class': None,
     'original_icon': 'mdi:printer',
     'original_name': None,
@@ -55,7 +55,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Active alerts',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -74,6 +73,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Active alerts',
     'original_device_class': None,
     'original_icon': 'mdi:printer',
     'original_name': 'Active alerts',
@@ -106,7 +106,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Black toner level',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -125,6 +124,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Black toner level',
     'original_device_class': None,
     'original_icon': 'mdi:printer',
     'original_name': 'Black toner level',
@@ -161,7 +161,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Cyan toner level',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -180,6 +179,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Cyan toner level',
     'original_device_class': None,
     'original_icon': 'mdi:printer',
     'original_name': 'Cyan toner level',
@@ -216,7 +216,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Input tray 1',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -235,6 +234,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Input tray 1',
     'original_device_class': None,
     'original_icon': 'mdi:printer',
     'original_name': 'Input tray 1',
@@ -274,7 +274,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Magenta toner level',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -293,6 +292,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Magenta toner level',
     'original_device_class': None,
     'original_icon': 'mdi:printer',
     'original_name': 'Magenta toner level',
@@ -329,7 +329,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Output tray 1',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -348,6 +347,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Output tray 1',
     'original_device_class': None,
     'original_icon': 'mdi:printer',
     'original_name': 'Output tray 1',
@@ -382,7 +382,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Yellow toner level',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -401,6 +400,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Yellow toner level',
     'original_device_class': None,
     'original_icon': 'mdi:printer',
     'original_name': 'Yellow toner level',

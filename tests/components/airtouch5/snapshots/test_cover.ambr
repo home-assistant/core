@@ -4,7 +4,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Damper',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -23,6 +22,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Damper',
     'original_device_class': <CoverDeviceClass.DAMPER: 'damper'>,
     'original_icon': None,
     'original_name': 'Damper',
@@ -56,7 +56,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Damper',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -75,6 +74,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Damper',
     'original_device_class': <CoverDeviceClass.DAMPER: 'damper'>,
     'original_icon': None,
     'original_name': 'Damper',

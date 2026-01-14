@@ -4,7 +4,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Accessory error',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -23,6 +22,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Accessory error',
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
     'original_icon': None,
     'original_name': 'Accessory error',
@@ -55,7 +55,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Cloud connectivity',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -74,6 +73,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Cloud connectivity',
     'original_device_class': <BinarySensorDeviceClass.CONNECTIVITY: 'connectivity'>,
     'original_icon': None,
     'original_name': 'Cloud connectivity',
@@ -106,7 +106,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Disabled error',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -125,6 +124,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Disabled error',
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
     'original_icon': None,
     'original_name': 'Disabled error',
@@ -157,7 +157,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'ECM offline error',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -176,6 +175,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'ECM offline error',
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
     'original_icon': None,
     'original_name': 'ECM offline error',
@@ -208,7 +208,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Fan delay error',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -227,6 +226,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Fan delay error',
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
     'original_icon': None,
     'original_name': 'Fan delay error',
@@ -259,7 +259,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Fan error',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -278,6 +277,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Fan error',
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
     'original_icon': None,
     'original_name': 'Fan error',
@@ -310,7 +310,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Flame',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -329,6 +328,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Flame',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Flame',
@@ -360,7 +360,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Flame error',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -379,6 +378,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Flame error',
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
     'original_icon': None,
     'original_name': 'Flame error',
@@ -411,7 +411,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Lights error',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -430,6 +429,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Lights error',
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
     'original_icon': None,
     'original_name': 'Lights error',
@@ -462,7 +462,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Local connectivity',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -481,6 +480,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Local connectivity',
     'original_device_class': <BinarySensorDeviceClass.CONNECTIVITY: 'connectivity'>,
     'original_icon': None,
     'original_name': 'Local connectivity',
@@ -513,7 +513,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Maintenance error',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -532,6 +531,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Maintenance error',
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
     'original_icon': None,
     'original_name': 'Maintenance error',
@@ -564,7 +564,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Offline error',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -583,6 +582,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Offline error',
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
     'original_icon': None,
     'original_name': 'Offline error',
@@ -615,7 +615,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Pilot flame error',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -634,6 +633,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Pilot flame error',
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
     'original_icon': None,
     'original_name': 'Pilot flame error',
@@ -666,7 +666,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Pilot light on',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -685,6 +684,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Pilot light on',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Pilot light on',
@@ -716,7 +716,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Soft lock out error',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -735,6 +734,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Soft lock out error',
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
     'original_icon': None,
     'original_name': 'Soft lock out error',
@@ -767,7 +767,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Thermostat on',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -786,6 +785,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Thermostat on',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Thermostat on',
@@ -817,7 +817,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Timer on',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -836,6 +835,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Timer on',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Timer on',

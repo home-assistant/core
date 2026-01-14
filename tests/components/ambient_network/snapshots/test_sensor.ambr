@@ -4,7 +4,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Absolute pressure',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -31,6 +30,7 @@
         'suggested_unit_of_measurement': <UnitOfPressure.HPA: 'hPa'>,
       }),
     }),
+    'object_id_base': 'Absolute pressure',
     'original_device_class': <SensorDeviceClass.PRESSURE: 'pressure'>,
     'original_icon': None,
     'original_name': 'Absolute pressure',
@@ -66,7 +66,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Daily rain',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -93,6 +92,7 @@
         'suggested_unit_of_measurement': <UnitOfLength.MILLIMETERS: 'mm'>,
       }),
     }),
+    'object_id_base': 'Daily rain',
     'original_device_class': <SensorDeviceClass.PRECIPITATION: 'precipitation'>,
     'original_icon': None,
     'original_name': 'Daily rain',
@@ -128,7 +128,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Dew point',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -152,6 +151,7 @@
         'suggested_display_precision': 1,
       }),
     }),
+    'object_id_base': 'Dew point',
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Dew point',
@@ -187,7 +187,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Feels like',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -211,6 +210,7 @@
         'suggested_display_precision': 1,
       }),
     }),
+    'object_id_base': 'Feels like',
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Feels like',
@@ -246,7 +246,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Hourly rain',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -273,6 +272,7 @@
         'suggested_unit_of_measurement': <UnitOfVolumetricFlux.MILLIMETERS_PER_HOUR: 'mm/h'>,
       }),
     }),
+    'object_id_base': 'Hourly rain',
     'original_device_class': <SensorDeviceClass.PRECIPITATION_INTENSITY: 'precipitation_intensity'>,
     'original_icon': None,
     'original_name': 'Hourly rain',
@@ -308,7 +308,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Humidity',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -332,6 +331,7 @@
         'suggested_display_precision': 1,
       }),
     }),
+    'object_id_base': 'Humidity',
     'original_device_class': <SensorDeviceClass.HUMIDITY: 'humidity'>,
     'original_icon': None,
     'original_name': 'Humidity',
@@ -367,7 +367,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Irradiance',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -391,6 +390,7 @@
         'suggested_display_precision': 1,
       }),
     }),
+    'object_id_base': 'Irradiance',
     'original_device_class': <SensorDeviceClass.IRRADIANCE: 'irradiance'>,
     'original_icon': None,
     'original_name': 'Irradiance',
@@ -426,7 +426,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Last rain',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -445,6 +444,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Last rain',
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
     'original_icon': None,
     'original_name': 'Last rain',
@@ -478,7 +478,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Max daily gust',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -505,6 +504,7 @@
         'suggested_unit_of_measurement': <UnitOfSpeed.KILOMETERS_PER_HOUR: 'km/h'>,
       }),
     }),
+    'object_id_base': 'Max daily gust',
     'original_device_class': <SensorDeviceClass.WIND_SPEED: 'wind_speed'>,
     'original_icon': None,
     'original_name': 'Max daily gust',
@@ -540,7 +540,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Monthly rain',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -567,6 +566,7 @@
         'suggested_unit_of_measurement': <UnitOfLength.MILLIMETERS: 'mm'>,
       }),
     }),
+    'object_id_base': 'Monthly rain',
     'original_device_class': <SensorDeviceClass.PRECIPITATION: 'precipitation'>,
     'original_icon': None,
     'original_name': 'Monthly rain',
@@ -602,7 +602,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Relative pressure',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -629,6 +628,7 @@
         'suggested_unit_of_measurement': <UnitOfPressure.HPA: 'hPa'>,
       }),
     }),
+    'object_id_base': 'Relative pressure',
     'original_device_class': <SensorDeviceClass.PRESSURE: 'pressure'>,
     'original_icon': None,
     'original_name': 'Relative pressure',
@@ -664,7 +664,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -688,6 +687,7 @@
         'suggested_display_precision': 1,
       }),
     }),
+    'object_id_base': 'Temperature',
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Temperature',
@@ -723,7 +723,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'UV index',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -747,6 +746,7 @@
         'suggested_display_precision': 1,
       }),
     }),
+    'object_id_base': 'UV index',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'UV index',
@@ -781,7 +781,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Weekly rain',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -808,6 +807,7 @@
         'suggested_unit_of_measurement': <UnitOfLength.MILLIMETERS: 'mm'>,
       }),
     }),
+    'object_id_base': 'Weekly rain',
     'original_device_class': <SensorDeviceClass.PRECIPITATION: 'precipitation'>,
     'original_icon': None,
     'original_name': 'Weekly rain',
@@ -843,7 +843,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Wind direction',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT_ANGLE: 'measurement_angle'>,
     }),
@@ -867,6 +866,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'Wind direction',
     'original_device_class': <SensorDeviceClass.WIND_DIRECTION: 'wind_direction'>,
     'original_icon': None,
     'original_name': 'Wind direction',
@@ -902,7 +902,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Wind gust',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -929,6 +928,7 @@
         'suggested_unit_of_measurement': <UnitOfSpeed.KILOMETERS_PER_HOUR: 'km/h'>,
       }),
     }),
+    'object_id_base': 'Wind gust',
     'original_device_class': <SensorDeviceClass.WIND_SPEED: 'wind_speed'>,
     'original_icon': None,
     'original_name': 'Wind gust',
@@ -964,7 +964,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Wind speed',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -991,6 +990,7 @@
         'suggested_unit_of_measurement': <UnitOfSpeed.KILOMETERS_PER_HOUR: 'km/h'>,
       }),
     }),
+    'object_id_base': 'Wind speed',
     'original_device_class': <SensorDeviceClass.WIND_SPEED: 'wind_speed'>,
     'original_icon': None,
     'original_name': 'Wind speed',
@@ -1026,7 +1026,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Absolute pressure',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1053,6 +1052,7 @@
         'suggested_unit_of_measurement': <UnitOfPressure.HPA: 'hPa'>,
       }),
     }),
+    'object_id_base': 'Absolute pressure',
     'original_device_class': <SensorDeviceClass.PRESSURE: 'pressure'>,
     'original_icon': None,
     'original_name': 'Absolute pressure',
@@ -1088,7 +1088,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Daily rain',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -1115,6 +1114,7 @@
         'suggested_unit_of_measurement': <UnitOfLength.MILLIMETERS: 'mm'>,
       }),
     }),
+    'object_id_base': 'Daily rain',
     'original_device_class': <SensorDeviceClass.PRECIPITATION: 'precipitation'>,
     'original_icon': None,
     'original_name': 'Daily rain',
@@ -1150,7 +1150,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Dew point',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1174,6 +1173,7 @@
         'suggested_display_precision': 1,
       }),
     }),
+    'object_id_base': 'Dew point',
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Dew point',
@@ -1209,7 +1209,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Feels like',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1233,6 +1232,7 @@
         'suggested_display_precision': 1,
       }),
     }),
+    'object_id_base': 'Feels like',
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Feels like',
@@ -1268,7 +1268,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Hourly rain',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1295,6 +1294,7 @@
         'suggested_unit_of_measurement': <UnitOfVolumetricFlux.MILLIMETERS_PER_HOUR: 'mm/h'>,
       }),
     }),
+    'object_id_base': 'Hourly rain',
     'original_device_class': <SensorDeviceClass.PRECIPITATION_INTENSITY: 'precipitation_intensity'>,
     'original_icon': None,
     'original_name': 'Hourly rain',
@@ -1330,7 +1330,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Humidity',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1354,6 +1353,7 @@
         'suggested_display_precision': 1,
       }),
     }),
+    'object_id_base': 'Humidity',
     'original_device_class': <SensorDeviceClass.HUMIDITY: 'humidity'>,
     'original_icon': None,
     'original_name': 'Humidity',
@@ -1389,7 +1389,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Irradiance',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1413,6 +1412,7 @@
         'suggested_display_precision': 1,
       }),
     }),
+    'object_id_base': 'Irradiance',
     'original_device_class': <SensorDeviceClass.IRRADIANCE: 'irradiance'>,
     'original_icon': None,
     'original_name': 'Irradiance',
@@ -1448,7 +1448,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Last rain',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1467,6 +1466,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Last rain',
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
     'original_icon': None,
     'original_name': 'Last rain',
@@ -1500,7 +1500,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Max daily gust',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1527,6 +1526,7 @@
         'suggested_unit_of_measurement': <UnitOfSpeed.KILOMETERS_PER_HOUR: 'km/h'>,
       }),
     }),
+    'object_id_base': 'Max daily gust',
     'original_device_class': <SensorDeviceClass.WIND_SPEED: 'wind_speed'>,
     'original_icon': None,
     'original_name': 'Max daily gust',
@@ -1562,7 +1562,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Monthly rain',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -1589,6 +1588,7 @@
         'suggested_unit_of_measurement': <UnitOfLength.MILLIMETERS: 'mm'>,
       }),
     }),
+    'object_id_base': 'Monthly rain',
     'original_device_class': <SensorDeviceClass.PRECIPITATION: 'precipitation'>,
     'original_icon': None,
     'original_name': 'Monthly rain',
@@ -1624,7 +1624,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Relative pressure',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1651,6 +1650,7 @@
         'suggested_unit_of_measurement': <UnitOfPressure.HPA: 'hPa'>,
       }),
     }),
+    'object_id_base': 'Relative pressure',
     'original_device_class': <SensorDeviceClass.PRESSURE: 'pressure'>,
     'original_icon': None,
     'original_name': 'Relative pressure',
@@ -1686,7 +1686,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1710,6 +1709,7 @@
         'suggested_display_precision': 1,
       }),
     }),
+    'object_id_base': 'Temperature',
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Temperature',
@@ -1745,7 +1745,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'UV index',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1769,6 +1768,7 @@
         'suggested_display_precision': 1,
       }),
     }),
+    'object_id_base': 'UV index',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'UV index',
@@ -1803,7 +1803,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Weekly rain',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -1830,6 +1829,7 @@
         'suggested_unit_of_measurement': <UnitOfLength.MILLIMETERS: 'mm'>,
       }),
     }),
+    'object_id_base': 'Weekly rain',
     'original_device_class': <SensorDeviceClass.PRECIPITATION: 'precipitation'>,
     'original_icon': None,
     'original_name': 'Weekly rain',
@@ -1865,7 +1865,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Wind direction',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT_ANGLE: 'measurement_angle'>,
     }),
@@ -1889,6 +1888,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'Wind direction',
     'original_device_class': <SensorDeviceClass.WIND_DIRECTION: 'wind_direction'>,
     'original_icon': None,
     'original_name': 'Wind direction',
@@ -1924,7 +1924,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Wind gust',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1951,6 +1950,7 @@
         'suggested_unit_of_measurement': <UnitOfSpeed.KILOMETERS_PER_HOUR: 'km/h'>,
       }),
     }),
+    'object_id_base': 'Wind gust',
     'original_device_class': <SensorDeviceClass.WIND_SPEED: 'wind_speed'>,
     'original_icon': None,
     'original_name': 'Wind gust',
@@ -1986,7 +1986,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Wind speed',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2013,6 +2012,7 @@
         'suggested_unit_of_measurement': <UnitOfSpeed.KILOMETERS_PER_HOUR: 'km/h'>,
       }),
     }),
+    'object_id_base': 'Wind speed',
     'original_device_class': <SensorDeviceClass.WIND_SPEED: 'wind_speed'>,
     'original_icon': None,
     'original_name': 'Wind speed',
@@ -2048,7 +2048,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Absolute pressure',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2075,6 +2074,7 @@
         'suggested_unit_of_measurement': <UnitOfPressure.HPA: 'hPa'>,
       }),
     }),
+    'object_id_base': 'Absolute pressure',
     'original_device_class': <SensorDeviceClass.PRESSURE: 'pressure'>,
     'original_icon': None,
     'original_name': 'Absolute pressure',
@@ -2109,7 +2109,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Daily rain',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -2136,6 +2135,7 @@
         'suggested_unit_of_measurement': <UnitOfLength.MILLIMETERS: 'mm'>,
       }),
     }),
+    'object_id_base': 'Daily rain',
     'original_device_class': <SensorDeviceClass.PRECIPITATION: 'precipitation'>,
     'original_icon': None,
     'original_name': 'Daily rain',
@@ -2170,7 +2170,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Dew point',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2194,6 +2193,7 @@
         'suggested_display_precision': 1,
       }),
     }),
+    'object_id_base': 'Dew point',
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Dew point',
@@ -2228,7 +2228,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Feels like',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2252,6 +2251,7 @@
         'suggested_display_precision': 1,
       }),
     }),
+    'object_id_base': 'Feels like',
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Feels like',
@@ -2286,7 +2286,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Hourly rain',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2313,6 +2312,7 @@
         'suggested_unit_of_measurement': <UnitOfVolumetricFlux.MILLIMETERS_PER_HOUR: 'mm/h'>,
       }),
     }),
+    'object_id_base': 'Hourly rain',
     'original_device_class': <SensorDeviceClass.PRECIPITATION_INTENSITY: 'precipitation_intensity'>,
     'original_icon': None,
     'original_name': 'Hourly rain',
@@ -2347,7 +2347,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Humidity',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2371,6 +2370,7 @@
         'suggested_display_precision': 1,
       }),
     }),
+    'object_id_base': 'Humidity',
     'original_device_class': <SensorDeviceClass.HUMIDITY: 'humidity'>,
     'original_icon': None,
     'original_name': 'Humidity',
@@ -2405,7 +2405,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Irradiance',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2429,6 +2428,7 @@
         'suggested_display_precision': 1,
       }),
     }),
+    'object_id_base': 'Irradiance',
     'original_device_class': <SensorDeviceClass.IRRADIANCE: 'irradiance'>,
     'original_icon': None,
     'original_name': 'Irradiance',
@@ -2463,7 +2463,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Max daily gust',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2490,6 +2489,7 @@
         'suggested_unit_of_measurement': <UnitOfSpeed.KILOMETERS_PER_HOUR: 'km/h'>,
       }),
     }),
+    'object_id_base': 'Max daily gust',
     'original_device_class': <SensorDeviceClass.WIND_SPEED: 'wind_speed'>,
     'original_icon': None,
     'original_name': 'Max daily gust',
@@ -2524,7 +2524,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Monthly rain',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -2551,6 +2550,7 @@
         'suggested_unit_of_measurement': <UnitOfLength.MILLIMETERS: 'mm'>,
       }),
     }),
+    'object_id_base': 'Monthly rain',
     'original_device_class': <SensorDeviceClass.PRECIPITATION: 'precipitation'>,
     'original_icon': None,
     'original_name': 'Monthly rain',
@@ -2585,7 +2585,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Relative pressure',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2612,6 +2611,7 @@
         'suggested_unit_of_measurement': <UnitOfPressure.HPA: 'hPa'>,
       }),
     }),
+    'object_id_base': 'Relative pressure',
     'original_device_class': <SensorDeviceClass.PRESSURE: 'pressure'>,
     'original_icon': None,
     'original_name': 'Relative pressure',
@@ -2646,7 +2646,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2670,6 +2669,7 @@
         'suggested_display_precision': 1,
       }),
     }),
+    'object_id_base': 'Temperature',
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Temperature',
@@ -2704,7 +2704,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'UV index',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2728,6 +2727,7 @@
         'suggested_display_precision': 1,
       }),
     }),
+    'object_id_base': 'UV index',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'UV index',
@@ -2761,7 +2761,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Weekly rain',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -2788,6 +2787,7 @@
         'suggested_unit_of_measurement': <UnitOfLength.MILLIMETERS: 'mm'>,
       }),
     }),
+    'object_id_base': 'Weekly rain',
     'original_device_class': <SensorDeviceClass.PRECIPITATION: 'precipitation'>,
     'original_icon': None,
     'original_name': 'Weekly rain',
@@ -2822,7 +2822,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Wind direction',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT_ANGLE: 'measurement_angle'>,
     }),
@@ -2846,6 +2845,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'Wind direction',
     'original_device_class': <SensorDeviceClass.WIND_DIRECTION: 'wind_direction'>,
     'original_icon': None,
     'original_name': 'Wind direction',
@@ -2880,7 +2880,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Wind gust',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2907,6 +2906,7 @@
         'suggested_unit_of_measurement': <UnitOfSpeed.KILOMETERS_PER_HOUR: 'km/h'>,
       }),
     }),
+    'object_id_base': 'Wind gust',
     'original_device_class': <SensorDeviceClass.WIND_SPEED: 'wind_speed'>,
     'original_icon': None,
     'original_name': 'Wind gust',
@@ -2941,7 +2941,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Wind speed',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2968,6 +2967,7 @@
         'suggested_unit_of_measurement': <UnitOfSpeed.KILOMETERS_PER_HOUR: 'km/h'>,
       }),
     }),
+    'object_id_base': 'Wind speed',
     'original_device_class': <SensorDeviceClass.WIND_SPEED: 'wind_speed'>,
     'original_icon': None,
     'original_name': 'Wind speed',

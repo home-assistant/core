@@ -4,7 +4,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Message',
     'capabilities': dict({
       'event_types': list([
         'alarm_mower_in_motion',
@@ -148,6 +147,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Message',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Message',

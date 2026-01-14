@@ -4,7 +4,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -23,6 +22,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': None,
     'original_device_class': None,
     'original_icon': None,
     'original_name': None,
@@ -53,7 +53,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Sound effect',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -72,6 +71,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Sound effect',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Sound effect',
@@ -102,7 +102,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Display lighting',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -121,6 +120,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Display lighting',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Display lighting',
@@ -151,7 +151,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Sound effect',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -170,6 +169,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Sound effect',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Sound effect',
@@ -200,7 +200,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -219,6 +218,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': None,
     'original_device_class': None,
     'original_icon': None,
     'original_name': None,
@@ -249,7 +249,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Sabbath mode',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -268,6 +267,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Sabbath mode',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Sabbath mode',
@@ -298,7 +298,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Cubed ice',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -317,6 +316,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Cubed ice',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Cubed ice',
@@ -347,7 +347,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Power cool',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -366,6 +365,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Power cool',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Power cool',
@@ -396,7 +396,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Power freeze',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -415,6 +414,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Power freeze',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Power freeze',
@@ -445,7 +445,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Sabbath mode',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -464,6 +463,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Sabbath mode',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Sabbath mode',
@@ -494,7 +494,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Cubed ice',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -513,6 +512,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Cubed ice',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Cubed ice',
@@ -543,7 +543,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Power cool',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -562,6 +561,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Power cool',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Power cool',
@@ -592,7 +592,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Power freeze',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -611,6 +610,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Power freeze',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Power freeze',
@@ -641,7 +641,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Cubed ice',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -660,6 +659,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Cubed ice',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Cubed ice',
@@ -690,7 +690,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Ice Bites',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -709,6 +708,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Ice Bites',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Ice Bites',
@@ -739,7 +739,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Power cool',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -758,6 +757,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Power cool',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Power cool',
@@ -788,7 +788,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Power freeze',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -807,6 +806,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Power freeze',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Power freeze',
@@ -837,7 +837,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Sabbath mode',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -856,6 +855,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Sabbath mode',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Sabbath mode',
@@ -886,7 +886,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Power cool',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -905,6 +904,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Power cool',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Power cool',
@@ -935,7 +935,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -954,6 +953,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': None,
     'original_device_class': None,
     'original_icon': None,
     'original_name': None,
@@ -984,7 +984,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1003,6 +1002,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': None,
     'original_device_class': None,
     'original_icon': None,
     'original_name': None,
@@ -1033,7 +1033,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Auto Cycle Link',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1052,6 +1051,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Auto Cycle Link',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Auto Cycle Link',
@@ -1082,7 +1082,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Keep fresh mode',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1101,6 +1100,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Keep fresh mode',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Keep fresh mode',
@@ -1131,7 +1131,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Sanitize',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1150,6 +1149,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Sanitize',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Sanitize',
@@ -1180,7 +1180,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Wrinkle prevent',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1199,6 +1198,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Wrinkle prevent',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Wrinkle prevent',
@@ -1229,7 +1229,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Wrinkle prevent',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1248,6 +1247,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Wrinkle prevent',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Wrinkle prevent',
@@ -1278,7 +1278,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Wrinkle prevent',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1297,6 +1296,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Wrinkle prevent',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Wrinkle prevent',
@@ -1327,7 +1327,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Bubble Soak',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1346,6 +1345,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Bubble Soak',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Bubble Soak',
@@ -1376,7 +1376,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Bubble Soak',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1395,6 +1394,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Bubble Soak',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Bubble Soak',
@@ -1425,7 +1425,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1444,6 +1443,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': None,
     'original_device_class': None,
     'original_icon': None,
     'original_name': None,
@@ -1474,7 +1474,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1493,6 +1492,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': None,
     'original_device_class': None,
     'original_icon': None,
     'original_name': None,
@@ -1523,7 +1523,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1542,6 +1541,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': None,
     'original_device_class': None,
     'original_icon': None,
     'original_name': None,
@@ -1572,7 +1572,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1591,6 +1590,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': None,
     'original_device_class': None,
     'original_icon': None,
     'original_name': None,
@@ -1621,7 +1621,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1640,6 +1639,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': None,
     'original_device_class': None,
     'original_icon': None,
     'original_name': None,

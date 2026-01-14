@@ -4,7 +4,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Animation loop',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -23,6 +22,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Animation loop',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Animation loop',
@@ -53,7 +53,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Boost',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -72,6 +71,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Boost',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Boost',
@@ -102,7 +102,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Calibrate CJC',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -121,6 +120,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Calibrate CJC',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Calibrate CJC',
@@ -151,7 +151,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Cool down screen flashing',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -170,6 +169,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Cool down screen flashing',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Cool down screen flashing',
@@ -200,7 +200,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Detailed idle screen',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -219,6 +218,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Detailed idle screen',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Detailed idle screen',
@@ -249,7 +249,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Detailed solder screen',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -268,6 +267,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Detailed solder screen',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Detailed solder screen',
@@ -298,7 +298,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Invert screen',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -317,6 +316,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Invert screen',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Invert screen',
@@ -347,7 +347,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Swap +/- buttons',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -366,6 +365,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Swap +/- buttons',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Swap +/- buttons',

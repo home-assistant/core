@@ -4,7 +4,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Connection uptime',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -23,6 +22,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Connection uptime',
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
     'original_icon': None,
     'original_name': 'Connection uptime',
@@ -54,7 +54,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Download throughput',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -78,6 +77,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'Download throughput',
     'original_device_class': <SensorDeviceClass.DATA_RATE: 'data_rate'>,
     'original_icon': None,
     'original_name': 'Download throughput',
@@ -111,7 +111,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'External IP',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -130,6 +129,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'External IP',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'External IP',
@@ -160,7 +160,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'External IPv6',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -179,6 +178,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'External IPv6',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'External IPv6',
@@ -209,7 +209,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'GB received',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -233,6 +232,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'GB received',
     'original_device_class': <SensorDeviceClass.DATA_SIZE: 'data_size'>,
     'original_icon': None,
     'original_name': 'GB received',
@@ -266,7 +266,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'GB sent',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -290,6 +289,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'GB sent',
     'original_device_class': <SensorDeviceClass.DATA_SIZE: 'data_size'>,
     'original_icon': None,
     'original_name': 'GB sent',
@@ -323,7 +323,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Last restart',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -342,6 +341,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Last restart',
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
     'original_icon': None,
     'original_name': 'Last restart',
@@ -373,7 +373,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Link download noise margin',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -392,6 +391,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Link download noise margin',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Link download noise margin',
@@ -423,7 +423,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Link download power attenuation',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -442,6 +441,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Link download power attenuation',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Link download power attenuation',
@@ -473,7 +473,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Link download throughput',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -495,6 +494,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'Link download throughput',
     'original_device_class': <SensorDeviceClass.DATA_RATE: 'data_rate'>,
     'original_icon': None,
     'original_name': 'Link download throughput',
@@ -527,7 +527,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Link upload noise margin',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -546,6 +545,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Link upload noise margin',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Link upload noise margin',
@@ -577,7 +577,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Link upload power attenuation',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -596,6 +595,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Link upload power attenuation',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Link upload power attenuation',
@@ -627,7 +627,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Link upload throughput',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -649,6 +648,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'Link upload throughput',
     'original_device_class': <SensorDeviceClass.DATA_RATE: 'data_rate'>,
     'original_icon': None,
     'original_name': 'Link upload throughput',
@@ -681,7 +681,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Max connection download throughput',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -703,6 +702,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'Max connection download throughput',
     'original_device_class': <SensorDeviceClass.DATA_RATE: 'data_rate'>,
     'original_icon': None,
     'original_name': 'Max connection download throughput',
@@ -735,7 +735,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Max connection upload throughput',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -757,6 +756,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'Max connection upload throughput',
     'original_device_class': <SensorDeviceClass.DATA_RATE: 'data_rate'>,
     'original_icon': None,
     'original_name': 'Max connection upload throughput',
@@ -789,7 +789,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Upload throughput',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -813,6 +812,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'Upload throughput',
     'original_device_class': <SensorDeviceClass.DATA_RATE: 'data_rate'>,
     'original_icon': None,
     'original_name': 'Upload throughput',
@@ -846,7 +846,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'CPU temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -870,6 +869,7 @@
         'suggested_display_precision': 1,
       }),
     }),
+    'object_id_base': 'CPU temperature',
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'CPU temperature',

@@ -39,7 +39,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Clean count',
     'capabilities': dict({
       'max': 65536,
       'min': 0,
@@ -63,6 +62,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Clean count',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Clean count',
@@ -97,7 +97,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Pan degrees',
     'capabilities': dict({
       'max': 65536,
       'min': 0,
@@ -121,6 +120,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Pan degrees',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Pan degrees',
@@ -155,7 +155,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Power protection',
     'capabilities': dict({
       'max': 65536,
       'min': 0,
@@ -179,6 +178,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Power protection',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Power protection',
@@ -213,7 +213,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Smooth off',
     'capabilities': dict({
       'max': 60,
       'min': 0,
@@ -237,6 +236,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Smooth off',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Smooth off',
@@ -271,7 +271,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Smooth on',
     'capabilities': dict({
       'max': 60,
       'min': 0,
@@ -295,6 +294,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Smooth on',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Smooth on',
@@ -329,7 +329,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Temperature offset',
     'capabilities': dict({
       'max': 10,
       'min': -10,
@@ -353,6 +352,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Temperature offset',
     'original_device_class': <NumberDeviceClass.TEMPERATURE_DELTA: 'temperature_delta'>,
     'original_icon': None,
     'original_name': 'Temperature offset',
@@ -388,7 +388,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Tilt degrees',
     'capabilities': dict({
       'max': 65536,
       'min': 0,
@@ -412,6 +411,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Tilt degrees',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Tilt degrees',
@@ -446,7 +446,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Turn off in',
     'capabilities': dict({
       'max': 60,
       'min': 0,
@@ -470,6 +469,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Turn off in',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Turn off in',

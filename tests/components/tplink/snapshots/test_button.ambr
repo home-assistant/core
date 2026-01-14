@@ -4,7 +4,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Pair new device',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -23,6 +22,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Pair new device',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Pair new device',
@@ -53,7 +53,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Pan left',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -72,6 +71,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Pan left',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Pan left',
@@ -102,7 +102,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Pan right',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -121,6 +120,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Pan right',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Pan right',
@@ -151,7 +151,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Reset charging contacts consumable',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -170,6 +169,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Reset charging contacts consumable',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Reset charging contacts consumable',
@@ -187,7 +187,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Reset filter consumable',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -206,6 +205,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Reset filter consumable',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Reset filter consumable',
@@ -223,7 +223,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Reset main brush consumable',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -242,6 +241,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Reset main brush consumable',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Reset main brush consumable',
@@ -259,7 +259,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Reset sensor consumable',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -278,6 +277,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Reset sensor consumable',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Reset sensor consumable',
@@ -295,7 +295,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Reset side brush consumable',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -314,6 +313,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Reset side brush consumable',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Reset side brush consumable',
@@ -331,7 +331,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Restart',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -350,6 +349,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Restart',
     'original_device_class': <ButtonDeviceClass.RESTART: 'restart'>,
     'original_icon': None,
     'original_name': 'Restart',
@@ -367,7 +367,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Stop alarm',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -386,6 +385,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Stop alarm',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Stop alarm',
@@ -416,7 +416,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Test alarm',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -435,6 +434,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Test alarm',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Test alarm',
@@ -465,7 +465,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Tilt down',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -484,6 +483,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Tilt down',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Tilt down',
@@ -514,7 +514,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Tilt up',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -533,6 +532,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Tilt up',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Tilt up',
@@ -563,7 +563,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Unpair device',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -582,6 +581,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Unpair device',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Unpair device',

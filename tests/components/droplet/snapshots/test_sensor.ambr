@@ -4,7 +4,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Flow rate',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -31,6 +30,7 @@
         'suggested_unit_of_measurement': <UnitOfVolumeFlowRate.GALLONS_PER_MINUTE: 'gal/min'>,
       }),
     }),
+    'object_id_base': 'Flow rate',
     'original_device_class': <SensorDeviceClass.VOLUME_FLOW_RATE: 'volume_flow_rate'>,
     'original_icon': None,
     'original_name': 'Flow rate',
@@ -64,7 +64,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Server status',
     'capabilities': dict({
       'options': list([
         'connected',
@@ -89,6 +88,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Server status',
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
     'original_name': 'Server status',
@@ -125,7 +125,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Signal quality',
     'capabilities': dict({
       'options': list([
         'no_signal',
@@ -150,6 +149,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Signal quality',
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
     'original_name': 'Signal quality',
@@ -186,7 +186,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Water',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -213,6 +212,7 @@
         'suggested_unit_of_measurement': <UnitOfVolume.GALLONS: 'gal'>,
       }),
     }),
+    'object_id_base': 'Water',
     'original_device_class': <SensorDeviceClass.WATER: 'water'>,
     'original_icon': None,
     'original_name': 'Water',

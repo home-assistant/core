@@ -4,7 +4,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Power (1)',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -23,6 +22,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Power (1)',
     'original_device_class': <SwitchDeviceClass.SWITCH: 'switch'>,
     'original_icon': None,
     'original_name': 'Power (1)',
@@ -54,7 +54,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Power (2)',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -73,6 +72,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Power (2)',
     'original_device_class': <SwitchDeviceClass.SWITCH: 'switch'>,
     'original_icon': None,
     'original_name': 'Power (2)',
@@ -104,7 +104,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -123,6 +122,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': None,
     'original_device_class': <SwitchDeviceClass.OUTLET: 'outlet'>,
     'original_icon': None,
     'original_name': None,
@@ -154,7 +154,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Privacy mode button',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -173,6 +172,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Privacy mode button',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Privacy mode button',
@@ -203,7 +203,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -222,6 +221,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': None,
     'original_device_class': <SwitchDeviceClass.OUTLET: 'outlet'>,
     'original_icon': None,
     'original_name': None,
@@ -253,7 +253,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Privacy mode button',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -272,6 +271,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Privacy mode button',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Privacy mode button',
@@ -302,7 +302,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Switch (bottom)',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -321,6 +320,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Switch (bottom)',
     'original_device_class': <SwitchDeviceClass.OUTLET: 'outlet'>,
     'original_icon': None,
     'original_name': 'Switch (bottom)',
@@ -352,7 +352,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Switch (top)',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -371,6 +370,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Switch (top)',
     'original_device_class': <SwitchDeviceClass.OUTLET: 'outlet'>,
     'original_icon': None,
     'original_name': 'Switch (top)',
@@ -402,7 +402,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -421,6 +420,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': None,
     'original_device_class': <SwitchDeviceClass.OUTLET: 'outlet'>,
     'original_icon': None,
     'original_name': None,
@@ -452,7 +452,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -471,6 +470,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': None,
     'original_device_class': <SwitchDeviceClass.OUTLET: 'outlet'>,
     'original_icon': None,
     'original_name': None,
@@ -502,7 +502,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Child lock',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -521,6 +520,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Child lock',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Child lock',
@@ -551,7 +551,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -570,6 +569,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': None,
     'original_device_class': <SwitchDeviceClass.OUTLET: 'outlet'>,
     'original_icon': None,
     'original_name': None,
@@ -601,7 +601,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Switch (Load Control)',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -620,6 +619,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Switch (Load Control)',
     'original_device_class': <SwitchDeviceClass.OUTLET: 'outlet'>,
     'original_icon': None,
     'original_name': 'Switch (Load Control)',
@@ -651,7 +651,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Power',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -670,6 +669,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Power',
     'original_device_class': <SwitchDeviceClass.SWITCH: 'switch'>,
     'original_icon': None,
     'original_name': 'Power',
@@ -701,7 +701,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -720,6 +719,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': None,
     'original_device_class': <SwitchDeviceClass.OUTLET: 'outlet'>,
     'original_icon': None,
     'original_name': None,
@@ -751,7 +751,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Privacy mode button',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -770,6 +769,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Privacy mode button',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Privacy mode button',
@@ -800,7 +800,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -819,6 +818,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': None,
     'original_device_class': <SwitchDeviceClass.OUTLET: 'outlet'>,
     'original_icon': None,
     'original_name': None,
@@ -850,7 +850,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Power (3)',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -869,6 +868,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Power (3)',
     'original_device_class': <SwitchDeviceClass.SWITCH: 'switch'>,
     'original_icon': None,
     'original_name': 'Power (3)',
@@ -900,7 +900,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Power (4)',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -919,6 +918,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Power (4)',
     'original_device_class': <SwitchDeviceClass.SWITCH: 'switch'>,
     'original_icon': None,
     'original_name': 'Power (4)',
@@ -950,7 +950,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Power',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -969,6 +968,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Power',
     'original_device_class': <SwitchDeviceClass.SWITCH: 'switch'>,
     'original_icon': None,
     'original_name': 'Power',
@@ -1000,7 +1000,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Power',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1019,6 +1018,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Power',
     'original_device_class': <SwitchDeviceClass.SWITCH: 'switch'>,
     'original_icon': None,
     'original_name': 'Power',
@@ -1050,7 +1050,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Enable charging',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1069,6 +1068,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Enable charging',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Enable charging',
@@ -1099,7 +1099,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Power',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1118,6 +1117,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Power',
     'original_device_class': <SwitchDeviceClass.SWITCH: 'switch'>,
     'original_icon': None,
     'original_name': 'Power',
@@ -1149,7 +1149,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Mute',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1168,6 +1167,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Mute',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Mute',
@@ -1198,7 +1198,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1217,6 +1216,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': None,
     'original_device_class': <SwitchDeviceClass.OUTLET: 'outlet'>,
     'original_icon': None,
     'original_name': None,
@@ -1248,7 +1248,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1267,6 +1266,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': None,
     'original_device_class': <SwitchDeviceClass.OUTLET: 'outlet'>,
     'original_icon': None,
     'original_name': None,

@@ -4,7 +4,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'test_script.js',
     'capabilities': dict({
       'event_types': list([
         'input_event',
@@ -28,6 +27,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'test_script.js',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'test_script.js',

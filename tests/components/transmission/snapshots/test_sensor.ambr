@@ -4,7 +4,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Active torrents',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -23,6 +22,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Active torrents',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Active torrents',
@@ -56,7 +56,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Completed torrents',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -75,6 +74,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Completed torrents',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Completed torrents',
@@ -108,7 +108,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Download speed',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -133,6 +132,7 @@
         'suggested_unit_of_measurement': <UnitOfDataRate.MEGABYTES_PER_SECOND: 'MB/s'>,
       }),
     }),
+    'object_id_base': 'Download speed',
     'original_device_class': <SensorDeviceClass.DATA_RATE: 'data_rate'>,
     'original_icon': None,
     'original_name': 'Download speed',
@@ -165,7 +165,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Paused torrents',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -184,6 +183,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Paused torrents',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Paused torrents',
@@ -217,7 +217,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Started torrents',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -236,6 +235,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Started torrents',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Started torrents',
@@ -269,7 +269,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Status',
     'capabilities': dict({
       'options': list([
         'idle',
@@ -295,6 +294,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Status',
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
     'original_name': 'Status',
@@ -332,7 +332,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Total torrents',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -351,6 +350,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Total torrents',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Total torrents',
@@ -384,7 +384,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Upload speed',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -409,6 +408,7 @@
         'suggested_unit_of_measurement': <UnitOfDataRate.MEGABYTES_PER_SECOND: 'MB/s'>,
       }),
     }),
+    'object_id_base': 'Upload speed',
     'original_device_class': <SensorDeviceClass.DATA_RATE: 'data_rate'>,
     'original_icon': None,
     'original_name': 'Upload speed',

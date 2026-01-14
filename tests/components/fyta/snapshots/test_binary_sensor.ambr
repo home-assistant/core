@@ -4,7 +4,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Battery',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -23,6 +22,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Battery',
     'original_device_class': <BinarySensorDeviceClass.BATTERY: 'battery'>,
     'original_icon': None,
     'original_name': 'Battery',
@@ -54,7 +54,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Light notification',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -73,6 +72,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Light notification',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Light notification',
@@ -103,7 +103,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Nutrition notification',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -122,6 +121,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Nutrition notification',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Nutrition notification',
@@ -152,7 +152,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Productive plant',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -171,6 +170,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Productive plant',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Productive plant',
@@ -201,7 +201,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Repotted',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -220,6 +219,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Repotted',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Repotted',
@@ -250,7 +250,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Temperature notification',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -269,6 +268,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Temperature notification',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Temperature notification',
@@ -299,7 +299,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Update',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -318,6 +317,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Update',
     'original_device_class': <BinarySensorDeviceClass.UPDATE: 'update'>,
     'original_icon': None,
     'original_name': 'Update',
@@ -349,7 +349,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Water notification',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -368,6 +367,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Water notification',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Water notification',
@@ -398,7 +398,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Battery',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -417,6 +416,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Battery',
     'original_device_class': <BinarySensorDeviceClass.BATTERY: 'battery'>,
     'original_icon': None,
     'original_name': 'Battery',
@@ -448,7 +448,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Light notification',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -467,6 +466,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Light notification',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Light notification',
@@ -497,7 +497,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Nutrition notification',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -516,6 +515,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Nutrition notification',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Nutrition notification',
@@ -546,7 +546,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Productive plant',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -565,6 +564,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Productive plant',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Productive plant',
@@ -595,7 +595,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Repotted',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -614,6 +613,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Repotted',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Repotted',
@@ -644,7 +644,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Temperature notification',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -663,6 +662,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Temperature notification',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Temperature notification',
@@ -693,7 +693,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Update',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -712,6 +711,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Update',
     'original_device_class': <BinarySensorDeviceClass.UPDATE: 'update'>,
     'original_icon': None,
     'original_name': 'Update',
@@ -743,7 +743,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Water notification',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -762,6 +761,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Water notification',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Water notification',

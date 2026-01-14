@@ -4,7 +4,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Charge limit',
     'capabilities': dict({
       'max': 16,
       'min': 6,
@@ -28,6 +27,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Charge limit',
     'original_device_class': <NumberDeviceClass.CURRENT: 'current'>,
     'original_icon': None,
     'original_name': 'Charge limit',

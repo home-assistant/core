@@ -4,7 +4,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Restriction mode',
     'capabilities': dict({
       'options': list([
         'daily',
@@ -28,6 +27,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Restriction mode',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Restriction mode',

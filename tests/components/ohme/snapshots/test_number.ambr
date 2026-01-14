@@ -4,7 +4,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Preconditioning duration',
     'capabilities': dict({
       'max': 60,
       'min': 0,
@@ -28,6 +27,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Preconditioning duration',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Preconditioning duration',
@@ -63,7 +63,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Target percentage',
     'capabilities': dict({
       'max': 100,
       'min': 0,
@@ -87,6 +86,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Target percentage',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Target percentage',

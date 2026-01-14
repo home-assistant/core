@@ -26,7 +26,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Button 1',
     'capabilities': dict({
       'event_types': list([
         'click',
@@ -50,6 +49,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Button 1',
     'original_device_class': <EventDeviceClass.BUTTON: 'button'>,
     'original_icon': None,
     'original_name': 'Button 1',
@@ -86,7 +86,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Button 2',
     'capabilities': dict({
       'event_types': list([
         'click',
@@ -110,6 +109,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Button 2',
     'original_device_class': <EventDeviceClass.BUTTON: 'button'>,
     'original_icon': None,
     'original_name': 'Button 2',
@@ -146,7 +146,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Button 1',
     'capabilities': dict({
       'event_types': list([
         'click',
@@ -171,6 +170,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Button 1',
     'original_device_class': <EventDeviceClass.BUTTON: 'button'>,
     'original_icon': None,
     'original_name': 'Button 1',
@@ -208,7 +208,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Doorbell message',
     'capabilities': dict({
       'event_types': list([
         'triggered',
@@ -231,6 +230,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Doorbell message',
     'original_device_class': <EventDeviceClass.DOORBELL: 'doorbell'>,
     'original_icon': None,
     'original_name': 'Doorbell message',
@@ -267,7 +267,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Doorbell message',
     'capabilities': dict({
       'event_types': list([
         'triggered',
@@ -290,6 +289,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Doorbell message',
     'original_device_class': <EventDeviceClass.DOORBELL: 'doorbell'>,
     'original_icon': None,
     'original_name': 'Doorbell message',
@@ -326,7 +326,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Doorbell picture',
     'capabilities': dict({
       'event_types': list([
         'triggered',
@@ -349,6 +348,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Doorbell picture',
     'original_device_class': <EventDeviceClass.DOORBELL: 'doorbell'>,
     'original_icon': None,
     'original_name': 'Doorbell picture',
@@ -385,7 +385,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Doorbell message',
     'capabilities': dict({
       'event_types': list([
         'triggered',
@@ -408,6 +407,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Doorbell message',
     'original_device_class': <EventDeviceClass.DOORBELL: 'doorbell'>,
     'original_icon': None,
     'original_name': 'Doorbell message',
@@ -444,7 +444,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Doorbell message',
     'capabilities': dict({
       'event_types': list([
         'triggered',
@@ -467,6 +466,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Doorbell message',
     'original_device_class': <EventDeviceClass.DOORBELL: 'doorbell'>,
     'original_icon': None,
     'original_name': 'Doorbell message',
@@ -503,7 +503,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Doorbell picture',
     'capabilities': dict({
       'event_types': list([
         'triggered',
@@ -526,6 +525,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Doorbell picture',
     'original_device_class': <EventDeviceClass.DOORBELL: 'doorbell'>,
     'original_icon': None,
     'original_name': 'Doorbell picture',
@@ -562,7 +562,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Doorbell message',
     'capabilities': dict({
       'event_types': list([
         'triggered',
@@ -585,6 +584,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Doorbell message',
     'original_device_class': <EventDeviceClass.DOORBELL: 'doorbell'>,
     'original_icon': None,
     'original_name': 'Doorbell message',
@@ -621,7 +621,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Doorbell picture',
     'capabilities': dict({
       'event_types': list([
         'triggered',
@@ -644,6 +643,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Doorbell picture',
     'original_device_class': <EventDeviceClass.DOORBELL: 'doorbell'>,
     'original_icon': None,
     'original_name': 'Doorbell picture',

@@ -4,7 +4,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Profile',
     'capabilities': dict({
       'options': list([
       ]),
@@ -26,6 +25,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Profile',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Profile',

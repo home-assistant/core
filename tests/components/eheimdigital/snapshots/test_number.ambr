@@ -4,7 +4,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'System LED brightness',
     'capabilities': dict({
       'max': 100,
       'min': 0,
@@ -28,6 +27,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'System LED brightness',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'System LED brightness',
@@ -63,7 +63,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Day speed',
     'capabilities': dict({
       'max': 100.0,
       'min': 0.0,
@@ -87,6 +86,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Day speed',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Day speed',
@@ -122,7 +122,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Manual speed',
     'capabilities': dict({
       'max': 100.0,
       'min': 0.0,
@@ -146,6 +145,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Manual speed',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Manual speed',
@@ -181,7 +181,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Night speed',
     'capabilities': dict({
       'max': 100.0,
       'min': 0.0,
@@ -205,6 +204,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Night speed',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Night speed',
@@ -240,7 +240,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'System LED brightness',
     'capabilities': dict({
       'max': 100,
       'min': 0,
@@ -264,6 +263,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'System LED brightness',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'System LED brightness',
@@ -299,7 +299,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'High pulse duration',
     'capabilities': dict({
       'max': 200000,
       'min': 5,
@@ -323,6 +322,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'High pulse duration',
     'original_device_class': <NumberDeviceClass.DURATION: 'duration'>,
     'original_icon': None,
     'original_name': 'High pulse duration',
@@ -359,7 +359,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Low pulse duration',
     'capabilities': dict({
       'max': 200000,
       'min': 5,
@@ -383,6 +382,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Low pulse duration',
     'original_device_class': <NumberDeviceClass.DURATION: 'duration'>,
     'original_icon': None,
     'original_name': 'Low pulse duration',
@@ -419,7 +419,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'System LED brightness',
     'capabilities': dict({
       'max': 100,
       'min': 0,
@@ -443,6 +442,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'System LED brightness',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'System LED brightness',
@@ -478,7 +478,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Night temperature offset',
     'capabilities': dict({
       'max': 5,
       'min': -5,
@@ -502,6 +501,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Night temperature offset',
     'original_device_class': <NumberDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Night temperature offset',
@@ -537,7 +537,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'System LED brightness',
     'capabilities': dict({
       'max': 100,
       'min': 0,
@@ -561,6 +560,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'System LED brightness',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'System LED brightness',
@@ -596,7 +596,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Temperature offset',
     'capabilities': dict({
       'max': 3,
       'min': -3,
@@ -620,6 +619,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Temperature offset',
     'original_device_class': <NumberDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Temperature offset',

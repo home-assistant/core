@@ -4,7 +4,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Activities',
     'capabilities': dict({
       'event_types': list([
         'list_items_changed',
@@ -29,6 +28,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Activities',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Activities',
@@ -90,7 +90,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Activities',
     'capabilities': dict({
       'event_types': list([
         'list_items_changed',
@@ -115,6 +114,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Activities',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Activities',

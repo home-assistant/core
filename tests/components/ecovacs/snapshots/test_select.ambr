@@ -4,7 +4,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Active map',
     'capabilities': dict({
       'options': list([
         'Map 2',
@@ -28,6 +27,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Active map',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Active map',
@@ -62,7 +62,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Auto-empty frequency',
     'capabilities': dict({
       'options': list([
         'auto',
@@ -86,6 +85,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Auto-empty frequency',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Auto-empty frequency',
@@ -120,7 +120,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Work mode',
     'capabilities': dict({
       'options': list([
         'mop',
@@ -146,6 +145,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Work mode',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Work mode',
@@ -182,7 +182,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Active map',
     'capabilities': dict({
       'options': list([
         'Map 2',
@@ -206,6 +205,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Active map',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Active map',
@@ -240,7 +240,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Auto-empty frequency',
     'capabilities': dict({
       'options': list([
         'auto',
@@ -264,6 +263,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Auto-empty frequency',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Auto-empty frequency',
@@ -298,7 +298,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Water flow level',
     'capabilities': dict({
       'options': list([
         'low',
@@ -323,6 +322,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Water flow level',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Water flow level',
@@ -358,7 +358,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Active map',
     'capabilities': dict({
       'options': list([
         'Map 2',
@@ -382,6 +381,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Active map',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Active map',
@@ -416,7 +416,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Water flow level',
     'capabilities': dict({
       'options': list([
         'low',
@@ -442,6 +441,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Water flow level',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Water flow level',

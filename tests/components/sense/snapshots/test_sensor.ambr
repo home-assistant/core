@@ -4,7 +4,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Bill energy',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -28,6 +27,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'Bill energy',
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': 'mdi:car-electric',
     'original_name': 'Bill energy',
@@ -63,7 +63,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Daily energy',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -87,6 +86,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'Daily energy',
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': 'mdi:car-electric',
     'original_name': 'Daily energy',
@@ -122,7 +122,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Monthly energy',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -146,6 +145,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'Monthly energy',
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': 'mdi:car-electric',
     'original_name': 'Monthly energy',
@@ -181,7 +181,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Power',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -205,6 +204,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'Power',
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
     'original_icon': 'mdi:car-electric',
     'original_name': 'Power',
@@ -240,7 +240,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Weekly energy',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -264,6 +263,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'Weekly energy',
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': 'mdi:car-electric',
     'original_name': 'Weekly energy',
@@ -299,7 +299,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Yearly energy',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -323,6 +322,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'Yearly energy',
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': 'mdi:car-electric',
     'original_name': 'Yearly energy',
@@ -358,7 +358,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Bill energy',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -382,6 +381,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'Bill energy',
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': 'mdi:stove',
     'original_name': 'Bill energy',
@@ -417,7 +417,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Daily energy',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -441,6 +440,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'Daily energy',
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': 'mdi:stove',
     'original_name': 'Daily energy',
@@ -476,7 +476,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Monthly energy',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -500,6 +499,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'Monthly energy',
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': 'mdi:stove',
     'original_name': 'Monthly energy',
@@ -535,7 +535,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Power',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -559,6 +558,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'Power',
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
     'original_icon': 'mdi:stove',
     'original_name': 'Power',
@@ -594,7 +594,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Weekly energy',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -618,6 +617,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'Weekly energy',
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': 'mdi:stove',
     'original_name': 'Weekly energy',
@@ -653,7 +653,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Yearly energy',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -677,6 +676,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'Yearly energy',
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': 'mdi:stove',
     'original_name': 'Yearly energy',
@@ -712,7 +712,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Bill Energy',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -736,6 +735,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'Bill Energy',
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
     'original_name': 'Bill Energy',
@@ -771,7 +771,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Bill From Grid',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -795,6 +794,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'Bill From Grid',
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
     'original_name': 'Bill From Grid',
@@ -830,7 +830,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Bill Net Production',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -854,6 +853,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'Bill Net Production',
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
     'original_name': 'Bill Net Production',
@@ -889,7 +889,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Bill Net Production Percentage',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -908,6 +907,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Bill Net Production Percentage',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Bill Net Production Percentage',
@@ -940,7 +940,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Bill Production',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -964,6 +963,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'Bill Production',
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
     'original_name': 'Bill Production',
@@ -999,7 +999,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Bill Solar Powered Percentage',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1018,6 +1017,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Bill Solar Powered Percentage',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Bill Solar Powered Percentage',
@@ -1050,7 +1050,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Bill To Grid',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -1074,6 +1073,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'Bill To Grid',
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
     'original_name': 'Bill To Grid',
@@ -1109,7 +1109,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Daily Energy',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -1133,6 +1132,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'Daily Energy',
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
     'original_name': 'Daily Energy',
@@ -1168,7 +1168,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Daily From Grid',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -1192,6 +1191,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'Daily From Grid',
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
     'original_name': 'Daily From Grid',
@@ -1227,7 +1227,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Daily Net Production',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -1251,6 +1250,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'Daily Net Production',
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
     'original_name': 'Daily Net Production',
@@ -1286,7 +1286,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Daily Net Production Percentage',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1305,6 +1304,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Daily Net Production Percentage',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Daily Net Production Percentage',
@@ -1337,7 +1337,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Daily Production',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -1361,6 +1360,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'Daily Production',
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
     'original_name': 'Daily Production',
@@ -1396,7 +1396,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Daily Solar Powered Percentage',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1415,6 +1414,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Daily Solar Powered Percentage',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Daily Solar Powered Percentage',
@@ -1447,7 +1447,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Daily To Grid',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -1471,6 +1470,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'Daily To Grid',
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
     'original_name': 'Daily To Grid',
@@ -1506,7 +1506,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Energy',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1530,6 +1529,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'Energy',
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
     'original_icon': None,
     'original_name': 'Energy',
@@ -1564,7 +1564,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'L1 Voltage',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1588,6 +1587,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'L1 Voltage',
     'original_device_class': <SensorDeviceClass.VOLTAGE: 'voltage'>,
     'original_icon': None,
     'original_name': 'L1 Voltage',
@@ -1622,7 +1622,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'L2 Voltage',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1646,6 +1645,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'L2 Voltage',
     'original_device_class': <SensorDeviceClass.VOLTAGE: 'voltage'>,
     'original_icon': None,
     'original_name': 'L2 Voltage',
@@ -1680,7 +1680,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Monthly Energy',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -1704,6 +1703,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'Monthly Energy',
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
     'original_name': 'Monthly Energy',
@@ -1739,7 +1739,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Monthly From Grid',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -1763,6 +1762,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'Monthly From Grid',
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
     'original_name': 'Monthly From Grid',
@@ -1798,7 +1798,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Monthly Net Production',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -1822,6 +1821,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'Monthly Net Production',
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
     'original_name': 'Monthly Net Production',
@@ -1857,7 +1857,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Monthly Net Production Percentage',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1876,6 +1875,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Monthly Net Production Percentage',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Monthly Net Production Percentage',
@@ -1908,7 +1908,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Monthly Production',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -1932,6 +1931,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'Monthly Production',
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
     'original_name': 'Monthly Production',
@@ -1967,7 +1967,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Monthly Solar Powered Percentage',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1986,6 +1985,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Monthly Solar Powered Percentage',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Monthly Solar Powered Percentage',
@@ -2018,7 +2018,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Monthly To Grid',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -2042,6 +2041,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'Monthly To Grid',
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
     'original_name': 'Monthly To Grid',
@@ -2077,7 +2077,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Production',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2101,6 +2100,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'Production',
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
     'original_icon': None,
     'original_name': 'Production',
@@ -2135,7 +2135,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Weekly Energy',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -2159,6 +2158,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'Weekly Energy',
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
     'original_name': 'Weekly Energy',
@@ -2194,7 +2194,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Weekly From Grid',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -2218,6 +2217,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'Weekly From Grid',
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
     'original_name': 'Weekly From Grid',
@@ -2253,7 +2253,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Weekly Net Production',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -2277,6 +2276,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'Weekly Net Production',
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
     'original_name': 'Weekly Net Production',
@@ -2312,7 +2312,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Weekly Net Production Percentage',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2331,6 +2330,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Weekly Net Production Percentage',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Weekly Net Production Percentage',
@@ -2363,7 +2363,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Weekly Production',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -2387,6 +2386,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'Weekly Production',
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
     'original_name': 'Weekly Production',
@@ -2422,7 +2422,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Weekly Solar Powered Percentage',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2441,6 +2440,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Weekly Solar Powered Percentage',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Weekly Solar Powered Percentage',
@@ -2473,7 +2473,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Weekly To Grid',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -2497,6 +2496,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'Weekly To Grid',
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
     'original_name': 'Weekly To Grid',
@@ -2532,7 +2532,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Yearly Energy',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -2556,6 +2555,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'Yearly Energy',
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
     'original_name': 'Yearly Energy',
@@ -2591,7 +2591,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Yearly From Grid',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -2615,6 +2614,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'Yearly From Grid',
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
     'original_name': 'Yearly From Grid',
@@ -2650,7 +2650,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Yearly Net Production',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -2674,6 +2673,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'Yearly Net Production',
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
     'original_name': 'Yearly Net Production',
@@ -2709,7 +2709,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Yearly Net Production Percentage',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2728,6 +2727,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Yearly Net Production Percentage',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Yearly Net Production Percentage',
@@ -2760,7 +2760,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Yearly Production',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -2784,6 +2783,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'Yearly Production',
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
     'original_name': 'Yearly Production',
@@ -2819,7 +2819,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Yearly Solar Powered Percentage',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2838,6 +2837,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Yearly Solar Powered Percentage',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Yearly Solar Powered Percentage',
@@ -2870,7 +2870,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Yearly To Grid',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -2894,6 +2893,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'Yearly To Grid',
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
     'original_name': 'Yearly To Grid',

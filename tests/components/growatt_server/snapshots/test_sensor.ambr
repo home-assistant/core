@@ -4,7 +4,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'AC frequency',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -26,6 +25,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'AC frequency',
     'original_device_class': <SensorDeviceClass.FREQUENCY: 'frequency'>,
     'original_icon': 'mdi:solar-power',
     'original_name': 'AC frequency',
@@ -59,7 +59,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'All batteries charged today',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -83,6 +82,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'All batteries charged today',
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': 'mdi:solar-power',
     'original_name': 'All batteries charged today',
@@ -117,7 +117,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'All batteries discharged today',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -141,6 +140,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'All batteries discharged today',
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': 'mdi:solar-power',
     'original_name': 'All batteries discharged today',
@@ -175,7 +175,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Batteries charged from grid today',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -199,6 +198,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'Batteries charged from grid today',
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': 'mdi:solar-power',
     'original_name': 'Batteries charged from grid today',
@@ -233,7 +233,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Battery 1 charging W',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -257,6 +256,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'Battery 1 charging W',
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
     'original_icon': 'mdi:solar-power',
     'original_name': 'Battery 1 charging W',
@@ -291,7 +291,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Battery 1 discharging W',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -315,6 +314,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'Battery 1 discharging W',
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
     'original_icon': 'mdi:solar-power',
     'original_name': 'Battery 1 discharging W',
@@ -349,7 +349,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Battery 2 charging W',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -373,6 +372,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'Battery 2 charging W',
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
     'original_icon': 'mdi:solar-power',
     'original_name': 'Battery 2 charging W',
@@ -407,7 +407,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Battery 2 discharging W',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -431,6 +430,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'Battery 2 discharging W',
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
     'original_icon': 'mdi:solar-power',
     'original_name': 'Battery 2 discharging W',
@@ -465,7 +465,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Energy today',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -489,6 +488,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'Energy today',
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': 'mdi:solar-power',
     'original_name': 'Energy today',
@@ -523,7 +523,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Energy today input 1',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -547,6 +546,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'Energy today input 1',
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': 'mdi:solar-power',
     'original_name': 'Energy today input 1',
@@ -581,7 +581,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Energy today input 2',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -605,6 +604,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'Energy today input 2',
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': 'mdi:solar-power',
     'original_name': 'Energy today input 2',
@@ -639,7 +639,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Energy today input 3',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -663,6 +662,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'Energy today input 3',
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': 'mdi:solar-power',
     'original_name': 'Energy today input 3',
@@ -697,7 +697,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Energy today input 4',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -721,6 +720,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'Energy today input 4',
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': 'mdi:solar-power',
     'original_name': 'Energy today input 4',
@@ -755,7 +755,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Export power',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -779,6 +778,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'Export power',
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
     'original_icon': 'mdi:solar-power',
     'original_name': 'Export power',
@@ -813,7 +813,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Export to grid today',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -837,6 +836,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'Export to grid today',
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': 'mdi:solar-power',
     'original_name': 'Export to grid today',
@@ -871,7 +871,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Import from grid today',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -895,6 +894,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'Import from grid today',
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': 'mdi:solar-power',
     'original_name': 'Import from grid today',
@@ -929,7 +929,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Import power',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -953,6 +952,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'Import power',
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
     'original_icon': 'mdi:solar-power',
     'original_name': 'Import power',
@@ -987,7 +987,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Input 1 amperage',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1009,6 +1008,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'Input 1 amperage',
     'original_device_class': <SensorDeviceClass.CURRENT: 'current'>,
     'original_icon': 'mdi:solar-power',
     'original_name': 'Input 1 amperage',
@@ -1042,7 +1042,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Input 1 voltage',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1064,6 +1063,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'Input 1 voltage',
     'original_device_class': <SensorDeviceClass.VOLTAGE: 'voltage'>,
     'original_icon': 'mdi:solar-power',
     'original_name': 'Input 1 voltage',
@@ -1097,7 +1097,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Input 1 wattage',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1121,6 +1120,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'Input 1 wattage',
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
     'original_icon': 'mdi:solar-power',
     'original_name': 'Input 1 wattage',
@@ -1155,7 +1155,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Input 2 amperage',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1177,6 +1176,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'Input 2 amperage',
     'original_device_class': <SensorDeviceClass.CURRENT: 'current'>,
     'original_icon': 'mdi:solar-power',
     'original_name': 'Input 2 amperage',
@@ -1210,7 +1210,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Input 2 voltage',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1232,6 +1231,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'Input 2 voltage',
     'original_device_class': <SensorDeviceClass.VOLTAGE: 'voltage'>,
     'original_icon': 'mdi:solar-power',
     'original_name': 'Input 2 voltage',
@@ -1265,7 +1265,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Input 2 wattage',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1289,6 +1288,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'Input 2 wattage',
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
     'original_icon': 'mdi:solar-power',
     'original_name': 'Input 2 wattage',
@@ -1323,7 +1323,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Input 3 amperage',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1345,6 +1344,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'Input 3 amperage',
     'original_device_class': <SensorDeviceClass.CURRENT: 'current'>,
     'original_icon': 'mdi:solar-power',
     'original_name': 'Input 3 amperage',
@@ -1378,7 +1378,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Input 3 voltage',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1400,6 +1399,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'Input 3 voltage',
     'original_device_class': <SensorDeviceClass.VOLTAGE: 'voltage'>,
     'original_icon': 'mdi:solar-power',
     'original_name': 'Input 3 voltage',
@@ -1433,7 +1433,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Input 3 wattage',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1457,6 +1456,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'Input 3 wattage',
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
     'original_icon': 'mdi:solar-power',
     'original_name': 'Input 3 wattage',
@@ -1491,7 +1491,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Input 4 amperage',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1513,6 +1512,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'Input 4 amperage',
     'original_device_class': <SensorDeviceClass.CURRENT: 'current'>,
     'original_icon': 'mdi:solar-power',
     'original_name': 'Input 4 amperage',
@@ -1546,7 +1546,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Input 4 voltage',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1568,6 +1567,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'Input 4 voltage',
     'original_device_class': <SensorDeviceClass.VOLTAGE: 'voltage'>,
     'original_icon': 'mdi:solar-power',
     'original_name': 'Input 4 voltage',
@@ -1601,7 +1601,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Input 4 wattage',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1625,6 +1624,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'Input 4 wattage',
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
     'original_icon': 'mdi:solar-power',
     'original_name': 'Input 4 wattage',
@@ -1659,7 +1659,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Internal wattage',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1683,6 +1682,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'Internal wattage',
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
     'original_icon': 'mdi:solar-power',
     'original_name': 'Internal wattage',
@@ -1717,7 +1717,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Lifetime batteries charged from grid',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -1741,6 +1740,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'Lifetime batteries charged from grid',
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': 'mdi:solar-power',
     'original_name': 'Lifetime batteries charged from grid',
@@ -1775,7 +1775,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Lifetime energy output',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -1799,6 +1798,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'Lifetime energy output',
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': 'mdi:solar-power',
     'original_name': 'Lifetime energy output',
@@ -1833,7 +1833,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Lifetime import from grid',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -1857,6 +1856,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'Lifetime import from grid',
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': 'mdi:solar-power',
     'original_name': 'Lifetime import from grid',
@@ -1891,7 +1891,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Lifetime self consumption',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -1915,6 +1914,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'Lifetime self consumption',
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': 'mdi:solar-power',
     'original_name': 'Lifetime self consumption',
@@ -1949,7 +1949,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Lifetime system production',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -1973,6 +1972,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'Lifetime system production',
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': 'mdi:solar-power',
     'original_name': 'Lifetime system production',
@@ -2007,7 +2007,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Lifetime total all batteries charged',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -2031,6 +2030,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'Lifetime total all batteries charged',
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': 'mdi:solar-power',
     'original_name': 'Lifetime total all batteries charged',
@@ -2065,7 +2065,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Lifetime total all batteries discharged',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -2089,6 +2088,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'Lifetime total all batteries discharged',
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': 'mdi:solar-power',
     'original_name': 'Lifetime total all batteries discharged',
@@ -2123,7 +2123,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Lifetime total battery 1 charged',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -2147,6 +2146,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'Lifetime total battery 1 charged',
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': 'mdi:solar-power',
     'original_name': 'Lifetime total battery 1 charged',
@@ -2181,7 +2181,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Lifetime total battery 1 discharged',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -2205,6 +2204,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'Lifetime total battery 1 discharged',
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': 'mdi:solar-power',
     'original_name': 'Lifetime total battery 1 discharged',
@@ -2239,7 +2239,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Lifetime total battery 2 charged',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -2263,6 +2262,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'Lifetime total battery 2 charged',
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': 'mdi:solar-power',
     'original_name': 'Lifetime total battery 2 charged',
@@ -2297,7 +2297,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Lifetime total battery 2 discharged',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -2321,6 +2320,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'Lifetime total battery 2 discharged',
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': 'mdi:solar-power',
     'original_name': 'Lifetime total battery 2 discharged',
@@ -2355,7 +2355,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Lifetime total energy input 1',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -2379,6 +2378,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'Lifetime total energy input 1',
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': 'mdi:solar-power',
     'original_name': 'Lifetime total energy input 1',
@@ -2413,7 +2413,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Lifetime total energy input 2',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -2437,6 +2436,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'Lifetime total energy input 2',
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': 'mdi:solar-power',
     'original_name': 'Lifetime total energy input 2',
@@ -2471,7 +2471,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Lifetime total energy input 3',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -2495,6 +2494,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'Lifetime total energy input 3',
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': 'mdi:solar-power',
     'original_name': 'Lifetime total energy input 3',
@@ -2529,7 +2529,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Lifetime total energy input 4',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -2553,6 +2552,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'Lifetime total energy input 4',
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': 'mdi:solar-power',
     'original_name': 'Lifetime total energy input 4',
@@ -2587,7 +2587,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Lifetime total export to grid',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -2611,6 +2610,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'Lifetime total export to grid',
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': 'mdi:solar-power',
     'original_name': 'Lifetime total export to grid',
@@ -2645,7 +2645,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Lifetime total load consumption',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -2669,6 +2668,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'Lifetime total load consumption',
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': 'mdi:solar-power',
     'original_name': 'Lifetime total load consumption',
@@ -2703,7 +2703,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Lifetime total solar energy',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -2727,6 +2726,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'Lifetime total solar energy',
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': 'mdi:solar-power',
     'original_name': 'Lifetime total solar energy',
@@ -2761,7 +2761,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Load consumption today',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -2785,6 +2784,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'Load consumption today',
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': 'mdi:solar-power',
     'original_name': 'Load consumption today',
@@ -2819,7 +2819,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Local load power',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2843,6 +2842,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'Local load power',
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
     'original_icon': 'mdi:solar-power',
     'original_name': 'Local load power',
@@ -2877,7 +2877,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Output power',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2901,6 +2900,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'Output power',
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
     'original_icon': 'mdi:solar-power',
     'original_name': 'Output power',
@@ -2935,7 +2935,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Reactive voltage',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2957,6 +2956,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'Reactive voltage',
     'original_device_class': <SensorDeviceClass.VOLTAGE: 'voltage'>,
     'original_icon': 'mdi:solar-power',
     'original_name': 'Reactive voltage',
@@ -2990,7 +2990,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Self consumption today',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -3014,6 +3013,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'Self consumption today',
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': 'mdi:solar-power',
     'original_name': 'Self consumption today',
@@ -3048,7 +3048,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Self power',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -3072,6 +3071,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'Self power',
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
     'original_icon': 'mdi:solar-power',
     'original_name': 'Self power',
@@ -3106,7 +3106,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Solar energy today',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -3130,6 +3129,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'Solar energy today',
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': 'mdi:solar-power',
     'original_name': 'Solar energy today',
@@ -3164,7 +3164,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'State of charge (SoC)',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -3183,6 +3182,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'State of charge (SoC)',
     'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
     'original_icon': 'mdi:solar-power',
     'original_name': 'State of charge (SoC)',
@@ -3216,7 +3216,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'System power',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -3240,6 +3239,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'System power',
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
     'original_icon': 'mdi:solar-power',
     'original_name': 'System power',
@@ -3274,7 +3274,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'System production today',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -3298,6 +3297,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'System production today',
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': 'mdi:solar-power',
     'original_name': 'System production today',
@@ -3332,7 +3332,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Temperature 1',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -3354,6 +3353,7 @@
         'suggested_display_precision': 1,
       }),
     }),
+    'object_id_base': 'Temperature 1',
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': 'mdi:solar-power',
     'original_name': 'Temperature 1',
@@ -3387,7 +3387,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Temperature 2',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -3409,6 +3408,7 @@
         'suggested_display_precision': 1,
       }),
     }),
+    'object_id_base': 'Temperature 2',
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': 'mdi:solar-power',
     'original_name': 'Temperature 2',
@@ -3442,7 +3442,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Temperature 3',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -3464,6 +3463,7 @@
         'suggested_display_precision': 1,
       }),
     }),
+    'object_id_base': 'Temperature 3',
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': 'mdi:solar-power',
     'original_name': 'Temperature 3',
@@ -3497,7 +3497,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Temperature 4',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -3519,6 +3518,7 @@
         'suggested_display_precision': 1,
       }),
     }),
+    'object_id_base': 'Temperature 4',
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': 'mdi:solar-power',
     'original_name': 'Temperature 4',
@@ -3552,7 +3552,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Temperature 5',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -3574,6 +3573,7 @@
         'suggested_display_precision': 1,
       }),
     }),
+    'object_id_base': 'Temperature 5',
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': 'mdi:solar-power',
     'original_name': 'Temperature 5',
@@ -3607,7 +3607,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Energy today',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -3631,6 +3630,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'Energy today',
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': 'mdi:solar-power',
     'original_name': 'Energy today',
@@ -3665,7 +3665,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Lifetime energy output',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -3689,6 +3688,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'Lifetime energy output',
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': 'mdi:solar-power',
     'original_name': 'Lifetime energy output',
@@ -3723,7 +3723,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Maximum power',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -3747,6 +3746,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'Maximum power',
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
     'original_icon': 'mdi:solar-power',
     'original_name': 'Maximum power',
@@ -3781,7 +3781,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Money lifetime',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -3800,6 +3799,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Money lifetime',
     'original_device_class': None,
     'original_icon': 'mdi:solar-power',
     'original_name': 'Money lifetime',
@@ -3831,7 +3831,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Output power',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -3855,6 +3854,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'Output power',
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
     'original_icon': 'mdi:solar-power',
     'original_name': 'Output power',
@@ -3889,7 +3889,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Total money today',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -3908,6 +3907,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Total money today',
     'original_device_class': None,
     'original_icon': 'mdi:solar-power',
     'original_name': 'Total money today',
@@ -3939,7 +3939,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'AC frequency',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -3963,6 +3962,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'AC frequency',
     'original_device_class': <SensorDeviceClass.FREQUENCY: 'frequency'>,
     'original_icon': 'mdi:solar-power',
     'original_name': 'AC frequency',
@@ -3997,7 +3997,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Energy today',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -4021,6 +4020,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'Energy today',
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': 'mdi:solar-power',
     'original_name': 'Energy today',
@@ -4055,7 +4055,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Input 1 amperage',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -4079,6 +4078,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'Input 1 amperage',
     'original_device_class': <SensorDeviceClass.CURRENT: 'current'>,
     'original_icon': 'mdi:solar-power',
     'original_name': 'Input 1 amperage',
@@ -4113,7 +4113,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Input 1 voltage',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -4137,6 +4136,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'Input 1 voltage',
     'original_device_class': <SensorDeviceClass.VOLTAGE: 'voltage'>,
     'original_icon': 'mdi:solar-power',
     'original_name': 'Input 1 voltage',
@@ -4171,7 +4171,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Input 1 wattage',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -4195,6 +4194,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'Input 1 wattage',
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
     'original_icon': 'mdi:solar-power',
     'original_name': 'Input 1 wattage',
@@ -4229,7 +4229,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Input 2 amperage',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -4253,6 +4252,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'Input 2 amperage',
     'original_device_class': <SensorDeviceClass.CURRENT: 'current'>,
     'original_icon': 'mdi:solar-power',
     'original_name': 'Input 2 amperage',
@@ -4287,7 +4287,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Input 2 voltage',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -4311,6 +4310,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'Input 2 voltage',
     'original_device_class': <SensorDeviceClass.VOLTAGE: 'voltage'>,
     'original_icon': 'mdi:solar-power',
     'original_name': 'Input 2 voltage',
@@ -4345,7 +4345,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Input 2 wattage',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -4369,6 +4368,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'Input 2 wattage',
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
     'original_icon': 'mdi:solar-power',
     'original_name': 'Input 2 wattage',
@@ -4403,7 +4403,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Input 3 amperage',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -4427,6 +4426,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'Input 3 amperage',
     'original_device_class': <SensorDeviceClass.CURRENT: 'current'>,
     'original_icon': 'mdi:solar-power',
     'original_name': 'Input 3 amperage',
@@ -4461,7 +4461,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Input 3 voltage',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -4485,6 +4484,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'Input 3 voltage',
     'original_device_class': <SensorDeviceClass.VOLTAGE: 'voltage'>,
     'original_icon': 'mdi:solar-power',
     'original_name': 'Input 3 voltage',
@@ -4519,7 +4519,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Input 3 wattage',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -4543,6 +4542,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'Input 3 wattage',
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
     'original_icon': 'mdi:solar-power',
     'original_name': 'Input 3 wattage',
@@ -4577,7 +4577,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Intelligent Power Management temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -4601,6 +4600,7 @@
         'suggested_display_precision': 1,
       }),
     }),
+    'object_id_base': 'Intelligent Power Management temperature',
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': 'mdi:solar-power',
     'original_name': 'Intelligent Power Management temperature',
@@ -4635,7 +4635,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Internal wattage',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -4659,6 +4658,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'Internal wattage',
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
     'original_icon': 'mdi:solar-power',
     'original_name': 'Internal wattage',
@@ -4693,7 +4693,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Inverter temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -4717,6 +4716,7 @@
         'suggested_display_precision': 1,
       }),
     }),
+    'object_id_base': 'Inverter temperature',
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': 'mdi:solar-power',
     'original_name': 'Inverter temperature',
@@ -4751,7 +4751,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Lifetime energy output',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -4775,6 +4774,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'Lifetime energy output',
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': 'mdi:solar-power',
     'original_name': 'Lifetime energy output',
@@ -4809,7 +4809,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Output power',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -4833,6 +4832,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'Output power',
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
     'original_icon': 'mdi:solar-power',
     'original_name': 'Output power',
@@ -4867,7 +4867,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Reactive amperage',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -4891,6 +4890,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'Reactive amperage',
     'original_device_class': <SensorDeviceClass.CURRENT: 'current'>,
     'original_icon': 'mdi:solar-power',
     'original_name': 'Reactive amperage',
@@ -4925,7 +4925,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Reactive voltage',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -4949,6 +4948,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'Reactive voltage',
     'original_device_class': <SensorDeviceClass.VOLTAGE: 'voltage'>,
     'original_icon': 'mdi:solar-power',
     'original_name': 'Reactive voltage',
@@ -4983,7 +4983,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Reactive wattage',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -5007,6 +5006,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'Reactive wattage',
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
     'original_icon': 'mdi:solar-power',
     'original_name': 'Reactive wattage',
@@ -5041,7 +5041,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Energy today',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -5065,6 +5064,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'Energy today',
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': 'mdi:solar-power',
     'original_name': 'Energy today',
@@ -5099,7 +5099,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Lifetime energy output',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -5123,6 +5122,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'Lifetime energy output',
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': 'mdi:solar-power',
     'original_name': 'Lifetime energy output',
@@ -5157,7 +5157,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Maximum power',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -5181,6 +5180,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'Maximum power',
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
     'original_icon': 'mdi:solar-power',
     'original_name': 'Maximum power',
@@ -5215,7 +5215,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Money lifetime',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -5234,6 +5233,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Money lifetime',
     'original_device_class': None,
     'original_icon': 'mdi:solar-power',
     'original_name': 'Money lifetime',
@@ -5266,7 +5266,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Output power',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -5290,6 +5289,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'Output power',
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
     'original_icon': 'mdi:solar-power',
     'original_name': 'Output power',
@@ -5324,7 +5324,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Total money today',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -5343,6 +5342,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Total money today',
     'original_device_class': None,
     'original_icon': 'mdi:solar-power',
     'original_name': 'Total money today',
@@ -5375,7 +5375,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'All PV wattage',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -5399,6 +5398,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'All PV wattage',
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
     'original_icon': 'mdi:solar-power',
     'original_name': 'All PV wattage',
@@ -5433,7 +5433,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Battery charged today',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -5457,6 +5456,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'Battery charged today',
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': 'mdi:solar-power',
     'original_name': 'Battery charged today',
@@ -5491,7 +5491,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Battery charging',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -5515,6 +5514,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'Battery charging',
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
     'original_icon': 'mdi:solar-power',
     'original_name': 'Battery charging',
@@ -5549,7 +5549,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Battery discharged today',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -5573,6 +5572,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'Battery discharged today',
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': 'mdi:solar-power',
     'original_name': 'Battery discharged today',
@@ -5607,7 +5607,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Battery discharging kW',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -5631,6 +5630,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'Battery discharging kW',
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
     'original_icon': 'mdi:solar-power',
     'original_name': 'Battery discharging kW',
@@ -5665,7 +5665,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Battery discharging W',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -5689,6 +5688,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'Battery discharging W',
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
     'original_icon': 'mdi:solar-power',
     'original_name': 'Battery discharging W',
@@ -5723,7 +5723,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Battery voltage',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -5745,6 +5744,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'Battery voltage',
     'original_device_class': <SensorDeviceClass.VOLTAGE: 'voltage'>,
     'original_icon': 'mdi:solar-power',
     'original_name': 'Battery voltage',
@@ -5778,7 +5778,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Export to grid',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -5802,6 +5801,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'Export to grid',
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
     'original_icon': 'mdi:solar-power',
     'original_name': 'Export to grid',
@@ -5836,7 +5836,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Export to grid today',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -5860,6 +5859,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'Export to grid today',
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': 'mdi:solar-power',
     'original_name': 'Export to grid today',
@@ -5894,7 +5894,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Grid voltage',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -5916,6 +5915,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'Grid voltage',
     'original_device_class': <SensorDeviceClass.VOLTAGE: 'voltage'>,
     'original_icon': 'mdi:solar-power',
     'original_name': 'Grid voltage',
@@ -5949,7 +5949,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Import from grid',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -5973,6 +5972,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'Import from grid',
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
     'original_icon': 'mdi:solar-power',
     'original_name': 'Import from grid',
@@ -6007,7 +6007,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Import from grid today (load)',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -6031,6 +6030,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'Import from grid today (load)',
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': 'mdi:solar-power',
     'original_name': 'Import from grid today (load)',
@@ -6065,7 +6065,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Import from grid today (load + charging)',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -6089,6 +6088,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'Import from grid today (load + charging)',
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': 'mdi:solar-power',
     'original_name': 'Import from grid today (load + charging)',
@@ -6123,7 +6123,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Last data update',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -6142,6 +6141,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Last data update',
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
     'original_icon': 'mdi:solar-power',
     'original_name': 'Last data update',
@@ -6174,7 +6174,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Lifetime battery charged',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -6198,6 +6197,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'Lifetime battery charged',
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': 'mdi:solar-power',
     'original_name': 'Lifetime battery charged',
@@ -6232,7 +6232,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Lifetime battery discharged',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -6256,6 +6255,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'Lifetime battery discharged',
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': 'mdi:solar-power',
     'original_name': 'Lifetime battery discharged',
@@ -6290,7 +6290,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Lifetime export to grid',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -6314,6 +6313,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'Lifetime export to grid',
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': 'mdi:solar-power',
     'original_name': 'Lifetime export to grid',
@@ -6348,7 +6348,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Lifetime load consumption',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -6372,6 +6371,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'Lifetime load consumption',
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': 'mdi:solar-power',
     'original_name': 'Lifetime load consumption',
@@ -6406,7 +6406,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Lifetime solar energy',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -6430,6 +6429,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'Lifetime solar energy',
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': 'mdi:solar-power',
     'original_name': 'Lifetime solar energy',
@@ -6464,7 +6464,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Load consumption',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -6488,6 +6487,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'Load consumption',
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
     'original_icon': 'mdi:solar-power',
     'original_name': 'Load consumption',
@@ -6522,7 +6522,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Load consumption today',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -6546,6 +6545,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'Load consumption today',
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': 'mdi:solar-power',
     'original_name': 'Load consumption today',
@@ -6580,7 +6580,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Load consumption today (battery)',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -6604,6 +6603,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'Load consumption today (battery)',
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': 'mdi:solar-power',
     'original_name': 'Load consumption today (battery)',
@@ -6638,7 +6638,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Load consumption today (solar)',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -6662,6 +6661,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'Load consumption today (solar)',
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': 'mdi:solar-power',
     'original_name': 'Load consumption today (solar)',
@@ -6696,7 +6696,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'PV1 voltage',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -6718,6 +6717,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'PV1 voltage',
     'original_device_class': <SensorDeviceClass.VOLTAGE: 'voltage'>,
     'original_icon': 'mdi:solar-power',
     'original_name': 'PV1 voltage',
@@ -6751,7 +6751,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'PV1 wattage',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -6775,6 +6774,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'PV1 wattage',
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
     'original_icon': 'mdi:solar-power',
     'original_name': 'PV1 wattage',
@@ -6809,7 +6809,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'PV2 voltage',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -6831,6 +6830,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'PV2 voltage',
     'original_device_class': <SensorDeviceClass.VOLTAGE: 'voltage'>,
     'original_icon': 'mdi:solar-power',
     'original_name': 'PV2 voltage',
@@ -6864,7 +6864,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'PV2 wattage',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -6888,6 +6887,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'PV2 wattage',
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
     'original_icon': 'mdi:solar-power',
     'original_name': 'PV2 wattage',
@@ -6922,7 +6922,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Self-consumption today (solar + battery)',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -6946,6 +6945,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'Self-consumption today (solar + battery)',
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': 'mdi:solar-power',
     'original_name': 'Self-consumption today (solar + battery)',
@@ -6980,7 +6980,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Solar energy today',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -7004,6 +7003,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'Solar energy today',
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': 'mdi:solar-power',
     'original_name': 'Solar energy today',
@@ -7038,7 +7038,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'State of charge',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -7057,6 +7056,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'State of charge',
     'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
     'original_icon': 'mdi:solar-power',
     'original_name': 'State of charge',
@@ -7090,7 +7090,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'System production today (self-consumption + export)',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -7114,6 +7113,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'System production today (self-consumption + export)',
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': 'mdi:solar-power',
     'original_name': 'System production today (self-consumption + export)',
@@ -7148,7 +7148,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Energy today',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -7172,6 +7171,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'Energy today',
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': 'mdi:solar-power',
     'original_name': 'Energy today',
@@ -7206,7 +7206,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Lifetime energy output',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -7230,6 +7229,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'Lifetime energy output',
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': 'mdi:solar-power',
     'original_name': 'Lifetime energy output',
@@ -7264,7 +7264,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Maximum power',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -7288,6 +7287,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'Maximum power',
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
     'original_icon': 'mdi:solar-power',
     'original_name': 'Maximum power',
@@ -7322,7 +7322,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Money lifetime',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -7341,6 +7340,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Money lifetime',
     'original_device_class': None,
     'original_icon': 'mdi:solar-power',
     'original_name': 'Money lifetime',
@@ -7373,7 +7373,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Output power',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -7397,6 +7396,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'Output power',
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
     'original_icon': 'mdi:solar-power',
     'original_name': 'Output power',
@@ -7431,7 +7431,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Total money today',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -7450,6 +7449,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Total money today',
     'original_device_class': None,
     'original_icon': 'mdi:solar-power',
     'original_name': 'Total money today',
@@ -7482,7 +7482,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'AC input frequency',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -7506,6 +7505,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'AC input frequency',
     'original_device_class': <SensorDeviceClass.FREQUENCY: 'frequency'>,
     'original_icon': 'mdi:solar-power',
     'original_name': 'AC input frequency',
@@ -7540,7 +7540,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'AC input voltage',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -7564,6 +7563,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'AC input voltage',
     'original_device_class': <SensorDeviceClass.VOLTAGE: 'voltage'>,
     'original_icon': 'mdi:solar-power',
     'original_name': 'AC input voltage',
@@ -7598,7 +7598,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'AC output frequency',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -7622,6 +7621,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'AC output frequency',
     'original_device_class': <SensorDeviceClass.FREQUENCY: 'frequency'>,
     'original_icon': 'mdi:solar-power',
     'original_name': 'AC output frequency',
@@ -7656,7 +7656,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Battery percentage',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -7677,6 +7676,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Battery percentage',
     'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
     'original_icon': 'mdi:solar-power',
     'original_name': 'Battery percentage',
@@ -7711,7 +7711,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Battery voltage',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -7735,6 +7734,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'Battery voltage',
     'original_device_class': <SensorDeviceClass.VOLTAGE: 'voltage'>,
     'original_icon': 'mdi:solar-power',
     'original_name': 'Battery voltage',
@@ -7769,7 +7769,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Charge today',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -7793,6 +7792,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'Charge today',
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': 'mdi:solar-power',
     'original_name': 'Charge today',
@@ -7827,7 +7827,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Grid charge current',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -7851,6 +7850,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'Grid charge current',
     'original_device_class': <SensorDeviceClass.CURRENT: 'current'>,
     'original_icon': 'mdi:solar-power',
     'original_name': 'Grid charge current',
@@ -7885,7 +7885,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Grid charged today',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -7909,6 +7908,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'Grid charged today',
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': 'mdi:solar-power',
     'original_name': 'Grid charged today',
@@ -7943,7 +7943,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Grid discharged today',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -7967,6 +7966,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'Grid discharged today',
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': 'mdi:solar-power',
     'original_name': 'Grid discharged today',
@@ -8001,7 +8001,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Grid out current',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -8025,6 +8024,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'Grid out current',
     'original_device_class': <SensorDeviceClass.CURRENT: 'current'>,
     'original_icon': 'mdi:solar-power',
     'original_name': 'Grid out current',
@@ -8059,7 +8059,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Import from grid',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -8083,6 +8082,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'Import from grid',
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
     'original_icon': 'mdi:solar-power',
     'original_name': 'Import from grid',
@@ -8117,7 +8117,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Import from grid today',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -8141,6 +8140,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'Import from grid today',
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': 'mdi:solar-power',
     'original_name': 'Import from grid today',
@@ -8175,7 +8175,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Import from grid total',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -8199,6 +8198,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'Import from grid total',
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': 'mdi:solar-power',
     'original_name': 'Import from grid total',
@@ -8233,7 +8233,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Lifetime grid charged',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -8257,6 +8256,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'Lifetime grid charged',
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': 'mdi:solar-power',
     'original_name': 'Lifetime grid charged',
@@ -8291,7 +8291,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Lifetime grid discharged',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -8315,6 +8314,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'Lifetime grid discharged',
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': 'mdi:solar-power',
     'original_name': 'Lifetime grid discharged',
@@ -8349,7 +8349,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Lifetime load consumption',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -8373,6 +8372,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'Lifetime load consumption',
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': 'mdi:solar-power',
     'original_name': 'Lifetime load consumption',
@@ -8407,7 +8407,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Lifetime solar output',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -8431,6 +8430,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'Lifetime solar output',
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': 'mdi:solar-power',
     'original_name': 'Lifetime solar output',
@@ -8465,7 +8465,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Lifetime storage production',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -8489,6 +8488,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'Lifetime storage production',
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': 'mdi:solar-power',
     'original_name': 'Lifetime storage production',
@@ -8523,7 +8523,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Lifetime stored charged',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -8547,6 +8546,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'Lifetime stored charged',
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': 'mdi:solar-power',
     'original_name': 'Lifetime stored charged',
@@ -8581,7 +8581,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Load consumption',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -8605,6 +8604,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'Load consumption',
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
     'original_icon': 'mdi:solar-power',
     'original_name': 'Load consumption',
@@ -8639,7 +8639,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Load consumption (solar + storage)',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -8660,6 +8659,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Load consumption (solar + storage)',
     'original_device_class': None,
     'original_icon': 'mdi:solar-power',
     'original_name': 'Load consumption (solar + storage)',
@@ -8693,7 +8693,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Load consumption today',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -8717,6 +8716,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'Load consumption today',
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': 'mdi:solar-power',
     'original_name': 'Load consumption today',
@@ -8751,7 +8751,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Load percentage',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -8772,6 +8771,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Load percentage',
     'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
     'original_icon': 'mdi:solar-power',
     'original_name': 'Load percentage',
@@ -8806,7 +8806,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Output voltage',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -8830,6 +8829,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'Output voltage',
     'original_device_class': <SensorDeviceClass.VOLTAGE: 'voltage'>,
     'original_icon': 'mdi:solar-power',
     'original_name': 'Output voltage',
@@ -8864,7 +8864,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'PV1 charging voltage',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -8888,6 +8887,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'PV1 charging voltage',
     'original_device_class': <SensorDeviceClass.VOLTAGE: 'voltage'>,
     'original_icon': 'mdi:solar-power',
     'original_name': 'PV1 charging voltage',
@@ -8922,7 +8922,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'PV1 current to storage',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -8946,6 +8945,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'PV1 current to storage',
     'original_device_class': <SensorDeviceClass.CURRENT: 'current'>,
     'original_icon': 'mdi:solar-power',
     'original_name': 'PV1 current to storage',
@@ -8980,7 +8980,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'PV2 charging voltage',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -9004,6 +9003,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'PV2 charging voltage',
     'original_device_class': <SensorDeviceClass.VOLTAGE: 'voltage'>,
     'original_icon': 'mdi:solar-power',
     'original_name': 'PV2 charging voltage',
@@ -9038,7 +9038,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'PV2 current to storage',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -9062,6 +9061,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'PV2 current to storage',
     'original_device_class': <SensorDeviceClass.CURRENT: 'current'>,
     'original_icon': 'mdi:solar-power',
     'original_name': 'PV2 current to storage',
@@ -9096,7 +9096,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Solar charge current',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -9120,6 +9119,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'Solar charge current',
     'original_device_class': <SensorDeviceClass.CURRENT: 'current'>,
     'original_icon': 'mdi:solar-power',
     'original_name': 'Solar charge current',
@@ -9154,7 +9154,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Solar output today',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -9178,6 +9177,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'Solar output today',
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': 'mdi:solar-power',
     'original_name': 'Solar output today',
@@ -9212,7 +9212,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Solar power production (PV1)',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -9236,6 +9235,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'Solar power production (PV1)',
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
     'original_icon': 'mdi:solar-power',
     'original_name': 'Solar power production (PV1)',
@@ -9270,7 +9270,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Solar power production (PV2)',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -9294,6 +9293,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'Solar power production (PV2)',
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
     'original_icon': 'mdi:solar-power',
     'original_name': 'Solar power production (PV2)',
@@ -9328,7 +9328,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Storage charging/ discharging(-ve)',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -9352,6 +9351,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'Storage charging/ discharging(-ve)',
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
     'original_icon': 'mdi:solar-power',
     'original_name': 'Storage charging/ discharging(-ve)',
@@ -9386,7 +9386,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Storage production today',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -9410,6 +9409,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'Storage production today',
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': 'mdi:solar-power',
     'original_name': 'Storage production today',
@@ -9444,7 +9444,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Energy today',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -9468,6 +9467,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'Energy today',
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': 'mdi:solar-power',
     'original_name': 'Energy today',
@@ -9502,7 +9502,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Lifetime energy output',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -9526,6 +9525,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'Lifetime energy output',
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': 'mdi:solar-power',
     'original_name': 'Lifetime energy output',
@@ -9560,7 +9560,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Maximum power',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -9584,6 +9583,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'Maximum power',
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
     'original_icon': 'mdi:solar-power',
     'original_name': 'Maximum power',
@@ -9618,7 +9618,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Money lifetime',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -9637,6 +9636,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Money lifetime',
     'original_device_class': None,
     'original_icon': 'mdi:solar-power',
     'original_name': 'Money lifetime',
@@ -9669,7 +9669,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Output power',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -9693,6 +9692,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'Output power',
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
     'original_icon': 'mdi:solar-power',
     'original_name': 'Output power',
@@ -9727,7 +9727,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Total money today',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -9746,6 +9745,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Total money today',
     'original_device_class': None,
     'original_icon': 'mdi:solar-power',
     'original_name': 'Total money today',
@@ -9778,7 +9778,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Energy today',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -9802,6 +9801,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'Energy today',
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': 'mdi:solar-power',
     'original_name': 'Energy today',
@@ -9836,7 +9836,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Lifetime energy output',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -9860,6 +9859,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'Lifetime energy output',
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': 'mdi:solar-power',
     'original_name': 'Lifetime energy output',
@@ -9894,7 +9894,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Maximum power',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -9918,6 +9917,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'Maximum power',
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
     'original_icon': 'mdi:solar-power',
     'original_name': 'Maximum power',
@@ -9952,7 +9952,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Money lifetime',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -9971,6 +9970,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Money lifetime',
     'original_device_class': None,
     'original_icon': 'mdi:solar-power',
     'original_name': 'Money lifetime',
@@ -10003,7 +10003,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Output power',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -10027,6 +10026,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'Output power',
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
     'original_icon': 'mdi:solar-power',
     'original_name': 'Output power',
@@ -10061,7 +10061,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Total money today',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -10080,6 +10079,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Total money today',
     'original_device_class': None,
     'original_icon': 'mdi:solar-power',
     'original_name': 'Total money today',
@@ -10112,7 +10112,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'AC frequency',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -10134,6 +10133,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'AC frequency',
     'original_device_class': <SensorDeviceClass.FREQUENCY: 'frequency'>,
     'original_icon': 'mdi:solar-power',
     'original_name': 'AC frequency',
@@ -10167,7 +10167,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'All batteries charged today',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -10191,6 +10190,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'All batteries charged today',
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': 'mdi:solar-power',
     'original_name': 'All batteries charged today',
@@ -10225,7 +10225,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'All batteries discharged today',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -10249,6 +10248,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'All batteries discharged today',
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': 'mdi:solar-power',
     'original_name': 'All batteries discharged today',
@@ -10283,7 +10283,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Batteries charged from grid today',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -10307,6 +10306,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'Batteries charged from grid today',
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': 'mdi:solar-power',
     'original_name': 'Batteries charged from grid today',
@@ -10341,7 +10341,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Battery 1 charging W',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -10365,6 +10364,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'Battery 1 charging W',
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
     'original_icon': 'mdi:solar-power',
     'original_name': 'Battery 1 charging W',
@@ -10399,7 +10399,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Battery 1 discharging W',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -10423,6 +10422,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'Battery 1 discharging W',
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
     'original_icon': 'mdi:solar-power',
     'original_name': 'Battery 1 discharging W',
@@ -10457,7 +10457,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Battery 2 charging W',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -10481,6 +10480,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'Battery 2 charging W',
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
     'original_icon': 'mdi:solar-power',
     'original_name': 'Battery 2 charging W',
@@ -10515,7 +10515,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Battery 2 discharging W',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -10539,6 +10538,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'Battery 2 discharging W',
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
     'original_icon': 'mdi:solar-power',
     'original_name': 'Battery 2 discharging W',
@@ -10573,7 +10573,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Energy today',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -10597,6 +10596,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'Energy today',
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': 'mdi:solar-power',
     'original_name': 'Energy today',
@@ -10631,7 +10631,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Energy today input 1',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -10655,6 +10654,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'Energy today input 1',
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': 'mdi:solar-power',
     'original_name': 'Energy today input 1',
@@ -10689,7 +10689,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Energy today input 2',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -10713,6 +10712,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'Energy today input 2',
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': 'mdi:solar-power',
     'original_name': 'Energy today input 2',
@@ -10747,7 +10747,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Energy today input 3',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -10771,6 +10770,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'Energy today input 3',
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': 'mdi:solar-power',
     'original_name': 'Energy today input 3',
@@ -10805,7 +10805,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Energy today input 4',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -10829,6 +10828,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'Energy today input 4',
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': 'mdi:solar-power',
     'original_name': 'Energy today input 4',
@@ -10863,7 +10863,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Export power',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -10887,6 +10886,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'Export power',
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
     'original_icon': 'mdi:solar-power',
     'original_name': 'Export power',
@@ -10921,7 +10921,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Export to grid today',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -10945,6 +10944,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'Export to grid today',
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': 'mdi:solar-power',
     'original_name': 'Export to grid today',
@@ -10979,7 +10979,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Import from grid today',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -11003,6 +11002,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'Import from grid today',
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': 'mdi:solar-power',
     'original_name': 'Import from grid today',
@@ -11037,7 +11037,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Import power',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -11061,6 +11060,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'Import power',
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
     'original_icon': 'mdi:solar-power',
     'original_name': 'Import power',
@@ -11095,7 +11095,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Input 1 amperage',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -11117,6 +11116,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'Input 1 amperage',
     'original_device_class': <SensorDeviceClass.CURRENT: 'current'>,
     'original_icon': 'mdi:solar-power',
     'original_name': 'Input 1 amperage',
@@ -11150,7 +11150,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Input 1 voltage',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -11172,6 +11171,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'Input 1 voltage',
     'original_device_class': <SensorDeviceClass.VOLTAGE: 'voltage'>,
     'original_icon': 'mdi:solar-power',
     'original_name': 'Input 1 voltage',
@@ -11205,7 +11205,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Input 1 wattage',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -11229,6 +11228,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'Input 1 wattage',
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
     'original_icon': 'mdi:solar-power',
     'original_name': 'Input 1 wattage',
@@ -11263,7 +11263,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Input 2 amperage',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -11285,6 +11284,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'Input 2 amperage',
     'original_device_class': <SensorDeviceClass.CURRENT: 'current'>,
     'original_icon': 'mdi:solar-power',
     'original_name': 'Input 2 amperage',
@@ -11318,7 +11318,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Input 2 voltage',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -11340,6 +11339,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'Input 2 voltage',
     'original_device_class': <SensorDeviceClass.VOLTAGE: 'voltage'>,
     'original_icon': 'mdi:solar-power',
     'original_name': 'Input 2 voltage',
@@ -11373,7 +11373,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Input 2 wattage',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -11397,6 +11396,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'Input 2 wattage',
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
     'original_icon': 'mdi:solar-power',
     'original_name': 'Input 2 wattage',
@@ -11431,7 +11431,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Input 3 amperage',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -11453,6 +11452,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'Input 3 amperage',
     'original_device_class': <SensorDeviceClass.CURRENT: 'current'>,
     'original_icon': 'mdi:solar-power',
     'original_name': 'Input 3 amperage',
@@ -11486,7 +11486,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Input 3 voltage',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -11508,6 +11507,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'Input 3 voltage',
     'original_device_class': <SensorDeviceClass.VOLTAGE: 'voltage'>,
     'original_icon': 'mdi:solar-power',
     'original_name': 'Input 3 voltage',
@@ -11541,7 +11541,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Input 3 wattage',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -11565,6 +11564,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'Input 3 wattage',
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
     'original_icon': 'mdi:solar-power',
     'original_name': 'Input 3 wattage',
@@ -11599,7 +11599,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Input 4 amperage',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -11621,6 +11620,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'Input 4 amperage',
     'original_device_class': <SensorDeviceClass.CURRENT: 'current'>,
     'original_icon': 'mdi:solar-power',
     'original_name': 'Input 4 amperage',
@@ -11654,7 +11654,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Input 4 voltage',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -11676,6 +11675,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'Input 4 voltage',
     'original_device_class': <SensorDeviceClass.VOLTAGE: 'voltage'>,
     'original_icon': 'mdi:solar-power',
     'original_name': 'Input 4 voltage',
@@ -11709,7 +11709,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Input 4 wattage',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -11733,6 +11732,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'Input 4 wattage',
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
     'original_icon': 'mdi:solar-power',
     'original_name': 'Input 4 wattage',
@@ -11767,7 +11767,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Internal wattage',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -11791,6 +11790,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'Internal wattage',
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
     'original_icon': 'mdi:solar-power',
     'original_name': 'Internal wattage',
@@ -11825,7 +11825,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Lifetime batteries charged from grid',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -11849,6 +11848,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'Lifetime batteries charged from grid',
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': 'mdi:solar-power',
     'original_name': 'Lifetime batteries charged from grid',
@@ -11883,7 +11883,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Lifetime energy output',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -11907,6 +11906,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'Lifetime energy output',
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': 'mdi:solar-power',
     'original_name': 'Lifetime energy output',
@@ -11941,7 +11941,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Lifetime import from grid',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -11965,6 +11964,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'Lifetime import from grid',
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': 'mdi:solar-power',
     'original_name': 'Lifetime import from grid',
@@ -11999,7 +11999,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Lifetime self consumption',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -12023,6 +12022,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'Lifetime self consumption',
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': 'mdi:solar-power',
     'original_name': 'Lifetime self consumption',
@@ -12057,7 +12057,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Lifetime system production',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -12081,6 +12080,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'Lifetime system production',
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': 'mdi:solar-power',
     'original_name': 'Lifetime system production',
@@ -12115,7 +12115,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Lifetime total all batteries charged',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -12139,6 +12138,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'Lifetime total all batteries charged',
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': 'mdi:solar-power',
     'original_name': 'Lifetime total all batteries charged',
@@ -12173,7 +12173,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Lifetime total all batteries discharged',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -12197,6 +12196,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'Lifetime total all batteries discharged',
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': 'mdi:solar-power',
     'original_name': 'Lifetime total all batteries discharged',
@@ -12231,7 +12231,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Lifetime total battery 1 charged',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -12255,6 +12254,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'Lifetime total battery 1 charged',
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': 'mdi:solar-power',
     'original_name': 'Lifetime total battery 1 charged',
@@ -12289,7 +12289,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Lifetime total battery 1 discharged',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -12313,6 +12312,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'Lifetime total battery 1 discharged',
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': 'mdi:solar-power',
     'original_name': 'Lifetime total battery 1 discharged',
@@ -12347,7 +12347,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Lifetime total battery 2 charged',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -12371,6 +12370,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'Lifetime total battery 2 charged',
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': 'mdi:solar-power',
     'original_name': 'Lifetime total battery 2 charged',
@@ -12405,7 +12405,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Lifetime total battery 2 discharged',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -12429,6 +12428,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'Lifetime total battery 2 discharged',
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': 'mdi:solar-power',
     'original_name': 'Lifetime total battery 2 discharged',
@@ -12463,7 +12463,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Lifetime total energy input 1',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -12487,6 +12486,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'Lifetime total energy input 1',
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': 'mdi:solar-power',
     'original_name': 'Lifetime total energy input 1',
@@ -12521,7 +12521,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Lifetime total energy input 2',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -12545,6 +12544,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'Lifetime total energy input 2',
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': 'mdi:solar-power',
     'original_name': 'Lifetime total energy input 2',
@@ -12579,7 +12579,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Lifetime total energy input 3',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -12603,6 +12602,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'Lifetime total energy input 3',
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': 'mdi:solar-power',
     'original_name': 'Lifetime total energy input 3',
@@ -12637,7 +12637,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Lifetime total energy input 4',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -12661,6 +12660,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'Lifetime total energy input 4',
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': 'mdi:solar-power',
     'original_name': 'Lifetime total energy input 4',
@@ -12695,7 +12695,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Lifetime total export to grid',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -12719,6 +12718,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'Lifetime total export to grid',
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': 'mdi:solar-power',
     'original_name': 'Lifetime total export to grid',
@@ -12753,7 +12753,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Lifetime total load consumption',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -12777,6 +12776,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'Lifetime total load consumption',
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': 'mdi:solar-power',
     'original_name': 'Lifetime total load consumption',
@@ -12811,7 +12811,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Lifetime total solar energy',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -12835,6 +12834,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'Lifetime total solar energy',
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': 'mdi:solar-power',
     'original_name': 'Lifetime total solar energy',
@@ -12869,7 +12869,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Load consumption today',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -12893,6 +12892,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'Load consumption today',
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': 'mdi:solar-power',
     'original_name': 'Load consumption today',
@@ -12927,7 +12927,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Local load power',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -12951,6 +12950,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'Local load power',
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
     'original_icon': 'mdi:solar-power',
     'original_name': 'Local load power',
@@ -12985,7 +12985,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Output power',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -13009,6 +13008,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'Output power',
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
     'original_icon': 'mdi:solar-power',
     'original_name': 'Output power',
@@ -13043,7 +13043,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Reactive voltage',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -13065,6 +13064,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'Reactive voltage',
     'original_device_class': <SensorDeviceClass.VOLTAGE: 'voltage'>,
     'original_icon': 'mdi:solar-power',
     'original_name': 'Reactive voltage',
@@ -13098,7 +13098,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Self consumption today',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -13122,6 +13121,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'Self consumption today',
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': 'mdi:solar-power',
     'original_name': 'Self consumption today',
@@ -13156,7 +13156,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Self power',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -13180,6 +13179,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'Self power',
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
     'original_icon': 'mdi:solar-power',
     'original_name': 'Self power',
@@ -13214,7 +13214,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Solar energy today',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -13238,6 +13237,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'Solar energy today',
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': 'mdi:solar-power',
     'original_name': 'Solar energy today',
@@ -13272,7 +13272,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'State of charge (SoC)',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -13291,6 +13290,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'State of charge (SoC)',
     'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
     'original_icon': 'mdi:solar-power',
     'original_name': 'State of charge (SoC)',
@@ -13324,7 +13324,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'System power',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -13348,6 +13347,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'System power',
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
     'original_icon': 'mdi:solar-power',
     'original_name': 'System power',
@@ -13382,7 +13382,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'System production today',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -13406,6 +13405,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'System production today',
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': 'mdi:solar-power',
     'original_name': 'System production today',
@@ -13440,7 +13440,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Temperature 1',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -13462,6 +13461,7 @@
         'suggested_display_precision': 1,
       }),
     }),
+    'object_id_base': 'Temperature 1',
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': 'mdi:solar-power',
     'original_name': 'Temperature 1',
@@ -13495,7 +13495,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Temperature 2',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -13517,6 +13516,7 @@
         'suggested_display_precision': 1,
       }),
     }),
+    'object_id_base': 'Temperature 2',
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': 'mdi:solar-power',
     'original_name': 'Temperature 2',
@@ -13550,7 +13550,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Temperature 3',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -13572,6 +13571,7 @@
         'suggested_display_precision': 1,
       }),
     }),
+    'object_id_base': 'Temperature 3',
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': 'mdi:solar-power',
     'original_name': 'Temperature 3',
@@ -13605,7 +13605,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Temperature 4',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -13627,6 +13626,7 @@
         'suggested_display_precision': 1,
       }),
     }),
+    'object_id_base': 'Temperature 4',
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': 'mdi:solar-power',
     'original_name': 'Temperature 4',
@@ -13660,7 +13660,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Temperature 5',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -13682,6 +13681,7 @@
         'suggested_display_precision': 1,
       }),
     }),
+    'object_id_base': 'Temperature 5',
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': 'mdi:solar-power',
     'original_name': 'Temperature 5',
@@ -13715,7 +13715,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Energy today',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -13739,6 +13738,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'Energy today',
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': 'mdi:solar-power',
     'original_name': 'Energy today',
@@ -13773,7 +13773,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Lifetime energy output',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -13797,6 +13796,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'Lifetime energy output',
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': 'mdi:solar-power',
     'original_name': 'Lifetime energy output',
@@ -13831,7 +13831,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Maximum power',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -13855,6 +13854,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'Maximum power',
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
     'original_icon': 'mdi:solar-power',
     'original_name': 'Maximum power',
@@ -13889,7 +13889,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Money lifetime',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -13908,6 +13907,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Money lifetime',
     'original_device_class': None,
     'original_icon': 'mdi:solar-power',
     'original_name': 'Money lifetime',
@@ -13940,7 +13940,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Output power',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -13964,6 +13963,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'Output power',
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
     'original_icon': 'mdi:solar-power',
     'original_name': 'Output power',
@@ -13998,7 +13998,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Total money today',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -14017,6 +14016,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Total money today',
     'original_device_class': None,
     'original_icon': 'mdi:solar-power',
     'original_name': 'Total money today',
@@ -14049,7 +14049,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'AC frequency',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -14071,6 +14070,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'AC frequency',
     'original_device_class': <SensorDeviceClass.FREQUENCY: 'frequency'>,
     'original_icon': 'mdi:solar-power',
     'original_name': 'AC frequency',
@@ -14104,7 +14104,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'All batteries charged today',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -14128,6 +14127,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'All batteries charged today',
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': 'mdi:solar-power',
     'original_name': 'All batteries charged today',
@@ -14162,7 +14162,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'All batteries discharged today',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -14186,6 +14185,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'All batteries discharged today',
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': 'mdi:solar-power',
     'original_name': 'All batteries discharged today',
@@ -14220,7 +14220,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Batteries charged from grid today',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -14244,6 +14243,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'Batteries charged from grid today',
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': 'mdi:solar-power',
     'original_name': 'Batteries charged from grid today',
@@ -14278,7 +14278,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Battery 1 charging W',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -14302,6 +14301,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'Battery 1 charging W',
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
     'original_icon': 'mdi:solar-power',
     'original_name': 'Battery 1 charging W',
@@ -14336,7 +14336,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Battery 1 discharging W',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -14360,6 +14359,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'Battery 1 discharging W',
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
     'original_icon': 'mdi:solar-power',
     'original_name': 'Battery 1 discharging W',
@@ -14394,7 +14394,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Battery 2 charging W',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -14418,6 +14417,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'Battery 2 charging W',
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
     'original_icon': 'mdi:solar-power',
     'original_name': 'Battery 2 charging W',
@@ -14452,7 +14452,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Battery 2 discharging W',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -14476,6 +14475,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'Battery 2 discharging W',
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
     'original_icon': 'mdi:solar-power',
     'original_name': 'Battery 2 discharging W',
@@ -14510,7 +14510,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Energy today',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -14534,6 +14533,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'Energy today',
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': 'mdi:solar-power',
     'original_name': 'Energy today',
@@ -14568,7 +14568,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Energy today input 1',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -14592,6 +14591,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'Energy today input 1',
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': 'mdi:solar-power',
     'original_name': 'Energy today input 1',
@@ -14626,7 +14626,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Energy today input 2',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -14650,6 +14649,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'Energy today input 2',
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': 'mdi:solar-power',
     'original_name': 'Energy today input 2',
@@ -14684,7 +14684,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Energy today input 3',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -14708,6 +14707,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'Energy today input 3',
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': 'mdi:solar-power',
     'original_name': 'Energy today input 3',
@@ -14742,7 +14742,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Energy today input 4',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -14766,6 +14765,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'Energy today input 4',
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': 'mdi:solar-power',
     'original_name': 'Energy today input 4',
@@ -14800,7 +14800,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Export power',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -14824,6 +14823,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'Export power',
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
     'original_icon': 'mdi:solar-power',
     'original_name': 'Export power',
@@ -14858,7 +14858,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Export to grid today',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -14882,6 +14881,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'Export to grid today',
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': 'mdi:solar-power',
     'original_name': 'Export to grid today',
@@ -14916,7 +14916,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Import from grid today',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -14940,6 +14939,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'Import from grid today',
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': 'mdi:solar-power',
     'original_name': 'Import from grid today',
@@ -14974,7 +14974,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Import power',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -14998,6 +14997,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'Import power',
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
     'original_icon': 'mdi:solar-power',
     'original_name': 'Import power',
@@ -15032,7 +15032,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Input 1 amperage',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -15054,6 +15053,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'Input 1 amperage',
     'original_device_class': <SensorDeviceClass.CURRENT: 'current'>,
     'original_icon': 'mdi:solar-power',
     'original_name': 'Input 1 amperage',
@@ -15087,7 +15087,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Input 1 voltage',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -15109,6 +15108,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'Input 1 voltage',
     'original_device_class': <SensorDeviceClass.VOLTAGE: 'voltage'>,
     'original_icon': 'mdi:solar-power',
     'original_name': 'Input 1 voltage',
@@ -15142,7 +15142,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Input 1 wattage',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -15166,6 +15165,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'Input 1 wattage',
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
     'original_icon': 'mdi:solar-power',
     'original_name': 'Input 1 wattage',
@@ -15200,7 +15200,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Input 2 amperage',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -15222,6 +15221,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'Input 2 amperage',
     'original_device_class': <SensorDeviceClass.CURRENT: 'current'>,
     'original_icon': 'mdi:solar-power',
     'original_name': 'Input 2 amperage',
@@ -15255,7 +15255,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Input 2 voltage',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -15277,6 +15276,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'Input 2 voltage',
     'original_device_class': <SensorDeviceClass.VOLTAGE: 'voltage'>,
     'original_icon': 'mdi:solar-power',
     'original_name': 'Input 2 voltage',
@@ -15310,7 +15310,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Input 2 wattage',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -15334,6 +15333,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'Input 2 wattage',
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
     'original_icon': 'mdi:solar-power',
     'original_name': 'Input 2 wattage',
@@ -15368,7 +15368,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Input 3 amperage',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -15390,6 +15389,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'Input 3 amperage',
     'original_device_class': <SensorDeviceClass.CURRENT: 'current'>,
     'original_icon': 'mdi:solar-power',
     'original_name': 'Input 3 amperage',
@@ -15423,7 +15423,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Input 3 voltage',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -15445,6 +15444,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'Input 3 voltage',
     'original_device_class': <SensorDeviceClass.VOLTAGE: 'voltage'>,
     'original_icon': 'mdi:solar-power',
     'original_name': 'Input 3 voltage',
@@ -15478,7 +15478,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Input 3 wattage',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -15502,6 +15501,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'Input 3 wattage',
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
     'original_icon': 'mdi:solar-power',
     'original_name': 'Input 3 wattage',
@@ -15536,7 +15536,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Input 4 amperage',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -15558,6 +15557,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'Input 4 amperage',
     'original_device_class': <SensorDeviceClass.CURRENT: 'current'>,
     'original_icon': 'mdi:solar-power',
     'original_name': 'Input 4 amperage',
@@ -15591,7 +15591,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Input 4 voltage',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -15613,6 +15612,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'Input 4 voltage',
     'original_device_class': <SensorDeviceClass.VOLTAGE: 'voltage'>,
     'original_icon': 'mdi:solar-power',
     'original_name': 'Input 4 voltage',
@@ -15646,7 +15646,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Input 4 wattage',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -15670,6 +15669,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'Input 4 wattage',
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
     'original_icon': 'mdi:solar-power',
     'original_name': 'Input 4 wattage',
@@ -15704,7 +15704,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Internal wattage',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -15728,6 +15727,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'Internal wattage',
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
     'original_icon': 'mdi:solar-power',
     'original_name': 'Internal wattage',
@@ -15762,7 +15762,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Lifetime batteries charged from grid',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -15786,6 +15785,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'Lifetime batteries charged from grid',
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': 'mdi:solar-power',
     'original_name': 'Lifetime batteries charged from grid',
@@ -15820,7 +15820,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Lifetime energy output',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -15844,6 +15843,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'Lifetime energy output',
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': 'mdi:solar-power',
     'original_name': 'Lifetime energy output',
@@ -15878,7 +15878,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Lifetime import from grid',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -15902,6 +15901,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'Lifetime import from grid',
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': 'mdi:solar-power',
     'original_name': 'Lifetime import from grid',
@@ -15936,7 +15936,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Lifetime self consumption',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -15960,6 +15959,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'Lifetime self consumption',
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': 'mdi:solar-power',
     'original_name': 'Lifetime self consumption',
@@ -15994,7 +15994,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Lifetime system production',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -16018,6 +16017,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'Lifetime system production',
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': 'mdi:solar-power',
     'original_name': 'Lifetime system production',
@@ -16052,7 +16052,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Lifetime total all batteries charged',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -16076,6 +16075,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'Lifetime total all batteries charged',
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': 'mdi:solar-power',
     'original_name': 'Lifetime total all batteries charged',
@@ -16110,7 +16110,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Lifetime total all batteries discharged',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -16134,6 +16133,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'Lifetime total all batteries discharged',
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': 'mdi:solar-power',
     'original_name': 'Lifetime total all batteries discharged',
@@ -16168,7 +16168,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Lifetime total battery 1 charged',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -16192,6 +16191,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'Lifetime total battery 1 charged',
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': 'mdi:solar-power',
     'original_name': 'Lifetime total battery 1 charged',
@@ -16226,7 +16226,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Lifetime total battery 1 discharged',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -16250,6 +16249,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'Lifetime total battery 1 discharged',
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': 'mdi:solar-power',
     'original_name': 'Lifetime total battery 1 discharged',
@@ -16284,7 +16284,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Lifetime total battery 2 charged',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -16308,6 +16307,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'Lifetime total battery 2 charged',
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': 'mdi:solar-power',
     'original_name': 'Lifetime total battery 2 charged',
@@ -16342,7 +16342,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Lifetime total battery 2 discharged',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -16366,6 +16365,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'Lifetime total battery 2 discharged',
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': 'mdi:solar-power',
     'original_name': 'Lifetime total battery 2 discharged',
@@ -16400,7 +16400,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Lifetime total energy input 1',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -16424,6 +16423,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'Lifetime total energy input 1',
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': 'mdi:solar-power',
     'original_name': 'Lifetime total energy input 1',
@@ -16458,7 +16458,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Lifetime total energy input 2',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -16482,6 +16481,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'Lifetime total energy input 2',
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': 'mdi:solar-power',
     'original_name': 'Lifetime total energy input 2',
@@ -16516,7 +16516,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Lifetime total energy input 3',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -16540,6 +16539,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'Lifetime total energy input 3',
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': 'mdi:solar-power',
     'original_name': 'Lifetime total energy input 3',
@@ -16574,7 +16574,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Lifetime total energy input 4',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -16598,6 +16597,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'Lifetime total energy input 4',
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': 'mdi:solar-power',
     'original_name': 'Lifetime total energy input 4',
@@ -16632,7 +16632,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Lifetime total export to grid',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -16656,6 +16655,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'Lifetime total export to grid',
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': 'mdi:solar-power',
     'original_name': 'Lifetime total export to grid',
@@ -16690,7 +16690,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Lifetime total load consumption',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -16714,6 +16713,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'Lifetime total load consumption',
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': 'mdi:solar-power',
     'original_name': 'Lifetime total load consumption',
@@ -16748,7 +16748,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Lifetime total solar energy',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -16772,6 +16771,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'Lifetime total solar energy',
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': 'mdi:solar-power',
     'original_name': 'Lifetime total solar energy',
@@ -16806,7 +16806,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Load consumption today',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -16830,6 +16829,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'Load consumption today',
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': 'mdi:solar-power',
     'original_name': 'Load consumption today',
@@ -16864,7 +16864,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Local load power',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -16888,6 +16887,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'Local load power',
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
     'original_icon': 'mdi:solar-power',
     'original_name': 'Local load power',
@@ -16922,7 +16922,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Output power',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -16946,6 +16945,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'Output power',
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
     'original_icon': 'mdi:solar-power',
     'original_name': 'Output power',
@@ -16980,7 +16980,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Reactive voltage',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -17002,6 +17001,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'Reactive voltage',
     'original_device_class': <SensorDeviceClass.VOLTAGE: 'voltage'>,
     'original_icon': 'mdi:solar-power',
     'original_name': 'Reactive voltage',
@@ -17035,7 +17035,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Self consumption today',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -17059,6 +17058,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'Self consumption today',
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': 'mdi:solar-power',
     'original_name': 'Self consumption today',
@@ -17093,7 +17093,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Self power',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -17117,6 +17116,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'Self power',
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
     'original_icon': 'mdi:solar-power',
     'original_name': 'Self power',
@@ -17151,7 +17151,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Solar energy today',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -17175,6 +17174,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'Solar energy today',
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': 'mdi:solar-power',
     'original_name': 'Solar energy today',
@@ -17209,7 +17209,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'State of charge (SoC)',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -17228,6 +17227,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'State of charge (SoC)',
     'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
     'original_icon': 'mdi:solar-power',
     'original_name': 'State of charge (SoC)',
@@ -17261,7 +17261,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'System power',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -17285,6 +17284,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'System power',
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
     'original_icon': 'mdi:solar-power',
     'original_name': 'System power',
@@ -17319,7 +17319,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'System production today',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -17343,6 +17342,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'System production today',
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': 'mdi:solar-power',
     'original_name': 'System production today',
@@ -17377,7 +17377,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Temperature 1',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -17399,6 +17398,7 @@
         'suggested_display_precision': 1,
       }),
     }),
+    'object_id_base': 'Temperature 1',
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': 'mdi:solar-power',
     'original_name': 'Temperature 1',
@@ -17432,7 +17432,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Temperature 2',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -17454,6 +17453,7 @@
         'suggested_display_precision': 1,
       }),
     }),
+    'object_id_base': 'Temperature 2',
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': 'mdi:solar-power',
     'original_name': 'Temperature 2',
@@ -17487,7 +17487,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Temperature 3',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -17509,6 +17508,7 @@
         'suggested_display_precision': 1,
       }),
     }),
+    'object_id_base': 'Temperature 3',
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': 'mdi:solar-power',
     'original_name': 'Temperature 3',
@@ -17542,7 +17542,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Temperature 4',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -17564,6 +17563,7 @@
         'suggested_display_precision': 1,
       }),
     }),
+    'object_id_base': 'Temperature 4',
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': 'mdi:solar-power',
     'original_name': 'Temperature 4',
@@ -17597,7 +17597,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Temperature 5',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -17619,6 +17618,7 @@
         'suggested_display_precision': 1,
       }),
     }),
+    'object_id_base': 'Temperature 5',
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': 'mdi:solar-power',
     'original_name': 'Temperature 5',

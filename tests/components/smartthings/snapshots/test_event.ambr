@@ -4,7 +4,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'button1',
     'capabilities': dict({
       'event_types': list([
         'pushed',
@@ -29,6 +28,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'button1',
     'original_device_class': <EventDeviceClass.BUTTON: 'button'>,
     'original_icon': None,
     'original_name': 'button1',
@@ -66,7 +66,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'button2',
     'capabilities': dict({
       'event_types': list([
         'pushed',
@@ -91,6 +90,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'button2',
     'original_device_class': <EventDeviceClass.BUTTON: 'button'>,
     'original_icon': None,
     'original_name': 'button2',
@@ -128,7 +128,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'button3',
     'capabilities': dict({
       'event_types': list([
         'pushed',
@@ -153,6 +152,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'button3',
     'original_device_class': <EventDeviceClass.BUTTON: 'button'>,
     'original_icon': None,
     'original_name': 'button3',
@@ -190,7 +190,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'button4',
     'capabilities': dict({
       'event_types': list([
         'pushed',
@@ -215,6 +214,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'button4',
     'original_device_class': <EventDeviceClass.BUTTON: 'button'>,
     'original_icon': None,
     'original_name': 'button4',
@@ -252,7 +252,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'button5',
     'capabilities': dict({
       'event_types': list([
         'pushed',
@@ -277,6 +276,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'button5',
     'original_device_class': <EventDeviceClass.BUTTON: 'button'>,
     'original_icon': None,
     'original_name': 'button5',
@@ -314,7 +314,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'button6',
     'capabilities': dict({
       'event_types': list([
         'pushed',
@@ -339,6 +338,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'button6',
     'original_device_class': <EventDeviceClass.BUTTON: 'button'>,
     'original_icon': None,
     'original_name': 'button6',

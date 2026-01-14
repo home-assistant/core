@@ -4,7 +4,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Temperature resolution',
     'capabilities': dict({
       'options': list([
         '9',
@@ -30,6 +29,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Temperature resolution',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Temperature resolution',

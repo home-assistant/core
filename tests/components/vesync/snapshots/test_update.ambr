@@ -38,7 +38,6 @@
       'aliases': set({
       }),
       'area_id': None,
-      'calculated_object_id': 'Firmware',
       'capabilities': None,
       'config_entry_id': <ANY>,
       'config_subentry_id': <ANY>,
@@ -57,6 +56,7 @@
       'name': None,
       'options': dict({
       }),
+      'object_id_base': 'Firmware',
       'original_device_class': <UpdateDeviceClass.FIRMWARE: 'firmware'>,
       'original_icon': None,
       'original_name': 'Firmware',
@@ -135,7 +135,6 @@
       'aliases': set({
       }),
       'area_id': None,
-      'calculated_object_id': 'Firmware',
       'capabilities': None,
       'config_entry_id': <ANY>,
       'config_subentry_id': <ANY>,
@@ -154,6 +153,7 @@
       'name': None,
       'options': dict({
       }),
+      'object_id_base': 'Firmware',
       'original_device_class': <UpdateDeviceClass.FIRMWARE: 'firmware'>,
       'original_icon': None,
       'original_name': 'Firmware',
@@ -232,7 +232,6 @@
       'aliases': set({
       }),
       'area_id': None,
-      'calculated_object_id': 'Firmware',
       'capabilities': None,
       'config_entry_id': <ANY>,
       'config_subentry_id': <ANY>,
@@ -251,6 +250,7 @@
       'name': None,
       'options': dict({
       }),
+      'object_id_base': 'Firmware',
       'original_device_class': <UpdateDeviceClass.FIRMWARE: 'firmware'>,
       'original_icon': None,
       'original_name': 'Firmware',
@@ -329,7 +329,6 @@
       'aliases': set({
       }),
       'area_id': None,
-      'calculated_object_id': 'Firmware',
       'capabilities': None,
       'config_entry_id': <ANY>,
       'config_subentry_id': <ANY>,
@@ -348,6 +347,7 @@
       'name': None,
       'options': dict({
       }),
+      'object_id_base': 'Firmware',
       'original_device_class': <UpdateDeviceClass.FIRMWARE: 'firmware'>,
       'original_icon': None,
       'original_name': 'Firmware',
@@ -426,7 +426,6 @@
       'aliases': set({
       }),
       'area_id': None,
-      'calculated_object_id': 'Firmware',
       'capabilities': None,
       'config_entry_id': <ANY>,
       'config_subentry_id': <ANY>,
@@ -445,6 +444,7 @@
       'name': None,
       'options': dict({
       }),
+      'object_id_base': 'Firmware',
       'original_device_class': <UpdateDeviceClass.FIRMWARE: 'firmware'>,
       'original_icon': None,
       'original_name': 'Firmware',
@@ -523,7 +523,6 @@
       'aliases': set({
       }),
       'area_id': None,
-      'calculated_object_id': 'Firmware',
       'capabilities': None,
       'config_entry_id': <ANY>,
       'config_subentry_id': <ANY>,
@@ -542,6 +541,7 @@
       'name': None,
       'options': dict({
       }),
+      'object_id_base': 'Firmware',
       'original_device_class': <UpdateDeviceClass.FIRMWARE: 'firmware'>,
       'original_icon': None,
       'original_name': 'Firmware',
@@ -620,7 +620,6 @@
       'aliases': set({
       }),
       'area_id': None,
-      'calculated_object_id': 'Firmware',
       'capabilities': None,
       'config_entry_id': <ANY>,
       'config_subentry_id': <ANY>,
@@ -639,6 +638,7 @@
       'name': None,
       'options': dict({
       }),
+      'object_id_base': 'Firmware',
       'original_device_class': <UpdateDeviceClass.FIRMWARE: 'firmware'>,
       'original_icon': None,
       'original_name': 'Firmware',
@@ -707,7 +707,6 @@
       'aliases': set({
       }),
       'area_id': None,
-      'calculated_object_id': 'Firmware',
       'capabilities': None,
       'config_entry_id': <ANY>,
       'config_subentry_id': <ANY>,
@@ -726,6 +725,7 @@
       'name': None,
       'options': dict({
       }),
+      'object_id_base': 'Firmware',
       'original_device_class': <UpdateDeviceClass.FIRMWARE: 'firmware'>,
       'original_icon': None,
       'original_name': 'Firmware',
@@ -804,7 +804,6 @@
       'aliases': set({
       }),
       'area_id': None,
-      'calculated_object_id': 'Firmware',
       'capabilities': None,
       'config_entry_id': <ANY>,
       'config_subentry_id': <ANY>,
@@ -823,6 +822,7 @@
       'name': None,
       'options': dict({
       }),
+      'object_id_base': 'Firmware',
       'original_device_class': <UpdateDeviceClass.FIRMWARE: 'firmware'>,
       'original_icon': None,
       'original_name': 'Firmware',
@@ -901,7 +901,6 @@
       'aliases': set({
       }),
       'area_id': None,
-      'calculated_object_id': 'Firmware',
       'capabilities': None,
       'config_entry_id': <ANY>,
       'config_subentry_id': <ANY>,
@@ -920,6 +919,7 @@
       'name': None,
       'options': dict({
       }),
+      'object_id_base': 'Firmware',
       'original_device_class': <UpdateDeviceClass.FIRMWARE: 'firmware'>,
       'original_icon': None,
       'original_name': 'Firmware',
@@ -998,7 +998,6 @@
       'aliases': set({
       }),
       'area_id': None,
-      'calculated_object_id': 'Firmware',
       'capabilities': None,
       'config_entry_id': <ANY>,
       'config_subentry_id': <ANY>,
@@ -1017,6 +1016,7 @@
       'name': None,
       'options': dict({
       }),
+      'object_id_base': 'Firmware',
       'original_device_class': <UpdateDeviceClass.FIRMWARE: 'firmware'>,
       'original_icon': None,
       'original_name': 'Firmware',
@@ -1095,7 +1095,6 @@
       'aliases': set({
       }),
       'area_id': None,
-      'calculated_object_id': 'Firmware',
       'capabilities': None,
       'config_entry_id': <ANY>,
       'config_subentry_id': <ANY>,
@@ -1114,6 +1113,7 @@
       'name': None,
       'options': dict({
       }),
+      'object_id_base': 'Firmware',
       'original_device_class': <UpdateDeviceClass.FIRMWARE: 'firmware'>,
       'original_icon': None,
       'original_name': 'Firmware',
@@ -1192,7 +1192,6 @@
       'aliases': set({
       }),
       'area_id': None,
-      'calculated_object_id': 'Firmware',
       'capabilities': None,
       'config_entry_id': <ANY>,
       'config_subentry_id': <ANY>,
@@ -1211,6 +1210,7 @@
       'name': None,
       'options': dict({
       }),
+      'object_id_base': 'Firmware',
       'original_device_class': <UpdateDeviceClass.FIRMWARE: 'firmware'>,
       'original_icon': None,
       'original_name': 'Firmware',
@@ -1289,7 +1289,6 @@
       'aliases': set({
       }),
       'area_id': None,
-      'calculated_object_id': 'Firmware',
       'capabilities': None,
       'config_entry_id': <ANY>,
       'config_subentry_id': <ANY>,
@@ -1308,6 +1307,7 @@
       'name': None,
       'options': dict({
       }),
+      'object_id_base': 'Firmware',
       'original_device_class': <UpdateDeviceClass.FIRMWARE: 'firmware'>,
       'original_icon': None,
       'original_name': 'Firmware',
@@ -1386,7 +1386,6 @@
       'aliases': set({
       }),
       'area_id': None,
-      'calculated_object_id': 'Firmware',
       'capabilities': None,
       'config_entry_id': <ANY>,
       'config_subentry_id': <ANY>,
@@ -1405,6 +1404,7 @@
       'name': None,
       'options': dict({
       }),
+      'object_id_base': 'Firmware',
       'original_device_class': <UpdateDeviceClass.FIRMWARE: 'firmware'>,
       'original_icon': None,
       'original_name': 'Firmware',

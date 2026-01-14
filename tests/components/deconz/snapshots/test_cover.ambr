@@ -4,7 +4,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Window covering device',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -23,6 +22,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Window covering device',
     'original_device_class': <CoverDeviceClass.SHADE: 'shade'>,
     'original_icon': None,
     'original_name': 'Window covering device',
@@ -56,7 +56,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Vent',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -75,6 +74,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Vent',
     'original_device_class': <CoverDeviceClass.DAMPER: 'damper'>,
     'original_icon': None,
     'original_name': 'Vent',
@@ -109,7 +109,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Covering device',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -128,6 +127,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Covering device',
     'original_device_class': <CoverDeviceClass.SHADE: 'shade'>,
     'original_icon': None,
     'original_name': 'Covering device',

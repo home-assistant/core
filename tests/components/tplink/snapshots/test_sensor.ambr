@@ -39,7 +39,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Alarm source',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -58,6 +57,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Alarm source',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Alarm source',
@@ -75,7 +75,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Auto-off at',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -94,6 +93,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Auto-off at',
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
     'original_icon': None,
     'original_name': 'Auto-off at',
@@ -125,7 +125,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Battery',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -146,6 +145,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Battery',
     'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
     'original_icon': None,
     'original_name': 'Battery',
@@ -179,7 +179,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Charging contacts remaining',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -201,6 +200,7 @@
         'suggested_unit_of_measurement': <UnitOfTime.HOURS: 'h'>,
       }),
     }),
+    'object_id_base': 'Charging contacts remaining',
     'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
     'original_icon': None,
     'original_name': 'Charging contacts remaining',
@@ -218,7 +218,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Charging contacts used',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -240,6 +239,7 @@
         'suggested_unit_of_measurement': <UnitOfTime.HOURS: 'h'>,
       }),
     }),
+    'object_id_base': 'Charging contacts used',
     'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
     'original_icon': None,
     'original_name': 'Charging contacts used',
@@ -257,7 +257,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Cleaning area',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -284,6 +283,7 @@
         'suggested_unit_of_measurement': <UnitOfArea.SQUARE_METERS: 'm²'>,
       }),
     }),
+    'object_id_base': 'Cleaning area',
     'original_device_class': <SensorDeviceClass.AREA: 'area'>,
     'original_icon': None,
     'original_name': 'Cleaning area',
@@ -317,7 +317,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Cleaning progress',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -338,6 +337,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Cleaning progress',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Cleaning progress',
@@ -355,7 +355,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Cleaning time',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -380,6 +379,7 @@
         'suggested_unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
       }),
     }),
+    'object_id_base': 'Cleaning time',
     'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
     'original_icon': None,
     'original_name': 'Cleaning time',
@@ -412,7 +412,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Current',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -436,6 +435,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'Current',
     'original_device_class': <SensorDeviceClass.CURRENT: 'current'>,
     'original_icon': None,
     'original_name': 'Current',
@@ -469,7 +469,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Current consumption',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -493,6 +492,7 @@
         'suggested_display_precision': 1,
       }),
     }),
+    'object_id_base': 'Current consumption',
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
     'original_icon': None,
     'original_name': 'Current consumption',
@@ -526,7 +526,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Device time',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -545,6 +544,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Device time',
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
     'original_icon': None,
     'original_name': 'Device time',
@@ -562,7 +562,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Error',
     'capabilities': dict({
       'options': list([
         'ok',
@@ -596,6 +595,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Error',
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
     'original_name': 'Error',
@@ -641,7 +641,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Filter remaining',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -663,6 +662,7 @@
         'suggested_unit_of_measurement': <UnitOfTime.HOURS: 'h'>,
       }),
     }),
+    'object_id_base': 'Filter remaining',
     'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
     'original_icon': None,
     'original_name': 'Filter remaining',
@@ -680,7 +680,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Filter used',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -702,6 +701,7 @@
         'suggested_unit_of_measurement': <UnitOfTime.HOURS: 'h'>,
       }),
     }),
+    'object_id_base': 'Filter used',
     'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
     'original_icon': None,
     'original_name': 'Filter used',
@@ -719,7 +719,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Humidity',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -740,6 +739,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Humidity',
     'original_device_class': <SensorDeviceClass.HUMIDITY: 'humidity'>,
     'original_icon': None,
     'original_name': 'Humidity',
@@ -773,7 +773,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Last clean start',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -792,6 +791,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Last clean start',
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
     'original_icon': None,
     'original_name': 'Last clean start',
@@ -809,7 +809,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Last cleaned area',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -831,6 +830,7 @@
         'suggested_unit_of_measurement': <UnitOfArea.SQUARE_METERS: 'm²'>,
       }),
     }),
+    'object_id_base': 'Last cleaned area',
     'original_device_class': <SensorDeviceClass.AREA: 'area'>,
     'original_icon': None,
     'original_name': 'Last cleaned area',
@@ -848,7 +848,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Last cleaned time',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -872,6 +871,7 @@
         'suggested_unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
       }),
     }),
+    'object_id_base': 'Last cleaned time',
     'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
     'original_icon': None,
     'original_name': 'Last cleaned time',
@@ -889,7 +889,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Last water leak alert',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -908,6 +907,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Last water leak alert',
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
     'original_icon': None,
     'original_name': 'Last water leak alert',
@@ -939,7 +939,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Main brush remaining',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -961,6 +960,7 @@
         'suggested_unit_of_measurement': <UnitOfTime.HOURS: 'h'>,
       }),
     }),
+    'object_id_base': 'Main brush remaining',
     'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
     'original_icon': None,
     'original_name': 'Main brush remaining',
@@ -978,7 +978,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Main brush used',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1000,6 +999,7 @@
         'suggested_unit_of_measurement': <UnitOfTime.HOURS: 'h'>,
       }),
     }),
+    'object_id_base': 'Main brush used',
     'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
     'original_icon': None,
     'original_name': 'Main brush used',
@@ -1017,7 +1017,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'On since',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1036,6 +1035,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'On since',
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
     'original_icon': None,
     'original_name': 'On since',
@@ -1053,7 +1053,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Report interval',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1072,6 +1071,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Report interval',
     'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
     'original_icon': None,
     'original_name': 'Report interval',
@@ -1089,7 +1089,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Sensor remaining',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1111,6 +1110,7 @@
         'suggested_unit_of_measurement': <UnitOfTime.HOURS: 'h'>,
       }),
     }),
+    'object_id_base': 'Sensor remaining',
     'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
     'original_icon': None,
     'original_name': 'Sensor remaining',
@@ -1128,7 +1128,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Sensor used',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1150,6 +1149,7 @@
         'suggested_unit_of_measurement': <UnitOfTime.HOURS: 'h'>,
       }),
     }),
+    'object_id_base': 'Sensor used',
     'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
     'original_icon': None,
     'original_name': 'Sensor used',
@@ -1167,7 +1167,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Side brush remaining',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1189,6 +1188,7 @@
         'suggested_unit_of_measurement': <UnitOfTime.HOURS: 'h'>,
       }),
     }),
+    'object_id_base': 'Side brush remaining',
     'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
     'original_icon': None,
     'original_name': 'Side brush remaining',
@@ -1206,7 +1206,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Side brush used',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1228,6 +1227,7 @@
         'suggested_unit_of_measurement': <UnitOfTime.HOURS: 'h'>,
       }),
     }),
+    'object_id_base': 'Side brush used',
     'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
     'original_icon': None,
     'original_name': 'Side brush used',
@@ -1245,7 +1245,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Signal level',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1266,6 +1265,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Signal level',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Signal level',
@@ -1297,7 +1297,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Signal strength',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1318,6 +1317,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Signal strength',
     'original_device_class': <SensorDeviceClass.SIGNAL_STRENGTH: 'signal_strength'>,
     'original_icon': None,
     'original_name': 'Signal strength',
@@ -1335,7 +1335,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'SSID',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1354,6 +1353,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'SSID',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'SSID',
@@ -1371,7 +1371,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1392,6 +1391,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Temperature',
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Temperature',
@@ -1409,7 +1409,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': "This month's consumption",
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -1433,6 +1432,7 @@
         'suggested_display_precision': 3,
       }),
     }),
+    'object_id_base': "This month's consumption",
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
     'original_name': "This month's consumption",
@@ -1466,7 +1466,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': "Today's consumption",
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -1490,6 +1489,7 @@
         'suggested_display_precision': 3,
       }),
     }),
+    'object_id_base': "Today's consumption",
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
     'original_name': "Today's consumption",
@@ -1523,7 +1523,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Total cleaning area',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -1547,6 +1546,7 @@
         'suggested_unit_of_measurement': <UnitOfArea.SQUARE_METERS: 'm²'>,
       }),
     }),
+    'object_id_base': 'Total cleaning area',
     'original_device_class': <SensorDeviceClass.AREA: 'area'>,
     'original_icon': None,
     'original_name': 'Total cleaning area',
@@ -1564,7 +1564,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Total cleaning count',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -1585,6 +1584,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Total cleaning count',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Total cleaning count',
@@ -1602,7 +1602,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Total cleaning time',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -1626,6 +1625,7 @@
         'suggested_unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
       }),
     }),
+    'object_id_base': 'Total cleaning time',
     'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
     'original_icon': None,
     'original_name': 'Total cleaning time',
@@ -1643,7 +1643,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Total consumption',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -1667,6 +1666,7 @@
         'suggested_display_precision': 3,
       }),
     }),
+    'object_id_base': 'Total consumption',
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
     'original_name': 'Total consumption',
@@ -1700,7 +1700,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Voltage',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1724,6 +1723,7 @@
         'suggested_display_precision': 1,
       }),
     }),
+    'object_id_base': 'Voltage',
     'original_device_class': <SensorDeviceClass.VOLTAGE: 'voltage'>,
     'original_icon': None,
     'original_name': 'Voltage',

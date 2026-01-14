@@ -4,7 +4,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'External temperature',
     'capabilities': dict({
       'max': 50,
       'min': -50,
@@ -28,6 +27,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'External temperature',
     'original_device_class': <NumberDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'External temperature',
@@ -64,7 +64,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Valve position',
     'capabilities': dict({
       'max': 100,
       'min': 0,
@@ -88,6 +87,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Valve position',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Valve position',
@@ -123,7 +123,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Left slot intensity',
     'capabilities': dict({
       'max': 100,
       'min': 0,
@@ -147,6 +146,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Left slot intensity',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Left slot intensity',
@@ -182,7 +182,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Right slot intensity',
     'capabilities': dict({
       'max': 100,
       'min': 0,
@@ -206,6 +205,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Right slot intensity',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Right slot intensity',

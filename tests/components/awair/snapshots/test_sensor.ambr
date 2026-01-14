@@ -4,7 +4,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Carbon dioxide',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -25,6 +24,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Carbon dioxide',
     'original_device_class': <SensorDeviceClass.CO2: 'carbon_dioxide'>,
     'original_icon': None,
     'original_name': 'Carbon dioxide',
@@ -60,7 +60,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Humidity',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -81,6 +80,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Humidity',
     'original_device_class': <SensorDeviceClass.HUMIDITY: 'humidity'>,
     'original_icon': None,
     'original_name': 'Humidity',
@@ -116,7 +116,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'PM10',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -137,6 +136,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'PM10',
     'original_device_class': <SensorDeviceClass.PM10: 'pm10'>,
     'original_icon': None,
     'original_name': 'PM10',
@@ -172,7 +172,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'PM2.5',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -193,6 +192,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'PM2.5',
     'original_device_class': <SensorDeviceClass.PM25: 'pm25'>,
     'original_icon': None,
     'original_name': 'PM2.5',
@@ -228,7 +228,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Score',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -249,6 +248,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Score',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Score',
@@ -282,7 +282,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -306,6 +305,7 @@
         'suggested_display_precision': 1,
       }),
     }),
+    'object_id_base': 'Temperature',
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Temperature',
@@ -341,7 +341,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Volatile organic compounds parts',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -362,6 +361,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Volatile organic compounds parts',
     'original_device_class': <SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS_PARTS: 'volatile_organic_compounds_parts'>,
     'original_icon': None,
     'original_name': 'Volatile organic compounds parts',
@@ -397,7 +397,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Carbon dioxide',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -418,6 +417,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Carbon dioxide',
     'original_device_class': <SensorDeviceClass.CO2: 'carbon_dioxide'>,
     'original_icon': None,
     'original_name': 'Carbon dioxide',
@@ -453,7 +453,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Humidity',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -474,6 +473,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Humidity',
     'original_device_class': <SensorDeviceClass.HUMIDITY: 'humidity'>,
     'original_icon': None,
     'original_name': 'Humidity',
@@ -509,7 +509,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'PM2.5',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -530,6 +529,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'PM2.5',
     'original_device_class': <SensorDeviceClass.PM25: 'pm25'>,
     'original_icon': None,
     'original_name': 'PM2.5',
@@ -565,7 +565,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Score',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -586,6 +585,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Score',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Score',
@@ -619,7 +619,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -643,6 +642,7 @@
         'suggested_display_precision': 1,
       }),
     }),
+    'object_id_base': 'Temperature',
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Temperature',
@@ -678,7 +678,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Volatile organic compounds parts',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -699,6 +698,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Volatile organic compounds parts',
     'original_device_class': <SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS_PARTS: 'volatile_organic_compounds_parts'>,
     'original_icon': None,
     'original_name': 'Volatile organic compounds parts',
@@ -734,7 +734,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Carbon dioxide',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -755,6 +754,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Carbon dioxide',
     'original_device_class': <SensorDeviceClass.CO2: 'carbon_dioxide'>,
     'original_icon': None,
     'original_name': 'Carbon dioxide',
@@ -790,7 +790,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Humidity',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -811,6 +810,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Humidity',
     'original_device_class': <SensorDeviceClass.HUMIDITY: 'humidity'>,
     'original_icon': None,
     'original_name': 'Humidity',
@@ -846,7 +846,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Score',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -867,6 +866,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Score',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Score',
@@ -900,7 +900,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -924,6 +923,7 @@
         'suggested_display_precision': 1,
       }),
     }),
+    'object_id_base': 'Temperature',
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Temperature',
@@ -959,7 +959,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Volatile organic compounds parts',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -980,6 +979,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Volatile organic compounds parts',
     'original_device_class': <SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS_PARTS: 'volatile_organic_compounds_parts'>,
     'original_icon': None,
     'original_name': 'Volatile organic compounds parts',
@@ -1015,7 +1015,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Humidity',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1036,6 +1035,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Humidity',
     'original_device_class': <SensorDeviceClass.HUMIDITY: 'humidity'>,
     'original_icon': None,
     'original_name': 'Humidity',
@@ -1071,7 +1071,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Illuminance',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1092,6 +1091,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Illuminance',
     'original_device_class': <SensorDeviceClass.ILLUMINANCE: 'illuminance'>,
     'original_icon': None,
     'original_name': 'Illuminance',
@@ -1126,7 +1126,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'PM2.5',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1147,6 +1146,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'PM2.5',
     'original_device_class': <SensorDeviceClass.PM25: 'pm25'>,
     'original_icon': None,
     'original_name': 'PM2.5',
@@ -1182,7 +1182,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Score',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1203,6 +1202,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Score',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Score',
@@ -1236,7 +1236,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1260,6 +1259,7 @@
         'suggested_display_precision': 1,
       }),
     }),
+    'object_id_base': 'Temperature',
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Temperature',
@@ -1295,7 +1295,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Volatile organic compounds parts',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1316,6 +1315,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Volatile organic compounds parts',
     'original_device_class': <SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS_PARTS: 'volatile_organic_compounds_parts'>,
     'original_icon': None,
     'original_name': 'Volatile organic compounds parts',
@@ -1351,7 +1351,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Carbon dioxide',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1372,6 +1371,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Carbon dioxide',
     'original_device_class': <SensorDeviceClass.CO2: 'carbon_dioxide'>,
     'original_icon': None,
     'original_name': 'Carbon dioxide',
@@ -1407,7 +1407,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Humidity',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1428,6 +1427,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Humidity',
     'original_device_class': <SensorDeviceClass.HUMIDITY: 'humidity'>,
     'original_icon': None,
     'original_name': 'Humidity',
@@ -1463,7 +1463,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Illuminance',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1484,6 +1483,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Illuminance',
     'original_device_class': <SensorDeviceClass.ILLUMINANCE: 'illuminance'>,
     'original_icon': None,
     'original_name': 'Illuminance',
@@ -1518,7 +1518,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'PM2.5',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1539,6 +1538,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'PM2.5',
     'original_device_class': <SensorDeviceClass.PM25: 'pm25'>,
     'original_icon': None,
     'original_name': 'PM2.5',
@@ -1574,7 +1574,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Score',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1595,6 +1594,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Score',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Score',
@@ -1628,7 +1628,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Sound level',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1649,6 +1648,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Sound level',
     'original_device_class': <SensorDeviceClass.SOUND_PRESSURE: 'sound_pressure'>,
     'original_icon': None,
     'original_name': 'Sound level',
@@ -1683,7 +1683,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1707,6 +1706,7 @@
         'suggested_display_precision': 1,
       }),
     }),
+    'object_id_base': 'Temperature',
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Temperature',
@@ -1742,7 +1742,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Volatile organic compounds parts',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1763,6 +1762,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Volatile organic compounds parts',
     'original_device_class': <SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS_PARTS: 'volatile_organic_compounds_parts'>,
     'original_icon': None,
     'original_name': 'Volatile organic compounds parts',
@@ -1798,7 +1798,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Absolute humidity',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1822,6 +1821,7 @@
         'suggested_display_precision': 1,
       }),
     }),
+    'object_id_base': 'Absolute humidity',
     'original_device_class': <SensorDeviceClass.ABSOLUTE_HUMIDITY: 'absolute_humidity'>,
     'original_icon': None,
     'original_name': 'Absolute humidity',
@@ -1856,7 +1856,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Carbon dioxide',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1877,6 +1876,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Carbon dioxide',
     'original_device_class': <SensorDeviceClass.CO2: 'carbon_dioxide'>,
     'original_icon': None,
     'original_name': 'Carbon dioxide',
@@ -1911,7 +1911,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Dew point',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1935,6 +1934,7 @@
         'suggested_display_precision': 1,
       }),
     }),
+    'object_id_base': 'Dew point',
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Dew point',
@@ -1969,7 +1969,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Humidity',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1990,6 +1989,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Humidity',
     'original_device_class': <SensorDeviceClass.HUMIDITY: 'humidity'>,
     'original_icon': None,
     'original_name': 'Humidity',
@@ -2024,7 +2024,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'PM2.5',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2045,6 +2044,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'PM2.5',
     'original_device_class': <SensorDeviceClass.PM25: 'pm25'>,
     'original_icon': None,
     'original_name': 'PM2.5',
@@ -2079,7 +2079,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Score',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2100,6 +2099,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Score',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Score',
@@ -2133,7 +2133,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2157,6 +2156,7 @@
         'suggested_display_precision': 1,
       }),
     }),
+    'object_id_base': 'Temperature',
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Temperature',
@@ -2191,7 +2191,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Volatile organic compounds parts',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2212,6 +2211,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Volatile organic compounds parts',
     'original_device_class': <SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS_PARTS: 'volatile_organic_compounds_parts'>,
     'original_icon': None,
     'original_name': 'Volatile organic compounds parts',

@@ -4,7 +4,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Avatar',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -23,6 +22,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Avatar',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Avatar',
@@ -55,7 +55,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Gamerpic',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -74,6 +73,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Gamerpic',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Gamerpic',
@@ -106,7 +106,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Now playing',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -125,6 +124,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Now playing',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Now playing',
@@ -157,7 +157,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Avatar',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -176,6 +175,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Avatar',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Avatar',
@@ -208,7 +208,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Gamerpic',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -227,6 +226,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Gamerpic',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Gamerpic',
@@ -259,7 +259,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Now playing',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -278,6 +277,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Now playing',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Now playing',
@@ -310,7 +310,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Avatar',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -329,6 +328,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Avatar',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Avatar',
@@ -361,7 +361,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Gamerpic',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -380,6 +379,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Gamerpic',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Gamerpic',
@@ -412,7 +412,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Now playing',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -431,6 +430,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Now playing',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Now playing',

@@ -4,7 +4,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Battery',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -25,6 +24,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Battery',
     'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
     'original_icon': None,
     'original_name': 'Battery',
@@ -58,7 +58,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Cutting blade usage time',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -85,6 +84,7 @@
         'suggested_unit_of_measurement': <UnitOfTime.HOURS: 'h'>,
       }),
     }),
+    'object_id_base': 'Cutting blade usage time',
     'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
     'original_icon': None,
     'original_name': 'Cutting blade usage time',
@@ -118,7 +118,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Downtime',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -145,6 +144,7 @@
         'suggested_unit_of_measurement': <UnitOfTime.HOURS: 'h'>,
       }),
     }),
+    'object_id_base': 'Downtime',
     'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
     'original_icon': None,
     'original_name': 'Downtime',
@@ -178,7 +178,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Error',
     'capabilities': dict({
       'options': list([
         'alarm_mower_in_motion',
@@ -330,6 +329,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Error',
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
     'original_name': 'Error',
@@ -493,7 +493,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Front lawn last time completed',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -512,6 +511,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Front lawn last time completed',
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
     'original_icon': None,
     'original_name': 'Front lawn last time completed',
@@ -543,7 +543,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Front lawn progress',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -564,6 +563,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Front lawn progress',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Front lawn progress',
@@ -596,7 +596,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Inactive reason',
     'capabilities': dict({
       'options': list([
         <InactiveReasons.NONE: 'none'>,
@@ -621,6 +620,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Inactive reason',
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
     'original_name': 'Inactive reason',
@@ -657,7 +657,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Mode',
     'capabilities': dict({
       'options': list([
         <MowerModes.MAIN_AREA: 'main_area'>,
@@ -685,6 +684,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Mode',
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
     'original_name': 'Mode',
@@ -724,7 +724,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'My lawn last time completed',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -743,6 +742,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'My lawn last time completed',
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
     'original_icon': None,
     'original_name': 'My lawn last time completed',
@@ -774,7 +774,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'My lawn progress',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -795,6 +794,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'My lawn progress',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'My lawn progress',
@@ -827,7 +827,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Next start',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -846,6 +845,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Next start',
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
     'original_icon': None,
     'original_name': 'Next start',
@@ -877,7 +877,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Number of charging cycles',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -898,6 +897,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Number of charging cycles',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Number of charging cycles',
@@ -929,7 +929,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Number of collisions',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -950,6 +949,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Number of collisions',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Number of collisions',
@@ -981,7 +981,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Remaining charging time',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1006,6 +1005,7 @@
         'suggested_unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
       }),
     }),
+    'object_id_base': 'Remaining charging time',
     'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
     'original_icon': None,
     'original_name': 'Remaining charging time',
@@ -1038,7 +1038,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Restricted reason',
     'capabilities': dict({
       'options': list([
         <RestrictedReasons.ALL_WORK_AREAS_COMPLETED: 'all_work_areas_completed'>,
@@ -1082,6 +1081,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Restricted reason',
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
     'original_name': 'Restricted reason',
@@ -1137,7 +1137,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Total charging time',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -1164,6 +1163,7 @@
         'suggested_unit_of_measurement': <UnitOfTime.HOURS: 'h'>,
       }),
     }),
+    'object_id_base': 'Total charging time',
     'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
     'original_icon': None,
     'original_name': 'Total charging time',
@@ -1197,7 +1197,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Total cutting time',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -1224,6 +1223,7 @@
         'suggested_unit_of_measurement': <UnitOfTime.HOURS: 'h'>,
       }),
     }),
+    'object_id_base': 'Total cutting time',
     'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
     'original_icon': None,
     'original_name': 'Total cutting time',
@@ -1257,7 +1257,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Total drive distance',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -1284,6 +1283,7 @@
         'suggested_unit_of_measurement': <UnitOfLength.KILOMETERS: 'km'>,
       }),
     }),
+    'object_id_base': 'Total drive distance',
     'original_device_class': <SensorDeviceClass.DISTANCE: 'distance'>,
     'original_icon': None,
     'original_name': 'Total drive distance',
@@ -1317,7 +1317,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Total running time',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -1344,6 +1343,7 @@
         'suggested_unit_of_measurement': <UnitOfTime.HOURS: 'h'>,
       }),
     }),
+    'object_id_base': 'Total running time',
     'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
     'original_icon': None,
     'original_name': 'Total running time',
@@ -1377,7 +1377,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Total searching time',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -1404,6 +1403,7 @@
         'suggested_unit_of_measurement': <UnitOfTime.HOURS: 'h'>,
       }),
     }),
+    'object_id_base': 'Total searching time',
     'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
     'original_icon': None,
     'original_name': 'Total searching time',
@@ -1437,7 +1437,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Uptime',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -1464,6 +1463,7 @@
         'suggested_unit_of_measurement': <UnitOfTime.HOURS: 'h'>,
       }),
     }),
+    'object_id_base': 'Uptime',
     'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
     'original_icon': None,
     'original_name': 'Uptime',
@@ -1497,7 +1497,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Work area',
     'capabilities': dict({
       'options': list([
         'Front lawn',
@@ -1523,6 +1522,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Work area',
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
     'original_name': 'Work area',
@@ -1565,7 +1565,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Battery',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1586,6 +1585,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Battery',
     'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
     'original_icon': None,
     'original_name': 'Battery',
@@ -1619,7 +1619,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Error',
     'capabilities': dict({
       'options': list([
         'alarm_mower_in_motion',
@@ -1771,6 +1770,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Error',
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
     'original_name': 'Error',
@@ -1934,7 +1934,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Mode',
     'capabilities': dict({
       'options': list([
         <MowerModes.MAIN_AREA: 'main_area'>,
@@ -1962,6 +1961,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Mode',
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
     'original_name': 'Mode',
@@ -2001,7 +2001,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Next start',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2020,6 +2019,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Next start',
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
     'original_icon': None,
     'original_name': 'Next start',
@@ -2051,7 +2051,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Remaining charging time',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2076,6 +2075,7 @@
         'suggested_unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
       }),
     }),
+    'object_id_base': 'Remaining charging time',
     'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
     'original_icon': None,
     'original_name': 'Remaining charging time',
@@ -2108,7 +2108,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Restricted reason',
     'capabilities': dict({
       'options': list([
         <RestrictedReasons.ALL_WORK_AREAS_COMPLETED: 'all_work_areas_completed'>,
@@ -2152,6 +2151,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Restricted reason',
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
     'original_name': 'Restricted reason',

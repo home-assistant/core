@@ -4,7 +4,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Storage mode',
     'capabilities': dict({
       'options': list([
         'backup',
@@ -29,6 +28,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Storage mode',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Storage mode',
@@ -64,7 +64,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Storage mode',
     'capabilities': dict({
       'options': list([
         'backup',
@@ -89,6 +88,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Storage mode',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Storage mode',
@@ -124,7 +124,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Generator action',
     'capabilities': dict({
       'options': list([
         'powered',
@@ -150,6 +149,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Generator action',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Generator action',
@@ -186,7 +186,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Grid action',
     'capabilities': dict({
       'options': list([
         'powered',
@@ -212,6 +211,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Grid action',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Grid action',
@@ -248,7 +248,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Microgrid action',
     'capabilities': dict({
       'options': list([
         'powered',
@@ -274,6 +273,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Microgrid action',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Microgrid action',
@@ -310,7 +310,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Mode',
     'capabilities': dict({
       'options': list([
         'standard',
@@ -334,6 +333,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Mode',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Mode',
@@ -368,7 +368,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Generator action',
     'capabilities': dict({
       'options': list([
         'powered',
@@ -394,6 +393,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Generator action',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Generator action',
@@ -430,7 +430,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Grid action',
     'capabilities': dict({
       'options': list([
         'powered',
@@ -456,6 +455,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Grid action',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Grid action',
@@ -492,7 +492,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Microgrid action',
     'capabilities': dict({
       'options': list([
         'powered',
@@ -518,6 +517,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Microgrid action',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Microgrid action',
@@ -554,7 +554,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Mode',
     'capabilities': dict({
       'options': list([
         'standard',
@@ -578,6 +577,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Mode',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Mode',
@@ -612,7 +612,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Generator action',
     'capabilities': dict({
       'options': list([
         'powered',
@@ -638,6 +637,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Generator action',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Generator action',
@@ -674,7 +674,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Grid action',
     'capabilities': dict({
       'options': list([
         'powered',
@@ -700,6 +699,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Grid action',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Grid action',
@@ -736,7 +736,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Microgrid action',
     'capabilities': dict({
       'options': list([
         'powered',
@@ -762,6 +761,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Microgrid action',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Microgrid action',
@@ -798,7 +798,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Mode',
     'capabilities': dict({
       'options': list([
         'standard',
@@ -822,6 +821,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Mode',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Mode',

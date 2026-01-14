@@ -21,7 +21,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Segment 1 intensity',
     'capabilities': dict({
       'max': 255,
       'min': 0,
@@ -45,6 +44,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Segment 1 intensity',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Segment 1 intensity',
@@ -114,7 +114,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Segment 1 speed',
     'capabilities': dict({
       'max': 255,
       'min': 0,
@@ -138,6 +137,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Segment 1 speed',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Segment 1 speed',
@@ -190,7 +190,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Intensity',
     'capabilities': dict({
       'max': 255,
       'min': 0,
@@ -214,6 +213,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Intensity',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Intensity',
@@ -248,7 +248,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Segment 1 intensity',
     'capabilities': dict({
       'max': 255,
       'min': 0,
@@ -272,6 +271,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Segment 1 intensity',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Segment 1 intensity',
@@ -306,7 +306,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Segment 1 speed',
     'capabilities': dict({
       'max': 255,
       'min': 0,
@@ -330,6 +329,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Segment 1 speed',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Segment 1 speed',
@@ -364,7 +364,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Speed',
     'capabilities': dict({
       'max': 255,
       'min': 0,
@@ -388,6 +387,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Speed',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Speed',

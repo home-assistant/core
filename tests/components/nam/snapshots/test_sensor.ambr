@@ -4,7 +4,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'BH1750 illuminance',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -28,6 +27,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'BH1750 illuminance',
     'original_device_class': <SensorDeviceClass.ILLUMINANCE: 'illuminance'>,
     'original_icon': None,
     'original_name': 'BH1750 illuminance',
@@ -61,7 +61,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'BME280 humidity',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -85,6 +84,7 @@
         'suggested_display_precision': 1,
       }),
     }),
+    'object_id_base': 'BME280 humidity',
     'original_device_class': <SensorDeviceClass.HUMIDITY: 'humidity'>,
     'original_icon': None,
     'original_name': 'BME280 humidity',
@@ -118,7 +118,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'BME280 pressure',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -142,6 +141,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'BME280 pressure',
     'original_device_class': <SensorDeviceClass.PRESSURE: 'pressure'>,
     'original_icon': None,
     'original_name': 'BME280 pressure',
@@ -175,7 +175,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'BME280 temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -199,6 +198,7 @@
         'suggested_display_precision': 1,
       }),
     }),
+    'object_id_base': 'BME280 temperature',
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'BME280 temperature',
@@ -232,7 +232,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'BMP180 pressure',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -256,6 +255,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'BMP180 pressure',
     'original_device_class': <SensorDeviceClass.PRESSURE: 'pressure'>,
     'original_icon': None,
     'original_name': 'BMP180 pressure',
@@ -289,7 +289,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'BMP180 temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -313,6 +312,7 @@
         'suggested_display_precision': 1,
       }),
     }),
+    'object_id_base': 'BMP180 temperature',
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'BMP180 temperature',
@@ -346,7 +346,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'BMP280 pressure',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -370,6 +369,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'BMP280 pressure',
     'original_device_class': <SensorDeviceClass.PRESSURE: 'pressure'>,
     'original_icon': None,
     'original_name': 'BMP280 pressure',
@@ -403,7 +403,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'BMP280 temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -427,6 +426,7 @@
         'suggested_display_precision': 1,
       }),
     }),
+    'object_id_base': 'BMP280 temperature',
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'BMP280 temperature',
@@ -460,7 +460,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'DHT22 humidity',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -484,6 +483,7 @@
         'suggested_display_precision': 1,
       }),
     }),
+    'object_id_base': 'DHT22 humidity',
     'original_device_class': <SensorDeviceClass.HUMIDITY: 'humidity'>,
     'original_icon': None,
     'original_name': 'DHT22 humidity',
@@ -517,7 +517,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'DHT22 temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -541,6 +540,7 @@
         'suggested_display_precision': 1,
       }),
     }),
+    'object_id_base': 'DHT22 temperature',
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'DHT22 temperature',
@@ -574,7 +574,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'DS18B20 temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -598,6 +597,7 @@
         'suggested_display_precision': 1,
       }),
     }),
+    'object_id_base': 'DS18B20 temperature',
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'DS18B20 temperature',
@@ -631,7 +631,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'HECA humidity',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -655,6 +654,7 @@
         'suggested_display_precision': 1,
       }),
     }),
+    'object_id_base': 'HECA humidity',
     'original_device_class': <SensorDeviceClass.HUMIDITY: 'humidity'>,
     'original_icon': None,
     'original_name': 'HECA humidity',
@@ -688,7 +688,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'HECA temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -712,6 +711,7 @@
         'suggested_display_precision': 1,
       }),
     }),
+    'object_id_base': 'HECA temperature',
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'HECA temperature',
@@ -745,7 +745,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Last restart',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -764,6 +763,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Last restart',
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
     'original_icon': None,
     'original_name': 'Last restart',
@@ -795,7 +795,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'MH-Z14A carbon dioxide',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -819,6 +818,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'MH-Z14A carbon dioxide',
     'original_device_class': <SensorDeviceClass.CO2: 'carbon_dioxide'>,
     'original_icon': None,
     'original_name': 'MH-Z14A carbon dioxide',
@@ -852,7 +852,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'PMSx003 common air quality index',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -871,6 +870,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'PMSx003 common air quality index',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'PMSx003 common air quality index',
@@ -901,7 +901,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'PMSx003 common air quality index level',
     'capabilities': dict({
       'options': list([
         'very_low',
@@ -928,6 +927,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'PMSx003 common air quality index level',
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
     'original_name': 'PMSx003 common air quality index level',
@@ -966,7 +966,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'PMSx003 PM1',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -990,6 +989,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'PMSx003 PM1',
     'original_device_class': <SensorDeviceClass.PM1: 'pm1'>,
     'original_icon': None,
     'original_name': 'PMSx003 PM1',
@@ -1023,7 +1023,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'PMSx003 PM10',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1047,6 +1046,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'PMSx003 PM10',
     'original_device_class': <SensorDeviceClass.PM10: 'pm10'>,
     'original_icon': None,
     'original_name': 'PMSx003 PM10',
@@ -1080,7 +1080,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'PMSx003 PM2.5',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1104,6 +1103,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'PMSx003 PM2.5',
     'original_device_class': <SensorDeviceClass.PM25: 'pm25'>,
     'original_icon': None,
     'original_name': 'PMSx003 PM2.5',
@@ -1137,7 +1137,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'SDS011 common air quality index',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1156,6 +1155,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'SDS011 common air quality index',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'SDS011 common air quality index',
@@ -1186,7 +1186,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'SDS011 common air quality index level',
     'capabilities': dict({
       'options': list([
         'very_low',
@@ -1213,6 +1212,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'SDS011 common air quality index level',
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
     'original_name': 'SDS011 common air quality index level',
@@ -1251,7 +1251,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'SDS011 PM10',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1275,6 +1274,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'SDS011 PM10',
     'original_device_class': <SensorDeviceClass.PM10: 'pm10'>,
     'original_icon': None,
     'original_name': 'SDS011 PM10',
@@ -1308,7 +1308,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'SDS011 PM2.5',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1332,6 +1331,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'SDS011 PM2.5',
     'original_device_class': <SensorDeviceClass.PM25: 'pm25'>,
     'original_icon': None,
     'original_name': 'SDS011 PM2.5',
@@ -1365,7 +1365,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'SHT3X humidity',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1389,6 +1388,7 @@
         'suggested_display_precision': 1,
       }),
     }),
+    'object_id_base': 'SHT3X humidity',
     'original_device_class': <SensorDeviceClass.HUMIDITY: 'humidity'>,
     'original_icon': None,
     'original_name': 'SHT3X humidity',
@@ -1422,7 +1422,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'SHT3X temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1446,6 +1445,7 @@
         'suggested_display_precision': 1,
       }),
     }),
+    'object_id_base': 'SHT3X temperature',
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'SHT3X temperature',
@@ -1479,7 +1479,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Signal strength',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1503,6 +1502,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'Signal strength',
     'original_device_class': <SensorDeviceClass.SIGNAL_STRENGTH: 'signal_strength'>,
     'original_icon': None,
     'original_name': 'Signal strength',
@@ -1536,7 +1536,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'SPS30 common air quality index',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1555,6 +1554,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'SPS30 common air quality index',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'SPS30 common air quality index',
@@ -1585,7 +1585,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'SPS30 common air quality index level',
     'capabilities': dict({
       'options': list([
         'very_low',
@@ -1612,6 +1611,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'SPS30 common air quality index level',
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
     'original_name': 'SPS30 common air quality index level',
@@ -1650,7 +1650,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'SPS30 PM1',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1674,6 +1673,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'SPS30 PM1',
     'original_device_class': <SensorDeviceClass.PM1: 'pm1'>,
     'original_icon': None,
     'original_name': 'SPS30 PM1',
@@ -1707,7 +1707,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'SPS30 PM10',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1731,6 +1730,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'SPS30 PM10',
     'original_device_class': <SensorDeviceClass.PM10: 'pm10'>,
     'original_icon': None,
     'original_name': 'SPS30 PM10',
@@ -1764,7 +1764,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'SPS30 PM2.5',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1788,6 +1787,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'SPS30 PM2.5',
     'original_device_class': <SensorDeviceClass.PM25: 'pm25'>,
     'original_icon': None,
     'original_name': 'SPS30 PM2.5',
@@ -1821,7 +1821,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'SPS30 PM4',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1845,6 +1844,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'SPS30 PM4',
     'original_device_class': <SensorDeviceClass.PM4: 'pm4'>,
     'original_icon': None,
     'original_name': 'SPS30 PM4',

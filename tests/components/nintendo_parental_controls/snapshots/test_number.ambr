@@ -4,7 +4,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Max screentime today',
     'capabilities': dict({
       'max': 360,
       'min': -1,
@@ -28,6 +27,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Max screentime today',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Max screentime today',

@@ -4,7 +4,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Bedroom',
     'capabilities': dict({
       'hvac_modes': list([
         <HVACMode.OFF: 'off'>,
@@ -33,6 +32,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Bedroom',
     'original_device_class': None,
     'original_icon': 'mdi:radiator',
     'original_name': 'Bedroom',
@@ -86,7 +86,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Ensuite',
     'capabilities': dict({
       'hvac_modes': list([
         <HVACMode.OFF: 'off'>,
@@ -116,6 +115,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Ensuite',
     'original_device_class': None,
     'original_icon': 'mdi:radiator',
     'original_name': 'Ensuite',
@@ -171,7 +171,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Guest room',
     'capabilities': dict({
       'hvac_modes': list([
         <HVACMode.OFF: 'off'>,
@@ -201,6 +200,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Guest room',
     'original_device_class': None,
     'original_icon': 'mdi:radiator',
     'original_name': 'Guest room',
@@ -256,7 +256,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Hall',
     'capabilities': dict({
       'hvac_modes': list([
         <HVACMode.OFF: 'off'>,
@@ -286,6 +285,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Hall',
     'original_device_class': None,
     'original_icon': 'mdi:radiator',
     'original_name': 'Hall',
@@ -341,7 +341,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Kitchen',
     'capabilities': dict({
       'hvac_modes': list([
         <HVACMode.OFF: 'off'>,
@@ -371,6 +370,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Kitchen',
     'original_device_class': None,
     'original_icon': 'mdi:radiator',
     'original_name': 'Kitchen',
@@ -426,7 +426,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Lounge',
     'capabilities': dict({
       'hvac_modes': list([
         <HVACMode.OFF: 'off'>,
@@ -455,6 +454,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Lounge',
     'original_device_class': None,
     'original_icon': 'mdi:radiator',
     'original_name': 'Lounge',
@@ -508,7 +508,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Study',
     'capabilities': dict({
       'hvac_modes': list([
         <HVACMode.OFF: 'off'>,
@@ -538,6 +537,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Study',
     'original_device_class': None,
     'original_icon': 'mdi:radiator',
     'original_name': 'Study',

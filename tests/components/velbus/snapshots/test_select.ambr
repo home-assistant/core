@@ -4,7 +4,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'select',
     'capabilities': dict({
       'options': list([
         'none',
@@ -30,6 +29,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'select',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'select',

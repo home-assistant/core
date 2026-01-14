@@ -4,7 +4,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Programmed input-output',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -23,6 +22,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Programmed input-output',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Programmed input-output',
@@ -54,7 +54,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Latch A',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -73,6 +72,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Latch A',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Latch A',
@@ -104,7 +104,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Latch B',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -123,6 +122,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Latch B',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Latch B',
@@ -154,7 +154,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Programmed input-output A',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -173,6 +172,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Programmed input-output A',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Programmed input-output A',
@@ -204,7 +204,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Programmed input-output B',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -223,6 +222,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Programmed input-output B',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Programmed input-output B',
@@ -254,7 +254,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Current A/D control',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -273,6 +272,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Current A/D control',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Current A/D control',
@@ -304,7 +304,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Latch 0',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -323,6 +322,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Latch 0',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Latch 0',
@@ -354,7 +354,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Latch 1',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -373,6 +372,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Latch 1',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Latch 1',
@@ -404,7 +404,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Latch 2',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -423,6 +422,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Latch 2',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Latch 2',
@@ -454,7 +454,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Latch 3',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -473,6 +472,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Latch 3',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Latch 3',
@@ -504,7 +504,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Latch 4',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -523,6 +522,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Latch 4',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Latch 4',
@@ -554,7 +554,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Latch 5',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -573,6 +572,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Latch 5',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Latch 5',
@@ -604,7 +604,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Latch 6',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -623,6 +622,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Latch 6',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Latch 6',
@@ -654,7 +654,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Latch 7',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -673,6 +672,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Latch 7',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Latch 7',
@@ -704,7 +704,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Programmed input-output 0',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -723,6 +722,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Programmed input-output 0',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Programmed input-output 0',
@@ -754,7 +754,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Programmed input-output 1',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -773,6 +772,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Programmed input-output 1',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Programmed input-output 1',
@@ -804,7 +804,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Programmed input-output 2',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -823,6 +822,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Programmed input-output 2',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Programmed input-output 2',
@@ -854,7 +854,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Programmed input-output 3',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -873,6 +872,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Programmed input-output 3',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Programmed input-output 3',
@@ -904,7 +904,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Programmed input-output 4',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -923,6 +922,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Programmed input-output 4',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Programmed input-output 4',
@@ -954,7 +954,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Programmed input-output 5',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -973,6 +972,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Programmed input-output 5',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Programmed input-output 5',
@@ -1004,7 +1004,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Programmed input-output 6',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1023,6 +1022,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Programmed input-output 6',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Programmed input-output 6',
@@ -1054,7 +1054,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Programmed input-output 7',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1073,6 +1072,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Programmed input-output 7',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Programmed input-output 7',
@@ -1104,7 +1104,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Programmed input-output A',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1123,6 +1122,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Programmed input-output A',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Programmed input-output A',
@@ -1154,7 +1154,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Programmed input-output B',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1173,6 +1172,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Programmed input-output B',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Programmed input-output B',
@@ -1204,7 +1204,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Current A/D control',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1223,6 +1222,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Current A/D control',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Current A/D control',
@@ -1254,7 +1254,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Leaf sensor 0',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1273,6 +1272,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Leaf sensor 0',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Leaf sensor 0',
@@ -1304,7 +1304,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Leaf sensor 1',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1323,6 +1322,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Leaf sensor 1',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Leaf sensor 1',
@@ -1354,7 +1354,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Leaf sensor 2',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1373,6 +1372,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Leaf sensor 2',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Leaf sensor 2',
@@ -1404,7 +1404,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Leaf sensor 3',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1423,6 +1422,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Leaf sensor 3',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Leaf sensor 3',
@@ -1454,7 +1454,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Moisture sensor 0',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1473,6 +1472,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Moisture sensor 0',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Moisture sensor 0',
@@ -1504,7 +1504,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Moisture sensor 1',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1523,6 +1522,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Moisture sensor 1',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Moisture sensor 1',
@@ -1554,7 +1554,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Moisture sensor 2',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1573,6 +1572,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Moisture sensor 2',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Moisture sensor 2',
@@ -1604,7 +1604,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Moisture sensor 3',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1623,6 +1622,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Moisture sensor 3',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Moisture sensor 3',
@@ -1654,7 +1654,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Hub branch 0',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1673,6 +1672,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Hub branch 0',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Hub branch 0',
@@ -1704,7 +1704,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Hub branch 1',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1723,6 +1722,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Hub branch 1',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Hub branch 1',
@@ -1754,7 +1754,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Hub branch 2',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1773,6 +1772,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Hub branch 2',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Hub branch 2',
@@ -1804,7 +1804,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Hub branch 3',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1823,6 +1822,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Hub branch 3',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Hub branch 3',

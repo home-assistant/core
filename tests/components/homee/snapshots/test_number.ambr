@@ -4,7 +4,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Button brightness (active)',
     'capabilities': dict({
       'max': 100,
       'min': 0,
@@ -28,6 +27,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Button brightness (active)',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Button brightness (active)',
@@ -63,7 +63,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Button brightness (dimmed)',
     'capabilities': dict({
       'max': 100,
       'min': 0,
@@ -87,6 +86,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Button brightness (dimmed)',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Button brightness (dimmed)',
@@ -122,7 +122,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Display brightness (active)',
     'capabilities': dict({
       'max': 100,
       'min': 0,
@@ -146,6 +145,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Display brightness (active)',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Display brightness (active)',
@@ -181,7 +181,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Display brightness (dimmed)',
     'capabilities': dict({
       'max': 100,
       'min': 0,
@@ -205,6 +204,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Display brightness (dimmed)',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Display brightness (dimmed)',
@@ -240,7 +240,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Down-movement duration',
     'capabilities': dict({
       'max': 240,
       'min': 4,
@@ -264,6 +263,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Down-movement duration',
     'original_device_class': <NumberDeviceClass.DURATION: 'duration'>,
     'original_icon': None,
     'original_name': 'Down-movement duration',
@@ -300,7 +300,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Down position',
     'capabilities': dict({
       'max': 100,
       'min': 0,
@@ -324,6 +323,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Down position',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Down position',
@@ -359,7 +359,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Down slat position',
     'capabilities': dict({
       'max': 75,
       'min': -75,
@@ -383,6 +382,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Down slat position',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Down slat position',
@@ -418,7 +418,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'End position',
     'capabilities': dict({
       'max': 130,
       'min': 0,
@@ -442,6 +441,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'End position',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'End position',
@@ -476,7 +476,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'External temperature offset',
     'capabilities': dict({
       'max': 6,
       'min': -6,
@@ -500,6 +499,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'External temperature offset',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'External temperature offset',
@@ -535,7 +535,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Floor temperature offset',
     'capabilities': dict({
       'max': 6,
       'min': -6,
@@ -559,6 +558,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Floor temperature offset',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Floor temperature offset',
@@ -594,7 +594,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Maximum slat angle',
     'capabilities': dict({
       'max': 127,
       'min': -127,
@@ -618,6 +617,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Maximum slat angle',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Maximum slat angle',
@@ -653,7 +653,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Minimum slat angle',
     'capabilities': dict({
       'max': 127,
       'min': -127,
@@ -677,6 +676,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Minimum slat angle',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Minimum slat angle',
@@ -712,7 +712,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Motion alarm delay',
     'capabilities': dict({
       'max': 15300,
       'min': 1,
@@ -736,6 +735,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Motion alarm delay',
     'original_device_class': <NumberDeviceClass.DURATION: 'duration'>,
     'original_icon': None,
     'original_name': 'Motion alarm delay',
@@ -772,7 +772,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Polling interval',
     'capabilities': dict({
       'max': 45,
       'min': 5,
@@ -796,6 +795,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Polling interval',
     'original_device_class': <NumberDeviceClass.DURATION: 'duration'>,
     'original_icon': None,
     'original_name': 'Polling interval',
@@ -832,7 +832,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Slat steps',
     'capabilities': dict({
       'max': 20,
       'min': 1,
@@ -856,6 +855,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Slat steps',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Slat steps',
@@ -890,7 +890,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Slat turn duration',
     'capabilities': dict({
       'max': 24,
       'min': 0,
@@ -914,6 +913,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Slat turn duration',
     'original_device_class': <NumberDeviceClass.DURATION: 'duration'>,
     'original_icon': None,
     'original_name': 'Slat turn duration',
@@ -950,7 +950,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Temperature offset',
     'capabilities': dict({
       'max': 128,
       'min': -5,
@@ -974,6 +973,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Temperature offset',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Temperature offset',
@@ -1009,7 +1009,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Temperature report interval',
     'capabilities': dict({
       'max': 32767,
       'min': 0,
@@ -1033,6 +1032,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Temperature report interval',
     'original_device_class': <NumberDeviceClass.DURATION: 'duration'>,
     'original_icon': None,
     'original_name': 'Temperature report interval',
@@ -1069,7 +1069,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Threshold for wind trigger',
     'capabilities': dict({
       'max': 22.5,
       'min': 0,
@@ -1093,6 +1092,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Threshold for wind trigger',
     'original_device_class': <NumberDeviceClass.WIND_SPEED: 'wind_speed'>,
     'original_icon': None,
     'original_name': 'Threshold for wind trigger',
@@ -1129,7 +1129,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Up-movement duration',
     'capabilities': dict({
       'max': 240,
       'min': 4,
@@ -1153,6 +1152,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Up-movement duration',
     'original_device_class': <NumberDeviceClass.DURATION: 'duration'>,
     'original_icon': None,
     'original_name': 'Up-movement duration',
@@ -1189,7 +1189,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Wake-up interval',
     'capabilities': dict({
       'max': 7200,
       'min': 30,
@@ -1213,6 +1212,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Wake-up interval',
     'original_device_class': <NumberDeviceClass.DURATION: 'duration'>,
     'original_icon': None,
     'original_name': 'Wake-up interval',
@@ -1249,7 +1249,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Window open sensibility',
     'capabilities': dict({
       'max': 3,
       'min': 0,
@@ -1273,6 +1272,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Window open sensibility',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Window open sensibility',

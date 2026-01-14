@@ -4,7 +4,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Reserve battery level',
     'capabilities': dict({
       'max': 100.0,
       'min': 0.0,
@@ -28,6 +27,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Reserve battery level',
     'original_device_class': <NumberDeviceClass.BATTERY: 'battery'>,
     'original_icon': None,
     'original_name': 'Reserve battery level',
@@ -64,7 +64,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Reserve battery level',
     'capabilities': dict({
       'max': 100.0,
       'min': 0.0,
@@ -88,6 +87,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Reserve battery level',
     'original_device_class': <NumberDeviceClass.BATTERY: 'battery'>,
     'original_icon': None,
     'original_name': 'Reserve battery level',
@@ -124,7 +124,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Cutoff battery level',
     'capabilities': dict({
       'max': 100.0,
       'min': 0.0,
@@ -148,6 +147,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Cutoff battery level',
     'original_device_class': <NumberDeviceClass.BATTERY: 'battery'>,
     'original_icon': None,
     'original_name': 'Cutoff battery level',
@@ -183,7 +183,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Restore battery level',
     'capabilities': dict({
       'max': 100.0,
       'min': 0.0,
@@ -207,6 +206,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Restore battery level',
     'original_device_class': <NumberDeviceClass.BATTERY: 'battery'>,
     'original_icon': None,
     'original_name': 'Restore battery level',
@@ -242,7 +242,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Cutoff battery level',
     'capabilities': dict({
       'max': 100.0,
       'min': 0.0,
@@ -266,6 +265,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Cutoff battery level',
     'original_device_class': <NumberDeviceClass.BATTERY: 'battery'>,
     'original_icon': None,
     'original_name': 'Cutoff battery level',
@@ -301,7 +301,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Restore battery level',
     'capabilities': dict({
       'max': 100.0,
       'min': 0.0,
@@ -325,6 +324,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Restore battery level',
     'original_device_class': <NumberDeviceClass.BATTERY: 'battery'>,
     'original_icon': None,
     'original_name': 'Restore battery level',
@@ -360,7 +360,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Cutoff battery level',
     'capabilities': dict({
       'max': 100.0,
       'min': 0.0,
@@ -384,6 +383,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Cutoff battery level',
     'original_device_class': <NumberDeviceClass.BATTERY: 'battery'>,
     'original_icon': None,
     'original_name': 'Cutoff battery level',
@@ -419,7 +419,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Restore battery level',
     'capabilities': dict({
       'max': 100.0,
       'min': 0.0,
@@ -443,6 +442,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Restore battery level',
     'original_device_class': <NumberDeviceClass.BATTERY: 'battery'>,
     'original_icon': None,
     'original_name': 'Restore battery level',

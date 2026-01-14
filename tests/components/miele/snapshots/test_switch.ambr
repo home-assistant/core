@@ -4,7 +4,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Superfreezing',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -23,6 +22,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Superfreezing',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Superfreezing',
@@ -53,7 +53,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Power',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -72,6 +71,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Power',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Power',
@@ -102,7 +102,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Power',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -121,6 +120,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Power',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Power',
@@ -151,7 +151,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Supercooling',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -170,6 +169,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Supercooling',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Supercooling',
@@ -200,7 +200,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Power',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -219,6 +218,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Power',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Power',
@@ -249,7 +249,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Superfreezing',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -268,6 +267,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Superfreezing',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Superfreezing',
@@ -298,7 +298,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Power',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -317,6 +316,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Power',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Power',
@@ -347,7 +347,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Power',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -366,6 +365,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Power',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Power',
@@ -396,7 +396,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Supercooling',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -415,6 +414,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Supercooling',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Supercooling',
@@ -445,7 +445,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Power',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -464,6 +463,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Power',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Power',

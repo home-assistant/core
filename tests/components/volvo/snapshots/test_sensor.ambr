@@ -4,7 +4,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Battery',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -28,6 +27,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'Battery',
     'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
     'original_icon': None,
     'original_name': 'Battery',
@@ -61,7 +61,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Battery capacity',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -83,6 +82,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'Battery capacity',
     'original_device_class': <SensorDeviceClass.ENERGY_STORAGE: 'energy_storage'>,
     'original_icon': None,
     'original_name': 'Battery capacity',
@@ -115,7 +115,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Car connection',
     'capabilities': dict({
       'options': list([
         'available',
@@ -142,6 +141,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Car connection',
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
     'original_name': 'Car connection',
@@ -180,7 +180,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Charging connection status',
     'capabilities': dict({
       'options': list([
         'connected',
@@ -205,6 +204,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Charging connection status',
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
     'original_name': 'Charging connection status',
@@ -241,7 +241,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Charging power',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -265,6 +264,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'Charging power',
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
     'original_icon': None,
     'original_name': 'Charging power',
@@ -298,7 +298,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Charging power status',
     'capabilities': dict({
       'options': list([
         'fault',
@@ -324,6 +323,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Charging power status',
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
     'original_name': 'Charging power status',
@@ -361,7 +361,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Charging status',
     'capabilities': dict({
       'options': list([
         'charging',
@@ -389,6 +388,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Charging status',
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
     'original_name': 'Charging status',
@@ -428,7 +428,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Charging type',
     'capabilities': dict({
       'options': list([
         'ac',
@@ -453,6 +452,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Charging type',
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
     'original_name': 'Charging type',
@@ -489,7 +489,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Direction',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -511,6 +510,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'Direction',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Direction',
@@ -542,7 +542,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Distance to empty battery',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -566,6 +565,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'Distance to empty battery',
     'original_device_class': <SensorDeviceClass.DISTANCE: 'distance'>,
     'original_icon': None,
     'original_name': 'Distance to empty battery',
@@ -599,7 +599,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Distance to service',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -623,6 +622,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'Distance to service',
     'original_device_class': <SensorDeviceClass.DISTANCE: 'distance'>,
     'original_icon': None,
     'original_name': 'Distance to service',
@@ -656,7 +656,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Estimated charging time',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -680,6 +679,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'Estimated charging time',
     'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
     'original_icon': None,
     'original_name': 'Estimated charging time',
@@ -713,7 +713,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Odometer',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -737,6 +736,7 @@
         'suggested_display_precision': 1,
       }),
     }),
+    'object_id_base': 'Odometer',
     'original_device_class': <SensorDeviceClass.DISTANCE: 'distance'>,
     'original_icon': None,
     'original_name': 'Odometer',
@@ -770,7 +770,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Service',
     'capabilities': dict({
       'options': list([
         'distance_driven_almost_time_for_service',
@@ -803,6 +802,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Service',
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
     'original_name': 'Service',
@@ -847,7 +847,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Target battery charge level',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -869,6 +868,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'Target battery charge level',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Target battery charge level',
@@ -900,7 +900,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Time to engine service',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -924,6 +923,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'Time to engine service',
     'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
     'original_icon': None,
     'original_name': 'Time to engine service',
@@ -957,7 +957,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Time to service',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -981,6 +980,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'Time to service',
     'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
     'original_icon': None,
     'original_name': 'Time to service',
@@ -1014,7 +1014,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Trip automatic average speed',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1038,6 +1037,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'Trip automatic average speed',
     'original_device_class': <SensorDeviceClass.SPEED: 'speed'>,
     'original_icon': None,
     'original_name': 'Trip automatic average speed',
@@ -1071,7 +1071,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Trip automatic distance',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -1095,6 +1094,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'Trip automatic distance',
     'original_device_class': <SensorDeviceClass.DISTANCE: 'distance'>,
     'original_icon': None,
     'original_name': 'Trip automatic distance',
@@ -1128,7 +1128,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Trip manual average energy consumption',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1152,6 +1151,7 @@
         'suggested_display_precision': 1,
       }),
     }),
+    'object_id_base': 'Trip manual average energy consumption',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Trip manual average energy consumption',
@@ -1184,7 +1184,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Trip manual average speed',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1208,6 +1207,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'Trip manual average speed',
     'original_device_class': <SensorDeviceClass.SPEED: 'speed'>,
     'original_icon': None,
     'original_name': 'Trip manual average speed',
@@ -1241,7 +1241,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Trip manual distance',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -1265,6 +1264,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'Trip manual distance',
     'original_device_class': <SensorDeviceClass.DISTANCE: 'distance'>,
     'original_icon': None,
     'original_name': 'Trip manual distance',
@@ -1298,7 +1298,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Battery',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1322,6 +1321,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'Battery',
     'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
     'original_icon': None,
     'original_name': 'Battery',
@@ -1355,7 +1355,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Car connection',
     'capabilities': dict({
       'options': list([
         'available',
@@ -1382,6 +1381,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Car connection',
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
     'original_name': 'Car connection',
@@ -1420,7 +1420,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Direction',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1442,6 +1441,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'Direction',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Direction',
@@ -1473,7 +1473,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Distance to empty tank',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1497,6 +1496,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'Distance to empty tank',
     'original_device_class': <SensorDeviceClass.DISTANCE: 'distance'>,
     'original_icon': None,
     'original_name': 'Distance to empty tank',
@@ -1530,7 +1530,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Distance to service',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1554,6 +1553,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'Distance to service',
     'original_device_class': <SensorDeviceClass.DISTANCE: 'distance'>,
     'original_icon': None,
     'original_name': 'Distance to service',
@@ -1587,7 +1587,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Fuel amount',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1611,6 +1610,7 @@
         'suggested_display_precision': 1,
       }),
     }),
+    'object_id_base': 'Fuel amount',
     'original_device_class': <SensorDeviceClass.VOLUME_STORAGE: 'volume_storage'>,
     'original_icon': None,
     'original_name': 'Fuel amount',
@@ -1644,7 +1644,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Odometer',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -1668,6 +1667,7 @@
         'suggested_display_precision': 1,
       }),
     }),
+    'object_id_base': 'Odometer',
     'original_device_class': <SensorDeviceClass.DISTANCE: 'distance'>,
     'original_icon': None,
     'original_name': 'Odometer',
@@ -1701,7 +1701,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Service',
     'capabilities': dict({
       'options': list([
         'distance_driven_almost_time_for_service',
@@ -1734,6 +1733,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Service',
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
     'original_name': 'Service',
@@ -1778,7 +1778,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Time to engine service',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1802,6 +1801,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'Time to engine service',
     'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
     'original_icon': None,
     'original_name': 'Time to engine service',
@@ -1835,7 +1835,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Time to service',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1859,6 +1858,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'Time to service',
     'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
     'original_icon': None,
     'original_name': 'Time to service',
@@ -1892,7 +1892,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Trip automatic average speed',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1916,6 +1915,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'Trip automatic average speed',
     'original_device_class': <SensorDeviceClass.SPEED: 'speed'>,
     'original_icon': None,
     'original_name': 'Trip automatic average speed',
@@ -1949,7 +1949,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Trip automatic distance',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -1973,6 +1972,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'Trip automatic distance',
     'original_device_class': <SensorDeviceClass.DISTANCE: 'distance'>,
     'original_icon': None,
     'original_name': 'Trip automatic distance',
@@ -2006,7 +2006,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Trip manual average fuel consumption',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2030,6 +2029,7 @@
         'suggested_display_precision': 1,
       }),
     }),
+    'object_id_base': 'Trip manual average fuel consumption',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Trip manual average fuel consumption',
@@ -2062,7 +2062,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Trip manual average speed',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2086,6 +2085,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'Trip manual average speed',
     'original_device_class': <SensorDeviceClass.SPEED: 'speed'>,
     'original_icon': None,
     'original_name': 'Trip manual average speed',
@@ -2119,7 +2119,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Trip manual distance',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -2143,6 +2142,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'Trip manual distance',
     'original_device_class': <SensorDeviceClass.DISTANCE: 'distance'>,
     'original_icon': None,
     'original_name': 'Trip manual distance',
@@ -2176,7 +2176,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Battery',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2200,6 +2199,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'Battery',
     'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
     'original_icon': None,
     'original_name': 'Battery',
@@ -2233,7 +2233,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Battery capacity',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2255,6 +2254,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'Battery capacity',
     'original_device_class': <SensorDeviceClass.ENERGY_STORAGE: 'energy_storage'>,
     'original_icon': None,
     'original_name': 'Battery capacity',
@@ -2287,7 +2287,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Car connection',
     'capabilities': dict({
       'options': list([
         'available',
@@ -2314,6 +2313,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Car connection',
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
     'original_name': 'Car connection',
@@ -2352,7 +2352,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Charging connection status',
     'capabilities': dict({
       'options': list([
         'connected',
@@ -2377,6 +2376,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Charging connection status',
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
     'original_name': 'Charging connection status',
@@ -2413,7 +2413,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Charging limit',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2437,6 +2436,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'Charging limit',
     'original_device_class': <SensorDeviceClass.CURRENT: 'current'>,
     'original_icon': None,
     'original_name': 'Charging limit',
@@ -2470,7 +2470,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Charging power',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2494,6 +2493,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'Charging power',
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
     'original_icon': None,
     'original_name': 'Charging power',
@@ -2527,7 +2527,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Charging power status',
     'capabilities': dict({
       'options': list([
         'fault',
@@ -2553,6 +2552,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Charging power status',
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
     'original_name': 'Charging power status',
@@ -2590,7 +2590,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Charging status',
     'capabilities': dict({
       'options': list([
         'charging',
@@ -2618,6 +2617,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Charging status',
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
     'original_name': 'Charging status',
@@ -2657,7 +2657,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Charging type',
     'capabilities': dict({
       'options': list([
         'ac',
@@ -2682,6 +2681,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Charging type',
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
     'original_name': 'Charging type',
@@ -2718,7 +2718,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Direction',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2740,6 +2739,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'Direction',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Direction',
@@ -2771,7 +2771,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Distance to empty battery',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2795,6 +2794,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'Distance to empty battery',
     'original_device_class': <SensorDeviceClass.DISTANCE: 'distance'>,
     'original_icon': None,
     'original_name': 'Distance to empty battery',
@@ -2828,7 +2828,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Distance to service',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2852,6 +2851,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'Distance to service',
     'original_device_class': <SensorDeviceClass.DISTANCE: 'distance'>,
     'original_icon': None,
     'original_name': 'Distance to service',
@@ -2885,7 +2885,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Estimated charging time',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2909,6 +2908,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'Estimated charging time',
     'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
     'original_icon': None,
     'original_name': 'Estimated charging time',
@@ -2942,7 +2942,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Odometer',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -2966,6 +2965,7 @@
         'suggested_display_precision': 1,
       }),
     }),
+    'object_id_base': 'Odometer',
     'original_device_class': <SensorDeviceClass.DISTANCE: 'distance'>,
     'original_icon': None,
     'original_name': 'Odometer',
@@ -2999,7 +2999,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Service',
     'capabilities': dict({
       'options': list([
         'distance_driven_almost_time_for_service',
@@ -3032,6 +3031,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Service',
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
     'original_name': 'Service',
@@ -3076,7 +3076,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Target battery charge level',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -3098,6 +3097,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'Target battery charge level',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Target battery charge level',
@@ -3129,7 +3129,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Time to engine service',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -3153,6 +3152,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'Time to engine service',
     'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
     'original_icon': None,
     'original_name': 'Time to engine service',
@@ -3186,7 +3186,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Time to service',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -3210,6 +3209,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'Time to service',
     'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
     'original_icon': None,
     'original_name': 'Time to service',
@@ -3243,7 +3243,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Trip automatic average speed',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -3267,6 +3266,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'Trip automatic average speed',
     'original_device_class': <SensorDeviceClass.SPEED: 'speed'>,
     'original_icon': None,
     'original_name': 'Trip automatic average speed',
@@ -3300,7 +3300,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Trip automatic distance',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -3324,6 +3323,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'Trip automatic distance',
     'original_device_class': <SensorDeviceClass.DISTANCE: 'distance'>,
     'original_icon': None,
     'original_name': 'Trip automatic distance',
@@ -3357,7 +3357,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Trip manual average energy consumption',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -3381,6 +3380,7 @@
         'suggested_display_precision': 1,
       }),
     }),
+    'object_id_base': 'Trip manual average energy consumption',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Trip manual average energy consumption',
@@ -3413,7 +3413,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Trip manual average speed',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -3437,6 +3436,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'Trip manual average speed',
     'original_device_class': <SensorDeviceClass.SPEED: 'speed'>,
     'original_icon': None,
     'original_name': 'Trip manual average speed',
@@ -3470,7 +3470,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Trip manual distance',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -3494,6 +3493,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'Trip manual distance',
     'original_device_class': <SensorDeviceClass.DISTANCE: 'distance'>,
     'original_icon': None,
     'original_name': 'Trip manual distance',
@@ -3527,7 +3527,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Battery',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -3551,6 +3550,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'Battery',
     'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
     'original_icon': None,
     'original_name': 'Battery',
@@ -3584,7 +3584,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Battery capacity',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -3606,6 +3605,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'Battery capacity',
     'original_device_class': <SensorDeviceClass.ENERGY_STORAGE: 'energy_storage'>,
     'original_icon': None,
     'original_name': 'Battery capacity',
@@ -3638,7 +3638,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Car connection',
     'capabilities': dict({
       'options': list([
         'available',
@@ -3665,6 +3664,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Car connection',
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
     'original_name': 'Car connection',
@@ -3703,7 +3703,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Charging connection status',
     'capabilities': dict({
       'options': list([
         'connected',
@@ -3728,6 +3727,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Charging connection status',
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
     'original_name': 'Charging connection status',
@@ -3764,7 +3764,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Charging status',
     'capabilities': dict({
       'options': list([
         'charging',
@@ -3792,6 +3791,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Charging status',
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
     'original_name': 'Charging status',
@@ -3831,7 +3831,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Direction',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -3853,6 +3852,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'Direction',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Direction',
@@ -3884,7 +3884,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Distance to empty battery',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -3908,6 +3907,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'Distance to empty battery',
     'original_device_class': <SensorDeviceClass.DISTANCE: 'distance'>,
     'original_icon': None,
     'original_name': 'Distance to empty battery',
@@ -3941,7 +3941,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Distance to empty tank',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -3965,6 +3964,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'Distance to empty tank',
     'original_device_class': <SensorDeviceClass.DISTANCE: 'distance'>,
     'original_icon': None,
     'original_name': 'Distance to empty tank',
@@ -3998,7 +3998,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Distance to service',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -4022,6 +4021,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'Distance to service',
     'original_device_class': <SensorDeviceClass.DISTANCE: 'distance'>,
     'original_icon': None,
     'original_name': 'Distance to service',
@@ -4055,7 +4055,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Fuel amount',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -4079,6 +4078,7 @@
         'suggested_display_precision': 1,
       }),
     }),
+    'object_id_base': 'Fuel amount',
     'original_device_class': <SensorDeviceClass.VOLUME_STORAGE: 'volume_storage'>,
     'original_icon': None,
     'original_name': 'Fuel amount',
@@ -4112,7 +4112,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Odometer',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -4136,6 +4135,7 @@
         'suggested_display_precision': 1,
       }),
     }),
+    'object_id_base': 'Odometer',
     'original_device_class': <SensorDeviceClass.DISTANCE: 'distance'>,
     'original_icon': None,
     'original_name': 'Odometer',
@@ -4169,7 +4169,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Service',
     'capabilities': dict({
       'options': list([
         'distance_driven_almost_time_for_service',
@@ -4202,6 +4201,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Service',
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
     'original_name': 'Service',
@@ -4246,7 +4246,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Target battery charge level',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -4268,6 +4267,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'Target battery charge level',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Target battery charge level',
@@ -4299,7 +4299,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Time to engine service',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -4323,6 +4322,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'Time to engine service',
     'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
     'original_icon': None,
     'original_name': 'Time to engine service',
@@ -4356,7 +4356,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Time to service',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -4380,6 +4379,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'Time to service',
     'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
     'original_icon': None,
     'original_name': 'Time to service',
@@ -4413,7 +4413,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Trip automatic distance',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -4437,6 +4436,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'Trip automatic distance',
     'original_device_class': <SensorDeviceClass.DISTANCE: 'distance'>,
     'original_icon': None,
     'original_name': 'Trip automatic distance',
@@ -4470,7 +4470,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Trip manual average fuel consumption',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -4494,6 +4493,7 @@
         'suggested_display_precision': 1,
       }),
     }),
+    'object_id_base': 'Trip manual average fuel consumption',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Trip manual average fuel consumption',
@@ -4526,7 +4526,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Trip manual average speed',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -4550,6 +4549,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'Trip manual average speed',
     'original_device_class': <SensorDeviceClass.SPEED: 'speed'>,
     'original_icon': None,
     'original_name': 'Trip manual average speed',
@@ -4583,7 +4583,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Trip manual distance',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -4607,6 +4606,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'Trip manual distance',
     'original_device_class': <SensorDeviceClass.DISTANCE: 'distance'>,
     'original_icon': None,
     'original_name': 'Trip manual distance',
@@ -4640,7 +4640,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Battery',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -4664,6 +4663,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'Battery',
     'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
     'original_icon': None,
     'original_name': 'Battery',
@@ -4697,7 +4697,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Car connection',
     'capabilities': dict({
       'options': list([
         'available',
@@ -4724,6 +4723,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Car connection',
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
     'original_name': 'Car connection',
@@ -4762,7 +4762,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Direction',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -4784,6 +4783,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'Direction',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Direction',
@@ -4815,7 +4815,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Distance to empty tank',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -4839,6 +4838,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'Distance to empty tank',
     'original_device_class': <SensorDeviceClass.DISTANCE: 'distance'>,
     'original_icon': None,
     'original_name': 'Distance to empty tank',
@@ -4872,7 +4872,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Distance to service',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -4896,6 +4895,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'Distance to service',
     'original_device_class': <SensorDeviceClass.DISTANCE: 'distance'>,
     'original_icon': None,
     'original_name': 'Distance to service',
@@ -4929,7 +4929,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Fuel amount',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -4953,6 +4952,7 @@
         'suggested_display_precision': 1,
       }),
     }),
+    'object_id_base': 'Fuel amount',
     'original_device_class': <SensorDeviceClass.VOLUME_STORAGE: 'volume_storage'>,
     'original_icon': None,
     'original_name': 'Fuel amount',
@@ -4986,7 +4986,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Odometer',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -5010,6 +5009,7 @@
         'suggested_display_precision': 1,
       }),
     }),
+    'object_id_base': 'Odometer',
     'original_device_class': <SensorDeviceClass.DISTANCE: 'distance'>,
     'original_icon': None,
     'original_name': 'Odometer',
@@ -5043,7 +5043,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Service',
     'capabilities': dict({
       'options': list([
         'distance_driven_almost_time_for_service',
@@ -5076,6 +5075,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Service',
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
     'original_name': 'Service',
@@ -5120,7 +5120,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Time to engine service',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -5144,6 +5143,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'Time to engine service',
     'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
     'original_icon': None,
     'original_name': 'Time to engine service',
@@ -5177,7 +5177,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Time to service',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -5201,6 +5200,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'Time to service',
     'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
     'original_icon': None,
     'original_name': 'Time to service',
@@ -5234,7 +5234,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Trip automatic average speed',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -5258,6 +5257,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'Trip automatic average speed',
     'original_device_class': <SensorDeviceClass.SPEED: 'speed'>,
     'original_icon': None,
     'original_name': 'Trip automatic average speed',
@@ -5291,7 +5291,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Trip automatic distance',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -5315,6 +5314,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'Trip automatic distance',
     'original_device_class': <SensorDeviceClass.DISTANCE: 'distance'>,
     'original_icon': None,
     'original_name': 'Trip automatic distance',
@@ -5348,7 +5348,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Trip manual average fuel consumption',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -5372,6 +5371,7 @@
         'suggested_display_precision': 1,
       }),
     }),
+    'object_id_base': 'Trip manual average fuel consumption',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Trip manual average fuel consumption',
@@ -5404,7 +5404,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Trip manual average speed',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -5428,6 +5427,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'Trip manual average speed',
     'original_device_class': <SensorDeviceClass.SPEED: 'speed'>,
     'original_icon': None,
     'original_name': 'Trip manual average speed',
@@ -5461,7 +5461,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Trip manual distance',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -5485,6 +5484,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'Trip manual distance',
     'original_device_class': <SensorDeviceClass.DISTANCE: 'distance'>,
     'original_icon': None,
     'original_name': 'Trip manual distance',
@@ -5518,7 +5518,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Battery',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -5542,6 +5541,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'Battery',
     'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
     'original_icon': None,
     'original_name': 'Battery',
@@ -5575,7 +5575,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Battery capacity',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -5597,6 +5596,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'Battery capacity',
     'original_device_class': <SensorDeviceClass.ENERGY_STORAGE: 'energy_storage'>,
     'original_icon': None,
     'original_name': 'Battery capacity',
@@ -5629,7 +5629,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Car connection',
     'capabilities': dict({
       'options': list([
         'available',
@@ -5656,6 +5655,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Car connection',
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
     'original_name': 'Car connection',
@@ -5694,7 +5694,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Charging connection status',
     'capabilities': dict({
       'options': list([
         'connected',
@@ -5719,6 +5718,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Charging connection status',
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
     'original_name': 'Charging connection status',
@@ -5755,7 +5755,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Charging power status',
     'capabilities': dict({
       'options': list([
         'fault',
@@ -5781,6 +5780,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Charging power status',
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
     'original_name': 'Charging power status',
@@ -5818,7 +5818,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Charging status',
     'capabilities': dict({
       'options': list([
         'charging',
@@ -5846,6 +5845,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Charging status',
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
     'original_name': 'Charging status',
@@ -5885,7 +5885,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Charging type',
     'capabilities': dict({
       'options': list([
         'ac',
@@ -5910,6 +5909,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Charging type',
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
     'original_name': 'Charging type',
@@ -5946,7 +5946,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Direction',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -5968,6 +5967,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'Direction',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Direction',
@@ -5999,7 +5999,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Distance to empty battery',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -6023,6 +6022,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'Distance to empty battery',
     'original_device_class': <SensorDeviceClass.DISTANCE: 'distance'>,
     'original_icon': None,
     'original_name': 'Distance to empty battery',
@@ -6056,7 +6056,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Distance to empty tank',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -6080,6 +6079,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'Distance to empty tank',
     'original_device_class': <SensorDeviceClass.DISTANCE: 'distance'>,
     'original_icon': None,
     'original_name': 'Distance to empty tank',
@@ -6113,7 +6113,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Distance to service',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -6137,6 +6136,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'Distance to service',
     'original_device_class': <SensorDeviceClass.DISTANCE: 'distance'>,
     'original_icon': None,
     'original_name': 'Distance to service',
@@ -6170,7 +6170,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Estimated charging time',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -6194,6 +6193,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'Estimated charging time',
     'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
     'original_icon': None,
     'original_name': 'Estimated charging time',
@@ -6227,7 +6227,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Fuel amount',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -6251,6 +6250,7 @@
         'suggested_display_precision': 1,
       }),
     }),
+    'object_id_base': 'Fuel amount',
     'original_device_class': <SensorDeviceClass.VOLUME_STORAGE: 'volume_storage'>,
     'original_icon': None,
     'original_name': 'Fuel amount',
@@ -6284,7 +6284,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Odometer',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -6308,6 +6307,7 @@
         'suggested_display_precision': 1,
       }),
     }),
+    'object_id_base': 'Odometer',
     'original_device_class': <SensorDeviceClass.DISTANCE: 'distance'>,
     'original_icon': None,
     'original_name': 'Odometer',
@@ -6341,7 +6341,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Service',
     'capabilities': dict({
       'options': list([
         'distance_driven_almost_time_for_service',
@@ -6374,6 +6373,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Service',
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
     'original_name': 'Service',
@@ -6418,7 +6418,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Target battery charge level',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -6440,6 +6439,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'Target battery charge level',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Target battery charge level',
@@ -6471,7 +6471,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Time to engine service',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -6495,6 +6494,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'Time to engine service',
     'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
     'original_icon': None,
     'original_name': 'Time to engine service',
@@ -6528,7 +6528,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Time to service',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -6552,6 +6551,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'Time to service',
     'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
     'original_icon': None,
     'original_name': 'Time to service',
@@ -6585,7 +6585,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Trip automatic average fuel consumption',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -6609,6 +6608,7 @@
         'suggested_display_precision': 1,
       }),
     }),
+    'object_id_base': 'Trip automatic average fuel consumption',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Trip automatic average fuel consumption',
@@ -6641,7 +6641,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Trip automatic average speed',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -6665,6 +6664,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'Trip automatic average speed',
     'original_device_class': <SensorDeviceClass.SPEED: 'speed'>,
     'original_icon': None,
     'original_name': 'Trip automatic average speed',
@@ -6698,7 +6698,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Trip automatic distance',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -6722,6 +6721,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'Trip automatic distance',
     'original_device_class': <SensorDeviceClass.DISTANCE: 'distance'>,
     'original_icon': None,
     'original_name': 'Trip automatic distance',
@@ -6755,7 +6755,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Trip manual average energy consumption',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -6779,6 +6778,7 @@
         'suggested_display_precision': 1,
       }),
     }),
+    'object_id_base': 'Trip manual average energy consumption',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Trip manual average energy consumption',
@@ -6811,7 +6811,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Trip manual average fuel consumption',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -6835,6 +6834,7 @@
         'suggested_display_precision': 1,
       }),
     }),
+    'object_id_base': 'Trip manual average fuel consumption',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Trip manual average fuel consumption',
@@ -6867,7 +6867,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Trip manual average speed',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -6891,6 +6890,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'Trip manual average speed',
     'original_device_class': <SensorDeviceClass.SPEED: 'speed'>,
     'original_icon': None,
     'original_name': 'Trip manual average speed',
@@ -6924,7 +6924,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Trip manual distance',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -6948,6 +6947,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'Trip manual distance',
     'original_device_class': <SensorDeviceClass.DISTANCE: 'distance'>,
     'original_icon': None,
     'original_name': 'Trip manual distance',

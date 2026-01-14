@@ -4,7 +4,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Expense year to date',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -25,6 +24,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Expense year to date',
     'original_device_class': <SensorDeviceClass.MONETARY: 'monetary'>,
     'original_icon': None,
     'original_name': 'Expense year to date',
@@ -58,7 +58,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Income year to date',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -79,6 +78,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Income year to date',
     'original_device_class': <SensorDeviceClass.MONETARY: 'monetary'>,
     'original_icon': None,
     'original_name': 'Income year to date',
@@ -112,7 +112,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Savings rate',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -134,6 +133,7 @@
         'suggested_display_precision': 1,
       }),
     }),
+    'object_id_base': 'Savings rate',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Savings rate',
@@ -165,7 +165,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Savings year to date',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -186,6 +185,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Savings year to date',
     'original_device_class': <SensorDeviceClass.MONETARY: 'monetary'>,
     'original_icon': None,
     'original_name': 'Savings year to date',
@@ -219,7 +219,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Balance',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -240,6 +239,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Balance',
     'original_device_class': <SensorDeviceClass.MONETARY: 'monetary'>,
     'original_icon': None,
     'original_name': 'Balance',
@@ -274,7 +274,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Data age',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -293,6 +292,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Data age',
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
     'original_icon': None,
     'original_name': 'Data age',
@@ -325,7 +325,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Balance',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -346,6 +345,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Balance',
     'original_device_class': <SensorDeviceClass.MONETARY: 'monetary'>,
     'original_icon': None,
     'original_name': 'Balance',
@@ -381,7 +381,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Data age',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -400,6 +399,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Data age',
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
     'original_icon': None,
     'original_name': 'Data age',
@@ -432,7 +432,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Balance',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -453,6 +452,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Balance',
     'original_device_class': <SensorDeviceClass.MONETARY: 'monetary'>,
     'original_icon': None,
     'original_name': 'Balance',
@@ -488,7 +488,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Data age',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -507,6 +506,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Data age',
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
     'original_icon': None,
     'original_name': 'Data age',
@@ -539,7 +539,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Balance',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -560,6 +559,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Balance',
     'original_device_class': <SensorDeviceClass.MONETARY: 'monetary'>,
     'original_icon': None,
     'original_name': 'Balance',
@@ -595,7 +595,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Data age',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -614,6 +613,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Data age',
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
     'original_icon': None,
     'original_name': 'Data age',
@@ -646,7 +646,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Balance',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -667,6 +666,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Balance',
     'original_device_class': <SensorDeviceClass.MONETARY: 'monetary'>,
     'original_icon': None,
     'original_name': 'Balance',
@@ -702,7 +702,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Data age',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -721,6 +720,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Data age',
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
     'original_icon': None,
     'original_name': 'Data age',
@@ -753,7 +753,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Balance',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -774,6 +773,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Balance',
     'original_device_class': <SensorDeviceClass.MONETARY: 'monetary'>,
     'original_icon': None,
     'original_name': 'Balance',
@@ -809,7 +809,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Data age',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -828,6 +827,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Data age',
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
     'original_icon': None,
     'original_name': 'Data age',
@@ -860,7 +860,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Balance',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -881,6 +880,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Balance',
     'original_device_class': <SensorDeviceClass.MONETARY: 'monetary'>,
     'original_icon': None,
     'original_name': 'Balance',
@@ -916,7 +916,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Data age',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -935,6 +934,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Data age',
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
     'original_icon': None,
     'original_name': 'Data age',
@@ -967,7 +967,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Data age',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -986,6 +985,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Data age',
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
     'original_icon': None,
     'original_name': 'Data age',
@@ -1018,7 +1018,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Value',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -1039,6 +1038,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Value',
     'original_device_class': <SensorDeviceClass.MONETARY: 'monetary'>,
     'original_icon': None,
     'original_name': 'Value',
@@ -1074,7 +1074,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Balance',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -1095,6 +1094,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Balance',
     'original_device_class': <SensorDeviceClass.MONETARY: 'monetary'>,
     'original_icon': None,
     'original_name': 'Balance',
@@ -1130,7 +1130,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Data age',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1149,6 +1148,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Data age',
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
     'original_icon': None,
     'original_name': 'Data age',

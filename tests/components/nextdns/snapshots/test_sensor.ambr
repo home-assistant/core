@@ -4,7 +4,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'DNS-over-HTTP/3 queries',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -25,6 +24,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'DNS-over-HTTP/3 queries',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'DNS-over-HTTP/3 queries',
@@ -57,7 +57,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'DNS-over-HTTP/3 queries ratio',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -78,6 +77,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'DNS-over-HTTP/3 queries ratio',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'DNS-over-HTTP/3 queries ratio',
@@ -110,7 +110,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'DNS-over-HTTPS queries',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -131,6 +130,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'DNS-over-HTTPS queries',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'DNS-over-HTTPS queries',
@@ -163,7 +163,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'DNS-over-HTTPS queries ratio',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -184,6 +183,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'DNS-over-HTTPS queries ratio',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'DNS-over-HTTPS queries ratio',
@@ -216,7 +216,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'DNS-over-QUIC queries',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -237,6 +236,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'DNS-over-QUIC queries',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'DNS-over-QUIC queries',
@@ -269,7 +269,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'DNS-over-QUIC queries ratio',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -290,6 +289,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'DNS-over-QUIC queries ratio',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'DNS-over-QUIC queries ratio',
@@ -322,7 +322,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'DNS-over-TLS queries',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -343,6 +342,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'DNS-over-TLS queries',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'DNS-over-TLS queries',
@@ -375,7 +375,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'DNS-over-TLS queries ratio',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -396,6 +395,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'DNS-over-TLS queries ratio',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'DNS-over-TLS queries ratio',
@@ -428,7 +428,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'DNS queries',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -449,6 +448,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'DNS queries',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'DNS queries',
@@ -481,7 +481,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'DNS queries blocked',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -502,6 +501,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'DNS queries blocked',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'DNS queries blocked',
@@ -534,7 +534,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'DNS queries blocked ratio',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -555,6 +554,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'DNS queries blocked ratio',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'DNS queries blocked ratio',
@@ -587,7 +587,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'DNS queries relayed',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -608,6 +607,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'DNS queries relayed',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'DNS queries relayed',
@@ -640,7 +640,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'DNSSEC not validated queries',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -661,6 +660,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'DNSSEC not validated queries',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'DNSSEC not validated queries',
@@ -693,7 +693,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'DNSSEC validated queries',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -714,6 +713,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'DNSSEC validated queries',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'DNSSEC validated queries',
@@ -746,7 +746,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'DNSSEC validated queries ratio',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -767,6 +766,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'DNSSEC validated queries ratio',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'DNSSEC validated queries ratio',
@@ -799,7 +799,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Encrypted queries',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -820,6 +819,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Encrypted queries',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Encrypted queries',
@@ -852,7 +852,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Encrypted queries ratio',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -873,6 +872,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Encrypted queries ratio',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Encrypted queries ratio',
@@ -905,7 +905,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'IPv4 queries',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -926,6 +925,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'IPv4 queries',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'IPv4 queries',
@@ -958,7 +958,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'IPv6 queries',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -979,6 +978,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'IPv6 queries',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'IPv6 queries',
@@ -1011,7 +1011,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'IPv6 queries ratio',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1032,6 +1031,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'IPv6 queries ratio',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'IPv6 queries ratio',
@@ -1064,7 +1064,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'TCP queries',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -1085,6 +1084,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'TCP queries',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'TCP queries',
@@ -1117,7 +1117,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'TCP queries ratio',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1138,6 +1137,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'TCP queries ratio',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'TCP queries ratio',
@@ -1170,7 +1170,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'UDP queries',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -1191,6 +1190,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'UDP queries',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'UDP queries',
@@ -1223,7 +1223,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'UDP queries ratio',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1244,6 +1243,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'UDP queries ratio',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'UDP queries ratio',
@@ -1276,7 +1276,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Unencrypted queries',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -1297,6 +1296,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Unencrypted queries',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Unencrypted queries',

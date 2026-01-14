@@ -4,7 +4,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'LED ButtonOn',
     'capabilities': dict({
       'supported_color_modes': list([
         <ColorMode.ONOFF: 'onoff'>,
@@ -27,6 +26,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'LED ButtonOn',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'LED ButtonOn',
@@ -62,7 +62,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Dimmer',
     'capabilities': dict({
       'supported_color_modes': list([
         <ColorMode.BRIGHTNESS: 'brightness'>,
@@ -85,6 +84,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Dimmer',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Dimmer',

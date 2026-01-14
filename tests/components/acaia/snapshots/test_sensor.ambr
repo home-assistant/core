@@ -4,7 +4,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Battery',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -25,6 +24,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Battery',
     'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
     'original_icon': None,
     'original_name': 'Battery',
@@ -58,7 +58,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Volume flow rate',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -82,6 +81,7 @@
         'suggested_display_precision': 1,
       }),
     }),
+    'object_id_base': 'Volume flow rate',
     'original_device_class': <SensorDeviceClass.VOLUME_FLOW_RATE: 'volume_flow_rate'>,
     'original_icon': None,
     'original_name': 'Volume flow rate',
@@ -115,7 +115,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Weight',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -139,6 +138,7 @@
         'suggested_display_precision': 1,
       }),
     }),
+    'object_id_base': 'Weight',
     'original_device_class': <SensorDeviceClass.WEIGHT: 'weight'>,
     'original_icon': None,
     'original_name': 'Weight',

@@ -4,7 +4,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Aqara FP1 Device Mode',
     'capabilities': dict({
       'options': list([
         'leftright',
@@ -28,6 +27,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Aqara FP1 Device Mode',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Aqara FP1 Device Mode',
@@ -62,7 +62,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Aqara FP1 Sensitivity',
     'capabilities': dict({
       'options': list([
         'High',
@@ -87,6 +86,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Aqara FP1 Sensitivity',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Aqara FP1 Sensitivity',
@@ -122,7 +122,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Aqara FP1 Trigger Distance',
     'capabilities': dict({
       'options': list([
         'far',
@@ -147,6 +146,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Aqara FP1 Trigger Distance',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Aqara FP1 Trigger Distance',
@@ -182,7 +182,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Aqara FP1 Device Mode',
     'capabilities': dict({
       'options': list([
         'leftright',
@@ -206,6 +205,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Aqara FP1 Device Mode',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Aqara FP1 Device Mode',
@@ -240,7 +240,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Aqara FP1 Sensitivity',
     'capabilities': dict({
       'options': list([
         'High',
@@ -265,6 +264,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Aqara FP1 Sensitivity',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Aqara FP1 Sensitivity',
@@ -300,7 +300,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Aqara FP1 Trigger Distance',
     'capabilities': dict({
       'options': list([
         'far',
@@ -325,6 +324,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Aqara FP1 Trigger Distance',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Aqara FP1 Trigger Distance',
@@ -360,7 +360,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Aqara FP1 Device Mode',
     'capabilities': dict({
       'options': list([
         'leftright',
@@ -384,6 +383,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Aqara FP1 Device Mode',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Aqara FP1 Device Mode',
@@ -418,7 +418,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Aqara FP1 Sensitivity',
     'capabilities': dict({
       'options': list([
         'High',
@@ -443,6 +442,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Aqara FP1 Sensitivity',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Aqara FP1 Sensitivity',
@@ -478,7 +478,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Aqara FP1 Trigger Distance',
     'capabilities': dict({
       'options': list([
         'far',
@@ -503,6 +502,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Aqara FP1 Trigger Distance',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Aqara FP1 Trigger Distance',
@@ -538,7 +538,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'IKEA Starkvind Fan Mode',
     'capabilities': dict({
       'options': list([
         'off',
@@ -567,6 +566,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'IKEA Starkvind Fan Mode',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'IKEA Starkvind Fan Mode',

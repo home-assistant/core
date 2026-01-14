@@ -4,7 +4,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'CO2 intensity',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -25,6 +24,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'CO2 intensity',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'CO2 intensity',
@@ -59,7 +59,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Grid fossil fuel percentage',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -80,6 +79,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Grid fossil fuel percentage',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Grid fossil fuel percentage',

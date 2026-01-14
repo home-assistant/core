@@ -4,7 +4,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Estimated energy consumption - Current hour',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -31,6 +30,7 @@
         'suggested_unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
       }),
     }),
+    'object_id_base': 'Estimated energy consumption - Current hour',
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
     'original_name': 'Estimated energy consumption - Current hour',
@@ -64,7 +64,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Estimated energy consumption - Next hour',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -91,6 +90,7 @@
         'suggested_unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
       }),
     }),
+    'object_id_base': 'Estimated energy consumption - Next hour',
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
     'original_name': 'Estimated energy consumption - Next hour',
@@ -124,7 +124,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Estimated energy consumption - Today',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -151,6 +150,7 @@
         'suggested_unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
       }),
     }),
+    'object_id_base': 'Estimated energy consumption - Today',
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
     'original_name': 'Estimated energy consumption - Today',
@@ -184,7 +184,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Estimated energy consumption - Today remaining',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -211,6 +210,7 @@
         'suggested_unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
       }),
     }),
+    'object_id_base': 'Estimated energy consumption - Today remaining',
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
     'original_name': 'Estimated energy consumption - Today remaining',
@@ -244,7 +244,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Estimated energy consumption - Tomorrow',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -271,6 +270,7 @@
         'suggested_unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
       }),
     }),
+    'object_id_base': 'Estimated energy consumption - Tomorrow',
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
     'original_name': 'Estimated energy consumption - Tomorrow',
@@ -304,7 +304,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Estimated energy consumption - Yesterday',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -331,6 +330,7 @@
         'suggested_unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
       }),
     }),
+    'object_id_base': 'Estimated energy consumption - Yesterday',
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
     'original_name': 'Estimated energy consumption - Yesterday',
@@ -364,7 +364,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Estimated energy production - Current hour',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -391,6 +390,7 @@
         'suggested_unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
       }),
     }),
+    'object_id_base': 'Estimated energy production - Current hour',
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
     'original_name': 'Estimated energy production - Current hour',
@@ -424,7 +424,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Estimated energy production - Next hour',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -451,6 +450,7 @@
         'suggested_unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
       }),
     }),
+    'object_id_base': 'Estimated energy production - Next hour',
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
     'original_name': 'Estimated energy production - Next hour',
@@ -484,7 +484,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Estimated energy production - Today',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -511,6 +510,7 @@
         'suggested_unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
       }),
     }),
+    'object_id_base': 'Estimated energy production - Today',
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
     'original_name': 'Estimated energy production - Today',
@@ -544,7 +544,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Estimated energy production - Today remaining',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -571,6 +570,7 @@
         'suggested_unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
       }),
     }),
+    'object_id_base': 'Estimated energy production - Today remaining',
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
     'original_name': 'Estimated energy production - Today remaining',
@@ -604,7 +604,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Estimated energy production - Tomorrow',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -631,6 +630,7 @@
         'suggested_unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
       }),
     }),
+    'object_id_base': 'Estimated energy production - Tomorrow',
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
     'original_name': 'Estimated energy production - Tomorrow',
@@ -664,7 +664,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Estimated energy production - Yesterday',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -691,6 +690,7 @@
         'suggested_unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
       }),
     }),
+    'object_id_base': 'Estimated energy production - Yesterday',
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
     'original_name': 'Estimated energy production - Yesterday',
@@ -724,7 +724,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Highest consumption peak time - Today',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -743,6 +742,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Highest consumption peak time - Today',
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
     'original_icon': None,
     'original_name': 'Highest consumption peak time - Today',
@@ -774,7 +774,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Highest consumption peak time - Tomorrow',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -793,6 +792,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Highest consumption peak time - Tomorrow',
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
     'original_icon': None,
     'original_name': 'Highest consumption peak time - Tomorrow',
@@ -824,7 +824,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Highest consumption peak time - Yesterday',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -843,6 +842,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Highest consumption peak time - Yesterday',
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
     'original_icon': None,
     'original_name': 'Highest consumption peak time - Yesterday',
@@ -874,7 +874,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Highest peak time - Today',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -893,6 +892,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Highest peak time - Today',
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
     'original_icon': None,
     'original_name': 'Highest peak time - Today',
@@ -924,7 +924,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Highest peak time - Tomorrow',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -943,6 +942,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Highest peak time - Tomorrow',
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
     'original_icon': None,
     'original_name': 'Highest peak time - Tomorrow',
@@ -974,7 +974,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Highest peak time - Yesterday',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -993,6 +992,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Highest peak time - Yesterday',
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
     'original_icon': None,
     'original_name': 'Highest peak time - Yesterday',

@@ -4,7 +4,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Presence sensor Delay',
     'capabilities': dict({
       'max': 65535,
       'min': 0,
@@ -28,6 +27,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Presence sensor Delay',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Presence sensor Delay',
@@ -62,7 +62,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Presence sensor Duration',
     'capabilities': dict({
       'max': 65535,
       'min': 0,
@@ -86,6 +85,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Presence sensor Duration',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Presence sensor Duration',

@@ -4,7 +4,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'AI-Driven threat detection',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -23,6 +22,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'AI-Driven threat detection',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'AI-Driven threat detection',
@@ -53,7 +53,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Allow affiliate & tracking links',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -72,6 +71,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Allow affiliate & tracking links',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Allow affiliate & tracking links',
@@ -102,7 +102,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Anonymized EDNS client subnet',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -121,6 +120,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Anonymized EDNS client subnet',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Anonymized EDNS client subnet',
@@ -151,7 +151,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Block 9GAG',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -170,6 +169,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Block 9GAG',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Block 9GAG',
@@ -200,7 +200,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Block Amazon',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -219,6 +218,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Block Amazon',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Block Amazon',
@@ -249,7 +249,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Block BeReal',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -268,6 +267,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Block BeReal',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Block BeReal',
@@ -298,7 +298,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Block Blizzard',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -317,6 +316,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Block Blizzard',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Block Blizzard',
@@ -347,7 +347,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Block bypass methods',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -366,6 +365,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Block bypass methods',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Block bypass methods',
@@ -396,7 +396,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Block ChatGPT',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -415,6 +414,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Block ChatGPT',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Block ChatGPT',
@@ -445,7 +445,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Block child sexual abuse material',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -464,6 +463,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Block child sexual abuse material',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Block child sexual abuse material',
@@ -494,7 +494,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Block Dailymotion',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -513,6 +512,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Block Dailymotion',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Block Dailymotion',
@@ -543,7 +543,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Block dating',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -562,6 +561,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Block dating',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Block dating',
@@ -592,7 +592,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Block Discord',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -611,6 +610,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Block Discord',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Block Discord',
@@ -641,7 +641,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Block disguised third-party trackers',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -660,6 +659,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Block disguised third-party trackers',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Block disguised third-party trackers',
@@ -690,7 +690,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Block Disney Plus',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -709,6 +708,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Block Disney Plus',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Block Disney Plus',
@@ -739,7 +739,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Block dynamic DNS hostnames',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -758,6 +757,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Block dynamic DNS hostnames',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Block dynamic DNS hostnames',
@@ -788,7 +788,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Block eBay',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -807,6 +806,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Block eBay',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Block eBay',
@@ -837,7 +837,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Block Facebook',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -856,6 +855,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Block Facebook',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Block Facebook',
@@ -886,7 +886,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Block Fortnite',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -905,6 +904,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Block Fortnite',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Block Fortnite',
@@ -935,7 +935,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Block gambling',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -954,6 +953,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Block gambling',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Block gambling',
@@ -984,7 +984,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Block Google Chat',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1003,6 +1002,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Block Google Chat',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Block Google Chat',
@@ -1033,7 +1033,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Block HBO Max',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1052,6 +1051,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Block HBO Max',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Block HBO Max',
@@ -1082,7 +1082,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Block Hulu',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1101,6 +1100,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Block Hulu',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Block Hulu',
@@ -1131,7 +1131,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Block Imgur',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1150,6 +1149,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Block Imgur',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Block Imgur',
@@ -1180,7 +1180,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Block Instagram',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1199,6 +1198,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Block Instagram',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Block Instagram',
@@ -1229,7 +1229,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Block League of Legends',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1248,6 +1247,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Block League of Legends',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Block League of Legends',
@@ -1278,7 +1278,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Block Mastodon',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1297,6 +1296,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Block Mastodon',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Block Mastodon',
@@ -1327,7 +1327,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Block Messenger',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1346,6 +1345,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Block Messenger',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Block Messenger',
@@ -1376,7 +1376,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Block Minecraft',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1395,6 +1394,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Block Minecraft',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Block Minecraft',
@@ -1425,7 +1425,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Block Netflix',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1444,6 +1443,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Block Netflix',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Block Netflix',
@@ -1474,7 +1474,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Block newly registered domains',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1493,6 +1492,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Block newly registered domains',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Block newly registered domains',
@@ -1523,7 +1523,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Block online gaming',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1542,6 +1541,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Block online gaming',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Block online gaming',
@@ -1572,7 +1572,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Block page',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1591,6 +1590,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Block page',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Block page',
@@ -1621,7 +1621,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Block parked domains',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1640,6 +1639,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Block parked domains',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Block parked domains',
@@ -1670,7 +1670,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Block Pinterest',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1689,6 +1688,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Block Pinterest',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Block Pinterest',
@@ -1719,7 +1719,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Block piracy',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1738,6 +1737,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Block piracy',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Block piracy',
@@ -1768,7 +1768,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Block PlayStation Network',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1787,6 +1786,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Block PlayStation Network',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Block PlayStation Network',
@@ -1817,7 +1817,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Block porn',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1836,6 +1835,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Block porn',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Block porn',
@@ -1866,7 +1866,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Block Prime Video',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1885,6 +1884,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Block Prime Video',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Block Prime Video',
@@ -1915,7 +1915,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Block Reddit',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1934,6 +1933,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Block Reddit',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Block Reddit',
@@ -1964,7 +1964,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Block Roblox',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1983,6 +1982,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Block Roblox',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Block Roblox',
@@ -2013,7 +2013,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Block Signal',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2032,6 +2031,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Block Signal',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Block Signal',
@@ -2062,7 +2062,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Block Skype',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2081,6 +2080,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Block Skype',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Block Skype',
@@ -2111,7 +2111,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Block Snapchat',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2130,6 +2129,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Block Snapchat',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Block Snapchat',
@@ -2160,7 +2160,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Block social networks',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2179,6 +2178,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Block social networks',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Block social networks',
@@ -2209,7 +2209,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Block Spotify',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2228,6 +2227,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Block Spotify',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Block Spotify',
@@ -2258,7 +2258,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Block Steam',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2277,6 +2276,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Block Steam',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Block Steam',
@@ -2307,7 +2307,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Block Telegram',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2326,6 +2325,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Block Telegram',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Block Telegram',
@@ -2356,7 +2356,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Block TikTok',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2375,6 +2374,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Block TikTok',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Block TikTok',
@@ -2405,7 +2405,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Block Tinder',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2424,6 +2423,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Block Tinder',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Block Tinder',
@@ -2454,7 +2454,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Block Tumblr',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2473,6 +2472,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Block Tumblr',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Block Tumblr',
@@ -2503,7 +2503,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Block Twitch',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2522,6 +2521,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Block Twitch',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Block Twitch',
@@ -2552,7 +2552,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Block video streaming',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2571,6 +2570,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Block video streaming',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Block video streaming',
@@ -2601,7 +2601,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Block Vimeo',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2620,6 +2619,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Block Vimeo',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Block Vimeo',
@@ -2650,7 +2650,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Block VK',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2669,6 +2668,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Block VK',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Block VK',
@@ -2699,7 +2699,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Block WhatsApp',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2718,6 +2717,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Block WhatsApp',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Block WhatsApp',
@@ -2748,7 +2748,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Block X (formerly Twitter)',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2767,6 +2766,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Block X (formerly Twitter)',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Block X (formerly Twitter)',
@@ -2797,7 +2797,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Block Xbox Network',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2816,6 +2815,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Block Xbox Network',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Block Xbox Network',
@@ -2846,7 +2846,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Block YouTube',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2865,6 +2864,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Block YouTube',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Block YouTube',
@@ -2895,7 +2895,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Block Zoom',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2914,6 +2913,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Block Zoom',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Block Zoom',
@@ -2944,7 +2944,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Bypass age verification',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2963,6 +2962,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Bypass age verification',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Bypass age verification',
@@ -2993,7 +2993,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Cache boost',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -3012,6 +3011,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Cache boost',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Cache boost',
@@ -3042,7 +3042,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'CNAME flattening',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -3061,6 +3060,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'CNAME flattening',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'CNAME flattening',
@@ -3091,7 +3091,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Cryptojacking protection',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -3110,6 +3109,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Cryptojacking protection',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Cryptojacking protection',
@@ -3140,7 +3140,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'DNS rebinding protection',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -3159,6 +3158,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'DNS rebinding protection',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'DNS rebinding protection',
@@ -3189,7 +3189,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Domain generation algorithms protection',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -3208,6 +3207,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Domain generation algorithms protection',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Domain generation algorithms protection',
@@ -3238,7 +3238,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Force SafeSearch',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -3257,6 +3256,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Force SafeSearch',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Force SafeSearch',
@@ -3287,7 +3287,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Force YouTube restricted mode',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -3306,6 +3305,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Force YouTube restricted mode',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Force YouTube restricted mode',
@@ -3336,7 +3336,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Google safe browsing',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -3355,6 +3354,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Google safe browsing',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Google safe browsing',
@@ -3385,7 +3385,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'IDN homograph attacks protection',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -3404,6 +3403,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'IDN homograph attacks protection',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'IDN homograph attacks protection',
@@ -3434,7 +3434,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Logs',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -3453,6 +3452,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Logs',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Logs',
@@ -3483,7 +3483,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Threat intelligence feeds',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -3502,6 +3501,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Threat intelligence feeds',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Threat intelligence feeds',
@@ -3532,7 +3532,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Typosquatting protection',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -3551,6 +3550,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Typosquatting protection',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Typosquatting protection',
@@ -3581,7 +3581,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Web3',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -3600,6 +3599,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Web3',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Web3',

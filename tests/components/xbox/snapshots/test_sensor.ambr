@@ -4,7 +4,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Follower',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -23,6 +22,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Follower',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Follower',
@@ -54,7 +54,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Following',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -73,6 +72,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Following',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Following',
@@ -104,7 +104,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Friends',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -123,6 +122,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Friends',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Friends',
@@ -154,7 +154,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Gamerscore',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -173,6 +172,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Gamerscore',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Gamerscore',
@@ -204,7 +204,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'In party',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -223,6 +222,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'In party',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'In party',
@@ -254,7 +254,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Last online',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -273,6 +272,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Last online',
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
     'original_icon': None,
     'original_name': 'Last online',
@@ -304,7 +304,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Now playing',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -323,6 +322,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Now playing',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Now playing',
@@ -362,7 +362,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Party join restrictions',
     'capabilities': dict({
       'options': list([
         'invite_only',
@@ -386,6 +385,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Party join restrictions',
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
     'original_name': 'Party join restrictions',
@@ -421,7 +421,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Status',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -440,6 +439,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Status',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Status',
@@ -470,7 +470,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Follower',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -489,6 +488,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Follower',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Follower',
@@ -520,7 +520,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Following',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -539,6 +538,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Following',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Following',
@@ -570,7 +570,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Friends',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -589,6 +588,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Friends',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Friends',
@@ -620,7 +620,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Gamerscore',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -639,6 +638,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Gamerscore',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Gamerscore',
@@ -670,7 +670,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'In party',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -689,6 +688,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'In party',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'In party',
@@ -720,7 +720,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Last online',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -739,6 +738,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Last online',
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
     'original_icon': None,
     'original_name': 'Last online',
@@ -770,7 +770,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Now playing',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -789,6 +788,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Now playing',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Now playing',
@@ -829,7 +829,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Party join restrictions',
     'capabilities': dict({
       'options': list([
         'invite_only',
@@ -853,6 +852,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Party join restrictions',
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
     'original_name': 'Party join restrictions',
@@ -888,7 +888,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Status',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -907,6 +906,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Status',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Status',
@@ -937,7 +937,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Follower',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -956,6 +955,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Follower',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Follower',
@@ -987,7 +987,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Following',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1006,6 +1005,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Following',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Following',
@@ -1037,7 +1037,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Friends',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1056,6 +1055,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Friends',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Friends',
@@ -1087,7 +1087,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Gamerscore',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1106,6 +1105,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Gamerscore',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Gamerscore',
@@ -1137,7 +1137,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'In party',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1156,6 +1155,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'In party',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'In party',
@@ -1187,7 +1187,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Last online',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1206,6 +1205,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Last online',
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
     'original_icon': None,
     'original_name': 'Last online',
@@ -1237,7 +1237,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Now playing',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1256,6 +1255,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Now playing',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Now playing',
@@ -1295,7 +1295,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Party join restrictions',
     'capabilities': dict({
       'options': list([
         'invite_only',
@@ -1319,6 +1318,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Party join restrictions',
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
     'original_name': 'Party join restrictions',
@@ -1354,7 +1354,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Status',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1373,6 +1372,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Status',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Status',
@@ -1403,7 +1403,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Free space - External',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1430,6 +1429,7 @@
         'suggested_unit_of_measurement': <UnitOfInformation.GIBIBYTES: 'GiB'>,
       }),
     }),
+    'object_id_base': 'Free space - External',
     'original_device_class': <SensorDeviceClass.DATA_SIZE: 'data_size'>,
     'original_icon': None,
     'original_name': 'Free space - External',
@@ -1463,7 +1463,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Free space - Internal',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1490,6 +1489,7 @@
         'suggested_unit_of_measurement': <UnitOfInformation.GIBIBYTES: 'GiB'>,
       }),
     }),
+    'object_id_base': 'Free space - Internal',
     'original_device_class': <SensorDeviceClass.DATA_SIZE: 'data_size'>,
     'original_icon': None,
     'original_name': 'Free space - Internal',
@@ -1523,7 +1523,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Total space - External',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1550,6 +1549,7 @@
         'suggested_unit_of_measurement': <UnitOfInformation.GIBIBYTES: 'GiB'>,
       }),
     }),
+    'object_id_base': 'Total space - External',
     'original_device_class': <SensorDeviceClass.DATA_SIZE: 'data_size'>,
     'original_icon': None,
     'original_name': 'Total space - External',
@@ -1583,7 +1583,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Total space - Internal',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1610,6 +1609,7 @@
         'suggested_unit_of_measurement': <UnitOfInformation.GIBIBYTES: 'GiB'>,
       }),
     }),
+    'object_id_base': 'Total space - Internal',
     'original_device_class': <SensorDeviceClass.DATA_SIZE: 'data_size'>,
     'original_icon': None,
     'original_name': 'Total space - Internal',
@@ -1643,7 +1643,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Free space - Internal',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1670,6 +1669,7 @@
         'suggested_unit_of_measurement': <UnitOfInformation.GIBIBYTES: 'GiB'>,
       }),
     }),
+    'object_id_base': 'Free space - Internal',
     'original_device_class': <SensorDeviceClass.DATA_SIZE: 'data_size'>,
     'original_icon': None,
     'original_name': 'Free space - Internal',
@@ -1703,7 +1703,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Total space - Internal',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1730,6 +1729,7 @@
         'suggested_unit_of_measurement': <UnitOfInformation.GIBIBYTES: 'GiB'>,
       }),
     }),
+    'object_id_base': 'Total space - Internal',
     'original_device_class': <SensorDeviceClass.DATA_SIZE: 'data_size'>,
     'original_icon': None,
     'original_name': 'Total space - Internal',

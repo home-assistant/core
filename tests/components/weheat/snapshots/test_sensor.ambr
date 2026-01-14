@@ -4,7 +4,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': None,
     'capabilities': dict({
       'options': list([
         'standby',
@@ -35,6 +34,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': None,
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
     'original_name': None,
@@ -77,7 +77,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Central heating inlet temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -101,6 +100,7 @@
         'suggested_display_precision': 1,
       }),
     }),
+    'object_id_base': 'Central heating inlet temperature',
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Central heating inlet temperature',
@@ -134,7 +134,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Central heating pump flow',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -158,6 +157,7 @@
         'suggested_display_precision': 1,
       }),
     }),
+    'object_id_base': 'Central heating pump flow',
     'original_device_class': <SensorDeviceClass.VOLUME_FLOW_RATE: 'volume_flow_rate'>,
     'original_icon': None,
     'original_name': 'Central heating pump flow',
@@ -191,7 +191,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Compressor speed',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -212,6 +211,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Compressor speed',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Compressor speed',
@@ -244,7 +244,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Compressor usage',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -265,6 +264,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Compressor usage',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Compressor usage',
@@ -297,7 +297,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'COP',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -321,6 +320,7 @@
         'suggested_display_precision': 1,
       }),
     }),
+    'object_id_base': 'COP',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'COP',
@@ -352,7 +352,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Current room temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -376,6 +375,7 @@
         'suggested_display_precision': 1,
       }),
     }),
+    'object_id_base': 'Current room temperature',
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Current room temperature',
@@ -409,7 +409,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'DHW bottom temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -433,6 +432,7 @@
         'suggested_display_precision': 1,
       }),
     }),
+    'object_id_base': 'DHW bottom temperature',
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'DHW bottom temperature',
@@ -466,7 +466,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'DHW pump flow',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -490,6 +489,7 @@
         'suggested_display_precision': 1,
       }),
     }),
+    'object_id_base': 'DHW pump flow',
     'original_device_class': <SensorDeviceClass.VOLUME_FLOW_RATE: 'volume_flow_rate'>,
     'original_icon': None,
     'original_name': 'DHW pump flow',
@@ -523,7 +523,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'DHW top temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -547,6 +546,7 @@
         'suggested_display_precision': 1,
       }),
     }),
+    'object_id_base': 'DHW top temperature',
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'DHW top temperature',
@@ -580,7 +580,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Electricity used',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -604,6 +603,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'Electricity used',
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
     'original_name': 'Electricity used',
@@ -637,7 +637,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Input power',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -661,6 +660,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'Input power',
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
     'original_icon': None,
     'original_name': 'Input power',
@@ -694,7 +694,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Output power',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -718,6 +717,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'Output power',
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
     'original_icon': None,
     'original_name': 'Output power',
@@ -751,7 +751,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Outside temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -775,6 +774,7 @@
         'suggested_display_precision': 1,
       }),
     }),
+    'object_id_base': 'Outside temperature',
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Outside temperature',
@@ -808,7 +808,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Room temperature setpoint',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -832,6 +831,7 @@
         'suggested_display_precision': 1,
       }),
     }),
+    'object_id_base': 'Room temperature setpoint',
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Room temperature setpoint',
@@ -865,7 +865,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Total energy output',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -889,6 +888,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'Total energy output',
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
     'original_name': 'Total energy output',
@@ -922,7 +922,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Water inlet temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -946,6 +945,7 @@
         'suggested_display_precision': 1,
       }),
     }),
+    'object_id_base': 'Water inlet temperature',
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Water inlet temperature',
@@ -979,7 +979,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Water outlet temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1003,6 +1002,7 @@
         'suggested_display_precision': 1,
       }),
     }),
+    'object_id_base': 'Water outlet temperature',
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Water outlet temperature',
@@ -1036,7 +1036,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Water target temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1060,6 +1059,7 @@
         'suggested_display_precision': 1,
       }),
     }),
+    'object_id_base': 'Water target temperature',
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Water target temperature',

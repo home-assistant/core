@@ -4,7 +4,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Charging status',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -23,6 +22,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Charging status',
     'original_device_class': <BinarySensorDeviceClass.BATTERY_CHARGING: 'battery_charging'>,
     'original_icon': None,
     'original_name': 'Charging status',
@@ -54,7 +54,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Check control messages',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -73,6 +72,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Check control messages',
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
     'original_icon': None,
     'original_name': 'Check control messages',
@@ -104,7 +104,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Condition-based services',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -123,6 +122,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Condition-based services',
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
     'original_icon': None,
     'original_name': 'Condition-based services',
@@ -160,7 +160,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Connection status',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -179,6 +178,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Connection status',
     'original_device_class': <BinarySensorDeviceClass.PLUG: 'plug'>,
     'original_icon': None,
     'original_name': 'Connection status',
@@ -210,7 +210,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Door lock state',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -229,6 +228,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Door lock state',
     'original_device_class': <BinarySensorDeviceClass.LOCK: 'lock'>,
     'original_icon': None,
     'original_name': 'Door lock state',
@@ -261,7 +261,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Lids',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -280,6 +279,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Lids',
     'original_device_class': <BinarySensorDeviceClass.OPENING: 'opening'>,
     'original_icon': None,
     'original_name': 'Lids',
@@ -318,7 +318,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Pre-entry climatization',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -337,6 +336,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Pre-entry climatization',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Pre-entry climatization',
@@ -367,7 +367,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Windows',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -386,6 +385,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Windows',
     'original_device_class': <BinarySensorDeviceClass.OPENING: 'opening'>,
     'original_icon': None,
     'original_name': 'Windows',
@@ -419,7 +419,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Charging status',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -438,6 +437,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Charging status',
     'original_device_class': <BinarySensorDeviceClass.BATTERY_CHARGING: 'battery_charging'>,
     'original_icon': None,
     'original_name': 'Charging status',
@@ -469,7 +469,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Check control messages',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -488,6 +487,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Check control messages',
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
     'original_icon': None,
     'original_name': 'Check control messages',
@@ -520,7 +520,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Condition-based services',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -539,6 +538,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Condition-based services',
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
     'original_icon': None,
     'original_name': 'Condition-based services',
@@ -581,7 +581,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Connection status',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -600,6 +599,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Connection status',
     'original_device_class': <BinarySensorDeviceClass.PLUG: 'plug'>,
     'original_icon': None,
     'original_name': 'Connection status',
@@ -631,7 +631,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Door lock state',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -650,6 +649,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Door lock state',
     'original_device_class': <BinarySensorDeviceClass.LOCK: 'lock'>,
     'original_icon': None,
     'original_name': 'Door lock state',
@@ -682,7 +682,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Lids',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -701,6 +700,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Lids',
     'original_device_class': <BinarySensorDeviceClass.OPENING: 'opening'>,
     'original_icon': None,
     'original_name': 'Lids',
@@ -738,7 +738,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Pre-entry climatization',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -757,6 +756,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Pre-entry climatization',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Pre-entry climatization',
@@ -787,7 +787,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Windows',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -806,6 +805,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Windows',
     'original_device_class': <BinarySensorDeviceClass.OPENING: 'opening'>,
     'original_icon': None,
     'original_name': 'Windows',
@@ -842,7 +842,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Charging status',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -861,6 +860,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Charging status',
     'original_device_class': <BinarySensorDeviceClass.BATTERY_CHARGING: 'battery_charging'>,
     'original_icon': None,
     'original_name': 'Charging status',
@@ -892,7 +892,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Check control messages',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -911,6 +910,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Check control messages',
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
     'original_icon': None,
     'original_name': 'Check control messages',
@@ -943,7 +943,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Condition-based services',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -962,6 +961,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Condition-based services',
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
     'original_icon': None,
     'original_name': 'Condition-based services',
@@ -1004,7 +1004,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Connection status',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1023,6 +1022,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Connection status',
     'original_device_class': <BinarySensorDeviceClass.PLUG: 'plug'>,
     'original_icon': None,
     'original_name': 'Connection status',
@@ -1054,7 +1054,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Door lock state',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1073,6 +1072,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Door lock state',
     'original_device_class': <BinarySensorDeviceClass.LOCK: 'lock'>,
     'original_icon': None,
     'original_name': 'Door lock state',
@@ -1105,7 +1105,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Lids',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1124,6 +1123,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Lids',
     'original_device_class': <BinarySensorDeviceClass.OPENING: 'opening'>,
     'original_icon': None,
     'original_name': 'Lids',
@@ -1162,7 +1162,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Pre-entry climatization',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1181,6 +1180,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Pre-entry climatization',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Pre-entry climatization',
@@ -1211,7 +1211,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Windows',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1230,6 +1229,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Windows',
     'original_device_class': <BinarySensorDeviceClass.OPENING: 'opening'>,
     'original_icon': None,
     'original_name': 'Windows',
@@ -1266,7 +1266,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Check control messages',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1285,6 +1284,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Check control messages',
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
     'original_icon': None,
     'original_name': 'Check control messages',
@@ -1318,7 +1318,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Condition-based services',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1337,6 +1336,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Condition-based services',
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
     'original_icon': None,
     'original_name': 'Condition-based services',
@@ -1382,7 +1382,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Door lock state',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1401,6 +1400,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Door lock state',
     'original_device_class': <BinarySensorDeviceClass.LOCK: 'lock'>,
     'original_icon': None,
     'original_name': 'Door lock state',
@@ -1433,7 +1433,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Lids',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1452,6 +1451,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Lids',
     'original_device_class': <BinarySensorDeviceClass.OPENING: 'opening'>,
     'original_icon': None,
     'original_name': 'Lids',
@@ -1489,7 +1489,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Windows',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1508,6 +1507,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Windows',
     'original_device_class': <BinarySensorDeviceClass.OPENING: 'opening'>,
     'original_icon': None,
     'original_name': 'Windows',

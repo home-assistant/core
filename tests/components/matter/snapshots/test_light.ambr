@@ -4,7 +4,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': None,
     'capabilities': dict({
       'max_color_temp_kelvin': 6535,
       'max_mireds': 500,
@@ -31,6 +30,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': None,
     'original_device_class': None,
     'original_icon': None,
     'original_name': None,
@@ -86,7 +86,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': None,
     'capabilities': dict({
       'supported_color_modes': list([
         <ColorMode.BRIGHTNESS: 'brightness'>,
@@ -109,6 +108,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': None,
     'original_device_class': None,
     'original_icon': None,
     'original_name': None,
@@ -145,7 +145,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': None,
     'capabilities': dict({
       'supported_color_modes': list([
         <ColorMode.BRIGHTNESS: 'brightness'>,
@@ -168,6 +167,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': None,
     'original_device_class': None,
     'original_icon': None,
     'original_name': None,
@@ -204,7 +204,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': None,
     'capabilities': dict({
       'max_color_temp_kelvin': 6535,
       'max_mireds': 500,
@@ -233,6 +232,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': None,
     'original_device_class': None,
     'original_icon': None,
     'original_name': None,
@@ -290,7 +290,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Light (RGB Indicator)',
     'capabilities': dict({
       'max_color_temp_kelvin': 1000000,
       'max_mireds': 66666,
@@ -319,6 +318,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Light (RGB Indicator)',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Light (RGB Indicator)',
@@ -366,7 +366,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': None,
     'capabilities': dict({
       'supported_color_modes': list([
         <ColorMode.BRIGHTNESS: 'brightness'>,
@@ -389,6 +388,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': None,
     'original_device_class': None,
     'original_icon': None,
     'original_name': None,
@@ -423,7 +423,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Light (1)',
     'capabilities': dict({
       'supported_color_modes': list([
         <ColorMode.BRIGHTNESS: 'brightness'>,
@@ -446,6 +445,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Light (1)',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Light (1)',
@@ -482,7 +482,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Light (6)',
     'capabilities': dict({
       'max_color_temp_kelvin': 6535,
       'max_mireds': 500,
@@ -511,6 +510,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Light (6)',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Light (6)',
@@ -558,7 +558,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': None,
     'capabilities': dict({
       'supported_color_modes': list([
         <ColorMode.ONOFF: 'onoff'>,
@@ -581,6 +580,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': None,
     'original_device_class': None,
     'original_icon': None,
     'original_name': None,
@@ -616,7 +616,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': None,
     'capabilities': dict({
       'max_color_temp_kelvin': 6535,
       'max_mireds': 500,
@@ -645,6 +644,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': None,
     'original_device_class': None,
     'original_icon': None,
     'original_name': None,
@@ -692,7 +692,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': None,
     'capabilities': dict({
       'max_color_temp_kelvin': 6535,
       'max_mireds': 500,
@@ -721,6 +720,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': None,
     'original_device_class': None,
     'original_icon': None,
     'original_name': None,
@@ -768,7 +768,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': None,
     'capabilities': dict({
       'supported_color_modes': list([
         <ColorMode.ONOFF: 'onoff'>,
@@ -791,6 +790,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': None,
     'original_device_class': None,
     'original_icon': None,
     'original_name': None,

@@ -4,7 +4,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Budget',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -25,6 +24,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Budget',
     'original_device_class': <SensorDeviceClass.MONETARY: 'monetary'>,
     'original_icon': None,
     'original_name': 'Budget',
@@ -58,7 +58,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Account Balance',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -79,6 +78,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Account Balance',
     'original_device_class': <SensorDeviceClass.MONETARY: 'monetary'>,
     'original_icon': None,
     'original_name': 'Account Balance',
@@ -112,7 +112,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Account Role',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -131,6 +130,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Account Role',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Account Role',
@@ -161,7 +161,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Account Type',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -180,6 +179,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Account Type',
     'original_device_class': None,
     'original_icon': 'mdi:hand-coin',
     'original_name': 'Account Type',
@@ -211,7 +211,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Earned/Spent',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -232,6 +231,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Earned/Spent',
     'original_device_class': <SensorDeviceClass.MONETARY: 'monetary'>,
     'original_icon': None,
     'original_name': 'Earned/Spent',
@@ -265,7 +265,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Account Balance',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -286,6 +285,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Account Balance',
     'original_device_class': <SensorDeviceClass.MONETARY: 'monetary'>,
     'original_icon': None,
     'original_name': 'Account Balance',
@@ -319,7 +319,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Account Role',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -338,6 +337,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Account Role',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Account Role',
@@ -368,7 +368,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Account Type',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -387,6 +386,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Account Type',
     'original_device_class': None,
     'original_icon': 'mdi:account-cash',
     'original_name': 'Account Type',
@@ -418,7 +418,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Account Balance',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -439,6 +438,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Account Balance',
     'original_device_class': <SensorDeviceClass.MONETARY: 'monetary'>,
     'original_icon': None,
     'original_name': 'Account Balance',
@@ -472,7 +472,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Account Role',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -491,6 +490,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Account Role',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Account Role',
@@ -521,7 +521,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Account Type',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -540,6 +539,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Account Type',
     'original_device_class': None,
     'original_icon': 'mdi:cash-minus',
     'original_name': 'Account Type',

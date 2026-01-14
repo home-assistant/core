@@ -4,7 +4,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'End time',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -23,6 +22,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'End time',
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
     'original_icon': 'mdi:progress-clock',
     'original_name': 'End time',
@@ -55,7 +55,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'State',
     'capabilities': dict({
       'options': list([
         'standby',
@@ -98,6 +97,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'State',
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
     'original_name': 'State',
@@ -152,7 +152,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Lower oven cook mode',
     'capabilities': dict({
       'options': list([
         'standby',
@@ -182,6 +181,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Lower oven cook mode',
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
     'original_name': 'Lower oven cook mode',
@@ -223,7 +223,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Lower oven current temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -247,6 +246,7 @@
         'suggested_display_precision': 1,
       }),
     }),
+    'object_id_base': 'Lower oven current temperature',
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Lower oven current temperature',
@@ -280,7 +280,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Lower oven state',
     'capabilities': dict({
       'options': list([
         'standby',
@@ -305,6 +304,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Lower oven state',
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
     'original_name': 'Lower oven state',
@@ -341,7 +341,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Lower oven target temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -365,6 +364,7 @@
         'suggested_display_precision': 1,
       }),
     }),
+    'object_id_base': 'Lower oven target temperature',
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Lower oven target temperature',
@@ -398,7 +398,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Upper oven cook mode',
     'capabilities': dict({
       'options': list([
         'standby',
@@ -428,6 +427,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Upper oven cook mode',
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
     'original_name': 'Upper oven cook mode',
@@ -469,7 +469,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Upper oven current temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -493,6 +492,7 @@
         'suggested_display_precision': 1,
       }),
     }),
+    'object_id_base': 'Upper oven current temperature',
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Upper oven current temperature',
@@ -526,7 +526,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Upper oven state',
     'capabilities': dict({
       'options': list([
         'standby',
@@ -551,6 +550,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Upper oven state',
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
     'original_name': 'Upper oven state',
@@ -587,7 +587,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Upper oven target temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -611,6 +610,7 @@
         'suggested_display_precision': 1,
       }),
     }),
+    'object_id_base': 'Upper oven target temperature',
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Upper oven target temperature',
@@ -644,7 +644,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Cook mode',
     'capabilities': dict({
       'options': list([
         'standby',
@@ -674,6 +673,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Cook mode',
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
     'original_name': 'Cook mode',
@@ -715,7 +715,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Current temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -739,6 +738,7 @@
         'suggested_display_precision': 1,
       }),
     }),
+    'object_id_base': 'Current temperature',
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Current temperature',
@@ -772,7 +772,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'State',
     'capabilities': dict({
       'options': list([
         'standby',
@@ -797,6 +796,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'State',
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
     'original_name': 'State',
@@ -833,7 +833,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Target temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -857,6 +856,7 @@
         'suggested_display_precision': 1,
       }),
     }),
+    'object_id_base': 'Target temperature',
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Target temperature',
@@ -890,7 +890,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Detergent level',
     'capabilities': dict({
       'options': list([
         'empty',
@@ -917,6 +916,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Detergent level',
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
     'original_name': 'Detergent level',
@@ -955,7 +955,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'End time',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -974,6 +973,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'End time',
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
     'original_icon': 'mdi:progress-clock',
     'original_name': 'End time',
@@ -1006,7 +1006,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'State',
     'capabilities': dict({
       'options': list([
         'standby',
@@ -1053,6 +1052,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'State',
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
     'original_name': 'State',

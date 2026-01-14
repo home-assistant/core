@@ -4,7 +4,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Activity',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -25,6 +24,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Activity',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Activity',
@@ -56,7 +56,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Amplitude',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -77,6 +76,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Amplitude',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Amplitude',
@@ -109,7 +109,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Period',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -130,6 +129,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Period',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Period',
@@ -162,7 +162,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Swing count',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -183,6 +182,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Swing count',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Swing count',

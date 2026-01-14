@@ -4,7 +4,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': None,
     'capabilities': dict({
       'source_list': list([
         'wifi',
@@ -31,6 +30,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': None,
     'original_device_class': <MediaPlayerDeviceClass.SPEAKER: 'speaker'>,
     'original_icon': None,
     'original_name': None,
@@ -75,7 +75,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': None,
     'capabilities': dict({
     }),
     'config_entry_id': <ANY>,
@@ -95,6 +94,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': None,
     'original_device_class': <MediaPlayerDeviceClass.SPEAKER: 'speaker'>,
     'original_icon': None,
     'original_name': None,
@@ -131,7 +131,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': None,
     'capabilities': dict({
     }),
     'config_entry_id': <ANY>,
@@ -151,6 +150,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': None,
     'original_device_class': <MediaPlayerDeviceClass.SPEAKER: 'speaker'>,
     'original_icon': None,
     'original_name': None,
@@ -187,7 +187,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': None,
     'capabilities': dict({
     }),
     'config_entry_id': <ANY>,
@@ -207,6 +206,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': None,
     'original_device_class': <MediaPlayerDeviceClass.SPEAKER: 'speaker'>,
     'original_icon': None,
     'original_name': None,
@@ -244,7 +244,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': None,
     'capabilities': dict({
     }),
     'config_entry_id': <ANY>,
@@ -264,6 +263,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': None,
     'original_device_class': <MediaPlayerDeviceClass.SPEAKER: 'speaker'>,
     'original_icon': None,
     'original_name': None,
@@ -296,7 +296,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': None,
     'capabilities': dict({
       'source_list': list([
         'digitalTv',
@@ -322,6 +321,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': None,
     'original_device_class': <MediaPlayerDeviceClass.TV: 'tv'>,
     'original_icon': None,
     'original_name': None,

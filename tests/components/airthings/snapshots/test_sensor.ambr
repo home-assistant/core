@@ -4,7 +4,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Atmospheric pressure',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -31,6 +30,7 @@
         'suggested_unit_of_measurement': <UnitOfPressure.HPA: 'hPa'>,
       }),
     }),
+    'object_id_base': 'Atmospheric pressure',
     'original_device_class': <SensorDeviceClass.ATMOSPHERIC_PRESSURE: 'atmospheric_pressure'>,
     'original_icon': None,
     'original_name': 'Atmospheric pressure',
@@ -64,7 +64,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Battery',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -88,6 +87,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'Battery',
     'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
     'original_icon': None,
     'original_name': 'Battery',
@@ -121,7 +121,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Carbon dioxide',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -145,6 +144,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'Carbon dioxide',
     'original_device_class': <SensorDeviceClass.CO2: 'carbon_dioxide'>,
     'original_icon': None,
     'original_name': 'Carbon dioxide',
@@ -178,7 +178,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Humidity',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -202,6 +201,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'Humidity',
     'original_device_class': <SensorDeviceClass.HUMIDITY: 'humidity'>,
     'original_icon': None,
     'original_name': 'Humidity',
@@ -235,7 +235,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'PM1',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -259,6 +258,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'PM1',
     'original_device_class': <SensorDeviceClass.PM1: 'pm1'>,
     'original_icon': None,
     'original_name': 'PM1',
@@ -292,7 +292,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'PM2.5',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -316,6 +315,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'PM2.5',
     'original_device_class': <SensorDeviceClass.PM25: 'pm25'>,
     'original_icon': None,
     'original_name': 'PM2.5',
@@ -349,7 +349,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Radon',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -373,6 +372,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'Radon',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Radon',
@@ -405,7 +405,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -429,6 +428,7 @@
         'suggested_display_precision': 1,
       }),
     }),
+    'object_id_base': 'Temperature',
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Temperature',
@@ -462,7 +462,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Volatile organic compounds parts',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -486,6 +485,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'Volatile organic compounds parts',
     'original_device_class': <SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS_PARTS: 'volatile_organic_compounds_parts'>,
     'original_icon': None,
     'original_name': 'Volatile organic compounds parts',
@@ -519,7 +519,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Atmospheric pressure',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -546,6 +545,7 @@
         'suggested_unit_of_measurement': <UnitOfPressure.HPA: 'hPa'>,
       }),
     }),
+    'object_id_base': 'Atmospheric pressure',
     'original_device_class': <SensorDeviceClass.ATMOSPHERIC_PRESSURE: 'atmospheric_pressure'>,
     'original_icon': None,
     'original_name': 'Atmospheric pressure',
@@ -579,7 +579,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Battery',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -603,6 +602,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'Battery',
     'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
     'original_icon': None,
     'original_name': 'Battery',
@@ -636,7 +636,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Carbon dioxide',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -660,6 +659,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'Carbon dioxide',
     'original_device_class': <SensorDeviceClass.CO2: 'carbon_dioxide'>,
     'original_icon': None,
     'original_name': 'Carbon dioxide',
@@ -693,7 +693,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Humidity',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -717,6 +716,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'Humidity',
     'original_device_class': <SensorDeviceClass.HUMIDITY: 'humidity'>,
     'original_icon': None,
     'original_name': 'Humidity',
@@ -750,7 +750,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Illuminance',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -774,6 +773,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'Illuminance',
     'original_device_class': <SensorDeviceClass.ILLUMINANCE: 'illuminance'>,
     'original_icon': None,
     'original_name': 'Illuminance',
@@ -807,7 +807,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Sound pressure',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -831,6 +830,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'Sound pressure',
     'original_device_class': <SensorDeviceClass.SOUND_PRESSURE: 'sound_pressure'>,
     'original_icon': None,
     'original_name': 'Sound pressure',
@@ -864,7 +864,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -888,6 +887,7 @@
         'suggested_display_precision': 1,
       }),
     }),
+    'object_id_base': 'Temperature',
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Temperature',
@@ -921,7 +921,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Volatile organic compounds parts',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -945,6 +944,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'Volatile organic compounds parts',
     'original_device_class': <SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS_PARTS: 'volatile_organic_compounds_parts'>,
     'original_icon': None,
     'original_name': 'Volatile organic compounds parts',
@@ -978,7 +978,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Atmospheric pressure',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1005,6 +1004,7 @@
         'suggested_unit_of_measurement': <UnitOfPressure.HPA: 'hPa'>,
       }),
     }),
+    'object_id_base': 'Atmospheric pressure',
     'original_device_class': <SensorDeviceClass.ATMOSPHERIC_PRESSURE: 'atmospheric_pressure'>,
     'original_icon': None,
     'original_name': 'Atmospheric pressure',
@@ -1038,7 +1038,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Battery',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1062,6 +1061,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'Battery',
     'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
     'original_icon': None,
     'original_name': 'Battery',
@@ -1095,7 +1095,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Carbon dioxide',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1119,6 +1118,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'Carbon dioxide',
     'original_device_class': <SensorDeviceClass.CO2: 'carbon_dioxide'>,
     'original_icon': None,
     'original_name': 'Carbon dioxide',
@@ -1152,7 +1152,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Humidity',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1176,6 +1175,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'Humidity',
     'original_device_class': <SensorDeviceClass.HUMIDITY: 'humidity'>,
     'original_icon': None,
     'original_name': 'Humidity',
@@ -1209,7 +1209,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Radon',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1233,6 +1232,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'Radon',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Radon',
@@ -1265,7 +1265,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1289,6 +1288,7 @@
         'suggested_display_precision': 1,
       }),
     }),
+    'object_id_base': 'Temperature',
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Temperature',
@@ -1322,7 +1322,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Volatile organic compounds parts',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1346,6 +1345,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'Volatile organic compounds parts',
     'original_device_class': <SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS_PARTS: 'volatile_organic_compounds_parts'>,
     'original_icon': None,
     'original_name': 'Volatile organic compounds parts',

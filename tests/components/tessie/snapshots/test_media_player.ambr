@@ -4,7 +4,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Media player',
     'capabilities': dict({
     }),
     'config_entry_id': <ANY>,
@@ -24,6 +23,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Media player',
     'original_device_class': <MediaPlayerDeviceClass.SPEAKER: 'speaker'>,
     'original_icon': None,
     'original_name': 'Media player',

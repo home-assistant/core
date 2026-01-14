@@ -22,7 +22,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Brew by weight dose mode',
     'capabilities': dict({
       'options': list([
         'continuous',
@@ -47,6 +46,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Brew by weight dose mode',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Brew by weight dose mode',
@@ -82,7 +82,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Prebrew/-infusion mode',
     'capabilities': dict({
       'options': list([
         'disabled',
@@ -107,6 +106,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Prebrew/-infusion mode',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Prebrew/-infusion mode',
@@ -142,7 +142,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Prebrew/-infusion mode',
     'capabilities': dict({
       'options': list([
         'disabled',
@@ -167,6 +166,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Prebrew/-infusion mode',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Prebrew/-infusion mode',
@@ -202,7 +202,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Prebrew/-infusion mode',
     'capabilities': dict({
       'options': list([
         'disabled',
@@ -227,6 +226,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Prebrew/-infusion mode',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Prebrew/-infusion mode',
@@ -261,7 +261,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Smart standby mode',
     'capabilities': dict({
       'options': list([
         'power_on',
@@ -285,6 +284,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Smart standby mode',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Smart standby mode',
@@ -320,7 +320,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Steam level',
     'capabilities': dict({
       'options': list([
         '1',
@@ -345,6 +344,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Steam level',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Steam level',

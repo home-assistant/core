@@ -4,7 +4,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Burner',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -23,6 +22,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Burner',
     'original_device_class': <BinarySensorDeviceClass.RUNNING: 'running'>,
     'original_icon': None,
     'original_name': 'Burner',
@@ -54,7 +54,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Fault',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -73,6 +72,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Fault',
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
     'original_icon': None,
     'original_name': 'Fault',
@@ -105,7 +105,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Hot water tap',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -124,6 +123,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Hot water tap',
     'original_device_class': <BinarySensorDeviceClass.RUNNING: 'running'>,
     'original_icon': None,
     'original_name': 'Hot water tap',
@@ -155,7 +155,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Pump',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -174,6 +173,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Pump',
     'original_device_class': <BinarySensorDeviceClass.RUNNING: 'running'>,
     'original_icon': None,
     'original_name': 'Pump',
@@ -205,7 +205,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Burner',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -224,6 +223,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Burner',
     'original_device_class': <BinarySensorDeviceClass.RUNNING: 'running'>,
     'original_icon': None,
     'original_name': 'Burner',
@@ -255,7 +255,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Fault',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -274,6 +273,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Fault',
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
     'original_icon': None,
     'original_name': 'Fault',
@@ -306,7 +306,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Hot water tap',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -325,6 +324,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Hot water tap',
     'original_device_class': <BinarySensorDeviceClass.RUNNING: 'running'>,
     'original_icon': None,
     'original_name': 'Hot water tap',
@@ -356,7 +356,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Pump',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -375,6 +374,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Pump',
     'original_device_class': <BinarySensorDeviceClass.RUNNING: 'running'>,
     'original_icon': None,
     'original_name': 'Pump',
@@ -406,7 +406,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Burner',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -425,6 +424,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Burner',
     'original_device_class': <BinarySensorDeviceClass.RUNNING: 'running'>,
     'original_icon': None,
     'original_name': 'Burner',
@@ -456,7 +456,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Fault',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -475,6 +474,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Fault',
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
     'original_icon': None,
     'original_name': 'Fault',
@@ -507,7 +507,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Hot water tap',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -526,6 +525,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Hot water tap',
     'original_device_class': <BinarySensorDeviceClass.RUNNING: 'running'>,
     'original_icon': None,
     'original_name': 'Hot water tap',
@@ -557,7 +557,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Pump',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -576,6 +575,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Pump',
     'original_device_class': <BinarySensorDeviceClass.RUNNING: 'running'>,
     'original_icon': None,
     'original_name': 'Pump',
@@ -607,7 +607,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Burner',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -626,6 +625,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Burner',
     'original_device_class': <BinarySensorDeviceClass.RUNNING: 'running'>,
     'original_icon': None,
     'original_name': 'Burner',
@@ -657,7 +657,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Fault',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -676,6 +675,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Fault',
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
     'original_icon': None,
     'original_name': 'Fault',
@@ -708,7 +708,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Hot water tap',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -727,6 +726,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Hot water tap',
     'original_device_class': <BinarySensorDeviceClass.RUNNING: 'running'>,
     'original_icon': None,
     'original_name': 'Hot water tap',
@@ -758,7 +758,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Pump',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -777,6 +776,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Pump',
     'original_device_class': <BinarySensorDeviceClass.RUNNING: 'running'>,
     'original_icon': None,
     'original_name': 'Pump',
@@ -808,7 +808,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Burner',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -827,6 +826,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Burner',
     'original_device_class': <BinarySensorDeviceClass.RUNNING: 'running'>,
     'original_icon': None,
     'original_name': 'Burner',
@@ -858,7 +858,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Fault',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -877,6 +876,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Fault',
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
     'original_icon': None,
     'original_name': 'Fault',
@@ -909,7 +909,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Hot water tap',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -928,6 +927,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Hot water tap',
     'original_device_class': <BinarySensorDeviceClass.RUNNING: 'running'>,
     'original_icon': None,
     'original_name': 'Hot water tap',
@@ -959,7 +959,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Pump',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -978,6 +977,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Pump',
     'original_device_class': <BinarySensorDeviceClass.RUNNING: 'running'>,
     'original_icon': None,
     'original_name': 'Pump',

@@ -4,7 +4,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Battery',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -25,6 +24,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Battery',
     'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
     'original_icon': None,
     'original_name': 'Battery',
@@ -58,7 +58,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Current 1',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -82,6 +81,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'Current 1',
     'original_device_class': <SensorDeviceClass.CURRENT: 'current'>,
     'original_icon': None,
     'original_name': 'Current 1',
@@ -115,7 +115,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Current 2',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -139,6 +138,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'Current 2',
     'original_device_class': <SensorDeviceClass.CURRENT: 'current'>,
     'original_icon': None,
     'original_name': 'Current 2',
@@ -172,7 +172,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Dawn',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -193,6 +192,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Dawn',
     'original_device_class': <SensorDeviceClass.ILLUMINANCE: 'illuminance'>,
     'original_icon': None,
     'original_name': 'Dawn',
@@ -226,7 +226,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Device temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -250,6 +249,7 @@
         'suggested_display_precision': 1,
       }),
     }),
+    'object_id_base': 'Device temperature',
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Device temperature',
@@ -283,7 +283,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Energy 1',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -307,6 +306,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'Energy 1',
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
     'original_name': 'Energy 1',
@@ -340,7 +340,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Energy 2',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -364,6 +363,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'Energy 2',
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
     'original_name': 'Energy 2',
@@ -397,7 +397,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Exhaust motor speed',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -418,6 +417,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Exhaust motor speed',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Exhaust motor speed',
@@ -450,7 +450,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'External temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -474,6 +473,7 @@
         'suggested_display_precision': 1,
       }),
     }),
+    'object_id_base': 'External temperature',
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'External temperature',
@@ -507,7 +507,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Floor temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -531,6 +530,7 @@
         'suggested_display_precision': 1,
       }),
     }),
+    'object_id_base': 'Floor temperature',
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Floor temperature',
@@ -564,7 +564,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Humidity',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -585,6 +584,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Humidity',
     'original_device_class': <SensorDeviceClass.HUMIDITY: 'humidity'>,
     'original_icon': None,
     'original_name': 'Humidity',
@@ -618,7 +618,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Illuminance',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -639,6 +638,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Illuminance',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Illuminance',
@@ -671,7 +671,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Illuminance 1',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -692,6 +691,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Illuminance 1',
     'original_device_class': <SensorDeviceClass.ILLUMINANCE: 'illuminance'>,
     'original_icon': None,
     'original_name': 'Illuminance 1',
@@ -725,7 +725,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Illuminance 2',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -746,6 +745,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Illuminance 2',
     'original_device_class': <SensorDeviceClass.ILLUMINANCE: 'illuminance'>,
     'original_icon': None,
     'original_name': 'Illuminance 2',
@@ -779,7 +779,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Indoor humidity',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -800,6 +799,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Indoor humidity',
     'original_device_class': <SensorDeviceClass.HUMIDITY: 'humidity'>,
     'original_icon': None,
     'original_name': 'Indoor humidity',
@@ -833,7 +833,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Indoor temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -857,6 +856,7 @@
         'suggested_display_precision': 1,
       }),
     }),
+    'object_id_base': 'Indoor temperature',
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Indoor temperature',
@@ -890,7 +890,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Intake motor speed',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -911,6 +910,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Intake motor speed',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Intake motor speed',
@@ -943,7 +943,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Level',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -967,6 +966,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'Level',
     'original_device_class': <SensorDeviceClass.VOLUME_STORAGE: 'volume_storage'>,
     'original_icon': None,
     'original_name': 'Level',
@@ -1000,7 +1000,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Link quality',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1021,6 +1020,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Link quality',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Link quality',
@@ -1052,7 +1052,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Node state',
     'capabilities': dict({
       'options': list([
         'available',
@@ -1088,6 +1087,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Node state',
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
     'original_name': 'Node state',
@@ -1135,7 +1135,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Operating hours',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -1159,6 +1158,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'Operating hours',
     'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
     'original_icon': None,
     'original_name': 'Operating hours',
@@ -1192,7 +1192,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Outdoor humidity',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1213,6 +1212,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Outdoor humidity',
     'original_device_class': <SensorDeviceClass.HUMIDITY: 'humidity'>,
     'original_icon': None,
     'original_name': 'Outdoor humidity',
@@ -1246,7 +1246,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Outdoor temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1270,6 +1269,7 @@
         'suggested_display_precision': 1,
       }),
     }),
+    'object_id_base': 'Outdoor temperature',
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Outdoor temperature',
@@ -1303,7 +1303,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Position',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1324,6 +1323,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Position',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Position',
@@ -1356,7 +1356,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'State',
     'capabilities': dict({
       'options': list([
         'open',
@@ -1383,6 +1382,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'State',
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
     'original_name': 'State',
@@ -1421,7 +1421,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1445,6 +1444,7 @@
         'suggested_display_precision': 1,
       }),
     }),
+    'object_id_base': 'Temperature',
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Temperature',
@@ -1478,7 +1478,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Total current',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1502,6 +1501,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'Total current',
     'original_device_class': <SensorDeviceClass.CURRENT: 'current'>,
     'original_icon': None,
     'original_name': 'Total current',
@@ -1535,7 +1535,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Total energy',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -1559,6 +1558,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'Total energy',
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
     'original_name': 'Total energy',
@@ -1592,7 +1592,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Total power',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1616,6 +1615,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'Total power',
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
     'original_icon': None,
     'original_name': 'Total power',
@@ -1649,7 +1649,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Total voltage',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1673,6 +1672,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'Total voltage',
     'original_device_class': <SensorDeviceClass.VOLTAGE: 'voltage'>,
     'original_icon': None,
     'original_name': 'Total voltage',
@@ -1706,7 +1706,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Ultraviolet',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1727,6 +1726,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Ultraviolet',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Ultraviolet',
@@ -1758,7 +1758,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Voltage 1',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1782,6 +1781,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'Voltage 1',
     'original_device_class': <SensorDeviceClass.VOLTAGE: 'voltage'>,
     'original_icon': None,
     'original_name': 'Voltage 1',
@@ -1815,7 +1815,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Voltage 2',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1839,6 +1838,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'Voltage 2',
     'original_device_class': <SensorDeviceClass.VOLTAGE: 'voltage'>,
     'original_icon': None,
     'original_name': 'Voltage 2',
@@ -1872,7 +1872,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Wind speed',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1899,6 +1898,7 @@
         'suggested_unit_of_measurement': <UnitOfSpeed.KILOMETERS_PER_HOUR: 'km/h'>,
       }),
     }),
+    'object_id_base': 'Wind speed',
     'original_device_class': <SensorDeviceClass.WIND_SPEED: 'wind_speed'>,
     'original_icon': None,
     'original_name': 'Wind speed',
@@ -1932,7 +1932,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Window position',
     'capabilities': dict({
       'options': list([
         'closed',
@@ -1957,6 +1956,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Window position',
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
     'original_name': 'Window position',

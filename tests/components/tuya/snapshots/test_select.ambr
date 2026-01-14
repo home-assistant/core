@@ -4,7 +4,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Indicator light mode',
     'capabilities': dict({
       'options': list([
         'relay',
@@ -29,6 +28,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Indicator light mode',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Indicator light mode',
@@ -64,7 +64,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Power on behavior',
     'capabilities': dict({
       'options': list([
         'power_off',
@@ -89,6 +88,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Power on behavior',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Power on behavior',
@@ -124,7 +124,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Power on behavior',
     'capabilities': dict({
       'options': list([
         '0',
@@ -149,6 +148,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Power on behavior',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Power on behavior',
@@ -184,7 +184,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Power on behavior',
     'capabilities': dict({
       'options': list([
         'power_off',
@@ -209,6 +208,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Power on behavior',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Power on behavior',
@@ -244,7 +244,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Volume',
     'capabilities': dict({
       'options': list([
         'low',
@@ -270,6 +269,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Volume',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Volume',
@@ -306,7 +306,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Countdown',
     'capabilities': dict({
       'options': list([
         '1h',
@@ -331,6 +330,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Countdown',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Countdown',
@@ -366,7 +366,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Target humidity',
     'capabilities': dict({
       'options': list([
         '40',
@@ -390,6 +389,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Target humidity',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Target humidity',
@@ -424,7 +424,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Indicator light mode',
     'capabilities': dict({
       'options': list([
         'relay',
@@ -449,6 +448,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Indicator light mode',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Indicator light mode',
@@ -484,7 +484,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Power on behavior',
     'capabilities': dict({
       'options': list([
         'power_off',
@@ -509,6 +508,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Power on behavior',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Power on behavior',
@@ -544,7 +544,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Indicator light mode',
     'capabilities': dict({
       'options': list([
         'relay',
@@ -569,6 +568,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Indicator light mode',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Indicator light mode',
@@ -604,7 +604,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Power on behavior',
     'capabilities': dict({
       'options': list([
         'power_off',
@@ -629,6 +628,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Power on behavior',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Power on behavior',
@@ -664,7 +664,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Weather delay',
     'capabilities': dict({
       'options': list([
         'cancel',
@@ -690,6 +689,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Weather delay',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Weather delay',
@@ -726,7 +726,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Indicator light mode',
     'capabilities': dict({
       'options': list([
         'none',
@@ -751,6 +750,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Indicator light mode',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Indicator light mode',
@@ -786,7 +786,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Power on behavior',
     'capabilities': dict({
       'options': list([
         'power_off',
@@ -811,6 +810,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Power on behavior',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Power on behavior',
@@ -846,7 +846,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Mode',
     'capabilities': dict({
       'options': list([
         'morning',
@@ -870,6 +869,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Mode',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Mode',
@@ -904,7 +904,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Countdown',
     'capabilities': dict({
       'options': list([
         'cancel',
@@ -932,6 +931,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Countdown',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Countdown',
@@ -970,7 +970,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Anti-flicker',
     'capabilities': dict({
       'options': list([
         '0',
@@ -995,6 +994,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Anti-flicker',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Anti-flicker',
@@ -1030,7 +1030,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Motion detection sensitivity',
     'capabilities': dict({
       'options': list([
         '0',
@@ -1055,6 +1054,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Motion detection sensitivity',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Motion detection sensitivity',
@@ -1090,7 +1090,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Night vision',
     'capabilities': dict({
       'options': list([
         '0',
@@ -1115,6 +1114,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Night vision',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Night vision',
@@ -1150,7 +1150,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Record mode',
     'capabilities': dict({
       'options': list([
         '1',
@@ -1174,6 +1173,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Record mode',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Record mode',
@@ -1208,7 +1208,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Sound detection sensitivity',
     'capabilities': dict({
       'options': list([
         '0',
@@ -1232,6 +1231,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Sound detection sensitivity',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Sound detection sensitivity',
@@ -1266,7 +1266,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'IPC mode',
     'capabilities': dict({
       'options': list([
         '0',
@@ -1290,6 +1289,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'IPC mode',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'IPC mode',
@@ -1324,7 +1324,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Motion detection sensitivity',
     'capabilities': dict({
       'options': list([
         '0',
@@ -1349,6 +1348,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Motion detection sensitivity',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Motion detection sensitivity',
@@ -1384,7 +1384,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Record mode',
     'capabilities': dict({
       'options': list([
         '1',
@@ -1408,6 +1407,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Record mode',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Record mode',
@@ -1442,7 +1442,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Motion detection sensitivity',
     'capabilities': dict({
       'options': list([
         '0',
@@ -1467,6 +1466,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Motion detection sensitivity',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Motion detection sensitivity',
@@ -1502,7 +1502,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Night vision',
     'capabilities': dict({
       'options': list([
         '0',
@@ -1527,6 +1526,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Night vision',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Night vision',
@@ -1562,7 +1562,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Record mode',
     'capabilities': dict({
       'options': list([
         '1',
@@ -1586,6 +1585,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Record mode',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Record mode',
@@ -1620,7 +1620,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Sound detection sensitivity',
     'capabilities': dict({
       'options': list([
         '0',
@@ -1644,6 +1643,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Sound detection sensitivity',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Sound detection sensitivity',
@@ -1678,7 +1678,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Motion detection sensitivity',
     'capabilities': dict({
       'options': list([
         '0',
@@ -1703,6 +1702,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Motion detection sensitivity',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Motion detection sensitivity',
@@ -1738,7 +1738,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Record mode',
     'capabilities': dict({
       'options': list([
         '1',
@@ -1762,6 +1761,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Record mode',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Record mode',
@@ -1796,7 +1796,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Sound detection sensitivity',
     'capabilities': dict({
       'options': list([
         '0',
@@ -1820,6 +1819,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Sound detection sensitivity',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Sound detection sensitivity',
@@ -1854,7 +1854,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Inverter work mode',
     'capabilities': dict({
       'options': list([
         'self_powered',
@@ -1878,6 +1877,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Inverter work mode',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Inverter work mode',
@@ -1912,7 +1912,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Countdown',
     'capabilities': dict({
       'options': list([
         'cancel',
@@ -1939,6 +1938,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Countdown',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Countdown',
@@ -1976,7 +1976,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Countdown',
     'capabilities': dict({
       'options': list([
         'cancel',
@@ -2002,6 +2001,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Countdown',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Countdown',
@@ -2038,7 +2038,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Countdown',
     'capabilities': dict({
       'options': list([
         'cancel',
@@ -2064,6 +2063,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Countdown',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Countdown',
@@ -2100,7 +2100,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Indicator light mode',
     'capabilities': dict({
       'options': list([
         'relay',
@@ -2125,6 +2124,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Indicator light mode',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Indicator light mode',
@@ -2160,7 +2160,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Power on behavior',
     'capabilities': dict({
       'options': list([
         'power_off',
@@ -2185,6 +2184,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Power on behavior',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Power on behavior',
@@ -2220,7 +2220,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Countdown',
     'capabilities': dict({
       'options': list([
         'cancel',
@@ -2246,6 +2245,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Countdown',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Countdown',
@@ -2282,7 +2282,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Motor mode',
     'capabilities': dict({
       'options': list([
         'forward',
@@ -2306,6 +2305,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Motor mode',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Motor mode',
@@ -2340,7 +2340,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Indicator light mode',
     'capabilities': dict({
       'options': list([
         'relay',
@@ -2365,6 +2364,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Indicator light mode',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Indicator light mode',
@@ -2400,7 +2400,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Power on behavior',
     'capabilities': dict({
       'options': list([
         'power_off',
@@ -2425,6 +2424,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Power on behavior',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Power on behavior',
@@ -2460,7 +2460,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Indicator light mode',
     'capabilities': dict({
       'options': list([
         'relay',
@@ -2485,6 +2484,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Indicator light mode',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Indicator light mode',
@@ -2520,7 +2520,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Power on behavior',
     'capabilities': dict({
       'options': list([
         'power_off',
@@ -2545,6 +2544,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Power on behavior',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Power on behavior',
@@ -2580,7 +2580,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Indicator light mode',
     'capabilities': dict({
       'options': list([
         'relay',
@@ -2605,6 +2604,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Indicator light mode',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Indicator light mode',
@@ -2640,7 +2640,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Power on behavior',
     'capabilities': dict({
       'options': list([
         'power_off',
@@ -2665,6 +2664,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Power on behavior',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Power on behavior',
@@ -2700,7 +2700,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Power on behavior',
     'capabilities': dict({
       'options': list([
         '0',
@@ -2725,6 +2724,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Power on behavior',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Power on behavior',
@@ -2760,7 +2760,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Motion detection sensitivity',
     'capabilities': dict({
       'options': list([
         '0',
@@ -2785,6 +2784,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Motion detection sensitivity',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Motion detection sensitivity',
@@ -2820,7 +2820,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Record mode',
     'capabilities': dict({
       'options': list([
         '1',
@@ -2844,6 +2843,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Record mode',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Record mode',
@@ -2878,7 +2878,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Weather delay',
     'capabilities': dict({
       'options': list([
         'cancel',
@@ -2904,6 +2903,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Weather delay',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Weather delay',
@@ -2940,7 +2940,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Indicator light mode',
     'capabilities': dict({
       'options': list([
         'relay',
@@ -2965,6 +2964,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Indicator light mode',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Indicator light mode',
@@ -3000,7 +3000,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Power on behavior',
     'capabilities': dict({
       'options': list([
         'power_off',
@@ -3025,6 +3024,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Power on behavior',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Power on behavior',
@@ -3060,7 +3060,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Mode',
     'capabilities': dict({
       'options': list([
         'random',
@@ -3086,6 +3085,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Mode',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Mode',
@@ -3122,7 +3122,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Power on behavior',
     'capabilities': dict({
       'options': list([
         'power_off',
@@ -3147,6 +3146,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Power on behavior',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Power on behavior',
@@ -3182,7 +3182,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Motion detection sensitivity',
     'capabilities': dict({
       'options': list([
         '0',
@@ -3207,6 +3206,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Motion detection sensitivity',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Motion detection sensitivity',
@@ -3242,7 +3242,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Countdown',
     'capabilities': dict({
       'options': list([
         '1',
@@ -3270,6 +3269,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Countdown',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Countdown',
@@ -3308,7 +3308,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Countdown',
     'capabilities': dict({
       'options': list([
         '1',
@@ -3336,6 +3335,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Countdown',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Countdown',
@@ -3374,7 +3374,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Power on behavior',
     'capabilities': dict({
       'options': list([
         '0',
@@ -3399,6 +3398,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Power on behavior',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Power on behavior',
@@ -3434,7 +3434,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Indicator light mode',
     'capabilities': dict({
       'options': list([
         'relay',
@@ -3459,6 +3458,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Indicator light mode',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Indicator light mode',
@@ -3494,7 +3494,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Power on behavior',
     'capabilities': dict({
       'options': list([
         'power_off',
@@ -3519,6 +3518,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Power on behavior',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Power on behavior',
@@ -3554,7 +3554,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Countdown',
     'capabilities': dict({
       'options': list([
         'cancel',
@@ -3582,6 +3581,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Countdown',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Countdown',
@@ -3620,7 +3620,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Motor mode',
     'capabilities': dict({
       'options': list([
         'forward',
@@ -3644,6 +3643,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Motor mode',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Motor mode',
@@ -3678,7 +3678,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Spraying level',
     'capabilities': dict({
       'options': list([
         'level_1',
@@ -3709,6 +3708,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Spraying level',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Spraying level',
@@ -3750,7 +3750,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Indicator light mode',
     'capabilities': dict({
       'options': list([
         'none',
@@ -3775,6 +3774,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Indicator light mode',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Indicator light mode',
@@ -3810,7 +3810,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Power on behavior',
     'capabilities': dict({
       'options': list([
         'power_off',
@@ -3835,6 +3834,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Power on behavior',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Power on behavior',
@@ -3870,7 +3870,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Countdown',
     'capabilities': dict({
       'options': list([
         'cancel',
@@ -3896,6 +3895,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Countdown',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Countdown',
@@ -3932,7 +3932,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Level',
     'capabilities': dict({
       'options': list([
         'level_1',
@@ -3958,6 +3957,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Level',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Level',
@@ -3994,7 +3994,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Up/Down',
     'capabilities': dict({
       'options': list([
         'up',
@@ -4019,6 +4018,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Up/Down',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Up/Down',
@@ -4054,7 +4054,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Anti-flicker',
     'capabilities': dict({
       'options': list([
         '0',
@@ -4079,6 +4078,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Anti-flicker',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Anti-flicker',
@@ -4114,7 +4114,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'IPC mode',
     'capabilities': dict({
       'options': list([
         '0',
@@ -4138,6 +4137,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'IPC mode',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'IPC mode',
@@ -4172,7 +4172,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Indicator light mode',
     'capabilities': dict({
       'options': list([
         'relay',
@@ -4197,6 +4196,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Indicator light mode',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Indicator light mode',
@@ -4232,7 +4232,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Power on behavior',
     'capabilities': dict({
       'options': list([
         'power_off',
@@ -4257,6 +4256,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Power on behavior',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Power on behavior',
@@ -4292,7 +4292,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Motor mode',
     'capabilities': dict({
       'options': list([
         'forward',
@@ -4316,6 +4315,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Motor mode',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Motor mode',
@@ -4350,7 +4350,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Motor mode',
     'capabilities': dict({
       'options': list([
         'forward',
@@ -4374,6 +4373,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Motor mode',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Motor mode',
@@ -4408,7 +4408,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Indicator light mode',
     'capabilities': dict({
       'options': list([
         'none',
@@ -4433,6 +4432,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Indicator light mode',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Indicator light mode',
@@ -4468,7 +4468,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Power on behavior',
     'capabilities': dict({
       'options': list([
         'power_off',
@@ -4493,6 +4492,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Power on behavior',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Power on behavior',
@@ -4528,7 +4528,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Power on behavior',
     'capabilities': dict({
       'options': list([
         '0',
@@ -4553,6 +4552,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Power on behavior',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Power on behavior',
@@ -4588,7 +4588,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Indicator light mode',
     'capabilities': dict({
       'options': list([
         'none',
@@ -4613,6 +4612,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Indicator light mode',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Indicator light mode',
@@ -4648,7 +4648,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Power on behavior',
     'capabilities': dict({
       'options': list([
         'power_off',
@@ -4673,6 +4672,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Power on behavior',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Power on behavior',
@@ -4708,7 +4708,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Siren mode',
     'capabilities': dict({
       'options': list([
         'alarm_sound',
@@ -4734,6 +4733,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Siren mode',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Siren mode',
@@ -4770,7 +4770,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Volume',
     'capabilities': dict({
       'options': list([
         'low',
@@ -4796,6 +4795,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Volume',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Volume',
@@ -4832,7 +4832,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Volume',
     'capabilities': dict({
       'options': list([
         'low',
@@ -4858,6 +4857,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Volume',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Volume',
@@ -4894,7 +4894,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Odor elimination mode',
     'capabilities': dict({
       'options': list([
         'smart',
@@ -4918,6 +4917,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Odor elimination mode',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Odor elimination mode',
@@ -4952,7 +4952,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Weather delay',
     'capabilities': dict({
       'options': list([
         'cancel',
@@ -4978,6 +4977,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Weather delay',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Weather delay',
@@ -5014,7 +5014,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Power on behavior',
     'capabilities': dict({
       'options': list([
         '0',
@@ -5039,6 +5038,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Power on behavior',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Power on behavior',
@@ -5074,7 +5074,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Indicator light mode',
     'capabilities': dict({
       'options': list([
         'relay',
@@ -5099,6 +5098,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Indicator light mode',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Indicator light mode',
@@ -5134,7 +5134,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Power on behavior',
     'capabilities': dict({
       'options': list([
         'power_off',
@@ -5159,6 +5158,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Power on behavior',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Power on behavior',
@@ -5194,7 +5194,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Indicator light mode',
     'capabilities': dict({
       'options': list([
         'relay',
@@ -5219,6 +5218,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Indicator light mode',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Indicator light mode',
@@ -5254,7 +5254,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Power on behavior',
     'capabilities': dict({
       'options': list([
         'power_off',
@@ -5279,6 +5278,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Power on behavior',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Power on behavior',
@@ -5314,7 +5314,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Level',
     'capabilities': dict({
       'options': list([
         'level_1',
@@ -5346,6 +5345,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Level',
     'original_device_class': None,
     'original_icon': 'mdi:thermometer-lines',
     'original_name': 'Level',
@@ -5389,7 +5389,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Level 1',
     'capabilities': dict({
       'options': list([
         'level_1',
@@ -5421,6 +5420,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Level 1',
     'original_device_class': None,
     'original_icon': 'mdi:thermometer-lines',
     'original_name': 'Level 1',
@@ -5464,7 +5464,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Level 2',
     'capabilities': dict({
       'options': list([
         'level_1',
@@ -5496,6 +5495,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Level 2',
     'original_device_class': None,
     'original_icon': 'mdi:thermometer-lines',
     'original_name': 'Level 2',
@@ -5539,7 +5539,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Mode',
     'capabilities': dict({
       'options': list([
         'smart',
@@ -5565,6 +5564,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Mode',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Mode',
@@ -5601,7 +5601,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Water tank adjustment',
     'capabilities': dict({
       'options': list([
         'low',
@@ -5626,6 +5625,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Water tank adjustment',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Water tank adjustment',
@@ -5661,7 +5661,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Weather delay',
     'capabilities': dict({
       'options': list([
         'cancel',
@@ -5687,6 +5686,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Weather delay',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Weather delay',
@@ -5723,7 +5723,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Motor mode',
     'capabilities': dict({
       'options': list([
         'forward',
@@ -5747,6 +5746,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Motor mode',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Motor mode',
@@ -5781,7 +5781,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Indicator light mode',
     'capabilities': dict({
       'options': list([
         'relay',
@@ -5806,6 +5805,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Indicator light mode',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Indicator light mode',
@@ -5841,7 +5841,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Power on behavior',
     'capabilities': dict({
       'options': list([
         'power_off',
@@ -5866,6 +5865,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Power on behavior',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Power on behavior',
@@ -5901,7 +5901,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Indicator light mode',
     'capabilities': dict({
       'options': list([
         'relay',
@@ -5926,6 +5925,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Indicator light mode',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Indicator light mode',
@@ -5961,7 +5961,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Power on behavior',
     'capabilities': dict({
       'options': list([
         'power_off',
@@ -5986,6 +5985,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Power on behavior',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Power on behavior',
@@ -6021,7 +6021,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Power on behavior',
     'capabilities': dict({
       'options': list([
         'power_off',
@@ -6046,6 +6045,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Power on behavior',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Power on behavior',

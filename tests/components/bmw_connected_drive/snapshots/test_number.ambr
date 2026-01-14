@@ -4,7 +4,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Target SoC',
     'capabilities': dict({
       'max': 100.0,
       'min': 20.0,
@@ -28,6 +27,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Target SoC',
     'original_device_class': <NumberDeviceClass.BATTERY: 'battery'>,
     'original_icon': None,
     'original_name': 'Target SoC',
@@ -63,7 +63,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Target SoC',
     'capabilities': dict({
       'max': 100.0,
       'min': 20.0,
@@ -87,6 +86,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Target SoC',
     'original_device_class': <NumberDeviceClass.BATTERY: 'battery'>,
     'original_icon': None,
     'original_name': 'Target SoC',

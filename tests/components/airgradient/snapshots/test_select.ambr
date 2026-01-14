@@ -4,7 +4,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'CO2 automatic baseline duration',
     'capabilities': dict({
       'options': list([
         '1',
@@ -32,6 +31,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'CO2 automatic baseline duration',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'CO2 automatic baseline duration',
@@ -70,7 +70,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Configuration source',
     'capabilities': dict({
       'options': list([
         'cloud',
@@ -94,6 +93,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Configuration source',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Configuration source',
@@ -128,7 +128,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Display PM standard',
     'capabilities': dict({
       'options': list([
         'ugm3',
@@ -152,6 +151,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Display PM standard',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Display PM standard',
@@ -186,7 +186,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Display temperature unit',
     'capabilities': dict({
       'options': list([
         'c',
@@ -210,6 +209,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Display temperature unit',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Display temperature unit',
@@ -244,7 +244,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'LED bar mode',
     'capabilities': dict({
       'options': list([
         'off',
@@ -269,6 +268,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'LED bar mode',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'LED bar mode',
@@ -304,7 +304,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'NOx index learning offset',
     'capabilities': dict({
       'options': list([
         '12',
@@ -331,6 +330,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'NOx index learning offset',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'NOx index learning offset',
@@ -368,7 +368,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'VOC index learning offset',
     'capabilities': dict({
       'options': list([
         '12',
@@ -395,6 +394,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'VOC index learning offset',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'VOC index learning offset',
@@ -432,7 +432,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'CO2 automatic baseline duration',
     'capabilities': dict({
       'options': list([
         '1',
@@ -460,6 +459,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'CO2 automatic baseline duration',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'CO2 automatic baseline duration',
@@ -498,7 +498,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Configuration source',
     'capabilities': dict({
       'options': list([
         'cloud',
@@ -522,6 +521,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Configuration source',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Configuration source',
@@ -556,7 +556,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'NOx index learning offset',
     'capabilities': dict({
       'options': list([
         '12',
@@ -583,6 +582,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'NOx index learning offset',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'NOx index learning offset',
@@ -620,7 +620,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'VOC index learning offset',
     'capabilities': dict({
       'options': list([
         '12',
@@ -647,6 +646,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'VOC index learning offset',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'VOC index learning offset',

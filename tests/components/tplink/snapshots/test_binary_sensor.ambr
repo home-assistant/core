@@ -4,7 +4,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Battery',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -23,6 +22,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Battery',
     'original_device_class': <BinarySensorDeviceClass.BATTERY: 'battery'>,
     'original_icon': None,
     'original_name': 'Battery',
@@ -40,7 +40,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Cloud connection',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -59,6 +58,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Cloud connection',
     'original_device_class': <BinarySensorDeviceClass.CONNECTIVITY: 'connectivity'>,
     'original_icon': None,
     'original_name': 'Cloud connection',
@@ -90,7 +90,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Door',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -109,6 +108,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Door',
     'original_device_class': <BinarySensorDeviceClass.DOOR: 'door'>,
     'original_icon': None,
     'original_name': 'Door',
@@ -140,7 +140,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Humidity warning',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -159,6 +158,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Humidity warning',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Humidity warning',
@@ -176,7 +176,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Moisture',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -195,6 +194,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Moisture',
     'original_device_class': <BinarySensorDeviceClass.MOISTURE: 'moisture'>,
     'original_icon': None,
     'original_name': 'Moisture',
@@ -226,7 +226,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Motion',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -245,6 +244,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Motion',
     'original_device_class': <BinarySensorDeviceClass.MOTION: 'motion'>,
     'original_icon': None,
     'original_name': 'Motion',
@@ -276,7 +276,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Overheated',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -295,6 +294,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Overheated',
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
     'original_icon': None,
     'original_name': 'Overheated',
@@ -326,7 +326,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Overloaded',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -345,6 +344,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Overloaded',
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
     'original_icon': None,
     'original_name': 'Overloaded',
@@ -376,7 +376,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Temperature warning',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -395,6 +394,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Temperature warning',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Temperature warning',

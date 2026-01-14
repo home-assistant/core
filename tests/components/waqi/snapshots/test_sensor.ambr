@@ -4,7 +4,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Air quality index',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -25,6 +24,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Air quality index',
     'original_device_class': <SensorDeviceClass.AQI: 'aqi'>,
     'original_icon': None,
     'original_name': 'Air quality index',
@@ -58,7 +58,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Carbon monoxide',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -79,6 +78,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Carbon monoxide',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Carbon monoxide',
@@ -111,7 +111,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Dominant pollutant',
     'capabilities': dict({
       'options': list([
         'co',
@@ -140,6 +139,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Dominant pollutant',
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
     'original_name': 'Dominant pollutant',
@@ -181,7 +181,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Humidity',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -202,6 +201,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Humidity',
     'original_device_class': <SensorDeviceClass.HUMIDITY: 'humidity'>,
     'original_icon': None,
     'original_name': 'Humidity',
@@ -236,7 +236,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Nitrogen dioxide',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -257,6 +256,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Nitrogen dioxide',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Nitrogen dioxide',
@@ -289,7 +289,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Ozone',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -310,6 +309,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Ozone',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Ozone',
@@ -342,7 +342,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'PM10',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -363,6 +362,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'PM10',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'PM10',
@@ -395,7 +395,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'PM2.5',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -416,6 +415,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'PM2.5',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'PM2.5',
@@ -448,7 +448,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Pressure',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -472,6 +471,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'Pressure',
     'original_device_class': <SensorDeviceClass.PRESSURE: 'pressure'>,
     'original_icon': None,
     'original_name': 'Pressure',
@@ -506,7 +506,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Sulphur dioxide',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -527,6 +526,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Sulphur dioxide',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Sulphur dioxide',
@@ -559,7 +559,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -583,6 +582,7 @@
         'suggested_display_precision': 1,
       }),
     }),
+    'object_id_base': 'Temperature',
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Temperature',
@@ -617,7 +617,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Visibility using nephelometry',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -638,6 +637,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Visibility using nephelometry',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Visibility using nephelometry',

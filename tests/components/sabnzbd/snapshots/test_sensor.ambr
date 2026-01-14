@@ -4,7 +4,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Daily total',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -28,6 +27,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'Daily total',
     'original_device_class': <SensorDeviceClass.DATA_SIZE: 'data_size'>,
     'original_icon': None,
     'original_name': 'Daily total',
@@ -61,7 +61,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Free disk space',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -85,6 +84,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'Free disk space',
     'original_device_class': <SensorDeviceClass.DATA_SIZE: 'data_size'>,
     'original_icon': None,
     'original_name': 'Free disk space',
@@ -118,7 +118,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Left to download',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -142,6 +141,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'Left to download',
     'original_device_class': <SensorDeviceClass.DATA_SIZE: 'data_size'>,
     'original_icon': None,
     'original_name': 'Left to download',
@@ -175,7 +175,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Monthly total',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -199,6 +198,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'Monthly total',
     'original_device_class': <SensorDeviceClass.DATA_SIZE: 'data_size'>,
     'original_icon': None,
     'original_name': 'Monthly total',
@@ -232,7 +232,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Overall total',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -256,6 +255,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'Overall total',
     'original_device_class': <SensorDeviceClass.DATA_SIZE: 'data_size'>,
     'original_icon': None,
     'original_name': 'Overall total',
@@ -289,7 +289,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Queue',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -313,6 +312,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'Queue',
     'original_device_class': <SensorDeviceClass.DATA_SIZE: 'data_size'>,
     'original_icon': None,
     'original_name': 'Queue',
@@ -346,7 +346,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Queue count',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -370,6 +369,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'Queue count',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Queue count',
@@ -401,7 +401,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Speed',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -428,6 +427,7 @@
         'suggested_unit_of_measurement': <UnitOfDataRate.MEGABYTES_PER_SECOND: 'MB/s'>,
       }),
     }),
+    'object_id_base': 'Speed',
     'original_device_class': <SensorDeviceClass.DATA_RATE: 'data_rate'>,
     'original_icon': None,
     'original_name': 'Speed',
@@ -461,7 +461,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Status',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -480,6 +479,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Status',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Status',
@@ -510,7 +510,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Total disk space',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -534,6 +533,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'Total disk space',
     'original_device_class': <SensorDeviceClass.DATA_SIZE: 'data_size'>,
     'original_icon': None,
     'original_name': 'Total disk space',
@@ -567,7 +567,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Weekly total',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -591,6 +590,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'Weekly total',
     'original_device_class': <SensorDeviceClass.DATA_SIZE: 'data_size'>,
     'original_icon': None,
     'original_name': 'Weekly total',

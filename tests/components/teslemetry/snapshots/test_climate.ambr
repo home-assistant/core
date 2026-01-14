@@ -4,7 +4,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Cabin overheat protection',
     'capabilities': dict({
       'hvac_modes': list([
         <HVACMode.OFF: 'off'>,
@@ -32,6 +31,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Cabin overheat protection',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Cabin overheat protection',
@@ -73,7 +73,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Climate',
     'capabilities': dict({
       'fan_modes': list([
         'off',
@@ -109,6 +108,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Climate',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Climate',
@@ -160,7 +160,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Cabin overheat protection',
     'capabilities': dict({
       'hvac_modes': list([
         <HVACMode.OFF: 'off'>,
@@ -188,6 +187,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Cabin overheat protection',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Cabin overheat protection',
@@ -228,7 +228,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Climate',
     'capabilities': dict({
       'fan_modes': list([
         'off',
@@ -264,6 +263,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Climate',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Climate',
@@ -315,7 +315,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Cabin overheat protection',
     'capabilities': dict({
       'hvac_modes': list([
         <HVACMode.OFF: 'off'>,
@@ -343,6 +342,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Cabin overheat protection',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Cabin overheat protection',
@@ -360,7 +360,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Climate',
     'capabilities': dict({
       'hvac_modes': list([
         <HVACMode.HEAT_COOL: 'heat_cool'>,
@@ -386,6 +385,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Climate',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Climate',

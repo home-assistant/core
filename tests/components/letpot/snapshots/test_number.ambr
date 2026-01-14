@@ -4,7 +4,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Light brightness',
     'capabilities': dict({
       'max': 8.0,
       'min': 1.0,
@@ -28,6 +27,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Light brightness',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Light brightness',
@@ -62,7 +62,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Plants age',
     'capabilities': dict({
       'max': 999.0,
       'min': 0.0,
@@ -86,6 +85,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Plants age',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Plants age',

@@ -22,7 +22,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Battery group mode',
     'capabilities': dict({
       'options': list([
         'standby',
@@ -47,6 +46,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Battery group mode',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Battery group mode',

@@ -4,7 +4,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Child lock',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -23,6 +22,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Child lock',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Child lock',
@@ -53,7 +53,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Socket 1',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -72,6 +71,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Socket 1',
     'original_device_class': <SwitchDeviceClass.OUTLET: 'outlet'>,
     'original_icon': None,
     'original_name': 'Socket 1',
@@ -103,7 +103,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Switch 1',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -122,6 +121,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Switch 1',
     'original_device_class': <SwitchDeviceClass.OUTLET: 'outlet'>,
     'original_icon': None,
     'original_name': 'Switch 1',
@@ -153,7 +153,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Switch 2',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -172,6 +171,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Switch 2',
     'original_device_class': <SwitchDeviceClass.OUTLET: 'outlet'>,
     'original_icon': None,
     'original_name': 'Switch 2',
@@ -203,7 +203,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Switch 3',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -222,6 +221,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Switch 3',
     'original_device_class': <SwitchDeviceClass.OUTLET: 'outlet'>,
     'original_icon': None,
     'original_name': 'Switch 3',
@@ -253,7 +253,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Switch 4',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -272,6 +271,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Switch 4',
     'original_device_class': <SwitchDeviceClass.OUTLET: 'outlet'>,
     'original_icon': None,
     'original_name': 'Switch 4',
@@ -303,7 +303,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Child lock',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -322,6 +321,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Child lock',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Child lock',
@@ -352,7 +352,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Socket 1',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -371,6 +370,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Socket 1',
     'original_device_class': <SwitchDeviceClass.OUTLET: 'outlet'>,
     'original_icon': None,
     'original_name': 'Socket 1',
@@ -402,7 +402,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Socket 2',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -421,6 +420,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Socket 2',
     'original_device_class': <SwitchDeviceClass.OUTLET: 'outlet'>,
     'original_icon': None,
     'original_name': 'Socket 2',
@@ -452,7 +452,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Switch',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -471,6 +470,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Switch',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Switch',
@@ -501,7 +501,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Socket',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -520,6 +519,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Socket',
     'original_device_class': <SwitchDeviceClass.OUTLET: 'outlet'>,
     'original_icon': None,
     'original_name': 'Socket',
@@ -551,7 +551,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Socket 1',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -570,6 +569,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Socket 1',
     'original_device_class': <SwitchDeviceClass.OUTLET: 'outlet'>,
     'original_icon': None,
     'original_name': 'Socket 1',
@@ -601,7 +601,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Child lock',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -620,6 +619,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Child lock',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Child lock',
@@ -650,7 +650,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Socket 1',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -669,6 +668,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Socket 1',
     'original_device_class': <SwitchDeviceClass.OUTLET: 'outlet'>,
     'original_icon': None,
     'original_name': 'Socket 1',
@@ -700,7 +700,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Child lock',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -719,6 +718,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Child lock',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Child lock',
@@ -749,7 +749,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Socket 1',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -768,6 +767,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Socket 1',
     'original_device_class': <SwitchDeviceClass.OUTLET: 'outlet'>,
     'original_icon': None,
     'original_name': 'Socket 1',
@@ -799,7 +799,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Child lock',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -818,6 +817,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Child lock',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Child lock',
@@ -848,7 +848,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Socket 1',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -867,6 +866,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Socket 1',
     'original_device_class': <SwitchDeviceClass.OUTLET: 'outlet'>,
     'original_icon': None,
     'original_name': 'Socket 1',
@@ -898,7 +898,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Socket 1',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -917,6 +916,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Socket 1',
     'original_device_class': <SwitchDeviceClass.OUTLET: 'outlet'>,
     'original_icon': None,
     'original_name': 'Socket 1',
@@ -948,7 +948,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Socket 1',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -967,6 +966,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Socket 1',
     'original_device_class': <SwitchDeviceClass.OUTLET: 'outlet'>,
     'original_icon': None,
     'original_name': 'Socket 1',
@@ -998,7 +998,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Socket 1',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1017,6 +1016,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Socket 1',
     'original_device_class': <SwitchDeviceClass.OUTLET: 'outlet'>,
     'original_icon': None,
     'original_name': 'Socket 1',
@@ -1048,7 +1048,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Switch 1',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1067,6 +1066,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Switch 1',
     'original_device_class': <SwitchDeviceClass.OUTLET: 'outlet'>,
     'original_icon': None,
     'original_name': 'Switch 1',
@@ -1098,7 +1098,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Socket 1',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1117,6 +1116,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Socket 1',
     'original_device_class': <SwitchDeviceClass.OUTLET: 'outlet'>,
     'original_icon': None,
     'original_name': 'Socket 1',
@@ -1148,7 +1148,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Child lock',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1167,6 +1166,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Child lock',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Child lock',
@@ -1197,7 +1197,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Snooze',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1216,6 +1215,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Snooze',
     'original_device_class': None,
     'original_icon': 'mdi:alarm-snooze',
     'original_name': 'Snooze',
@@ -1247,7 +1247,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Power',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1266,6 +1265,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Power',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Power',
@@ -1296,7 +1296,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Socket 1',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1315,6 +1314,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Socket 1',
     'original_device_class': <SwitchDeviceClass.OUTLET: 'outlet'>,
     'original_icon': None,
     'original_name': 'Socket 1',
@@ -1346,7 +1346,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Socket 2',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1365,6 +1364,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Socket 2',
     'original_device_class': <SwitchDeviceClass.OUTLET: 'outlet'>,
     'original_icon': None,
     'original_name': 'Socket 2',
@@ -1396,7 +1396,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Socket 1',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1415,6 +1414,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Socket 1',
     'original_device_class': <SwitchDeviceClass.OUTLET: 'outlet'>,
     'original_icon': None,
     'original_name': 'Socket 1',
@@ -1446,7 +1446,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Flip',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1465,6 +1464,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Flip',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Flip',
@@ -1495,7 +1495,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Motion alarm',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1514,6 +1513,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Motion alarm',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Motion alarm',
@@ -1544,7 +1544,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Motion tracking',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1563,6 +1562,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Motion tracking',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Motion tracking',
@@ -1593,7 +1593,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Privacy mode',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1612,6 +1611,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Privacy mode',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Privacy mode',
@@ -1642,7 +1642,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Sound detection',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1661,6 +1660,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Sound detection',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Sound detection',
@@ -1691,7 +1691,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Time watermark',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1710,6 +1709,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Time watermark',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Time watermark',
@@ -1740,7 +1740,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Video recording',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1759,6 +1758,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Video recording',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Video recording',
@@ -1789,7 +1789,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Flip',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1808,6 +1807,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Flip',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Flip',
@@ -1838,7 +1838,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Motion alarm',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1857,6 +1856,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Motion alarm',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Motion alarm',
@@ -1887,7 +1887,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Motion recording',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1906,6 +1905,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Motion recording',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Motion recording',
@@ -1936,7 +1936,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Motion tracking',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1955,6 +1954,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Motion tracking',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Motion tracking',
@@ -1985,7 +1985,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Time watermark',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2004,6 +2003,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Time watermark',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Time watermark',
@@ -2034,7 +2034,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Video recording',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2053,6 +2052,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Video recording',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Video recording',
@@ -2083,7 +2083,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Wide dynamic range',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2102,6 +2101,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Wide dynamic range',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Wide dynamic range',
@@ -2132,7 +2132,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Flip',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2151,6 +2150,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Flip',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Flip',
@@ -2181,7 +2181,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Motion alarm',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2200,6 +2199,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Motion alarm',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Motion alarm',
@@ -2230,7 +2230,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Sound detection',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2249,6 +2248,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Sound detection',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Sound detection',
@@ -2279,7 +2279,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Time watermark',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2298,6 +2297,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Time watermark',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Time watermark',
@@ -2328,7 +2328,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Video recording',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2347,6 +2346,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Video recording',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Video recording',
@@ -2377,7 +2377,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Flip',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2396,6 +2395,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Flip',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Flip',
@@ -2426,7 +2426,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Motion alarm',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2445,6 +2444,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Motion alarm',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Motion alarm',
@@ -2475,7 +2475,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Sound detection',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2494,6 +2493,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Sound detection',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Sound detection',
@@ -2524,7 +2524,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Time watermark',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2543,6 +2542,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Time watermark',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Time watermark',
@@ -2573,7 +2573,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Video recording',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2592,6 +2591,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Video recording',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Video recording',
@@ -2622,7 +2622,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Socket',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2641,6 +2640,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Socket',
     'original_device_class': <SwitchDeviceClass.OUTLET: 'outlet'>,
     'original_icon': None,
     'original_name': 'Socket',
@@ -2672,7 +2672,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Output power limit',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2691,6 +2690,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Output power limit',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Output power limit',
@@ -2721,7 +2721,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Sound',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2740,6 +2739,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Sound',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Sound',
@@ -2770,7 +2770,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Child lock',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2789,6 +2788,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Child lock',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Child lock',
@@ -2819,7 +2819,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Socket 1',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2838,6 +2837,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Socket 1',
     'original_device_class': <SwitchDeviceClass.OUTLET: 'outlet'>,
     'original_icon': None,
     'original_name': 'Socket 1',
@@ -2869,7 +2869,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Socket 2',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2888,6 +2887,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Socket 2',
     'original_device_class': <SwitchDeviceClass.OUTLET: 'outlet'>,
     'original_icon': None,
     'original_name': 'Socket 2',
@@ -2919,7 +2919,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Child lock',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2938,6 +2937,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Child lock',
     'original_device_class': None,
     'original_icon': 'mdi:account-lock',
     'original_name': 'Child lock',
@@ -2969,7 +2969,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Ionizer',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2988,6 +2987,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Ionizer',
     'original_device_class': None,
     'original_icon': 'mdi:atom',
     'original_name': 'Ionizer',
@@ -3019,7 +3019,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Child lock',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -3038,6 +3037,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Child lock',
     'original_device_class': None,
     'original_icon': 'mdi:account-lock',
     'original_name': 'Child lock',
@@ -3069,7 +3069,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Child lock',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -3088,6 +3087,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Child lock',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Child lock',
@@ -3118,7 +3118,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Socket 1',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -3137,6 +3136,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Socket 1',
     'original_device_class': <SwitchDeviceClass.OUTLET: 'outlet'>,
     'original_icon': None,
     'original_name': 'Socket 1',
@@ -3168,7 +3168,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Child lock',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -3187,6 +3186,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Child lock',
     'original_device_class': None,
     'original_icon': 'mdi:account-lock',
     'original_name': 'Child lock',
@@ -3218,7 +3218,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Filter reset',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -3237,6 +3236,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Filter reset',
     'original_device_class': None,
     'original_icon': 'mdi:filter',
     'original_name': 'Filter reset',
@@ -3268,7 +3268,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Ionizer',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -3287,6 +3286,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Ionizer',
     'original_device_class': None,
     'original_icon': 'mdi:atom',
     'original_name': 'Ionizer',
@@ -3318,7 +3318,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Socket',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -3337,6 +3336,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Socket',
     'original_device_class': <SwitchDeviceClass.OUTLET: 'outlet'>,
     'original_icon': None,
     'original_name': 'Socket',
@@ -3368,7 +3368,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Socket 1',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -3387,6 +3386,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Socket 1',
     'original_device_class': <SwitchDeviceClass.OUTLET: 'outlet'>,
     'original_icon': None,
     'original_name': 'Socket 1',
@@ -3418,7 +3418,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Child lock',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -3437,6 +3436,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Child lock',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Child lock',
@@ -3467,7 +3467,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Switch',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -3486,6 +3485,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Switch',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Switch',
@@ -3516,7 +3516,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Child lock',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -3535,6 +3534,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Child lock',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Child lock',
@@ -3565,7 +3565,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Switch',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -3584,6 +3583,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Switch',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Switch',
@@ -3614,7 +3614,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Switch',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -3633,6 +3632,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Switch',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Switch',
@@ -3663,7 +3663,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Child lock',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -3682,6 +3681,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Child lock',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Child lock',
@@ -3712,7 +3712,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Child lock',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -3731,6 +3730,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Child lock',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Child lock',
@@ -3761,7 +3761,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Socket 1',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -3780,6 +3779,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Socket 1',
     'original_device_class': <SwitchDeviceClass.OUTLET: 'outlet'>,
     'original_icon': None,
     'original_name': 'Socket 1',
@@ -3811,7 +3811,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Child lock',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -3830,6 +3829,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Child lock',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Child lock',
@@ -3860,7 +3860,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Socket 1',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -3879,6 +3878,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Socket 1',
     'original_device_class': <SwitchDeviceClass.OUTLET: 'outlet'>,
     'original_icon': None,
     'original_name': 'Socket 1',
@@ -3910,7 +3910,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Child lock',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -3929,6 +3928,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Child lock',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Child lock',
@@ -3959,7 +3959,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Socket 1',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -3978,6 +3977,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Socket 1',
     'original_device_class': <SwitchDeviceClass.OUTLET: 'outlet'>,
     'original_icon': None,
     'original_name': 'Socket 1',
@@ -4009,7 +4009,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Child lock',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -4028,6 +4027,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Child lock',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Child lock',
@@ -4058,7 +4058,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Child lock',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -4077,6 +4076,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Child lock',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Child lock',
@@ -4107,7 +4107,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Socket 1',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -4126,6 +4125,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Socket 1',
     'original_device_class': <SwitchDeviceClass.OUTLET: 'outlet'>,
     'original_icon': None,
     'original_name': 'Socket 1',
@@ -4157,7 +4157,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Socket 2',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -4176,6 +4175,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Socket 2',
     'original_device_class': <SwitchDeviceClass.OUTLET: 'outlet'>,
     'original_icon': None,
     'original_name': 'Socket 2',
@@ -4207,7 +4207,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Switch 1',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -4226,6 +4225,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Switch 1',
     'original_device_class': <SwitchDeviceClass.OUTLET: 'outlet'>,
     'original_icon': None,
     'original_name': 'Switch 1',
@@ -4257,7 +4257,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Flip',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -4276,6 +4275,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Flip',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Flip',
@@ -4306,7 +4306,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Motion alarm',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -4325,6 +4324,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Motion alarm',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Motion alarm',
@@ -4355,7 +4355,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Motion recording',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -4374,6 +4373,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Motion recording',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Motion recording',
@@ -4404,7 +4404,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Motion tracking',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -4423,6 +4422,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Motion tracking',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Motion tracking',
@@ -4453,7 +4453,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Privacy mode',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -4472,6 +4471,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Privacy mode',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Privacy mode',
@@ -4502,7 +4502,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Time watermark',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -4521,6 +4520,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Time watermark',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Time watermark',
@@ -4551,7 +4551,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Video recording',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -4570,6 +4569,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Video recording',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Video recording',
@@ -4600,7 +4600,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Socket 1',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -4619,6 +4618,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Socket 1',
     'original_device_class': <SwitchDeviceClass.OUTLET: 'outlet'>,
     'original_icon': None,
     'original_name': 'Socket 1',
@@ -4650,7 +4650,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Socket',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -4669,6 +4668,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Socket',
     'original_device_class': <SwitchDeviceClass.OUTLET: 'outlet'>,
     'original_icon': None,
     'original_name': 'Socket',
@@ -4700,7 +4700,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Child lock',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -4719,6 +4718,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Child lock',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Child lock',
@@ -4749,7 +4749,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Socket 1',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -4768,6 +4767,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Socket 1',
     'original_device_class': <SwitchDeviceClass.OUTLET: 'outlet'>,
     'original_icon': None,
     'original_name': 'Socket 1',
@@ -4799,7 +4799,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Child lock',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -4818,6 +4817,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Child lock',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Child lock',
@@ -4848,7 +4848,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Ionizer',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -4867,6 +4866,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Ionizer',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Ionizer',
@@ -4897,7 +4897,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Power',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -4916,6 +4915,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Power',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Power',
@@ -4946,7 +4946,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'UV sterilization',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -4965,6 +4964,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'UV sterilization',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'UV sterilization',
@@ -4995,7 +4995,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Mute',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -5014,6 +5013,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Mute',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Mute',
@@ -5044,7 +5044,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Switch',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -5063,6 +5062,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Switch',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Switch',
@@ -5093,7 +5093,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Socket 1',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -5112,6 +5111,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Socket 1',
     'original_device_class': <SwitchDeviceClass.OUTLET: 'outlet'>,
     'original_icon': None,
     'original_name': 'Socket 1',
@@ -5143,7 +5143,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Socket 2',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -5162,6 +5161,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Socket 2',
     'original_device_class': <SwitchDeviceClass.OUTLET: 'outlet'>,
     'original_icon': None,
     'original_name': 'Socket 2',
@@ -5193,7 +5193,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Child lock',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -5212,6 +5211,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Child lock',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Child lock',
@@ -5242,7 +5242,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Socket 1',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -5261,6 +5260,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Socket 1',
     'original_device_class': <SwitchDeviceClass.OUTLET: 'outlet'>,
     'original_icon': None,
     'original_name': 'Socket 1',
@@ -5292,7 +5292,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Flip',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -5311,6 +5310,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Flip',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Flip',
@@ -5341,7 +5341,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Motion alarm',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -5360,6 +5359,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Motion alarm',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Motion alarm',
@@ -5390,7 +5390,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Time watermark',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -5409,6 +5408,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Time watermark',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Time watermark',
@@ -5439,7 +5439,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Switch 1',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -5458,6 +5457,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Switch 1',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Switch 1',
@@ -5488,7 +5488,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Switch 2',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -5507,6 +5506,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Switch 2',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Switch 2',
@@ -5537,7 +5537,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Switch 3',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -5556,6 +5555,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Switch 3',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Switch 3',
@@ -5586,7 +5586,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Switch 4',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -5605,6 +5604,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Switch 4',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Switch 4',
@@ -5635,7 +5635,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Child lock',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -5654,6 +5653,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Child lock',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Child lock',
@@ -5684,7 +5684,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Filter cartridge reset',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -5703,6 +5702,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Filter cartridge reset',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Filter cartridge reset',
@@ -5733,7 +5733,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Ionizer',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -5752,6 +5751,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Ionizer',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Ionizer',
@@ -5782,7 +5782,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Power',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -5801,6 +5800,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Power',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Power',
@@ -5831,7 +5831,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'UV sterilization',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -5850,6 +5849,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'UV sterilization',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'UV sterilization',
@@ -5880,7 +5880,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Switch 1',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -5899,6 +5898,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Switch 1',
     'original_device_class': <SwitchDeviceClass.OUTLET: 'outlet'>,
     'original_icon': None,
     'original_name': 'Switch 1',
@@ -5930,7 +5930,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Child lock',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -5949,6 +5948,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Child lock',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Child lock',
@@ -5979,7 +5979,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Socket 1',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -5998,6 +5997,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Socket 1',
     'original_device_class': <SwitchDeviceClass.OUTLET: 'outlet'>,
     'original_icon': None,
     'original_name': 'Socket 1',
@@ -6029,7 +6029,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Child lock',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -6048,6 +6047,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Child lock',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Child lock',
@@ -6078,7 +6078,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Frost protection',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -6097,6 +6096,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Frost protection',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Frost protection',
@@ -6127,7 +6127,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Filter cartridge reset',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -6146,6 +6145,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Filter cartridge reset',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Filter cartridge reset',
@@ -6176,7 +6176,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Power',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -6195,6 +6194,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Power',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Power',
@@ -6225,7 +6225,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Auto clean',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -6244,6 +6243,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Auto clean',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Auto clean',
@@ -6274,7 +6274,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Socket 1',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -6293,6 +6292,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Socket 1',
     'original_device_class': <SwitchDeviceClass.OUTLET: 'outlet'>,
     'original_icon': None,
     'original_name': 'Socket 1',
@@ -6324,7 +6324,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Socket 2',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -6343,6 +6342,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Socket 2',
     'original_device_class': <SwitchDeviceClass.OUTLET: 'outlet'>,
     'original_icon': None,
     'original_name': 'Socket 2',
@@ -6374,7 +6374,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Socket 3',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -6393,6 +6392,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Socket 3',
     'original_device_class': <SwitchDeviceClass.OUTLET: 'outlet'>,
     'original_icon': None,
     'original_name': 'Socket 3',
@@ -6424,7 +6424,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'USB 1',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -6443,6 +6442,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'USB 1',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'USB 1',
@@ -6473,7 +6473,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Sleep',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -6492,6 +6491,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Sleep',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Sleep',
@@ -6522,7 +6522,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Child lock',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -6541,6 +6540,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Child lock',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Child lock',
@@ -6571,7 +6571,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Socket 1',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -6590,6 +6589,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Socket 1',
     'original_device_class': <SwitchDeviceClass.OUTLET: 'outlet'>,
     'original_icon': None,
     'original_name': 'Socket 1',
@@ -6621,7 +6621,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Socket 1',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -6640,6 +6639,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Socket 1',
     'original_device_class': <SwitchDeviceClass.OUTLET: 'outlet'>,
     'original_icon': None,
     'original_name': 'Socket 1',
@@ -6671,7 +6671,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Child lock',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -6690,6 +6689,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Child lock',
     'original_device_class': None,
     'original_icon': 'mdi:account-lock',
     'original_name': 'Child lock',
@@ -6721,7 +6721,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Ionizer',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -6740,6 +6739,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Ionizer',
     'original_device_class': None,
     'original_icon': 'mdi:atom',
     'original_name': 'Ionizer',
@@ -6771,7 +6771,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Socket',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -6790,6 +6789,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Socket',
     'original_device_class': <SwitchDeviceClass.OUTLET: 'outlet'>,
     'original_icon': None,
     'original_name': 'Socket',
@@ -6821,7 +6821,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Reverse',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -6840,6 +6839,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Reverse',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Reverse',
@@ -6870,7 +6870,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Child lock',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -6889,6 +6888,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Child lock',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Child lock',
@@ -6919,7 +6919,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Mute',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -6938,6 +6937,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Mute',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Mute',
@@ -6968,7 +6968,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Child lock',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -6987,6 +6986,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Child lock',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Child lock',
@@ -7017,7 +7017,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Flip',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -7036,6 +7035,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Flip',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Flip',
@@ -7066,7 +7066,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Time watermark',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -7085,6 +7084,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Time watermark',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Time watermark',
@@ -7115,7 +7115,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Arm beep',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -7134,6 +7133,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Arm beep',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Arm beep',
@@ -7164,7 +7164,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Siren',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -7183,6 +7182,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Siren',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Siren',
@@ -7213,7 +7213,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Socket 1',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -7232,6 +7231,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Socket 1',
     'original_device_class': <SwitchDeviceClass.OUTLET: 'outlet'>,
     'original_icon': None,
     'original_name': 'Socket 1',
@@ -7263,7 +7263,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Child lock',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -7282,6 +7281,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Child lock',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Child lock',
@@ -7312,7 +7312,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Switch 1',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -7331,6 +7330,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Switch 1',
     'original_device_class': <SwitchDeviceClass.OUTLET: 'outlet'>,
     'original_icon': None,
     'original_name': 'Switch 1',
@@ -7362,7 +7362,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Socket 1',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -7381,6 +7380,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Socket 1',
     'original_device_class': <SwitchDeviceClass.OUTLET: 'outlet'>,
     'original_icon': None,
     'original_name': 'Socket 1',
@@ -7412,7 +7412,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Switch',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -7431,6 +7430,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Switch',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Switch',
@@ -7461,7 +7461,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Switch 1',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -7480,6 +7479,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Switch 1',
     'original_device_class': <SwitchDeviceClass.OUTLET: 'outlet'>,
     'original_icon': None,
     'original_name': 'Switch 1',
@@ -7511,7 +7511,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Switch 2',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -7530,6 +7529,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Switch 2',
     'original_device_class': <SwitchDeviceClass.OUTLET: 'outlet'>,
     'original_icon': None,
     'original_name': 'Switch 2',
@@ -7561,7 +7561,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Filter reset',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -7580,6 +7579,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Filter reset',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Filter reset',
@@ -7610,7 +7610,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Power',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -7629,6 +7628,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Power',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Power',
@@ -7659,7 +7659,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Reset of water usage days',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -7678,6 +7677,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Reset of water usage days',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Reset of water usage days',
@@ -7708,7 +7708,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'UV sterilization',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -7727,6 +7726,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'UV sterilization',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'UV sterilization',
@@ -7757,7 +7757,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Water pump reset',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -7776,6 +7775,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Water pump reset',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Water pump reset',
@@ -7806,7 +7806,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Do not disturb',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -7825,6 +7824,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Do not disturb',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Do not disturb',
@@ -7855,7 +7855,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Auto clean',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -7874,6 +7873,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Auto clean',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Auto clean',
@@ -7904,7 +7904,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Socket 1',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -7923,6 +7922,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Socket 1',
     'original_device_class': <SwitchDeviceClass.OUTLET: 'outlet'>,
     'original_icon': None,
     'original_name': 'Socket 1',
@@ -7954,7 +7954,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Ionizer',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -7973,6 +7972,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Ionizer',
     'original_device_class': None,
     'original_icon': 'mdi:atom',
     'original_name': 'Ionizer',
@@ -8004,7 +8004,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Switch 1',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -8023,6 +8022,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Switch 1',
     'original_device_class': <SwitchDeviceClass.OUTLET: 'outlet'>,
     'original_icon': None,
     'original_name': 'Switch 1',
@@ -8054,7 +8054,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Child lock',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -8073,6 +8072,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Child lock',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Child lock',
@@ -8103,7 +8103,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Socket 1',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -8122,6 +8121,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Socket 1',
     'original_device_class': <SwitchDeviceClass.OUTLET: 'outlet'>,
     'original_icon': None,
     'original_name': 'Socket 1',
@@ -8153,7 +8153,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Socket 1',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -8172,6 +8171,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Socket 1',
     'original_device_class': <SwitchDeviceClass.OUTLET: 'outlet'>,
     'original_icon': None,
     'original_name': 'Socket 1',
@@ -8203,7 +8203,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Child lock',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -8222,6 +8221,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Child lock',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Child lock',
@@ -8252,7 +8252,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Socket',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -8271,6 +8270,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Socket',
     'original_device_class': <SwitchDeviceClass.OUTLET: 'outlet'>,
     'original_icon': None,
     'original_name': 'Socket',
@@ -8302,7 +8302,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Socket 1',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -8321,6 +8320,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Socket 1',
     'original_device_class': <SwitchDeviceClass.OUTLET: 'outlet'>,
     'original_icon': None,
     'original_name': 'Socket 1',
@@ -8352,7 +8352,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Child lock',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -8371,6 +8370,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Child lock',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Child lock',
@@ -8401,7 +8401,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Switch 1',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -8420,6 +8419,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Switch 1',
     'original_device_class': <SwitchDeviceClass.OUTLET: 'outlet'>,
     'original_icon': None,
     'original_name': 'Switch 1',
@@ -8451,7 +8451,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Switch 2',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -8470,6 +8469,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Switch 2',
     'original_device_class': <SwitchDeviceClass.OUTLET: 'outlet'>,
     'original_icon': None,
     'original_name': 'Switch 2',
@@ -8501,7 +8501,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Switch 3',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -8520,6 +8519,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Switch 3',
     'original_device_class': <SwitchDeviceClass.OUTLET: 'outlet'>,
     'original_icon': None,
     'original_name': 'Switch 3',
@@ -8551,7 +8551,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Switch 4',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -8570,6 +8569,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Switch 4',
     'original_device_class': <SwitchDeviceClass.OUTLET: 'outlet'>,
     'original_icon': None,
     'original_name': 'Switch 4',
@@ -8601,7 +8601,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Switch 5',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -8620,6 +8619,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Switch 5',
     'original_device_class': <SwitchDeviceClass.OUTLET: 'outlet'>,
     'original_icon': None,
     'original_name': 'Switch 5',
@@ -8651,7 +8651,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Switch 6',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -8670,6 +8669,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Switch 6',
     'original_device_class': <SwitchDeviceClass.OUTLET: 'outlet'>,
     'original_icon': None,
     'original_name': 'Switch 6',
@@ -8701,7 +8701,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Child lock',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -8720,6 +8719,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Child lock',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Child lock',
@@ -8750,7 +8750,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Socket 1',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -8769,6 +8768,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Socket 1',
     'original_device_class': <SwitchDeviceClass.OUTLET: 'outlet'>,
     'original_icon': None,
     'original_name': 'Socket 1',
@@ -8800,7 +8800,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Socket 1',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -8819,6 +8818,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Socket 1',
     'original_device_class': <SwitchDeviceClass.OUTLET: 'outlet'>,
     'original_icon': None,
     'original_name': 'Socket 1',
@@ -8850,7 +8850,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Switch',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -8869,6 +8868,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Switch',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Switch',
@@ -8899,7 +8899,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Switch 1',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -8918,6 +8917,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Switch 1',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Switch 1',
@@ -8948,7 +8948,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Switch 2',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -8967,6 +8966,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Switch 2',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Switch 2',
@@ -8997,7 +8997,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Child lock',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -9016,6 +9015,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Child lock',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Child lock',
@@ -9046,7 +9046,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Frost protection',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -9065,6 +9064,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Frost protection',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Frost protection',
@@ -9095,7 +9095,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -9114,6 +9113,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': None,
     'original_device_class': None,
     'original_icon': None,
     'original_name': None,
@@ -9144,7 +9144,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Music',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -9163,6 +9162,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Music',
     'original_device_class': None,
     'original_icon': 'mdi:music',
     'original_name': 'Music',
@@ -9194,7 +9194,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Mute',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -9213,6 +9212,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Mute',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Mute',
@@ -9243,7 +9243,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Mute',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -9262,6 +9261,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Mute',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Mute',
@@ -9292,7 +9292,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Switch 1',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -9311,6 +9310,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Switch 1',
     'original_device_class': <SwitchDeviceClass.OUTLET: 'outlet'>,
     'original_icon': None,
     'original_name': 'Switch 1',
@@ -9342,7 +9342,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Child lock',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -9361,6 +9360,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Child lock',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Child lock',
@@ -9391,7 +9391,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Socket 1',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -9410,6 +9409,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Socket 1',
     'original_device_class': <SwitchDeviceClass.OUTLET: 'outlet'>,
     'original_icon': None,
     'original_name': 'Socket 1',
@@ -9441,7 +9441,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Socket 1',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -9460,6 +9459,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Socket 1',
     'original_device_class': <SwitchDeviceClass.OUTLET: 'outlet'>,
     'original_icon': None,
     'original_name': 'Socket 1',
@@ -9491,7 +9491,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Energy saving',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -9510,6 +9509,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Energy saving',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Energy saving',
@@ -9540,7 +9540,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Start',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -9559,6 +9558,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Start',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Start',
@@ -9589,7 +9589,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Socket 1',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -9608,6 +9607,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Socket 1',
     'original_device_class': <SwitchDeviceClass.OUTLET: 'outlet'>,
     'original_icon': None,
     'original_name': 'Socket 1',
@@ -9639,7 +9639,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Child lock',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -9658,6 +9657,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Child lock',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Child lock',
@@ -9688,7 +9688,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Socket 1',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -9707,6 +9706,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Socket 1',
     'original_device_class': <SwitchDeviceClass.OUTLET: 'outlet'>,
     'original_icon': None,
     'original_name': 'Socket 1',
@@ -9738,7 +9738,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Socket 1',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -9757,6 +9756,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Socket 1',
     'original_device_class': <SwitchDeviceClass.OUTLET: 'outlet'>,
     'original_icon': None,
     'original_name': 'Socket 1',
@@ -9788,7 +9788,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Socket',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -9807,6 +9806,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Socket',
     'original_device_class': <SwitchDeviceClass.OUTLET: 'outlet'>,
     'original_icon': None,
     'original_name': 'Socket',
@@ -9838,7 +9838,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Power',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -9857,6 +9856,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Power',
     'original_device_class': <SwitchDeviceClass.SWITCH: 'switch'>,
     'original_icon': 'mdi:power',
     'original_name': 'Power',
@@ -9889,7 +9889,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Preheat',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -9908,6 +9907,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Preheat',
     'original_device_class': <SwitchDeviceClass.SWITCH: 'switch'>,
     'original_icon': 'mdi:radiator',
     'original_name': 'Preheat',
@@ -9940,7 +9940,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Side A Power',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -9959,6 +9958,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Side A Power',
     'original_device_class': <SwitchDeviceClass.SWITCH: 'switch'>,
     'original_icon': 'mdi:alpha-a',
     'original_name': 'Side A Power',
@@ -9991,7 +9991,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Side A Preheat',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -10010,6 +10009,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Side A Preheat',
     'original_device_class': <SwitchDeviceClass.SWITCH: 'switch'>,
     'original_icon': 'mdi:radiator',
     'original_name': 'Side A Preheat',
@@ -10042,7 +10042,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Side B Power',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -10061,6 +10060,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Side B Power',
     'original_device_class': <SwitchDeviceClass.SWITCH: 'switch'>,
     'original_icon': 'mdi:alpha-b',
     'original_name': 'Side B Power',
@@ -10093,7 +10093,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Side B Preheat',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -10112,6 +10111,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Side B Preheat',
     'original_device_class': <SwitchDeviceClass.SWITCH: 'switch'>,
     'original_icon': 'mdi:radiator',
     'original_name': 'Side B Preheat',
@@ -10144,7 +10144,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Child lock',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -10163,6 +10162,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Child lock',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Child lock',
@@ -10193,7 +10193,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Socket 1',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -10212,6 +10211,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Socket 1',
     'original_device_class': <SwitchDeviceClass.OUTLET: 'outlet'>,
     'original_icon': None,
     'original_name': 'Socket 1',
@@ -10243,7 +10243,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Socket 2',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -10262,6 +10261,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Socket 2',
     'original_device_class': <SwitchDeviceClass.OUTLET: 'outlet'>,
     'original_icon': None,
     'original_name': 'Socket 2',
@@ -10293,7 +10293,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Ionizer',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -10312,6 +10311,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Ionizer',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Ionizer',
@@ -10342,7 +10342,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Do not disturb',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -10361,6 +10360,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Do not disturb',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Do not disturb',
@@ -10391,7 +10391,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Socket 1',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -10410,6 +10409,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Socket 1',
     'original_device_class': <SwitchDeviceClass.OUTLET: 'outlet'>,
     'original_icon': None,
     'original_name': 'Socket 1',
@@ -10441,7 +10441,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Child lock',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -10460,6 +10459,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Child lock',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Child lock',
@@ -10490,7 +10490,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Socket 1',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -10509,6 +10508,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Socket 1',
     'original_device_class': <SwitchDeviceClass.OUTLET: 'outlet'>,
     'original_icon': None,
     'original_name': 'Socket 1',
@@ -10540,7 +10540,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Socket',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -10559,6 +10558,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Socket',
     'original_device_class': <SwitchDeviceClass.OUTLET: 'outlet'>,
     'original_icon': None,
     'original_name': 'Socket',
@@ -10590,7 +10590,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Filter reset',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -10609,6 +10608,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Filter reset',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Filter reset',
@@ -10639,7 +10639,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Power',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -10658,6 +10657,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Power',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Power',
@@ -10688,7 +10688,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Water pump reset',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -10707,6 +10706,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Water pump reset',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Water pump reset',
@@ -10737,7 +10737,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Socket 1',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -10756,6 +10755,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Socket 1',
     'original_device_class': <SwitchDeviceClass.OUTLET: 'outlet'>,
     'original_icon': None,
     'original_name': 'Socket 1',
@@ -10787,7 +10787,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Child lock',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -10806,6 +10805,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Child lock',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Child lock',
@@ -10836,7 +10836,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Socket 1',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -10855,6 +10854,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Socket 1',
     'original_device_class': <SwitchDeviceClass.OUTLET: 'outlet'>,
     'original_icon': None,
     'original_name': 'Socket 1',
@@ -10886,7 +10886,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -10905,6 +10904,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': None,
     'original_device_class': None,
     'original_icon': None,
     'original_name': None,
@@ -10935,7 +10935,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Music',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -10954,6 +10953,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Music',
     'original_device_class': None,
     'original_icon': 'mdi:music',
     'original_name': 'Music',
@@ -10985,7 +10985,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Child lock',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -11004,6 +11003,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Child lock',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Child lock',
@@ -11034,7 +11034,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Frost protection',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -11053,6 +11052,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Frost protection',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Frost protection',
@@ -11083,7 +11083,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Mute',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -11102,6 +11101,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Mute',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Mute',
@@ -11132,7 +11132,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Switch',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -11151,6 +11150,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Switch',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Switch',
@@ -11181,7 +11181,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Child lock',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -11200,6 +11199,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Child lock',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Child lock',
@@ -11230,7 +11230,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Switch',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -11249,6 +11248,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Switch',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Switch',
@@ -11279,7 +11279,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Socket',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -11298,6 +11297,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Socket',
     'original_device_class': <SwitchDeviceClass.OUTLET: 'outlet'>,
     'original_icon': None,
     'original_name': 'Socket',

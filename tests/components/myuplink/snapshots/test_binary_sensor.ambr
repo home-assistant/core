@@ -4,7 +4,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Alarm',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -23,6 +22,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Alarm',
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
     'original_icon': None,
     'original_name': 'Alarm',
@@ -54,7 +54,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Connectivity',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -73,6 +72,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Connectivity',
     'original_device_class': <BinarySensorDeviceClass.CONNECTIVITY: 'connectivity'>,
     'original_icon': None,
     'original_name': 'Connectivity',
@@ -104,7 +104,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Connectivity',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -123,6 +122,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Connectivity',
     'original_device_class': <BinarySensorDeviceClass.CONNECTIVITY: 'connectivity'>,
     'original_icon': None,
     'original_name': 'Connectivity',
@@ -154,7 +154,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Extern. adjust\xadment climate system 1',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -173,6 +172,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Extern. adjust\xadment climate system 1',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Extern. adjust\xadment climate system 1',
@@ -203,7 +203,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Extern. adjust\xadment climate system 1',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -222,6 +221,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Extern. adjust\xadment climate system 1',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Extern. adjust\xadment climate system 1',
@@ -252,7 +252,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Pump: Heating medium (GP1)',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -271,6 +270,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Pump: Heating medium (GP1)',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Pump: Heating medium (GP1)',
@@ -301,7 +301,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Pump: Heating medium (GP1)',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -320,6 +319,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Pump: Heating medium (GP1)',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Pump: Heating medium (GP1)',

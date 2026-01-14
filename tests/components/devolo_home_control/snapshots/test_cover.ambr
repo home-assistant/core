@@ -20,7 +20,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -39,6 +38,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': None,
     'original_device_class': <CoverDeviceClass.BLIND: 'blind'>,
     'original_icon': None,
     'original_name': None,

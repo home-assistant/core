@@ -4,7 +4,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Residential Thermostat V2',
     'capabilities': dict({
       'hvac_modes': list([
         <HVACMode.OFF: 'off'>,
@@ -32,6 +31,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Residential Thermostat V2',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Residential Thermostat V2',

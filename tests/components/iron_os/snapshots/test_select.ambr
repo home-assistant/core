@@ -4,7 +4,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Animation speed',
     'capabilities': dict({
       'options': list([
         'off',
@@ -30,6 +29,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Animation speed',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Animation speed',
@@ -66,7 +66,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Boot logo duration',
     'capabilities': dict({
       'options': list([
         'off',
@@ -95,6 +94,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Boot logo duration',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Boot logo duration',
@@ -134,7 +134,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Button locking mode',
     'capabilities': dict({
       'options': list([
         'off',
@@ -159,6 +158,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Button locking mode',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Button locking mode',
@@ -194,7 +194,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Display orientation mode',
     'capabilities': dict({
       'options': list([
         'right_handed',
@@ -219,6 +218,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Display orientation mode',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Display orientation mode',
@@ -254,7 +254,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Power Delivery 3.1 EPR',
     'capabilities': dict({
       'options': list([
         'off',
@@ -279,6 +278,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Power Delivery 3.1 EPR',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Power Delivery 3.1 EPR',
@@ -314,7 +314,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Power source',
     'capabilities': dict({
       'options': list([
         'no_battery',
@@ -341,6 +340,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Power source',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Power source',
@@ -378,7 +378,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Scrolling speed',
     'capabilities': dict({
       'options': list([
         'slow',
@@ -402,6 +401,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Scrolling speed',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Scrolling speed',
@@ -436,7 +436,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Soldering tip type',
     'capabilities': dict({
       'options': list([
         'auto',
@@ -462,6 +461,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Soldering tip type',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Soldering tip type',
@@ -498,7 +498,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Start-up behavior',
     'capabilities': dict({
       'options': list([
         'disabled',
@@ -524,6 +523,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Start-up behavior',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Start-up behavior',
@@ -560,7 +560,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Temperature display unit',
     'capabilities': dict({
       'options': list([
         'celsius',
@@ -584,6 +583,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Temperature display unit',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Temperature display unit',

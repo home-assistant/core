@@ -4,7 +4,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Battery',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -25,6 +24,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Battery',
     'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
     'original_icon': None,
     'original_name': 'Battery',
@@ -58,7 +58,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Oxydo reduction potential',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -79,6 +78,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Oxydo reduction potential',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Oxydo reduction potential',
@@ -111,7 +111,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'pH',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -132,6 +131,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'pH',
     'original_device_class': <SensorDeviceClass.PH: 'ph'>,
     'original_icon': None,
     'original_name': 'pH',
@@ -164,7 +164,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'RSSI',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -185,6 +184,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'RSSI',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'RSSI',
@@ -217,7 +217,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Salt',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -238,6 +237,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Salt',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Salt',
@@ -270,7 +270,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'TDS',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -291,6 +290,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'TDS',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'TDS',
@@ -323,7 +323,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -347,6 +346,7 @@
         'suggested_display_precision': 1,
       }),
     }),
+    'object_id_base': 'Temperature',
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Temperature',
@@ -380,7 +380,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Battery',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -401,6 +400,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Battery',
     'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
     'original_icon': None,
     'original_name': 'Battery',
@@ -434,7 +434,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Oxydo reduction potential',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -455,6 +454,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Oxydo reduction potential',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Oxydo reduction potential',
@@ -487,7 +487,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'pH',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -508,6 +507,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'pH',
     'original_device_class': <SensorDeviceClass.PH: 'ph'>,
     'original_icon': None,
     'original_name': 'pH',
@@ -540,7 +540,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'RSSI',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -561,6 +560,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'RSSI',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'RSSI',
@@ -593,7 +593,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Salt',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -614,6 +613,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Salt',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Salt',
@@ -646,7 +646,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'TDS',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -667,6 +666,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'TDS',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'TDS',
@@ -699,7 +699,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -723,6 +722,7 @@
         'suggested_display_precision': 1,
       }),
     }),
+    'object_id_base': 'Temperature',
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Temperature',

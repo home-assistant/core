@@ -4,7 +4,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Antenna gain',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -25,6 +24,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Antenna gain',
     'original_device_class': <SensorDeviceClass.SIGNAL_STRENGTH: 'signal_strength'>,
     'original_icon': None,
     'original_name': 'Antenna gain',
@@ -58,7 +58,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'CPU load',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -82,6 +81,7 @@
         'suggested_display_precision': 1,
       }),
     }),
+    'object_id_base': 'CPU load',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'CPU load',
@@ -114,7 +114,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Download capacity',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -141,6 +140,7 @@
         'suggested_unit_of_measurement': <UnitOfDataRate.MEGABITS_PER_SECOND: 'Mbit/s'>,
       }),
     }),
+    'object_id_base': 'Download capacity',
     'original_device_class': <SensorDeviceClass.DATA_RATE: 'data_rate'>,
     'original_icon': None,
     'original_name': 'Download capacity',
@@ -174,7 +174,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Network role',
     'capabilities': dict({
       'options': list([
         'bridge',
@@ -198,6 +197,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Network role',
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
     'original_name': 'Network role',
@@ -233,7 +233,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Throughput receive (actual)',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -260,6 +259,7 @@
         'suggested_unit_of_measurement': <UnitOfDataRate.MEGABITS_PER_SECOND: 'Mbit/s'>,
       }),
     }),
+    'object_id_base': 'Throughput receive (actual)',
     'original_device_class': <SensorDeviceClass.DATA_RATE: 'data_rate'>,
     'original_icon': None,
     'original_name': 'Throughput receive (actual)',
@@ -293,7 +293,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Throughput transmit (actual)',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -320,6 +319,7 @@
         'suggested_unit_of_measurement': <UnitOfDataRate.MEGABITS_PER_SECOND: 'Mbit/s'>,
       }),
     }),
+    'object_id_base': 'Throughput transmit (actual)',
     'original_device_class': <SensorDeviceClass.DATA_RATE: 'data_rate'>,
     'original_icon': None,
     'original_name': 'Throughput transmit (actual)',
@@ -353,7 +353,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Upload capacity',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -380,6 +379,7 @@
         'suggested_unit_of_measurement': <UnitOfDataRate.MEGABITS_PER_SECOND: 'Mbit/s'>,
       }),
     }),
+    'object_id_base': 'Upload capacity',
     'original_device_class': <SensorDeviceClass.DATA_RATE: 'data_rate'>,
     'original_icon': None,
     'original_name': 'Upload capacity',
@@ -413,7 +413,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Uptime',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -438,6 +437,7 @@
         'suggested_unit_of_measurement': <UnitOfTime.DAYS: 'd'>,
       }),
     }),
+    'object_id_base': 'Uptime',
     'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
     'original_icon': None,
     'original_name': 'Uptime',
@@ -470,7 +470,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Wireless distance',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -495,6 +494,7 @@
         'suggested_unit_of_measurement': <UnitOfLength.KILOMETERS: 'km'>,
       }),
     }),
+    'object_id_base': 'Wireless distance',
     'original_device_class': <SensorDeviceClass.DISTANCE: 'distance'>,
     'original_icon': None,
     'original_name': 'Wireless distance',
@@ -527,7 +527,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Wireless frequency',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -548,6 +547,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Wireless frequency',
     'original_device_class': <SensorDeviceClass.FREQUENCY: 'frequency'>,
     'original_icon': None,
     'original_name': 'Wireless frequency',
@@ -581,7 +581,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Wireless mode',
     'capabilities': dict({
       'options': list([
         'point_to_point',
@@ -605,6 +604,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Wireless mode',
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
     'original_name': 'Wireless mode',
@@ -640,7 +640,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Wireless role',
     'capabilities': dict({
       'options': list([
         'station',
@@ -664,6 +663,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Wireless role',
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
     'original_name': 'Wireless role',
@@ -699,7 +699,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Wireless SSID',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -718,6 +717,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Wireless SSID',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Wireless SSID',

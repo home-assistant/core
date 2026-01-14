@@ -4,7 +4,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Backup capable',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -23,6 +22,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Backup capable',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Backup capable',
@@ -53,7 +53,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Grid services active',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -72,6 +71,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Grid services active',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Grid services active',
@@ -102,7 +102,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Grid services enabled',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -121,6 +120,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Grid services enabled',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Grid services enabled',
@@ -151,7 +151,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Grid status',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -170,6 +169,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Grid status',
     'original_device_class': <BinarySensorDeviceClass.POWER: 'power'>,
     'original_icon': None,
     'original_name': 'Grid status',
@@ -201,7 +201,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Storm watch active',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -220,6 +219,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Storm watch active',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Storm watch active',
@@ -250,7 +250,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Battery heater',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -269,6 +268,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Battery heater',
     'original_device_class': <BinarySensorDeviceClass.HEAT: 'heat'>,
     'original_icon': None,
     'original_name': 'Battery heater',
@@ -300,7 +300,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Cabin overheat protection active',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -319,6 +318,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Cabin overheat protection active',
     'original_device_class': <BinarySensorDeviceClass.HEAT: 'heat'>,
     'original_icon': None,
     'original_name': 'Cabin overheat protection active',
@@ -350,7 +350,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Charge cable',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -369,6 +368,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Charge cable',
     'original_device_class': <BinarySensorDeviceClass.CONNECTIVITY: 'connectivity'>,
     'original_icon': None,
     'original_name': 'Charge cable',
@@ -400,7 +400,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Charger has multiple phases',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -419,6 +418,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Charger has multiple phases',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Charger has multiple phases',
@@ -449,7 +449,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Dashcam',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -468,6 +467,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Dashcam',
     'original_device_class': <BinarySensorDeviceClass.RUNNING: 'running'>,
     'original_icon': None,
     'original_name': 'Dashcam',
@@ -499,7 +499,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Front driver door',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -518,6 +517,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Front driver door',
     'original_device_class': <BinarySensorDeviceClass.DOOR: 'door'>,
     'original_icon': None,
     'original_name': 'Front driver door',
@@ -549,7 +549,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Front driver window',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -568,6 +567,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Front driver window',
     'original_device_class': <BinarySensorDeviceClass.WINDOW: 'window'>,
     'original_icon': None,
     'original_name': 'Front driver window',
@@ -599,7 +599,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Front passenger door',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -618,6 +617,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Front passenger door',
     'original_device_class': <BinarySensorDeviceClass.DOOR: 'door'>,
     'original_icon': None,
     'original_name': 'Front passenger door',
@@ -649,7 +649,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Front passenger window',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -668,6 +667,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Front passenger window',
     'original_device_class': <BinarySensorDeviceClass.WINDOW: 'window'>,
     'original_icon': None,
     'original_name': 'Front passenger window',
@@ -699,7 +699,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Preconditioning',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -718,6 +717,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Preconditioning',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Preconditioning',
@@ -748,7 +748,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Preconditioning enabled',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -767,6 +766,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Preconditioning enabled',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Preconditioning enabled',
@@ -797,7 +797,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Rear driver door',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -816,6 +815,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Rear driver door',
     'original_device_class': <BinarySensorDeviceClass.DOOR: 'door'>,
     'original_icon': None,
     'original_name': 'Rear driver door',
@@ -847,7 +847,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Rear driver window',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -866,6 +865,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Rear driver window',
     'original_device_class': <BinarySensorDeviceClass.WINDOW: 'window'>,
     'original_icon': None,
     'original_name': 'Rear driver window',
@@ -897,7 +897,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Rear passenger door',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -916,6 +915,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Rear passenger door',
     'original_device_class': <BinarySensorDeviceClass.DOOR: 'door'>,
     'original_icon': None,
     'original_name': 'Rear passenger door',
@@ -947,7 +947,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Rear passenger window',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -966,6 +965,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Rear passenger window',
     'original_device_class': <BinarySensorDeviceClass.WINDOW: 'window'>,
     'original_icon': None,
     'original_name': 'Rear passenger window',
@@ -997,7 +997,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Scheduled charging pending',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1016,6 +1015,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Scheduled charging pending',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Scheduled charging pending',
@@ -1046,7 +1046,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Status',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1065,6 +1064,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Status',
     'original_device_class': <BinarySensorDeviceClass.CONNECTIVITY: 'connectivity'>,
     'original_icon': None,
     'original_name': 'Status',
@@ -1096,7 +1096,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Tire pressure warning front left',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1115,6 +1114,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Tire pressure warning front left',
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
     'original_icon': None,
     'original_name': 'Tire pressure warning front left',
@@ -1146,7 +1146,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Tire pressure warning front right',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1165,6 +1164,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Tire pressure warning front right',
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
     'original_icon': None,
     'original_name': 'Tire pressure warning front right',
@@ -1196,7 +1196,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Tire pressure warning rear left',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1215,6 +1214,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Tire pressure warning rear left',
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
     'original_icon': None,
     'original_name': 'Tire pressure warning rear left',
@@ -1246,7 +1246,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Tire pressure warning rear right',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1265,6 +1264,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Tire pressure warning rear right',
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
     'original_icon': None,
     'original_name': 'Tire pressure warning rear right',
@@ -1296,7 +1296,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Trip charging',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1315,6 +1314,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Trip charging',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Trip charging',
@@ -1345,7 +1345,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'User present',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1364,6 +1363,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'User present',
     'original_device_class': <BinarySensorDeviceClass.PRESENCE: 'presence'>,
     'original_icon': None,
     'original_name': 'User present',

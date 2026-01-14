@@ -4,7 +4,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Degree minutes',
     'capabilities': dict({
       'max': 3000.0,
       'min': -3000.0,
@@ -28,6 +27,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Degree minutes',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Degree minutes',
@@ -63,7 +63,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Degree minutes',
     'capabilities': dict({
       'max': 3000.0,
       'min': -3000.0,
@@ -87,6 +86,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Degree minutes',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Degree minutes',
@@ -122,7 +122,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Heating offset climate system 1',
     'capabilities': dict({
       'max': 10.0,
       'min': -10.0,
@@ -146,6 +145,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Heating offset climate system 1',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Heating offset climate system 1',
@@ -180,7 +180,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Heating offset climate system 1',
     'capabilities': dict({
       'max': 10.0,
       'min': -10.0,
@@ -204,6 +203,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Heating offset climate system 1',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Heating offset climate system 1',
@@ -238,7 +238,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Room sensor set point value heating climate system 1',
     'capabilities': dict({
       'max': 35.0,
       'min': 5.0,
@@ -262,6 +261,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Room sensor set point value heating climate system 1',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Room sensor set point value heating climate system 1',
@@ -296,7 +296,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Room sensor set point value heating climate system 1',
     'capabilities': dict({
       'max': 35.0,
       'min': 5.0,
@@ -320,6 +319,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Room sensor set point value heating climate system 1',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Room sensor set point value heating climate system 1',
@@ -354,7 +354,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'start diff additional heat',
     'capabilities': dict({
       'max': 2000.0,
       'min': 100.0,
@@ -378,6 +377,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'start diff additional heat',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'start diff additional heat',
@@ -413,7 +413,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'start diff additional heat',
     'capabilities': dict({
       'max': 2000.0,
       'min': 100.0,
@@ -437,6 +436,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'start diff additional heat',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'start diff additional heat',

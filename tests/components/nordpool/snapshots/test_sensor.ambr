@@ -4,7 +4,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Currency',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -23,6 +22,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Currency',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Currency',
@@ -53,7 +53,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Current price',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -77,6 +76,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'Current price',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Current price',
@@ -109,7 +109,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Daily average',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -133,6 +132,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'Daily average',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Daily average',
@@ -165,7 +165,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Exchange rate',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -186,6 +185,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Exchange rate',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Exchange rate',
@@ -217,7 +217,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Highest price',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -239,6 +238,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'Highest price',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Highest price',
@@ -272,7 +272,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Last updated',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -291,6 +290,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Last updated',
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
     'original_icon': None,
     'original_name': 'Last updated',
@@ -322,7 +322,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Lowest price',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -344,6 +343,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'Lowest price',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Lowest price',
@@ -377,7 +377,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Next price',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -399,6 +398,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'Next price',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Next price',
@@ -430,7 +430,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Off-peak 1 average',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -454,6 +453,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'Off-peak 1 average',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Off-peak 1 average',
@@ -486,7 +486,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Off-peak 1 highest price',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -510,6 +509,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'Off-peak 1 highest price',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Off-peak 1 highest price',
@@ -542,7 +542,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Off-peak 1 lowest price',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -566,6 +565,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'Off-peak 1 lowest price',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Off-peak 1 lowest price',
@@ -598,7 +598,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Off-peak 1 time from',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -617,6 +616,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Off-peak 1 time from',
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
     'original_icon': None,
     'original_name': 'Off-peak 1 time from',
@@ -648,7 +648,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Off-peak 1 time until',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -667,6 +666,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Off-peak 1 time until',
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
     'original_icon': None,
     'original_name': 'Off-peak 1 time until',
@@ -698,7 +698,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Off-peak 2 average',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -722,6 +721,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'Off-peak 2 average',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Off-peak 2 average',
@@ -754,7 +754,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Off-peak 2 highest price',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -778,6 +777,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'Off-peak 2 highest price',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Off-peak 2 highest price',
@@ -810,7 +810,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Off-peak 2 lowest price',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -834,6 +833,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'Off-peak 2 lowest price',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Off-peak 2 lowest price',
@@ -866,7 +866,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Off-peak 2 time from',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -885,6 +884,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Off-peak 2 time from',
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
     'original_icon': None,
     'original_name': 'Off-peak 2 time from',
@@ -916,7 +916,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Off-peak 2 time until',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -935,6 +934,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Off-peak 2 time until',
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
     'original_icon': None,
     'original_name': 'Off-peak 2 time until',
@@ -966,7 +966,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Peak average',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -990,6 +989,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'Peak average',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Peak average',
@@ -1022,7 +1022,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Peak highest price',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1046,6 +1045,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'Peak highest price',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Peak highest price',
@@ -1078,7 +1078,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Peak lowest price',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1102,6 +1101,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'Peak lowest price',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Peak lowest price',
@@ -1134,7 +1134,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Peak time from',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1153,6 +1152,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Peak time from',
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
     'original_icon': None,
     'original_name': 'Peak time from',
@@ -1184,7 +1184,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Peak time until',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1203,6 +1202,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Peak time until',
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
     'original_icon': None,
     'original_name': 'Peak time until',
@@ -1234,7 +1234,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Previous price',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1256,6 +1255,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'Previous price',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Previous price',
@@ -1287,7 +1287,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Currency',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1306,6 +1305,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Currency',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Currency',
@@ -1336,7 +1336,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Current price',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1360,6 +1359,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'Current price',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Current price',
@@ -1392,7 +1392,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Daily average',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1416,6 +1415,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'Daily average',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Daily average',
@@ -1448,7 +1448,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Exchange rate',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1469,6 +1468,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Exchange rate',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Exchange rate',
@@ -1500,7 +1500,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Highest price',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1522,6 +1521,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'Highest price',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Highest price',
@@ -1555,7 +1555,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Last updated',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1574,6 +1573,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Last updated',
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
     'original_icon': None,
     'original_name': 'Last updated',
@@ -1605,7 +1605,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Lowest price',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1627,6 +1626,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'Lowest price',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Lowest price',
@@ -1660,7 +1660,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Next price',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1682,6 +1681,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'Next price',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Next price',
@@ -1713,7 +1713,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Off-peak 1 average',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1737,6 +1736,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'Off-peak 1 average',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Off-peak 1 average',
@@ -1769,7 +1769,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Off-peak 1 highest price',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1793,6 +1792,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'Off-peak 1 highest price',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Off-peak 1 highest price',
@@ -1825,7 +1825,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Off-peak 1 lowest price',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1849,6 +1848,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'Off-peak 1 lowest price',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Off-peak 1 lowest price',
@@ -1881,7 +1881,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Off-peak 1 time from',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1900,6 +1899,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Off-peak 1 time from',
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
     'original_icon': None,
     'original_name': 'Off-peak 1 time from',
@@ -1931,7 +1931,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Off-peak 1 time until',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1950,6 +1949,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Off-peak 1 time until',
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
     'original_icon': None,
     'original_name': 'Off-peak 1 time until',
@@ -1981,7 +1981,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Off-peak 2 average',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2005,6 +2004,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'Off-peak 2 average',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Off-peak 2 average',
@@ -2037,7 +2037,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Off-peak 2 highest price',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2061,6 +2060,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'Off-peak 2 highest price',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Off-peak 2 highest price',
@@ -2093,7 +2093,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Off-peak 2 lowest price',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2117,6 +2116,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'Off-peak 2 lowest price',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Off-peak 2 lowest price',
@@ -2149,7 +2149,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Off-peak 2 time from',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2168,6 +2167,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Off-peak 2 time from',
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
     'original_icon': None,
     'original_name': 'Off-peak 2 time from',
@@ -2199,7 +2199,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Off-peak 2 time until',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2218,6 +2217,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Off-peak 2 time until',
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
     'original_icon': None,
     'original_name': 'Off-peak 2 time until',
@@ -2249,7 +2249,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Peak average',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2273,6 +2272,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'Peak average',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Peak average',
@@ -2305,7 +2305,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Peak highest price',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2329,6 +2328,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'Peak highest price',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Peak highest price',
@@ -2361,7 +2361,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Peak lowest price',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2385,6 +2384,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'Peak lowest price',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Peak lowest price',
@@ -2417,7 +2417,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Peak time from',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2436,6 +2435,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Peak time from',
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
     'original_icon': None,
     'original_name': 'Peak time from',
@@ -2467,7 +2467,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Peak time until',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2486,6 +2485,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Peak time until',
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
     'original_icon': None,
     'original_name': 'Peak time until',
@@ -2517,7 +2517,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Previous price',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2539,6 +2538,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'Previous price',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Previous price',

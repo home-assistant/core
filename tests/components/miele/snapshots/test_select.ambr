@@ -4,7 +4,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Mode',
     'capabilities': dict({
       'options': list([
         'normal',
@@ -28,6 +27,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Mode',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Mode',
@@ -62,7 +62,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Mode',
     'capabilities': dict({
       'options': list([
         'normal',
@@ -86,6 +85,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Mode',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Mode',

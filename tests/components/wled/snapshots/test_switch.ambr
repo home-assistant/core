@@ -4,7 +4,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Nightlight',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -23,6 +22,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Nightlight',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Nightlight',
@@ -55,7 +55,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Reverse',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -74,6 +73,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Reverse',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Reverse',
@@ -104,7 +104,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Segment 1 reverse',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -123,6 +122,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Segment 1 reverse',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Segment 1 reverse',
@@ -153,7 +153,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Sync receive',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -172,6 +171,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Sync receive',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Sync receive',
@@ -203,7 +203,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Sync send',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -222,6 +221,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Sync send',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Sync send',
@@ -253,7 +253,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Nightlight',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -272,6 +271,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Nightlight',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Nightlight',
@@ -304,7 +304,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Reverse',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -323,6 +322,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Reverse',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Reverse',
@@ -353,7 +353,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Sync receive',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -372,6 +371,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Sync receive',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Sync receive',
@@ -403,7 +403,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Sync send',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -422,6 +421,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Sync send',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Sync send',

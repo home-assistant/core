@@ -38,7 +38,6 @@
       'aliases': set({
       }),
       'area_id': None,
-      'calculated_object_id': 'Display',
       'capabilities': None,
       'config_entry_id': <ANY>,
       'config_subentry_id': <ANY>,
@@ -57,6 +56,7 @@
       'name': None,
       'options': dict({
       }),
+      'object_id_base': 'Display',
       'original_device_class': None,
       'original_icon': None,
       'original_name': 'Display',
@@ -122,7 +122,6 @@
       'aliases': set({
       }),
       'area_id': None,
-      'calculated_object_id': 'Display',
       'capabilities': None,
       'config_entry_id': <ANY>,
       'config_subentry_id': <ANY>,
@@ -141,6 +140,7 @@
       'name': None,
       'options': dict({
       }),
+      'object_id_base': 'Display',
       'original_device_class': None,
       'original_icon': None,
       'original_name': 'Display',
@@ -156,7 +156,6 @@
       'aliases': set({
       }),
       'area_id': None,
-      'calculated_object_id': 'Child lock',
       'capabilities': None,
       'config_entry_id': <ANY>,
       'config_subentry_id': <ANY>,
@@ -175,6 +174,7 @@
       'name': None,
       'options': dict({
       }),
+      'object_id_base': 'Child lock',
       'original_device_class': None,
       'original_icon': None,
       'original_name': 'Child lock',
@@ -253,7 +253,6 @@
       'aliases': set({
       }),
       'area_id': None,
-      'calculated_object_id': 'Display',
       'capabilities': None,
       'config_entry_id': <ANY>,
       'config_subentry_id': <ANY>,
@@ -272,6 +271,7 @@
       'name': None,
       'options': dict({
       }),
+      'object_id_base': 'Display',
       'original_device_class': None,
       'original_icon': None,
       'original_name': 'Display',
@@ -287,7 +287,6 @@
       'aliases': set({
       }),
       'area_id': None,
-      'calculated_object_id': 'Child lock',
       'capabilities': None,
       'config_entry_id': <ANY>,
       'config_subentry_id': <ANY>,
@@ -306,6 +305,7 @@
       'name': None,
       'options': dict({
       }),
+      'object_id_base': 'Child lock',
       'original_device_class': None,
       'original_icon': None,
       'original_name': 'Child lock',
@@ -384,7 +384,6 @@
       'aliases': set({
       }),
       'area_id': None,
-      'calculated_object_id': 'Display',
       'capabilities': None,
       'config_entry_id': <ANY>,
       'config_subentry_id': <ANY>,
@@ -403,6 +402,7 @@
       'name': None,
       'options': dict({
       }),
+      'object_id_base': 'Display',
       'original_device_class': None,
       'original_icon': None,
       'original_name': 'Display',
@@ -418,7 +418,6 @@
       'aliases': set({
       }),
       'area_id': None,
-      'calculated_object_id': 'Child lock',
       'capabilities': None,
       'config_entry_id': <ANY>,
       'config_subentry_id': <ANY>,
@@ -437,6 +436,7 @@
       'name': None,
       'options': dict({
       }),
+      'object_id_base': 'Child lock',
       'original_device_class': None,
       'original_icon': None,
       'original_name': 'Child lock',
@@ -663,7 +663,6 @@
       'aliases': set({
       }),
       'area_id': None,
-      'calculated_object_id': 'Display',
       'capabilities': None,
       'config_entry_id': <ANY>,
       'config_subentry_id': <ANY>,
@@ -682,6 +681,7 @@
       'name': None,
       'options': dict({
       }),
+      'object_id_base': 'Display',
       'original_device_class': None,
       'original_icon': None,
       'original_name': 'Display',
@@ -697,7 +697,6 @@
       'aliases': set({
       }),
       'area_id': None,
-      'calculated_object_id': 'Auto Off',
       'capabilities': None,
       'config_entry_id': <ANY>,
       'config_subentry_id': <ANY>,
@@ -716,6 +715,7 @@
       'name': None,
       'options': dict({
       }),
+      'object_id_base': 'Auto Off',
       'original_device_class': None,
       'original_icon': None,
       'original_name': 'Auto Off',
@@ -794,7 +794,6 @@
       'aliases': set({
       }),
       'area_id': None,
-      'calculated_object_id': 'Display',
       'capabilities': None,
       'config_entry_id': <ANY>,
       'config_subentry_id': <ANY>,
@@ -813,6 +812,7 @@
       'name': None,
       'options': dict({
       }),
+      'object_id_base': 'Display',
       'original_device_class': None,
       'original_icon': None,
       'original_name': 'Display',
@@ -828,7 +828,6 @@
       'aliases': set({
       }),
       'area_id': None,
-      'calculated_object_id': 'Child lock',
       'capabilities': None,
       'config_entry_id': <ANY>,
       'config_subentry_id': <ANY>,
@@ -847,6 +846,7 @@
       'name': None,
       'options': dict({
       }),
+      'object_id_base': 'Child lock',
       'original_device_class': None,
       'original_icon': None,
       'original_name': 'Child lock',
@@ -862,7 +862,6 @@
       'aliases': set({
       }),
       'area_id': None,
-      'calculated_object_id': 'Auto Off',
       'capabilities': None,
       'config_entry_id': <ANY>,
       'config_subentry_id': <ANY>,
@@ -881,6 +880,7 @@
       'name': None,
       'options': dict({
       }),
+      'object_id_base': 'Auto Off',
       'original_device_class': None,
       'original_icon': None,
       'original_name': 'Auto Off',
@@ -972,7 +972,6 @@
       'aliases': set({
       }),
       'area_id': None,
-      'calculated_object_id': 'Display',
       'capabilities': None,
       'config_entry_id': <ANY>,
       'config_subentry_id': <ANY>,
@@ -991,6 +990,7 @@
       'name': None,
       'options': dict({
       }),
+      'object_id_base': 'Display',
       'original_device_class': None,
       'original_icon': None,
       'original_name': 'Display',
@@ -1006,7 +1006,6 @@
       'aliases': set({
       }),
       'area_id': None,
-      'calculated_object_id': 'Auto Off',
       'capabilities': None,
       'config_entry_id': <ANY>,
       'config_subentry_id': <ANY>,
@@ -1025,6 +1024,7 @@
       'name': None,
       'options': dict({
       }),
+      'object_id_base': 'Auto Off',
       'original_device_class': None,
       'original_icon': None,
       'original_name': 'Auto Off',
@@ -1103,7 +1103,6 @@
       'aliases': set({
       }),
       'area_id': None,
-      'calculated_object_id': None,
       'capabilities': None,
       'config_entry_id': <ANY>,
       'config_subentry_id': <ANY>,
@@ -1122,6 +1121,7 @@
       'name': None,
       'options': dict({
       }),
+      'object_id_base': None,
       'original_device_class': <SwitchDeviceClass.OUTLET: 'outlet'>,
       'original_icon': None,
       'original_name': None,
@@ -1188,7 +1188,6 @@
       'aliases': set({
       }),
       'area_id': None,
-      'calculated_object_id': 'Display',
       'capabilities': None,
       'config_entry_id': <ANY>,
       'config_subentry_id': <ANY>,
@@ -1207,6 +1206,7 @@
       'name': None,
       'options': dict({
       }),
+      'object_id_base': 'Display',
       'original_device_class': None,
       'original_icon': None,
       'original_name': 'Display',
@@ -1309,7 +1309,6 @@
       'aliases': set({
       }),
       'area_id': None,
-      'calculated_object_id': None,
       'capabilities': None,
       'config_entry_id': <ANY>,
       'config_subentry_id': <ANY>,
@@ -1328,6 +1327,7 @@
       'name': None,
       'options': dict({
       }),
+      'object_id_base': None,
       'original_device_class': <SwitchDeviceClass.SWITCH: 'switch'>,
       'original_icon': None,
       'original_name': None,

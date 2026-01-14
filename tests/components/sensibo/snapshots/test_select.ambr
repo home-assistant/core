@@ -4,7 +4,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Light',
     'capabilities': dict({
       'options': list([
         'on',
@@ -28,6 +27,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Light',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Light',
@@ -62,7 +62,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Light',
     'capabilities': dict({
       'options': list([
         'on',
@@ -87,6 +86,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Light',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Light',

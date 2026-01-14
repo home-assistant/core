@@ -4,7 +4,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Display brightness',
     'capabilities': dict({
       'max': 100,
       'min': 0,
@@ -28,6 +27,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Display brightness',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Display brightness',
@@ -63,7 +63,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'LED bar brightness',
     'capabilities': dict({
       'max': 100,
       'min': 0,
@@ -87,6 +86,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'LED bar brightness',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'LED bar brightness',

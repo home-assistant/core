@@ -4,7 +4,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Filter mode',
     'capabilities': dict({
       'options': list([
         'manual',
@@ -29,6 +28,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Filter mode',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Filter mode',
@@ -64,7 +64,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Constant flow speed',
     'capabilities': dict({
       'options': list([
         '400',
@@ -101,6 +100,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Constant flow speed',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Constant flow speed',
@@ -149,7 +149,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Day speed',
     'capabilities': dict({
       'options': list([
         '400',
@@ -186,6 +185,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Day speed',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Day speed',
@@ -234,7 +234,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Filter mode',
     'capabilities': dict({
       'options': list([
         'manual',
@@ -260,6 +259,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Filter mode',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Filter mode',
@@ -296,7 +296,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'High pulse speed',
     'capabilities': dict({
       'options': list([
         '400',
@@ -333,6 +332,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'High pulse speed',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'High pulse speed',
@@ -381,7 +381,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Low pulse speed',
     'capabilities': dict({
       'options': list([
         '400',
@@ -418,6 +417,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Low pulse speed',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Low pulse speed',
@@ -466,7 +466,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Manual speed',
     'capabilities': dict({
       'options': list([
         '35',
@@ -503,6 +502,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Manual speed',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Manual speed',
@@ -551,7 +551,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Night speed',
     'capabilities': dict({
       'options': list([
         '400',
@@ -588,6 +587,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Night speed',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Night speed',

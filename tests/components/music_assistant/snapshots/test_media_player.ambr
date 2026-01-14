@@ -4,7 +4,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': None,
     'capabilities': dict({
     }),
     'config_entry_id': <ANY>,
@@ -24,6 +23,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': None,
     'original_device_class': <MediaPlayerDeviceClass.SPEAKER: 'speaker'>,
     'original_icon': 'mdi:speaker',
     'original_name': None,
@@ -73,7 +73,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': None,
     'capabilities': dict({
     }),
     'config_entry_id': <ANY>,
@@ -93,6 +92,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': None,
     'original_device_class': <MediaPlayerDeviceClass.SPEAKER: 'speaker'>,
     'original_icon': 'mdi:speaker-multiple',
     'original_name': None,
@@ -146,7 +146,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': None,
     'capabilities': dict({
       'source_list': list([
         'Music Assistant Queue',
@@ -170,6 +169,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': None,
     'original_device_class': <MediaPlayerDeviceClass.SPEAKER: 'speaker'>,
     'original_icon': 'mdi:speaker',
     'original_name': None,

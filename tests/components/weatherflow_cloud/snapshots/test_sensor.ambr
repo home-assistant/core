@@ -4,7 +4,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Air density',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -28,6 +27,7 @@
         'suggested_display_precision': 5,
       }),
     }),
+    'object_id_base': 'Air density',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Air density',
@@ -61,7 +61,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Dew point',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -85,6 +84,7 @@
         'suggested_display_precision': 1,
       }),
     }),
+    'object_id_base': 'Dew point',
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Dew point',
@@ -119,7 +119,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Feels like',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -143,6 +142,7 @@
         'suggested_display_precision': 1,
       }),
     }),
+    'object_id_base': 'Feels like',
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Feels like',
@@ -177,7 +177,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Heat index',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -201,6 +200,7 @@
         'suggested_display_precision': 1,
       }),
     }),
+    'object_id_base': 'Heat index',
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Heat index',
@@ -235,7 +235,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Lightning count',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -256,6 +255,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Lightning count',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Lightning count',
@@ -288,7 +288,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Lightning count last 1 hr',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -309,6 +308,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Lightning count last 1 hr',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Lightning count last 1 hr',
@@ -341,7 +341,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Lightning count last 3 hr',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -362,6 +361,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Lightning count last 3 hr',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Lightning count last 3 hr',
@@ -394,7 +394,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Lightning last distance',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -418,6 +417,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'Lightning last distance',
     'original_device_class': <SensorDeviceClass.DISTANCE: 'distance'>,
     'original_icon': None,
     'original_name': 'Lightning last distance',
@@ -452,7 +452,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Lightning last strike',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -471,6 +470,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Lightning last strike',
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
     'original_icon': None,
     'original_name': 'Lightning last strike',
@@ -503,7 +503,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Nearcast precipitation duration yesterday',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -527,6 +526,7 @@
         'suggested_display_precision': 1,
       }),
     }),
+    'object_id_base': 'Nearcast precipitation duration yesterday',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Nearcast precipitation duration yesterday',
@@ -560,7 +560,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Nearcast precipitation today',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -584,6 +583,7 @@
         'suggested_display_precision': 1,
       }),
     }),
+    'object_id_base': 'Nearcast precipitation today',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Nearcast precipitation today',
@@ -617,7 +617,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Nearcast precipitation yesterday',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -641,6 +640,7 @@
         'suggested_display_precision': 1,
       }),
     }),
+    'object_id_base': 'Nearcast precipitation yesterday',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Nearcast precipitation yesterday',
@@ -674,7 +674,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Precipitation duration today',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -698,6 +697,7 @@
         'suggested_display_precision': 1,
       }),
     }),
+    'object_id_base': 'Precipitation duration today',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Precipitation duration today',
@@ -731,7 +731,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Precipitation duration yesterday',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -755,6 +754,7 @@
         'suggested_display_precision': 1,
       }),
     }),
+    'object_id_base': 'Precipitation duration yesterday',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Precipitation duration yesterday',
@@ -788,7 +788,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Precipitation today',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -812,6 +811,7 @@
         'suggested_display_precision': 1,
       }),
     }),
+    'object_id_base': 'Precipitation today',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Precipitation today',
@@ -845,7 +845,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Precipitation type yesterday',
     'capabilities': dict({
       'options': list([
         'none',
@@ -875,6 +874,7 @@
         'suggested_display_precision': 1,
       }),
     }),
+    'object_id_base': 'Precipitation type yesterday',
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
     'original_name': 'Precipitation type yesterday',
@@ -914,7 +914,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Precipitation yesterday',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -938,6 +937,7 @@
         'suggested_display_precision': 1,
       }),
     }),
+    'object_id_base': 'Precipitation yesterday',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Precipitation yesterday',
@@ -971,7 +971,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Pressure barometric',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -998,6 +997,7 @@
         'suggested_unit_of_measurement': <UnitOfPressure.HPA: 'hPa'>,
       }),
     }),
+    'object_id_base': 'Pressure barometric',
     'original_device_class': <SensorDeviceClass.ATMOSPHERIC_PRESSURE: 'atmospheric_pressure'>,
     'original_icon': None,
     'original_name': 'Pressure barometric',
@@ -1032,7 +1032,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Pressure sea level',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1059,6 +1058,7 @@
         'suggested_unit_of_measurement': <UnitOfPressure.HPA: 'hPa'>,
       }),
     }),
+    'object_id_base': 'Pressure sea level',
     'original_device_class': <SensorDeviceClass.ATMOSPHERIC_PRESSURE: 'atmospheric_pressure'>,
     'original_icon': None,
     'original_name': 'Pressure sea level',
@@ -1093,7 +1093,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Rain last hour',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1117,6 +1116,7 @@
         'suggested_display_precision': 1,
       }),
     }),
+    'object_id_base': 'Rain last hour',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Rain last hour',
@@ -1150,7 +1150,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1174,6 +1173,7 @@
         'suggested_display_precision': 1,
       }),
     }),
+    'object_id_base': 'Temperature',
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Temperature',
@@ -1208,7 +1208,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Wet bulb globe temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1232,6 +1231,7 @@
         'suggested_display_precision': 1,
       }),
     }),
+    'object_id_base': 'Wet bulb globe temperature',
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Wet bulb globe temperature',
@@ -1266,7 +1266,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Wet bulb temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1290,6 +1289,7 @@
         'suggested_display_precision': 1,
       }),
     }),
+    'object_id_base': 'Wet bulb temperature',
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Wet bulb temperature',
@@ -1324,7 +1324,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Wind chill',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1348,6 +1347,7 @@
         'suggested_display_precision': 1,
       }),
     }),
+    'object_id_base': 'Wind chill',
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Wind chill',
@@ -1382,7 +1382,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Wind direction',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1401,6 +1400,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Wind direction',
     'original_device_class': <SensorDeviceClass.WIND_DIRECTION: 'wind_direction'>,
     'original_icon': None,
     'original_name': 'Wind direction',
@@ -1434,7 +1434,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Wind gust',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1461,6 +1460,7 @@
         'suggested_unit_of_measurement': <UnitOfSpeed.KILOMETERS_PER_HOUR: 'km/h'>,
       }),
     }),
+    'object_id_base': 'Wind gust',
     'original_device_class': <SensorDeviceClass.WIND_SPEED: 'wind_speed'>,
     'original_icon': None,
     'original_name': 'Wind gust',
@@ -1495,7 +1495,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Wind lull',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1522,6 +1521,7 @@
         'suggested_unit_of_measurement': <UnitOfSpeed.KILOMETERS_PER_HOUR: 'km/h'>,
       }),
     }),
+    'object_id_base': 'Wind lull',
     'original_device_class': <SensorDeviceClass.WIND_SPEED: 'wind_speed'>,
     'original_icon': None,
     'original_name': 'Wind lull',
@@ -1556,7 +1556,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Wind sample interval',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1580,6 +1579,7 @@
         'suggested_display_precision': 1,
       }),
     }),
+    'object_id_base': 'Wind sample interval',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Wind sample interval',
@@ -1613,7 +1613,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Wind speed',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1640,6 +1639,7 @@
         'suggested_unit_of_measurement': <UnitOfSpeed.KILOMETERS_PER_HOUR: 'km/h'>,
       }),
     }),
+    'object_id_base': 'Wind speed',
     'original_device_class': <SensorDeviceClass.WIND_SPEED: 'wind_speed'>,
     'original_icon': None,
     'original_name': 'Wind speed',
@@ -1674,7 +1674,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Wind speed (avg)',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1701,6 +1700,7 @@
         'suggested_unit_of_measurement': <UnitOfSpeed.KILOMETERS_PER_HOUR: 'km/h'>,
       }),
     }),
+    'object_id_base': 'Wind speed (avg)',
     'original_device_class': <SensorDeviceClass.WIND_SPEED: 'wind_speed'>,
     'original_icon': None,
     'original_name': 'Wind speed (avg)',

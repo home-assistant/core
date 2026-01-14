@@ -4,7 +4,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'AC',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -23,6 +22,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'AC',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'AC',
@@ -54,7 +54,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Humidity',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -75,6 +74,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Humidity',
     'original_device_class': <SensorDeviceClass.HUMIDITY: 'humidity'>,
     'original_icon': None,
     'original_name': 'Humidity',
@@ -109,7 +109,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Tado mode',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -128,6 +127,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Tado mode',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Tado mode',
@@ -158,7 +158,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -182,6 +181,7 @@
         'suggested_display_precision': 1,
       }),
     }),
+    'object_id_base': 'Temperature',
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Temperature',
@@ -217,7 +217,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'AC',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -236,6 +235,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'AC',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'AC',
@@ -267,7 +267,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Humidity',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -288,6 +287,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Humidity',
     'original_device_class': <SensorDeviceClass.HUMIDITY: 'humidity'>,
     'original_icon': None,
     'original_name': 'Humidity',
@@ -322,7 +322,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Tado mode',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -341,6 +340,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Tado mode',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Tado mode',
@@ -371,7 +371,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -395,6 +394,7 @@
         'suggested_display_precision': 1,
       }),
     }),
+    'object_id_base': 'Temperature',
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Temperature',
@@ -430,7 +430,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'AC',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -449,6 +448,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'AC',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'AC',
@@ -480,7 +480,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Humidity',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -501,6 +500,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Humidity',
     'original_device_class': <SensorDeviceClass.HUMIDITY: 'humidity'>,
     'original_icon': None,
     'original_name': 'Humidity',
@@ -535,7 +535,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Tado mode',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -554,6 +553,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Tado mode',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Tado mode',
@@ -584,7 +584,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -608,6 +607,7 @@
         'suggested_display_precision': 1,
       }),
     }),
+    'object_id_base': 'Temperature',
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Temperature',
@@ -643,7 +643,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Heating',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -664,6 +663,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Heating',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Heating',
@@ -697,7 +697,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Humidity',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -718,6 +717,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Humidity',
     'original_device_class': <SensorDeviceClass.HUMIDITY: 'humidity'>,
     'original_icon': None,
     'original_name': 'Humidity',
@@ -752,7 +752,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Tado mode',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -771,6 +770,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Tado mode',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Tado mode',
@@ -801,7 +801,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -825,6 +824,7 @@
         'suggested_display_precision': 1,
       }),
     }),
+    'object_id_base': 'Temperature',
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Temperature',
@@ -860,7 +860,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Automatic geofencing',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -879,6 +878,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Automatic geofencing',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Automatic geofencing',
@@ -909,7 +909,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Geofencing mode',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -928,6 +927,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Geofencing mode',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Geofencing mode',
@@ -958,7 +958,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Outdoor temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -982,6 +981,7 @@
         'suggested_display_precision': 1,
       }),
     }),
+    'object_id_base': 'Outdoor temperature',
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Outdoor temperature',
@@ -1016,7 +1016,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Solar percentage',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1037,6 +1036,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Solar percentage',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Solar percentage',
@@ -1070,7 +1070,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Tado mode',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1089,6 +1088,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Tado mode',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Tado mode',
@@ -1119,7 +1119,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Weather condition',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1138,6 +1137,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Weather condition',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Weather condition',
@@ -1169,7 +1169,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Tado mode',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1188,6 +1187,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Tado mode',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Tado mode',
@@ -1218,7 +1218,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Tado mode',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1237,6 +1236,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Tado mode',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Tado mode',

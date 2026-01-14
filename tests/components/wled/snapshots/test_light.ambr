@@ -4,7 +4,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': None,
     'capabilities': dict({
       'effect_list': list([
         'Solid',
@@ -221,6 +220,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': None,
     'original_device_class': None,
     'original_icon': None,
     'original_name': None,
@@ -468,7 +468,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': None,
     'capabilities': dict({
       'effect_list': list([
         'Solid',
@@ -680,6 +679,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': None,
     'original_device_class': None,
     'original_icon': None,
     'original_name': None,
@@ -919,7 +919,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Main',
     'capabilities': dict({
       'supported_color_modes': list([
         <ColorMode.BRIGHTNESS: 'brightness'>,
@@ -942,6 +941,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Main',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Main',
@@ -978,7 +978,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Segment 1',
     'capabilities': dict({
       'effect_list': list([
         'Solid',
@@ -1190,6 +1189,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Segment 1',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Segment 1',
@@ -1429,7 +1429,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': None,
     'capabilities': dict({
       'effect_list': list([
         'Solid',
@@ -1641,6 +1640,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': None,
     'original_device_class': None,
     'original_icon': None,
     'original_name': None,
@@ -1880,7 +1880,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': None,
     'capabilities': dict({
       'effect_list': list([
         'Solid',
@@ -2092,6 +2091,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': None,
     'original_device_class': None,
     'original_icon': None,
     'original_name': None,
@@ -2331,7 +2331,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': None,
     'capabilities': dict({
       'effect_list': list([
         'Solid',
@@ -2543,6 +2542,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': None,
     'original_device_class': None,
     'original_icon': None,
     'original_name': None,

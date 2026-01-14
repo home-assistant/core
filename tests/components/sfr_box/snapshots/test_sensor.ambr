@@ -4,7 +4,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'DSL attenuation down',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -25,6 +24,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'DSL attenuation down',
     'original_device_class': <SensorDeviceClass.SIGNAL_STRENGTH: 'signal_strength'>,
     'original_icon': None,
     'original_name': 'DSL attenuation down',
@@ -58,7 +58,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'DSL attenuation up',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -79,6 +78,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'DSL attenuation up',
     'original_device_class': <SensorDeviceClass.SIGNAL_STRENGTH: 'signal_strength'>,
     'original_icon': None,
     'original_name': 'DSL attenuation up',
@@ -112,7 +112,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'DSL connect count',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -131,6 +130,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'DSL connect count',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'DSL connect count',
@@ -162,7 +162,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'DSL CRC error count',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -181,6 +180,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'DSL CRC error count',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'DSL CRC error count',
@@ -212,7 +212,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'DSL line mode',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -231,6 +230,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'DSL line mode',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'DSL line mode',
@@ -261,7 +261,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'DSL line status',
     'capabilities': dict({
       'options': list([
         'no_defect',
@@ -288,6 +287,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'DSL line status',
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
     'original_name': 'DSL line status',
@@ -326,7 +326,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'DSL noise down',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -347,6 +346,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'DSL noise down',
     'original_device_class': <SensorDeviceClass.SIGNAL_STRENGTH: 'signal_strength'>,
     'original_icon': None,
     'original_name': 'DSL noise down',
@@ -380,7 +380,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'DSL noise up',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -401,6 +400,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'DSL noise up',
     'original_device_class': <SensorDeviceClass.SIGNAL_STRENGTH: 'signal_strength'>,
     'original_icon': None,
     'original_name': 'DSL noise up',
@@ -434,7 +434,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'DSL rate down',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -458,6 +457,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'DSL rate down',
     'original_device_class': <SensorDeviceClass.DATA_RATE: 'data_rate'>,
     'original_icon': None,
     'original_name': 'DSL rate down',
@@ -491,7 +491,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'DSL rate up',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -515,6 +514,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'DSL rate up',
     'original_device_class': <SensorDeviceClass.DATA_RATE: 'data_rate'>,
     'original_icon': None,
     'original_name': 'DSL rate up',
@@ -548,7 +548,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'DSL training',
     'capabilities': dict({
       'options': list([
         'idle',
@@ -579,6 +578,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'DSL training',
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
     'original_name': 'DSL training',
@@ -621,7 +621,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Network infrastructure',
     'capabilities': dict({
       'options': list([
         'adsl',
@@ -646,6 +645,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Network infrastructure',
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
     'original_name': 'Network infrastructure',
@@ -682,7 +682,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -706,6 +705,7 @@
         'suggested_display_precision': 1,
       }),
     }),
+    'object_id_base': 'Temperature',
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Temperature',
@@ -739,7 +739,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Voltage',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -763,6 +762,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'Voltage',
     'original_device_class': <SensorDeviceClass.VOLTAGE: 'voltage'>,
     'original_icon': None,
     'original_name': 'Voltage',
@@ -796,7 +796,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'WAN mode',
     'capabilities': dict({
       'options': list([
         'adsl_ppp',
@@ -822,6 +821,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'WAN mode',
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
     'original_name': 'WAN mode',

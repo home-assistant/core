@@ -4,7 +4,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'AC current',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -28,6 +27,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'AC current',
     'original_device_class': <SensorDeviceClass.CURRENT: 'current'>,
     'original_icon': None,
     'original_name': 'AC current',
@@ -61,7 +61,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'AC power',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -85,6 +84,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'AC power',
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
     'original_icon': None,
     'original_name': 'AC power',
@@ -118,7 +118,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'AC voltage',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -142,6 +141,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'AC voltage',
     'original_device_class': <SensorDeviceClass.VOLTAGE: 'voltage'>,
     'original_icon': None,
     'original_name': 'AC voltage',
@@ -175,7 +175,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'DC current',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -199,6 +198,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'DC current',
     'original_device_class': <SensorDeviceClass.CURRENT: 'current'>,
     'original_icon': None,
     'original_name': 'DC current',
@@ -232,7 +232,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'DC current 2',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -256,6 +255,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'DC current 2',
     'original_device_class': <SensorDeviceClass.CURRENT: 'current'>,
     'original_icon': None,
     'original_name': 'DC current 2',
@@ -289,7 +289,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'DC voltage',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -313,6 +312,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'DC voltage',
     'original_device_class': <SensorDeviceClass.VOLTAGE: 'voltage'>,
     'original_icon': None,
     'original_name': 'DC voltage',
@@ -346,7 +346,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'DC voltage 2',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -370,6 +369,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'DC voltage 2',
     'original_device_class': <SensorDeviceClass.VOLTAGE: 'voltage'>,
     'original_icon': None,
     'original_name': 'DC voltage 2',
@@ -403,7 +403,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Error code',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -422,6 +421,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Error code',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Error code',
@@ -452,7 +452,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Error message',
     'capabilities': dict({
       'options': list([
         'no_error',
@@ -570,6 +569,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Error message',
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
     'original_name': 'Error message',
@@ -699,7 +699,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Frequency',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -723,6 +722,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'Frequency',
     'original_device_class': <SensorDeviceClass.FREQUENCY: 'frequency'>,
     'original_icon': None,
     'original_name': 'Frequency',
@@ -756,7 +756,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Inverter state',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -775,6 +774,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Inverter state',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Inverter state',
@@ -805,7 +805,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Status code',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -824,6 +823,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Status code',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Status code',
@@ -854,7 +854,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Status message',
     'capabilities': dict({
       'options': list([
         'startup',
@@ -884,6 +883,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Status message',
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
     'original_name': 'Status message',
@@ -925,7 +925,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Total energy',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -949,6 +948,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'Total energy',
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
     'original_name': 'Total energy',
@@ -982,7 +982,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Apparent power',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1006,6 +1005,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'Apparent power',
     'original_device_class': <SensorDeviceClass.APPARENT_POWER: 'apparent_power'>,
     'original_icon': None,
     'original_name': 'Apparent power',
@@ -1039,7 +1039,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Apparent power phase 1',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1063,6 +1062,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'Apparent power phase 1',
     'original_device_class': <SensorDeviceClass.APPARENT_POWER: 'apparent_power'>,
     'original_icon': None,
     'original_name': 'Apparent power phase 1',
@@ -1096,7 +1096,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Apparent power phase 2',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1120,6 +1119,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'Apparent power phase 2',
     'original_device_class': <SensorDeviceClass.APPARENT_POWER: 'apparent_power'>,
     'original_icon': None,
     'original_name': 'Apparent power phase 2',
@@ -1153,7 +1153,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Apparent power phase 3',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1177,6 +1176,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'Apparent power phase 3',
     'original_device_class': <SensorDeviceClass.APPARENT_POWER: 'apparent_power'>,
     'original_icon': None,
     'original_name': 'Apparent power phase 3',
@@ -1210,7 +1210,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Current phase 1',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1234,6 +1233,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'Current phase 1',
     'original_device_class': <SensorDeviceClass.CURRENT: 'current'>,
     'original_icon': None,
     'original_name': 'Current phase 1',
@@ -1267,7 +1267,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Current phase 2',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1291,6 +1290,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'Current phase 2',
     'original_device_class': <SensorDeviceClass.CURRENT: 'current'>,
     'original_icon': None,
     'original_name': 'Current phase 2',
@@ -1324,7 +1324,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Current phase 3',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1348,6 +1347,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'Current phase 3',
     'original_device_class': <SensorDeviceClass.CURRENT: 'current'>,
     'original_icon': None,
     'original_name': 'Current phase 3',
@@ -1381,7 +1381,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Frequency phase average',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1405,6 +1404,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'Frequency phase average',
     'original_device_class': <SensorDeviceClass.FREQUENCY: 'frequency'>,
     'original_icon': None,
     'original_name': 'Frequency phase average',
@@ -1438,7 +1438,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Meter location',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1457,6 +1456,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Meter location',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Meter location',
@@ -1487,7 +1487,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Meter location description',
     'capabilities': dict({
       'options': list([
         'feed_in',
@@ -1514,6 +1513,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Meter location description',
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
     'original_name': 'Meter location description',
@@ -1552,7 +1552,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Power factor',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1573,6 +1572,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Power factor',
     'original_device_class': <SensorDeviceClass.POWER_FACTOR: 'power_factor'>,
     'original_icon': None,
     'original_name': 'Power factor',
@@ -1605,7 +1605,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Power factor phase 1',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1626,6 +1625,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Power factor phase 1',
     'original_device_class': <SensorDeviceClass.POWER_FACTOR: 'power_factor'>,
     'original_icon': None,
     'original_name': 'Power factor phase 1',
@@ -1658,7 +1658,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Power factor phase 2',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1679,6 +1678,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Power factor phase 2',
     'original_device_class': <SensorDeviceClass.POWER_FACTOR: 'power_factor'>,
     'original_icon': None,
     'original_name': 'Power factor phase 2',
@@ -1711,7 +1711,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Power factor phase 3',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1732,6 +1731,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Power factor phase 3',
     'original_device_class': <SensorDeviceClass.POWER_FACTOR: 'power_factor'>,
     'original_icon': None,
     'original_name': 'Power factor phase 3',
@@ -1764,7 +1764,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Reactive energy consumed',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -1785,6 +1784,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Reactive energy consumed',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Reactive energy consumed',
@@ -1817,7 +1817,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Reactive energy produced',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -1838,6 +1837,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Reactive energy produced',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Reactive energy produced',
@@ -1870,7 +1870,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Reactive power',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1894,6 +1893,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'Reactive power',
     'original_device_class': <SensorDeviceClass.REACTIVE_POWER: 'reactive_power'>,
     'original_icon': None,
     'original_name': 'Reactive power',
@@ -1927,7 +1927,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Reactive power phase 1',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1951,6 +1950,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'Reactive power phase 1',
     'original_device_class': <SensorDeviceClass.REACTIVE_POWER: 'reactive_power'>,
     'original_icon': None,
     'original_name': 'Reactive power phase 1',
@@ -1984,7 +1984,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Reactive power phase 2',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2008,6 +2007,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'Reactive power phase 2',
     'original_device_class': <SensorDeviceClass.REACTIVE_POWER: 'reactive_power'>,
     'original_icon': None,
     'original_name': 'Reactive power phase 2',
@@ -2041,7 +2041,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Reactive power phase 3',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2065,6 +2064,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'Reactive power phase 3',
     'original_device_class': <SensorDeviceClass.REACTIVE_POWER: 'reactive_power'>,
     'original_icon': None,
     'original_name': 'Reactive power phase 3',
@@ -2098,7 +2098,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Real energy consumed',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -2122,6 +2121,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'Real energy consumed',
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
     'original_name': 'Real energy consumed',
@@ -2155,7 +2155,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Real energy minus',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -2179,6 +2178,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'Real energy minus',
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
     'original_name': 'Real energy minus',
@@ -2212,7 +2212,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Real energy plus',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -2236,6 +2235,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'Real energy plus',
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
     'original_name': 'Real energy plus',
@@ -2269,7 +2269,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Real energy produced',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -2293,6 +2292,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'Real energy produced',
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
     'original_name': 'Real energy produced',
@@ -2326,7 +2326,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Real power',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2350,6 +2349,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'Real power',
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
     'original_icon': None,
     'original_name': 'Real power',
@@ -2383,7 +2383,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Real power phase 1',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2407,6 +2406,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'Real power phase 1',
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
     'original_icon': None,
     'original_name': 'Real power phase 1',
@@ -2440,7 +2440,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Real power phase 2',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2464,6 +2463,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'Real power phase 2',
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
     'original_icon': None,
     'original_name': 'Real power phase 2',
@@ -2497,7 +2497,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Real power phase 3',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2521,6 +2520,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'Real power phase 3',
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
     'original_icon': None,
     'original_name': 'Real power phase 3',
@@ -2554,7 +2554,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Voltage phase 1',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2578,6 +2577,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'Voltage phase 1',
     'original_device_class': <SensorDeviceClass.VOLTAGE: 'voltage'>,
     'original_icon': None,
     'original_name': 'Voltage phase 1',
@@ -2611,7 +2611,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Voltage phase 1-2',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2635,6 +2634,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'Voltage phase 1-2',
     'original_device_class': <SensorDeviceClass.VOLTAGE: 'voltage'>,
     'original_icon': None,
     'original_name': 'Voltage phase 1-2',
@@ -2668,7 +2668,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Voltage phase 2',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2692,6 +2691,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'Voltage phase 2',
     'original_device_class': <SensorDeviceClass.VOLTAGE: 'voltage'>,
     'original_icon': None,
     'original_name': 'Voltage phase 2',
@@ -2725,7 +2725,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Voltage phase 2-3',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2749,6 +2748,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'Voltage phase 2-3',
     'original_device_class': <SensorDeviceClass.VOLTAGE: 'voltage'>,
     'original_icon': None,
     'original_name': 'Voltage phase 2-3',
@@ -2782,7 +2782,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Voltage phase 3',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2806,6 +2805,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'Voltage phase 3',
     'original_device_class': <SensorDeviceClass.VOLTAGE: 'voltage'>,
     'original_icon': None,
     'original_name': 'Voltage phase 3',
@@ -2839,7 +2839,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Voltage phase 3-1',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2863,6 +2862,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'Voltage phase 3-1',
     'original_device_class': <SensorDeviceClass.VOLTAGE: 'voltage'>,
     'original_icon': None,
     'original_name': 'Voltage phase 3-1',
@@ -2896,7 +2896,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Meter mode',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2915,6 +2914,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Meter mode',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Meter mode',
@@ -2945,7 +2945,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Power grid',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2969,6 +2968,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'Power grid',
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
     'original_icon': None,
     'original_name': 'Power grid',
@@ -3002,7 +3002,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Power grid export',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -3026,6 +3025,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'Power grid export',
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
     'original_icon': None,
     'original_name': 'Power grid export',
@@ -3059,7 +3059,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Power grid import',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -3083,6 +3082,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'Power grid import',
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
     'original_icon': None,
     'original_name': 'Power grid import',
@@ -3116,7 +3116,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Power load',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -3140,6 +3139,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'Power load',
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
     'original_icon': None,
     'original_name': 'Power load',
@@ -3173,7 +3173,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Power load consumed',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -3197,6 +3196,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'Power load consumed',
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
     'original_icon': None,
     'original_name': 'Power load consumed',
@@ -3230,7 +3230,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Power load generated',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -3254,6 +3253,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'Power load generated',
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
     'original_icon': None,
     'original_name': 'Power load generated',
@@ -3287,7 +3287,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Power photovoltaics',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -3311,6 +3310,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'Power photovoltaics',
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
     'original_icon': None,
     'original_name': 'Power photovoltaics',
@@ -3344,7 +3344,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Relative autonomy',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -3365,6 +3364,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Relative autonomy',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Relative autonomy',
@@ -3397,7 +3397,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Relative self-consumption',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -3418,6 +3417,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Relative self-consumption',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Relative self-consumption',
@@ -3450,7 +3450,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Total energy',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -3474,6 +3473,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'Total energy',
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
     'original_name': 'Total energy',
@@ -3507,7 +3507,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'DC current',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -3531,6 +3530,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'DC current',
     'original_device_class': <SensorDeviceClass.CURRENT: 'current'>,
     'original_icon': None,
     'original_name': 'DC current',
@@ -3564,7 +3564,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'DC voltage',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -3588,6 +3587,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'DC voltage',
     'original_device_class': <SensorDeviceClass.VOLTAGE: 'voltage'>,
     'original_icon': None,
     'original_name': 'DC voltage',
@@ -3621,7 +3621,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Designed capacity',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -3640,6 +3639,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Designed capacity',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Designed capacity',
@@ -3671,7 +3671,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Maximum capacity',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -3690,6 +3689,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Maximum capacity',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Maximum capacity',
@@ -3721,7 +3721,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'State of charge',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -3742,6 +3741,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'State of charge',
     'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
     'original_icon': None,
     'original_name': 'State of charge',
@@ -3775,7 +3775,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -3799,6 +3798,7 @@
         'suggested_display_precision': 1,
       }),
     }),
+    'object_id_base': 'Temperature',
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Temperature',
@@ -3832,7 +3832,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'AC current',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -3856,6 +3855,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'AC current',
     'original_device_class': <SensorDeviceClass.CURRENT: 'current'>,
     'original_icon': None,
     'original_name': 'AC current',
@@ -3889,7 +3889,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'AC power',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -3913,6 +3912,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'AC power',
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
     'original_icon': None,
     'original_name': 'AC power',
@@ -3946,7 +3946,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'AC voltage',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -3970,6 +3969,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'AC voltage',
     'original_device_class': <SensorDeviceClass.VOLTAGE: 'voltage'>,
     'original_icon': None,
     'original_name': 'AC voltage',
@@ -4003,7 +4003,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'DC current',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -4027,6 +4026,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'DC current',
     'original_device_class': <SensorDeviceClass.CURRENT: 'current'>,
     'original_icon': None,
     'original_name': 'DC current',
@@ -4060,7 +4060,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'DC current 2',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -4084,6 +4083,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'DC current 2',
     'original_device_class': <SensorDeviceClass.CURRENT: 'current'>,
     'original_icon': None,
     'original_name': 'DC current 2',
@@ -4117,7 +4117,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'DC voltage',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -4141,6 +4140,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'DC voltage',
     'original_device_class': <SensorDeviceClass.VOLTAGE: 'voltage'>,
     'original_icon': None,
     'original_name': 'DC voltage',
@@ -4174,7 +4174,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'DC voltage 2',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -4198,6 +4197,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'DC voltage 2',
     'original_device_class': <SensorDeviceClass.VOLTAGE: 'voltage'>,
     'original_icon': None,
     'original_name': 'DC voltage 2',
@@ -4231,7 +4231,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Error code',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -4250,6 +4249,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Error code',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Error code',
@@ -4280,7 +4280,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Error message',
     'capabilities': dict({
       'options': list([
         'no_error',
@@ -4398,6 +4397,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Error message',
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
     'original_name': 'Error message',
@@ -4527,7 +4527,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Frequency',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -4551,6 +4550,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'Frequency',
     'original_device_class': <SensorDeviceClass.FREQUENCY: 'frequency'>,
     'original_icon': None,
     'original_name': 'Frequency',
@@ -4584,7 +4584,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Inverter state',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -4603,6 +4602,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Inverter state',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Inverter state',
@@ -4633,7 +4633,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Status code',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -4652,6 +4651,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Status code',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Status code',
@@ -4682,7 +4682,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Status message',
     'capabilities': dict({
       'options': list([
         'startup',
@@ -4712,6 +4711,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Status message',
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
     'original_name': 'Status message',
@@ -4753,7 +4753,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Total energy',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -4777,6 +4776,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'Total energy',
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
     'original_name': 'Total energy',
@@ -4810,7 +4810,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Energy consumed',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -4834,6 +4833,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'Energy consumed',
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
     'original_name': 'Energy consumed',
@@ -4867,7 +4867,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Power',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -4891,6 +4890,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'Power',
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
     'original_icon': None,
     'original_name': 'Power',
@@ -4924,7 +4924,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'State code',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -4943,6 +4942,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'State code',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'State code',
@@ -4973,7 +4973,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'State message',
     'capabilities': dict({
       'options': list([
         'up_and_running',
@@ -5001,6 +5000,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'State message',
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
     'original_name': 'State message',
@@ -5040,7 +5040,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -5064,6 +5063,7 @@
         'suggested_display_precision': 1,
       }),
     }),
+    'object_id_base': 'Temperature',
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Temperature',
@@ -5097,7 +5097,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Apparent power',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -5121,6 +5120,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'Apparent power',
     'original_device_class': <SensorDeviceClass.APPARENT_POWER: 'apparent_power'>,
     'original_icon': None,
     'original_name': 'Apparent power',
@@ -5154,7 +5154,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Apparent power phase 1',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -5178,6 +5177,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'Apparent power phase 1',
     'original_device_class': <SensorDeviceClass.APPARENT_POWER: 'apparent_power'>,
     'original_icon': None,
     'original_name': 'Apparent power phase 1',
@@ -5211,7 +5211,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Apparent power phase 2',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -5235,6 +5234,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'Apparent power phase 2',
     'original_device_class': <SensorDeviceClass.APPARENT_POWER: 'apparent_power'>,
     'original_icon': None,
     'original_name': 'Apparent power phase 2',
@@ -5268,7 +5268,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Apparent power phase 3',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -5292,6 +5291,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'Apparent power phase 3',
     'original_device_class': <SensorDeviceClass.APPARENT_POWER: 'apparent_power'>,
     'original_icon': None,
     'original_name': 'Apparent power phase 3',
@@ -5325,7 +5325,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Current phase 1',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -5349,6 +5348,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'Current phase 1',
     'original_device_class': <SensorDeviceClass.CURRENT: 'current'>,
     'original_icon': None,
     'original_name': 'Current phase 1',
@@ -5382,7 +5382,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Current phase 2',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -5406,6 +5405,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'Current phase 2',
     'original_device_class': <SensorDeviceClass.CURRENT: 'current'>,
     'original_icon': None,
     'original_name': 'Current phase 2',
@@ -5439,7 +5439,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Current phase 3',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -5463,6 +5462,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'Current phase 3',
     'original_device_class': <SensorDeviceClass.CURRENT: 'current'>,
     'original_icon': None,
     'original_name': 'Current phase 3',
@@ -5496,7 +5496,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Frequency phase average',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -5520,6 +5519,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'Frequency phase average',
     'original_device_class': <SensorDeviceClass.FREQUENCY: 'frequency'>,
     'original_icon': None,
     'original_name': 'Frequency phase average',
@@ -5553,7 +5553,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Meter location',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -5572,6 +5571,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Meter location',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Meter location',
@@ -5602,7 +5602,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Meter location description',
     'capabilities': dict({
       'options': list([
         'feed_in',
@@ -5629,6 +5628,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Meter location description',
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
     'original_name': 'Meter location description',
@@ -5667,7 +5667,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Power factor',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -5688,6 +5687,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Power factor',
     'original_device_class': <SensorDeviceClass.POWER_FACTOR: 'power_factor'>,
     'original_icon': None,
     'original_name': 'Power factor',
@@ -5720,7 +5720,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Power factor phase 1',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -5741,6 +5740,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Power factor phase 1',
     'original_device_class': <SensorDeviceClass.POWER_FACTOR: 'power_factor'>,
     'original_icon': None,
     'original_name': 'Power factor phase 1',
@@ -5773,7 +5773,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Power factor phase 2',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -5794,6 +5793,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Power factor phase 2',
     'original_device_class': <SensorDeviceClass.POWER_FACTOR: 'power_factor'>,
     'original_icon': None,
     'original_name': 'Power factor phase 2',
@@ -5826,7 +5826,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Power factor phase 3',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -5847,6 +5846,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Power factor phase 3',
     'original_device_class': <SensorDeviceClass.POWER_FACTOR: 'power_factor'>,
     'original_icon': None,
     'original_name': 'Power factor phase 3',
@@ -5879,7 +5879,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Reactive energy consumed',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -5900,6 +5899,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Reactive energy consumed',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Reactive energy consumed',
@@ -5932,7 +5932,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Reactive energy produced',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -5953,6 +5952,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Reactive energy produced',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Reactive energy produced',
@@ -5985,7 +5985,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Reactive power',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -6009,6 +6008,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'Reactive power',
     'original_device_class': <SensorDeviceClass.REACTIVE_POWER: 'reactive_power'>,
     'original_icon': None,
     'original_name': 'Reactive power',
@@ -6042,7 +6042,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Reactive power phase 1',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -6066,6 +6065,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'Reactive power phase 1',
     'original_device_class': <SensorDeviceClass.REACTIVE_POWER: 'reactive_power'>,
     'original_icon': None,
     'original_name': 'Reactive power phase 1',
@@ -6099,7 +6099,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Reactive power phase 2',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -6123,6 +6122,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'Reactive power phase 2',
     'original_device_class': <SensorDeviceClass.REACTIVE_POWER: 'reactive_power'>,
     'original_icon': None,
     'original_name': 'Reactive power phase 2',
@@ -6156,7 +6156,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Reactive power phase 3',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -6180,6 +6179,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'Reactive power phase 3',
     'original_device_class': <SensorDeviceClass.REACTIVE_POWER: 'reactive_power'>,
     'original_icon': None,
     'original_name': 'Reactive power phase 3',
@@ -6213,7 +6213,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Real energy consumed',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -6237,6 +6236,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'Real energy consumed',
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
     'original_name': 'Real energy consumed',
@@ -6270,7 +6270,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Real energy minus',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -6294,6 +6293,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'Real energy minus',
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
     'original_name': 'Real energy minus',
@@ -6327,7 +6327,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Real energy plus',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -6351,6 +6350,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'Real energy plus',
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
     'original_name': 'Real energy plus',
@@ -6384,7 +6384,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Real energy produced',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -6408,6 +6407,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'Real energy produced',
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
     'original_name': 'Real energy produced',
@@ -6441,7 +6441,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Real power',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -6465,6 +6464,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'Real power',
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
     'original_icon': None,
     'original_name': 'Real power',
@@ -6498,7 +6498,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Real power phase 1',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -6522,6 +6521,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'Real power phase 1',
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
     'original_icon': None,
     'original_name': 'Real power phase 1',
@@ -6555,7 +6555,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Real power phase 2',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -6579,6 +6578,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'Real power phase 2',
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
     'original_icon': None,
     'original_name': 'Real power phase 2',
@@ -6612,7 +6612,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Real power phase 3',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -6636,6 +6635,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'Real power phase 3',
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
     'original_icon': None,
     'original_name': 'Real power phase 3',
@@ -6669,7 +6669,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Voltage phase 1',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -6693,6 +6692,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'Voltage phase 1',
     'original_device_class': <SensorDeviceClass.VOLTAGE: 'voltage'>,
     'original_icon': None,
     'original_name': 'Voltage phase 1',
@@ -6726,7 +6726,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Voltage phase 1-2',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -6750,6 +6749,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'Voltage phase 1-2',
     'original_device_class': <SensorDeviceClass.VOLTAGE: 'voltage'>,
     'original_icon': None,
     'original_name': 'Voltage phase 1-2',
@@ -6783,7 +6783,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Voltage phase 2',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -6807,6 +6806,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'Voltage phase 2',
     'original_device_class': <SensorDeviceClass.VOLTAGE: 'voltage'>,
     'original_icon': None,
     'original_name': 'Voltage phase 2',
@@ -6840,7 +6840,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Voltage phase 2-3',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -6864,6 +6863,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'Voltage phase 2-3',
     'original_device_class': <SensorDeviceClass.VOLTAGE: 'voltage'>,
     'original_icon': None,
     'original_name': 'Voltage phase 2-3',
@@ -6897,7 +6897,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Voltage phase 3',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -6921,6 +6920,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'Voltage phase 3',
     'original_device_class': <SensorDeviceClass.VOLTAGE: 'voltage'>,
     'original_icon': None,
     'original_name': 'Voltage phase 3',
@@ -6954,7 +6954,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Voltage phase 3-1',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -6978,6 +6977,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'Voltage phase 3-1',
     'original_device_class': <SensorDeviceClass.VOLTAGE: 'voltage'>,
     'original_icon': None,
     'original_name': 'Voltage phase 3-1',
@@ -7011,7 +7011,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Meter mode',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -7030,6 +7029,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Meter mode',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Meter mode',
@@ -7060,7 +7060,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Power battery',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -7084,6 +7083,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'Power battery',
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
     'original_icon': None,
     'original_name': 'Power battery',
@@ -7117,7 +7117,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Power battery charge',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -7141,6 +7140,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'Power battery charge',
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
     'original_icon': None,
     'original_name': 'Power battery charge',
@@ -7174,7 +7174,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Power battery discharge',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -7198,6 +7197,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'Power battery discharge',
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
     'original_icon': None,
     'original_name': 'Power battery discharge',
@@ -7231,7 +7231,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Power grid',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -7255,6 +7254,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'Power grid',
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
     'original_icon': None,
     'original_name': 'Power grid',
@@ -7288,7 +7288,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Power grid export',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -7312,6 +7311,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'Power grid export',
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
     'original_icon': None,
     'original_name': 'Power grid export',
@@ -7345,7 +7345,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Power grid import',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -7369,6 +7368,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'Power grid import',
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
     'original_icon': None,
     'original_name': 'Power grid import',
@@ -7402,7 +7402,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Power load',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -7426,6 +7425,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'Power load',
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
     'original_icon': None,
     'original_name': 'Power load',
@@ -7459,7 +7459,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Power load consumed',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -7483,6 +7482,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'Power load consumed',
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
     'original_icon': None,
     'original_name': 'Power load consumed',
@@ -7516,7 +7516,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Power load generated',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -7540,6 +7539,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'Power load generated',
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
     'original_icon': None,
     'original_name': 'Power load generated',
@@ -7573,7 +7573,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Power photovoltaics',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -7597,6 +7596,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'Power photovoltaics',
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
     'original_icon': None,
     'original_name': 'Power photovoltaics',
@@ -7630,7 +7630,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Relative autonomy',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -7651,6 +7650,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Relative autonomy',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Relative autonomy',
@@ -7683,7 +7683,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Relative self-consumption',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -7704,6 +7703,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Relative self-consumption',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Relative self-consumption',
@@ -7736,7 +7736,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Total energy',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -7760,6 +7759,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'Total energy',
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
     'original_name': 'Total energy',
@@ -7793,7 +7793,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'AC current',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -7817,6 +7816,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'AC current',
     'original_device_class': <SensorDeviceClass.CURRENT: 'current'>,
     'original_icon': None,
     'original_name': 'AC current',
@@ -7850,7 +7850,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'AC power',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -7874,6 +7873,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'AC power',
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
     'original_icon': None,
     'original_name': 'AC power',
@@ -7907,7 +7907,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'AC voltage',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -7931,6 +7930,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'AC voltage',
     'original_device_class': <SensorDeviceClass.VOLTAGE: 'voltage'>,
     'original_icon': None,
     'original_name': 'AC voltage',
@@ -7964,7 +7964,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'DC current',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -7988,6 +7987,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'DC current',
     'original_device_class': <SensorDeviceClass.CURRENT: 'current'>,
     'original_icon': None,
     'original_name': 'DC current',
@@ -8021,7 +8021,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'DC voltage',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -8045,6 +8044,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'DC voltage',
     'original_device_class': <SensorDeviceClass.VOLTAGE: 'voltage'>,
     'original_icon': None,
     'original_name': 'DC voltage',
@@ -8078,7 +8078,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Energy day',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -8102,6 +8101,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'Energy day',
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
     'original_name': 'Energy day',
@@ -8135,7 +8135,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Energy year',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -8159,6 +8158,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'Energy year',
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
     'original_name': 'Energy year',
@@ -8192,7 +8192,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Error code',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -8211,6 +8210,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Error code',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Error code',
@@ -8241,7 +8241,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Error message',
     'capabilities': dict({
       'options': list([
         'no_error',
@@ -8359,6 +8358,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Error message',
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
     'original_name': 'Error message',
@@ -8488,7 +8488,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Frequency',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -8512,6 +8511,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'Frequency',
     'original_device_class': <SensorDeviceClass.FREQUENCY: 'frequency'>,
     'original_icon': None,
     'original_name': 'Frequency',
@@ -8545,7 +8545,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'LED color',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -8564,6 +8563,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'LED color',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'LED color',
@@ -8594,7 +8594,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'LED state',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -8613,6 +8612,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'LED state',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'LED state',
@@ -8643,7 +8643,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Status code',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -8662,6 +8661,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Status code',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Status code',
@@ -8692,7 +8692,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Status message',
     'capabilities': dict({
       'options': list([
         'startup',
@@ -8722,6 +8721,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Status message',
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
     'original_name': 'Status message',
@@ -8763,7 +8763,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Total energy',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -8787,6 +8786,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'Total energy',
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
     'original_name': 'Total energy',
@@ -8820,7 +8820,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'AC current',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -8844,6 +8843,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'AC current',
     'original_device_class': <SensorDeviceClass.CURRENT: 'current'>,
     'original_icon': None,
     'original_name': 'AC current',
@@ -8877,7 +8877,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'AC power',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -8901,6 +8900,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'AC power',
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
     'original_icon': None,
     'original_name': 'AC power',
@@ -8934,7 +8934,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'AC voltage',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -8958,6 +8957,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'AC voltage',
     'original_device_class': <SensorDeviceClass.VOLTAGE: 'voltage'>,
     'original_icon': None,
     'original_name': 'AC voltage',
@@ -8991,7 +8991,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'DC current',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -9015,6 +9014,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'DC current',
     'original_device_class': <SensorDeviceClass.CURRENT: 'current'>,
     'original_icon': None,
     'original_name': 'DC current',
@@ -9048,7 +9048,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'DC voltage',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -9072,6 +9071,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'DC voltage',
     'original_device_class': <SensorDeviceClass.VOLTAGE: 'voltage'>,
     'original_icon': None,
     'original_name': 'DC voltage',
@@ -9105,7 +9105,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Energy day',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -9129,6 +9128,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'Energy day',
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
     'original_name': 'Energy day',
@@ -9162,7 +9162,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Energy year',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -9186,6 +9185,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'Energy year',
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
     'original_name': 'Energy year',
@@ -9219,7 +9219,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Error code',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -9238,6 +9237,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Error code',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Error code',
@@ -9268,7 +9268,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Error message',
     'capabilities': dict({
       'options': list([
         'no_error',
@@ -9386,6 +9385,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Error message',
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
     'original_name': 'Error message',
@@ -9515,7 +9515,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Frequency',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -9539,6 +9538,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'Frequency',
     'original_device_class': <SensorDeviceClass.FREQUENCY: 'frequency'>,
     'original_icon': None,
     'original_name': 'Frequency',
@@ -9572,7 +9572,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'LED color',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -9591,6 +9590,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'LED color',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'LED color',
@@ -9621,7 +9621,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'LED state',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -9640,6 +9639,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'LED state',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'LED state',
@@ -9670,7 +9670,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Status code',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -9689,6 +9688,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Status code',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Status code',
@@ -9719,7 +9719,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Status message',
     'capabilities': dict({
       'options': list([
         'startup',
@@ -9749,6 +9748,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Status message',
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
     'original_name': 'Status message',
@@ -9790,7 +9790,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Total energy',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -9814,6 +9813,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'Total energy',
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
     'original_name': 'Total energy',
@@ -9847,7 +9847,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Meter location',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -9866,6 +9865,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Meter location',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Meter location',
@@ -9896,7 +9896,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Meter location description',
     'capabilities': dict({
       'options': list([
         'feed_in',
@@ -9923,6 +9922,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Meter location description',
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
     'original_name': 'Meter location description',
@@ -9961,7 +9961,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Real power',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -9985,6 +9984,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'Real power',
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
     'original_icon': None,
     'original_name': 'Real power',
@@ -10018,7 +10018,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'CO₂ factor',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -10039,6 +10038,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'CO₂ factor',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'CO₂ factor',
@@ -10071,7 +10071,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Energy day',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -10095,6 +10094,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'Energy day',
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
     'original_name': 'Energy day',
@@ -10128,7 +10128,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Energy year',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -10152,6 +10151,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'Energy year',
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
     'original_name': 'Energy year',
@@ -10185,7 +10185,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Grid export tariff',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -10206,6 +10205,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Grid export tariff',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Grid export tariff',
@@ -10238,7 +10238,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Grid import tariff',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -10259,6 +10258,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Grid import tariff',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Grid import tariff',
@@ -10291,7 +10291,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Meter mode',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -10310,6 +10309,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Meter mode',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Meter mode',
@@ -10340,7 +10340,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Power grid',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -10364,6 +10363,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'Power grid',
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
     'original_icon': None,
     'original_name': 'Power grid',
@@ -10397,7 +10397,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Power grid export',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -10421,6 +10420,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'Power grid export',
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
     'original_icon': None,
     'original_name': 'Power grid export',
@@ -10454,7 +10454,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Power grid import',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -10478,6 +10477,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'Power grid import',
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
     'original_icon': None,
     'original_name': 'Power grid import',
@@ -10511,7 +10511,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Power load',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -10535,6 +10534,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'Power load',
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
     'original_icon': None,
     'original_name': 'Power load',
@@ -10568,7 +10568,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Power load consumed',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -10592,6 +10591,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'Power load consumed',
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
     'original_icon': None,
     'original_name': 'Power load consumed',
@@ -10625,7 +10625,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Power load generated',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -10649,6 +10648,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'Power load generated',
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
     'original_icon': None,
     'original_name': 'Power load generated',
@@ -10682,7 +10682,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Power photovoltaics',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -10706,6 +10705,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'Power photovoltaics',
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
     'original_icon': None,
     'original_name': 'Power photovoltaics',
@@ -10739,7 +10739,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Relative autonomy',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -10760,6 +10759,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Relative autonomy',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Relative autonomy',
@@ -10792,7 +10792,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Relative self-consumption',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -10813,6 +10812,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Relative self-consumption',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Relative self-consumption',
@@ -10845,7 +10845,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Total energy',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -10869,6 +10868,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'Total energy',
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
     'original_name': 'Total energy',

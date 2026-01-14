@@ -88,7 +88,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Auto on/off schedule (aXFz5bJ)',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -107,6 +106,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Auto on/off schedule (aXFz5bJ)',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Auto on/off schedule (aXFz5bJ)',
@@ -124,7 +124,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Auto on/off schedule (Os2OswX)',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -143,6 +142,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Auto on/off schedule (Os2OswX)',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Auto on/off schedule (Os2OswX)',

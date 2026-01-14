@@ -138,7 +138,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Breakfast',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -157,6 +156,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Breakfast',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Breakfast',
@@ -193,7 +193,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Dessert',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -212,6 +211,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Dessert',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Dessert',
@@ -248,7 +248,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Dinner',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -267,6 +266,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Dinner',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Dinner',
@@ -303,7 +303,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Drink',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -322,6 +321,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Drink',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Drink',
@@ -358,7 +358,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Lunch',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -377,6 +376,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Lunch',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Lunch',
@@ -413,7 +413,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Side',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -432,6 +431,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Side',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Side',
@@ -468,7 +468,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Snack',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -487,6 +486,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Snack',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Snack',

@@ -4,7 +4,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Available storage',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -28,6 +27,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'Available storage',
     'original_device_class': <SensorDeviceClass.DATA_SIZE: 'data_size'>,
     'original_icon': None,
     'original_name': 'Available storage',
@@ -61,7 +61,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Correspondents',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -82,6 +81,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Correspondents',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Correspondents',
@@ -114,7 +114,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Document types',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -135,6 +134,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Document types',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Document types',
@@ -167,7 +167,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Documents in inbox',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -188,6 +187,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Documents in inbox',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Documents in inbox',
@@ -220,7 +220,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Status Celery',
     'capabilities': dict({
       'options': list([
         'ok',
@@ -245,6 +244,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Status Celery',
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
     'original_name': 'Status Celery',
@@ -281,7 +281,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Status classifier',
     'capabilities': dict({
       'options': list([
         'ok',
@@ -306,6 +305,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Status classifier',
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
     'original_name': 'Status classifier',
@@ -342,7 +342,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Status database',
     'capabilities': dict({
       'options': list([
         'ok',
@@ -367,6 +366,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Status database',
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
     'original_name': 'Status database',
@@ -403,7 +403,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Status index',
     'capabilities': dict({
       'options': list([
         'ok',
@@ -428,6 +427,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Status index',
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
     'original_name': 'Status index',
@@ -464,7 +464,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Status Redis',
     'capabilities': dict({
       'options': list([
         'ok',
@@ -489,6 +488,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Status Redis',
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
     'original_name': 'Status Redis',
@@ -525,7 +525,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Status sanity',
     'capabilities': dict({
       'options': list([
         'ok',
@@ -550,6 +549,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Status sanity',
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
     'original_name': 'Status sanity',
@@ -586,7 +586,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Tags',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -607,6 +606,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Tags',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Tags',
@@ -639,7 +639,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Total characters',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -660,6 +659,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Total characters',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Total characters',
@@ -692,7 +692,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Total documents',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -713,6 +712,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Total documents',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Total documents',
@@ -745,7 +745,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Total storage',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -769,6 +768,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'Total storage',
     'original_device_class': <SensorDeviceClass.DATA_SIZE: 'data_size'>,
     'original_icon': None,
     'original_name': 'Total storage',

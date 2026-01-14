@@ -69,7 +69,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Port 1 PoE',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -88,6 +87,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Port 1 PoE',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Port 1 PoE',
@@ -118,7 +118,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Port 2 (Renamed Port) PoE',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -137,6 +136,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Port 2 (Renamed Port) PoE',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Port 2 (Renamed Port) PoE',

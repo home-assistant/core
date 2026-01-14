@@ -4,7 +4,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Burner',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -23,6 +22,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Burner',
     'original_device_class': <BinarySensorDeviceClass.RUNNING: 'running'>,
     'original_icon': None,
     'original_name': 'Burner',
@@ -54,7 +54,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Circulation pump',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -73,6 +72,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Circulation pump',
     'original_device_class': <BinarySensorDeviceClass.RUNNING: 'running'>,
     'original_icon': None,
     'original_name': 'Circulation pump',
@@ -104,7 +104,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Circulation pump',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -123,6 +122,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Circulation pump',
     'original_device_class': <BinarySensorDeviceClass.RUNNING: 'running'>,
     'original_icon': None,
     'original_name': 'Circulation pump',
@@ -154,7 +154,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'DHW charging',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -173,6 +172,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'DHW charging',
     'original_device_class': <BinarySensorDeviceClass.RUNNING: 'running'>,
     'original_icon': None,
     'original_name': 'DHW charging',
@@ -204,7 +204,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'DHW circulation pump',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -223,6 +222,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'DHW circulation pump',
     'original_device_class': <BinarySensorDeviceClass.RUNNING: 'running'>,
     'original_icon': None,
     'original_name': 'DHW circulation pump',
@@ -254,7 +254,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'DHW pump',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -273,6 +272,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'DHW pump',
     'original_device_class': <BinarySensorDeviceClass.RUNNING: 'running'>,
     'original_icon': None,
     'original_name': 'DHW pump',
@@ -304,7 +304,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Frost protection',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -323,6 +322,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Frost protection',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Frost protection',
@@ -353,7 +353,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Frost protection',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -372,6 +371,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Frost protection',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Frost protection',
@@ -402,7 +402,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'One-time charge',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -421,6 +420,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'One-time charge',
     'original_device_class': <BinarySensorDeviceClass.RUNNING: 'running'>,
     'original_icon': None,
     'original_name': 'One-time charge',
@@ -452,7 +452,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Child safety lock',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -471,6 +470,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Child safety lock',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Child safety lock',
@@ -501,7 +501,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Identification mode',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -520,6 +519,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Identification mode',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Identification mode',
@@ -550,7 +550,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Mounting mode',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -569,6 +568,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Mounting mode',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Mounting mode',
@@ -599,7 +599,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Valve',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -618,6 +617,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Valve',
     'original_device_class': <BinarySensorDeviceClass.DOOR: 'door'>,
     'original_icon': None,
     'original_name': 'Valve',
@@ -649,7 +649,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Identification mode',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -668,6 +667,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Identification mode',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Identification mode',
@@ -698,7 +698,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Identification mode',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -717,6 +716,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Identification mode',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Identification mode',
@@ -747,7 +747,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Valve',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -766,6 +765,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Valve',
     'original_device_class': <BinarySensorDeviceClass.DOOR: 'door'>,
     'original_icon': None,
     'original_name': 'Valve',

@@ -4,7 +4,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'TX-NR7100',
     'capabilities': dict({
       'sound_mode_list': list([
         'Stereo',
@@ -32,6 +31,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'TX-NR7100',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'TX-NR7100',
@@ -82,7 +82,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'TX-NR7100 Zone 2',
     'capabilities': dict({
       'sound_mode_list': list([
         'Stereo',
@@ -109,6 +108,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'TX-NR7100 Zone 2',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'TX-NR7100 Zone 2',
@@ -150,7 +150,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'TX-NR7100 Zone 3',
     'capabilities': dict({
       'source_list': list([
         'TV',
@@ -174,6 +173,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'TX-NR7100 Zone 3',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'TX-NR7100 Zone 3',

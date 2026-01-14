@@ -4,7 +4,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Allow export',
     'capabilities': dict({
       'options': list([
         <EnergyExportMode.NEVER: 'never'>,
@@ -29,6 +28,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Allow export',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Allow export',
@@ -64,7 +64,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Operation mode',
     'capabilities': dict({
       'options': list([
         <EnergyOperationMode.AUTONOMOUS: 'autonomous'>,
@@ -89,6 +88,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Operation mode',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Operation mode',
@@ -124,7 +124,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Seat heater front left',
     'capabilities': dict({
       'options': list([
         'off',
@@ -150,6 +149,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Seat heater front left',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Seat heater front left',
@@ -186,7 +186,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Seat heater front right',
     'capabilities': dict({
       'options': list([
         'off',
@@ -212,6 +211,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Seat heater front right',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Seat heater front right',
@@ -248,7 +248,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Seat heater rear center',
     'capabilities': dict({
       'options': list([
         'off',
@@ -274,6 +273,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Seat heater rear center',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Seat heater rear center',
@@ -310,7 +310,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Seat heater rear left',
     'capabilities': dict({
       'options': list([
         'off',
@@ -336,6 +335,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Seat heater rear left',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Seat heater rear left',
@@ -372,7 +372,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Seat heater rear right',
     'capabilities': dict({
       'options': list([
         'off',
@@ -398,6 +397,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Seat heater rear right',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Seat heater rear right',
@@ -434,7 +434,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Seat heater third row left',
     'capabilities': dict({
       'options': list([
         'off',
@@ -460,6 +459,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Seat heater third row left',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Seat heater third row left',
@@ -496,7 +496,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Seat heater third row right',
     'capabilities': dict({
       'options': list([
         'off',
@@ -522,6 +521,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Seat heater third row right',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Seat heater third row right',
@@ -558,7 +558,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Steering wheel heater',
     'capabilities': dict({
       'options': list([
         'off',
@@ -583,6 +582,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Steering wheel heater',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Steering wheel heater',

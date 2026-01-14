@@ -4,7 +4,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Ambient temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -28,6 +27,7 @@
         'suggested_display_precision': 1,
       }),
     }),
+    'object_id_base': 'Ambient temperature',
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Ambient temperature',
@@ -61,7 +61,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Charge time elapsed',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -85,6 +84,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'Charge time elapsed',
     'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
     'original_icon': None,
     'original_name': 'Charge time elapsed',
@@ -118,7 +118,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Charging status',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -137,6 +136,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Charging status',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Charging status',
@@ -167,7 +167,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'IR temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -191,6 +190,7 @@
         'suggested_display_precision': 1,
       }),
     }),
+    'object_id_base': 'IR temperature',
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'IR temperature',
@@ -224,7 +224,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'RTC temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -248,6 +247,7 @@
         'suggested_display_precision': 1,
       }),
     }),
+    'object_id_base': 'RTC temperature',
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'RTC temperature',
@@ -281,7 +281,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Total energy usage',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -305,6 +304,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'Total energy usage',
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
     'original_name': 'Total energy usage',
@@ -338,7 +338,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Usage this session',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -362,6 +361,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'Usage this session',
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
     'original_name': 'Usage this session',

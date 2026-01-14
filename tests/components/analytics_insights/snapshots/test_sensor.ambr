@@ -4,7 +4,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'core_samba',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -25,6 +24,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'core_samba',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'core_samba',
@@ -57,7 +57,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'hacs (custom)',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -78,6 +77,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'hacs (custom)',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'hacs (custom)',
@@ -110,7 +110,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'myq',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -131,6 +130,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'myq',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'myq',
@@ -163,7 +163,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'spotify',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -184,6 +183,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'spotify',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'spotify',
@@ -216,7 +216,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Total active installations',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -237,6 +236,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Total active installations',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Total active installations',
@@ -269,7 +269,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Total reported integrations',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -290,6 +289,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Total reported integrations',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Total reported integrations',
@@ -322,7 +322,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'YouTube',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -343,6 +342,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'YouTube',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'YouTube',

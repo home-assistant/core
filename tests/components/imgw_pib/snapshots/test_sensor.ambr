@@ -4,7 +4,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Hydrological alert',
     'capabilities': dict({
       'options': list([
         'no_alert',
@@ -30,6 +29,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Hydrological alert',
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
     'original_name': 'Hydrological alert',
@@ -72,7 +72,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Water flow',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -96,6 +95,7 @@
         'suggested_display_precision': 1,
       }),
     }),
+    'object_id_base': 'Water flow',
     'original_device_class': <SensorDeviceClass.VOLUME_FLOW_RATE: 'volume_flow_rate'>,
     'original_icon': None,
     'original_name': 'Water flow',
@@ -130,7 +130,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Water level',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -154,6 +153,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'Water level',
     'original_device_class': <SensorDeviceClass.DISTANCE: 'distance'>,
     'original_icon': None,
     'original_name': 'Water level',
@@ -188,7 +188,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Water temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -212,6 +211,7 @@
         'suggested_display_precision': 1,
       }),
     }),
+    'object_id_base': 'Water temperature',
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Water temperature',

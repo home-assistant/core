@@ -4,7 +4,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Temperature range',
     'capabilities': dict({
       'options': list([
         'low',
@@ -28,6 +27,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Temperature range',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Temperature range',

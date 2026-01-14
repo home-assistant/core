@@ -4,7 +4,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Average noise',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -28,6 +27,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'Average noise',
     'original_device_class': <SensorDeviceClass.SOUND_PRESSURE: 'sound_pressure'>,
     'original_icon': None,
     'original_name': 'Average noise',
@@ -61,7 +61,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'BME280 humidity',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -85,6 +84,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'BME280 humidity',
     'original_device_class': <SensorDeviceClass.HUMIDITY: 'humidity'>,
     'original_icon': None,
     'original_name': 'BME280 humidity',
@@ -118,7 +118,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'BME280 pressure',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -145,6 +144,7 @@
         'suggested_unit_of_measurement': <UnitOfPressure.MMHG: 'mmHg'>,
       }),
     }),
+    'object_id_base': 'BME280 pressure',
     'original_device_class': <SensorDeviceClass.PRESSURE: 'pressure'>,
     'original_icon': None,
     'original_name': 'BME280 pressure',
@@ -178,7 +178,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'BME280 temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -202,6 +201,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'BME280 temperature',
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'BME280 temperature',
@@ -235,7 +235,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Maximum noise',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -259,6 +258,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'Maximum noise',
     'original_device_class': <SensorDeviceClass.SOUND_PRESSURE: 'sound_pressure'>,
     'original_icon': None,
     'original_name': 'Maximum noise',
@@ -292,7 +292,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'PM10',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -316,6 +315,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'PM10',
     'original_device_class': <SensorDeviceClass.PM10: 'pm10'>,
     'original_icon': None,
     'original_name': 'PM10',
@@ -349,7 +349,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'PM2.5',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -373,6 +372,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'PM2.5',
     'original_device_class': <SensorDeviceClass.PM25: 'pm25'>,
     'original_icon': None,
     'original_name': 'PM2.5',
@@ -406,7 +406,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Radiation level',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -430,6 +429,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'Radiation level',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Radiation level',
@@ -462,7 +462,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Signal strength',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -486,6 +485,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'Signal strength',
     'original_device_class': <SensorDeviceClass.SIGNAL_STRENGTH: 'signal_strength'>,
     'original_icon': None,
     'original_name': 'Signal strength',

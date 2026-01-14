@@ -4,7 +4,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Ceiling fan',
     'capabilities': dict({
       'preset_modes': None,
     }),
@@ -25,6 +24,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Ceiling fan',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Ceiling fan',

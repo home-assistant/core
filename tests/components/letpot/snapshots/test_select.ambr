@@ -4,7 +4,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Light brightness',
     'capabilities': dict({
       'options': list([
         'low',
@@ -28,6 +27,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Light brightness',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Light brightness',
@@ -62,7 +62,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Light mode',
     'capabilities': dict({
       'options': list([
         'flower',
@@ -86,6 +85,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Light mode',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Light mode',
@@ -120,7 +120,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Light mode',
     'capabilities': dict({
       'options': list([
         'flower',
@@ -144,6 +143,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Light mode',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Light mode',
@@ -178,7 +178,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Temperature unit on display',
     'capabilities': dict({
       'options': list([
         'fahrenheit',
@@ -202,6 +201,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Temperature unit on display',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Temperature unit on display',

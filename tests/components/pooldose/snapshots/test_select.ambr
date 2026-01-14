@@ -4,7 +4,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Chlorine dosing method',
     'capabilities': dict({
       'options': list([
         'off',
@@ -30,6 +29,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Chlorine dosing method',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Chlorine dosing method',
@@ -66,7 +66,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Chlorine dosing set',
     'capabilities': dict({
       'options': list([
         'low',
@@ -90,6 +89,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Chlorine dosing set',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Chlorine dosing set',
@@ -124,7 +124,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Flow rate unit',
     'capabilities': dict({
       'options': list([
         <UnitOfVolumeFlowRate.CUBIC_METERS_PER_HOUR: 'm³/h'>,
@@ -148,6 +147,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Flow rate unit',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Flow rate unit',
@@ -182,7 +182,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'ORP dosing method',
     'capabilities': dict({
       'options': list([
         'off',
@@ -208,6 +207,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'ORP dosing method',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'ORP dosing method',
@@ -244,7 +244,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'ORP dosing set',
     'capabilities': dict({
       'options': list([
         'low',
@@ -268,6 +267,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'ORP dosing set',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'ORP dosing set',
@@ -302,7 +302,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'pH dosing method',
     'capabilities': dict({
       'options': list([
         'off',
@@ -328,6 +327,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'pH dosing method',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'pH dosing method',
@@ -364,7 +364,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'pH dosing set',
     'capabilities': dict({
       'options': list([
         'alcalyne',
@@ -388,6 +387,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'pH dosing set',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'pH dosing set',
@@ -422,7 +422,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Water meter unit',
     'capabilities': dict({
       'options': list([
         <UnitOfVolume.LITERS: 'L'>,
@@ -446,6 +445,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Water meter unit',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Water meter unit',

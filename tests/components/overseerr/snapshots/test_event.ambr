@@ -4,7 +4,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Last media event',
     'capabilities': dict({
       'event_types': list([
         'pending',
@@ -32,6 +31,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Last media event',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Last media event',

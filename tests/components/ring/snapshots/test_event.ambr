@@ -4,7 +4,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Ding',
     'capabilities': dict({
       'event_types': list([
         'ding',
@@ -27,6 +26,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Ding',
     'original_device_class': <EventDeviceClass.DOORBELL: 'doorbell'>,
     'original_icon': None,
     'original_name': 'Ding',
@@ -63,7 +63,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Motion',
     'capabilities': dict({
       'event_types': list([
         'motion',
@@ -86,6 +85,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Motion',
     'original_device_class': <EventDeviceClass.MOTION: 'motion'>,
     'original_icon': None,
     'original_name': 'Motion',
@@ -122,7 +122,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Motion',
     'capabilities': dict({
       'event_types': list([
         'motion',
@@ -145,6 +144,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Motion',
     'original_device_class': <EventDeviceClass.MOTION: 'motion'>,
     'original_icon': None,
     'original_name': 'Motion',
@@ -181,7 +181,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Ding',
     'capabilities': dict({
       'event_types': list([
         'ding',
@@ -204,6 +203,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Ding',
     'original_device_class': <EventDeviceClass.DOORBELL: 'doorbell'>,
     'original_icon': None,
     'original_name': 'Ding',
@@ -240,7 +240,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Intercom unlock',
     'capabilities': dict({
       'event_types': list([
         'intercom_unlock',
@@ -263,6 +262,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Intercom unlock',
     'original_device_class': <EventDeviceClass.BUTTON: 'button'>,
     'original_icon': None,
     'original_name': 'Intercom unlock',
@@ -299,7 +299,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Motion',
     'capabilities': dict({
       'event_types': list([
         'motion',
@@ -322,6 +321,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Motion',
     'original_device_class': <EventDeviceClass.MOTION: 'motion'>,
     'original_icon': None,
     'original_name': 'Motion',

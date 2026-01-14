@@ -4,7 +4,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': None,
     'capabilities': dict({
       'preset_modes': None,
     }),
@@ -25,6 +24,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': None,
     'original_device_class': None,
     'original_icon': None,
     'original_name': None,
@@ -60,7 +60,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'my_fan_0',
     'capabilities': dict({
       'preset_modes': None,
     }),
@@ -81,6 +80,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'my_fan_0',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'my_fan_0',
@@ -116,7 +116,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'my_fan_1',
     'capabilities': dict({
       'preset_modes': None,
     }),
@@ -137,6 +136,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'my_fan_1',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'my_fan_1',

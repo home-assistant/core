@@ -4,7 +4,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Gateway mode',
     'capabilities': dict({
       'options': list([
         'away',
@@ -29,6 +28,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Gateway mode',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Gateway mode',
@@ -64,7 +64,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Regulation mode',
     'capabilities': dict({
       'options': list([
         'bleeding_cold',
@@ -91,6 +90,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Regulation mode',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Regulation mode',
@@ -128,7 +128,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Thermostat schedule',
     'capabilities': dict({
       'options': list([
         'Badkamer',
@@ -155,6 +154,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Thermostat schedule',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Thermostat schedule',
@@ -192,7 +192,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Zone profile',
     'capabilities': dict({
       'options': list([
         'active',
@@ -217,6 +216,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Zone profile',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Zone profile',
@@ -252,7 +252,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Thermostat schedule',
     'capabilities': dict({
       'options': list([
         'Badkamer',
@@ -279,6 +278,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Thermostat schedule',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Thermostat schedule',
@@ -316,7 +316,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Zone profile',
     'capabilities': dict({
       'options': list([
         'active',
@@ -341,6 +340,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Zone profile',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Zone profile',
@@ -376,7 +376,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Thermostat schedule',
     'capabilities': dict({
       'options': list([
         'CV Roan',
@@ -404,6 +403,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Thermostat schedule',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Thermostat schedule',
@@ -442,7 +442,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Thermostat schedule',
     'capabilities': dict({
       'options': list([
         'CV Roan',
@@ -470,6 +469,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Thermostat schedule',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Thermostat schedule',
@@ -508,7 +508,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Thermostat schedule',
     'capabilities': dict({
       'options': list([
         'CV Roan',
@@ -536,6 +535,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Thermostat schedule',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Thermostat schedule',
@@ -574,7 +574,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Thermostat schedule',
     'capabilities': dict({
       'options': list([
         'CV Roan',
@@ -602,6 +601,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Thermostat schedule',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Thermostat schedule',

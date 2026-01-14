@@ -4,7 +4,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Channel 1',
     'capabilities': dict({
       'effect_list': list([
         'daycl_mode',
@@ -30,6 +29,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Channel 1',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Channel 1',
@@ -70,7 +70,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Channel 0',
     'capabilities': dict({
       'effect_list': list([
         'daycl_mode',
@@ -96,6 +95,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Channel 0',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Channel 0',
@@ -136,7 +136,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Channel 1',
     'capabilities': dict({
       'effect_list': list([
         'daycl_mode',
@@ -162,6 +161,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Channel 1',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Channel 1',
@@ -202,7 +202,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Channel 0',
     'capabilities': dict({
       'effect_list': list([
         'daycl_mode',
@@ -228,6 +227,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Channel 0',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Channel 0',
@@ -268,7 +268,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Channel 1',
     'capabilities': dict({
       'effect_list': list([
         'daycl_mode',
@@ -294,6 +293,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Channel 1',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Channel 1',

@@ -4,7 +4,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'CPU usage',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -25,6 +24,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'CPU usage',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'CPU usage',
@@ -57,7 +57,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Device status',
     'capabilities': dict({
       'options': list([
         'disconnected',
@@ -86,6 +85,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Device status',
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
     'original_name': 'Device status',
@@ -126,7 +126,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Memory usage',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -147,6 +146,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Memory usage',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Memory usage',
@@ -179,7 +179,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'CPU usage',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -200,6 +199,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'CPU usage',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'CPU usage',
@@ -232,7 +232,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Device status',
     'capabilities': dict({
       'options': list([
         'disconnected',
@@ -261,6 +260,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Device status',
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
     'original_name': 'Device status',
@@ -301,7 +301,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Memory usage',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -322,6 +321,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Memory usage',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Memory usage',

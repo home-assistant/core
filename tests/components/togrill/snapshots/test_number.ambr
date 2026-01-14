@@ -4,7 +4,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Alarm interval',
     'capabilities': dict({
       'max': 15,
       'min': 0,
@@ -28,6 +27,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Alarm interval',
     'original_device_class': <NumberDeviceClass.DURATION: 'duration'>,
     'original_icon': None,
     'original_name': 'Alarm interval',
@@ -64,7 +64,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Maximum temperature',
     'capabilities': dict({
       'max': 250,
       'min': 0,
@@ -88,6 +87,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Maximum temperature',
     'original_device_class': <NumberDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': 'mdi:thermometer-chevron-up',
     'original_name': 'Maximum temperature',
@@ -125,7 +125,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Minimum temperature',
     'capabilities': dict({
       'max': 250,
       'min': 0,
@@ -149,6 +148,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Minimum temperature',
     'original_device_class': <NumberDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': 'mdi:thermometer-chevron-down',
     'original_name': 'Minimum temperature',
@@ -186,7 +186,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Target temperature',
     'capabilities': dict({
       'max': 250,
       'min': 0,
@@ -210,6 +209,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Target temperature',
     'original_device_class': <NumberDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': 'mdi:thermometer-check',
     'original_name': 'Target temperature',
@@ -247,7 +247,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Maximum temperature',
     'capabilities': dict({
       'max': 250,
       'min': 0,
@@ -271,6 +270,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Maximum temperature',
     'original_device_class': <NumberDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': 'mdi:thermometer-chevron-up',
     'original_name': 'Maximum temperature',
@@ -308,7 +308,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Minimum temperature',
     'capabilities': dict({
       'max': 250,
       'min': 0,
@@ -332,6 +331,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Minimum temperature',
     'original_device_class': <NumberDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': 'mdi:thermometer-chevron-down',
     'original_name': 'Minimum temperature',
@@ -369,7 +369,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Target temperature',
     'capabilities': dict({
       'max': 250,
       'min': 0,
@@ -393,6 +392,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Target temperature',
     'original_device_class': <NumberDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': 'mdi:thermometer-check',
     'original_name': 'Target temperature',
@@ -430,7 +430,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Alarm interval',
     'capabilities': dict({
       'max': 15,
       'min': 0,
@@ -454,6 +453,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Alarm interval',
     'original_device_class': <NumberDeviceClass.DURATION: 'duration'>,
     'original_icon': None,
     'original_name': 'Alarm interval',
@@ -490,7 +490,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Maximum temperature',
     'capabilities': dict({
       'max': 250,
       'min': 0,
@@ -514,6 +513,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Maximum temperature',
     'original_device_class': <NumberDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': 'mdi:thermometer-chevron-up',
     'original_name': 'Maximum temperature',
@@ -551,7 +551,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Minimum temperature',
     'capabilities': dict({
       'max': 250,
       'min': 0,
@@ -575,6 +574,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Minimum temperature',
     'original_device_class': <NumberDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': 'mdi:thermometer-chevron-down',
     'original_name': 'Minimum temperature',
@@ -612,7 +612,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Target temperature',
     'capabilities': dict({
       'max': 250,
       'min': 0,
@@ -636,6 +635,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Target temperature',
     'original_device_class': <NumberDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': 'mdi:thermometer-check',
     'original_name': 'Target temperature',
@@ -673,7 +673,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Maximum temperature',
     'capabilities': dict({
       'max': 250,
       'min': 0,
@@ -697,6 +696,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Maximum temperature',
     'original_device_class': <NumberDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': 'mdi:thermometer-chevron-up',
     'original_name': 'Maximum temperature',
@@ -734,7 +734,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Minimum temperature',
     'capabilities': dict({
       'max': 250,
       'min': 0,
@@ -758,6 +757,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Minimum temperature',
     'original_device_class': <NumberDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': 'mdi:thermometer-chevron-down',
     'original_name': 'Minimum temperature',
@@ -795,7 +795,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Target temperature',
     'capabilities': dict({
       'max': 250,
       'min': 0,
@@ -819,6 +818,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Target temperature',
     'original_device_class': <NumberDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': 'mdi:thermometer-check',
     'original_name': 'Target temperature',

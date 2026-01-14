@@ -4,7 +4,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Plaato Plaatodevicetype.Airlock Device_Name Alcohol By Volume',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -23,6 +22,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Plaato Plaatodevicetype.Airlock Device_Name Alcohol By Volume',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Plaato Plaatodevicetype.Airlock Device_Name Alcohol By Volume',
@@ -54,7 +54,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Plaato Plaatodevicetype.Airlock Device_Name Batch Volume',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -73,6 +72,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Plaato Plaatodevicetype.Airlock Device_Name Batch Volume',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Plaato Plaatodevicetype.Airlock Device_Name Batch Volume',
@@ -103,7 +103,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Plaato Plaatodevicetype.Airlock Device_Name Bubbles',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -122,6 +121,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Plaato Plaatodevicetype.Airlock Device_Name Bubbles',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Plaato Plaatodevicetype.Airlock Device_Name Bubbles',
@@ -153,7 +153,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Plaato Plaatodevicetype.Airlock Device_Name Bubbles Per Minute',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -172,6 +171,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Plaato Plaatodevicetype.Airlock Device_Name Bubbles Per Minute',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Plaato Plaatodevicetype.Airlock Device_Name Bubbles Per Minute',
@@ -203,7 +203,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Plaato Plaatodevicetype.Airlock Device_Name Co2 Volume',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -222,6 +221,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Plaato Plaatodevicetype.Airlock Device_Name Co2 Volume',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Plaato Plaatodevicetype.Airlock Device_Name Co2 Volume',
@@ -252,7 +252,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Plaato Plaatodevicetype.Airlock Device_Name Original Gravity',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -271,6 +270,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Plaato Plaatodevicetype.Airlock Device_Name Original Gravity',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Plaato Plaatodevicetype.Airlock Device_Name Original Gravity',
@@ -302,7 +302,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Plaato Plaatodevicetype.Airlock Device_Name Specific Gravity',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -321,6 +320,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Plaato Plaatodevicetype.Airlock Device_Name Specific Gravity',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Plaato Plaatodevicetype.Airlock Device_Name Specific Gravity',
@@ -352,7 +352,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Plaato Plaatodevicetype.Airlock Device_Name Temperature',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -371,6 +370,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Plaato Plaatodevicetype.Airlock Device_Name Temperature',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Plaato Plaatodevicetype.Airlock Device_Name Temperature',
@@ -401,7 +401,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Plaato Plaatodevicetype.Keg Device_Name Beer Left',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -420,6 +419,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Plaato Plaatodevicetype.Keg Device_Name Beer Left',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Plaato Plaatodevicetype.Keg Device_Name Beer Left',
@@ -453,7 +453,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Plaato Plaatodevicetype.Keg Device_Name Last Pour Amount',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -472,6 +471,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Plaato Plaatodevicetype.Keg Device_Name Last Pour Amount',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Plaato Plaatodevicetype.Keg Device_Name Last Pour Amount',
@@ -506,7 +506,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Plaato Plaatodevicetype.Keg Device_Name Percent Beer Left',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -525,6 +524,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Plaato Plaatodevicetype.Keg Device_Name Percent Beer Left',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Plaato Plaatodevicetype.Keg Device_Name Percent Beer Left',
@@ -559,7 +559,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Plaato Plaatodevicetype.Keg Device_Name Temperature',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -581,6 +580,7 @@
         'suggested_display_precision': 1,
       }),
     }),
+    'object_id_base': 'Plaato Plaatodevicetype.Keg Device_Name Temperature',
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Plaato Plaatodevicetype.Keg Device_Name Temperature',

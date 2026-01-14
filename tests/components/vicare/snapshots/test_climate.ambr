@@ -4,7 +4,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Heating',
     'capabilities': dict({
       'hvac_modes': list([
       ]),
@@ -35,6 +34,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Heating',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Heating',
@@ -90,7 +90,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Heating',
     'capabilities': dict({
       'hvac_modes': list([
       ]),
@@ -121,6 +120,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Heating',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Heating',

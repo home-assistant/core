@@ -4,7 +4,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Evening Run Completion Time',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -23,6 +22,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Evening Run Completion Time',
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
     'original_icon': None,
     'original_name': 'Evening Run Completion Time',
@@ -54,7 +54,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Flower Box Run Completion Time',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -73,6 +72,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Flower Box Run Completion Time',
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
     'original_icon': None,
     'original_name': 'Flower Box Run Completion Time',
@@ -104,7 +104,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Landscaping Run Completion Time',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -123,6 +122,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Landscaping Run Completion Time',
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
     'original_icon': None,
     'original_name': 'Landscaping Run Completion Time',
@@ -154,7 +154,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Morning Run Completion Time',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -173,6 +172,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Morning Run Completion Time',
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
     'original_icon': None,
     'original_name': 'Morning Run Completion Time',
@@ -204,7 +204,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Rain sensor rain start',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -223,6 +222,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Rain sensor rain start',
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
     'original_icon': 'mdi:weather-pouring',
     'original_name': 'Rain sensor rain start',
@@ -255,7 +255,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'TEST Run Completion Time',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -274,6 +273,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'TEST Run Completion Time',
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
     'original_icon': None,
     'original_name': 'TEST Run Completion Time',
@@ -305,7 +305,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Zone 10 Run Completion Time',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -324,6 +323,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Zone 10 Run Completion Time',
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
     'original_icon': None,
     'original_name': 'Zone 10 Run Completion Time',
@@ -355,7 +355,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Zone 11 Run Completion Time',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -374,6 +373,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Zone 11 Run Completion Time',
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
     'original_icon': None,
     'original_name': 'Zone 11 Run Completion Time',
@@ -405,7 +405,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Zone 12 Run Completion Time',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -424,6 +423,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Zone 12 Run Completion Time',
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
     'original_icon': None,
     'original_name': 'Zone 12 Run Completion Time',
@@ -455,7 +455,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Zone 4 Run Completion Time',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -474,6 +473,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Zone 4 Run Completion Time',
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
     'original_icon': None,
     'original_name': 'Zone 4 Run Completion Time',
@@ -505,7 +505,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Zone 5 Run Completion Time',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -524,6 +523,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Zone 5 Run Completion Time',
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
     'original_icon': None,
     'original_name': 'Zone 5 Run Completion Time',
@@ -555,7 +555,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Zone 6 Run Completion Time',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -574,6 +573,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Zone 6 Run Completion Time',
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
     'original_icon': None,
     'original_name': 'Zone 6 Run Completion Time',
@@ -605,7 +605,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Zone 7 Run Completion Time',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -624,6 +623,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Zone 7 Run Completion Time',
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
     'original_icon': None,
     'original_name': 'Zone 7 Run Completion Time',
@@ -655,7 +655,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Zone 8 Run Completion Time',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -674,6 +673,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Zone 8 Run Completion Time',
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
     'original_icon': None,
     'original_name': 'Zone 8 Run Completion Time',
@@ -705,7 +705,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Zone 9 Run Completion Time',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -724,6 +723,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Zone 9 Run Completion Time',
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
     'original_icon': None,
     'original_name': 'Zone 9 Run Completion Time',

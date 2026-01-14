@@ -4,7 +4,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Build up index',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -25,6 +24,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Build up index',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Build up index',
@@ -57,7 +57,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Drought code',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -78,6 +77,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Drought code',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Drought code',
@@ -110,7 +110,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Duff moisture code',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -131,6 +130,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Duff moisture code',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Duff moisture code',
@@ -163,7 +163,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Fine fuel moisture code',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -184,6 +183,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Fine fuel moisture code',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Fine fuel moisture code',
@@ -216,7 +216,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Fire weather index',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -237,6 +236,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Fire weather index',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Fire weather index',
@@ -269,7 +269,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Frozen precipitation',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -288,6 +287,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Frozen precipitation',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Frozen precipitation',
@@ -320,7 +320,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Fuel drying',
     'capabilities': dict({
       'options': list([
         'very_wet',
@@ -348,6 +347,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Fuel drying',
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
     'original_name': 'Fuel drying',
@@ -388,7 +388,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'FWI index',
     'capabilities': dict({
       'options': list([
         'very_low',
@@ -416,6 +415,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'FWI index',
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
     'original_name': 'FWI index',
@@ -456,7 +456,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'High cloud coverage',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -475,6 +474,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'High cloud coverage',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'High cloud coverage',
@@ -507,7 +507,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Highest grass fire risk',
     'capabilities': dict({
       'options': list([
         'snow_cover',
@@ -535,6 +534,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Highest grass fire risk',
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
     'original_name': 'Highest grass fire risk',
@@ -575,7 +575,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Initial spread index',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -596,6 +595,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Initial spread index',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Initial spread index',
@@ -628,7 +628,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Low cloud coverage',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -647,6 +646,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Low cloud coverage',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Low cloud coverage',
@@ -679,7 +679,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Medium cloud coverage',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -698,6 +697,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Medium cloud coverage',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Medium cloud coverage',
@@ -730,7 +730,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Potential rate of spread',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -754,6 +753,7 @@
         'suggested_display_precision': 1,
       }),
     }),
+    'object_id_base': 'Potential rate of spread',
     'original_device_class': <SensorDeviceClass.SPEED: 'speed'>,
     'original_icon': None,
     'original_name': 'Potential rate of spread',
@@ -788,7 +788,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Precipitation category',
     'capabilities': dict({
       'options': list([
         '0',
@@ -817,6 +816,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Precipitation category',
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
     'original_name': 'Precipitation category',
@@ -858,7 +858,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Thunder probability',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -877,6 +876,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Thunder probability',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Thunder probability',
@@ -909,7 +909,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Total cloud coverage',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -928,6 +927,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Total cloud coverage',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Total cloud coverage',

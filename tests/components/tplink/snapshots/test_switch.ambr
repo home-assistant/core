@@ -39,7 +39,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -58,6 +57,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': None,
     'original_device_class': None,
     'original_icon': None,
     'original_name': None,
@@ -88,7 +88,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Auto-off enabled',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -107,6 +106,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Auto-off enabled',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Auto-off enabled',
@@ -137,7 +137,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Auto-update enabled',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -156,6 +155,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Auto-update enabled',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Auto-update enabled',
@@ -186,7 +186,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Baby cry detection',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -205,6 +204,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Baby cry detection',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Baby cry detection',
@@ -235,7 +235,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Carpet boost',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -254,6 +253,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Carpet boost',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Carpet boost',
@@ -284,7 +284,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Child lock',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -303,6 +302,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Child lock',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Child lock',
@@ -333,7 +333,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Fan sleep mode',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -352,6 +351,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Fan sleep mode',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Fan sleep mode',
@@ -382,7 +382,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'LED',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -401,6 +400,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'LED',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'LED',
@@ -431,7 +431,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Motion detection',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -450,6 +449,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Motion detection',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Motion detection',
@@ -480,7 +480,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Motion sensor',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -499,6 +498,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Motion sensor',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Motion sensor',
@@ -529,7 +529,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Person detection',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -548,6 +547,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Person detection',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Person detection',
@@ -578,7 +578,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Smooth transitions',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -597,6 +596,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Smooth transitions',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Smooth transitions',
@@ -627,7 +627,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Tamper detection',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -646,6 +645,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Tamper detection',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Tamper detection',

@@ -4,7 +4,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Domestic hot water',
     'capabilities': dict({
       'max_temp': 60,
       'min_temp': 10,
@@ -26,6 +25,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Domestic hot water',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Domestic hot water',
@@ -63,7 +63,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Domestic hot water',
     'capabilities': dict({
       'max_temp': 60,
       'min_temp': 10,
@@ -85,6 +84,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Domestic hot water',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Domestic hot water',

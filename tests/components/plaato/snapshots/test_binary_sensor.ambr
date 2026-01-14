@@ -4,7 +4,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Plaato Plaatodevicetype.Keg Device_Name Leaking',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -23,6 +22,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Plaato Plaatodevicetype.Keg Device_Name Leaking',
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
     'original_icon': None,
     'original_name': 'Plaato Plaatodevicetype.Keg Device_Name Leaking',
@@ -57,7 +57,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Plaato Plaatodevicetype.Keg Device_Name Pouring',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -76,6 +75,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Plaato Plaatodevicetype.Keg Device_Name Pouring',
     'original_device_class': <BinarySensorDeviceClass.OPENING: 'opening'>,
     'original_icon': None,
     'original_name': 'Plaato Plaatodevicetype.Keg Device_Name Pouring',

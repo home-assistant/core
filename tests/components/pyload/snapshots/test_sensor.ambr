@@ -4,7 +4,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Active downloads',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -25,6 +24,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Active downloads',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Active downloads',
@@ -57,7 +57,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Downloads in queue',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -78,6 +77,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Downloads in queue',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Downloads in queue',
@@ -110,7 +110,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Free space',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -135,6 +134,7 @@
         'suggested_unit_of_measurement': <UnitOfInformation.GIBIBYTES: 'GiB'>,
       }),
     }),
+    'object_id_base': 'Free space',
     'original_device_class': <SensorDeviceClass.DATA_SIZE: 'data_size'>,
     'original_icon': None,
     'original_name': 'Free space',
@@ -167,7 +167,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Speed',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -192,6 +191,7 @@
         'suggested_unit_of_measurement': <UnitOfDataRate.MEGABITS_PER_SECOND: 'Mbit/s'>,
       }),
     }),
+    'object_id_base': 'Speed',
     'original_device_class': <SensorDeviceClass.DATA_RATE: 'data_rate'>,
     'original_icon': None,
     'original_name': 'Speed',
@@ -224,7 +224,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Total downloads',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -245,6 +244,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Total downloads',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Total downloads',
@@ -277,7 +277,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Active downloads',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -298,6 +297,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Active downloads',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Active downloads',
@@ -330,7 +330,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Downloads in queue',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -351,6 +350,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Downloads in queue',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Downloads in queue',
@@ -383,7 +383,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Free space',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -408,6 +407,7 @@
         'suggested_unit_of_measurement': <UnitOfInformation.GIBIBYTES: 'GiB'>,
       }),
     }),
+    'object_id_base': 'Free space',
     'original_device_class': <SensorDeviceClass.DATA_SIZE: 'data_size'>,
     'original_icon': None,
     'original_name': 'Free space',
@@ -440,7 +440,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Speed',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -465,6 +464,7 @@
         'suggested_unit_of_measurement': <UnitOfDataRate.MEGABITS_PER_SECOND: 'Mbit/s'>,
       }),
     }),
+    'object_id_base': 'Speed',
     'original_device_class': <SensorDeviceClass.DATA_RATE: 'data_rate'>,
     'original_icon': None,
     'original_name': 'Speed',
@@ -497,7 +497,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Total downloads',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -518,6 +517,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Total downloads',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Total downloads',
@@ -550,7 +550,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Active downloads',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -571,6 +570,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Active downloads',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Active downloads',
@@ -603,7 +603,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Downloads in queue',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -624,6 +623,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Downloads in queue',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Downloads in queue',
@@ -656,7 +656,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Free space',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -681,6 +680,7 @@
         'suggested_unit_of_measurement': <UnitOfInformation.GIBIBYTES: 'GiB'>,
       }),
     }),
+    'object_id_base': 'Free space',
     'original_device_class': <SensorDeviceClass.DATA_SIZE: 'data_size'>,
     'original_icon': None,
     'original_name': 'Free space',
@@ -713,7 +713,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Speed',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -738,6 +737,7 @@
         'suggested_unit_of_measurement': <UnitOfDataRate.MEGABITS_PER_SECOND: 'Mbit/s'>,
       }),
     }),
+    'object_id_base': 'Speed',
     'original_device_class': <SensorDeviceClass.DATA_RATE: 'data_rate'>,
     'original_icon': None,
     'original_name': 'Speed',
@@ -770,7 +770,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Total downloads',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -791,6 +790,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Total downloads',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Total downloads',
@@ -823,7 +823,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Active downloads',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -844,6 +843,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Active downloads',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Active downloads',
@@ -876,7 +876,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Downloads in queue',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -897,6 +896,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Downloads in queue',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Downloads in queue',
@@ -929,7 +929,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Free space',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -954,6 +953,7 @@
         'suggested_unit_of_measurement': <UnitOfInformation.GIBIBYTES: 'GiB'>,
       }),
     }),
+    'object_id_base': 'Free space',
     'original_device_class': <SensorDeviceClass.DATA_SIZE: 'data_size'>,
     'original_icon': None,
     'original_name': 'Free space',
@@ -986,7 +986,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Speed',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1011,6 +1010,7 @@
         'suggested_unit_of_measurement': <UnitOfDataRate.MEGABITS_PER_SECOND: 'Mbit/s'>,
       }),
     }),
+    'object_id_base': 'Speed',
     'original_device_class': <SensorDeviceClass.DATA_RATE: 'data_rate'>,
     'original_icon': None,
     'original_name': 'Speed',
@@ -1043,7 +1043,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Total downloads',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1064,6 +1063,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Total downloads',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Total downloads',

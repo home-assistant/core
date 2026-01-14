@@ -4,7 +4,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Last job',
     'capabilities': dict({
       'event_types': list([
         'finished',
@@ -29,6 +28,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Last job',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Last job',

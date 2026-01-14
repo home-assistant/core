@@ -20,7 +20,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Battery',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -44,6 +43,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'Battery',
     'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
     'original_icon': None,
     'original_name': 'Battery',
@@ -112,7 +112,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Battery voltage',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -139,6 +138,7 @@
         'suggested_unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
       }),
     }),
+    'object_id_base': 'Battery voltage',
     'original_device_class': <SensorDeviceClass.VOLTAGE: 'voltage'>,
     'original_icon': None,
     'original_name': 'Battery voltage',
@@ -207,7 +207,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Charging current',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -234,6 +233,7 @@
         'suggested_unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
       }),
     }),
+    'object_id_base': 'Charging current',
     'original_device_class': <SensorDeviceClass.CURRENT: 'current'>,
     'original_icon': None,
     'original_name': 'Charging current',
@@ -302,7 +302,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Charging power',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -326,6 +325,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'Charging power',
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
     'original_icon': None,
     'original_name': 'Charging power',
@@ -394,7 +394,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Charging voltage',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -421,6 +420,7 @@
         'suggested_unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
       }),
     }),
+    'object_id_base': 'Charging voltage',
     'original_device_class': <SensorDeviceClass.VOLTAGE: 'voltage'>,
     'original_icon': None,
     'original_name': 'Charging voltage',

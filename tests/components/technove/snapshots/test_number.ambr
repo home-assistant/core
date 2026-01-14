@@ -4,7 +4,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Maximum current',
     'capabilities': dict({
       'max': 32,
       'min': 8,
@@ -28,6 +27,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Maximum current',
     'original_device_class': <NumberDeviceClass.CURRENT: 'current'>,
     'original_icon': None,
     'original_name': 'Maximum current',

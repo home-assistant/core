@@ -4,7 +4,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'fake_name',
     'capabilities': dict({
       'max_color_temp_kelvin': 6500,
       'max_mireds': 370,
@@ -32,6 +31,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'fake_name',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'fake_name',
@@ -88,7 +88,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'fake_name',
     'capabilities': dict({
       'max_color_temp_kelvin': 6500,
       'max_mireds': 370,
@@ -116,6 +115,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'fake_name',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'fake_name',
@@ -172,7 +172,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'fake_name',
     'capabilities': dict({
       'supported_color_modes': list([
         <ColorMode.BRIGHTNESS: 'brightness'>,
@@ -195,6 +194,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'fake_name',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'fake_name',
@@ -231,7 +231,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'fake_name',
     'capabilities': dict({
       'supported_color_modes': list([
         <ColorMode.ONOFF: 'onoff'>,
@@ -254,6 +253,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'fake_name',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'fake_name',

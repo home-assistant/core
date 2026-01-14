@@ -4,7 +4,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Fan',
     'capabilities': dict({
     }),
     'config_entry_id': <ANY>,
@@ -24,6 +23,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Fan',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Fan',
@@ -55,7 +55,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Fan',
     'capabilities': dict({
     }),
     'config_entry_id': <ANY>,
@@ -75,6 +74,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Fan',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Fan',
@@ -106,7 +106,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Fan',
     'capabilities': dict({
       'preset_modes': None,
     }),
@@ -127,6 +126,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Fan',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Fan',
@@ -162,7 +162,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Fan',
     'capabilities': dict({
       'preset_modes': None,
     }),
@@ -183,6 +182,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Fan',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Fan',

@@ -4,7 +4,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Kitchen Light',
     'capabilities': dict({
       'event_types': list([
         'upper',
@@ -29,6 +28,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Kitchen Light',
     'original_device_class': <EventDeviceClass.BUTTON: 'button'>,
     'original_icon': None,
     'original_name': 'Kitchen Light',
@@ -66,7 +66,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Switch 2',
     'capabilities': dict({
       'event_types': list([
         'upper',
@@ -91,6 +90,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Switch 2',
     'original_device_class': <EventDeviceClass.BUTTON: 'button'>,
     'original_icon': None,
     'original_name': 'Switch 2',
@@ -128,7 +128,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Up/down remote',
     'capabilities': dict({
       'event_types': list([
         'released',
@@ -160,6 +159,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Up/down remote',
     'original_device_class': <EventDeviceClass.BUTTON: 'button'>,
     'original_icon': None,
     'original_name': 'Up/down remote',

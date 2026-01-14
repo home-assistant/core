@@ -4,7 +4,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Filter cycle 2 enabled',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -23,6 +22,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Filter cycle 2 enabled',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Filter cycle 2 enabled',

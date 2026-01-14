@@ -4,7 +4,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Battery voltage',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -28,6 +27,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'Battery voltage',
     'original_device_class': <SensorDeviceClass.VOLTAGE: 'voltage'>,
     'original_icon': None,
     'original_name': 'Battery voltage',
@@ -61,7 +61,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Controller temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -85,6 +84,7 @@
         'suggested_display_precision': 1,
       }),
     }),
+    'object_id_base': 'Controller temperature',
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Controller temperature',
@@ -118,7 +118,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Device IP address',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -137,6 +136,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Device IP address',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Device IP address',
@@ -167,7 +167,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Engine compartment temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -191,6 +190,7 @@
         'suggested_display_precision': 1,
       }),
     }),
+    'object_id_base': 'Engine compartment temperature',
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Engine compartment temperature',
@@ -224,7 +224,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Engine coolant temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -248,6 +247,7 @@
         'suggested_display_precision': 1,
       }),
     }),
+    'object_id_base': 'Engine coolant temperature',
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Engine coolant temperature',
@@ -281,7 +281,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Engine frequency',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -305,6 +304,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'Engine frequency',
     'original_device_class': <SensorDeviceClass.FREQUENCY: 'frequency'>,
     'original_icon': None,
     'original_name': 'Engine frequency',
@@ -338,7 +338,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Engine oil pressure',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -365,6 +364,7 @@
         'suggested_unit_of_measurement': <UnitOfPressure.KPA: 'kPa'>,
       }),
     }),
+    'object_id_base': 'Engine oil pressure',
     'original_device_class': <SensorDeviceClass.PRESSURE: 'pressure'>,
     'original_icon': None,
     'original_name': 'Engine oil pressure',
@@ -398,7 +398,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Engine speed',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -419,6 +418,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Engine speed',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Engine speed',
@@ -451,7 +451,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Engine state',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -470,6 +469,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Engine state',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Engine state',
@@ -500,7 +500,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Generator load',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -524,6 +523,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'Generator load',
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
     'original_icon': None,
     'original_name': 'Generator load',
@@ -557,7 +557,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Generator load percentage',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -578,6 +577,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Generator load percentage',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Generator load percentage',
@@ -610,7 +610,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Generator status',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -629,6 +628,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Generator status',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Generator status',
@@ -659,7 +659,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Last exercise',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -678,6 +677,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Last exercise',
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
     'original_icon': None,
     'original_name': 'Last exercise',
@@ -709,7 +709,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Last maintainance',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -728,6 +727,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Last maintainance',
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
     'original_icon': None,
     'original_name': 'Last maintainance',
@@ -759,7 +759,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Last run',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -778,6 +777,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Last run',
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
     'original_icon': None,
     'original_name': 'Last run',
@@ -809,7 +809,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Lube oil temperature',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -833,6 +832,7 @@
         'suggested_display_precision': 1,
       }),
     }),
+    'object_id_base': 'Lube oil temperature',
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Lube oil temperature',
@@ -866,7 +866,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Next exercise',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -885,6 +884,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Next exercise',
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
     'original_icon': None,
     'original_name': 'Next exercise',
@@ -916,7 +916,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Next maintainance',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -935,6 +934,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Next maintainance',
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
     'original_icon': None,
     'original_name': 'Next maintainance',
@@ -966,7 +966,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Power source',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -985,6 +984,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Power source',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Power source',
@@ -1015,7 +1015,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Runtime since last maintenance',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1039,6 +1038,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'Runtime since last maintenance',
     'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
     'original_icon': None,
     'original_name': 'Runtime since last maintenance',
@@ -1072,7 +1072,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Server IP address',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1091,6 +1090,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Server IP address',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Server IP address',
@@ -1121,7 +1121,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Total operation',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1145,6 +1144,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'Total operation',
     'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
     'original_icon': None,
     'original_name': 'Total operation',
@@ -1178,7 +1178,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Total runtime',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1202,6 +1201,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'Total runtime',
     'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
     'original_icon': None,
     'original_name': 'Total runtime',
@@ -1235,7 +1235,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Utility voltage',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1259,6 +1258,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'Utility voltage',
     'original_device_class': <SensorDeviceClass.VOLTAGE: 'voltage'>,
     'original_icon': None,
     'original_name': 'Utility voltage',
@@ -1292,7 +1292,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Voltage',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1316,6 +1315,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'Voltage',
     'original_device_class': <SensorDeviceClass.VOLTAGE: 'voltage'>,
     'original_icon': None,
     'original_name': 'Voltage',

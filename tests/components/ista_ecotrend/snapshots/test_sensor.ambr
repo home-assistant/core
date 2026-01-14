@@ -4,7 +4,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Heating',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -28,6 +27,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'Heating',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Heating',
@@ -60,7 +60,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Heating cost',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -84,6 +83,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'Heating cost',
     'original_device_class': <SensorDeviceClass.MONETARY: 'monetary'>,
     'original_icon': None,
     'original_name': 'Heating cost',
@@ -117,7 +117,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Heating energy',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -141,6 +140,7 @@
         'suggested_display_precision': 1,
       }),
     }),
+    'object_id_base': 'Heating energy',
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
     'original_name': 'Heating energy',
@@ -174,7 +174,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Hot water',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -198,6 +197,7 @@
         'suggested_display_precision': 1,
       }),
     }),
+    'object_id_base': 'Hot water',
     'original_device_class': <SensorDeviceClass.WATER: 'water'>,
     'original_icon': None,
     'original_name': 'Hot water',
@@ -231,7 +231,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Hot water cost',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -255,6 +254,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'Hot water cost',
     'original_device_class': <SensorDeviceClass.MONETARY: 'monetary'>,
     'original_icon': None,
     'original_name': 'Hot water cost',
@@ -288,7 +288,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Hot water energy',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -312,6 +311,7 @@
         'suggested_display_precision': 1,
       }),
     }),
+    'object_id_base': 'Hot water energy',
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
     'original_name': 'Hot water energy',
@@ -345,7 +345,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Water',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -369,6 +368,7 @@
         'suggested_display_precision': 1,
       }),
     }),
+    'object_id_base': 'Water',
     'original_device_class': <SensorDeviceClass.WATER: 'water'>,
     'original_icon': None,
     'original_name': 'Water',
@@ -402,7 +402,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Water cost',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -426,6 +425,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'Water cost',
     'original_device_class': <SensorDeviceClass.MONETARY: 'monetary'>,
     'original_icon': None,
     'original_name': 'Water cost',
@@ -459,7 +459,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Heating',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -483,6 +482,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'Heating',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Heating',
@@ -515,7 +515,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Heating cost',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -539,6 +538,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'Heating cost',
     'original_device_class': <SensorDeviceClass.MONETARY: 'monetary'>,
     'original_icon': None,
     'original_name': 'Heating cost',
@@ -572,7 +572,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Heating energy',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -596,6 +595,7 @@
         'suggested_display_precision': 1,
       }),
     }),
+    'object_id_base': 'Heating energy',
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
     'original_name': 'Heating energy',
@@ -629,7 +629,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Hot water',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -653,6 +652,7 @@
         'suggested_display_precision': 1,
       }),
     }),
+    'object_id_base': 'Hot water',
     'original_device_class': <SensorDeviceClass.WATER: 'water'>,
     'original_icon': None,
     'original_name': 'Hot water',
@@ -686,7 +686,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Hot water cost',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -710,6 +709,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'Hot water cost',
     'original_device_class': <SensorDeviceClass.MONETARY: 'monetary'>,
     'original_icon': None,
     'original_name': 'Hot water cost',
@@ -743,7 +743,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Hot water energy',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -767,6 +766,7 @@
         'suggested_display_precision': 1,
       }),
     }),
+    'object_id_base': 'Hot water energy',
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
     'original_name': 'Hot water energy',
@@ -800,7 +800,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Water',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -824,6 +823,7 @@
         'suggested_display_precision': 1,
       }),
     }),
+    'object_id_base': 'Water',
     'original_device_class': <SensorDeviceClass.WATER: 'water'>,
     'original_icon': None,
     'original_name': 'Water',
@@ -857,7 +857,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Water cost',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
@@ -881,6 +880,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'Water cost',
     'original_device_class': <SensorDeviceClass.MONETARY: 'monetary'>,
     'original_icon': None,
     'original_name': 'Water cost',

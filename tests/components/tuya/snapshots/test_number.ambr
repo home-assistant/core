@@ -4,7 +4,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Alarm duration',
     'capabilities': dict({
       'max': 60.0,
       'min': 1.0,
@@ -28,6 +27,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Alarm duration',
     'original_device_class': <NumberDeviceClass.DURATION: 'duration'>,
     'original_icon': None,
     'original_name': 'Alarm duration',
@@ -64,7 +64,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Volume',
     'capabilities': dict({
       'max': 100.0,
       'min': 5.0,
@@ -88,6 +87,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Volume',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Volume',
@@ -123,7 +123,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Temperature correction',
     'capabilities': dict({
       'max': 9.9,
       'min': -9.9,
@@ -147,6 +146,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Temperature correction',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Temperature correction',
@@ -182,7 +182,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Volume',
     'capabilities': dict({
       'max': 10.0,
       'min': 1.0,
@@ -206,6 +205,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Volume',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Volume',
@@ -241,7 +241,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Feed',
     'capabilities': dict({
       'max': 50.0,
       'min': 1.0,
@@ -265,6 +264,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Feed',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Feed',
@@ -300,7 +300,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Voice times',
     'capabilities': dict({
       'max': 5.0,
       'min': 0.0,
@@ -324,6 +323,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Voice times',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Voice times',
@@ -359,7 +359,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Battery backup reserve',
     'capabilities': dict({
       'max': 100.0,
       'min': 0.0,
@@ -383,6 +382,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Battery backup reserve',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Battery backup reserve',
@@ -418,7 +418,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Inverter output power limit',
     'capabilities': dict({
       'max': 100000.0,
       'min': 0.0,
@@ -442,6 +441,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Inverter output power limit',
     'original_device_class': <NumberDeviceClass.POWER: 'power'>,
     'original_icon': None,
     'original_name': 'Inverter output power limit',
@@ -478,7 +478,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Feed',
     'capabilities': dict({
       'max': 20.0,
       'min': 1.0,
@@ -502,6 +501,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Feed',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Feed',
@@ -537,7 +537,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Cooking temperature',
     'capabilities': dict({
       'max': 300.0,
       'min': -30.0,
@@ -561,6 +560,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Cooking temperature',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Cooking temperature',
@@ -596,7 +596,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Cooking temperature 2',
     'capabilities': dict({
       'max': 300.0,
       'min': -30.0,
@@ -620,6 +619,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Cooking temperature 2',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Cooking temperature 2',
@@ -655,7 +655,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Temperature',
     'capabilities': dict({
       'max': 75.0,
       'min': 15.0,
@@ -679,6 +678,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Temperature',
     'original_device_class': <NumberDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Temperature',
@@ -715,7 +715,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Alarm maximum',
     'capabilities': dict({
       'max': 100.0,
       'min': 0.0,
@@ -739,6 +738,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Alarm maximum',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Alarm maximum',
@@ -774,7 +774,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Alarm minimum',
     'capabilities': dict({
       'max': 100.0,
       'min': 0.0,
@@ -798,6 +797,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Alarm minimum',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Alarm minimum',
@@ -833,7 +833,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Installation height',
     'capabilities': dict({
       'max': 2.5,
       'min': 0.2,
@@ -857,6 +856,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Installation height',
     'original_device_class': <NumberDeviceClass.DISTANCE: 'distance'>,
     'original_icon': None,
     'original_name': 'Installation height',
@@ -893,7 +893,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Maximum liquid depth',
     'capabilities': dict({
       'max': 2.4,
       'min': 0.1,
@@ -917,6 +916,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Maximum liquid depth',
     'original_device_class': <NumberDeviceClass.DISTANCE: 'distance'>,
     'original_icon': None,
     'original_name': 'Maximum liquid depth',
@@ -953,7 +953,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Far detection',
     'capabilities': dict({
       'max': 1000.0,
       'min': 0.0,
@@ -977,6 +976,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Far detection',
     'original_device_class': <NumberDeviceClass.DISTANCE: 'distance'>,
     'original_icon': None,
     'original_name': 'Far detection',
@@ -1013,7 +1013,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Near detection',
     'capabilities': dict({
       'max': 1000.0,
       'min': 0.0,
@@ -1037,6 +1036,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Near detection',
     'original_device_class': <NumberDeviceClass.DISTANCE: 'distance'>,
     'original_icon': None,
     'original_name': 'Near detection',
@@ -1073,7 +1073,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Sensitivity',
     'capabilities': dict({
       'max': 10.0,
       'min': 0.0,
@@ -1097,6 +1096,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Sensitivity',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Sensitivity',
@@ -1132,7 +1132,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Irrigation duration 1',
     'capabilities': dict({
       'max': 1439.0,
       'min': 1.0,
@@ -1156,6 +1155,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Irrigation duration 1',
     'original_device_class': <NumberDeviceClass.DURATION: 'duration'>,
     'original_icon': None,
     'original_name': 'Irrigation duration 1',
@@ -1192,7 +1192,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Irrigation duration 2',
     'capabilities': dict({
       'max': 1439.0,
       'min': 1.0,
@@ -1216,6 +1215,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Irrigation duration 2',
     'original_device_class': <NumberDeviceClass.DURATION: 'duration'>,
     'original_icon': None,
     'original_name': 'Irrigation duration 2',
@@ -1252,7 +1252,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Irrigation duration 3',
     'capabilities': dict({
       'max': 1439.0,
       'min': 1.0,
@@ -1276,6 +1275,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Irrigation duration 3',
     'original_device_class': <NumberDeviceClass.DURATION: 'duration'>,
     'original_icon': None,
     'original_name': 'Irrigation duration 3',
@@ -1312,7 +1312,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Irrigation duration 4',
     'capabilities': dict({
       'max': 1439.0,
       'min': 1.0,
@@ -1336,6 +1335,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Irrigation duration 4',
     'original_device_class': <NumberDeviceClass.DURATION: 'duration'>,
     'original_icon': None,
     'original_name': 'Irrigation duration 4',
@@ -1372,7 +1372,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Irrigation duration 5',
     'capabilities': dict({
       'max': 1439.0,
       'min': 1.0,
@@ -1396,6 +1395,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Irrigation duration 5',
     'original_device_class': <NumberDeviceClass.DURATION: 'duration'>,
     'original_icon': None,
     'original_name': 'Irrigation duration 5',
@@ -1432,7 +1432,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Irrigation duration 6',
     'capabilities': dict({
       'max': 1439.0,
       'min': 1.0,
@@ -1456,6 +1455,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Irrigation duration 6',
     'original_device_class': <NumberDeviceClass.DURATION: 'duration'>,
     'original_icon': None,
     'original_name': 'Irrigation duration 6',
@@ -1492,7 +1492,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Irrigation duration 7',
     'capabilities': dict({
       'max': 1439.0,
       'min': 1.0,
@@ -1516,6 +1515,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Irrigation duration 7',
     'original_device_class': <NumberDeviceClass.DURATION: 'duration'>,
     'original_icon': None,
     'original_name': 'Irrigation duration 7',
@@ -1552,7 +1552,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Irrigation duration 8',
     'capabilities': dict({
       'max': 1439.0,
       'min': 1.0,
@@ -1576,6 +1575,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Irrigation duration 8',
     'original_device_class': <NumberDeviceClass.DURATION: 'duration'>,
     'original_icon': None,
     'original_name': 'Irrigation duration 8',
@@ -1612,7 +1612,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Temperature correction',
     'capabilities': dict({
       'max': 9.0,
       'min': -9.0,
@@ -1636,6 +1635,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Temperature correction',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Temperature correction',
@@ -1671,7 +1671,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Delay clean time',
     'capabilities': dict({
       'max': 600.0,
       'min': 0.0,
@@ -1695,6 +1694,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Delay clean time',
     'original_device_class': <NumberDeviceClass.DURATION: 'duration'>,
     'original_icon': None,
     'original_name': 'Delay clean time',
@@ -1731,7 +1731,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Volume',
     'capabilities': dict({
       'max': 100.0,
       'min': 1.0,
@@ -1755,6 +1754,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Volume',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Volume',
@@ -1790,7 +1790,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Alarm delay',
     'capabilities': dict({
       'max': 999.0,
       'min': 0.0,
@@ -1814,6 +1813,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Alarm delay',
     'original_device_class': <NumberDeviceClass.DURATION: 'duration'>,
     'original_icon': None,
     'original_name': 'Alarm delay',
@@ -1850,7 +1850,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Arm delay',
     'capabilities': dict({
       'max': 999.0,
       'min': 0.0,
@@ -1874,6 +1873,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Arm delay',
     'original_device_class': <NumberDeviceClass.DURATION: 'duration'>,
     'original_icon': None,
     'original_name': 'Arm delay',
@@ -1910,7 +1910,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Siren duration',
     'capabilities': dict({
       'max': 999.0,
       'min': 0.0,
@@ -1934,6 +1933,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Siren duration',
     'original_device_class': <NumberDeviceClass.DURATION: 'duration'>,
     'original_icon': None,
     'original_name': 'Siren duration',
@@ -1970,7 +1970,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Delay clean time',
     'capabilities': dict({
       'max': 600.0,
       'min': 1.0,
@@ -1994,6 +1993,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Delay clean time',
     'original_device_class': <NumberDeviceClass.DURATION: 'duration'>,
     'original_icon': None,
     'original_name': 'Delay clean time',
@@ -2030,7 +2030,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Alarm maximum',
     'capabilities': dict({
       'max': 100.0,
       'min': 0.0,
@@ -2054,6 +2053,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Alarm maximum',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Alarm maximum',
@@ -2089,7 +2089,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Alarm minimum',
     'capabilities': dict({
       'max': 100.0,
       'min': 0.0,
@@ -2113,6 +2112,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Alarm minimum',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Alarm minimum',
@@ -2148,7 +2148,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Installation height',
     'capabilities': dict({
       'max': 3.0,
       'min': 0.1,
@@ -2172,6 +2171,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Installation height',
     'original_device_class': <NumberDeviceClass.DISTANCE: 'distance'>,
     'original_icon': None,
     'original_name': 'Installation height',
@@ -2208,7 +2208,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Maximum liquid depth',
     'capabilities': dict({
       'max': 2.7,
       'min': 0.1,
@@ -2232,6 +2231,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Maximum liquid depth',
     'original_device_class': <NumberDeviceClass.DISTANCE: 'distance'>,
     'original_icon': None,
     'original_name': 'Maximum liquid depth',
@@ -2268,7 +2268,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Time',
     'capabilities': dict({
       'max': 10.0,
       'min': 1.0,
@@ -2292,6 +2291,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Time',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Time',
@@ -2327,7 +2327,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Time',
     'capabilities': dict({
       'max': 30.0,
       'min': 1.0,
@@ -2351,6 +2350,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Time',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Time',
@@ -2386,7 +2386,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Temperature correction',
     'capabilities': dict({
       'max': 9.0,
       'min': -9.0,
@@ -2410,6 +2409,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Temperature correction',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Temperature correction',
@@ -2445,7 +2445,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Volume',
     'capabilities': dict({
       'max': 100.0,
       'min': 0.0,
@@ -2469,6 +2468,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Volume',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Volume',
@@ -2504,7 +2504,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Cooking temperature',
     'capabilities': dict({
       'max': 92.5,
       'min': 25.0,
@@ -2528,6 +2527,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Cooking temperature',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Cooking temperature',
@@ -2563,7 +2563,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Cooking time',
     'capabilities': dict({
       'max': 5999.0,
       'min': 1.0,
@@ -2587,6 +2586,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Cooking time',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Cooking time',
@@ -2622,7 +2622,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Volume',
     'capabilities': dict({
       'max': 100.0,
       'min': 0.0,
@@ -2646,6 +2645,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Volume',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Volume',
@@ -2681,7 +2681,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Volume',
     'capabilities': dict({
       'max': 100.0,
       'min': 0.0,
@@ -2705,6 +2704,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Volume',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Volume',
@@ -2740,7 +2740,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Temperature correction',
     'capabilities': dict({
       'max': 9.9,
       'min': -9.9,
@@ -2764,6 +2763,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Temperature correction',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Temperature correction',

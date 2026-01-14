@@ -4,7 +4,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Displayed temperature',
     'capabilities': dict({
       'options': list([
         'target',
@@ -28,6 +27,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Displayed temperature',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Displayed temperature',
@@ -62,7 +62,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Repeater mode',
     'capabilities': dict({
       'options': list([
         'off',
@@ -87,6 +86,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Repeater mode',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Repeater mode',

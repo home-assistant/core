@@ -4,7 +4,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Switch 1',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -23,6 +22,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Switch 1',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Switch 1',
@@ -56,7 +56,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'wd_client_1',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -75,6 +74,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'wd_client_1',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'wd_client_1',
@@ -108,7 +108,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'ws_client_1',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -127,6 +126,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'ws_client_1',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'ws_client_1',

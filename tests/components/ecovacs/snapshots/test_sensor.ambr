@@ -4,7 +4,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Battery',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -23,6 +22,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Battery',
     'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
     'original_icon': 'mdi:battery-unknown',
     'original_name': 'Battery',
@@ -56,7 +56,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Filter lifespan',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -75,6 +74,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Filter lifespan',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Filter lifespan',
@@ -106,7 +106,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Main brush lifespan',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -125,6 +124,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Main brush lifespan',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Main brush lifespan',
@@ -156,7 +156,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Side brush lifespan',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -175,6 +174,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Side brush lifespan',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Side brush lifespan',
@@ -214,7 +214,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Area cleaned',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -239,6 +238,7 @@
         'suggested_unit_of_measurement': <UnitOfArea.SQUARE_METERS: 'm²'>,
       }),
     }),
+    'object_id_base': 'Area cleaned',
     'original_device_class': <SensorDeviceClass.AREA: 'area'>,
     'original_icon': None,
     'original_name': 'Area cleaned',
@@ -271,7 +271,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Battery',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -290,6 +289,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Battery',
     'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
     'original_icon': None,
     'original_name': 'Battery',
@@ -322,7 +322,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Blade lifespan',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -341,6 +340,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Blade lifespan',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Blade lifespan',
@@ -372,7 +372,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Cleaning duration',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -397,6 +396,7 @@
         'suggested_unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
       }),
     }),
+    'object_id_base': 'Cleaning duration',
     'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
     'original_icon': None,
     'original_name': 'Cleaning duration',
@@ -429,7 +429,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Error',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -448,6 +447,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Error',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Error',
@@ -479,7 +479,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'IP address',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -498,6 +497,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'IP address',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'IP address',
@@ -528,7 +528,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Lens brush lifespan',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -547,6 +546,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Lens brush lifespan',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Lens brush lifespan',
@@ -578,7 +578,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Total area cleaned',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -602,6 +601,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'Total area cleaned',
     'original_device_class': <SensorDeviceClass.AREA: 'area'>,
     'original_icon': None,
     'original_name': 'Total area cleaned',
@@ -635,7 +635,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Total cleaning duration',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -662,6 +661,7 @@
         'suggested_unit_of_measurement': <UnitOfTime.HOURS: 'h'>,
       }),
     }),
+    'object_id_base': 'Total cleaning duration',
     'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
     'original_icon': None,
     'original_name': 'Total cleaning duration',
@@ -695,7 +695,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Total cleanings',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -716,6 +715,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Total cleanings',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Total cleanings',
@@ -747,7 +747,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Wi-Fi RSSI',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -766,6 +765,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Wi-Fi RSSI',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Wi-Fi RSSI',
@@ -796,7 +796,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Wi-Fi SSID',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -815,6 +814,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Wi-Fi SSID',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Wi-Fi SSID',
@@ -845,7 +845,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Area cleaned',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -870,6 +869,7 @@
         'suggested_unit_of_measurement': <UnitOfArea.SQUARE_METERS: 'm²'>,
       }),
     }),
+    'object_id_base': 'Area cleaned',
     'original_device_class': <SensorDeviceClass.AREA: 'area'>,
     'original_icon': None,
     'original_name': 'Area cleaned',
@@ -902,7 +902,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Battery',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -921,6 +920,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Battery',
     'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
     'original_icon': None,
     'original_name': 'Battery',
@@ -953,7 +953,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Cleaning duration',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -978,6 +977,7 @@
         'suggested_unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
       }),
     }),
+    'object_id_base': 'Cleaning duration',
     'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
     'original_icon': None,
     'original_name': 'Cleaning duration',
@@ -1010,7 +1010,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Error',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1029,6 +1028,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Error',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Error',
@@ -1060,7 +1060,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Filter lifespan',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1079,6 +1078,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Filter lifespan',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Filter lifespan',
@@ -1110,7 +1110,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'IP address',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1129,6 +1128,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'IP address',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'IP address',
@@ -1159,7 +1159,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Main brush lifespan',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1178,6 +1177,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Main brush lifespan',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Main brush lifespan',
@@ -1209,7 +1209,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Round mop lifespan',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1228,6 +1227,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Round mop lifespan',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Round mop lifespan',
@@ -1259,7 +1259,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Side brush lifespan',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1278,6 +1277,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Side brush lifespan',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Side brush lifespan',
@@ -1309,7 +1309,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Station state',
     'capabilities': dict({
       'options': list([
         'idle',
@@ -1335,6 +1334,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Station state',
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
     'original_name': 'Station state',
@@ -1372,7 +1372,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Total area cleaned',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -1396,6 +1395,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'Total area cleaned',
     'original_device_class': <SensorDeviceClass.AREA: 'area'>,
     'original_icon': None,
     'original_name': 'Total area cleaned',
@@ -1429,7 +1429,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Total cleaning duration',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -1456,6 +1455,7 @@
         'suggested_unit_of_measurement': <UnitOfTime.HOURS: 'h'>,
       }),
     }),
+    'object_id_base': 'Total cleaning duration',
     'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
     'original_icon': None,
     'original_name': 'Total cleaning duration',
@@ -1489,7 +1489,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Total cleanings',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -1510,6 +1509,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Total cleanings',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Total cleanings',
@@ -1541,7 +1541,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Unit care lifespan',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1560,6 +1559,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Unit care lifespan',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Unit care lifespan',
@@ -1591,7 +1591,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Wi-Fi RSSI',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1610,6 +1609,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Wi-Fi RSSI',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Wi-Fi RSSI',
@@ -1640,7 +1640,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Wi-Fi SSID',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1659,6 +1658,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Wi-Fi SSID',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Wi-Fi SSID',
@@ -1689,7 +1689,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Area cleaned',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1714,6 +1713,7 @@
         'suggested_unit_of_measurement': <UnitOfArea.SQUARE_METERS: 'm²'>,
       }),
     }),
+    'object_id_base': 'Area cleaned',
     'original_device_class': <SensorDeviceClass.AREA: 'area'>,
     'original_icon': None,
     'original_name': 'Area cleaned',
@@ -1746,7 +1746,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Battery',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1765,6 +1764,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Battery',
     'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
     'original_icon': None,
     'original_name': 'Battery',
@@ -1797,7 +1797,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Cleaning duration',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1822,6 +1821,7 @@
         'suggested_unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
       }),
     }),
+    'object_id_base': 'Cleaning duration',
     'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
     'original_icon': None,
     'original_name': 'Cleaning duration',
@@ -1854,7 +1854,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Error',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1873,6 +1872,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Error',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Error',
@@ -1904,7 +1904,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Filter lifespan',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1923,6 +1922,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Filter lifespan',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Filter lifespan',
@@ -1954,7 +1954,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'IP address',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1973,6 +1972,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'IP address',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'IP address',
@@ -2003,7 +2003,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Main brush lifespan',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2022,6 +2021,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Main brush lifespan',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Main brush lifespan',
@@ -2053,7 +2053,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Side brush lifespan',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2072,6 +2071,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Side brush lifespan',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Side brush lifespan',
@@ -2103,7 +2103,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Total area cleaned',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -2127,6 +2126,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'Total area cleaned',
     'original_device_class': <SensorDeviceClass.AREA: 'area'>,
     'original_icon': None,
     'original_name': 'Total area cleaned',
@@ -2160,7 +2160,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Total cleaning duration',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -2187,6 +2186,7 @@
         'suggested_unit_of_measurement': <UnitOfTime.HOURS: 'h'>,
       }),
     }),
+    'object_id_base': 'Total cleaning duration',
     'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
     'original_icon': None,
     'original_name': 'Total cleaning duration',
@@ -2220,7 +2220,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Total cleanings',
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
@@ -2241,6 +2240,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Total cleanings',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Total cleanings',
@@ -2272,7 +2272,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Wi-Fi RSSI',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2291,6 +2290,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Wi-Fi RSSI',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Wi-Fi RSSI',
@@ -2321,7 +2321,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Wi-Fi SSID',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2340,6 +2339,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Wi-Fi SSID',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Wi-Fi SSID',

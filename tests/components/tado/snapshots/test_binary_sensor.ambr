@@ -4,7 +4,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Connectivity',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -23,6 +22,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Connectivity',
     'original_device_class': <BinarySensorDeviceClass.CONNECTIVITY: 'connectivity'>,
     'original_icon': None,
     'original_name': 'Connectivity',
@@ -54,7 +54,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Overlay',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -73,6 +72,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Overlay',
     'original_device_class': <BinarySensorDeviceClass.POWER: 'power'>,
     'original_icon': None,
     'original_name': 'Overlay',
@@ -105,7 +105,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Power',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -124,6 +123,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Power',
     'original_device_class': <BinarySensorDeviceClass.POWER: 'power'>,
     'original_icon': None,
     'original_name': 'Power',
@@ -155,7 +155,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Window',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -174,6 +173,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Window',
     'original_device_class': <BinarySensorDeviceClass.WINDOW: 'window'>,
     'original_icon': None,
     'original_name': 'Window',
@@ -205,7 +205,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Connectivity',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -224,6 +223,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Connectivity',
     'original_device_class': <BinarySensorDeviceClass.CONNECTIVITY: 'connectivity'>,
     'original_icon': None,
     'original_name': 'Connectivity',
@@ -255,7 +255,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Overlay',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -274,6 +273,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Overlay',
     'original_device_class': <BinarySensorDeviceClass.POWER: 'power'>,
     'original_icon': None,
     'original_name': 'Overlay',
@@ -306,7 +306,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Power',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -325,6 +324,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Power',
     'original_device_class': <BinarySensorDeviceClass.POWER: 'power'>,
     'original_icon': None,
     'original_name': 'Power',
@@ -356,7 +356,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Window',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -375,6 +374,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Window',
     'original_device_class': <BinarySensorDeviceClass.WINDOW: 'window'>,
     'original_icon': None,
     'original_name': 'Window',
@@ -406,7 +406,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Connectivity',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -425,6 +424,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Connectivity',
     'original_device_class': <BinarySensorDeviceClass.CONNECTIVITY: 'connectivity'>,
     'original_icon': None,
     'original_name': 'Connectivity',
@@ -456,7 +456,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Overlay',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -475,6 +474,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Overlay',
     'original_device_class': <BinarySensorDeviceClass.POWER: 'power'>,
     'original_icon': None,
     'original_name': 'Overlay',
@@ -506,7 +506,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Power',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -525,6 +524,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Power',
     'original_device_class': <BinarySensorDeviceClass.POWER: 'power'>,
     'original_icon': None,
     'original_name': 'Power',
@@ -556,7 +556,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Window',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -575,6 +574,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Window',
     'original_device_class': <BinarySensorDeviceClass.WINDOW: 'window'>,
     'original_icon': None,
     'original_name': 'Window',
@@ -606,7 +606,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Connectivity',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -625,6 +624,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Connectivity',
     'original_device_class': <BinarySensorDeviceClass.CONNECTIVITY: 'connectivity'>,
     'original_icon': None,
     'original_name': 'Connectivity',
@@ -656,7 +656,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Early start',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -675,6 +674,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Early start',
     'original_device_class': <BinarySensorDeviceClass.POWER: 'power'>,
     'original_icon': None,
     'original_name': 'Early start',
@@ -706,7 +706,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Overlay',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -725,6 +724,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Overlay',
     'original_device_class': <BinarySensorDeviceClass.POWER: 'power'>,
     'original_icon': None,
     'original_name': 'Overlay',
@@ -757,7 +757,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Power',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -776,6 +775,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Power',
     'original_device_class': <BinarySensorDeviceClass.POWER: 'power'>,
     'original_icon': None,
     'original_name': 'Power',
@@ -807,7 +807,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Window',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -826,6 +825,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Window',
     'original_device_class': <BinarySensorDeviceClass.WINDOW: 'window'>,
     'original_icon': None,
     'original_name': 'Window',
@@ -857,7 +857,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Connectivity',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -876,6 +875,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Connectivity',
     'original_device_class': <BinarySensorDeviceClass.CONNECTIVITY: 'connectivity'>,
     'original_icon': None,
     'original_name': 'Connectivity',
@@ -907,7 +907,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Overlay',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -926,6 +925,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Overlay',
     'original_device_class': <BinarySensorDeviceClass.POWER: 'power'>,
     'original_icon': None,
     'original_name': 'Overlay',
@@ -958,7 +958,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Power',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -977,6 +976,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Power',
     'original_device_class': <BinarySensorDeviceClass.POWER: 'power'>,
     'original_icon': None,
     'original_name': 'Power',
@@ -1008,7 +1008,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Connectivity',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1027,6 +1026,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Connectivity',
     'original_device_class': <BinarySensorDeviceClass.CONNECTIVITY: 'connectivity'>,
     'original_icon': None,
     'original_name': 'Connectivity',
@@ -1058,7 +1058,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Overlay',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1077,6 +1076,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Overlay',
     'original_device_class': <BinarySensorDeviceClass.POWER: 'power'>,
     'original_icon': None,
     'original_name': 'Overlay',
@@ -1108,7 +1108,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Power',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1127,6 +1126,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Power',
     'original_device_class': <BinarySensorDeviceClass.POWER: 'power'>,
     'original_icon': None,
     'original_name': 'Power',
@@ -1158,7 +1158,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Connection state',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1177,6 +1176,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Connection state',
     'original_device_class': <BinarySensorDeviceClass.CONNECTIVITY: 'connectivity'>,
     'original_icon': None,
     'original_name': 'Connection state',
@@ -1208,7 +1208,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Connection state',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1227,6 +1226,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Connection state',
     'original_device_class': <BinarySensorDeviceClass.CONNECTIVITY: 'connectivity'>,
     'original_icon': None,
     'original_name': 'Connection state',

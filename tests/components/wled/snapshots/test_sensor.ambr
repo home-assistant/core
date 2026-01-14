@@ -4,7 +4,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Estimated current',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -28,6 +27,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'Estimated current',
     'original_device_class': <SensorDeviceClass.CURRENT: 'current'>,
     'original_icon': None,
     'original_name': 'Estimated current',
@@ -61,7 +61,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Free memory',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -85,6 +84,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'Free memory',
     'original_device_class': <SensorDeviceClass.DATA_SIZE: 'data_size'>,
     'original_icon': None,
     'original_name': 'Free memory',
@@ -118,7 +118,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'IP',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -137,6 +136,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'IP',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'IP',
@@ -167,7 +167,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'LED count',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -186,6 +185,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'LED count',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'LED count',
@@ -216,7 +216,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Max current',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -238,6 +237,7 @@
         'suggested_display_precision': 0,
       }),
     }),
+    'object_id_base': 'Max current',
     'original_device_class': <SensorDeviceClass.CURRENT: 'current'>,
     'original_icon': None,
     'original_name': 'Max current',
@@ -270,7 +270,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Uptime',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -289,6 +288,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Uptime',
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
     'original_icon': None,
     'original_name': 'Uptime',
@@ -320,7 +320,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Wi-Fi BSSID',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -339,6 +338,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Wi-Fi BSSID',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Wi-Fi BSSID',
@@ -369,7 +369,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Wi-Fi channel',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -388,6 +387,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Wi-Fi channel',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Wi-Fi channel',
@@ -418,7 +418,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Wi-Fi RSSI',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -439,6 +438,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Wi-Fi RSSI',
     'original_device_class': <SensorDeviceClass.SIGNAL_STRENGTH: 'signal_strength'>,
     'original_icon': None,
     'original_name': 'Wi-Fi RSSI',
@@ -472,7 +472,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Wi-Fi signal',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -493,6 +492,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Wi-Fi signal',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Wi-Fi signal',

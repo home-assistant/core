@@ -4,7 +4,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Curtain',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -23,6 +22,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Curtain',
     'original_device_class': <CoverDeviceClass.CURTAIN: 'curtain'>,
     'original_icon': None,
     'original_name': 'Curtain',
@@ -56,7 +56,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Curtain',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -75,6 +74,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Curtain',
     'original_device_class': <CoverDeviceClass.CURTAIN: 'curtain'>,
     'original_icon': None,
     'original_name': 'Curtain',
@@ -108,7 +108,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Curtain',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -127,6 +126,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Curtain',
     'original_device_class': <CoverDeviceClass.CURTAIN: 'curtain'>,
     'original_icon': None,
     'original_name': 'Curtain',
@@ -160,7 +160,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Curtain',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -179,6 +178,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Curtain',
     'original_device_class': <CoverDeviceClass.CURTAIN: 'curtain'>,
     'original_icon': None,
     'original_name': 'Curtain',
@@ -211,7 +211,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Curtain',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -230,6 +229,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Curtain',
     'original_device_class': <CoverDeviceClass.CURTAIN: 'curtain'>,
     'original_icon': None,
     'original_name': 'Curtain',
@@ -263,7 +263,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Door 1',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -282,6 +281,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Door 1',
     'original_device_class': <CoverDeviceClass.GARAGE: 'garage'>,
     'original_icon': None,
     'original_name': 'Door 1',
@@ -314,7 +314,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Curtain',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -333,6 +332,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Curtain',
     'original_device_class': <CoverDeviceClass.CURTAIN: 'curtain'>,
     'original_icon': None,
     'original_name': 'Curtain',
@@ -365,7 +365,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Blind',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -384,6 +383,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Blind',
     'original_device_class': <CoverDeviceClass.BLIND: 'blind'>,
     'original_icon': None,
     'original_name': 'Blind',
@@ -417,7 +417,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Curtain',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -436,6 +435,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Curtain',
     'original_device_class': <CoverDeviceClass.CURTAIN: 'curtain'>,
     'original_icon': None,
     'original_name': 'Curtain',
@@ -469,7 +469,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Curtain',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -488,6 +487,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Curtain',
     'original_device_class': <CoverDeviceClass.CURTAIN: 'curtain'>,
     'original_icon': None,
     'original_name': 'Curtain',
@@ -521,7 +521,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Curtain',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -540,6 +539,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Curtain',
     'original_device_class': <CoverDeviceClass.CURTAIN: 'curtain'>,
     'original_icon': None,
     'original_name': 'Curtain',
@@ -573,7 +573,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Curtain',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -592,6 +591,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Curtain',
     'original_device_class': <CoverDeviceClass.CURTAIN: 'curtain'>,
     'original_icon': None,
     'original_name': 'Curtain',
@@ -625,7 +625,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Curtain',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -644,6 +643,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Curtain',
     'original_device_class': <CoverDeviceClass.CURTAIN: 'curtain'>,
     'original_icon': None,
     'original_name': 'Curtain',
@@ -677,7 +677,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Curtain',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -696,6 +695,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Curtain',
     'original_device_class': <CoverDeviceClass.CURTAIN: 'curtain'>,
     'original_icon': None,
     'original_name': 'Curtain',
@@ -729,7 +729,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Curtain',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -748,6 +747,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Curtain',
     'original_device_class': <CoverDeviceClass.CURTAIN: 'curtain'>,
     'original_icon': None,
     'original_name': 'Curtain',
@@ -781,7 +781,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Curtain',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -800,6 +799,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Curtain',
     'original_device_class': <CoverDeviceClass.CURTAIN: 'curtain'>,
     'original_icon': None,
     'original_name': 'Curtain',

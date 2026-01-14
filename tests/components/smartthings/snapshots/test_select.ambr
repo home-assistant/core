@@ -4,7 +4,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Dust filter alarm threshold',
     'capabilities': dict({
       'options': list([
         '180',
@@ -30,6 +29,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Dust filter alarm threshold',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Dust filter alarm threshold',
@@ -66,7 +66,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Dust filter alarm threshold',
     'capabilities': dict({
       'options': list([
         '180',
@@ -92,6 +91,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Dust filter alarm threshold',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Dust filter alarm threshold',
@@ -128,7 +128,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Lamp',
     'capabilities': dict({
       'options': list([
         'off',
@@ -153,6 +152,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Lamp',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Lamp',
@@ -188,7 +188,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Lamp',
     'capabilities': dict({
       'options': list([
         'off',
@@ -212,6 +211,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Lamp',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Lamp',
@@ -246,7 +246,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Lamp',
     'capabilities': dict({
       'options': list([
         'off',
@@ -270,6 +269,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Lamp',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Lamp',
@@ -304,7 +304,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Lamp',
     'capabilities': dict({
       'options': list([
         'off',
@@ -328,6 +327,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Lamp',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Lamp',
@@ -362,7 +362,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Lamp',
     'capabilities': dict({
       'options': list([
         'off',
@@ -386,6 +385,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Lamp',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Lamp',
@@ -420,7 +420,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Lamp',
     'capabilities': dict({
       'options': list([
         'on',
@@ -444,6 +443,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Lamp',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Lamp',
@@ -478,7 +478,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': None,
     'capabilities': dict({
       'options': list([
         'stop',
@@ -503,6 +502,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': None,
     'original_device_class': None,
     'original_icon': None,
     'original_name': None,
@@ -538,7 +538,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': None,
     'capabilities': dict({
       'options': list([
         'stop',
@@ -563,6 +562,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': None,
     'original_device_class': None,
     'original_icon': None,
     'original_name': None,
@@ -598,7 +598,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': None,
     'capabilities': dict({
       'options': list([
         'stop',
@@ -623,6 +622,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': None,
     'original_device_class': None,
     'original_icon': None,
     'original_name': None,
@@ -658,7 +658,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': None,
     'capabilities': dict({
       'options': list([
         'stop',
@@ -683,6 +682,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': None,
     'original_device_class': None,
     'original_icon': None,
     'original_name': None,
@@ -718,7 +718,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': None,
     'capabilities': dict({
       'options': list([
         'stop',
@@ -743,6 +742,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': None,
     'original_device_class': None,
     'original_icon': None,
     'original_name': None,
@@ -778,7 +778,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': None,
     'capabilities': dict({
       'options': list([
         'stop',
@@ -803,6 +802,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': None,
     'original_device_class': None,
     'original_icon': None,
     'original_name': None,
@@ -838,7 +838,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': None,
     'capabilities': dict({
       'options': list([
         'stop',
@@ -863,6 +862,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': None,
     'original_device_class': None,
     'original_icon': None,
     'original_name': None,
@@ -898,7 +898,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Soil level',
     'capabilities': dict({
       'options': list([
         'none',
@@ -926,6 +925,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Soil level',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Soil level',
@@ -964,7 +964,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Spin level',
     'capabilities': dict({
       'options': list([
         'rinse_hold',
@@ -992,6 +991,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Spin level',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Spin level',
@@ -1030,7 +1030,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Water temperature',
     'capabilities': dict({
       'options': list([
         'none',
@@ -1058,6 +1057,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Water temperature',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Water temperature',
@@ -1096,7 +1096,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': None,
     'capabilities': dict({
       'options': list([
         'stop',
@@ -1121,6 +1120,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': None,
     'original_device_class': None,
     'original_icon': None,
     'original_name': None,
@@ -1156,7 +1156,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Spin level',
     'capabilities': dict({
       'options': list([
         'rinse_hold',
@@ -1185,6 +1184,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Spin level',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Spin level',
@@ -1224,7 +1224,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Water temperature',
     'capabilities': dict({
       'options': list([
         'none',
@@ -1253,6 +1252,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Water temperature',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Water temperature',
@@ -1292,7 +1292,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': None,
     'capabilities': dict({
       'options': list([
         'stop',
@@ -1317,6 +1316,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': None,
     'original_device_class': None,
     'original_icon': None,
     'original_name': None,
@@ -1352,7 +1352,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Detergent dispense amount',
     'capabilities': dict({
       'options': list([
         'none',
@@ -1378,6 +1377,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Detergent dispense amount',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Detergent dispense amount',
@@ -1414,7 +1414,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Flexible compartment dispense amount',
     'capabilities': dict({
       'options': list([
         'none',
@@ -1440,6 +1439,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Flexible compartment dispense amount',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Flexible compartment dispense amount',
@@ -1476,7 +1476,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Spin level',
     'capabilities': dict({
       'options': list([
         'rinse_hold',
@@ -1505,6 +1504,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Spin level',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Spin level',
@@ -1544,7 +1544,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Water temperature',
     'capabilities': dict({
       'options': list([
         'none',
@@ -1573,6 +1572,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Water temperature',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Water temperature',
@@ -1612,7 +1612,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': None,
     'capabilities': dict({
       'options': list([
         'run',
@@ -1637,6 +1636,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': None,
     'original_device_class': None,
     'original_icon': None,
     'original_name': None,
@@ -1672,7 +1672,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': None,
     'capabilities': dict({
       'options': list([
         'run',
@@ -1697,6 +1696,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': None,
     'original_device_class': None,
     'original_icon': None,
     'original_name': None,

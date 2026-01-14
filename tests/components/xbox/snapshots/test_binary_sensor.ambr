@@ -4,7 +4,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -23,6 +22,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': None,
     'original_device_class': None,
     'original_icon': None,
     'original_name': None,
@@ -58,7 +58,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'In game',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -77,6 +76,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'In game',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'In game',
@@ -107,7 +107,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Subscribed to Xbox Game Pass',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -126,6 +125,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Subscribed to Xbox Game Pass',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Subscribed to Xbox Game Pass',
@@ -156,7 +156,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -175,6 +174,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': None,
     'original_device_class': None,
     'original_icon': None,
     'original_name': None,
@@ -210,7 +210,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'In game',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -229,6 +228,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'In game',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'In game',
@@ -259,7 +259,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Subscribed to Xbox Game Pass',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -278,6 +277,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Subscribed to Xbox Game Pass',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Subscribed to Xbox Game Pass',
@@ -308,7 +308,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -327,6 +326,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': None,
     'original_device_class': None,
     'original_icon': None,
     'original_name': None,
@@ -362,7 +362,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'In game',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -381,6 +380,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'In game',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'In game',
@@ -411,7 +411,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Subscribed to Xbox Game Pass',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -430,6 +429,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Subscribed to Xbox Game Pass',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Subscribed to Xbox Game Pass',

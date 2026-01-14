@@ -4,7 +4,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Amount of active users last 5 minutes',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -25,6 +24,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Amount of active users last 5 minutes',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Amount of active users last 5 minutes',
@@ -56,7 +56,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Amount of active users last day',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -77,6 +76,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Amount of active users last day',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Amount of active users last day',
@@ -108,7 +108,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Amount of active users last hour',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -129,6 +128,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Amount of active users last hour',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Amount of active users last hour',
@@ -160,7 +160,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Amount of files',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -181,6 +180,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Amount of files',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Amount of files',
@@ -212,7 +212,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Amount of group shares',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -233,6 +232,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Amount of group shares',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Amount of group shares',
@@ -264,7 +264,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Amount of link shares',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -285,6 +284,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Amount of link shares',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Amount of link shares',
@@ -316,7 +316,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Amount of local storages',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -337,6 +336,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Amount of local storages',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Amount of local storages',
@@ -368,7 +368,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Amount of mail shares',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -389,6 +388,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Amount of mail shares',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Amount of mail shares',
@@ -420,7 +420,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Amount of other storages',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -441,6 +440,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Amount of other storages',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Amount of other storages',
@@ -472,7 +472,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Amount of passwordless link shares',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -493,6 +492,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Amount of passwordless link shares',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Amount of passwordless link shares',
@@ -524,7 +524,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Amount of room shares',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -545,6 +544,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Amount of room shares',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Amount of room shares',
@@ -576,7 +576,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Amount of shares',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -597,6 +596,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Amount of shares',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Amount of shares',
@@ -628,7 +628,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Amount of shares received',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -649,6 +648,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Amount of shares received',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Amount of shares received',
@@ -680,7 +680,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Amount of shares sent',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -701,6 +700,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Amount of shares sent',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Amount of shares sent',
@@ -732,7 +732,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Amount of storages',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -753,6 +752,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Amount of storages',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Amount of storages',
@@ -784,7 +784,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Amount of storages at home',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -805,6 +804,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Amount of storages at home',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Amount of storages at home',
@@ -836,7 +836,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Amount of user',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -857,6 +856,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Amount of user',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Amount of user',
@@ -888,7 +888,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Amount of user shares',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -909,6 +908,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Amount of user shares',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Amount of user shares',
@@ -940,7 +940,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Apps installed',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -961,6 +960,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Apps installed',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Apps installed',
@@ -992,7 +992,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Cache expunges',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1013,6 +1012,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Cache expunges',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Cache expunges',
@@ -1044,7 +1044,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Cache memory',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1063,6 +1062,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Cache memory',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Cache memory',
@@ -1093,7 +1093,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Cache memory size',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1118,6 +1117,7 @@
         'suggested_unit_of_measurement': <UnitOfInformation.MEGABYTES: 'MB'>,
       }),
     }),
+    'object_id_base': 'Cache memory size',
     'original_device_class': <SensorDeviceClass.DATA_SIZE: 'data_size'>,
     'original_icon': None,
     'original_name': 'Cache memory size',
@@ -1150,7 +1150,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Cache number of entries',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1171,6 +1170,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Cache number of entries',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Cache number of entries',
@@ -1202,7 +1202,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Cache number of hits',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1223,6 +1222,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Cache number of hits',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Cache number of hits',
@@ -1254,7 +1254,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Cache number of inserts',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1275,6 +1274,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Cache number of inserts',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Cache number of inserts',
@@ -1306,7 +1306,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Cache number of misses',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1327,6 +1326,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Cache number of misses',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Cache number of misses',
@@ -1358,7 +1358,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Cache number of slots',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -1379,6 +1378,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Cache number of slots',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Cache number of slots',
@@ -1410,7 +1410,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Cache start time',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1429,6 +1428,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Cache start time',
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
     'original_icon': None,
     'original_name': 'Cache start time',
@@ -1460,7 +1460,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Cache TTL',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1479,6 +1478,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Cache TTL',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Cache TTL',
@@ -1509,7 +1509,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'CPU load last 15 minutes',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1531,6 +1530,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'CPU load last 15 minutes',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'CPU load last 15 minutes',
@@ -1562,7 +1562,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'CPU load last 1 minute',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1584,6 +1583,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'CPU load last 1 minute',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'CPU load last 1 minute',
@@ -1615,7 +1615,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'CPU load last 5 minutes',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1637,6 +1636,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'CPU load last 5 minutes',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'CPU load last 5 minutes',
@@ -1668,7 +1668,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Database size',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1693,6 +1692,7 @@
         'suggested_unit_of_measurement': <UnitOfInformation.MEGABYTES: 'MB'>,
       }),
     }),
+    'object_id_base': 'Database size',
     'original_device_class': <SensorDeviceClass.DATA_SIZE: 'data_size'>,
     'original_icon': None,
     'original_name': 'Database size',
@@ -1725,7 +1725,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Database type',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1744,6 +1743,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Database type',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Database type',
@@ -1774,7 +1774,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Database version',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1793,6 +1792,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Database version',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Database version',
@@ -1823,7 +1823,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Free memory',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1848,6 +1847,7 @@
         'suggested_unit_of_measurement': <UnitOfInformation.GIGABYTES: 'GB'>,
       }),
     }),
+    'object_id_base': 'Free memory',
     'original_device_class': <SensorDeviceClass.DATA_SIZE: 'data_size'>,
     'original_icon': None,
     'original_name': 'Free memory',
@@ -1880,7 +1880,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Free space',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1905,6 +1904,7 @@
         'suggested_unit_of_measurement': <UnitOfInformation.GIGABYTES: 'GB'>,
       }),
     }),
+    'object_id_base': 'Free space',
     'original_device_class': <SensorDeviceClass.DATA_SIZE: 'data_size'>,
     'original_icon': None,
     'original_name': 'Free space',
@@ -1937,7 +1937,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Free swap memory',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1962,6 +1961,7 @@
         'suggested_unit_of_measurement': <UnitOfInformation.GIGABYTES: 'GB'>,
       }),
     }),
+    'object_id_base': 'Free swap memory',
     'original_device_class': <SensorDeviceClass.DATA_SIZE: 'data_size'>,
     'original_icon': None,
     'original_name': 'Free swap memory',
@@ -1994,7 +1994,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Interned buffer size',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2019,6 +2018,7 @@
         'suggested_unit_of_measurement': <UnitOfInformation.MEGABYTES: 'MB'>,
       }),
     }),
+    'object_id_base': 'Interned buffer size',
     'original_device_class': <SensorDeviceClass.DATA_SIZE: 'data_size'>,
     'original_icon': None,
     'original_name': 'Interned buffer size',
@@ -2051,7 +2051,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Interned free memory',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2076,6 +2075,7 @@
         'suggested_unit_of_measurement': <UnitOfInformation.MEGABYTES: 'MB'>,
       }),
     }),
+    'object_id_base': 'Interned free memory',
     'original_device_class': <SensorDeviceClass.DATA_SIZE: 'data_size'>,
     'original_icon': None,
     'original_name': 'Interned free memory',
@@ -2108,7 +2108,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Interned number of strings',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2129,6 +2128,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Interned number of strings',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Interned number of strings',
@@ -2160,7 +2160,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Interned used memory',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2185,6 +2184,7 @@
         'suggested_unit_of_measurement': <UnitOfInformation.MEGABYTES: 'MB'>,
       }),
     }),
+    'object_id_base': 'Interned used memory',
     'original_device_class': <SensorDeviceClass.DATA_SIZE: 'data_size'>,
     'original_icon': None,
     'original_name': 'Interned used memory',
@@ -2217,7 +2217,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'JIT buffer free',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2242,6 +2241,7 @@
         'suggested_unit_of_measurement': <UnitOfInformation.MEGABYTES: 'MB'>,
       }),
     }),
+    'object_id_base': 'JIT buffer free',
     'original_device_class': <SensorDeviceClass.DATA_SIZE: 'data_size'>,
     'original_icon': None,
     'original_name': 'JIT buffer free',
@@ -2274,7 +2274,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'JIT buffer size',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2299,6 +2298,7 @@
         'suggested_unit_of_measurement': <UnitOfInformation.MEGABYTES: 'MB'>,
       }),
     }),
+    'object_id_base': 'JIT buffer size',
     'original_device_class': <SensorDeviceClass.DATA_SIZE: 'data_size'>,
     'original_icon': None,
     'original_name': 'JIT buffer size',
@@ -2331,7 +2331,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'JIT kind',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2350,6 +2349,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'JIT kind',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'JIT kind',
@@ -2380,7 +2380,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'JIT opt flags',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2399,6 +2398,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'JIT opt flags',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'JIT opt flags',
@@ -2429,7 +2429,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'JIT opt level',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2448,6 +2447,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'JIT opt level',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'JIT opt level',
@@ -2478,7 +2478,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Opcache blacklist miss ratio',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2499,6 +2498,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Opcache blacklist miss ratio',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Opcache blacklist miss ratio',
@@ -2531,7 +2531,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Opcache blacklist misses',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2552,6 +2551,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Opcache blacklist misses',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Opcache blacklist misses',
@@ -2583,7 +2583,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Opcache cached keys',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2604,6 +2603,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Opcache cached keys',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Opcache cached keys',
@@ -2635,7 +2635,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Opcache cached scripts',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2656,6 +2655,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Opcache cached scripts',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Opcache cached scripts',
@@ -2687,7 +2687,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Opcache current wasted percentage',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2709,6 +2708,7 @@
         'suggested_display_precision': 1,
       }),
     }),
+    'object_id_base': 'Opcache current wasted percentage',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Opcache current wasted percentage',
@@ -2740,7 +2740,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Opcache free memory',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2765,6 +2764,7 @@
         'suggested_unit_of_measurement': <UnitOfInformation.MEGABYTES: 'MB'>,
       }),
     }),
+    'object_id_base': 'Opcache free memory',
     'original_device_class': <SensorDeviceClass.DATA_SIZE: 'data_size'>,
     'original_icon': None,
     'original_name': 'Opcache free memory',
@@ -2797,7 +2797,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Opcache hash restarts',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2818,6 +2817,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Opcache hash restarts',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Opcache hash restarts',
@@ -2849,7 +2849,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Opcache hit rate',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2871,6 +2870,7 @@
         'suggested_display_precision': 1,
       }),
     }),
+    'object_id_base': 'Opcache hit rate',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Opcache hit rate',
@@ -2902,7 +2902,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Opcache hits',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -2923,6 +2922,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Opcache hits',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Opcache hits',
@@ -2954,7 +2954,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Opcache last restart time',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2973,6 +2972,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Opcache last restart time',
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
     'original_icon': None,
     'original_name': 'Opcache last restart time',
@@ -3004,7 +3004,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Opcache manual restarts',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -3025,6 +3024,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Opcache manual restarts',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Opcache manual restarts',
@@ -3056,7 +3056,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Opcache max cached keys',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -3077,6 +3076,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Opcache max cached keys',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Opcache max cached keys',
@@ -3108,7 +3108,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Opcache misses',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -3129,6 +3128,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Opcache misses',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Opcache misses',
@@ -3160,7 +3160,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Opcache out of memory restarts',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -3181,6 +3180,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Opcache out of memory restarts',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Opcache out of memory restarts',
@@ -3212,7 +3212,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Opcache start time',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -3231,6 +3230,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Opcache start time',
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
     'original_icon': None,
     'original_name': 'Opcache start time',
@@ -3262,7 +3262,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Opcache used memory',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -3287,6 +3286,7 @@
         'suggested_unit_of_measurement': <UnitOfInformation.MEGABYTES: 'MB'>,
       }),
     }),
+    'object_id_base': 'Opcache used memory',
     'original_device_class': <SensorDeviceClass.DATA_SIZE: 'data_size'>,
     'original_icon': None,
     'original_name': 'Opcache used memory',
@@ -3319,7 +3319,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Opcache wasted memory',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -3344,6 +3343,7 @@
         'suggested_unit_of_measurement': <UnitOfInformation.MEGABYTES: 'MB'>,
       }),
     }),
+    'object_id_base': 'Opcache wasted memory',
     'original_device_class': <SensorDeviceClass.DATA_SIZE: 'data_size'>,
     'original_icon': None,
     'original_name': 'Opcache wasted memory',
@@ -3376,7 +3376,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'PHP max execution time',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -3398,6 +3397,7 @@
         'suggested_display_precision': 2,
       }),
     }),
+    'object_id_base': 'PHP max execution time',
     'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
     'original_icon': None,
     'original_name': 'PHP max execution time',
@@ -3430,7 +3430,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'PHP memory limit',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -3455,6 +3454,7 @@
         'suggested_unit_of_measurement': <UnitOfInformation.MEGABYTES: 'MB'>,
       }),
     }),
+    'object_id_base': 'PHP memory limit',
     'original_device_class': <SensorDeviceClass.DATA_SIZE: 'data_size'>,
     'original_icon': None,
     'original_name': 'PHP memory limit',
@@ -3487,7 +3487,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'PHP upload maximum filesize',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -3512,6 +3511,7 @@
         'suggested_unit_of_measurement': <UnitOfInformation.MEGABYTES: 'MB'>,
       }),
     }),
+    'object_id_base': 'PHP upload maximum filesize',
     'original_device_class': <SensorDeviceClass.DATA_SIZE: 'data_size'>,
     'original_icon': None,
     'original_name': 'PHP upload maximum filesize',
@@ -3544,7 +3544,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'PHP version',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -3563,6 +3562,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'PHP version',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'PHP version',
@@ -3593,7 +3593,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'SMA available memory',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -3618,6 +3617,7 @@
         'suggested_unit_of_measurement': <UnitOfInformation.MEGABYTES: 'MB'>,
       }),
     }),
+    'object_id_base': 'SMA available memory',
     'original_device_class': <SensorDeviceClass.DATA_SIZE: 'data_size'>,
     'original_icon': None,
     'original_name': 'SMA available memory',
@@ -3650,7 +3650,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'SMA number of segments',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -3671,6 +3670,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'SMA number of segments',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'SMA number of segments',
@@ -3702,7 +3702,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'SMA segment size',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -3727,6 +3726,7 @@
         'suggested_unit_of_measurement': <UnitOfInformation.MEGABYTES: 'MB'>,
       }),
     }),
+    'object_id_base': 'SMA segment size',
     'original_device_class': <SensorDeviceClass.DATA_SIZE: 'data_size'>,
     'original_icon': None,
     'original_name': 'SMA segment size',
@@ -3759,7 +3759,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'System memcache distributed',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -3778,6 +3777,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'System memcache distributed',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'System memcache distributed',
@@ -3808,7 +3808,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'System memcache local',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -3827,6 +3826,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'System memcache local',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'System memcache local',
@@ -3857,7 +3857,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'System memcache locking',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -3876,6 +3875,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'System memcache locking',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'System memcache locking',
@@ -3906,7 +3906,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'System theme',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -3925,6 +3924,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'System theme',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'System theme',
@@ -3955,7 +3955,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'System version',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -3974,6 +3973,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'System version',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'System version',
@@ -4004,7 +4004,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Total memory',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -4029,6 +4028,7 @@
         'suggested_unit_of_measurement': <UnitOfInformation.GIGABYTES: 'GB'>,
       }),
     }),
+    'object_id_base': 'Total memory',
     'original_device_class': <SensorDeviceClass.DATA_SIZE: 'data_size'>,
     'original_icon': None,
     'original_name': 'Total memory',
@@ -4061,7 +4061,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Total swap memory',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -4086,6 +4085,7 @@
         'suggested_unit_of_measurement': <UnitOfInformation.GIGABYTES: 'GB'>,
       }),
     }),
+    'object_id_base': 'Total swap memory',
     'original_device_class': <SensorDeviceClass.DATA_SIZE: 'data_size'>,
     'original_icon': None,
     'original_name': 'Total swap memory',
@@ -4118,7 +4118,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Updates available',
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
@@ -4139,6 +4138,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Updates available',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Updates available',
@@ -4170,7 +4170,6 @@
     'aliases': set({
     }),
     'area_id': None,
-    'calculated_object_id': 'Webserver',
     'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -4189,6 +4188,7 @@
     'name': None,
     'options': dict({
     }),
+    'object_id_base': 'Webserver',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Webserver',
