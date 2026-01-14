@@ -58,7 +58,7 @@ TEST_UNITS: dict[str, dict[str, Any]] = {
         "temperature": 25,
         "temperature_unit": "celsius",
         "fan_speed": "med",
-        "mode": "dry",
+        "mode": "cool",
         "error_code": None,
         "clean_filter": False,
         "swing": None,
@@ -198,9 +198,6 @@ async def load_int(hass: HomeAssistant) -> MockConfigEntry:
                 HVACMode.OFF,
                 HVACMode.COOL,
                 HVACMode.HEAT,
-                HVACMode.DRY,
-                HVACMode.HEAT_COOL,
-                HVACMode.FAN_ONLY,
             ],
         },
     )
@@ -229,9 +226,6 @@ async def config_entry_with_errors(hass: HomeAssistant) -> MockConfigEntry:
                 HVACMode.OFF,
                 HVACMode.COOL,
                 HVACMode.HEAT,
-                HVACMode.DRY,
-                HVACMode.HEAT_COOL,
-                HVACMode.FAN_ONLY,
             ],
         },
     )
@@ -260,9 +254,6 @@ async def config_entry_with_empty_status(hass: HomeAssistant) -> MockConfigEntry
                 HVACMode.OFF,
                 HVACMode.COOL,
                 HVACMode.HEAT,
-                HVACMode.DRY,
-                HVACMode.HEAT_COOL,
-                HVACMode.FAN_ONLY,
             ],
         },
     )

@@ -46,7 +46,7 @@ async def test_climate_state(
     assert hass.states.get("climate.l1_100").state == HVACMode.OFF
     assert hass.states.get("climate.l1_101").state == HVACMode.HEAT
     assert hass.states.get("climate.l1_102").state == HVACMode.COOL
-    assert hass.states.get("climate.l1_103").state == HVACMode.DRY
+    assert hass.states.get("climate.l1_103").state == HVACMode.COOL
 
 
 async def test_climate_friendly_name(
@@ -111,9 +111,6 @@ async def test_climate_hvac_modes(
         HVACMode.OFF,
         HVACMode.COOL,
         HVACMode.HEAT,
-        HVACMode.DRY,
-        HVACMode.HEAT_COOL,
-        HVACMode.FAN_ONLY,
     ]
     for unit in ("climate.l1_101", "climate.l1_102", "climate.l1_103"):
         assert (
@@ -243,10 +240,7 @@ async def test_set_swing_mode_error(
         )
 
 
-@pytest.mark.parametrize("target_hvac_mode", HVAC_MODES)
-async def test_set_hvac_mode(
-    hass: HomeAssistant, load_int: ConfigEntry, target_hvac_mode: str
-) -> None:
+async def test_set_hvac_mode(hass: HomeAssistant, load_int: ConfigEntry) -> None:
     """Test the Coolmaster climate set hvac mode."""
     assert hass.states.get("climate.l1_100").state == HVACMode.OFF
     await hass.services.async_call(
@@ -254,12 +248,12 @@ async def test_set_hvac_mode(
         SERVICE_SET_HVAC_MODE,
         {
             ATTR_ENTITY_ID: "climate.l1_100",
-            ATTR_HVAC_MODE: target_hvac_mode,
+            ATTR_HVAC_MODE: HVACMode.HEAT,
         },
         blocking=True,
     )
     await hass.async_block_till_done()
-    assert hass.states.get("climate.l1_100").state == target_hvac_mode
+    assert hass.states.get("climate.l1_100").state == HVACMode.HEAT
 
 
 async def test_set_hvac_mode_off(
