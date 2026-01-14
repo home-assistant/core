@@ -44,7 +44,7 @@ INPUT_SOURCES = {
     "Bluetooth": "BT",
     "USB": "USB",
     "PC": "PC",
-    "ARC": "ARC",
+    "HDMI ARC": "ARC",
 }
 
 # Map sound mode names to command codes
