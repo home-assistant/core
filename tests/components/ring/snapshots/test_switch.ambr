@@ -20,9 +20,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'In-home chime',
     'options': dict({
     }),
-    'object_id_base': 'In-home chime',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'In-home chime',
@@ -70,9 +70,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Motion detection',
     'options': dict({
     }),
-    'object_id_base': 'Motion detection',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Motion detection',
@@ -120,9 +120,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Motion detection',
     'options': dict({
     }),
-    'object_id_base': 'Motion detection',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Motion detection',
@@ -170,9 +170,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Siren',
     'options': dict({
     }),
-    'object_id_base': 'Siren',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Siren',
@@ -220,9 +220,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Motion detection',
     'options': dict({
     }),
-    'object_id_base': 'Motion detection',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Motion detection',
@@ -270,9 +270,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Siren',
     'options': dict({
     }),
-    'object_id_base': 'Siren',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Siren',

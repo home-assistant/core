@@ -20,9 +20,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Child lock',
     'options': dict({
     }),
-    'object_id_base': 'Child lock',
     'original_device_class': <SwitchDeviceClass.SWITCH: 'switch'>,
     'original_icon': None,
     'original_name': 'Child lock',
@@ -70,9 +70,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Manual operation',
     'options': dict({
     }),
-    'object_id_base': 'Manual operation',
     'original_device_class': <SwitchDeviceClass.SWITCH: 'switch'>,
     'original_icon': None,
     'original_name': 'Manual operation',
@@ -120,9 +120,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Switch 1',
     'options': dict({
     }),
-    'object_id_base': 'Switch 1',
     'original_device_class': <SwitchDeviceClass.OUTLET: 'outlet'>,
     'original_icon': None,
     'original_name': 'Switch 1',
@@ -170,9 +170,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Switch 2',
     'options': dict({
     }),
-    'object_id_base': 'Switch 2',
     'original_device_class': <SwitchDeviceClass.OUTLET: 'outlet'>,
     'original_icon': None,
     'original_name': 'Switch 2',
@@ -220,9 +220,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Watchdog',
     'options': dict({
     }),
-    'object_id_base': 'Watchdog',
     'original_device_class': <SwitchDeviceClass.SWITCH: 'switch'>,
     'original_icon': None,
     'original_name': 'Watchdog',

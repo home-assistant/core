@@ -20,12 +20,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'AC current limit',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
       }),
     }),
-    'object_id_base': 'AC current limit',
     'original_device_class': <SensorDeviceClass.CURRENT: 'current'>,
     'original_icon': None,
     'original_name': 'AC current limit',
@@ -74,9 +74,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Charging end time',
     'options': dict({
     }),
-    'object_id_base': 'Charging end time',
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
     'original_icon': None,
     'original_name': 'Charging end time',
@@ -124,9 +124,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Charging start time',
     'options': dict({
     }),
-    'object_id_base': 'Charging start time',
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
     'original_icon': None,
     'original_name': 'Charging start time',
@@ -189,9 +189,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Charging status',
     'options': dict({
     }),
-    'object_id_base': 'Charging status',
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
     'original_name': 'Charging status',
@@ -253,12 +253,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Charging target',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
       }),
     }),
-    'object_id_base': 'Charging target',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Charging target',
@@ -308,12 +308,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Mileage',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
       }),
     }),
-    'object_id_base': 'Mileage',
     'original_device_class': <SensorDeviceClass.DISTANCE: 'distance'>,
     'original_icon': None,
     'original_name': 'Mileage',
@@ -365,12 +365,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Remaining battery percent',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
       }),
     }),
-    'object_id_base': 'Remaining battery percent',
     'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
     'original_icon': None,
     'original_name': 'Remaining battery percent',
@@ -422,12 +422,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Remaining fuel',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
       }),
     }),
-    'object_id_base': 'Remaining fuel',
     'original_device_class': <SensorDeviceClass.VOLUME_STORAGE: 'volume_storage'>,
     'original_icon': None,
     'original_name': 'Remaining fuel',
@@ -479,12 +479,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Remaining fuel percent',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
       }),
     }),
-    'object_id_base': 'Remaining fuel percent',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Remaining fuel percent',
@@ -535,12 +535,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Remaining range electric',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
       }),
     }),
-    'object_id_base': 'Remaining range electric',
     'original_device_class': <SensorDeviceClass.DISTANCE: 'distance'>,
     'original_icon': None,
     'original_name': 'Remaining range electric',
@@ -592,12 +592,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Remaining range fuel',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
       }),
     }),
-    'object_id_base': 'Remaining range fuel',
     'original_device_class': <SensorDeviceClass.DISTANCE: 'distance'>,
     'original_icon': None,
     'original_name': 'Remaining range fuel',
@@ -649,12 +649,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Remaining range total',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
       }),
     }),
-    'object_id_base': 'Remaining range total',
     'original_device_class': <SensorDeviceClass.DISTANCE: 'distance'>,
     'original_icon': None,
     'original_name': 'Remaining range total',
@@ -704,12 +704,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'AC current limit',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
       }),
     }),
-    'object_id_base': 'AC current limit',
     'original_device_class': <SensorDeviceClass.CURRENT: 'current'>,
     'original_icon': None,
     'original_name': 'AC current limit',
@@ -758,9 +758,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Charging end time',
     'options': dict({
     }),
-    'object_id_base': 'Charging end time',
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
     'original_icon': None,
     'original_name': 'Charging end time',
@@ -808,9 +808,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Charging start time',
     'options': dict({
     }),
-    'object_id_base': 'Charging start time',
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
     'original_icon': None,
     'original_name': 'Charging start time',
@@ -873,9 +873,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Charging status',
     'options': dict({
     }),
-    'object_id_base': 'Charging status',
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
     'original_name': 'Charging status',
@@ -937,12 +937,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Charging target',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
       }),
     }),
-    'object_id_base': 'Charging target',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Charging target',
@@ -998,9 +998,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Climate status',
     'options': dict({
     }),
-    'object_id_base': 'Climate status',
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
     'original_name': 'Climate status',
@@ -1057,6 +1057,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Front left target pressure',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -1065,7 +1066,6 @@
         'suggested_unit_of_measurement': <UnitOfPressure.BAR: 'bar'>,
       }),
     }),
-    'object_id_base': 'Front left target pressure',
     'original_device_class': <SensorDeviceClass.PRESSURE: 'pressure'>,
     'original_icon': None,
     'original_name': 'Front left target pressure',
@@ -1117,6 +1117,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Front left tire pressure',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -1125,7 +1126,6 @@
         'suggested_unit_of_measurement': <UnitOfPressure.BAR: 'bar'>,
       }),
     }),
-    'object_id_base': 'Front left tire pressure',
     'original_device_class': <SensorDeviceClass.PRESSURE: 'pressure'>,
     'original_icon': None,
     'original_name': 'Front left tire pressure',
@@ -1177,6 +1177,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Front right target pressure',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -1185,7 +1186,6 @@
         'suggested_unit_of_measurement': <UnitOfPressure.BAR: 'bar'>,
       }),
     }),
-    'object_id_base': 'Front right target pressure',
     'original_device_class': <SensorDeviceClass.PRESSURE: 'pressure'>,
     'original_icon': None,
     'original_name': 'Front right target pressure',
@@ -1237,6 +1237,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Front right tire pressure',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -1245,7 +1246,6 @@
         'suggested_unit_of_measurement': <UnitOfPressure.BAR: 'bar'>,
       }),
     }),
-    'object_id_base': 'Front right tire pressure',
     'original_device_class': <SensorDeviceClass.PRESSURE: 'pressure'>,
     'original_icon': None,
     'original_name': 'Front right tire pressure',
@@ -1297,12 +1297,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Mileage',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
       }),
     }),
-    'object_id_base': 'Mileage',
     'original_device_class': <SensorDeviceClass.DISTANCE: 'distance'>,
     'original_icon': None,
     'original_name': 'Mileage',
@@ -1354,6 +1354,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Rear left target pressure',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -1362,7 +1363,6 @@
         'suggested_unit_of_measurement': <UnitOfPressure.BAR: 'bar'>,
       }),
     }),
-    'object_id_base': 'Rear left target pressure',
     'original_device_class': <SensorDeviceClass.PRESSURE: 'pressure'>,
     'original_icon': None,
     'original_name': 'Rear left target pressure',
@@ -1414,6 +1414,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Rear left tire pressure',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -1422,7 +1423,6 @@
         'suggested_unit_of_measurement': <UnitOfPressure.BAR: 'bar'>,
       }),
     }),
-    'object_id_base': 'Rear left tire pressure',
     'original_device_class': <SensorDeviceClass.PRESSURE: 'pressure'>,
     'original_icon': None,
     'original_name': 'Rear left tire pressure',
@@ -1474,6 +1474,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Rear right target pressure',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -1482,7 +1483,6 @@
         'suggested_unit_of_measurement': <UnitOfPressure.BAR: 'bar'>,
       }),
     }),
-    'object_id_base': 'Rear right target pressure',
     'original_device_class': <SensorDeviceClass.PRESSURE: 'pressure'>,
     'original_icon': None,
     'original_name': 'Rear right target pressure',
@@ -1534,6 +1534,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Rear right tire pressure',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -1542,7 +1543,6 @@
         'suggested_unit_of_measurement': <UnitOfPressure.BAR: 'bar'>,
       }),
     }),
-    'object_id_base': 'Rear right tire pressure',
     'original_device_class': <SensorDeviceClass.PRESSURE: 'pressure'>,
     'original_icon': None,
     'original_name': 'Rear right tire pressure',
@@ -1594,12 +1594,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Remaining battery percent',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
       }),
     }),
-    'object_id_base': 'Remaining battery percent',
     'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
     'original_icon': None,
     'original_name': 'Remaining battery percent',
@@ -1651,12 +1651,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Remaining range electric',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
       }),
     }),
-    'object_id_base': 'Remaining range electric',
     'original_device_class': <SensorDeviceClass.DISTANCE: 'distance'>,
     'original_icon': None,
     'original_name': 'Remaining range electric',
@@ -1708,12 +1708,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Remaining range total',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
       }),
     }),
-    'object_id_base': 'Remaining range total',
     'original_device_class': <SensorDeviceClass.DISTANCE: 'distance'>,
     'original_icon': None,
     'original_name': 'Remaining range total',
@@ -1763,12 +1763,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'AC current limit',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
       }),
     }),
-    'object_id_base': 'AC current limit',
     'original_device_class': <SensorDeviceClass.CURRENT: 'current'>,
     'original_icon': None,
     'original_name': 'AC current limit',
@@ -1817,9 +1817,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Charging end time',
     'options': dict({
     }),
-    'object_id_base': 'Charging end time',
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
     'original_icon': None,
     'original_name': 'Charging end time',
@@ -1867,9 +1867,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Charging start time',
     'options': dict({
     }),
-    'object_id_base': 'Charging start time',
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
     'original_icon': None,
     'original_name': 'Charging start time',
@@ -1932,9 +1932,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Charging status',
     'options': dict({
     }),
-    'object_id_base': 'Charging status',
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
     'original_name': 'Charging status',
@@ -1996,12 +1996,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Charging target',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
       }),
     }),
-    'object_id_base': 'Charging target',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Charging target',
@@ -2057,9 +2057,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Climate status',
     'options': dict({
     }),
-    'object_id_base': 'Climate status',
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
     'original_name': 'Climate status',
@@ -2116,6 +2116,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Front left target pressure',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -2124,7 +2125,6 @@
         'suggested_unit_of_measurement': <UnitOfPressure.BAR: 'bar'>,
       }),
     }),
-    'object_id_base': 'Front left target pressure',
     'original_device_class': <SensorDeviceClass.PRESSURE: 'pressure'>,
     'original_icon': None,
     'original_name': 'Front left target pressure',
@@ -2176,6 +2176,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Front left tire pressure',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -2184,7 +2185,6 @@
         'suggested_unit_of_measurement': <UnitOfPressure.BAR: 'bar'>,
       }),
     }),
-    'object_id_base': 'Front left tire pressure',
     'original_device_class': <SensorDeviceClass.PRESSURE: 'pressure'>,
     'original_icon': None,
     'original_name': 'Front left tire pressure',
@@ -2236,6 +2236,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Front right target pressure',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -2244,7 +2245,6 @@
         'suggested_unit_of_measurement': <UnitOfPressure.BAR: 'bar'>,
       }),
     }),
-    'object_id_base': 'Front right target pressure',
     'original_device_class': <SensorDeviceClass.PRESSURE: 'pressure'>,
     'original_icon': None,
     'original_name': 'Front right target pressure',
@@ -2296,6 +2296,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Front right tire pressure',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -2304,7 +2305,6 @@
         'suggested_unit_of_measurement': <UnitOfPressure.BAR: 'bar'>,
       }),
     }),
-    'object_id_base': 'Front right tire pressure',
     'original_device_class': <SensorDeviceClass.PRESSURE: 'pressure'>,
     'original_icon': None,
     'original_name': 'Front right tire pressure',
@@ -2356,12 +2356,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Mileage',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
       }),
     }),
-    'object_id_base': 'Mileage',
     'original_device_class': <SensorDeviceClass.DISTANCE: 'distance'>,
     'original_icon': None,
     'original_name': 'Mileage',
@@ -2413,6 +2413,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Rear left target pressure',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -2421,7 +2422,6 @@
         'suggested_unit_of_measurement': <UnitOfPressure.BAR: 'bar'>,
       }),
     }),
-    'object_id_base': 'Rear left target pressure',
     'original_device_class': <SensorDeviceClass.PRESSURE: 'pressure'>,
     'original_icon': None,
     'original_name': 'Rear left target pressure',
@@ -2473,6 +2473,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Rear left tire pressure',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -2481,7 +2482,6 @@
         'suggested_unit_of_measurement': <UnitOfPressure.BAR: 'bar'>,
       }),
     }),
-    'object_id_base': 'Rear left tire pressure',
     'original_device_class': <SensorDeviceClass.PRESSURE: 'pressure'>,
     'original_icon': None,
     'original_name': 'Rear left tire pressure',
@@ -2533,6 +2533,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Rear right target pressure',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -2541,7 +2542,6 @@
         'suggested_unit_of_measurement': <UnitOfPressure.BAR: 'bar'>,
       }),
     }),
-    'object_id_base': 'Rear right target pressure',
     'original_device_class': <SensorDeviceClass.PRESSURE: 'pressure'>,
     'original_icon': None,
     'original_name': 'Rear right target pressure',
@@ -2593,6 +2593,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Rear right tire pressure',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -2601,7 +2602,6 @@
         'suggested_unit_of_measurement': <UnitOfPressure.BAR: 'bar'>,
       }),
     }),
-    'object_id_base': 'Rear right tire pressure',
     'original_device_class': <SensorDeviceClass.PRESSURE: 'pressure'>,
     'original_icon': None,
     'original_name': 'Rear right tire pressure',
@@ -2653,12 +2653,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Remaining battery percent',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
       }),
     }),
-    'object_id_base': 'Remaining battery percent',
     'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
     'original_icon': None,
     'original_name': 'Remaining battery percent',
@@ -2710,12 +2710,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Remaining range electric',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
       }),
     }),
-    'object_id_base': 'Remaining range electric',
     'original_device_class': <SensorDeviceClass.DISTANCE: 'distance'>,
     'original_icon': None,
     'original_name': 'Remaining range electric',
@@ -2767,12 +2767,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Remaining range total',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
       }),
     }),
-    'object_id_base': 'Remaining range total',
     'original_device_class': <SensorDeviceClass.DISTANCE: 'distance'>,
     'original_icon': None,
     'original_name': 'Remaining range total',
@@ -2830,9 +2830,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Climate status',
     'options': dict({
     }),
-    'object_id_base': 'Climate status',
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
     'original_name': 'Climate status',
@@ -2889,6 +2889,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Front left target pressure',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -2897,7 +2898,6 @@
         'suggested_unit_of_measurement': <UnitOfPressure.BAR: 'bar'>,
       }),
     }),
-    'object_id_base': 'Front left target pressure',
     'original_device_class': <SensorDeviceClass.PRESSURE: 'pressure'>,
     'original_icon': None,
     'original_name': 'Front left target pressure',
@@ -2949,6 +2949,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Front left tire pressure',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -2957,7 +2958,6 @@
         'suggested_unit_of_measurement': <UnitOfPressure.BAR: 'bar'>,
       }),
     }),
-    'object_id_base': 'Front left tire pressure',
     'original_device_class': <SensorDeviceClass.PRESSURE: 'pressure'>,
     'original_icon': None,
     'original_name': 'Front left tire pressure',
@@ -3009,6 +3009,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Front right target pressure',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -3017,7 +3018,6 @@
         'suggested_unit_of_measurement': <UnitOfPressure.BAR: 'bar'>,
       }),
     }),
-    'object_id_base': 'Front right target pressure',
     'original_device_class': <SensorDeviceClass.PRESSURE: 'pressure'>,
     'original_icon': None,
     'original_name': 'Front right target pressure',
@@ -3069,6 +3069,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Front right tire pressure',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -3077,7 +3078,6 @@
         'suggested_unit_of_measurement': <UnitOfPressure.BAR: 'bar'>,
       }),
     }),
-    'object_id_base': 'Front right tire pressure',
     'original_device_class': <SensorDeviceClass.PRESSURE: 'pressure'>,
     'original_icon': None,
     'original_name': 'Front right tire pressure',
@@ -3129,12 +3129,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Mileage',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
       }),
     }),
-    'object_id_base': 'Mileage',
     'original_device_class': <SensorDeviceClass.DISTANCE: 'distance'>,
     'original_icon': None,
     'original_name': 'Mileage',
@@ -3186,6 +3186,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Rear left target pressure',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -3194,7 +3195,6 @@
         'suggested_unit_of_measurement': <UnitOfPressure.BAR: 'bar'>,
       }),
     }),
-    'object_id_base': 'Rear left target pressure',
     'original_device_class': <SensorDeviceClass.PRESSURE: 'pressure'>,
     'original_icon': None,
     'original_name': 'Rear left target pressure',
@@ -3246,6 +3246,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Rear left tire pressure',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -3254,7 +3255,6 @@
         'suggested_unit_of_measurement': <UnitOfPressure.BAR: 'bar'>,
       }),
     }),
-    'object_id_base': 'Rear left tire pressure',
     'original_device_class': <SensorDeviceClass.PRESSURE: 'pressure'>,
     'original_icon': None,
     'original_name': 'Rear left tire pressure',
@@ -3306,6 +3306,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Rear right target pressure',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -3314,7 +3315,6 @@
         'suggested_unit_of_measurement': <UnitOfPressure.BAR: 'bar'>,
       }),
     }),
-    'object_id_base': 'Rear right target pressure',
     'original_device_class': <SensorDeviceClass.PRESSURE: 'pressure'>,
     'original_icon': None,
     'original_name': 'Rear right target pressure',
@@ -3366,6 +3366,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Rear right tire pressure',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -3374,7 +3375,6 @@
         'suggested_unit_of_measurement': <UnitOfPressure.BAR: 'bar'>,
       }),
     }),
-    'object_id_base': 'Rear right tire pressure',
     'original_device_class': <SensorDeviceClass.PRESSURE: 'pressure'>,
     'original_icon': None,
     'original_name': 'Rear right tire pressure',
@@ -3426,12 +3426,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Remaining fuel',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
       }),
     }),
-    'object_id_base': 'Remaining fuel',
     'original_device_class': <SensorDeviceClass.VOLUME_STORAGE: 'volume_storage'>,
     'original_icon': None,
     'original_name': 'Remaining fuel',
@@ -3483,12 +3483,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Remaining fuel percent',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
       }),
     }),
-    'object_id_base': 'Remaining fuel percent',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Remaining fuel percent',
@@ -3539,12 +3539,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Remaining range fuel',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
       }),
     }),
-    'object_id_base': 'Remaining range fuel',
     'original_device_class': <SensorDeviceClass.DISTANCE: 'distance'>,
     'original_icon': None,
     'original_name': 'Remaining range fuel',
@@ -3596,12 +3596,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Remaining range total',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
       }),
     }),
-    'object_id_base': 'Remaining range total',
     'original_device_class': <SensorDeviceClass.DISTANCE: 'distance'>,
     'original_icon': None,
     'original_name': 'Remaining range total',

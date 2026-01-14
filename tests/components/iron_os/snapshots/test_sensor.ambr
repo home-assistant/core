@@ -22,12 +22,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'DC input voltage',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
       }),
     }),
-    'object_id_base': 'DC input voltage',
     'original_device_class': <SensorDeviceClass.VOLTAGE: 'voltage'>,
     'original_icon': None,
     'original_name': 'DC input voltage',
@@ -79,12 +79,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Estimated power',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
       }),
     }),
-    'object_id_base': 'Estimated power',
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
     'original_icon': None,
     'original_name': 'Estimated power',
@@ -136,9 +136,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Hall effect strength',
     'options': dict({
     }),
-    'object_id_base': 'Hall effect strength',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Hall effect strength',
@@ -188,12 +188,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Handle temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
       }),
     }),
-    'object_id_base': 'Handle temperature',
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Handle temperature',
@@ -245,12 +245,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Last movement time',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
       }),
     }),
-    'object_id_base': 'Last movement time',
     'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
     'original_icon': None,
     'original_name': 'Last movement time',
@@ -300,12 +300,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Max tip temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
       }),
     }),
-    'object_id_base': 'Max tip temperature',
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Max tip temperature',
@@ -372,9 +372,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Operating mode',
     'options': dict({
     }),
-    'object_id_base': 'Operating mode',
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
     'original_name': 'Operating mode',
@@ -441,12 +441,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power level',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
       }),
     }),
-    'object_id_base': 'Power level',
     'original_device_class': <SensorDeviceClass.POWER_FACTOR: 'power_factor'>,
     'original_icon': None,
     'original_name': 'Power level',
@@ -503,9 +503,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power source',
     'options': dict({
     }),
-    'object_id_base': 'Power source',
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
     'original_name': 'Power source',
@@ -561,12 +561,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Raw tip voltage',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
       }),
     }),
-    'object_id_base': 'Raw tip voltage',
     'original_device_class': <SensorDeviceClass.VOLTAGE: 'voltage'>,
     'original_icon': None,
     'original_name': 'Raw tip voltage',
@@ -618,9 +618,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Tip resistance',
     'options': dict({
     }),
-    'object_id_base': 'Tip resistance',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Tip resistance',
@@ -671,12 +671,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Tip temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
       }),
     }),
-    'object_id_base': 'Tip temperature',
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Tip temperature',
@@ -728,12 +728,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Uptime',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
       }),
     }),
-    'object_id_base': 'Uptime',
     'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
     'original_icon': None,
     'original_name': 'Uptime',

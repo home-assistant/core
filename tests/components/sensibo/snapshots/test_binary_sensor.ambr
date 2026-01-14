@@ -20,9 +20,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Filter clean required',
     'options': dict({
     }),
-    'object_id_base': 'Filter clean required',
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
     'original_icon': None,
     'original_name': 'Filter clean required',
@@ -70,9 +70,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Pure Boost linked with AC',
     'options': dict({
     }),
-    'object_id_base': 'Pure Boost linked with AC',
     'original_device_class': <BinarySensorDeviceClass.CONNECTIVITY: 'connectivity'>,
     'original_icon': None,
     'original_name': 'Pure Boost linked with AC',
@@ -120,9 +120,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Pure Boost linked with indoor air quality',
     'options': dict({
     }),
-    'object_id_base': 'Pure Boost linked with indoor air quality',
     'original_device_class': <BinarySensorDeviceClass.CONNECTIVITY: 'connectivity'>,
     'original_icon': None,
     'original_name': 'Pure Boost linked with indoor air quality',
@@ -170,9 +170,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Pure Boost linked with outdoor air quality',
     'options': dict({
     }),
-    'object_id_base': 'Pure Boost linked with outdoor air quality',
     'original_device_class': <BinarySensorDeviceClass.CONNECTIVITY: 'connectivity'>,
     'original_icon': None,
     'original_name': 'Pure Boost linked with outdoor air quality',
@@ -220,9 +220,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Pure Boost linked with presence',
     'options': dict({
     }),
-    'object_id_base': 'Pure Boost linked with presence',
     'original_device_class': <BinarySensorDeviceClass.CONNECTIVITY: 'connectivity'>,
     'original_icon': None,
     'original_name': 'Pure Boost linked with presence',
@@ -270,9 +270,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Filter clean required',
     'options': dict({
     }),
-    'object_id_base': 'Filter clean required',
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
     'original_icon': None,
     'original_name': 'Filter clean required',
@@ -320,9 +320,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Connectivity',
     'options': dict({
     }),
-    'object_id_base': 'Connectivity',
     'original_device_class': <BinarySensorDeviceClass.CONNECTIVITY: 'connectivity'>,
     'original_icon': None,
     'original_name': 'Connectivity',
@@ -370,9 +370,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Main sensor',
     'options': dict({
     }),
-    'object_id_base': 'Main sensor',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Main sensor',
@@ -419,9 +419,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Motion',
     'options': dict({
     }),
-    'object_id_base': 'Motion',
     'original_device_class': <BinarySensorDeviceClass.MOTION: 'motion'>,
     'original_icon': None,
     'original_name': 'Motion',
@@ -469,9 +469,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Room occupied',
     'options': dict({
     }),
-    'object_id_base': 'Room occupied',
     'original_device_class': <BinarySensorDeviceClass.MOTION: 'motion'>,
     'original_icon': None,
     'original_name': 'Room occupied',
@@ -519,9 +519,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Filter clean required',
     'options': dict({
     }),
-    'object_id_base': 'Filter clean required',
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
     'original_icon': None,
     'original_name': 'Filter clean required',
@@ -569,9 +569,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Pure Boost linked with AC',
     'options': dict({
     }),
-    'object_id_base': 'Pure Boost linked with AC',
     'original_device_class': <BinarySensorDeviceClass.CONNECTIVITY: 'connectivity'>,
     'original_icon': None,
     'original_name': 'Pure Boost linked with AC',
@@ -619,9 +619,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Pure Boost linked with indoor air quality',
     'options': dict({
     }),
-    'object_id_base': 'Pure Boost linked with indoor air quality',
     'original_device_class': <BinarySensorDeviceClass.CONNECTIVITY: 'connectivity'>,
     'original_icon': None,
     'original_name': 'Pure Boost linked with indoor air quality',
@@ -669,9 +669,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Pure Boost linked with outdoor air quality',
     'options': dict({
     }),
-    'object_id_base': 'Pure Boost linked with outdoor air quality',
     'original_device_class': <BinarySensorDeviceClass.CONNECTIVITY: 'connectivity'>,
     'original_icon': None,
     'original_name': 'Pure Boost linked with outdoor air quality',
@@ -719,9 +719,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Pure Boost linked with presence',
     'options': dict({
     }),
-    'object_id_base': 'Pure Boost linked with presence',
     'original_device_class': <BinarySensorDeviceClass.CONNECTIVITY: 'connectivity'>,
     'original_icon': None,
     'original_name': 'Pure Boost linked with presence',

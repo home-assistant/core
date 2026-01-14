@@ -26,9 +26,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Allow export',
     'options': dict({
     }),
-    'object_id_base': 'Allow export',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Allow export',
@@ -86,9 +86,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Operation mode',
     'options': dict({
     }),
-    'object_id_base': 'Operation mode',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Operation mode',
@@ -147,9 +147,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Seat heater front left',
     'options': dict({
     }),
-    'object_id_base': 'Seat heater front left',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Seat heater front left',
@@ -209,9 +209,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Seat heater front right',
     'options': dict({
     }),
-    'object_id_base': 'Seat heater front right',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Seat heater front right',
@@ -271,9 +271,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Seat heater rear center',
     'options': dict({
     }),
-    'object_id_base': 'Seat heater rear center',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Seat heater rear center',
@@ -333,9 +333,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Seat heater rear left',
     'options': dict({
     }),
-    'object_id_base': 'Seat heater rear left',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Seat heater rear left',
@@ -395,9 +395,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Seat heater rear right',
     'options': dict({
     }),
-    'object_id_base': 'Seat heater rear right',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Seat heater rear right',
@@ -457,9 +457,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Seat heater third row left',
     'options': dict({
     }),
-    'object_id_base': 'Seat heater third row left',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Seat heater third row left',
@@ -519,9 +519,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Seat heater third row right',
     'options': dict({
     }),
-    'object_id_base': 'Seat heater third row right',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Seat heater third row right',
@@ -580,9 +580,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Steering wheel heater',
     'options': dict({
     }),
-    'object_id_base': 'Steering wheel heater',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Steering wheel heater',

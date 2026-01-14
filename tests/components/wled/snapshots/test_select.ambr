@@ -94,9 +94,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Color palette',
     'options': dict({
     }),
-    'object_id_base': 'Color palette',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Color palette',
@@ -222,9 +222,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Live override',
     'options': dict({
     }),
-    'object_id_base': 'Live override',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Live override',
@@ -279,9 +279,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Playlist',
     'options': dict({
     }),
-    'object_id_base': 'Playlist',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Playlist',
@@ -333,9 +333,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Preset',
     'options': dict({
     }),
-    'object_id_base': 'Preset',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Preset',
@@ -458,9 +458,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Segment 1 color palette',
     'options': dict({
     }),
-    'object_id_base': 'Segment 1 color palette',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Segment 1 color palette',

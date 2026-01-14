@@ -28,9 +28,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
-    'object_id_base': None,
     'original_device_class': None,
     'original_icon': None,
     'original_name': None,
@@ -111,9 +111,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Light 1',
     'options': dict({
     }),
-    'object_id_base': 'Light 1',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Light 1',
@@ -195,9 +195,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Light 2',
     'options': dict({
     }),
-    'object_id_base': 'Light 2',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Light 2',
@@ -264,9 +264,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Light 3',
     'options': dict({
     }),
-    'object_id_base': 'Light 3',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Light 3',
@@ -323,9 +323,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Light 4',
     'options': dict({
     }),
-    'object_id_base': 'Light 4',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Light 4',

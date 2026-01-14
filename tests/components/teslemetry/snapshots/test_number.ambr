@@ -25,9 +25,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Backup reserve',
     'options': dict({
     }),
-    'object_id_base': 'Backup reserve',
     'original_device_class': <NumberDeviceClass.BATTERY: 'battery'>,
     'original_icon': 'mdi:battery-alert',
     'original_name': 'Backup reserve',
@@ -86,9 +86,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Off-grid reserve',
     'options': dict({
     }),
-    'object_id_base': 'Off-grid reserve',
     'original_device_class': <NumberDeviceClass.BATTERY: 'battery'>,
     'original_icon': 'mdi:battery-unknown',
     'original_name': 'Off-grid reserve',
@@ -147,9 +147,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Charge current',
     'options': dict({
     }),
-    'object_id_base': 'Charge current',
     'original_device_class': <NumberDeviceClass.CURRENT: 'current'>,
     'original_icon': None,
     'original_name': 'Charge current',
@@ -207,9 +207,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Charge limit',
     'options': dict({
     }),
-    'object_id_base': 'Charge limit',
     'original_device_class': <NumberDeviceClass.BATTERY: 'battery'>,
     'original_icon': None,
     'original_name': 'Charge limit',

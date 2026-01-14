@@ -20,9 +20,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Freeze prevent',
     'options': dict({
     }),
-    'object_id_base': 'Freeze prevent',
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
     'original_icon': None,
     'original_name': 'Freeze prevent',
@@ -70,9 +70,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Standby',
     'options': dict({
     }),
-    'object_id_base': 'Standby',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Standby',
@@ -119,9 +119,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Watering running',
     'options': dict({
     }),
-    'object_id_base': 'Watering running',
     'original_device_class': <BinarySensorDeviceClass.RUNNING: 'running'>,
     'original_icon': None,
     'original_name': 'Watering running',
@@ -169,9 +169,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Zone 1 enabled',
     'options': dict({
     }),
-    'object_id_base': 'Zone 1 enabled',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Zone 1 enabled',
@@ -218,9 +218,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Zone 2 enabled',
     'options': dict({
     }),
-    'object_id_base': 'Zone 2 enabled',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Zone 2 enabled',

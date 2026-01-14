@@ -26,9 +26,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Active connection',
     'options': dict({
     }),
-    'object_id_base': 'Active connection',
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
     'original_name': 'Active connection',
@@ -81,9 +81,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'CPU usage',
     'options': dict({
     }),
-    'object_id_base': 'CPU usage',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'CPU usage',
@@ -131,9 +131,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Memory usage',
     'options': dict({
     }),
-    'object_id_base': 'Memory usage',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Memory usage',
@@ -181,9 +181,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Reboot cause',
     'options': dict({
     }),
-    'object_id_base': 'Reboot cause',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Reboot cause',
@@ -230,9 +230,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Uptime',
     'options': dict({
     }),
-    'object_id_base': 'Uptime',
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
     'original_icon': None,
     'original_name': 'Uptime',

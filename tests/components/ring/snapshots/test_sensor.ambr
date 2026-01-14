@@ -20,9 +20,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Volume',
     'options': dict({
     }),
-    'object_id_base': 'Volume',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Volume',
@@ -70,9 +70,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Wi-Fi signal category',
     'options': dict({
     }),
-    'object_id_base': 'Wi-Fi signal category',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Wi-Fi signal category',
@@ -120,9 +120,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Signal strength',
     'options': dict({
     }),
-    'object_id_base': 'Signal strength',
     'original_device_class': <SensorDeviceClass.SIGNAL_STRENGTH: 'signal_strength'>,
     'original_icon': None,
     'original_name': 'Signal strength',
@@ -174,9 +174,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery',
     'options': dict({
     }),
-    'object_id_base': 'Battery',
     'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
     'original_icon': None,
     'original_name': 'Battery',
@@ -229,9 +229,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery',
     'options': dict({
     }),
-    'object_id_base': 'Battery',
     'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
     'original_icon': None,
     'original_name': 'Battery',
@@ -282,9 +282,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Last activity',
     'options': dict({
     }),
-    'object_id_base': 'Last activity',
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
     'original_icon': None,
     'original_name': 'Last activity',
@@ -333,9 +333,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Last ding',
     'options': dict({
     }),
-    'object_id_base': 'Last ding',
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
     'original_icon': None,
     'original_name': 'Last ding',
@@ -384,9 +384,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Last motion',
     'options': dict({
     }),
-    'object_id_base': 'Last motion',
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
     'original_icon': None,
     'original_name': 'Last motion',
@@ -435,9 +435,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Volume',
     'options': dict({
     }),
-    'object_id_base': 'Volume',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Volume',
@@ -485,9 +485,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Wi-Fi signal category',
     'options': dict({
     }),
-    'object_id_base': 'Wi-Fi signal category',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Wi-Fi signal category',
@@ -535,9 +535,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Signal strength',
     'options': dict({
     }),
-    'object_id_base': 'Signal strength',
     'original_device_class': <SensorDeviceClass.SIGNAL_STRENGTH: 'signal_strength'>,
     'original_icon': None,
     'original_name': 'Signal strength',
@@ -587,9 +587,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Last activity',
     'options': dict({
     }),
-    'object_id_base': 'Last activity',
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
     'original_icon': None,
     'original_name': 'Last activity',
@@ -638,9 +638,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Last ding',
     'options': dict({
     }),
-    'object_id_base': 'Last ding',
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
     'original_icon': None,
     'original_name': 'Last ding',
@@ -689,9 +689,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Last motion',
     'options': dict({
     }),
-    'object_id_base': 'Last motion',
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
     'original_icon': None,
     'original_name': 'Last motion',
@@ -740,9 +740,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Wi-Fi signal category',
     'options': dict({
     }),
-    'object_id_base': 'Wi-Fi signal category',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Wi-Fi signal category',
@@ -790,9 +790,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Signal strength',
     'options': dict({
     }),
-    'object_id_base': 'Signal strength',
     'original_device_class': <SensorDeviceClass.SIGNAL_STRENGTH: 'signal_strength'>,
     'original_icon': None,
     'original_name': 'Signal strength',
@@ -844,9 +844,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery',
     'options': dict({
     }),
-    'object_id_base': 'Battery',
     'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
     'original_icon': None,
     'original_name': 'Battery',
@@ -897,9 +897,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Doorbell volume',
     'options': dict({
     }),
-    'object_id_base': 'Doorbell volume',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Doorbell volume',
@@ -947,9 +947,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Last activity',
     'options': dict({
     }),
-    'object_id_base': 'Last activity',
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
     'original_icon': None,
     'original_name': 'Last activity',
@@ -998,9 +998,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Mic volume',
     'options': dict({
     }),
-    'object_id_base': 'Mic volume',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Mic volume',
@@ -1048,9 +1048,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Voice volume',
     'options': dict({
     }),
-    'object_id_base': 'Voice volume',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Voice volume',
@@ -1098,9 +1098,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Wi-Fi signal category',
     'options': dict({
     }),
-    'object_id_base': 'Wi-Fi signal category',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Wi-Fi signal category',
@@ -1148,9 +1148,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Signal strength',
     'options': dict({
     }),
-    'object_id_base': 'Signal strength',
     'original_device_class': <SensorDeviceClass.SIGNAL_STRENGTH: 'signal_strength'>,
     'original_icon': None,
     'original_name': 'Signal strength',
@@ -1202,9 +1202,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery',
     'options': dict({
     }),
-    'object_id_base': 'Battery',
     'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
     'original_icon': None,
     'original_name': 'Battery',
@@ -1255,9 +1255,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Last activity',
     'options': dict({
     }),
-    'object_id_base': 'Last activity',
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
     'original_icon': None,
     'original_name': 'Last activity',
@@ -1306,9 +1306,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Last ding',
     'options': dict({
     }),
-    'object_id_base': 'Last ding',
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
     'original_icon': None,
     'original_name': 'Last ding',
@@ -1357,9 +1357,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Last motion',
     'options': dict({
     }),
-    'object_id_base': 'Last motion',
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
     'original_icon': None,
     'original_name': 'Last motion',
@@ -1408,9 +1408,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Wi-Fi signal category',
     'options': dict({
     }),
-    'object_id_base': 'Wi-Fi signal category',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Wi-Fi signal category',
@@ -1458,9 +1458,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Signal strength',
     'options': dict({
     }),
-    'object_id_base': 'Signal strength',
     'original_device_class': <SensorDeviceClass.SIGNAL_STRENGTH: 'signal_strength'>,
     'original_icon': None,
     'original_name': 'Signal strength',

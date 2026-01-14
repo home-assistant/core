@@ -20,9 +20,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'CI latest build',
     'options': dict({
     }),
-    'object_id_base': 'CI latest build',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'CI latest build',
@@ -81,9 +81,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'CI latest build finish time',
     'options': dict({
     }),
-    'object_id_base': 'CI latest build finish time',
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
     'original_icon': None,
     'original_name': 'CI latest build finish time',
@@ -131,9 +131,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'CI latest build ID',
     'options': dict({
     }),
-    'object_id_base': 'CI latest build ID',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'CI latest build ID',
@@ -180,9 +180,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'CI latest build queue time',
     'options': dict({
     }),
-    'object_id_base': 'CI latest build queue time',
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
     'original_icon': None,
     'original_name': 'CI latest build queue time',
@@ -230,9 +230,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'CI latest build reason',
     'options': dict({
     }),
-    'object_id_base': 'CI latest build reason',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'CI latest build reason',
@@ -279,9 +279,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'CI latest build result',
     'options': dict({
     }),
-    'object_id_base': 'CI latest build result',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'CI latest build result',
@@ -328,9 +328,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'CI latest build source branch',
     'options': dict({
     }),
-    'object_id_base': 'CI latest build source branch',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'CI latest build source branch',
@@ -377,9 +377,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'CI latest build source version',
     'options': dict({
     }),
-    'object_id_base': 'CI latest build source version',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'CI latest build source version',
@@ -426,9 +426,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'CI latest build start time',
     'options': dict({
     }),
-    'object_id_base': 'CI latest build start time',
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
     'original_icon': None,
     'original_name': 'CI latest build start time',
@@ -476,9 +476,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'CI latest build URL',
     'options': dict({
     }),
-    'object_id_base': 'CI latest build URL',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'CI latest build URL',

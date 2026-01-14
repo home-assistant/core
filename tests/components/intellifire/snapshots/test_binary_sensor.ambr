@@ -20,9 +20,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Accessory error',
     'options': dict({
     }),
-    'object_id_base': 'Accessory error',
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
     'original_icon': None,
     'original_name': 'Accessory error',
@@ -71,9 +71,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Cloud connectivity',
     'options': dict({
     }),
-    'object_id_base': 'Cloud connectivity',
     'original_device_class': <BinarySensorDeviceClass.CONNECTIVITY: 'connectivity'>,
     'original_icon': None,
     'original_name': 'Cloud connectivity',
@@ -122,9 +122,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Disabled error',
     'options': dict({
     }),
-    'object_id_base': 'Disabled error',
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
     'original_icon': None,
     'original_name': 'Disabled error',
@@ -173,9 +173,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'ECM offline error',
     'options': dict({
     }),
-    'object_id_base': 'ECM offline error',
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
     'original_icon': None,
     'original_name': 'ECM offline error',
@@ -224,9 +224,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Fan delay error',
     'options': dict({
     }),
-    'object_id_base': 'Fan delay error',
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
     'original_icon': None,
     'original_name': 'Fan delay error',
@@ -275,9 +275,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Fan error',
     'options': dict({
     }),
-    'object_id_base': 'Fan error',
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
     'original_icon': None,
     'original_name': 'Fan error',
@@ -326,9 +326,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Flame',
     'options': dict({
     }),
-    'object_id_base': 'Flame',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Flame',
@@ -376,9 +376,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Flame error',
     'options': dict({
     }),
-    'object_id_base': 'Flame error',
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
     'original_icon': None,
     'original_name': 'Flame error',
@@ -427,9 +427,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Lights error',
     'options': dict({
     }),
-    'object_id_base': 'Lights error',
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
     'original_icon': None,
     'original_name': 'Lights error',
@@ -478,9 +478,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Local connectivity',
     'options': dict({
     }),
-    'object_id_base': 'Local connectivity',
     'original_device_class': <BinarySensorDeviceClass.CONNECTIVITY: 'connectivity'>,
     'original_icon': None,
     'original_name': 'Local connectivity',
@@ -529,9 +529,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Maintenance error',
     'options': dict({
     }),
-    'object_id_base': 'Maintenance error',
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
     'original_icon': None,
     'original_name': 'Maintenance error',
@@ -580,9 +580,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Offline error',
     'options': dict({
     }),
-    'object_id_base': 'Offline error',
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
     'original_icon': None,
     'original_name': 'Offline error',
@@ -631,9 +631,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Pilot flame error',
     'options': dict({
     }),
-    'object_id_base': 'Pilot flame error',
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
     'original_icon': None,
     'original_name': 'Pilot flame error',
@@ -682,9 +682,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Pilot light on',
     'options': dict({
     }),
-    'object_id_base': 'Pilot light on',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Pilot light on',
@@ -732,9 +732,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Soft lock out error',
     'options': dict({
     }),
-    'object_id_base': 'Soft lock out error',
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
     'original_icon': None,
     'original_name': 'Soft lock out error',
@@ -783,9 +783,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Thermostat on',
     'options': dict({
     }),
-    'object_id_base': 'Thermostat on',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Thermostat on',
@@ -833,9 +833,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Timer on',
     'options': dict({
     }),
-    'object_id_base': 'Timer on',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Timer on',

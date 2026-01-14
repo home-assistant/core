@@ -27,9 +27,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Channel 1',
     'options': dict({
     }),
-    'object_id_base': 'Channel 1',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Channel 1',
@@ -93,9 +93,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Channel 0',
     'options': dict({
     }),
-    'object_id_base': 'Channel 0',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Channel 0',
@@ -159,9 +159,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Channel 1',
     'options': dict({
     }),
-    'object_id_base': 'Channel 1',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Channel 1',
@@ -225,9 +225,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Channel 0',
     'options': dict({
     }),
-    'object_id_base': 'Channel 0',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Channel 0',
@@ -291,9 +291,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Channel 1',
     'options': dict({
     }),
-    'object_id_base': 'Channel 1',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Channel 1',

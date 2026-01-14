@@ -22,12 +22,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Current streak',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
       }),
     }),
-    'object_id_base': 'Current streak',
     'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
     'original_icon': None,
     'original_name': 'Current streak',
@@ -79,12 +79,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Highest streak',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
       }),
     }),
-    'object_id_base': 'Highest streak',
     'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
     'original_icon': None,
     'original_name': 'Highest streak',
@@ -134,9 +134,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Last played',
     'options': dict({
     }),
-    'object_id_base': 'Last played',
     'original_device_class': <SensorDeviceClass.DATE: 'date'>,
     'original_icon': None,
     'original_name': 'Last played',
@@ -186,9 +186,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Played',
     'options': dict({
     }),
-    'object_id_base': 'Played',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Played',
@@ -239,9 +239,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Won',
     'options': dict({
     }),
-    'object_id_base': 'Won',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Won',
@@ -292,9 +292,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Played',
     'options': dict({
     }),
-    'object_id_base': 'Played',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Played',
@@ -345,9 +345,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Total pangrams found',
     'options': dict({
     }),
-    'object_id_base': 'Total pangrams found',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Total pangrams found',
@@ -398,9 +398,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Total words found',
     'options': dict({
     }),
-    'object_id_base': 'Total words found',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Total words found',
@@ -451,12 +451,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Current streak',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
       }),
     }),
-    'object_id_base': 'Current streak',
     'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
     'original_icon': None,
     'original_name': 'Current streak',
@@ -508,12 +508,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Highest streak',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
       }),
     }),
-    'object_id_base': 'Highest streak',
     'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
     'original_icon': None,
     'original_name': 'Highest streak',
@@ -565,9 +565,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Played',
     'options': dict({
     }),
-    'object_id_base': 'Played',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Played',
@@ -618,9 +618,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Won',
     'options': dict({
     }),
-    'object_id_base': 'Won',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Won',

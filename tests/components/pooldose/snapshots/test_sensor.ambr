@@ -20,9 +20,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Chlorine',
     'options': dict({
     }),
-    'object_id_base': 'Chlorine',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Chlorine',
@@ -75,9 +75,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Chlorine dosing type',
     'options': dict({
     }),
-    'object_id_base': 'Chlorine dosing type',
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
     'original_name': 'Chlorine dosing type',
@@ -136,9 +136,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Chlorine peristaltic dosing',
     'options': dict({
     }),
-    'object_id_base': 'Chlorine peristaltic dosing',
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
     'original_name': 'Chlorine peristaltic dosing',
@@ -192,12 +192,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Flow rate',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
       }),
     }),
-    'object_id_base': 'Flow rate',
     'original_device_class': <SensorDeviceClass.VOLUME_FLOW_RATE: 'volume_flow_rate'>,
     'original_icon': None,
     'original_name': 'Flow rate',
@@ -246,12 +246,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'ORP',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
       }),
     }),
-    'object_id_base': 'ORP',
     'original_device_class': <SensorDeviceClass.VOLTAGE: 'voltage'>,
     'original_icon': None,
     'original_name': 'ORP',
@@ -300,12 +300,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'ORP calibration offset',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
       }),
     }),
-    'object_id_base': 'ORP calibration offset',
     'original_device_class': <SensorDeviceClass.VOLTAGE: 'voltage'>,
     'original_icon': None,
     'original_name': 'ORP calibration offset',
@@ -354,12 +354,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'ORP calibration slope',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
       }),
     }),
-    'object_id_base': 'ORP calibration slope',
     'original_device_class': <SensorDeviceClass.VOLTAGE: 'voltage'>,
     'original_icon': None,
     'original_name': 'ORP calibration slope',
@@ -414,9 +414,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'ORP calibration type',
     'options': dict({
     }),
-    'object_id_base': 'ORP calibration type',
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
     'original_name': 'ORP calibration type',
@@ -474,9 +474,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'ORP dosing type',
     'options': dict({
     }),
-    'object_id_base': 'ORP dosing type',
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
     'original_name': 'ORP dosing type',
@@ -528,12 +528,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'ORP overfeed alert time',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
       }),
     }),
-    'object_id_base': 'ORP overfeed alert time',
     'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
     'original_icon': None,
     'original_name': 'ORP overfeed alert time',
@@ -589,9 +589,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'ORP peristaltic dosing',
     'options': dict({
     }),
-    'object_id_base': 'ORP peristaltic dosing',
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
     'original_name': 'ORP peristaltic dosing',
@@ -645,9 +645,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'pH',
     'options': dict({
     }),
-    'object_id_base': 'pH',
     'original_device_class': <SensorDeviceClass.PH: 'ph'>,
     'original_icon': None,
     'original_name': 'pH',
@@ -695,12 +695,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'pH calibration offset',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
       }),
     }),
-    'object_id_base': 'pH calibration offset',
     'original_device_class': <SensorDeviceClass.VOLTAGE: 'voltage'>,
     'original_icon': None,
     'original_name': 'pH calibration offset',
@@ -749,12 +749,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'pH calibration slope',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
       }),
     }),
-    'object_id_base': 'pH calibration slope',
     'original_device_class': <SensorDeviceClass.VOLTAGE: 'voltage'>,
     'original_icon': None,
     'original_name': 'pH calibration slope',
@@ -810,9 +810,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'pH calibration type',
     'options': dict({
     }),
-    'object_id_base': 'pH calibration type',
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
     'original_name': 'pH calibration type',
@@ -871,9 +871,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'pH dosing type',
     'options': dict({
     }),
-    'object_id_base': 'pH dosing type',
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
     'original_name': 'pH dosing type',
@@ -925,12 +925,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'pH overfeed alert time',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
       }),
     }),
-    'object_id_base': 'pH overfeed alert time',
     'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
     'original_icon': None,
     'original_name': 'pH overfeed alert time',
@@ -985,9 +985,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'pH peristaltic dosing',
     'options': dict({
     }),
-    'object_id_base': 'pH peristaltic dosing',
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
     'original_name': 'pH peristaltic dosing',
@@ -1040,12 +1040,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
       }),
     }),
-    'object_id_base': 'Temperature',
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Temperature',
@@ -1096,12 +1096,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Totalizer',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
       }),
     }),
-    'object_id_base': 'Totalizer',
     'original_device_class': <SensorDeviceClass.VOLUME: 'volume'>,
     'original_icon': None,
     'original_name': 'Totalizer',

@@ -20,9 +20,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Created',
     'options': dict({
     }),
-    'object_id_base': 'Created',
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
     'original_icon': None,
     'original_name': 'Created',
@@ -70,9 +70,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Last updated',
     'options': dict({
     }),
-    'object_id_base': 'Last updated',
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
     'original_icon': None,
     'original_name': 'Last updated',
@@ -122,12 +122,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Size',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
       }),
     }),
-    'object_id_base': 'Size',
     'original_device_class': <SensorDeviceClass.DATA_SIZE: 'data_size'>,
     'original_icon': None,
     'original_name': 'Size',
@@ -179,12 +179,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Size in bytes',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
       }),
     }),
-    'object_id_base': 'Size in bytes',
     'original_device_class': <SensorDeviceClass.DATA_SIZE: 'data_size'>,
     'original_icon': None,
     'original_name': 'Size in bytes',

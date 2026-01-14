@@ -22,9 +22,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Balance',
     'options': dict({
     }),
-    'object_id_base': 'Balance',
     'original_device_class': <SensorDeviceClass.MONETARY: 'monetary'>,
     'original_icon': <AccountType.INVESTMENT: 'mdi:chart-areaspline'>,
     'original_name': 'Balance',
@@ -76,9 +76,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Data age',
     'options': dict({
     }),
-    'object_id_base': 'Data age',
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
     'original_icon': None,
     'original_name': 'Data age',
@@ -129,9 +129,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Balance',
     'options': dict({
     }),
-    'object_id_base': 'Balance',
     'original_device_class': <SensorDeviceClass.MONETARY: 'monetary'>,
     'original_icon': <AccountType.CHECKING: 'mdi:checkbook'>,
     'original_name': 'Balance',
@@ -183,9 +183,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Data age',
     'options': dict({
     }),
-    'object_id_base': 'Data age',
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
     'original_icon': None,
     'original_name': 'Data age',
@@ -236,9 +236,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Balance',
     'options': dict({
     }),
-    'object_id_base': 'Balance',
     'original_device_class': <SensorDeviceClass.MONETARY: 'monetary'>,
     'original_icon': <AccountType.INVESTMENT: 'mdi:chart-areaspline'>,
     'original_name': 'Balance',
@@ -290,9 +290,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Data age',
     'options': dict({
     }),
-    'object_id_base': 'Data age',
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
     'original_icon': None,
     'original_name': 'Data age',
@@ -343,9 +343,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Balance',
     'options': dict({
     }),
-    'object_id_base': 'Balance',
     'original_device_class': <SensorDeviceClass.MONETARY: 'monetary'>,
     'original_icon': <AccountType.UNKNOWN: 'mdi:cash'>,
     'original_name': 'Balance',
@@ -397,9 +397,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Data age',
     'options': dict({
     }),
-    'object_id_base': 'Data age',
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
     'original_icon': None,
     'original_name': 'Data age',
@@ -450,9 +450,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Balance',
     'options': dict({
     }),
-    'object_id_base': 'Balance',
     'original_device_class': <SensorDeviceClass.MONETARY: 'monetary'>,
     'original_icon': <AccountType.UNKNOWN: 'mdi:cash'>,
     'original_name': 'Balance',
@@ -504,9 +504,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Data age',
     'options': dict({
     }),
-    'object_id_base': 'Data age',
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
     'original_icon': None,
     'original_name': 'Data age',
@@ -557,9 +557,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Balance',
     'options': dict({
     }),
-    'object_id_base': 'Balance',
     'original_device_class': <SensorDeviceClass.MONETARY: 'monetary'>,
     'original_icon': <AccountType.CREDIT_CARD: 'mdi:credit-card'>,
     'original_name': 'Balance',
@@ -611,9 +611,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Data age',
     'options': dict({
     }),
-    'object_id_base': 'Data age',
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
     'original_icon': None,
     'original_name': 'Data age',
@@ -664,9 +664,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Balance',
     'options': dict({
     }),
-    'object_id_base': 'Balance',
     'original_device_class': <SensorDeviceClass.MONETARY: 'monetary'>,
     'original_icon': <AccountType.SAVINGS: 'mdi:piggy-bank-outline'>,
     'original_name': 'Balance',
@@ -718,9 +718,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Data age',
     'options': dict({
     }),
-    'object_id_base': 'Data age',
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
     'original_icon': None,
     'original_name': 'Data age',
@@ -771,9 +771,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Balance',
     'options': dict({
     }),
-    'object_id_base': 'Balance',
     'original_device_class': <SensorDeviceClass.MONETARY: 'monetary'>,
     'original_icon': <AccountType.UNKNOWN: 'mdi:cash'>,
     'original_name': 'Balance',
@@ -825,9 +825,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Data age',
     'options': dict({
     }),
-    'object_id_base': 'Data age',
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
     'original_icon': None,
     'original_name': 'Data age',

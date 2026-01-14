@@ -20,9 +20,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'ZONA  01',
     'options': dict({
     }),
-    'object_id_base': 'ZONA  01',
     'original_device_class': <BinarySensorDeviceClass.DOOR: 'door'>,
     'original_icon': None,
     'original_name': 'ZONA  01',
@@ -70,9 +70,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'ZONA  02e',
     'options': dict({
     }),
-    'object_id_base': 'ZONA  02e',
     'original_device_class': <BinarySensorDeviceClass.DOOR: 'door'>,
     'original_icon': None,
     'original_name': 'ZONA  02e',
@@ -120,9 +120,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'ZONA  03a',
     'options': dict({
     }),
-    'object_id_base': 'ZONA  03a',
     'original_device_class': <BinarySensorDeviceClass.DOOR: 'door'>,
     'original_icon': None,
     'original_name': 'ZONA  03a',
@@ -170,9 +170,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'ZONA  04',
     'options': dict({
     }),
-    'object_id_base': 'ZONA  04',
     'original_device_class': <BinarySensorDeviceClass.DOOR: 'door'>,
     'original_icon': None,
     'original_name': 'ZONA  04',
@@ -220,9 +220,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'ZONA  05',
     'options': dict({
     }),
-    'object_id_base': 'ZONA  05',
     'original_device_class': <BinarySensorDeviceClass.DOOR: 'door'>,
     'original_icon': None,
     'original_name': 'ZONA  05',
@@ -270,9 +270,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'ZONA  06',
     'options': dict({
     }),
-    'object_id_base': 'ZONA  06',
     'original_device_class': <BinarySensorDeviceClass.DOOR: 'door'>,
     'original_icon': None,
     'original_name': 'ZONA  06',
@@ -320,9 +320,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'ZONA  07',
     'options': dict({
     }),
-    'object_id_base': 'ZONA  07',
     'original_device_class': <BinarySensorDeviceClass.DOOR: 'door'>,
     'original_icon': None,
     'original_name': 'ZONA  07',
@@ -370,9 +370,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'ZONA  08',
     'options': dict({
     }),
-    'object_id_base': 'ZONA  08',
     'original_device_class': <BinarySensorDeviceClass.DOOR: 'door'>,
     'original_icon': None,
     'original_name': 'ZONA  08',

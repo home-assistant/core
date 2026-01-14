@@ -20,9 +20,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Announce',
     'options': dict({
     }),
-    'object_id_base': 'Announce',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Announce',
@@ -70,9 +70,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Speak',
     'options': dict({
     }),
-    'object_id_base': 'Speak',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Speak',

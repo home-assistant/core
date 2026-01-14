@@ -20,9 +20,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Reset timer',
     'options': dict({
     }),
-    'object_id_base': 'Reset timer',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Reset timer',
@@ -69,9 +69,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Start/stop timer',
     'options': dict({
     }),
-    'object_id_base': 'Start/stop timer',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Start/stop timer',
@@ -118,9 +118,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Tare',
     'options': dict({
     }),
-    'object_id_base': 'Tare',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Tare',

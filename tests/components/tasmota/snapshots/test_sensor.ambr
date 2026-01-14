@@ -38,12 +38,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'DHT11 Temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
       }),
     }),
-    'object_id_base': 'DHT11 Temperature',
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'DHT11 Temperature',
@@ -123,9 +123,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'TX23 Speed Act',
     'options': dict({
     }),
-    'object_id_base': 'TX23 Speed Act',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'TX23 Speed Act',
@@ -172,9 +172,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'TX23 Dir Card',
     'options': dict({
     }),
-    'object_id_base': 'TX23 Dir Card',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'TX23 Dir Card',
@@ -280,12 +280,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'ENERGY TotalTariff 0',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
       }),
     }),
-    'object_id_base': 'ENERGY TotalTariff 0',
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
     'original_name': 'ENERGY TotalTariff 0',
@@ -433,12 +433,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'ENERGY TotalTariff 1',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
       }),
     }),
-    'object_id_base': 'ENERGY TotalTariff 1',
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
     'original_name': 'ENERGY TotalTariff 1',
@@ -490,12 +490,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'ENERGY ExportTariff 0',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
       }),
     }),
-    'object_id_base': 'ENERGY ExportTariff 0',
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
     'original_name': 'ENERGY ExportTariff 0',
@@ -547,12 +547,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'ENERGY ExportTariff 1',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
       }),
     }),
-    'object_id_base': 'ENERGY ExportTariff 1',
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
     'original_name': 'ENERGY ExportTariff 1',
@@ -636,12 +636,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'DS18B20 Temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
       }),
     }),
-    'object_id_base': 'DS18B20 Temperature',
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'DS18B20 Temperature',
@@ -688,9 +688,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'DS18B20 Id',
     'options': dict({
     }),
-    'object_id_base': 'DS18B20 Id',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'DS18B20 Id',
@@ -800,12 +800,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'ENERGY Total',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
       }),
     }),
-    'object_id_base': 'ENERGY Total',
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
     'original_name': 'ENERGY Total',
@@ -889,12 +889,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'ENERGY Total 0',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
       }),
     }),
-    'object_id_base': 'ENERGY Total 0',
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
     'original_name': 'ENERGY Total 0',
@@ -946,12 +946,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'ENERGY Total 1',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
       }),
     }),
-    'object_id_base': 'ENERGY Total 1',
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
     'original_name': 'ENERGY Total 1',
@@ -1067,12 +1067,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'ENERGY Total Phase1',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
       }),
     }),
-    'object_id_base': 'ENERGY Total Phase1',
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
     'original_name': 'ENERGY Total Phase1',
@@ -1124,12 +1124,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'ENERGY Total Phase2',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
       }),
     }),
-    'object_id_base': 'ENERGY Total Phase2',
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
     'original_name': 'ENERGY Total Phase2',
@@ -1245,12 +1245,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'ANALOG Temperature1',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
       }),
     }),
-    'object_id_base': 'ANALOG Temperature1',
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'ANALOG Temperature1',
@@ -1334,12 +1334,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'ANALOG Temperature2',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
       }),
     }),
-    'object_id_base': 'ANALOG Temperature2',
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'ANALOG Temperature2',
@@ -1391,9 +1391,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'ANALOG Illuminance3',
     'options': dict({
     }),
-    'object_id_base': 'ANALOG Illuminance3',
     'original_device_class': <SensorDeviceClass.ILLUMINANCE: 'illuminance'>,
     'original_icon': None,
     'original_name': 'ANALOG Illuminance3',
@@ -1509,12 +1509,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'ANALOG CTEnergy1 Energy',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
       }),
     }),
-    'object_id_base': 'ANALOG CTEnergy1 Energy',
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
     'original_name': 'ANALOG CTEnergy1 Energy',
@@ -1662,12 +1662,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'ANALOG CTEnergy1 Power',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
       }),
     }),
-    'object_id_base': 'ANALOG CTEnergy1 Power',
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
     'original_icon': None,
     'original_name': 'ANALOG CTEnergy1 Power',
@@ -1719,12 +1719,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'ANALOG CTEnergy1 Voltage',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
       }),
     }),
-    'object_id_base': 'ANALOG CTEnergy1 Voltage',
     'original_device_class': <SensorDeviceClass.VOLTAGE: 'voltage'>,
     'original_icon': None,
     'original_name': 'ANALOG CTEnergy1 Voltage',
@@ -1776,12 +1776,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'ANALOG CTEnergy1 Current',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
       }),
     }),
-    'object_id_base': 'ANALOG CTEnergy1 Current',
     'original_device_class': <SensorDeviceClass.CURRENT: 'current'>,
     'original_icon': None,
     'original_name': 'ANALOG CTEnergy1 Current',
@@ -1860,9 +1860,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'SENSOR1 Unknown',
     'options': dict({
     }),
-    'object_id_base': 'SENSOR1 Unknown',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'SENSOR1 Unknown',
@@ -1991,9 +1991,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'SENSOR2 Unknown',
     'options': dict({
     }),
-    'object_id_base': 'SENSOR2 Unknown',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'SENSOR2 Unknown',
@@ -2043,9 +2043,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'SENSOR3 Unknown',
     'options': dict({
     }),
-    'object_id_base': 'SENSOR3 Unknown',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'SENSOR3 Unknown',
@@ -2095,9 +2095,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'SENSOR4 Unknown',
     'options': dict({
     }),
-    'object_id_base': 'SENSOR4 Unknown',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'SENSOR4 Unknown',

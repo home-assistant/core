@@ -22,12 +22,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'CPU usage total',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
       }),
     }),
-    'object_id_base': 'CPU usage total',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'CPU usage total',
@@ -76,9 +76,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Image',
     'options': dict({
     }),
-    'object_id_base': 'Image',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Image',
@@ -127,6 +127,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Memory limit',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -135,7 +136,6 @@
         'suggested_unit_of_measurement': <UnitOfInformation.MEGABYTES: 'MB'>,
       }),
     }),
-    'object_id_base': 'Memory limit',
     'original_device_class': <SensorDeviceClass.DATA_SIZE: 'data_size'>,
     'original_icon': None,
     'original_name': 'Memory limit',
@@ -187,6 +187,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Memory usage',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -195,7 +196,6 @@
         'suggested_unit_of_measurement': <UnitOfInformation.MEGABYTES: 'MB'>,
       }),
     }),
-    'object_id_base': 'Memory usage',
     'original_device_class': <SensorDeviceClass.DATA_SIZE: 'data_size'>,
     'original_icon': None,
     'original_name': 'Memory usage',
@@ -247,12 +247,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Memory usage percentage',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
       }),
     }),
-    'object_id_base': 'Memory usage percentage',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Memory usage percentage',
@@ -310,9 +310,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'State',
     'options': dict({
     }),
-    'object_id_base': 'State',
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
     'original_name': 'State',
@@ -370,12 +370,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'CPU usage total',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
       }),
     }),
-    'object_id_base': 'CPU usage total',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'CPU usage total',
@@ -424,9 +424,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Image',
     'options': dict({
     }),
-    'object_id_base': 'Image',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Image',
@@ -475,6 +475,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Memory limit',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -483,7 +484,6 @@
         'suggested_unit_of_measurement': <UnitOfInformation.MEGABYTES: 'MB'>,
       }),
     }),
-    'object_id_base': 'Memory limit',
     'original_device_class': <SensorDeviceClass.DATA_SIZE: 'data_size'>,
     'original_icon': None,
     'original_name': 'Memory limit',
@@ -535,6 +535,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Memory usage',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -543,7 +544,6 @@
         'suggested_unit_of_measurement': <UnitOfInformation.MEGABYTES: 'MB'>,
       }),
     }),
-    'object_id_base': 'Memory usage',
     'original_device_class': <SensorDeviceClass.DATA_SIZE: 'data_size'>,
     'original_icon': None,
     'original_name': 'Memory usage',
@@ -595,12 +595,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Memory usage percentage',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
       }),
     }),
-    'object_id_base': 'Memory usage percentage',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Memory usage percentage',
@@ -658,9 +658,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'State',
     'options': dict({
     }),
-    'object_id_base': 'State',
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
     'original_name': 'State',
@@ -716,9 +716,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'API version',
     'options': dict({
     }),
-    'object_id_base': 'API version',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'API version',
@@ -765,9 +765,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Architecture',
     'options': dict({
     }),
-    'object_id_base': 'Architecture',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Architecture',
@@ -816,9 +816,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Container count',
     'options': dict({
     }),
-    'object_id_base': 'Container count',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Container count',
@@ -868,9 +868,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Containers paused',
     'options': dict({
     }),
-    'object_id_base': 'Containers paused',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Containers paused',
@@ -920,9 +920,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Containers running',
     'options': dict({
     }),
-    'object_id_base': 'Containers running',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Containers running',
@@ -972,9 +972,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Containers stopped',
     'options': dict({
     }),
-    'object_id_base': 'Containers stopped',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Containers stopped',
@@ -1022,9 +1022,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Docker version',
     'options': dict({
     }),
-    'object_id_base': 'Docker version',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Docker version',
@@ -1073,9 +1073,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Image count',
     'options': dict({
     }),
-    'object_id_base': 'Image count',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Image count',
@@ -1123,9 +1123,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Kernel version',
     'options': dict({
     }),
-    'object_id_base': 'Kernel version',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Kernel version',
@@ -1172,9 +1172,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Operating system',
     'options': dict({
     }),
-    'object_id_base': 'Operating system',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Operating system',
@@ -1221,9 +1221,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Operating system version',
     'options': dict({
     }),
-    'object_id_base': 'Operating system version',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Operating system version',
@@ -1272,9 +1272,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Total CPU',
     'options': dict({
     }),
-    'object_id_base': 'Total CPU',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Total CPU',
@@ -1324,6 +1324,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Total memory',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -1332,7 +1333,6 @@
         'suggested_unit_of_measurement': <UnitOfInformation.MEBIBYTES: 'MiB'>,
       }),
     }),
-    'object_id_base': 'Total memory',
     'original_device_class': <SensorDeviceClass.DATA_SIZE: 'data_size'>,
     'original_icon': None,
     'original_name': 'Total memory',
@@ -1384,12 +1384,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'CPU usage total',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
       }),
     }),
-    'object_id_base': 'CPU usage total',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'CPU usage total',
@@ -1438,9 +1438,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Image',
     'options': dict({
     }),
-    'object_id_base': 'Image',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Image',
@@ -1489,6 +1489,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Memory limit',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -1497,7 +1498,6 @@
         'suggested_unit_of_measurement': <UnitOfInformation.MEGABYTES: 'MB'>,
       }),
     }),
-    'object_id_base': 'Memory limit',
     'original_device_class': <SensorDeviceClass.DATA_SIZE: 'data_size'>,
     'original_icon': None,
     'original_name': 'Memory limit',
@@ -1549,6 +1549,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Memory usage',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -1557,7 +1558,6 @@
         'suggested_unit_of_measurement': <UnitOfInformation.MEGABYTES: 'MB'>,
       }),
     }),
-    'object_id_base': 'Memory usage',
     'original_device_class': <SensorDeviceClass.DATA_SIZE: 'data_size'>,
     'original_icon': None,
     'original_name': 'Memory usage',
@@ -1609,12 +1609,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Memory usage percentage',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
       }),
     }),
-    'object_id_base': 'Memory usage percentage',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Memory usage percentage',
@@ -1672,9 +1672,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'State',
     'options': dict({
     }),
-    'object_id_base': 'State',
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
     'original_name': 'State',
@@ -1732,12 +1732,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'CPU usage total',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
       }),
     }),
-    'object_id_base': 'CPU usage total',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'CPU usage total',
@@ -1786,9 +1786,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Image',
     'options': dict({
     }),
-    'object_id_base': 'Image',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Image',
@@ -1837,6 +1837,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Memory limit',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -1845,7 +1846,6 @@
         'suggested_unit_of_measurement': <UnitOfInformation.MEGABYTES: 'MB'>,
       }),
     }),
-    'object_id_base': 'Memory limit',
     'original_device_class': <SensorDeviceClass.DATA_SIZE: 'data_size'>,
     'original_icon': None,
     'original_name': 'Memory limit',
@@ -1897,6 +1897,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Memory usage',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -1905,7 +1906,6 @@
         'suggested_unit_of_measurement': <UnitOfInformation.MEGABYTES: 'MB'>,
       }),
     }),
-    'object_id_base': 'Memory usage',
     'original_device_class': <SensorDeviceClass.DATA_SIZE: 'data_size'>,
     'original_icon': None,
     'original_name': 'Memory usage',
@@ -1957,12 +1957,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Memory usage percentage',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
       }),
     }),
-    'object_id_base': 'Memory usage percentage',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Memory usage percentage',
@@ -2020,9 +2020,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'State',
     'options': dict({
     }),
-    'object_id_base': 'State',
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
     'original_name': 'State',
@@ -2080,12 +2080,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'CPU usage total',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
       }),
     }),
-    'object_id_base': 'CPU usage total',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'CPU usage total',
@@ -2134,9 +2134,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Image',
     'options': dict({
     }),
-    'object_id_base': 'Image',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Image',
@@ -2185,6 +2185,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Memory limit',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -2193,7 +2194,6 @@
         'suggested_unit_of_measurement': <UnitOfInformation.MEGABYTES: 'MB'>,
       }),
     }),
-    'object_id_base': 'Memory limit',
     'original_device_class': <SensorDeviceClass.DATA_SIZE: 'data_size'>,
     'original_icon': None,
     'original_name': 'Memory limit',
@@ -2245,6 +2245,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Memory usage',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -2253,7 +2254,6 @@
         'suggested_unit_of_measurement': <UnitOfInformation.MEGABYTES: 'MB'>,
       }),
     }),
-    'object_id_base': 'Memory usage',
     'original_device_class': <SensorDeviceClass.DATA_SIZE: 'data_size'>,
     'original_icon': None,
     'original_name': 'Memory usage',
@@ -2305,12 +2305,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Memory usage percentage',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
       }),
     }),
-    'object_id_base': 'Memory usage percentage',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Memory usage percentage',
@@ -2368,9 +2368,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'State',
     'options': dict({
     }),
-    'object_id_base': 'State',
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
     'original_name': 'State',

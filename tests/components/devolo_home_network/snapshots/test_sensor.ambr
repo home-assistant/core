@@ -33,9 +33,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Connected PLC devices',
     'options': dict({
     }),
-    'object_id_base': 'Connected PLC devices',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Connected PLC devices',
@@ -85,9 +85,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Connected Wi-Fi clients',
     'options': dict({
     }),
-    'object_id_base': 'Connected Wi-Fi clients',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Connected Wi-Fi clients',
@@ -135,9 +135,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Last restart of the device',
     'options': dict({
     }),
-    'object_id_base': 'Last restart of the device',
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
     'original_icon': None,
     'original_name': 'Last restart of the device',
@@ -184,9 +184,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Neighboring Wi-Fi networks',
     'options': dict({
     }),
-    'object_id_base': 'Neighboring Wi-Fi networks',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Neighboring Wi-Fi networks',
@@ -235,12 +235,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'PLC downlink PHY rate (test2)',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
       }),
     }),
-    'object_id_base': 'PLC downlink PHY rate (test2)',
     'original_device_class': <SensorDeviceClass.DATA_RATE: 'data_rate'>,
     'original_icon': None,
     'original_name': 'PLC downlink PHY rate (test2)',
@@ -289,12 +289,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'PLC downlink PHY rate (test2)',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
       }),
     }),
-    'object_id_base': 'PLC downlink PHY rate (test2)',
     'original_device_class': <SensorDeviceClass.DATA_RATE: 'data_rate'>,
     'original_icon': None,
     'original_name': 'PLC downlink PHY rate (test2)',

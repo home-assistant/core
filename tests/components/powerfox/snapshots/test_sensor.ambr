@@ -20,12 +20,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Avg gas hourly consumption - today',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
       }),
     }),
-    'object_id_base': 'Avg gas hourly consumption - today',
     'original_device_class': <SensorDeviceClass.GAS: 'gas'>,
     'original_icon': None,
     'original_name': 'Avg gas hourly consumption - today',
@@ -74,12 +74,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Avg gas hourly energy - today',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
       }),
     }),
-    'object_id_base': 'Avg gas hourly energy - today',
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
     'original_name': 'Avg gas hourly energy - today',
@@ -128,12 +128,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Gas consumption energy - this hour',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
       }),
     }),
-    'object_id_base': 'Gas consumption energy - this hour',
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
     'original_name': 'Gas consumption energy - this hour',
@@ -184,12 +184,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Gas consumption energy - today',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
       }),
     }),
-    'object_id_base': 'Gas consumption energy - today',
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
     'original_name': 'Gas consumption energy - today',
@@ -239,12 +239,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Gas consumption - this hour',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
       }),
     }),
-    'object_id_base': 'Gas consumption - this hour',
     'original_device_class': <SensorDeviceClass.GAS: 'gas'>,
     'original_icon': None,
     'original_name': 'Gas consumption - this hour',
@@ -295,12 +295,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Gas consumption - today',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
       }),
     }),
-    'object_id_base': 'Gas consumption - today',
     'original_device_class': <SensorDeviceClass.GAS: 'gas'>,
     'original_icon': None,
     'original_name': 'Gas consumption - today',
@@ -352,12 +352,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Gas cost - today',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
       }),
     }),
-    'object_id_base': 'Gas cost - today',
     'original_device_class': <SensorDeviceClass.MONETARY: 'monetary'>,
     'original_icon': None,
     'original_name': 'Gas cost - today',
@@ -407,12 +407,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Max gas hourly consumption - today',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
       }),
     }),
-    'object_id_base': 'Max gas hourly consumption - today',
     'original_device_class': <SensorDeviceClass.GAS: 'gas'>,
     'original_icon': None,
     'original_name': 'Max gas hourly consumption - today',
@@ -461,12 +461,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Max gas hourly cost - today',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
       }),
     }),
-    'object_id_base': 'Max gas hourly cost - today',
     'original_device_class': <SensorDeviceClass.MONETARY: 'monetary'>,
     'original_icon': None,
     'original_name': 'Max gas hourly cost - today',
@@ -515,12 +515,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Max gas hourly energy - today',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
       }),
     }),
-    'object_id_base': 'Max gas hourly energy - today',
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
     'original_name': 'Max gas hourly energy - today',
@@ -569,12 +569,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Min gas hourly consumption - today',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
       }),
     }),
-    'object_id_base': 'Min gas hourly consumption - today',
     'original_device_class': <SensorDeviceClass.GAS: 'gas'>,
     'original_icon': None,
     'original_name': 'Min gas hourly consumption - today',
@@ -623,12 +623,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Min gas hourly energy - today',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
       }),
     }),
-    'object_id_base': 'Min gas hourly energy - today',
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
     'original_name': 'Min gas hourly energy - today',
@@ -677,12 +677,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Delta energy',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
       }),
     }),
-    'object_id_base': 'Delta energy',
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
     'original_name': 'Delta energy',
@@ -731,12 +731,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Delta volume',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
       }),
     }),
-    'object_id_base': 'Delta volume',
     'original_device_class': <SensorDeviceClass.WATER: 'water'>,
     'original_icon': None,
     'original_name': 'Delta volume',
@@ -787,12 +787,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Total energy',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
       }),
     }),
-    'object_id_base': 'Total energy',
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
     'original_name': 'Total energy',
@@ -844,12 +844,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Total volume',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
       }),
     }),
-    'object_id_base': 'Total volume',
     'original_device_class': <SensorDeviceClass.WATER: 'water'>,
     'original_icon': None,
     'original_name': 'Total volume',
@@ -901,12 +901,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Energy return',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
       }),
     }),
-    'object_id_base': 'Energy return',
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
     'original_name': 'Energy return',
@@ -958,12 +958,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Energy usage',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
       }),
     }),
-    'object_id_base': 'Energy usage',
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
     'original_name': 'Energy usage',
@@ -1015,12 +1015,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Energy usage high tariff',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
       }),
     }),
-    'object_id_base': 'Energy usage high tariff',
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
     'original_name': 'Energy usage high tariff',
@@ -1072,12 +1072,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Energy usage low tariff',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
       }),
     }),
-    'object_id_base': 'Energy usage low tariff',
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
     'original_name': 'Energy usage low tariff',
@@ -1129,12 +1129,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
       }),
     }),
-    'object_id_base': 'Power',
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
     'original_icon': None,
     'original_name': 'Power',
@@ -1186,12 +1186,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Cold water',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
       }),
     }),
-    'object_id_base': 'Cold water',
     'original_device_class': <SensorDeviceClass.WATER: 'water'>,
     'original_icon': None,
     'original_name': 'Cold water',
@@ -1243,12 +1243,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Warm water',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
       }),
     }),
-    'object_id_base': 'Warm water',
     'original_device_class': <SensorDeviceClass.WATER: 'water'>,
     'original_icon': None,
     'original_name': 'Warm water',

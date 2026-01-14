@@ -948,9 +948,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Dailies',
     'options': dict({
     }),
-    'object_id_base': 'Dailies',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Dailies',
@@ -1004,9 +1004,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Daily reminders',
     'options': dict({
     }),
-    'object_id_base': 'Daily reminders',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Daily reminders',
@@ -1059,9 +1059,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'To-do reminders',
     'options': dict({
     }),
-    'object_id_base': 'To-do reminders',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'To-do reminders',
@@ -1114,9 +1114,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': "To-Do's",
     'options': dict({
     }),
-    'object_id_base': "To-Do's",
     'original_device_class': None,
     'original_icon': None,
     'original_name': "To-Do's",

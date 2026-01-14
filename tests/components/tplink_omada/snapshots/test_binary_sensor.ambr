@@ -20,9 +20,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Port 10 LAN status',
     'options': dict({
     }),
-    'object_id_base': 'Port 10 LAN status',
     'original_device_class': <BinarySensorDeviceClass.CONNECTIVITY: 'connectivity'>,
     'original_icon': None,
     'original_name': 'Port 10 LAN status',
@@ -70,9 +70,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Port 10 PoE delivery',
     'options': dict({
     }),
-    'object_id_base': 'Port 10 PoE delivery',
     'original_device_class': <BinarySensorDeviceClass.POWER: 'power'>,
     'original_icon': None,
     'original_name': 'Port 10 PoE delivery',
@@ -120,9 +120,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Port 11 LAN status',
     'options': dict({
     }),
-    'object_id_base': 'Port 11 LAN status',
     'original_device_class': <BinarySensorDeviceClass.CONNECTIVITY: 'connectivity'>,
     'original_icon': None,
     'original_name': 'Port 11 LAN status',
@@ -170,9 +170,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Port 11 PoE delivery',
     'options': dict({
     }),
-    'object_id_base': 'Port 11 PoE delivery',
     'original_device_class': <BinarySensorDeviceClass.POWER: 'power'>,
     'original_icon': None,
     'original_name': 'Port 11 PoE delivery',
@@ -220,9 +220,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Port 12 LAN status',
     'options': dict({
     }),
-    'object_id_base': 'Port 12 LAN status',
     'original_device_class': <BinarySensorDeviceClass.CONNECTIVITY: 'connectivity'>,
     'original_icon': None,
     'original_name': 'Port 12 LAN status',
@@ -270,9 +270,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Port 12 PoE delivery',
     'options': dict({
     }),
-    'object_id_base': 'Port 12 PoE delivery',
     'original_device_class': <BinarySensorDeviceClass.POWER: 'power'>,
     'original_icon': None,
     'original_name': 'Port 12 PoE delivery',
@@ -320,9 +320,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Port 1 LAN status',
     'options': dict({
     }),
-    'object_id_base': 'Port 1 LAN status',
     'original_device_class': <BinarySensorDeviceClass.CONNECTIVITY: 'connectivity'>,
     'original_icon': None,
     'original_name': 'Port 1 LAN status',
@@ -370,9 +370,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Port 2 LAN status',
     'options': dict({
     }),
-    'object_id_base': 'Port 2 LAN status',
     'original_device_class': <BinarySensorDeviceClass.CONNECTIVITY: 'connectivity'>,
     'original_icon': None,
     'original_name': 'Port 2 LAN status',
@@ -420,9 +420,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Port 4 Internet link',
     'options': dict({
     }),
-    'object_id_base': 'Port 4 Internet link',
     'original_device_class': <BinarySensorDeviceClass.CONNECTIVITY: 'connectivity'>,
     'original_icon': None,
     'original_name': 'Port 4 Internet link',
@@ -470,9 +470,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Port 4 online detection',
     'options': dict({
     }),
-    'object_id_base': 'Port 4 online detection',
     'original_device_class': <BinarySensorDeviceClass.CONNECTIVITY: 'connectivity'>,
     'original_icon': None,
     'original_name': 'Port 4 online detection',
@@ -520,9 +520,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Port 5 LAN status',
     'options': dict({
     }),
-    'object_id_base': 'Port 5 LAN status',
     'original_device_class': <BinarySensorDeviceClass.CONNECTIVITY: 'connectivity'>,
     'original_icon': None,
     'original_name': 'Port 5 LAN status',
@@ -570,9 +570,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Port 5 PoE delivery',
     'options': dict({
     }),
-    'object_id_base': 'Port 5 PoE delivery',
     'original_device_class': <BinarySensorDeviceClass.POWER: 'power'>,
     'original_icon': None,
     'original_name': 'Port 5 PoE delivery',
@@ -620,9 +620,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Port 6 LAN status',
     'options': dict({
     }),
-    'object_id_base': 'Port 6 LAN status',
     'original_device_class': <BinarySensorDeviceClass.CONNECTIVITY: 'connectivity'>,
     'original_icon': None,
     'original_name': 'Port 6 LAN status',
@@ -670,9 +670,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Port 6 PoE delivery',
     'options': dict({
     }),
-    'object_id_base': 'Port 6 PoE delivery',
     'original_device_class': <BinarySensorDeviceClass.POWER: 'power'>,
     'original_icon': None,
     'original_name': 'Port 6 PoE delivery',
@@ -720,9 +720,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Port 7 LAN status',
     'options': dict({
     }),
-    'object_id_base': 'Port 7 LAN status',
     'original_device_class': <BinarySensorDeviceClass.CONNECTIVITY: 'connectivity'>,
     'original_icon': None,
     'original_name': 'Port 7 LAN status',
@@ -770,9 +770,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Port 7 PoE delivery',
     'options': dict({
     }),
-    'object_id_base': 'Port 7 PoE delivery',
     'original_device_class': <BinarySensorDeviceClass.POWER: 'power'>,
     'original_icon': None,
     'original_name': 'Port 7 PoE delivery',
@@ -820,9 +820,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Port 8 LAN status',
     'options': dict({
     }),
-    'object_id_base': 'Port 8 LAN status',
     'original_device_class': <BinarySensorDeviceClass.CONNECTIVITY: 'connectivity'>,
     'original_icon': None,
     'original_name': 'Port 8 LAN status',
@@ -870,9 +870,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Port 8 PoE delivery',
     'options': dict({
     }),
-    'object_id_base': 'Port 8 PoE delivery',
     'original_device_class': <BinarySensorDeviceClass.POWER: 'power'>,
     'original_icon': None,
     'original_name': 'Port 8 PoE delivery',
@@ -920,9 +920,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Port 9 LAN status',
     'options': dict({
     }),
-    'object_id_base': 'Port 9 LAN status',
     'original_device_class': <BinarySensorDeviceClass.CONNECTIVITY: 'connectivity'>,
     'original_icon': None,
     'original_name': 'Port 9 LAN status',
@@ -970,9 +970,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Port 9 PoE delivery',
     'options': dict({
     }),
-    'object_id_base': 'Port 9 PoE delivery',
     'original_device_class': <BinarySensorDeviceClass.POWER: 'power'>,
     'original_icon': None,
     'original_name': 'Port 9 PoE delivery',

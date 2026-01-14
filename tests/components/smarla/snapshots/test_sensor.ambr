@@ -22,9 +22,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Activity',
     'options': dict({
     }),
-    'object_id_base': 'Activity',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Activity',
@@ -74,9 +74,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Amplitude',
     'options': dict({
     }),
-    'object_id_base': 'Amplitude',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Amplitude',
@@ -127,9 +127,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Period',
     'options': dict({
     }),
-    'object_id_base': 'Period',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Period',
@@ -180,9 +180,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Swing count',
     'options': dict({
     }),
-    'object_id_base': 'Swing count',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Swing count',

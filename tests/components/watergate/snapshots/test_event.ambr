@@ -24,9 +24,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Duration auto shut-off',
     'options': dict({
     }),
-    'object_id_base': 'Duration auto shut-off',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Duration auto shut-off',
@@ -81,9 +81,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Volume auto shut-off',
     'options': dict({
     }),
-    'object_id_base': 'Volume auto shut-off',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Volume auto shut-off',

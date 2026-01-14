@@ -20,9 +20,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Charge cable lock',
     'options': dict({
     }),
-    'object_id_base': 'Charge cable lock',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Charge cable lock',
@@ -70,9 +70,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Lock',
     'options': dict({
     }),
-    'object_id_base': 'Lock',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Lock',
@@ -120,9 +120,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Charge cable lock',
     'options': dict({
     }),
-    'object_id_base': 'Charge cable lock',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Charge cable lock',
@@ -170,9 +170,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Lock',
     'options': dict({
     }),
-    'object_id_base': 'Lock',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Lock',

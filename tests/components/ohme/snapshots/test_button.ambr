@@ -20,9 +20,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Approve charge',
     'options': dict({
     }),
-    'object_id_base': 'Approve charge',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Approve charge',

@@ -20,9 +20,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'ESPAN.DOM.01',
     'options': dict({
     }),
-    'object_id_base': 'ESPAN.DOM.01',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'ESPAN.DOM.01',

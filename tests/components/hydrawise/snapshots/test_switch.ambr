@@ -20,9 +20,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Automatic watering',
     'options': dict({
     }),
-    'object_id_base': 'Automatic watering',
     'original_device_class': <SwitchDeviceClass.SWITCH: 'switch'>,
     'original_icon': None,
     'original_name': 'Automatic watering',
@@ -71,9 +71,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Manual watering',
     'options': dict({
     }),
-    'object_id_base': 'Manual watering',
     'original_device_class': <SwitchDeviceClass.SWITCH: 'switch'>,
     'original_icon': None,
     'original_name': 'Manual watering',
@@ -122,9 +122,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Automatic watering',
     'options': dict({
     }),
-    'object_id_base': 'Automatic watering',
     'original_device_class': <SwitchDeviceClass.SWITCH: 'switch'>,
     'original_icon': None,
     'original_name': 'Automatic watering',
@@ -173,9 +173,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Manual watering',
     'options': dict({
     }),
-    'object_id_base': 'Manual watering',
     'original_device_class': <SwitchDeviceClass.SWITCH: 'switch'>,
     'original_icon': None,
     'original_name': 'Manual watering',

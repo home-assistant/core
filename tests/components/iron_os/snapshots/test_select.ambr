@@ -27,9 +27,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Animation speed',
     'options': dict({
     }),
-    'object_id_base': 'Animation speed',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Animation speed',
@@ -92,9 +92,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Boot logo duration',
     'options': dict({
     }),
-    'object_id_base': 'Boot logo duration',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Boot logo duration',
@@ -156,9 +156,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Button locking mode',
     'options': dict({
     }),
-    'object_id_base': 'Button locking mode',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Button locking mode',
@@ -216,9 +216,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Display orientation mode',
     'options': dict({
     }),
-    'object_id_base': 'Display orientation mode',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Display orientation mode',
@@ -276,9 +276,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power Delivery 3.1 EPR',
     'options': dict({
     }),
-    'object_id_base': 'Power Delivery 3.1 EPR',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Power Delivery 3.1 EPR',
@@ -338,9 +338,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power source',
     'options': dict({
     }),
-    'object_id_base': 'Power source',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Power source',
@@ -399,9 +399,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Scrolling speed',
     'options': dict({
     }),
-    'object_id_base': 'Scrolling speed',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Scrolling speed',
@@ -459,9 +459,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Soldering tip type',
     'options': dict({
     }),
-    'object_id_base': 'Soldering tip type',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Soldering tip type',
@@ -521,9 +521,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Start-up behavior',
     'options': dict({
     }),
-    'object_id_base': 'Start-up behavior',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Start-up behavior',
@@ -581,9 +581,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Temperature display unit',
     'options': dict({
     }),
-    'object_id_base': 'Temperature display unit',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Temperature display unit',

@@ -20,9 +20,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Connection uptime',
     'options': dict({
     }),
-    'object_id_base': 'Connection uptime',
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
     'original_icon': None,
     'original_name': 'Connection uptime',
@@ -72,12 +72,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Download throughput',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
       }),
     }),
-    'object_id_base': 'Download throughput',
     'original_device_class': <SensorDeviceClass.DATA_RATE: 'data_rate'>,
     'original_icon': None,
     'original_name': 'Download throughput',
@@ -127,9 +127,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'External IP',
     'options': dict({
     }),
-    'object_id_base': 'External IP',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'External IP',
@@ -176,9 +176,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'External IPv6',
     'options': dict({
     }),
-    'object_id_base': 'External IPv6',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'External IPv6',
@@ -227,12 +227,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'GB received',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
       }),
     }),
-    'object_id_base': 'GB received',
     'original_device_class': <SensorDeviceClass.DATA_SIZE: 'data_size'>,
     'original_icon': None,
     'original_name': 'GB received',
@@ -284,12 +284,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'GB sent',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
       }),
     }),
-    'object_id_base': 'GB sent',
     'original_device_class': <SensorDeviceClass.DATA_SIZE: 'data_size'>,
     'original_icon': None,
     'original_name': 'GB sent',
@@ -339,9 +339,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Last restart',
     'options': dict({
     }),
-    'object_id_base': 'Last restart',
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
     'original_icon': None,
     'original_name': 'Last restart',
@@ -389,9 +389,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Link download noise margin',
     'options': dict({
     }),
-    'object_id_base': 'Link download noise margin',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Link download noise margin',
@@ -439,9 +439,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Link download power attenuation',
     'options': dict({
     }),
-    'object_id_base': 'Link download power attenuation',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Link download power attenuation',
@@ -489,12 +489,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Link download throughput',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
       }),
     }),
-    'object_id_base': 'Link download throughput',
     'original_device_class': <SensorDeviceClass.DATA_RATE: 'data_rate'>,
     'original_icon': None,
     'original_name': 'Link download throughput',
@@ -543,9 +543,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Link upload noise margin',
     'options': dict({
     }),
-    'object_id_base': 'Link upload noise margin',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Link upload noise margin',
@@ -593,9 +593,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Link upload power attenuation',
     'options': dict({
     }),
-    'object_id_base': 'Link upload power attenuation',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Link upload power attenuation',
@@ -643,12 +643,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Link upload throughput',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
       }),
     }),
-    'object_id_base': 'Link upload throughput',
     'original_device_class': <SensorDeviceClass.DATA_RATE: 'data_rate'>,
     'original_icon': None,
     'original_name': 'Link upload throughput',
@@ -697,12 +697,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Max connection download throughput',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
       }),
     }),
-    'object_id_base': 'Max connection download throughput',
     'original_device_class': <SensorDeviceClass.DATA_RATE: 'data_rate'>,
     'original_icon': None,
     'original_name': 'Max connection download throughput',
@@ -751,12 +751,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Max connection upload throughput',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
       }),
     }),
-    'object_id_base': 'Max connection upload throughput',
     'original_device_class': <SensorDeviceClass.DATA_RATE: 'data_rate'>,
     'original_icon': None,
     'original_name': 'Max connection upload throughput',
@@ -807,12 +807,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Upload throughput',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
       }),
     }),
-    'object_id_base': 'Upload throughput',
     'original_device_class': <SensorDeviceClass.DATA_RATE: 'data_rate'>,
     'original_icon': None,
     'original_name': 'Upload throughput',
@@ -864,12 +864,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'CPU temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
       }),
     }),
-    'object_id_base': 'CPU temperature',
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'CPU temperature',

@@ -20,9 +20,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'DC 1 short circuit error status',
     'options': dict({
     }),
-    'object_id_base': 'DC 1 short circuit error status',
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
     'original_icon': None,
     'original_name': 'DC 1 short circuit error status',
@@ -70,9 +70,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'DC 2 short circuit error status',
     'options': dict({
     }),
-    'object_id_base': 'DC 2 short circuit error status',
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
     'original_icon': None,
     'original_name': 'DC 2 short circuit error status',
@@ -120,9 +120,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Off-grid status',
     'options': dict({
     }),
-    'object_id_base': 'Off-grid status',
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
     'original_icon': None,
     'original_name': 'Off-grid status',
@@ -170,9 +170,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Output fault status',
     'options': dict({
     }),
-    'object_id_base': 'Output fault status',
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
     'original_icon': None,
     'original_name': 'Output fault status',

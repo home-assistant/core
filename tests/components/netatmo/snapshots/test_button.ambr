@@ -20,9 +20,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Preferred position',
     'options': dict({
     }),
-    'object_id_base': 'Preferred position',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Preferred position',
@@ -70,9 +70,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Preferred position',
     'options': dict({
     }),
-    'object_id_base': 'Preferred position',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Preferred position',

@@ -25,9 +25,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Fan speed',
     'options': dict({
     }),
-    'object_id_base': 'Fan speed',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Fan speed',
@@ -83,9 +83,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Freezer temperature',
     'options': dict({
     }),
-    'object_id_base': 'Freezer temperature',
     'original_device_class': <NumberDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Freezer temperature',
@@ -143,9 +143,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Fridge temperature',
     'options': dict({
     }),
-    'object_id_base': 'Fridge temperature',
     'original_device_class': <NumberDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Fridge temperature',
@@ -203,9 +203,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Freezer temperature',
     'options': dict({
     }),
-    'object_id_base': 'Freezer temperature',
     'original_device_class': <NumberDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Freezer temperature',
@@ -263,9 +263,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Fridge temperature',
     'options': dict({
     }),
-    'object_id_base': 'Fridge temperature',
     'original_device_class': <NumberDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Fridge temperature',
@@ -323,9 +323,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Freezer temperature',
     'options': dict({
     }),
-    'object_id_base': 'Freezer temperature',
     'original_device_class': <NumberDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Freezer temperature',
@@ -383,9 +383,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Fridge temperature',
     'options': dict({
     }),
-    'object_id_base': 'Fridge temperature',
     'original_device_class': <NumberDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Fridge temperature',
@@ -443,9 +443,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Target temperature',
     'options': dict({
     }),
-    'object_id_base': 'Target temperature',
     'original_device_class': <NumberDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Target temperature',
@@ -503,9 +503,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Rinse cycles',
     'options': dict({
     }),
-    'object_id_base': 'Rinse cycles',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Rinse cycles',
@@ -562,9 +562,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Rinse cycles',
     'options': dict({
     }),
-    'object_id_base': 'Rinse cycles',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Rinse cycles',
@@ -621,9 +621,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Rinse cycles',
     'options': dict({
     }),
-    'object_id_base': 'Rinse cycles',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Rinse cycles',

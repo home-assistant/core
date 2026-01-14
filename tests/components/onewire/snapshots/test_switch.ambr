@@ -20,9 +20,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Programmed input-output',
     'options': dict({
     }),
-    'object_id_base': 'Programmed input-output',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Programmed input-output',
@@ -70,9 +70,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Latch A',
     'options': dict({
     }),
-    'object_id_base': 'Latch A',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Latch A',
@@ -120,9 +120,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Latch B',
     'options': dict({
     }),
-    'object_id_base': 'Latch B',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Latch B',
@@ -170,9 +170,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Programmed input-output A',
     'options': dict({
     }),
-    'object_id_base': 'Programmed input-output A',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Programmed input-output A',
@@ -220,9 +220,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Programmed input-output B',
     'options': dict({
     }),
-    'object_id_base': 'Programmed input-output B',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Programmed input-output B',
@@ -270,9 +270,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Current A/D control',
     'options': dict({
     }),
-    'object_id_base': 'Current A/D control',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Current A/D control',
@@ -320,9 +320,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Latch 0',
     'options': dict({
     }),
-    'object_id_base': 'Latch 0',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Latch 0',
@@ -370,9 +370,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Latch 1',
     'options': dict({
     }),
-    'object_id_base': 'Latch 1',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Latch 1',
@@ -420,9 +420,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Latch 2',
     'options': dict({
     }),
-    'object_id_base': 'Latch 2',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Latch 2',
@@ -470,9 +470,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Latch 3',
     'options': dict({
     }),
-    'object_id_base': 'Latch 3',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Latch 3',
@@ -520,9 +520,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Latch 4',
     'options': dict({
     }),
-    'object_id_base': 'Latch 4',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Latch 4',
@@ -570,9 +570,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Latch 5',
     'options': dict({
     }),
-    'object_id_base': 'Latch 5',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Latch 5',
@@ -620,9 +620,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Latch 6',
     'options': dict({
     }),
-    'object_id_base': 'Latch 6',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Latch 6',
@@ -670,9 +670,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Latch 7',
     'options': dict({
     }),
-    'object_id_base': 'Latch 7',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Latch 7',
@@ -720,9 +720,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Programmed input-output 0',
     'options': dict({
     }),
-    'object_id_base': 'Programmed input-output 0',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Programmed input-output 0',
@@ -770,9 +770,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Programmed input-output 1',
     'options': dict({
     }),
-    'object_id_base': 'Programmed input-output 1',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Programmed input-output 1',
@@ -820,9 +820,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Programmed input-output 2',
     'options': dict({
     }),
-    'object_id_base': 'Programmed input-output 2',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Programmed input-output 2',
@@ -870,9 +870,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Programmed input-output 3',
     'options': dict({
     }),
-    'object_id_base': 'Programmed input-output 3',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Programmed input-output 3',
@@ -920,9 +920,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Programmed input-output 4',
     'options': dict({
     }),
-    'object_id_base': 'Programmed input-output 4',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Programmed input-output 4',
@@ -970,9 +970,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Programmed input-output 5',
     'options': dict({
     }),
-    'object_id_base': 'Programmed input-output 5',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Programmed input-output 5',
@@ -1020,9 +1020,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Programmed input-output 6',
     'options': dict({
     }),
-    'object_id_base': 'Programmed input-output 6',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Programmed input-output 6',
@@ -1070,9 +1070,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Programmed input-output 7',
     'options': dict({
     }),
-    'object_id_base': 'Programmed input-output 7',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Programmed input-output 7',
@@ -1120,9 +1120,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Programmed input-output A',
     'options': dict({
     }),
-    'object_id_base': 'Programmed input-output A',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Programmed input-output A',
@@ -1170,9 +1170,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Programmed input-output B',
     'options': dict({
     }),
-    'object_id_base': 'Programmed input-output B',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Programmed input-output B',
@@ -1220,9 +1220,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Current A/D control',
     'options': dict({
     }),
-    'object_id_base': 'Current A/D control',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Current A/D control',
@@ -1270,9 +1270,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Leaf sensor 0',
     'options': dict({
     }),
-    'object_id_base': 'Leaf sensor 0',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Leaf sensor 0',
@@ -1320,9 +1320,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Leaf sensor 1',
     'options': dict({
     }),
-    'object_id_base': 'Leaf sensor 1',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Leaf sensor 1',
@@ -1370,9 +1370,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Leaf sensor 2',
     'options': dict({
     }),
-    'object_id_base': 'Leaf sensor 2',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Leaf sensor 2',
@@ -1420,9 +1420,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Leaf sensor 3',
     'options': dict({
     }),
-    'object_id_base': 'Leaf sensor 3',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Leaf sensor 3',
@@ -1470,9 +1470,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Moisture sensor 0',
     'options': dict({
     }),
-    'object_id_base': 'Moisture sensor 0',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Moisture sensor 0',
@@ -1520,9 +1520,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Moisture sensor 1',
     'options': dict({
     }),
-    'object_id_base': 'Moisture sensor 1',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Moisture sensor 1',
@@ -1570,9 +1570,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Moisture sensor 2',
     'options': dict({
     }),
-    'object_id_base': 'Moisture sensor 2',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Moisture sensor 2',
@@ -1620,9 +1620,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Moisture sensor 3',
     'options': dict({
     }),
-    'object_id_base': 'Moisture sensor 3',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Moisture sensor 3',
@@ -1670,9 +1670,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Hub branch 0',
     'options': dict({
     }),
-    'object_id_base': 'Hub branch 0',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Hub branch 0',
@@ -1720,9 +1720,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Hub branch 1',
     'options': dict({
     }),
-    'object_id_base': 'Hub branch 1',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Hub branch 1',
@@ -1770,9 +1770,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Hub branch 2',
     'options': dict({
     }),
-    'object_id_base': 'Hub branch 2',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Hub branch 2',
@@ -1820,9 +1820,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Hub branch 3',
     'options': dict({
     }),
-    'object_id_base': 'Hub branch 3',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Hub branch 3',

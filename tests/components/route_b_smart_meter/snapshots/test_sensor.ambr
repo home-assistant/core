@@ -22,12 +22,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Instantaneous current R phase',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
       }),
     }),
-    'object_id_base': 'Instantaneous current R phase',
     'original_device_class': <SensorDeviceClass.CURRENT: 'current'>,
     'original_icon': None,
     'original_name': 'Instantaneous current R phase',
@@ -79,12 +79,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Instantaneous current T phase',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
       }),
     }),
-    'object_id_base': 'Instantaneous current T phase',
     'original_device_class': <SensorDeviceClass.CURRENT: 'current'>,
     'original_icon': None,
     'original_name': 'Instantaneous current T phase',
@@ -136,12 +136,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Instantaneous power',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
       }),
     }),
-    'object_id_base': 'Instantaneous power',
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
     'original_icon': None,
     'original_name': 'Instantaneous power',
@@ -193,12 +193,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Total consumption',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
       }),
     }),
-    'object_id_base': 'Total consumption',
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
     'original_name': 'Total consumption',

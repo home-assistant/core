@@ -20,9 +20,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'SCRUBBED Spa  Filter Pump ',
     'options': dict({
     }),
-    'object_id_base': 'SCRUBBED Spa  Filter Pump ',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'SCRUBBED Spa  Filter Pump ',
@@ -69,9 +69,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'SCRUBBED Spa  Spa Jets ',
     'options': dict({
     }),
-    'object_id_base': 'SCRUBBED Spa  Spa Jets ',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'SCRUBBED Spa  Spa Jets ',

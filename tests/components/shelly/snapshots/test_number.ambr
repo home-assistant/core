@@ -25,9 +25,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'External temperature',
     'options': dict({
     }),
-    'object_id_base': 'External temperature',
     'original_device_class': <NumberDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'External temperature',
@@ -85,9 +85,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Valve position',
     'options': dict({
     }),
-    'object_id_base': 'Valve position',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Valve position',
@@ -144,9 +144,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Left slot intensity',
     'options': dict({
     }),
-    'object_id_base': 'Left slot intensity',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Left slot intensity',
@@ -203,9 +203,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Right slot intensity',
     'options': dict({
     }),
-    'object_id_base': 'Right slot intensity',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Right slot intensity',

@@ -22,9 +22,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Expense year to date',
     'options': dict({
     }),
-    'object_id_base': 'Expense year to date',
     'original_device_class': <SensorDeviceClass.MONETARY: 'monetary'>,
     'original_icon': None,
     'original_name': 'Expense year to date',
@@ -76,9 +76,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Income year to date',
     'options': dict({
     }),
-    'object_id_base': 'Income year to date',
     'original_device_class': <SensorDeviceClass.MONETARY: 'monetary'>,
     'original_icon': None,
     'original_name': 'Income year to date',
@@ -128,12 +128,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Savings rate',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
       }),
     }),
-    'object_id_base': 'Savings rate',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Savings rate',
@@ -183,9 +183,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Savings year to date',
     'options': dict({
     }),
-    'object_id_base': 'Savings year to date',
     'original_device_class': <SensorDeviceClass.MONETARY: 'monetary'>,
     'original_icon': None,
     'original_name': 'Savings year to date',
@@ -237,9 +237,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Balance',
     'options': dict({
     }),
-    'object_id_base': 'Balance',
     'original_device_class': <SensorDeviceClass.MONETARY: 'monetary'>,
     'original_icon': None,
     'original_name': 'Balance',
@@ -290,9 +290,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Data age',
     'options': dict({
     }),
-    'object_id_base': 'Data age',
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
     'original_icon': None,
     'original_name': 'Data age',
@@ -343,9 +343,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Balance',
     'options': dict({
     }),
-    'object_id_base': 'Balance',
     'original_device_class': <SensorDeviceClass.MONETARY: 'monetary'>,
     'original_icon': None,
     'original_name': 'Balance',
@@ -397,9 +397,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Data age',
     'options': dict({
     }),
-    'object_id_base': 'Data age',
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
     'original_icon': None,
     'original_name': 'Data age',
@@ -450,9 +450,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Balance',
     'options': dict({
     }),
-    'object_id_base': 'Balance',
     'original_device_class': <SensorDeviceClass.MONETARY: 'monetary'>,
     'original_icon': None,
     'original_name': 'Balance',
@@ -504,9 +504,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Data age',
     'options': dict({
     }),
-    'object_id_base': 'Data age',
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
     'original_icon': None,
     'original_name': 'Data age',
@@ -557,9 +557,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Balance',
     'options': dict({
     }),
-    'object_id_base': 'Balance',
     'original_device_class': <SensorDeviceClass.MONETARY: 'monetary'>,
     'original_icon': None,
     'original_name': 'Balance',
@@ -611,9 +611,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Data age',
     'options': dict({
     }),
-    'object_id_base': 'Data age',
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
     'original_icon': None,
     'original_name': 'Data age',
@@ -664,9 +664,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Balance',
     'options': dict({
     }),
-    'object_id_base': 'Balance',
     'original_device_class': <SensorDeviceClass.MONETARY: 'monetary'>,
     'original_icon': None,
     'original_name': 'Balance',
@@ -718,9 +718,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Data age',
     'options': dict({
     }),
-    'object_id_base': 'Data age',
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
     'original_icon': None,
     'original_name': 'Data age',
@@ -771,9 +771,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Balance',
     'options': dict({
     }),
-    'object_id_base': 'Balance',
     'original_device_class': <SensorDeviceClass.MONETARY: 'monetary'>,
     'original_icon': None,
     'original_name': 'Balance',
@@ -825,9 +825,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Data age',
     'options': dict({
     }),
-    'object_id_base': 'Data age',
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
     'original_icon': None,
     'original_name': 'Data age',
@@ -878,9 +878,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Balance',
     'options': dict({
     }),
-    'object_id_base': 'Balance',
     'original_device_class': <SensorDeviceClass.MONETARY: 'monetary'>,
     'original_icon': None,
     'original_name': 'Balance',
@@ -932,9 +932,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Data age',
     'options': dict({
     }),
-    'object_id_base': 'Data age',
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
     'original_icon': None,
     'original_name': 'Data age',
@@ -983,9 +983,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Data age',
     'options': dict({
     }),
-    'object_id_base': 'Data age',
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
     'original_icon': None,
     'original_name': 'Data age',
@@ -1036,9 +1036,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Value',
     'options': dict({
     }),
-    'object_id_base': 'Value',
     'original_device_class': <SensorDeviceClass.MONETARY: 'monetary'>,
     'original_icon': None,
     'original_name': 'Value',
@@ -1092,9 +1092,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Balance',
     'options': dict({
     }),
-    'object_id_base': 'Balance',
     'original_device_class': <SensorDeviceClass.MONETARY: 'monetary'>,
     'original_icon': None,
     'original_name': 'Balance',
@@ -1146,9 +1146,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Data age',
     'options': dict({
     }),
-    'object_id_base': 'Data age',
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
     'original_icon': None,
     'original_name': 'Data age',

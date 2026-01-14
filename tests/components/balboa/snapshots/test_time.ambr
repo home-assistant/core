@@ -20,9 +20,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Filter cycle 1 end',
     'options': dict({
     }),
-    'object_id_base': 'Filter cycle 1 end',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Filter cycle 1 end',
@@ -69,9 +69,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Filter cycle 1 start',
     'options': dict({
     }),
-    'object_id_base': 'Filter cycle 1 start',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Filter cycle 1 start',
@@ -118,9 +118,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Filter cycle 2 end',
     'options': dict({
     }),
-    'object_id_base': 'Filter cycle 2 end',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Filter cycle 2 end',
@@ -167,9 +167,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Filter cycle 2 start',
     'options': dict({
     }),
-    'object_id_base': 'Filter cycle 2 start',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Filter cycle 2 start',

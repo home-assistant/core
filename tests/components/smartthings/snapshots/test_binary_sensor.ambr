@@ -20,9 +20,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Motion',
     'options': dict({
     }),
-    'object_id_base': 'Motion',
     'original_device_class': <BinarySensorDeviceClass.MOTION: 'motion'>,
     'original_icon': None,
     'original_name': 'Motion',
@@ -70,9 +70,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Tamper',
     'options': dict({
     }),
-    'object_id_base': 'Tamper',
     'original_device_class': <BinarySensorDeviceClass.TAMPER: 'tamper'>,
     'original_icon': None,
     'original_name': 'Tamper',
@@ -120,9 +120,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Motion',
     'options': dict({
     }),
-    'object_id_base': 'Motion',
     'original_device_class': <BinarySensorDeviceClass.MOTION: 'motion'>,
     'original_icon': None,
     'original_name': 'Motion',
@@ -170,9 +170,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Sound',
     'options': dict({
     }),
-    'object_id_base': 'Sound',
     'original_device_class': <BinarySensorDeviceClass.SOUND: 'sound'>,
     'original_icon': None,
     'original_name': 'Sound',
@@ -220,9 +220,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
-    'object_id_base': None,
     'original_device_class': <BinarySensorDeviceClass.GARAGE_DOOR: 'garage_door'>,
     'original_icon': None,
     'original_name': None,
@@ -270,9 +270,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Child lock',
     'options': dict({
     }),
-    'object_id_base': 'Child lock',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Child lock',
@@ -319,9 +319,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power',
     'options': dict({
     }),
-    'object_id_base': 'Power',
     'original_device_class': <BinarySensorDeviceClass.POWER: 'power'>,
     'original_icon': None,
     'original_name': 'Power',
@@ -369,9 +369,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power',
     'options': dict({
     }),
-    'object_id_base': 'Power',
     'original_device_class': <BinarySensorDeviceClass.POWER: 'power'>,
     'original_icon': None,
     'original_name': 'Power',
@@ -419,9 +419,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Child lock',
     'options': dict({
     }),
-    'object_id_base': 'Child lock',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Child lock',
@@ -468,9 +468,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Door',
     'options': dict({
     }),
-    'object_id_base': 'Door',
     'original_device_class': <BinarySensorDeviceClass.OPENING: 'opening'>,
     'original_icon': None,
     'original_name': 'Door',
@@ -518,9 +518,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power',
     'options': dict({
     }),
-    'object_id_base': 'Power',
     'original_device_class': <BinarySensorDeviceClass.POWER: 'power'>,
     'original_icon': None,
     'original_name': 'Power',
@@ -568,9 +568,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Remote control',
     'options': dict({
     }),
-    'object_id_base': 'Remote control',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Remote control',
@@ -617,9 +617,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Child lock',
     'options': dict({
     }),
-    'object_id_base': 'Child lock',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Child lock',
@@ -666,9 +666,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Door',
     'options': dict({
     }),
-    'object_id_base': 'Door',
     'original_device_class': <BinarySensorDeviceClass.OPENING: 'opening'>,
     'original_icon': None,
     'original_name': 'Door',
@@ -716,9 +716,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Remote control',
     'options': dict({
     }),
-    'object_id_base': 'Remote control',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Remote control',
@@ -765,9 +765,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Child lock',
     'options': dict({
     }),
-    'object_id_base': 'Child lock',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Child lock',
@@ -814,9 +814,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Door',
     'options': dict({
     }),
-    'object_id_base': 'Door',
     'original_device_class': <BinarySensorDeviceClass.OPENING: 'opening'>,
     'original_icon': None,
     'original_name': 'Door',
@@ -864,9 +864,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Remote control',
     'options': dict({
     }),
-    'object_id_base': 'Remote control',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Remote control',
@@ -913,9 +913,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Child lock',
     'options': dict({
     }),
-    'object_id_base': 'Child lock',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Child lock',
@@ -962,9 +962,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Door',
     'options': dict({
     }),
-    'object_id_base': 'Door',
     'original_device_class': <BinarySensorDeviceClass.OPENING: 'opening'>,
     'original_icon': None,
     'original_name': 'Door',
@@ -1012,9 +1012,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Remote control',
     'options': dict({
     }),
-    'object_id_base': 'Remote control',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Remote control',
@@ -1061,9 +1061,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Child lock',
     'options': dict({
     }),
-    'object_id_base': 'Child lock',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Child lock',
@@ -1110,9 +1110,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Door',
     'options': dict({
     }),
-    'object_id_base': 'Door',
     'original_device_class': <BinarySensorDeviceClass.OPENING: 'opening'>,
     'original_icon': None,
     'original_name': 'Door',
@@ -1160,9 +1160,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Remote control',
     'options': dict({
     }),
-    'object_id_base': 'Remote control',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Remote control',
@@ -1209,9 +1209,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Filter status',
     'options': dict({
     }),
-    'object_id_base': 'Filter status',
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
     'original_icon': None,
     'original_name': 'Filter status',
@@ -1259,9 +1259,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Freezer door',
     'options': dict({
     }),
-    'object_id_base': 'Freezer door',
     'original_device_class': <BinarySensorDeviceClass.DOOR: 'door'>,
     'original_icon': None,
     'original_name': 'Freezer door',
@@ -1309,9 +1309,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Fridge door',
     'options': dict({
     }),
-    'object_id_base': 'Fridge door',
     'original_device_class': <BinarySensorDeviceClass.DOOR: 'door'>,
     'original_icon': None,
     'original_name': 'Fridge door',
@@ -1359,9 +1359,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'CoolSelect+ door',
     'options': dict({
     }),
-    'object_id_base': 'CoolSelect+ door',
     'original_device_class': <BinarySensorDeviceClass.DOOR: 'door'>,
     'original_icon': None,
     'original_name': 'CoolSelect+ door',
@@ -1409,9 +1409,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Filter status',
     'options': dict({
     }),
-    'object_id_base': 'Filter status',
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
     'original_icon': None,
     'original_name': 'Filter status',
@@ -1459,9 +1459,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Freezer door',
     'options': dict({
     }),
-    'object_id_base': 'Freezer door',
     'original_device_class': <BinarySensorDeviceClass.DOOR: 'door'>,
     'original_icon': None,
     'original_name': 'Freezer door',
@@ -1509,9 +1509,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Fridge door',
     'options': dict({
     }),
-    'object_id_base': 'Fridge door',
     'original_device_class': <BinarySensorDeviceClass.DOOR: 'door'>,
     'original_icon': None,
     'original_name': 'Fridge door',
@@ -1559,9 +1559,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Filter status',
     'options': dict({
     }),
-    'object_id_base': 'Filter status',
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
     'original_icon': None,
     'original_name': 'Filter status',
@@ -1609,9 +1609,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Freezer door',
     'options': dict({
     }),
-    'object_id_base': 'Freezer door',
     'original_device_class': <BinarySensorDeviceClass.DOOR: 'door'>,
     'original_icon': None,
     'original_name': 'Freezer door',
@@ -1659,9 +1659,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Fridge door',
     'options': dict({
     }),
-    'object_id_base': 'Fridge door',
     'original_device_class': <BinarySensorDeviceClass.DOOR: 'door'>,
     'original_icon': None,
     'original_name': 'Fridge door',
@@ -1709,9 +1709,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Door',
     'options': dict({
     }),
-    'object_id_base': 'Door',
     'original_device_class': <BinarySensorDeviceClass.DOOR: 'door'>,
     'original_icon': None,
     'original_name': 'Door',
@@ -1759,9 +1759,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Child lock',
     'options': dict({
     }),
-    'object_id_base': 'Child lock',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Child lock',
@@ -1808,9 +1808,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power',
     'options': dict({
     }),
-    'object_id_base': 'Power',
     'original_device_class': <BinarySensorDeviceClass.POWER: 'power'>,
     'original_icon': None,
     'original_name': 'Power',
@@ -1858,9 +1858,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Remote control',
     'options': dict({
     }),
-    'object_id_base': 'Remote control',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Remote control',
@@ -1907,9 +1907,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Child lock',
     'options': dict({
     }),
-    'object_id_base': 'Child lock',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Child lock',
@@ -1956,9 +1956,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power',
     'options': dict({
     }),
-    'object_id_base': 'Power',
     'original_device_class': <BinarySensorDeviceClass.POWER: 'power'>,
     'original_icon': None,
     'original_name': 'Power',
@@ -2006,9 +2006,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Remote control',
     'options': dict({
     }),
-    'object_id_base': 'Remote control',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Remote control',
@@ -2055,9 +2055,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Child lock',
     'options': dict({
     }),
-    'object_id_base': 'Child lock',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Child lock',
@@ -2104,9 +2104,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Keep fresh mode active',
     'options': dict({
     }),
-    'object_id_base': 'Keep fresh mode active',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Keep fresh mode active',
@@ -2153,9 +2153,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power',
     'options': dict({
     }),
-    'object_id_base': 'Power',
     'original_device_class': <BinarySensorDeviceClass.POWER: 'power'>,
     'original_icon': None,
     'original_name': 'Power',
@@ -2203,9 +2203,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Remote control',
     'options': dict({
     }),
-    'object_id_base': 'Remote control',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Remote control',
@@ -2252,9 +2252,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Child lock',
     'options': dict({
     }),
-    'object_id_base': 'Child lock',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Child lock',
@@ -2301,9 +2301,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power',
     'options': dict({
     }),
-    'object_id_base': 'Power',
     'original_device_class': <BinarySensorDeviceClass.POWER: 'power'>,
     'original_icon': None,
     'original_name': 'Power',
@@ -2351,9 +2351,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Remote control',
     'options': dict({
     }),
-    'object_id_base': 'Remote control',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Remote control',
@@ -2400,9 +2400,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Wrinkle prevent active',
     'options': dict({
     }),
-    'object_id_base': 'Wrinkle prevent active',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Wrinkle prevent active',
@@ -2449,9 +2449,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Child lock',
     'options': dict({
     }),
-    'object_id_base': 'Child lock',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Child lock',
@@ -2498,9 +2498,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power',
     'options': dict({
     }),
-    'object_id_base': 'Power',
     'original_device_class': <BinarySensorDeviceClass.POWER: 'power'>,
     'original_icon': None,
     'original_name': 'Power',
@@ -2548,9 +2548,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Remote control',
     'options': dict({
     }),
-    'object_id_base': 'Remote control',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Remote control',
@@ -2597,9 +2597,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Wrinkle prevent active',
     'options': dict({
     }),
-    'object_id_base': 'Wrinkle prevent active',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Wrinkle prevent active',
@@ -2646,9 +2646,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Child lock',
     'options': dict({
     }),
-    'object_id_base': 'Child lock',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Child lock',
@@ -2695,9 +2695,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power',
     'options': dict({
     }),
-    'object_id_base': 'Power',
     'original_device_class': <BinarySensorDeviceClass.POWER: 'power'>,
     'original_icon': None,
     'original_name': 'Power',
@@ -2745,9 +2745,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Remote control',
     'options': dict({
     }),
-    'object_id_base': 'Remote control',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Remote control',
@@ -2794,9 +2794,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Wrinkle prevent active',
     'options': dict({
     }),
-    'object_id_base': 'Wrinkle prevent active',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Wrinkle prevent active',
@@ -2843,9 +2843,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Child lock',
     'options': dict({
     }),
-    'object_id_base': 'Child lock',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Child lock',
@@ -2892,9 +2892,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power',
     'options': dict({
     }),
-    'object_id_base': 'Power',
     'original_device_class': <BinarySensorDeviceClass.POWER: 'power'>,
     'original_icon': None,
     'original_name': 'Power',
@@ -2942,9 +2942,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Remote control',
     'options': dict({
     }),
-    'object_id_base': 'Remote control',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Remote control',
@@ -2991,9 +2991,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Child lock',
     'options': dict({
     }),
-    'object_id_base': 'Child lock',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Child lock',
@@ -3040,9 +3040,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power',
     'options': dict({
     }),
-    'object_id_base': 'Power',
     'original_device_class': <BinarySensorDeviceClass.POWER: 'power'>,
     'original_icon': None,
     'original_name': 'Power',
@@ -3090,9 +3090,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Remote control',
     'options': dict({
     }),
-    'object_id_base': 'Remote control',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Remote control',
@@ -3139,9 +3139,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Child lock',
     'options': dict({
     }),
-    'object_id_base': 'Child lock',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Child lock',
@@ -3188,9 +3188,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power',
     'options': dict({
     }),
-    'object_id_base': 'Power',
     'original_device_class': <BinarySensorDeviceClass.POWER: 'power'>,
     'original_icon': None,
     'original_name': 'Power',
@@ -3238,9 +3238,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Remote control',
     'options': dict({
     }),
-    'object_id_base': 'Remote control',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Remote control',
@@ -3287,9 +3287,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power',
     'options': dict({
     }),
-    'object_id_base': 'Power',
     'original_device_class': <BinarySensorDeviceClass.POWER: 'power'>,
     'original_icon': None,
     'original_name': 'Power',
@@ -3337,9 +3337,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Remote control',
     'options': dict({
     }),
-    'object_id_base': 'Remote control',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Remote control',
@@ -3386,9 +3386,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power',
     'options': dict({
     }),
-    'object_id_base': 'Power',
     'original_device_class': <BinarySensorDeviceClass.POWER: 'power'>,
     'original_icon': None,
     'original_name': 'Power',
@@ -3436,9 +3436,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Remote control',
     'options': dict({
     }),
-    'object_id_base': 'Remote control',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Remote control',
@@ -3485,9 +3485,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Upper washer remote control',
     'options': dict({
     }),
-    'object_id_base': 'Upper washer remote control',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Upper washer remote control',
@@ -3534,9 +3534,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Motion',
     'options': dict({
     }),
-    'object_id_base': 'Motion',
     'original_device_class': <BinarySensorDeviceClass.MOTION: 'motion'>,
     'original_icon': None,
     'original_name': 'Motion',
@@ -3584,9 +3584,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Presence',
     'options': dict({
     }),
-    'object_id_base': 'Presence',
     'original_device_class': <BinarySensorDeviceClass.PRESENCE: 'presence'>,
     'original_icon': None,
     'original_name': 'Presence',
@@ -3634,9 +3634,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Gas',
     'options': dict({
     }),
-    'object_id_base': 'Gas',
     'original_device_class': <BinarySensorDeviceClass.GAS: 'gas'>,
     'original_icon': None,
     'original_name': 'Gas',
@@ -3684,9 +3684,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Presence',
     'options': dict({
     }),
-    'object_id_base': 'Presence',
     'original_device_class': <BinarySensorDeviceClass.PRESENCE: 'presence'>,
     'original_icon': None,
     'original_name': 'Presence',
@@ -3734,9 +3734,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
-    'object_id_base': None,
     'original_device_class': <BinarySensorDeviceClass.DOOR: 'door'>,
     'original_icon': None,
     'original_name': None,
@@ -3784,9 +3784,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Acceleration',
     'options': dict({
     }),
-    'object_id_base': 'Acceleration',
     'original_device_class': <BinarySensorDeviceClass.MOVING: 'moving'>,
     'original_icon': None,
     'original_name': 'Acceleration',
@@ -3834,9 +3834,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Moisture',
     'options': dict({
     }),
-    'object_id_base': 'Moisture',
     'original_device_class': <BinarySensorDeviceClass.MOISTURE: 'moisture'>,
     'original_icon': None,
     'original_name': 'Moisture',

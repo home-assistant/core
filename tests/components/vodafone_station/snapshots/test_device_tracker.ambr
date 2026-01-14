@@ -20,9 +20,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'LanDevice1',
     'options': dict({
     }),
-    'object_id_base': 'LanDevice1',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'LanDevice1',
@@ -73,9 +73,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'WifiDevice0',
     'options': dict({
     }),
-    'object_id_base': 'WifiDevice0',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'WifiDevice0',

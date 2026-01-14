@@ -57,9 +57,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'Airversa AP2 1808 Identify',
             'options': dict({
             }),
-            'object_id_base': 'Airversa AP2 1808 Identify',
             'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
             'original_icon': None,
             'original_name': 'Airversa AP2 1808 Identify',
@@ -105,9 +105,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'Airversa AP2 1808 AirPurifier',
             'options': dict({
             }),
-            'object_id_base': 'Airversa AP2 1808 AirPurifier',
             'original_device_class': None,
             'original_icon': None,
             'original_name': 'Airversa AP2 1808 AirPurifier',
@@ -160,9 +160,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'Airversa AP2 1808 Air Purifier Mode',
             'options': dict({
             }),
-            'object_id_base': 'Airversa AP2 1808 Air Purifier Mode',
             'original_device_class': None,
             'original_icon': None,
             'original_name': 'Airversa AP2 1808 Air Purifier Mode',
@@ -213,9 +213,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'Airversa AP2 1808 Air Purifier Status',
             'options': dict({
             }),
-            'object_id_base': 'Airversa AP2 1808 Air Purifier Status',
             'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
             'original_icon': None,
             'original_name': 'Airversa AP2 1808 Air Purifier Status',
@@ -264,9 +264,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'Airversa AP2 1808 Air Quality',
             'options': dict({
             }),
-            'object_id_base': 'Airversa AP2 1808 Air Quality',
             'original_device_class': <SensorDeviceClass.AQI: 'aqi'>,
             'original_icon': None,
             'original_name': 'Airversa AP2 1808 Air Quality',
@@ -311,9 +311,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'Airversa AP2 1808 Filter lifetime',
             'options': dict({
             }),
-            'object_id_base': 'Airversa AP2 1808 Filter lifetime',
             'original_device_class': None,
             'original_icon': None,
             'original_name': 'Airversa AP2 1808 Filter lifetime',
@@ -358,9 +358,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'Airversa AP2 1808 PM2.5 Density',
             'options': dict({
             }),
-            'object_id_base': 'Airversa AP2 1808 PM2.5 Density',
             'original_device_class': <SensorDeviceClass.PM25: 'pm25'>,
             'original_icon': None,
             'original_name': 'Airversa AP2 1808 PM2.5 Density',
@@ -413,9 +413,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'Airversa AP2 1808 Thread Capabilities',
             'options': dict({
             }),
-            'object_id_base': 'Airversa AP2 1808 Thread Capabilities',
             'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
             'original_icon': None,
             'original_name': 'Airversa AP2 1808 Thread Capabilities',
@@ -475,9 +475,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'Airversa AP2 1808 Thread Status',
             'options': dict({
             }),
-            'object_id_base': 'Airversa AP2 1808 Thread Status',
             'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
             'original_icon': None,
             'original_name': 'Airversa AP2 1808 Thread Status',
@@ -528,9 +528,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'Airversa AP2 1808 Lock Physical Controls',
             'options': dict({
             }),
-            'object_id_base': 'Airversa AP2 1808 Lock Physical Controls',
             'original_device_class': None,
             'original_icon': None,
             'original_name': 'Airversa AP2 1808 Lock Physical Controls',
@@ -571,9 +571,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'Airversa AP2 1808 Mute',
             'options': dict({
             }),
-            'object_id_base': 'Airversa AP2 1808 Mute',
             'original_device_class': None,
             'original_icon': None,
             'original_name': 'Airversa AP2 1808 Mute',
@@ -614,9 +614,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'Airversa AP2 1808 Sleep Mode',
             'options': dict({
             }),
-            'object_id_base': 'Airversa AP2 1808 Sleep Mode',
             'original_device_class': None,
             'original_icon': None,
             'original_name': 'Airversa AP2 1808 Sleep Mode',
@@ -698,9 +698,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'eufy HomeBase2-0AAA Identify',
             'options': dict({
             }),
-            'object_id_base': 'eufy HomeBase2-0AAA Identify',
             'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
             'original_icon': None,
             'original_name': 'eufy HomeBase2-0AAA Identify',
@@ -779,9 +779,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'eufyCam2-0000 Motion Sensor',
             'options': dict({
             }),
-            'object_id_base': 'eufyCam2-0000 Motion Sensor',
             'original_device_class': <BinarySensorDeviceClass.MOTION: 'motion'>,
             'original_icon': None,
             'original_name': 'eufyCam2-0000 Motion Sensor',
@@ -823,9 +823,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'eufyCam2-0000 Identify',
             'options': dict({
             }),
-            'object_id_base': 'eufyCam2-0000 Identify',
             'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
             'original_icon': None,
             'original_name': 'eufyCam2-0000 Identify',
@@ -867,9 +867,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'eufyCam2-0000',
             'options': dict({
             }),
-            'object_id_base': 'eufyCam2-0000',
             'original_device_class': None,
             'original_icon': None,
             'original_name': 'eufyCam2-0000',
@@ -913,9 +913,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'eufyCam2-0000 Battery',
             'options': dict({
             }),
-            'object_id_base': 'eufyCam2-0000 Battery',
             'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
             'original_icon': 'mdi:battery-20',
             'original_name': 'eufyCam2-0000 Battery',
@@ -960,9 +960,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'eufyCam2-0000 Mute',
             'options': dict({
             }),
-            'object_id_base': 'eufyCam2-0000 Mute',
             'original_device_class': None,
             'original_icon': None,
             'original_name': 'eufyCam2-0000 Mute',
@@ -1040,9 +1040,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'eufyCam2-000A Motion Sensor',
             'options': dict({
             }),
-            'object_id_base': 'eufyCam2-000A Motion Sensor',
             'original_device_class': <BinarySensorDeviceClass.MOTION: 'motion'>,
             'original_icon': None,
             'original_name': 'eufyCam2-000A Motion Sensor',
@@ -1084,9 +1084,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'eufyCam2-000A Identify',
             'options': dict({
             }),
-            'object_id_base': 'eufyCam2-000A Identify',
             'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
             'original_icon': None,
             'original_name': 'eufyCam2-000A Identify',
@@ -1128,9 +1128,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'eufyCam2-000A',
             'options': dict({
             }),
-            'object_id_base': 'eufyCam2-000A',
             'original_device_class': None,
             'original_icon': None,
             'original_name': 'eufyCam2-000A',
@@ -1174,9 +1174,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'eufyCam2-000A Battery',
             'options': dict({
             }),
-            'object_id_base': 'eufyCam2-000A Battery',
             'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
             'original_icon': 'mdi:battery-40',
             'original_name': 'eufyCam2-000A Battery',
@@ -1221,9 +1221,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'eufyCam2-000A Mute',
             'options': dict({
             }),
-            'object_id_base': 'eufyCam2-000A Mute',
             'original_device_class': None,
             'original_icon': None,
             'original_name': 'eufyCam2-000A Mute',
@@ -1301,9 +1301,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'eufyCam2-000A Motion Sensor',
             'options': dict({
             }),
-            'object_id_base': 'eufyCam2-000A Motion Sensor',
             'original_device_class': <BinarySensorDeviceClass.MOTION: 'motion'>,
             'original_icon': None,
             'original_name': 'eufyCam2-000A Motion Sensor',
@@ -1345,9 +1345,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'eufyCam2-000A Identify',
             'options': dict({
             }),
-            'object_id_base': 'eufyCam2-000A Identify',
             'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
             'original_icon': None,
             'original_name': 'eufyCam2-000A Identify',
@@ -1389,9 +1389,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'eufyCam2-000A',
             'options': dict({
             }),
-            'object_id_base': 'eufyCam2-000A',
             'original_device_class': None,
             'original_icon': None,
             'original_name': 'eufyCam2-000A',
@@ -1435,9 +1435,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'eufyCam2-000A Battery',
             'options': dict({
             }),
-            'object_id_base': 'eufyCam2-000A Battery',
             'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
             'original_icon': 'mdi:battery-alert',
             'original_name': 'eufyCam2-000A Battery',
@@ -1482,9 +1482,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'eufyCam2-000A Mute',
             'options': dict({
             }),
-            'object_id_base': 'eufyCam2-000A Mute',
             'original_device_class': None,
             'original_icon': None,
             'original_name': 'eufyCam2-000A Mute',
@@ -1566,9 +1566,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'Aqara-Hub-E1-00A0 Security System',
             'options': dict({
             }),
-            'object_id_base': 'Aqara-Hub-E1-00A0 Security System',
             'original_device_class': None,
             'original_icon': None,
             'original_name': 'Aqara-Hub-E1-00A0 Security System',
@@ -1613,9 +1613,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'Aqara-Hub-E1-00A0 Identify',
             'options': dict({
             }),
-            'object_id_base': 'Aqara-Hub-E1-00A0 Identify',
             'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
             'original_icon': None,
             'original_name': 'Aqara-Hub-E1-00A0 Identify',
@@ -1662,9 +1662,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'Aqara-Hub-E1-00A0 Volume',
             'options': dict({
             }),
-            'object_id_base': 'Aqara-Hub-E1-00A0 Volume',
             'original_device_class': None,
             'original_icon': None,
             'original_name': 'Aqara-Hub-E1-00A0 Volume',
@@ -1709,9 +1709,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'Aqara-Hub-E1-00A0 Pairing Mode',
             'options': dict({
             }),
-            'object_id_base': 'Aqara-Hub-E1-00A0 Pairing Mode',
             'original_device_class': None,
             'original_icon': None,
             'original_name': 'Aqara-Hub-E1-00A0 Pairing Mode',
@@ -1789,9 +1789,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'Contact Sensor',
             'options': dict({
             }),
-            'object_id_base': 'Contact Sensor',
             'original_device_class': <BinarySensorDeviceClass.OPENING: 'opening'>,
             'original_icon': None,
             'original_name': 'Contact Sensor',
@@ -1833,9 +1833,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'Contact Sensor Identify',
             'options': dict({
             }),
-            'object_id_base': 'Contact Sensor Identify',
             'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
             'original_icon': None,
             'original_name': 'Contact Sensor Identify',
@@ -1879,9 +1879,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'Contact Sensor Battery Sensor',
             'options': dict({
             }),
-            'object_id_base': 'Contact Sensor Battery Sensor',
             'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
             'original_icon': 'mdi:battery',
             'original_name': 'Contact Sensor Battery Sensor',
@@ -1967,9 +1967,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'Aqara Hub-1563 Security System',
             'options': dict({
             }),
-            'object_id_base': 'Aqara Hub-1563 Security System',
             'original_device_class': None,
             'original_icon': None,
             'original_name': 'Aqara Hub-1563 Security System',
@@ -2014,9 +2014,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'Aqara Hub-1563 Identify',
             'options': dict({
             }),
-            'object_id_base': 'Aqara Hub-1563 Identify',
             'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
             'original_icon': None,
             'original_name': 'Aqara Hub-1563 Identify',
@@ -2067,9 +2067,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'Aqara Hub-1563 Lightbulb-1563',
             'options': dict({
             }),
-            'object_id_base': 'Aqara Hub-1563 Lightbulb-1563',
             'original_device_class': None,
             'original_icon': None,
             'original_name': 'Aqara Hub-1563 Lightbulb-1563',
@@ -2131,9 +2131,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'Aqara Hub-1563 Volume',
             'options': dict({
             }),
-            'object_id_base': 'Aqara Hub-1563 Volume',
             'original_device_class': None,
             'original_icon': None,
             'original_name': 'Aqara Hub-1563 Volume',
@@ -2178,9 +2178,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'Aqara Hub-1563 Pairing Mode',
             'options': dict({
             }),
-            'object_id_base': 'Aqara Hub-1563 Pairing Mode',
             'original_device_class': None,
             'original_icon': None,
             'original_name': 'Aqara Hub-1563 Pairing Mode',
@@ -2262,9 +2262,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'Programmable Switch Identify',
             'options': dict({
             }),
-            'object_id_base': 'Programmable Switch Identify',
             'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
             'original_icon': None,
             'original_name': 'Programmable Switch Identify',
@@ -2308,9 +2308,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'Programmable Switch Battery Sensor',
             'options': dict({
             }),
-            'object_id_base': 'Programmable Switch Battery Sensor',
             'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
             'original_icon': 'mdi:battery',
             'original_name': 'Programmable Switch Battery Sensor',
@@ -2396,9 +2396,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'ArloBabyA0 Motion',
             'options': dict({
             }),
-            'object_id_base': 'ArloBabyA0 Motion',
             'original_device_class': <BinarySensorDeviceClass.MOTION: 'motion'>,
             'original_icon': None,
             'original_name': 'ArloBabyA0 Motion',
@@ -2440,9 +2440,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'ArloBabyA0 Identify',
             'options': dict({
             }),
-            'object_id_base': 'ArloBabyA0 Identify',
             'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
             'original_icon': None,
             'original_name': 'ArloBabyA0 Identify',
@@ -2484,9 +2484,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'ArloBabyA0',
             'options': dict({
             }),
-            'object_id_base': 'ArloBabyA0',
             'original_device_class': None,
             'original_icon': None,
             'original_name': 'ArloBabyA0',
@@ -2537,9 +2537,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'ArloBabyA0 Nightlight',
             'options': dict({
             }),
-            'object_id_base': 'ArloBabyA0 Nightlight',
             'original_device_class': None,
             'original_icon': None,
             'original_name': 'ArloBabyA0 Nightlight',
@@ -2598,9 +2598,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'ArloBabyA0 Air Quality',
             'options': dict({
             }),
-            'object_id_base': 'ArloBabyA0 Air Quality',
             'original_device_class': <SensorDeviceClass.AQI: 'aqi'>,
             'original_icon': None,
             'original_name': 'ArloBabyA0 Air Quality',
@@ -2645,9 +2645,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'ArloBabyA0 Battery',
             'options': dict({
             }),
-            'object_id_base': 'ArloBabyA0 Battery',
             'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
             'original_icon': 'mdi:battery-80',
             'original_name': 'ArloBabyA0 Battery',
@@ -2694,9 +2694,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'ArloBabyA0 Humidity',
             'options': dict({
             }),
-            'object_id_base': 'ArloBabyA0 Humidity',
             'original_device_class': <SensorDeviceClass.HUMIDITY: 'humidity'>,
             'original_icon': None,
             'original_name': 'ArloBabyA0 Humidity',
@@ -2742,12 +2742,12 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'ArloBabyA0 Temperature',
             'options': dict({
               'sensor': dict({
                 'suggested_display_precision': 1,
               }),
             }),
-            'object_id_base': 'ArloBabyA0 Temperature',
             'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
             'original_icon': None,
             'original_name': 'ArloBabyA0 Temperature',
@@ -2791,9 +2791,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'ArloBabyA0 Mute',
             'options': dict({
             }),
-            'object_id_base': 'ArloBabyA0 Mute',
             'original_device_class': None,
             'original_icon': None,
             'original_name': 'ArloBabyA0 Mute',
@@ -2834,9 +2834,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'ArloBabyA0 Mute',
             'options': dict({
             }),
-            'object_id_base': 'ArloBabyA0 Mute',
             'original_device_class': None,
             'original_icon': None,
             'original_name': 'ArloBabyA0 Mute',
@@ -2918,9 +2918,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'InWall Outlet-0394DE Identify',
             'options': dict({
             }),
-            'object_id_base': 'InWall Outlet-0394DE Identify',
             'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
             'original_icon': None,
             'original_name': 'InWall Outlet-0394DE Identify',
@@ -2964,12 +2964,12 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'InWall Outlet-0394DE Current',
             'options': dict({
               'sensor': dict({
                 'suggested_display_precision': 2,
               }),
             }),
-            'object_id_base': 'InWall Outlet-0394DE Current',
             'original_device_class': <SensorDeviceClass.CURRENT: 'current'>,
             'original_icon': None,
             'original_name': 'InWall Outlet-0394DE Current',
@@ -3015,12 +3015,12 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'InWall Outlet-0394DE Current',
             'options': dict({
               'sensor': dict({
                 'suggested_display_precision': 2,
               }),
             }),
-            'object_id_base': 'InWall Outlet-0394DE Current',
             'original_device_class': <SensorDeviceClass.CURRENT: 'current'>,
             'original_icon': None,
             'original_name': 'InWall Outlet-0394DE Current',
@@ -3066,12 +3066,12 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'InWall Outlet-0394DE Energy kWh',
             'options': dict({
               'sensor': dict({
                 'suggested_display_precision': 2,
               }),
             }),
-            'object_id_base': 'InWall Outlet-0394DE Energy kWh',
             'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
             'original_icon': None,
             'original_name': 'InWall Outlet-0394DE Energy kWh',
@@ -3117,12 +3117,12 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'InWall Outlet-0394DE Energy kWh',
             'options': dict({
               'sensor': dict({
                 'suggested_display_precision': 2,
               }),
             }),
-            'object_id_base': 'InWall Outlet-0394DE Energy kWh',
             'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
             'original_icon': None,
             'original_name': 'InWall Outlet-0394DE Energy kWh',
@@ -3168,12 +3168,12 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'InWall Outlet-0394DE Power',
             'options': dict({
               'sensor': dict({
                 'suggested_display_precision': 0,
               }),
             }),
-            'object_id_base': 'InWall Outlet-0394DE Power',
             'original_device_class': <SensorDeviceClass.POWER: 'power'>,
             'original_icon': None,
             'original_name': 'InWall Outlet-0394DE Power',
@@ -3219,12 +3219,12 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'InWall Outlet-0394DE Power',
             'options': dict({
               'sensor': dict({
                 'suggested_display_precision': 0,
               }),
             }),
-            'object_id_base': 'InWall Outlet-0394DE Power',
             'original_device_class': <SensorDeviceClass.POWER: 'power'>,
             'original_icon': None,
             'original_name': 'InWall Outlet-0394DE Power',
@@ -3268,9 +3268,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'InWall Outlet-0394DE Outlet A',
             'options': dict({
             }),
-            'object_id_base': 'InWall Outlet-0394DE Outlet A',
             'original_device_class': None,
             'original_icon': None,
             'original_name': 'InWall Outlet-0394DE Outlet A',
@@ -3312,9 +3312,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'InWall Outlet-0394DE Outlet B',
             'options': dict({
             }),
-            'object_id_base': 'InWall Outlet-0394DE Outlet B',
             'original_device_class': None,
             'original_icon': None,
             'original_name': 'InWall Outlet-0394DE Outlet B',
@@ -3397,9 +3397,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'Basement',
             'options': dict({
             }),
-            'object_id_base': 'Basement',
             'original_device_class': <BinarySensorDeviceClass.MOTION: 'motion'>,
             'original_icon': None,
             'original_name': 'Basement',
@@ -3441,9 +3441,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'Basement Identify',
             'options': dict({
             }),
-            'object_id_base': 'Basement Identify',
             'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
             'original_icon': None,
             'original_name': 'Basement Identify',
@@ -3487,12 +3487,12 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'Basement Temperature',
             'options': dict({
               'sensor': dict({
                 'suggested_display_precision': 1,
               }),
             }),
-            'object_id_base': 'Basement Temperature',
             'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
             'original_icon': None,
             'original_name': 'Basement Temperature',
@@ -3573,9 +3573,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'HomeW',
             'options': dict({
             }),
-            'object_id_base': 'HomeW',
             'original_device_class': <BinarySensorDeviceClass.MOTION: 'motion'>,
             'original_icon': None,
             'original_name': 'HomeW',
@@ -3617,9 +3617,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'HomeW',
             'options': dict({
             }),
-            'object_id_base': 'HomeW',
             'original_device_class': <BinarySensorDeviceClass.OCCUPANCY: 'occupancy'>,
             'original_icon': None,
             'original_name': 'HomeW',
@@ -3661,9 +3661,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'HomeW Clear Hold',
             'options': dict({
             }),
-            'object_id_base': 'HomeW Clear Hold',
             'original_device_class': None,
             'original_icon': None,
             'original_name': 'HomeW Clear Hold',
@@ -3704,9 +3704,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'HomeW Identify',
             'options': dict({
             }),
-            'object_id_base': 'HomeW Identify',
             'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
             'original_icon': None,
             'original_name': 'HomeW Identify',
@@ -3759,9 +3759,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'HomeW',
             'options': dict({
             }),
-            'object_id_base': 'HomeW',
             'original_device_class': None,
             'original_icon': None,
             'original_name': 'HomeW',
@@ -3826,9 +3826,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'HomeW Current Mode',
             'options': dict({
             }),
-            'object_id_base': 'HomeW Current Mode',
             'original_device_class': None,
             'original_icon': None,
             'original_name': 'HomeW Current Mode',
@@ -3879,9 +3879,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'HomeW Temperature Display Units',
             'options': dict({
             }),
-            'object_id_base': 'HomeW Temperature Display Units',
             'original_device_class': None,
             'original_icon': None,
             'original_name': 'HomeW Temperature Display Units',
@@ -3928,9 +3928,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'HomeW Current Humidity',
             'options': dict({
             }),
-            'object_id_base': 'HomeW Current Humidity',
             'original_device_class': <SensorDeviceClass.HUMIDITY: 'humidity'>,
             'original_icon': None,
             'original_name': 'HomeW Current Humidity',
@@ -3976,12 +3976,12 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'HomeW Current Temperature',
             'options': dict({
               'sensor': dict({
                 'suggested_display_precision': 1,
               }),
             }),
-            'object_id_base': 'HomeW Current Temperature',
             'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
             'original_icon': None,
             'original_name': 'HomeW Current Temperature',
@@ -4062,9 +4062,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'Kitchen',
             'options': dict({
             }),
-            'object_id_base': 'Kitchen',
             'original_device_class': <BinarySensorDeviceClass.MOTION: 'motion'>,
             'original_icon': None,
             'original_name': 'Kitchen',
@@ -4106,9 +4106,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'Kitchen Identify',
             'options': dict({
             }),
-            'object_id_base': 'Kitchen Identify',
             'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
             'original_icon': None,
             'original_name': 'Kitchen Identify',
@@ -4152,12 +4152,12 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'Kitchen Temperature',
             'options': dict({
               'sensor': dict({
                 'suggested_display_precision': 1,
               }),
             }),
-            'object_id_base': 'Kitchen Temperature',
             'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
             'original_icon': None,
             'original_name': 'Kitchen Temperature',
@@ -4238,9 +4238,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'Porch',
             'options': dict({
             }),
-            'object_id_base': 'Porch',
             'original_device_class': <BinarySensorDeviceClass.MOTION: 'motion'>,
             'original_icon': None,
             'original_name': 'Porch',
@@ -4282,9 +4282,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'Porch Identify',
             'options': dict({
             }),
-            'object_id_base': 'Porch Identify',
             'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
             'original_icon': None,
             'original_name': 'Porch Identify',
@@ -4328,12 +4328,12 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'Porch Temperature',
             'options': dict({
               'sensor': dict({
                 'suggested_display_precision': 1,
               }),
             }),
-            'object_id_base': 'Porch Temperature',
             'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
             'original_icon': None,
             'original_name': 'Porch Temperature',
@@ -4418,9 +4418,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'Basement Motion',
             'options': dict({
             }),
-            'object_id_base': 'Basement Motion',
             'original_device_class': <BinarySensorDeviceClass.MOTION: 'motion'>,
             'original_icon': None,
             'original_name': 'Basement Motion',
@@ -4462,9 +4462,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'Basement Occupancy',
             'options': dict({
             }),
-            'object_id_base': 'Basement Occupancy',
             'original_device_class': <BinarySensorDeviceClass.OCCUPANCY: 'occupancy'>,
             'original_icon': None,
             'original_name': 'Basement Occupancy',
@@ -4506,9 +4506,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'Basement Identify',
             'options': dict({
             }),
-            'object_id_base': 'Basement Identify',
             'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
             'original_icon': None,
             'original_name': 'Basement Identify',
@@ -4552,9 +4552,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'Basement Battery',
             'options': dict({
             }),
-            'object_id_base': 'Basement Battery',
             'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
             'original_icon': 'mdi:battery',
             'original_name': 'Basement Battery',
@@ -4601,12 +4601,12 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'Basement Temperature',
             'options': dict({
               'sensor': dict({
                 'suggested_display_precision': 1,
               }),
             }),
-            'object_id_base': 'Basement Temperature',
             'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
             'original_icon': None,
             'original_name': 'Basement Temperature',
@@ -4687,9 +4687,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'Basement Window 1 Contact',
             'options': dict({
             }),
-            'object_id_base': 'Basement Window 1 Contact',
             'original_device_class': <BinarySensorDeviceClass.OPENING: 'opening'>,
             'original_icon': None,
             'original_name': 'Basement Window 1 Contact',
@@ -4731,9 +4731,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'Basement Window 1 Motion',
             'options': dict({
             }),
-            'object_id_base': 'Basement Window 1 Motion',
             'original_device_class': <BinarySensorDeviceClass.MOTION: 'motion'>,
             'original_icon': None,
             'original_name': 'Basement Window 1 Motion',
@@ -4775,9 +4775,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'Basement Window 1 Occupancy',
             'options': dict({
             }),
-            'object_id_base': 'Basement Window 1 Occupancy',
             'original_device_class': <BinarySensorDeviceClass.OCCUPANCY: 'occupancy'>,
             'original_icon': None,
             'original_name': 'Basement Window 1 Occupancy',
@@ -4819,9 +4819,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'Basement Window 1 Identify',
             'options': dict({
             }),
-            'object_id_base': 'Basement Window 1 Identify',
             'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
             'original_icon': None,
             'original_name': 'Basement Window 1 Identify',
@@ -4865,9 +4865,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'Basement Window 1 Battery',
             'options': dict({
             }),
-            'object_id_base': 'Basement Window 1 Battery',
             'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
             'original_icon': 'mdi:battery',
             'original_name': 'Basement Window 1 Battery',
@@ -4949,9 +4949,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'Deck Door Contact',
             'options': dict({
             }),
-            'object_id_base': 'Deck Door Contact',
             'original_device_class': <BinarySensorDeviceClass.OPENING: 'opening'>,
             'original_icon': None,
             'original_name': 'Deck Door Contact',
@@ -4993,9 +4993,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'Deck Door Motion',
             'options': dict({
             }),
-            'object_id_base': 'Deck Door Motion',
             'original_device_class': <BinarySensorDeviceClass.MOTION: 'motion'>,
             'original_icon': None,
             'original_name': 'Deck Door Motion',
@@ -5037,9 +5037,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'Deck Door Occupancy',
             'options': dict({
             }),
-            'object_id_base': 'Deck Door Occupancy',
             'original_device_class': <BinarySensorDeviceClass.OCCUPANCY: 'occupancy'>,
             'original_icon': None,
             'original_name': 'Deck Door Occupancy',
@@ -5081,9 +5081,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'Deck Door Identify',
             'options': dict({
             }),
-            'object_id_base': 'Deck Door Identify',
             'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
             'original_icon': None,
             'original_name': 'Deck Door Identify',
@@ -5127,9 +5127,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'Deck Door Battery',
             'options': dict({
             }),
-            'object_id_base': 'Deck Door Battery',
             'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
             'original_icon': 'mdi:battery',
             'original_name': 'Deck Door Battery',
@@ -5211,9 +5211,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'Front Door Contact',
             'options': dict({
             }),
-            'object_id_base': 'Front Door Contact',
             'original_device_class': <BinarySensorDeviceClass.OPENING: 'opening'>,
             'original_icon': None,
             'original_name': 'Front Door Contact',
@@ -5255,9 +5255,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'Front Door Motion',
             'options': dict({
             }),
-            'object_id_base': 'Front Door Motion',
             'original_device_class': <BinarySensorDeviceClass.MOTION: 'motion'>,
             'original_icon': None,
             'original_name': 'Front Door Motion',
@@ -5299,9 +5299,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'Front Door Occupancy',
             'options': dict({
             }),
-            'object_id_base': 'Front Door Occupancy',
             'original_device_class': <BinarySensorDeviceClass.OCCUPANCY: 'occupancy'>,
             'original_icon': None,
             'original_name': 'Front Door Occupancy',
@@ -5343,9 +5343,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'Front Door Identify',
             'options': dict({
             }),
-            'object_id_base': 'Front Door Identify',
             'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
             'original_icon': None,
             'original_name': 'Front Door Identify',
@@ -5389,9 +5389,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'Front Door Battery',
             'options': dict({
             }),
-            'object_id_base': 'Front Door Battery',
             'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
             'original_icon': 'mdi:battery',
             'original_name': 'Front Door Battery',
@@ -5473,9 +5473,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'Garage Door Contact',
             'options': dict({
             }),
-            'object_id_base': 'Garage Door Contact',
             'original_device_class': <BinarySensorDeviceClass.OPENING: 'opening'>,
             'original_icon': None,
             'original_name': 'Garage Door Contact',
@@ -5517,9 +5517,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'Garage Door Motion',
             'options': dict({
             }),
-            'object_id_base': 'Garage Door Motion',
             'original_device_class': <BinarySensorDeviceClass.MOTION: 'motion'>,
             'original_icon': None,
             'original_name': 'Garage Door Motion',
@@ -5561,9 +5561,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'Garage Door Occupancy',
             'options': dict({
             }),
-            'object_id_base': 'Garage Door Occupancy',
             'original_device_class': <BinarySensorDeviceClass.OCCUPANCY: 'occupancy'>,
             'original_icon': None,
             'original_name': 'Garage Door Occupancy',
@@ -5605,9 +5605,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'Garage Door Identify',
             'options': dict({
             }),
-            'object_id_base': 'Garage Door Identify',
             'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
             'original_icon': None,
             'original_name': 'Garage Door Identify',
@@ -5651,9 +5651,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'Garage Door Battery',
             'options': dict({
             }),
-            'object_id_base': 'Garage Door Battery',
             'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
             'original_icon': 'mdi:battery',
             'original_name': 'Garage Door Battery',
@@ -5735,9 +5735,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'Living Room Motion',
             'options': dict({
             }),
-            'object_id_base': 'Living Room Motion',
             'original_device_class': <BinarySensorDeviceClass.MOTION: 'motion'>,
             'original_icon': None,
             'original_name': 'Living Room Motion',
@@ -5779,9 +5779,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'Living Room Occupancy',
             'options': dict({
             }),
-            'object_id_base': 'Living Room Occupancy',
             'original_device_class': <BinarySensorDeviceClass.OCCUPANCY: 'occupancy'>,
             'original_icon': None,
             'original_name': 'Living Room Occupancy',
@@ -5823,9 +5823,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'Living Room Identify',
             'options': dict({
             }),
-            'object_id_base': 'Living Room Identify',
             'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
             'original_icon': None,
             'original_name': 'Living Room Identify',
@@ -5869,9 +5869,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'Living Room Battery',
             'options': dict({
             }),
-            'object_id_base': 'Living Room Battery',
             'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
             'original_icon': 'mdi:battery',
             'original_name': 'Living Room Battery',
@@ -5918,12 +5918,12 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'Living Room Temperature',
             'options': dict({
               'sensor': dict({
                 'suggested_display_precision': 1,
               }),
             }),
-            'object_id_base': 'Living Room Temperature',
             'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
             'original_icon': None,
             'original_name': 'Living Room Temperature',
@@ -6004,9 +6004,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'Living Room Window 1 Contact',
             'options': dict({
             }),
-            'object_id_base': 'Living Room Window 1 Contact',
             'original_device_class': <BinarySensorDeviceClass.OPENING: 'opening'>,
             'original_icon': None,
             'original_name': 'Living Room Window 1 Contact',
@@ -6048,9 +6048,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'Living Room Window 1 Motion',
             'options': dict({
             }),
-            'object_id_base': 'Living Room Window 1 Motion',
             'original_device_class': <BinarySensorDeviceClass.MOTION: 'motion'>,
             'original_icon': None,
             'original_name': 'Living Room Window 1 Motion',
@@ -6092,9 +6092,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'Living Room Window 1 Occupancy',
             'options': dict({
             }),
-            'object_id_base': 'Living Room Window 1 Occupancy',
             'original_device_class': <BinarySensorDeviceClass.OCCUPANCY: 'occupancy'>,
             'original_icon': None,
             'original_name': 'Living Room Window 1 Occupancy',
@@ -6136,9 +6136,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'Living Room Window 1 Identify',
             'options': dict({
             }),
-            'object_id_base': 'Living Room Window 1 Identify',
             'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
             'original_icon': None,
             'original_name': 'Living Room Window 1 Identify',
@@ -6182,9 +6182,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'Living Room Window 1 Battery',
             'options': dict({
             }),
-            'object_id_base': 'Living Room Window 1 Battery',
             'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
             'original_icon': 'mdi:battery',
             'original_name': 'Living Room Window 1 Battery',
@@ -6266,9 +6266,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'Loft window Contact',
             'options': dict({
             }),
-            'object_id_base': 'Loft window Contact',
             'original_device_class': <BinarySensorDeviceClass.OPENING: 'opening'>,
             'original_icon': None,
             'original_name': 'Loft window Contact',
@@ -6310,9 +6310,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'Loft window Motion',
             'options': dict({
             }),
-            'object_id_base': 'Loft window Motion',
             'original_device_class': <BinarySensorDeviceClass.MOTION: 'motion'>,
             'original_icon': None,
             'original_name': 'Loft window Motion',
@@ -6354,9 +6354,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'Loft window Occupancy',
             'options': dict({
             }),
-            'object_id_base': 'Loft window Occupancy',
             'original_device_class': <BinarySensorDeviceClass.OCCUPANCY: 'occupancy'>,
             'original_icon': None,
             'original_name': 'Loft window Occupancy',
@@ -6398,9 +6398,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'Loft window Identify',
             'options': dict({
             }),
-            'object_id_base': 'Loft window Identify',
             'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
             'original_icon': None,
             'original_name': 'Loft window Identify',
@@ -6444,9 +6444,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'Loft window Battery',
             'options': dict({
             }),
-            'object_id_base': 'Loft window Battery',
             'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
             'original_icon': 'mdi:battery',
             'original_name': 'Loft window Battery',
@@ -6528,9 +6528,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'Master BR Motion',
             'options': dict({
             }),
-            'object_id_base': 'Master BR Motion',
             'original_device_class': <BinarySensorDeviceClass.MOTION: 'motion'>,
             'original_icon': None,
             'original_name': 'Master BR Motion',
@@ -6572,9 +6572,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'Master BR Occupancy',
             'options': dict({
             }),
-            'object_id_base': 'Master BR Occupancy',
             'original_device_class': <BinarySensorDeviceClass.OCCUPANCY: 'occupancy'>,
             'original_icon': None,
             'original_name': 'Master BR Occupancy',
@@ -6616,9 +6616,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'Master BR Identify',
             'options': dict({
             }),
-            'object_id_base': 'Master BR Identify',
             'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
             'original_icon': None,
             'original_name': 'Master BR Identify',
@@ -6662,9 +6662,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'Master BR Battery',
             'options': dict({
             }),
-            'object_id_base': 'Master BR Battery',
             'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
             'original_icon': 'mdi:battery',
             'original_name': 'Master BR Battery',
@@ -6711,12 +6711,12 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'Master BR Temperature',
             'options': dict({
               'sensor': dict({
                 'suggested_display_precision': 1,
               }),
             }),
-            'object_id_base': 'Master BR Temperature',
             'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
             'original_icon': None,
             'original_name': 'Master BR Temperature',
@@ -6797,9 +6797,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'Master BR Window Contact',
             'options': dict({
             }),
-            'object_id_base': 'Master BR Window Contact',
             'original_device_class': <BinarySensorDeviceClass.OPENING: 'opening'>,
             'original_icon': None,
             'original_name': 'Master BR Window Contact',
@@ -6841,9 +6841,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'Master BR Window Motion',
             'options': dict({
             }),
-            'object_id_base': 'Master BR Window Motion',
             'original_device_class': <BinarySensorDeviceClass.MOTION: 'motion'>,
             'original_icon': None,
             'original_name': 'Master BR Window Motion',
@@ -6885,9 +6885,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'Master BR Window Occupancy',
             'options': dict({
             }),
-            'object_id_base': 'Master BR Window Occupancy',
             'original_device_class': <BinarySensorDeviceClass.OCCUPANCY: 'occupancy'>,
             'original_icon': None,
             'original_name': 'Master BR Window Occupancy',
@@ -6929,9 +6929,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'Master BR Window Identify',
             'options': dict({
             }),
-            'object_id_base': 'Master BR Window Identify',
             'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
             'original_icon': None,
             'original_name': 'Master BR Window Identify',
@@ -6975,9 +6975,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'Master BR Window Battery',
             'options': dict({
             }),
-            'object_id_base': 'Master BR Window Battery',
             'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
             'original_icon': 'mdi:battery',
             'original_name': 'Master BR Window Battery',
@@ -7059,9 +7059,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'Thermostat Clear Hold',
             'options': dict({
             }),
-            'object_id_base': 'Thermostat Clear Hold',
             'original_device_class': None,
             'original_icon': None,
             'original_name': 'Thermostat Clear Hold',
@@ -7102,9 +7102,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'Thermostat Identify',
             'options': dict({
             }),
-            'object_id_base': 'Thermostat Identify',
             'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
             'original_icon': None,
             'original_name': 'Thermostat Identify',
@@ -7159,9 +7159,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'Thermostat',
             'options': dict({
             }),
-            'object_id_base': 'Thermostat',
             'original_device_class': None,
             'original_icon': None,
             'original_name': 'Thermostat',
@@ -7228,9 +7228,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'Thermostat Current Mode',
             'options': dict({
             }),
-            'object_id_base': 'Thermostat Current Mode',
             'original_device_class': None,
             'original_icon': None,
             'original_name': 'Thermostat Current Mode',
@@ -7281,9 +7281,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'Thermostat Temperature Display Units',
             'options': dict({
             }),
-            'object_id_base': 'Thermostat Temperature Display Units',
             'original_device_class': None,
             'original_icon': None,
             'original_name': 'Thermostat Temperature Display Units',
@@ -7330,9 +7330,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'Thermostat Current Humidity',
             'options': dict({
             }),
-            'object_id_base': 'Thermostat Current Humidity',
             'original_device_class': <SensorDeviceClass.HUMIDITY: 'humidity'>,
             'original_icon': None,
             'original_name': 'Thermostat Current Humidity',
@@ -7378,12 +7378,12 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'Thermostat Current Temperature',
             'options': dict({
               'sensor': dict({
                 'suggested_display_precision': 1,
               }),
             }),
-            'object_id_base': 'Thermostat Current Temperature',
             'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
             'original_icon': None,
             'original_name': 'Thermostat Current Temperature',
@@ -7464,9 +7464,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'Upstairs BR Motion',
             'options': dict({
             }),
-            'object_id_base': 'Upstairs BR Motion',
             'original_device_class': <BinarySensorDeviceClass.MOTION: 'motion'>,
             'original_icon': None,
             'original_name': 'Upstairs BR Motion',
@@ -7508,9 +7508,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'Upstairs BR Occupancy',
             'options': dict({
             }),
-            'object_id_base': 'Upstairs BR Occupancy',
             'original_device_class': <BinarySensorDeviceClass.OCCUPANCY: 'occupancy'>,
             'original_icon': None,
             'original_name': 'Upstairs BR Occupancy',
@@ -7552,9 +7552,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'Upstairs BR Identify',
             'options': dict({
             }),
-            'object_id_base': 'Upstairs BR Identify',
             'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
             'original_icon': None,
             'original_name': 'Upstairs BR Identify',
@@ -7598,9 +7598,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'Upstairs BR Battery',
             'options': dict({
             }),
-            'object_id_base': 'Upstairs BR Battery',
             'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
             'original_icon': 'mdi:battery',
             'original_name': 'Upstairs BR Battery',
@@ -7647,12 +7647,12 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'Upstairs BR Temperature',
             'options': dict({
               'sensor': dict({
                 'suggested_display_precision': 1,
               }),
             }),
-            'object_id_base': 'Upstairs BR Temperature',
             'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
             'original_icon': None,
             'original_name': 'Upstairs BR Temperature',
@@ -7733,9 +7733,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'Upstairs BR Window Contact',
             'options': dict({
             }),
-            'object_id_base': 'Upstairs BR Window Contact',
             'original_device_class': <BinarySensorDeviceClass.OPENING: 'opening'>,
             'original_icon': None,
             'original_name': 'Upstairs BR Window Contact',
@@ -7777,9 +7777,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'Upstairs BR Window Motion',
             'options': dict({
             }),
-            'object_id_base': 'Upstairs BR Window Motion',
             'original_device_class': <BinarySensorDeviceClass.MOTION: 'motion'>,
             'original_icon': None,
             'original_name': 'Upstairs BR Window Motion',
@@ -7821,9 +7821,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'Upstairs BR Window Occupancy',
             'options': dict({
             }),
-            'object_id_base': 'Upstairs BR Window Occupancy',
             'original_device_class': <BinarySensorDeviceClass.OCCUPANCY: 'occupancy'>,
             'original_icon': None,
             'original_name': 'Upstairs BR Window Occupancy',
@@ -7865,9 +7865,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'Upstairs BR Window Identify',
             'options': dict({
             }),
-            'object_id_base': 'Upstairs BR Window Identify',
             'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
             'original_icon': None,
             'original_name': 'Upstairs BR Window Identify',
@@ -7911,9 +7911,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'Upstairs BR Window Battery',
             'options': dict({
             }),
-            'object_id_base': 'Upstairs BR Window Battery',
             'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
             'original_icon': 'mdi:battery',
             'original_name': 'Upstairs BR Window Battery',
@@ -7999,9 +7999,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'HomeW',
             'options': dict({
             }),
-            'object_id_base': 'HomeW',
             'original_device_class': <BinarySensorDeviceClass.MOTION: 'motion'>,
             'original_icon': None,
             'original_name': 'HomeW',
@@ -8043,9 +8043,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'HomeW',
             'options': dict({
             }),
-            'object_id_base': 'HomeW',
             'original_device_class': <BinarySensorDeviceClass.OCCUPANCY: 'occupancy'>,
             'original_icon': None,
             'original_name': 'HomeW',
@@ -8087,9 +8087,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'HomeW Clear Hold',
             'options': dict({
             }),
-            'object_id_base': 'HomeW Clear Hold',
             'original_device_class': None,
             'original_icon': None,
             'original_name': 'HomeW Clear Hold',
@@ -8130,9 +8130,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'HomeW Identify',
             'options': dict({
             }),
-            'object_id_base': 'HomeW Identify',
             'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
             'original_icon': None,
             'original_name': 'HomeW Identify',
@@ -8185,9 +8185,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'HomeW',
             'options': dict({
             }),
-            'object_id_base': 'HomeW',
             'original_device_class': None,
             'original_icon': None,
             'original_name': 'HomeW',
@@ -8252,9 +8252,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'HomeW Current Mode',
             'options': dict({
             }),
-            'object_id_base': 'HomeW Current Mode',
             'original_device_class': None,
             'original_icon': None,
             'original_name': 'HomeW Current Mode',
@@ -8305,9 +8305,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'HomeW Temperature Display Units',
             'options': dict({
             }),
-            'object_id_base': 'HomeW Temperature Display Units',
             'original_device_class': None,
             'original_icon': None,
             'original_name': 'HomeW Temperature Display Units',
@@ -8354,9 +8354,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'HomeW Current Humidity',
             'options': dict({
             }),
-            'object_id_base': 'HomeW Current Humidity',
             'original_device_class': <SensorDeviceClass.HUMIDITY: 'humidity'>,
             'original_icon': None,
             'original_name': 'HomeW Current Humidity',
@@ -8402,12 +8402,12 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'HomeW Current Temperature',
             'options': dict({
               'sensor': dict({
                 'suggested_display_precision': 1,
               }),
             }),
-            'object_id_base': 'HomeW Current Temperature',
             'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
             'original_icon': None,
             'original_name': 'HomeW Current Temperature',
@@ -8492,9 +8492,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'Basement',
             'options': dict({
             }),
-            'object_id_base': 'Basement',
             'original_device_class': <BinarySensorDeviceClass.MOTION: 'motion'>,
             'original_icon': None,
             'original_name': 'Basement',
@@ -8536,9 +8536,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'Basement Identify',
             'options': dict({
             }),
-            'object_id_base': 'Basement Identify',
             'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
             'original_icon': None,
             'original_name': 'Basement Identify',
@@ -8617,9 +8617,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'HomeW Identify',
             'options': dict({
             }),
-            'object_id_base': 'HomeW Identify',
             'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
             'original_icon': None,
             'original_name': 'HomeW Identify',
@@ -8672,9 +8672,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'HomeW',
             'options': dict({
             }),
-            'object_id_base': 'HomeW',
             'original_device_class': None,
             'original_icon': None,
             'original_name': 'HomeW',
@@ -8738,9 +8738,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'HomeW Temperature Display Units',
             'options': dict({
             }),
-            'object_id_base': 'HomeW Temperature Display Units',
             'original_device_class': None,
             'original_icon': None,
             'original_name': 'HomeW Temperature Display Units',
@@ -8787,9 +8787,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'HomeW Current Humidity',
             'options': dict({
             }),
-            'object_id_base': 'HomeW Current Humidity',
             'original_device_class': <SensorDeviceClass.HUMIDITY: 'humidity'>,
             'original_icon': None,
             'original_name': 'HomeW Current Humidity',
@@ -8835,12 +8835,12 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'HomeW Current Temperature',
             'options': dict({
               'sensor': dict({
                 'suggested_display_precision': 1,
               }),
             }),
-            'object_id_base': 'HomeW Current Temperature',
             'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
             'original_icon': None,
             'original_name': 'HomeW Current Temperature',
@@ -8921,9 +8921,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'Kitchen',
             'options': dict({
             }),
-            'object_id_base': 'Kitchen',
             'original_device_class': <BinarySensorDeviceClass.MOTION: 'motion'>,
             'original_icon': None,
             'original_name': 'Kitchen',
@@ -8965,9 +8965,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'Kitchen Identify',
             'options': dict({
             }),
-            'object_id_base': 'Kitchen Identify',
             'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
             'original_icon': None,
             'original_name': 'Kitchen Identify',
@@ -9011,12 +9011,12 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'Kitchen Temperature',
             'options': dict({
               'sensor': dict({
                 'suggested_display_precision': 1,
               }),
             }),
-            'object_id_base': 'Kitchen Temperature',
             'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
             'original_icon': None,
             'original_name': 'Kitchen Temperature',
@@ -9097,9 +9097,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'Porch',
             'options': dict({
             }),
-            'object_id_base': 'Porch',
             'original_device_class': <BinarySensorDeviceClass.MOTION: 'motion'>,
             'original_icon': None,
             'original_name': 'Porch',
@@ -9141,9 +9141,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'Porch Identify',
             'options': dict({
             }),
-            'object_id_base': 'Porch Identify',
             'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
             'original_icon': None,
             'original_name': 'Porch Identify',
@@ -9187,12 +9187,12 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'Porch Temperature',
             'options': dict({
               'sensor': dict({
                 'suggested_display_precision': 1,
               }),
             }),
-            'object_id_base': 'Porch Temperature',
             'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
             'original_icon': None,
             'original_name': 'Porch Temperature',
@@ -9277,9 +9277,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'My ecobee Motion',
             'options': dict({
             }),
-            'object_id_base': 'My ecobee Motion',
             'original_device_class': <BinarySensorDeviceClass.MOTION: 'motion'>,
             'original_icon': None,
             'original_name': 'My ecobee Motion',
@@ -9321,9 +9321,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'My ecobee Occupancy',
             'options': dict({
             }),
-            'object_id_base': 'My ecobee Occupancy',
             'original_device_class': <BinarySensorDeviceClass.OCCUPANCY: 'occupancy'>,
             'original_icon': None,
             'original_name': 'My ecobee Occupancy',
@@ -9365,9 +9365,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'My ecobee Clear Hold',
             'options': dict({
             }),
-            'object_id_base': 'My ecobee Clear Hold',
             'original_device_class': None,
             'original_icon': None,
             'original_name': 'My ecobee Clear Hold',
@@ -9408,9 +9408,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'My ecobee Identify',
             'options': dict({
             }),
-            'object_id_base': 'My ecobee Identify',
             'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
             'original_icon': None,
             'original_name': 'My ecobee Identify',
@@ -9467,9 +9467,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'My ecobee',
             'options': dict({
             }),
-            'object_id_base': 'My ecobee',
             'original_device_class': None,
             'original_icon': None,
             'original_name': 'My ecobee',
@@ -9539,9 +9539,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'My ecobee Current Mode',
             'options': dict({
             }),
-            'object_id_base': 'My ecobee Current Mode',
             'original_device_class': None,
             'original_icon': None,
             'original_name': 'My ecobee Current Mode',
@@ -9592,9 +9592,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'My ecobee Temperature Display Units',
             'options': dict({
             }),
-            'object_id_base': 'My ecobee Temperature Display Units',
             'original_device_class': None,
             'original_icon': None,
             'original_name': 'My ecobee Temperature Display Units',
@@ -9641,9 +9641,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'My ecobee Current Humidity',
             'options': dict({
             }),
-            'object_id_base': 'My ecobee Current Humidity',
             'original_device_class': <SensorDeviceClass.HUMIDITY: 'humidity'>,
             'original_icon': None,
             'original_name': 'My ecobee Current Humidity',
@@ -9689,12 +9689,12 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'My ecobee Current Temperature',
             'options': dict({
               'sensor': dict({
                 'suggested_display_precision': 1,
               }),
             }),
-            'object_id_base': 'My ecobee Current Temperature',
             'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
             'original_icon': None,
             'original_name': 'My ecobee Current Temperature',
@@ -9779,9 +9779,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'Master Fan',
             'options': dict({
             }),
-            'object_id_base': 'Master Fan',
             'original_device_class': <BinarySensorDeviceClass.MOTION: 'motion'>,
             'original_icon': None,
             'original_name': 'Master Fan',
@@ -9823,9 +9823,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'Master Fan',
             'options': dict({
             }),
-            'object_id_base': 'Master Fan',
             'original_device_class': <BinarySensorDeviceClass.OCCUPANCY: 'occupancy'>,
             'original_icon': None,
             'original_name': 'Master Fan',
@@ -9867,9 +9867,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'Master Fan Identify',
             'options': dict({
             }),
-            'object_id_base': 'Master Fan Identify',
             'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
             'original_icon': None,
             'original_name': 'Master Fan Identify',
@@ -9913,9 +9913,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'Master Fan Light Level',
             'options': dict({
             }),
-            'object_id_base': 'Master Fan Light Level',
             'original_device_class': <SensorDeviceClass.ILLUMINANCE: 'illuminance'>,
             'original_icon': None,
             'original_name': 'Master Fan Light Level',
@@ -9961,12 +9961,12 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'Master Fan Temperature',
             'options': dict({
               'sensor': dict({
                 'suggested_display_precision': 1,
               }),
             }),
-            'object_id_base': 'Master Fan Temperature',
             'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
             'original_icon': None,
             'original_name': 'Master Fan Temperature',
@@ -10010,9 +10010,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'Master Fan',
             'options': dict({
             }),
-            'object_id_base': 'Master Fan',
             'original_device_class': None,
             'original_icon': None,
             'original_name': 'Master Fan',
@@ -10094,9 +10094,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'Eve Degree AA11 Identify',
             'options': dict({
             }),
-            'object_id_base': 'Eve Degree AA11 Identify',
             'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
             'original_icon': None,
             'original_name': 'Eve Degree AA11 Identify',
@@ -10143,9 +10143,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'Eve Degree AA11 Elevation',
             'options': dict({
             }),
-            'object_id_base': 'Eve Degree AA11 Elevation',
             'original_device_class': None,
             'original_icon': None,
             'original_name': 'Eve Degree AA11 Elevation',
@@ -10195,9 +10195,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'Eve Degree AA11 Temperature Display Units',
             'options': dict({
             }),
-            'object_id_base': 'Eve Degree AA11 Temperature Display Units',
             'original_device_class': None,
             'original_icon': None,
             'original_name': 'Eve Degree AA11 Temperature Display Units',
@@ -10244,12 +10244,12 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'Eve Degree AA11 Air Pressure',
             'options': dict({
               'sensor': dict({
                 'suggested_display_precision': 2,
               }),
             }),
-            'object_id_base': 'Eve Degree AA11 Air Pressure',
             'original_device_class': <SensorDeviceClass.PRESSURE: 'pressure'>,
             'original_icon': None,
             'original_name': 'Eve Degree AA11 Air Pressure',
@@ -10295,9 +10295,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'Eve Degree AA11 Battery',
             'options': dict({
             }),
-            'object_id_base': 'Eve Degree AA11 Battery',
             'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
             'original_icon': 'mdi:battery-60',
             'original_name': 'Eve Degree AA11 Battery',
@@ -10344,9 +10344,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'Eve Degree AA11 Humidity',
             'options': dict({
             }),
-            'object_id_base': 'Eve Degree AA11 Humidity',
             'original_device_class': <SensorDeviceClass.HUMIDITY: 'humidity'>,
             'original_icon': None,
             'original_name': 'Eve Degree AA11 Humidity',
@@ -10392,12 +10392,12 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'Eve Degree AA11 Temperature',
             'options': dict({
               'sensor': dict({
                 'suggested_display_precision': 1,
               }),
             }),
-            'object_id_base': 'Eve Degree AA11 Temperature',
             'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
             'original_icon': None,
             'original_name': 'Eve Degree AA11 Temperature',
@@ -10482,9 +10482,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'Eve Energy 50FF Identify',
             'options': dict({
             }),
-            'object_id_base': 'Eve Energy 50FF Identify',
             'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
             'original_icon': None,
             'original_name': 'Eve Energy 50FF Identify',
@@ -10528,12 +10528,12 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'Eve Energy 50FF Amps',
             'options': dict({
               'sensor': dict({
                 'suggested_display_precision': 2,
               }),
             }),
-            'object_id_base': 'Eve Energy 50FF Amps',
             'original_device_class': <SensorDeviceClass.CURRENT: 'current'>,
             'original_icon': None,
             'original_name': 'Eve Energy 50FF Amps',
@@ -10579,12 +10579,12 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'Eve Energy 50FF Energy kWh',
             'options': dict({
               'sensor': dict({
                 'suggested_display_precision': 2,
               }),
             }),
-            'object_id_base': 'Eve Energy 50FF Energy kWh',
             'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
             'original_icon': None,
             'original_name': 'Eve Energy 50FF Energy kWh',
@@ -10630,12 +10630,12 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'Eve Energy 50FF Power',
             'options': dict({
               'sensor': dict({
                 'suggested_display_precision': 0,
               }),
             }),
-            'object_id_base': 'Eve Energy 50FF Power',
             'original_device_class': <SensorDeviceClass.POWER: 'power'>,
             'original_icon': None,
             'original_name': 'Eve Energy 50FF Power',
@@ -10681,12 +10681,12 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'Eve Energy 50FF Volts',
             'options': dict({
               'sensor': dict({
                 'suggested_display_precision': 0,
               }),
             }),
-            'object_id_base': 'Eve Energy 50FF Volts',
             'original_device_class': <SensorDeviceClass.VOLTAGE: 'voltage'>,
             'original_icon': None,
             'original_name': 'Eve Energy 50FF Volts',
@@ -10730,9 +10730,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'Eve Energy 50FF',
             'options': dict({
             }),
-            'object_id_base': 'Eve Energy 50FF',
             'original_device_class': None,
             'original_icon': None,
             'original_name': 'Eve Energy 50FF',
@@ -10774,9 +10774,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'Eve Energy 50FF Lock Physical Controls',
             'options': dict({
             }),
-            'object_id_base': 'Eve Energy 50FF Lock Physical Controls',
             'original_device_class': None,
             'original_icon': None,
             'original_name': 'Eve Energy 50FF Lock Physical Controls',
@@ -10858,9 +10858,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'HAA-C718B3 Identify',
             'options': dict({
             }),
-            'object_id_base': 'HAA-C718B3 Identify',
             'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
             'original_icon': None,
             'original_name': 'HAA-C718B3 Identify',
@@ -10902,9 +10902,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'HAA-C718B3 Setup',
             'options': dict({
             }),
-            'object_id_base': 'HAA-C718B3 Setup',
             'original_device_class': None,
             'original_icon': None,
             'original_name': 'HAA-C718B3 Setup',
@@ -10945,9 +10945,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'HAA-C718B3 Update',
             'options': dict({
             }),
-            'object_id_base': 'HAA-C718B3 Update',
             'original_device_class': <ButtonDeviceClass.UPDATE: 'update'>,
             'original_icon': None,
             'original_name': 'HAA-C718B3 Update',
@@ -10992,9 +10992,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'HAA-C718B3',
             'options': dict({
             }),
-            'object_id_base': 'HAA-C718B3',
             'original_device_class': None,
             'original_icon': None,
             'original_name': 'HAA-C718B3',
@@ -11082,9 +11082,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'HAA-C718B3 Identify',
             'options': dict({
             }),
-            'object_id_base': 'HAA-C718B3 Identify',
             'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
             'original_icon': None,
             'original_name': 'HAA-C718B3 Identify',
@@ -11126,9 +11126,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'HAA-C718B3',
             'options': dict({
             }),
-            'object_id_base': 'HAA-C718B3',
             'original_device_class': None,
             'original_icon': None,
             'original_name': 'HAA-C718B3',
@@ -11210,9 +11210,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'Family Room North Identify',
             'options': dict({
             }),
-            'object_id_base': 'Family Room North Identify',
             'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
             'original_icon': None,
             'original_name': 'Family Room North Identify',
@@ -11254,9 +11254,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'Family Room North',
             'options': dict({
             }),
-            'object_id_base': 'Family Room North',
             'original_device_class': None,
             'original_icon': None,
             'original_name': 'Family Room North',
@@ -11301,9 +11301,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'Family Room North Battery',
             'options': dict({
             }),
-            'object_id_base': 'Family Room North Battery',
             'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
             'original_icon': 'mdi:battery',
             'original_name': 'Family Room North Battery',
@@ -11385,9 +11385,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'HASS Bridge S6 Identify',
             'options': dict({
             }),
-            'object_id_base': 'HASS Bridge S6 Identify',
             'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
             'original_icon': None,
             'original_name': 'HASS Bridge S6 Identify',
@@ -11466,9 +11466,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'Kitchen Window Identify',
             'options': dict({
             }),
-            'object_id_base': 'Kitchen Window Identify',
             'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
             'original_icon': None,
             'original_name': 'Kitchen Window Identify',
@@ -11510,9 +11510,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'Kitchen Window',
             'options': dict({
             }),
-            'object_id_base': 'Kitchen Window',
             'original_device_class': None,
             'original_icon': None,
             'original_name': 'Kitchen Window',
@@ -11557,9 +11557,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'Kitchen Window Battery',
             'options': dict({
             }),
-            'object_id_base': 'Kitchen Window Battery',
             'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
             'original_icon': 'mdi:battery',
             'original_name': 'Kitchen Window Battery',
@@ -11645,9 +11645,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'Ceiling Fan Identify',
             'options': dict({
             }),
-            'object_id_base': 'Ceiling Fan Identify',
             'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
             'original_icon': None,
             'original_name': 'Ceiling Fan Identify',
@@ -11692,9 +11692,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'Ceiling Fan',
             'options': dict({
             }),
-            'object_id_base': 'Ceiling Fan',
             'original_device_class': None,
             'original_icon': None,
             'original_name': 'Ceiling Fan',
@@ -11778,9 +11778,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'Home Assistant Bridge Identify',
             'options': dict({
             }),
-            'object_id_base': 'Home Assistant Bridge Identify',
             'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
             'original_icon': None,
             'original_name': 'Home Assistant Bridge Identify',
@@ -11859,9 +11859,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'Living Room Fan Identify',
             'options': dict({
             }),
-            'object_id_base': 'Living Room Fan Identify',
             'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
             'original_icon': None,
             'original_name': 'Living Room Fan Identify',
@@ -11906,9 +11906,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'Living Room Fan',
             'options': dict({
             }),
-            'object_id_base': 'Living Room Fan',
             'original_device_class': None,
             'original_icon': None,
             'original_name': 'Living Room Fan',
@@ -11997,9 +11997,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': '89 Living Room Identify',
             'options': dict({
             }),
-            'object_id_base': '89 Living Room Identify',
             'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
             'original_icon': None,
             'original_name': '89 Living Room Identify',
@@ -12051,9 +12051,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': '89 Living Room',
             'options': dict({
             }),
-            'object_id_base': '89 Living Room',
             'original_device_class': None,
             'original_icon': None,
             'original_name': '89 Living Room',
@@ -12110,9 +12110,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': '89 Living Room',
             'options': dict({
             }),
-            'object_id_base': '89 Living Room',
             'original_device_class': None,
             'original_icon': None,
             'original_name': '89 Living Room',
@@ -12166,9 +12166,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': '89 Living Room Temperature Display Units',
             'options': dict({
             }),
-            'object_id_base': '89 Living Room Temperature Display Units',
             'original_device_class': None,
             'original_icon': None,
             'original_name': '89 Living Room Temperature Display Units',
@@ -12215,9 +12215,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': '89 Living Room Current Humidity',
             'options': dict({
             }),
-            'object_id_base': '89 Living Room Current Humidity',
             'original_device_class': <SensorDeviceClass.HUMIDITY: 'humidity'>,
             'original_icon': None,
             'original_name': '89 Living Room Current Humidity',
@@ -12263,12 +12263,12 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': '89 Living Room Current Temperature',
             'options': dict({
               'sensor': dict({
                 'suggested_display_precision': 1,
               }),
             }),
-            'object_id_base': '89 Living Room Current Temperature',
             'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
             'original_icon': None,
             'original_name': '89 Living Room Current Temperature',
@@ -12349,9 +12349,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'HASS Bridge S6 Identify',
             'options': dict({
             }),
-            'object_id_base': 'HASS Bridge S6 Identify',
             'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
             'original_icon': None,
             'original_name': 'HASS Bridge S6 Identify',
@@ -12434,9 +12434,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'HASS Bridge S6 Identify',
             'options': dict({
             }),
-            'object_id_base': 'HASS Bridge S6 Identify',
             'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
             'original_icon': None,
             'original_name': 'HASS Bridge S6 Identify',
@@ -12515,9 +12515,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'Laundry Smoke ED78 Identify',
             'options': dict({
             }),
-            'object_id_base': 'Laundry Smoke ED78 Identify',
             'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
             'original_icon': None,
             'original_name': 'Laundry Smoke ED78 Identify',
@@ -12563,9 +12563,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'Laundry Smoke ED78',
             'options': dict({
             }),
-            'object_id_base': 'Laundry Smoke ED78',
             'original_device_class': None,
             'original_icon': None,
             'original_name': 'Laundry Smoke ED78',
@@ -12614,9 +12614,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'Laundry Smoke ED78 Battery',
             'options': dict({
             }),
-            'object_id_base': 'Laundry Smoke ED78 Battery',
             'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
             'original_icon': 'mdi:battery',
             'original_name': 'Laundry Smoke ED78 Battery',
@@ -12702,9 +12702,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'Family Room North Identify',
             'options': dict({
             }),
-            'object_id_base': 'Family Room North Identify',
             'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
             'original_icon': None,
             'original_name': 'Family Room North Identify',
@@ -12746,9 +12746,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'Family Room North',
             'options': dict({
             }),
-            'object_id_base': 'Family Room North',
             'original_device_class': None,
             'original_icon': None,
             'original_name': 'Family Room North',
@@ -12793,9 +12793,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'Family Room North Battery',
             'options': dict({
             }),
-            'object_id_base': 'Family Room North Battery',
             'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
             'original_icon': 'mdi:battery',
             'original_name': 'Family Room North Battery',
@@ -12877,9 +12877,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'HASS Bridge S6 Identify',
             'options': dict({
             }),
-            'object_id_base': 'HASS Bridge S6 Identify',
             'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
             'original_icon': None,
             'original_name': 'HASS Bridge S6 Identify',
@@ -12958,9 +12958,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'Kitchen Window Identify',
             'options': dict({
             }),
-            'object_id_base': 'Kitchen Window Identify',
             'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
             'original_icon': None,
             'original_name': 'Kitchen Window Identify',
@@ -13002,9 +13002,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'Kitchen Window',
             'options': dict({
             }),
-            'object_id_base': 'Kitchen Window',
             'original_device_class': None,
             'original_icon': None,
             'original_name': 'Kitchen Window',
@@ -13049,9 +13049,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'Kitchen Window Battery',
             'options': dict({
             }),
-            'object_id_base': 'Kitchen Window Battery',
             'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
             'original_icon': 'mdi:battery',
             'original_name': 'Kitchen Window Battery',
@@ -13137,9 +13137,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'Ceiling Fan Identify',
             'options': dict({
             }),
-            'object_id_base': 'Ceiling Fan Identify',
             'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
             'original_icon': None,
             'original_name': 'Ceiling Fan Identify',
@@ -13184,9 +13184,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'Ceiling Fan',
             'options': dict({
             }),
-            'object_id_base': 'Ceiling Fan',
             'original_device_class': None,
             'original_icon': None,
             'original_name': 'Ceiling Fan',
@@ -13270,9 +13270,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'Home Assistant Bridge Identify',
             'options': dict({
             }),
-            'object_id_base': 'Home Assistant Bridge Identify',
             'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
             'original_icon': None,
             'original_name': 'Home Assistant Bridge Identify',
@@ -13351,9 +13351,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'Living Room Fan Identify',
             'options': dict({
             }),
-            'object_id_base': 'Living Room Fan Identify',
             'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
             'original_icon': None,
             'original_name': 'Living Room Fan Identify',
@@ -13398,9 +13398,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'Living Room Fan',
             'options': dict({
             }),
-            'object_id_base': 'Living Room Fan',
             'original_device_class': None,
             'original_icon': None,
             'original_name': 'Living Room Fan',
@@ -13490,9 +13490,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'Home Assistant Bridge Identify',
             'options': dict({
             }),
-            'object_id_base': 'Home Assistant Bridge Identify',
             'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
             'original_icon': None,
             'original_name': 'Home Assistant Bridge Identify',
@@ -13571,9 +13571,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'Living Room Fan Identify',
             'options': dict({
             }),
-            'object_id_base': 'Living Room Fan Identify',
             'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
             'original_icon': None,
             'original_name': 'Living Room Fan Identify',
@@ -13618,9 +13618,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'Living Room Fan',
             'options': dict({
             }),
-            'object_id_base': 'Living Room Fan',
             'original_device_class': None,
             'original_icon': None,
             'original_name': 'Living Room Fan',
@@ -13710,9 +13710,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': '89 Living Room Identify',
             'options': dict({
             }),
-            'object_id_base': '89 Living Room Identify',
             'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
             'original_icon': None,
             'original_name': '89 Living Room Identify',
@@ -13768,9 +13768,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': '89 Living Room',
             'options': dict({
             }),
-            'object_id_base': '89 Living Room',
             'original_device_class': None,
             'original_icon': None,
             'original_name': '89 Living Room',
@@ -13832,9 +13832,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': '89 Living Room',
             'options': dict({
             }),
-            'object_id_base': '89 Living Room',
             'original_device_class': None,
             'original_icon': None,
             'original_name': '89 Living Room',
@@ -13888,9 +13888,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': '89 Living Room Temperature Display Units',
             'options': dict({
             }),
-            'object_id_base': '89 Living Room Temperature Display Units',
             'original_device_class': None,
             'original_icon': None,
             'original_name': '89 Living Room Temperature Display Units',
@@ -13937,9 +13937,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': '89 Living Room Current Humidity',
             'options': dict({
             }),
-            'object_id_base': '89 Living Room Current Humidity',
             'original_device_class': <SensorDeviceClass.HUMIDITY: 'humidity'>,
             'original_icon': None,
             'original_name': '89 Living Room Current Humidity',
@@ -13985,12 +13985,12 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': '89 Living Room Current Temperature',
             'options': dict({
               'sensor': dict({
                 'suggested_display_precision': 1,
               }),
             }),
-            'object_id_base': '89 Living Room Current Temperature',
             'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
             'original_icon': None,
             'original_name': '89 Living Room Current Temperature',
@@ -14071,9 +14071,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'HASS Bridge S6 Identify',
             'options': dict({
             }),
-            'object_id_base': 'HASS Bridge S6 Identify',
             'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
             'original_icon': None,
             'original_name': 'HASS Bridge S6 Identify',
@@ -14156,9 +14156,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'HASS Bridge S6 Identify',
             'options': dict({
             }),
-            'object_id_base': 'HASS Bridge S6 Identify',
             'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
             'original_icon': None,
             'original_name': 'HASS Bridge S6 Identify',
@@ -14237,9 +14237,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'Humidifier 182A Identify',
             'options': dict({
             }),
-            'object_id_base': 'Humidifier 182A Identify',
             'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
             'original_icon': None,
             'original_name': 'Humidifier 182A Identify',
@@ -14288,9 +14288,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'Humidifier 182A',
             'options': dict({
             }),
-            'object_id_base': 'Humidifier 182A',
             'original_device_class': <HumidifierDeviceClass.HUMIDIFIER: 'humidifier'>,
             'original_icon': None,
             'original_name': 'Humidifier 182A',
@@ -14344,9 +14344,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'Humidifier 182A Current Humidity',
             'options': dict({
             }),
-            'object_id_base': 'Humidifier 182A Current Humidity',
             'original_device_class': <SensorDeviceClass.HUMIDITY: 'humidity'>,
             'original_icon': None,
             'original_name': 'Humidifier 182A Current Humidity',
@@ -14431,9 +14431,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'HASS Bridge S6 Identify',
             'options': dict({
             }),
-            'object_id_base': 'HASS Bridge S6 Identify',
             'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
             'original_icon': None,
             'original_name': 'HASS Bridge S6 Identify',
@@ -14512,9 +14512,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'Humidifier 182A Identify',
             'options': dict({
             }),
-            'object_id_base': 'Humidifier 182A Identify',
             'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
             'original_icon': None,
             'original_name': 'Humidifier 182A Identify',
@@ -14563,9 +14563,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'Humidifier 182A',
             'options': dict({
             }),
-            'object_id_base': 'Humidifier 182A',
             'original_device_class': <HumidifierDeviceClass.HUMIDIFIER: 'humidifier'>,
             'original_icon': None,
             'original_name': 'Humidifier 182A',
@@ -14619,9 +14619,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'Humidifier 182A Current Humidity',
             'options': dict({
             }),
-            'object_id_base': 'Humidifier 182A Current Humidity',
             'original_device_class': <SensorDeviceClass.HUMIDITY: 'humidity'>,
             'original_icon': None,
             'original_name': 'Humidifier 182A Current Humidity',
@@ -14706,9 +14706,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'HASS Bridge S6 Identify',
             'options': dict({
             }),
-            'object_id_base': 'HASS Bridge S6 Identify',
             'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
             'original_icon': None,
             'original_name': 'HASS Bridge S6 Identify',
@@ -14787,9 +14787,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'Laundry Smoke ED78 Identify',
             'options': dict({
             }),
-            'object_id_base': 'Laundry Smoke ED78 Identify',
             'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
             'original_icon': None,
             'original_name': 'Laundry Smoke ED78 Identify',
@@ -14840,9 +14840,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'Laundry Smoke ED78',
             'options': dict({
             }),
-            'object_id_base': 'Laundry Smoke ED78',
             'original_device_class': None,
             'original_icon': None,
             'original_name': 'Laundry Smoke ED78',
@@ -14901,9 +14901,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'Laundry Smoke ED78 Battery',
             'options': dict({
             }),
-            'object_id_base': 'Laundry Smoke ED78 Battery',
             'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
             'original_icon': 'mdi:battery',
             'original_name': 'Laundry Smoke ED78 Battery',
@@ -14989,9 +14989,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'Air Conditioner Identify',
             'options': dict({
             }),
-            'object_id_base': 'Air Conditioner Identify',
             'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
             'original_icon': None,
             'original_name': 'Air Conditioner Identify',
@@ -15049,9 +15049,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'Air Conditioner SlaveID 1',
             'options': dict({
             }),
-            'object_id_base': 'Air Conditioner SlaveID 1',
             'original_device_class': None,
             'original_icon': None,
             'original_name': 'Air Conditioner SlaveID 1',
@@ -15114,12 +15114,12 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'Air Conditioner Current Temperature',
             'options': dict({
               'sensor': dict({
                 'suggested_display_precision': 1,
               }),
             }),
-            'object_id_base': 'Air Conditioner Current Temperature',
             'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
             'original_icon': None,
             'original_name': 'Air Conditioner Current Temperature',
@@ -15204,9 +15204,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'Hue ambiance candle Identify',
             'options': dict({
             }),
-            'object_id_base': 'Hue ambiance candle Identify',
             'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
             'original_icon': None,
             'original_name': 'Hue ambiance candle Identify',
@@ -15256,9 +15256,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'Hue ambiance candle',
             'options': dict({
             }),
-            'object_id_base': 'Hue ambiance candle',
             'original_device_class': None,
             'original_icon': None,
             'original_name': 'Hue ambiance candle',
@@ -15351,9 +15351,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'Hue ambiance candle Identify',
             'options': dict({
             }),
-            'object_id_base': 'Hue ambiance candle Identify',
             'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
             'original_icon': None,
             'original_name': 'Hue ambiance candle Identify',
@@ -15403,9 +15403,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'Hue ambiance candle',
             'options': dict({
             }),
-            'object_id_base': 'Hue ambiance candle',
             'original_device_class': None,
             'original_icon': None,
             'original_name': 'Hue ambiance candle',
@@ -15498,9 +15498,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'Hue ambiance candle Identify',
             'options': dict({
             }),
-            'object_id_base': 'Hue ambiance candle Identify',
             'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
             'original_icon': None,
             'original_name': 'Hue ambiance candle Identify',
@@ -15550,9 +15550,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'Hue ambiance candle',
             'options': dict({
             }),
-            'object_id_base': 'Hue ambiance candle',
             'original_device_class': None,
             'original_icon': None,
             'original_name': 'Hue ambiance candle',
@@ -15645,9 +15645,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'Hue ambiance candle Identify',
             'options': dict({
             }),
-            'object_id_base': 'Hue ambiance candle Identify',
             'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
             'original_icon': None,
             'original_name': 'Hue ambiance candle Identify',
@@ -15697,9 +15697,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'Hue ambiance candle',
             'options': dict({
             }),
-            'object_id_base': 'Hue ambiance candle',
             'original_device_class': None,
             'original_icon': None,
             'original_name': 'Hue ambiance candle',
@@ -15792,9 +15792,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'Hue ambiance spot Identify',
             'options': dict({
             }),
-            'object_id_base': 'Hue ambiance spot Identify',
             'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
             'original_icon': None,
             'original_name': 'Hue ambiance spot Identify',
@@ -15844,9 +15844,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'Hue ambiance spot',
             'options': dict({
             }),
-            'object_id_base': 'Hue ambiance spot',
             'original_device_class': None,
             'original_icon': None,
             'original_name': 'Hue ambiance spot',
@@ -15949,9 +15949,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'Hue ambiance spot Identify',
             'options': dict({
             }),
-            'object_id_base': 'Hue ambiance spot Identify',
             'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
             'original_icon': None,
             'original_name': 'Hue ambiance spot Identify',
@@ -16001,9 +16001,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'Hue ambiance spot',
             'options': dict({
             }),
-            'object_id_base': 'Hue ambiance spot',
             'original_device_class': None,
             'original_icon': None,
             'original_name': 'Hue ambiance spot',
@@ -16106,9 +16106,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'Hue dimmer switch Identify',
             'options': dict({
             }),
-            'object_id_base': 'Hue dimmer switch Identify',
             'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
             'original_icon': None,
             'original_name': 'Hue dimmer switch Identify',
@@ -16154,9 +16154,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'Hue dimmer switch button 1',
             'options': dict({
             }),
-            'object_id_base': 'Hue dimmer switch button 1',
             'original_device_class': <EventDeviceClass.BUTTON: 'button'>,
             'original_icon': None,
             'original_name': 'Hue dimmer switch button 1',
@@ -16206,9 +16206,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'Hue dimmer switch button 2',
             'options': dict({
             }),
-            'object_id_base': 'Hue dimmer switch button 2',
             'original_device_class': <EventDeviceClass.BUTTON: 'button'>,
             'original_icon': None,
             'original_name': 'Hue dimmer switch button 2',
@@ -16258,9 +16258,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'Hue dimmer switch button 3',
             'options': dict({
             }),
-            'object_id_base': 'Hue dimmer switch button 3',
             'original_device_class': <EventDeviceClass.BUTTON: 'button'>,
             'original_icon': None,
             'original_name': 'Hue dimmer switch button 3',
@@ -16310,9 +16310,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'Hue dimmer switch button 4',
             'options': dict({
             }),
-            'object_id_base': 'Hue dimmer switch button 4',
             'original_device_class': <EventDeviceClass.BUTTON: 'button'>,
             'original_icon': None,
             'original_name': 'Hue dimmer switch button 4',
@@ -16360,9 +16360,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'Hue dimmer switch battery',
             'options': dict({
             }),
-            'object_id_base': 'Hue dimmer switch battery',
             'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
             'original_icon': 'mdi:battery',
             'original_name': 'Hue dimmer switch battery',
@@ -16444,9 +16444,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'Hue white lamp Identify',
             'options': dict({
             }),
-            'object_id_base': 'Hue white lamp Identify',
             'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
             'original_icon': None,
             'original_name': 'Hue white lamp Identify',
@@ -16492,9 +16492,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'Hue white lamp',
             'options': dict({
             }),
-            'object_id_base': 'Hue white lamp',
             'original_device_class': None,
             'original_icon': None,
             'original_name': 'Hue white lamp',
@@ -16578,9 +16578,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'Hue white lamp Identify',
             'options': dict({
             }),
-            'object_id_base': 'Hue white lamp Identify',
             'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
             'original_icon': None,
             'original_name': 'Hue white lamp Identify',
@@ -16626,9 +16626,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'Hue white lamp',
             'options': dict({
             }),
-            'object_id_base': 'Hue white lamp',
             'original_device_class': None,
             'original_icon': None,
             'original_name': 'Hue white lamp',
@@ -16712,9 +16712,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'Hue white lamp Identify',
             'options': dict({
             }),
-            'object_id_base': 'Hue white lamp Identify',
             'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
             'original_icon': None,
             'original_name': 'Hue white lamp Identify',
@@ -16760,9 +16760,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'Hue white lamp',
             'options': dict({
             }),
-            'object_id_base': 'Hue white lamp',
             'original_device_class': None,
             'original_icon': None,
             'original_name': 'Hue white lamp',
@@ -16846,9 +16846,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'Hue white lamp Identify',
             'options': dict({
             }),
-            'object_id_base': 'Hue white lamp Identify',
             'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
             'original_icon': None,
             'original_name': 'Hue white lamp Identify',
@@ -16894,9 +16894,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'Hue white lamp',
             'options': dict({
             }),
-            'object_id_base': 'Hue white lamp',
             'original_device_class': None,
             'original_icon': None,
             'original_name': 'Hue white lamp',
@@ -16980,9 +16980,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'Hue white lamp Identify',
             'options': dict({
             }),
-            'object_id_base': 'Hue white lamp Identify',
             'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
             'original_icon': None,
             'original_name': 'Hue white lamp Identify',
@@ -17028,9 +17028,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'Hue white lamp',
             'options': dict({
             }),
-            'object_id_base': 'Hue white lamp',
             'original_device_class': None,
             'original_icon': None,
             'original_name': 'Hue white lamp',
@@ -17114,9 +17114,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'Hue white lamp Identify',
             'options': dict({
             }),
-            'object_id_base': 'Hue white lamp Identify',
             'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
             'original_icon': None,
             'original_name': 'Hue white lamp Identify',
@@ -17162,9 +17162,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'Hue white lamp',
             'options': dict({
             }),
-            'object_id_base': 'Hue white lamp',
             'original_device_class': None,
             'original_icon': None,
             'original_name': 'Hue white lamp',
@@ -17248,9 +17248,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'Hue white lamp Identify',
             'options': dict({
             }),
-            'object_id_base': 'Hue white lamp Identify',
             'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
             'original_icon': None,
             'original_name': 'Hue white lamp Identify',
@@ -17296,9 +17296,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'Hue white lamp',
             'options': dict({
             }),
-            'object_id_base': 'Hue white lamp',
             'original_device_class': None,
             'original_icon': None,
             'original_name': 'Hue white lamp',
@@ -17382,9 +17382,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'Philips hue - 482544 Identify',
             'options': dict({
             }),
-            'object_id_base': 'Philips hue - 482544 Identify',
             'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
             'original_icon': None,
             'original_name': 'Philips hue - 482544 Identify',
@@ -17467,9 +17467,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'Koogeek-LS1-20833F Identify',
             'options': dict({
             }),
-            'object_id_base': 'Koogeek-LS1-20833F Identify',
             'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
             'original_icon': None,
             'original_name': 'Koogeek-LS1-20833F Identify',
@@ -17520,9 +17520,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'Koogeek-LS1-20833F Light Strip',
             'options': dict({
             }),
-            'object_id_base': 'Koogeek-LS1-20833F Light Strip',
             'original_device_class': None,
             'original_icon': None,
             'original_name': 'Koogeek-LS1-20833F Light Strip',
@@ -17620,9 +17620,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'Koogeek-P1-A00AA0 Identify',
             'options': dict({
             }),
-            'object_id_base': 'Koogeek-P1-A00AA0 Identify',
             'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
             'original_icon': None,
             'original_name': 'Koogeek-P1-A00AA0 Identify',
@@ -17666,12 +17666,12 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'Koogeek-P1-A00AA0 Power',
             'options': dict({
               'sensor': dict({
                 'suggested_display_precision': 0,
               }),
             }),
-            'object_id_base': 'Koogeek-P1-A00AA0 Power',
             'original_device_class': <SensorDeviceClass.POWER: 'power'>,
             'original_icon': None,
             'original_name': 'Koogeek-P1-A00AA0 Power',
@@ -17715,9 +17715,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'Koogeek-P1-A00AA0 outlet',
             'options': dict({
             }),
-            'object_id_base': 'Koogeek-P1-A00AA0 outlet',
             'original_device_class': None,
             'original_icon': None,
             'original_name': 'Koogeek-P1-A00AA0 outlet',
@@ -17800,9 +17800,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'Koogeek-SW2-187A91 Identify',
             'options': dict({
             }),
-            'object_id_base': 'Koogeek-SW2-187A91 Identify',
             'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
             'original_icon': None,
             'original_name': 'Koogeek-SW2-187A91 Identify',
@@ -17846,12 +17846,12 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'Koogeek-SW2-187A91 Power',
             'options': dict({
               'sensor': dict({
                 'suggested_display_precision': 0,
               }),
             }),
-            'object_id_base': 'Koogeek-SW2-187A91 Power',
             'original_device_class': <SensorDeviceClass.POWER: 'power'>,
             'original_icon': None,
             'original_name': 'Koogeek-SW2-187A91 Power',
@@ -17895,9 +17895,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'Koogeek-SW2-187A91 Switch 1',
             'options': dict({
             }),
-            'object_id_base': 'Koogeek-SW2-187A91 Switch 1',
             'original_device_class': None,
             'original_icon': None,
             'original_name': 'Koogeek-SW2-187A91 Switch 1',
@@ -17938,9 +17938,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'Koogeek-SW2-187A91 Switch 2',
             'options': dict({
             }),
-            'object_id_base': 'Koogeek-SW2-187A91 Switch 2',
             'original_device_class': None,
             'original_icon': None,
             'original_name': 'Koogeek-SW2-187A91 Switch 2',
@@ -18022,9 +18022,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'Lennox Identify',
             'options': dict({
             }),
-            'object_id_base': 'Lennox Identify',
             'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
             'original_icon': None,
             'original_name': 'Lennox Identify',
@@ -18075,9 +18075,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'Lennox',
             'options': dict({
             }),
-            'object_id_base': 'Lennox',
             'original_device_class': None,
             'original_icon': None,
             'original_name': 'Lennox',
@@ -18138,9 +18138,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'Lennox Temperature Display Units',
             'options': dict({
             }),
-            'object_id_base': 'Lennox Temperature Display Units',
             'original_device_class': None,
             'original_icon': None,
             'original_name': 'Lennox Temperature Display Units',
@@ -18187,9 +18187,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'Lennox Current Humidity',
             'options': dict({
             }),
-            'object_id_base': 'Lennox Current Humidity',
             'original_device_class': <SensorDeviceClass.HUMIDITY: 'humidity'>,
             'original_icon': None,
             'original_name': 'Lennox Current Humidity',
@@ -18235,12 +18235,12 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'Lennox Current Temperature',
             'options': dict({
               'sensor': dict({
                 'suggested_display_precision': 1,
               }),
             }),
-            'object_id_base': 'Lennox Current Temperature',
             'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
             'original_icon': None,
             'original_name': 'Lennox Current Temperature',
@@ -18325,9 +18325,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'LG webOS TV AF80 Identify',
             'options': dict({
             }),
-            'object_id_base': 'LG webOS TV AF80 Identify',
             'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
             'original_icon': None,
             'original_name': 'LG webOS TV AF80 Identify',
@@ -18379,9 +18379,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'LG webOS TV AF80',
             'options': dict({
             }),
-            'object_id_base': 'LG webOS TV AF80',
             'original_device_class': <MediaPlayerDeviceClass.TV: 'tv'>,
             'original_icon': None,
             'original_name': 'LG webOS TV AF80',
@@ -18434,9 +18434,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'LG webOS TV AF80 Mute',
             'options': dict({
             }),
-            'object_id_base': 'LG webOS TV AF80 Mute',
             'original_device_class': None,
             'original_icon': None,
             'original_name': 'LG webOS TV AF80 Mute',
@@ -18518,9 +18518,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'Caséta® Wireless Fan Speed Control Identify',
             'options': dict({
             }),
-            'object_id_base': 'Caséta® Wireless Fan Speed Control Identify',
             'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
             'original_icon': None,
             'original_name': 'Caséta® Wireless Fan Speed Control Identify',
@@ -18565,9 +18565,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'Caséta® Wireless Fan Speed Control',
             'options': dict({
             }),
-            'object_id_base': 'Caséta® Wireless Fan Speed Control',
             'original_device_class': None,
             'original_icon': None,
             'original_name': 'Caséta® Wireless Fan Speed Control',
@@ -18651,9 +18651,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'Smart Bridge 2 Identify',
             'options': dict({
             }),
-            'object_id_base': 'Smart Bridge 2 Identify',
             'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
             'original_icon': None,
             'original_name': 'Smart Bridge 2 Identify',
@@ -18736,9 +18736,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'MSS425F-15cc Identify',
             'options': dict({
             }),
-            'object_id_base': 'MSS425F-15cc Identify',
             'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
             'original_icon': None,
             'original_name': 'MSS425F-15cc Identify',
@@ -18780,9 +18780,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'MSS425F-15cc Outlet-1',
             'options': dict({
             }),
-            'object_id_base': 'MSS425F-15cc Outlet-1',
             'original_device_class': None,
             'original_icon': None,
             'original_name': 'MSS425F-15cc Outlet-1',
@@ -18823,9 +18823,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'MSS425F-15cc Outlet-2',
             'options': dict({
             }),
-            'object_id_base': 'MSS425F-15cc Outlet-2',
             'original_device_class': None,
             'original_icon': None,
             'original_name': 'MSS425F-15cc Outlet-2',
@@ -18866,9 +18866,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'MSS425F-15cc Outlet-3',
             'options': dict({
             }),
-            'object_id_base': 'MSS425F-15cc Outlet-3',
             'original_device_class': None,
             'original_icon': None,
             'original_name': 'MSS425F-15cc Outlet-3',
@@ -18909,9 +18909,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'MSS425F-15cc Outlet-4',
             'options': dict({
             }),
-            'object_id_base': 'MSS425F-15cc Outlet-4',
             'original_device_class': None,
             'original_icon': None,
             'original_name': 'MSS425F-15cc Outlet-4',
@@ -18952,9 +18952,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'MSS425F-15cc USB',
             'options': dict({
             }),
-            'object_id_base': 'MSS425F-15cc USB',
             'original_device_class': None,
             'original_icon': None,
             'original_name': 'MSS425F-15cc USB',
@@ -19036,9 +19036,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'MSS565-28da Identify',
             'options': dict({
             }),
-            'object_id_base': 'MSS565-28da Identify',
             'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
             'original_icon': None,
             'original_name': 'MSS565-28da Identify',
@@ -19084,9 +19084,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'MSS565-28da Dimmer Switch',
             'options': dict({
             }),
-            'object_id_base': 'MSS565-28da Dimmer Switch',
             'original_device_class': None,
             'original_icon': None,
             'original_name': 'MSS565-28da Dimmer Switch',
@@ -19174,9 +19174,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'Mysa-85dda9 Identify',
             'options': dict({
             }),
-            'object_id_base': 'Mysa-85dda9 Identify',
             'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
             'original_icon': None,
             'original_name': 'Mysa-85dda9 Identify',
@@ -19227,9 +19227,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'Mysa-85dda9 Thermostat',
             'options': dict({
             }),
-            'object_id_base': 'Mysa-85dda9 Thermostat',
             'original_device_class': None,
             'original_icon': None,
             'original_name': 'Mysa-85dda9 Thermostat',
@@ -19287,9 +19287,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'Mysa-85dda9 Display',
             'options': dict({
             }),
-            'object_id_base': 'Mysa-85dda9 Display',
             'original_device_class': None,
             'original_icon': None,
             'original_name': 'Mysa-85dda9 Display',
@@ -19341,9 +19341,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'Mysa-85dda9 Temperature Display Units',
             'options': dict({
             }),
-            'object_id_base': 'Mysa-85dda9 Temperature Display Units',
             'original_device_class': None,
             'original_icon': None,
             'original_name': 'Mysa-85dda9 Temperature Display Units',
@@ -19390,9 +19390,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'Mysa-85dda9 Current Humidity',
             'options': dict({
             }),
-            'object_id_base': 'Mysa-85dda9 Current Humidity',
             'original_device_class': <SensorDeviceClass.HUMIDITY: 'humidity'>,
             'original_icon': None,
             'original_name': 'Mysa-85dda9 Current Humidity',
@@ -19438,12 +19438,12 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'Mysa-85dda9 Current Temperature',
             'options': dict({
               'sensor': dict({
                 'suggested_display_precision': 1,
               }),
             }),
-            'object_id_base': 'Mysa-85dda9 Current Temperature',
             'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
             'original_icon': None,
             'original_name': 'Mysa-85dda9 Current Temperature',
@@ -19528,9 +19528,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'Nanoleaf Strip 3B32 Identify',
             'options': dict({
             }),
-            'object_id_base': 'Nanoleaf Strip 3B32 Identify',
             'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
             'original_icon': None,
             'original_name': 'Nanoleaf Strip 3B32 Identify',
@@ -19581,9 +19581,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'Nanoleaf Strip 3B32 Nanoleaf Light Strip',
             'options': dict({
             }),
-            'object_id_base': 'Nanoleaf Strip 3B32 Nanoleaf Light Strip',
             'original_device_class': None,
             'original_icon': None,
             'original_name': 'Nanoleaf Strip 3B32 Nanoleaf Light Strip',
@@ -19659,9 +19659,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'Nanoleaf Strip 3B32 Thread Capabilities',
             'options': dict({
             }),
-            'object_id_base': 'Nanoleaf Strip 3B32 Thread Capabilities',
             'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
             'original_icon': None,
             'original_name': 'Nanoleaf Strip 3B32 Thread Capabilities',
@@ -19721,9 +19721,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'Nanoleaf Strip 3B32 Thread Status',
             'options': dict({
             }),
-            'object_id_base': 'Nanoleaf Strip 3B32 Thread Status',
             'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
             'original_icon': None,
             'original_name': 'Nanoleaf Strip 3B32 Thread Status',
@@ -19815,9 +19815,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'Netatmo-Doorbell-g738658 Motion Sensor',
             'options': dict({
             }),
-            'object_id_base': 'Netatmo-Doorbell-g738658 Motion Sensor',
             'original_device_class': <BinarySensorDeviceClass.MOTION: 'motion'>,
             'original_icon': None,
             'original_name': 'Netatmo-Doorbell-g738658 Motion Sensor',
@@ -19859,9 +19859,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'Netatmo-Doorbell-g738658 Identify',
             'options': dict({
             }),
-            'object_id_base': 'Netatmo-Doorbell-g738658 Identify',
             'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
             'original_icon': None,
             'original_name': 'Netatmo-Doorbell-g738658 Identify',
@@ -19903,9 +19903,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'Netatmo-Doorbell-g738658',
             'options': dict({
             }),
-            'object_id_base': 'Netatmo-Doorbell-g738658',
             'original_device_class': None,
             'original_icon': None,
             'original_name': 'Netatmo-Doorbell-g738658',
@@ -19953,9 +19953,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'Netatmo-Doorbell-g738658',
             'options': dict({
             }),
-            'object_id_base': 'Netatmo-Doorbell-g738658',
             'original_device_class': <EventDeviceClass.DOORBELL: 'doorbell'>,
             'original_icon': None,
             'original_name': 'Netatmo-Doorbell-g738658',
@@ -20003,9 +20003,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'Netatmo-Doorbell-g738658 Mute',
             'options': dict({
             }),
-            'object_id_base': 'Netatmo-Doorbell-g738658 Mute',
             'original_device_class': None,
             'original_icon': None,
             'original_name': 'Netatmo-Doorbell-g738658 Mute',
@@ -20046,9 +20046,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'Netatmo-Doorbell-g738658 Mute',
             'options': dict({
             }),
-            'object_id_base': 'Netatmo-Doorbell-g738658 Mute',
             'original_device_class': None,
             'original_icon': None,
             'original_name': 'Netatmo-Doorbell-g738658 Mute',
@@ -20130,9 +20130,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'Smart CO Alarm Carbon Monoxide Sensor',
             'options': dict({
             }),
-            'object_id_base': 'Smart CO Alarm Carbon Monoxide Sensor',
             'original_device_class': <BinarySensorDeviceClass.CO: 'carbon_monoxide'>,
             'original_icon': None,
             'original_name': 'Smart CO Alarm Carbon Monoxide Sensor',
@@ -20174,9 +20174,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'Smart CO Alarm Low Battery',
             'options': dict({
             }),
-            'object_id_base': 'Smart CO Alarm Low Battery',
             'original_device_class': <BinarySensorDeviceClass.BATTERY: 'battery'>,
             'original_icon': None,
             'original_name': 'Smart CO Alarm Low Battery',
@@ -20218,9 +20218,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'Smart CO Alarm Identify',
             'options': dict({
             }),
-            'object_id_base': 'Smart CO Alarm Identify',
             'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
             'original_icon': None,
             'original_name': 'Smart CO Alarm Identify',
@@ -20303,9 +20303,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'Healthy Home Coach Identify',
             'options': dict({
             }),
-            'object_id_base': 'Healthy Home Coach Identify',
             'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
             'original_icon': None,
             'original_name': 'Healthy Home Coach Identify',
@@ -20349,9 +20349,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'Healthy Home Coach Air Quality',
             'options': dict({
             }),
-            'object_id_base': 'Healthy Home Coach Air Quality',
             'original_device_class': <SensorDeviceClass.AQI: 'aqi'>,
             'original_icon': None,
             'original_name': 'Healthy Home Coach Air Quality',
@@ -20396,9 +20396,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'Healthy Home Coach Carbon Dioxide sensor',
             'options': dict({
             }),
-            'object_id_base': 'Healthy Home Coach Carbon Dioxide sensor',
             'original_device_class': <SensorDeviceClass.CO2: 'carbon_dioxide'>,
             'original_icon': None,
             'original_name': 'Healthy Home Coach Carbon Dioxide sensor',
@@ -20444,9 +20444,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'Healthy Home Coach Humidity sensor',
             'options': dict({
             }),
-            'object_id_base': 'Healthy Home Coach Humidity sensor',
             'original_device_class': <SensorDeviceClass.HUMIDITY: 'humidity'>,
             'original_icon': None,
             'original_name': 'Healthy Home Coach Humidity sensor',
@@ -20492,12 +20492,12 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'Healthy Home Coach Noise',
             'options': dict({
               'sensor': dict({
                 'suggested_display_precision': 0,
               }),
             }),
-            'object_id_base': 'Healthy Home Coach Noise',
             'original_device_class': <SensorDeviceClass.SOUND_PRESSURE: 'sound_pressure'>,
             'original_icon': None,
             'original_name': 'Healthy Home Coach Noise',
@@ -20543,12 +20543,12 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'Healthy Home Coach Temperature sensor',
             'options': dict({
               'sensor': dict({
                 'suggested_display_precision': 1,
               }),
             }),
-            'object_id_base': 'Healthy Home Coach Temperature sensor',
             'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
             'original_icon': None,
             'original_name': 'Healthy Home Coach Temperature sensor',
@@ -20633,9 +20633,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'RainMachine-00ce4a Identify',
             'options': dict({
             }),
-            'object_id_base': 'RainMachine-00ce4a Identify',
             'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
             'original_icon': None,
             'original_name': 'RainMachine-00ce4a Identify',
@@ -20677,9 +20677,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'RainMachine-00ce4a',
             'options': dict({
             }),
-            'object_id_base': 'RainMachine-00ce4a',
             'original_device_class': None,
             'original_icon': None,
             'original_name': 'RainMachine-00ce4a',
@@ -20723,9 +20723,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'RainMachine-00ce4a',
             'options': dict({
             }),
-            'object_id_base': 'RainMachine-00ce4a',
             'original_device_class': None,
             'original_icon': None,
             'original_name': 'RainMachine-00ce4a',
@@ -20769,9 +20769,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'RainMachine-00ce4a',
             'options': dict({
             }),
-            'object_id_base': 'RainMachine-00ce4a',
             'original_device_class': None,
             'original_icon': None,
             'original_name': 'RainMachine-00ce4a',
@@ -20815,9 +20815,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'RainMachine-00ce4a',
             'options': dict({
             }),
-            'object_id_base': 'RainMachine-00ce4a',
             'original_device_class': None,
             'original_icon': None,
             'original_name': 'RainMachine-00ce4a',
@@ -20861,9 +20861,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'RainMachine-00ce4a',
             'options': dict({
             }),
-            'object_id_base': 'RainMachine-00ce4a',
             'original_device_class': None,
             'original_icon': None,
             'original_name': 'RainMachine-00ce4a',
@@ -20907,9 +20907,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'RainMachine-00ce4a',
             'options': dict({
             }),
-            'object_id_base': 'RainMachine-00ce4a',
             'original_device_class': None,
             'original_icon': None,
             'original_name': 'RainMachine-00ce4a',
@@ -20953,9 +20953,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'RainMachine-00ce4a',
             'options': dict({
             }),
-            'object_id_base': 'RainMachine-00ce4a',
             'original_device_class': None,
             'original_icon': None,
             'original_name': 'RainMachine-00ce4a',
@@ -20999,9 +20999,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'RainMachine-00ce4a',
             'options': dict({
             }),
-            'object_id_base': 'RainMachine-00ce4a',
             'original_device_class': None,
             'original_icon': None,
             'original_name': 'RainMachine-00ce4a',
@@ -21086,9 +21086,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'Master Bath South Identify',
             'options': dict({
             }),
-            'object_id_base': 'Master Bath South Identify',
             'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
             'original_icon': None,
             'original_name': 'Master Bath South Identify',
@@ -21130,9 +21130,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'Master Bath South RYSE Shade',
             'options': dict({
             }),
-            'object_id_base': 'Master Bath South RYSE Shade',
             'original_device_class': None,
             'original_icon': None,
             'original_name': 'Master Bath South RYSE Shade',
@@ -21177,9 +21177,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'Master Bath South RYSE Shade Battery',
             'options': dict({
             }),
-            'object_id_base': 'Master Bath South RYSE Shade Battery',
             'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
             'original_icon': 'mdi:battery',
             'original_name': 'Master Bath South RYSE Shade Battery',
@@ -21261,9 +21261,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'RYSE SmartBridge Identify',
             'options': dict({
             }),
-            'object_id_base': 'RYSE SmartBridge Identify',
             'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
             'original_icon': None,
             'original_name': 'RYSE SmartBridge Identify',
@@ -21342,9 +21342,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'RYSE SmartShade Identify',
             'options': dict({
             }),
-            'object_id_base': 'RYSE SmartShade Identify',
             'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
             'original_icon': None,
             'original_name': 'RYSE SmartShade Identify',
@@ -21386,9 +21386,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'RYSE SmartShade RYSE Shade',
             'options': dict({
             }),
-            'object_id_base': 'RYSE SmartShade RYSE Shade',
             'original_device_class': None,
             'original_icon': None,
             'original_name': 'RYSE SmartShade RYSE Shade',
@@ -21433,9 +21433,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'RYSE SmartShade RYSE Shade Battery',
             'options': dict({
             }),
-            'object_id_base': 'RYSE SmartShade RYSE Shade Battery',
             'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
             'original_icon': 'mdi:battery',
             'original_name': 'RYSE SmartShade RYSE Shade Battery',
@@ -21521,9 +21521,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'BR Left Identify',
             'options': dict({
             }),
-            'object_id_base': 'BR Left Identify',
             'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
             'original_icon': None,
             'original_name': 'BR Left Identify',
@@ -21565,9 +21565,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'BR Left RYSE Shade',
             'options': dict({
             }),
-            'object_id_base': 'BR Left RYSE Shade',
             'original_device_class': None,
             'original_icon': None,
             'original_name': 'BR Left RYSE Shade',
@@ -21612,9 +21612,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'BR Left RYSE Shade Battery',
             'options': dict({
             }),
-            'object_id_base': 'BR Left RYSE Shade Battery',
             'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
             'original_icon': 'mdi:battery',
             'original_name': 'BR Left RYSE Shade Battery',
@@ -21696,9 +21696,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'LR Left Identify',
             'options': dict({
             }),
-            'object_id_base': 'LR Left Identify',
             'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
             'original_icon': None,
             'original_name': 'LR Left Identify',
@@ -21740,9 +21740,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'LR Left RYSE Shade',
             'options': dict({
             }),
-            'object_id_base': 'LR Left RYSE Shade',
             'original_device_class': None,
             'original_icon': None,
             'original_name': 'LR Left RYSE Shade',
@@ -21787,9 +21787,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'LR Left RYSE Shade Battery',
             'options': dict({
             }),
-            'object_id_base': 'LR Left RYSE Shade Battery',
             'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
             'original_icon': 'mdi:battery-90',
             'original_name': 'LR Left RYSE Shade Battery',
@@ -21871,9 +21871,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'LR Right Identify',
             'options': dict({
             }),
-            'object_id_base': 'LR Right Identify',
             'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
             'original_icon': None,
             'original_name': 'LR Right Identify',
@@ -21915,9 +21915,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'LR Right RYSE Shade',
             'options': dict({
             }),
-            'object_id_base': 'LR Right RYSE Shade',
             'original_device_class': None,
             'original_icon': None,
             'original_name': 'LR Right RYSE Shade',
@@ -21962,9 +21962,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'LR Right RYSE Shade Battery',
             'options': dict({
             }),
-            'object_id_base': 'LR Right RYSE Shade Battery',
             'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
             'original_icon': 'mdi:battery',
             'original_name': 'LR Right RYSE Shade Battery',
@@ -22046,9 +22046,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'RYSE SmartBridge Identify',
             'options': dict({
             }),
-            'object_id_base': 'RYSE SmartBridge Identify',
             'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
             'original_icon': None,
             'original_name': 'RYSE SmartBridge Identify',
@@ -22127,9 +22127,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'RZSS Identify',
             'options': dict({
             }),
-            'object_id_base': 'RZSS Identify',
             'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
             'original_icon': None,
             'original_name': 'RZSS Identify',
@@ -22171,9 +22171,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'RZSS RYSE Shade',
             'options': dict({
             }),
-            'object_id_base': 'RZSS RYSE Shade',
             'original_device_class': None,
             'original_icon': None,
             'original_name': 'RZSS RYSE Shade',
@@ -22218,9 +22218,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'RZSS RYSE Shade Battery',
             'options': dict({
             }),
-            'object_id_base': 'RZSS RYSE Shade Battery',
             'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
             'original_icon': 'mdi:battery-alert',
             'original_name': 'RZSS RYSE Shade Battery',
@@ -22306,9 +22306,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'SENSE   Identify',
             'options': dict({
             }),
-            'object_id_base': 'SENSE   Identify',
             'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
             'original_icon': None,
             'original_name': 'SENSE   Identify',
@@ -22350,9 +22350,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'SENSE   Lock Mechanism',
             'options': dict({
             }),
-            'object_id_base': 'SENSE   Lock Mechanism',
             'original_device_class': None,
             'original_icon': None,
             'original_name': 'SENSE   Lock Mechanism',
@@ -22435,9 +22435,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'SIMPLEconnect Fan-06F674 Identify',
             'options': dict({
             }),
-            'object_id_base': 'SIMPLEconnect Fan-06F674 Identify',
             'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
             'original_icon': None,
             'original_name': 'SIMPLEconnect Fan-06F674 Identify',
@@ -22482,9 +22482,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'SIMPLEconnect Fan-06F674 Hunter Fan',
             'options': dict({
             }),
-            'object_id_base': 'SIMPLEconnect Fan-06F674 Hunter Fan',
             'original_device_class': None,
             'original_icon': None,
             'original_name': 'SIMPLEconnect Fan-06F674 Hunter Fan',
@@ -22536,9 +22536,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'SIMPLEconnect Fan-06F674 Hunter Light',
             'options': dict({
             }),
-            'object_id_base': 'SIMPLEconnect Fan-06F674 Hunter Light',
             'original_device_class': None,
             'original_icon': None,
             'original_name': 'SIMPLEconnect Fan-06F674 Hunter Light',
@@ -22626,9 +22626,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'VELUX Internal Cover Identify',
             'options': dict({
             }),
-            'object_id_base': 'VELUX Internal Cover Identify',
             'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
             'original_icon': None,
             'original_name': 'VELUX Internal Cover Identify',
@@ -22670,9 +22670,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'VELUX Internal Cover Venetian Blinds',
             'options': dict({
             }),
-            'object_id_base': 'VELUX Internal Cover Venetian Blinds',
             'original_device_class': None,
             'original_icon': None,
             'original_name': 'VELUX Internal Cover Venetian Blinds',
@@ -22757,9 +22757,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'U by Moen-015F44 Identify',
             'options': dict({
             }),
-            'object_id_base': 'U by Moen-015F44 Identify',
             'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
             'original_icon': None,
             'original_name': 'U by Moen-015F44 Identify',
@@ -22811,9 +22811,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'U by Moen-015F44',
             'options': dict({
             }),
-            'object_id_base': 'U by Moen-015F44',
             'original_device_class': None,
             'original_icon': None,
             'original_name': 'U by Moen-015F44',
@@ -22869,12 +22869,12 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'U by Moen-015F44 Current Temperature',
             'options': dict({
               'sensor': dict({
                 'suggested_display_precision': 1,
               }),
             }),
-            'object_id_base': 'U by Moen-015F44 Current Temperature',
             'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
             'original_icon': None,
             'original_name': 'U by Moen-015F44 Current Temperature',
@@ -22918,9 +22918,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'U by Moen-015F44',
             'options': dict({
             }),
-            'object_id_base': 'U by Moen-015F44',
             'original_device_class': None,
             'original_icon': None,
             'original_name': 'U by Moen-015F44',
@@ -22961,9 +22961,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'U by Moen-015F44 Outlet 1',
             'options': dict({
             }),
-            'object_id_base': 'U by Moen-015F44 Outlet 1',
             'original_device_class': None,
             'original_icon': None,
             'original_name': 'U by Moen-015F44 Outlet 1',
@@ -23005,9 +23005,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'U by Moen-015F44 Outlet 2',
             'options': dict({
             }),
-            'object_id_base': 'U by Moen-015F44 Outlet 2',
             'original_device_class': None,
             'original_icon': None,
             'original_name': 'U by Moen-015F44 Outlet 2',
@@ -23049,9 +23049,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'U by Moen-015F44 Outlet 3',
             'options': dict({
             }),
-            'object_id_base': 'U by Moen-015F44 Outlet 3',
             'original_device_class': None,
             'original_icon': None,
             'original_name': 'U by Moen-015F44 Outlet 3',
@@ -23093,9 +23093,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'U by Moen-015F44 Outlet 4',
             'options': dict({
             }),
-            'object_id_base': 'U by Moen-015F44 Outlet 4',
             'original_device_class': None,
             'original_icon': None,
             'original_name': 'U by Moen-015F44 Outlet 4',
@@ -23178,9 +23178,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'VELUX Sensor Identify',
             'options': dict({
             }),
-            'object_id_base': 'VELUX Sensor Identify',
             'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
             'original_icon': None,
             'original_name': 'VELUX Sensor Identify',
@@ -23224,9 +23224,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'VELUX Sensor Carbon Dioxide sensor',
             'options': dict({
             }),
-            'object_id_base': 'VELUX Sensor Carbon Dioxide sensor',
             'original_device_class': <SensorDeviceClass.CO2: 'carbon_dioxide'>,
             'original_icon': None,
             'original_name': 'VELUX Sensor Carbon Dioxide sensor',
@@ -23272,9 +23272,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'VELUX Sensor Humidity sensor',
             'options': dict({
             }),
-            'object_id_base': 'VELUX Sensor Humidity sensor',
             'original_device_class': <SensorDeviceClass.HUMIDITY: 'humidity'>,
             'original_icon': None,
             'original_name': 'VELUX Sensor Humidity sensor',
@@ -23320,12 +23320,12 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'VELUX Sensor Temperature sensor',
             'options': dict({
               'sensor': dict({
                 'suggested_display_precision': 1,
               }),
             }),
-            'object_id_base': 'VELUX Sensor Temperature sensor',
             'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
             'original_icon': None,
             'original_name': 'VELUX Sensor Temperature sensor',
@@ -23410,9 +23410,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'VELUX Gateway Identify',
             'options': dict({
             }),
-            'object_id_base': 'VELUX Gateway Identify',
             'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
             'original_icon': None,
             'original_name': 'VELUX Gateway Identify',
@@ -23491,9 +23491,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'VELUX Sensor Identify',
             'options': dict({
             }),
-            'object_id_base': 'VELUX Sensor Identify',
             'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
             'original_icon': None,
             'original_name': 'VELUX Sensor Identify',
@@ -23537,9 +23537,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'VELUX Sensor Carbon Dioxide sensor',
             'options': dict({
             }),
-            'object_id_base': 'VELUX Sensor Carbon Dioxide sensor',
             'original_device_class': <SensorDeviceClass.CO2: 'carbon_dioxide'>,
             'original_icon': None,
             'original_name': 'VELUX Sensor Carbon Dioxide sensor',
@@ -23585,9 +23585,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'VELUX Sensor Humidity sensor',
             'options': dict({
             }),
-            'object_id_base': 'VELUX Sensor Humidity sensor',
             'original_device_class': <SensorDeviceClass.HUMIDITY: 'humidity'>,
             'original_icon': None,
             'original_name': 'VELUX Sensor Humidity sensor',
@@ -23633,12 +23633,12 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'VELUX Sensor Temperature sensor',
             'options': dict({
               'sensor': dict({
                 'suggested_display_precision': 1,
               }),
             }),
-            'object_id_base': 'VELUX Sensor Temperature sensor',
             'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
             'original_icon': None,
             'original_name': 'VELUX Sensor Temperature sensor',
@@ -23719,9 +23719,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'VELUX Window Identify',
             'options': dict({
             }),
-            'object_id_base': 'VELUX Window Identify',
             'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
             'original_icon': None,
             'original_name': 'VELUX Window Identify',
@@ -23763,9 +23763,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'VELUX Window Roof Window',
             'options': dict({
             }),
-            'object_id_base': 'VELUX Window Roof Window',
             'original_device_class': <CoverDeviceClass.WINDOW: 'window'>,
             'original_icon': None,
             'original_name': 'VELUX Window Roof Window',
@@ -23850,9 +23850,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'VELUX Window Identify',
             'options': dict({
             }),
-            'object_id_base': 'VELUX Window Identify',
             'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
             'original_icon': None,
             'original_name': 'VELUX Window Identify',
@@ -23894,9 +23894,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'VELUX Window Roof Window',
             'options': dict({
             }),
-            'object_id_base': 'VELUX Window Roof Window',
             'original_device_class': <CoverDeviceClass.WINDOW: 'window'>,
             'original_icon': None,
             'original_name': 'VELUX Window Roof Window',
@@ -23981,9 +23981,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'VELUX External Cover Identify',
             'options': dict({
             }),
-            'object_id_base': 'VELUX External Cover Identify',
             'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
             'original_icon': None,
             'original_name': 'VELUX External Cover Identify',
@@ -24025,9 +24025,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'VELUX External Cover Awning Blinds',
             'options': dict({
             }),
-            'object_id_base': 'VELUX External Cover Awning Blinds',
             'original_device_class': None,
             'original_icon': None,
             'original_name': 'VELUX External Cover Awning Blinds',
@@ -24111,9 +24111,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'VOCOlinc-Flowerbud-0d324b Identify',
             'options': dict({
             }),
-            'object_id_base': 'VOCOlinc-Flowerbud-0d324b Identify',
             'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
             'original_icon': None,
             'original_name': 'VOCOlinc-Flowerbud-0d324b Identify',
@@ -24162,9 +24162,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'VOCOlinc-Flowerbud-0d324b',
             'options': dict({
             }),
-            'object_id_base': 'VOCOlinc-Flowerbud-0d324b',
             'original_device_class': <HumidifierDeviceClass.HUMIDIFIER: 'humidifier'>,
             'original_icon': None,
             'original_name': 'VOCOlinc-Flowerbud-0d324b',
@@ -24225,9 +24225,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'VOCOlinc-Flowerbud-0d324b Mood Light',
             'options': dict({
             }),
-            'object_id_base': 'VOCOlinc-Flowerbud-0d324b Mood Light',
             'original_device_class': None,
             'original_icon': None,
             'original_name': 'VOCOlinc-Flowerbud-0d324b Mood Light',
@@ -24299,9 +24299,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'VOCOlinc-Flowerbud-0d324b Spray Quantity',
             'options': dict({
             }),
-            'object_id_base': 'VOCOlinc-Flowerbud-0d324b Spray Quantity',
             'original_device_class': None,
             'original_icon': None,
             'original_name': 'VOCOlinc-Flowerbud-0d324b Spray Quantity',
@@ -24348,9 +24348,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'VOCOlinc-Flowerbud-0d324b Current Humidity',
             'options': dict({
             }),
-            'object_id_base': 'VOCOlinc-Flowerbud-0d324b Current Humidity',
             'original_device_class': <SensorDeviceClass.HUMIDITY: 'humidity'>,
             'original_icon': None,
             'original_name': 'VOCOlinc-Flowerbud-0d324b Current Humidity',
@@ -24435,9 +24435,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'VOCOlinc-VP3-123456 Identify',
             'options': dict({
             }),
-            'object_id_base': 'VOCOlinc-VP3-123456 Identify',
             'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
             'original_icon': None,
             'original_name': 'VOCOlinc-VP3-123456 Identify',
@@ -24481,12 +24481,12 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'VOCOlinc-VP3-123456 Power',
             'options': dict({
               'sensor': dict({
                 'suggested_display_precision': 0,
               }),
             }),
-            'object_id_base': 'VOCOlinc-VP3-123456 Power',
             'original_device_class': <SensorDeviceClass.POWER: 'power'>,
             'original_icon': None,
             'original_name': 'VOCOlinc-VP3-123456 Power',
@@ -24530,9 +24530,9 @@
             'labels': list([
             ]),
             'name': None,
+            'object_id_base': 'VOCOlinc-VP3-123456 Outlet',
             'options': dict({
             }),
-            'object_id_base': 'VOCOlinc-VP3-123456 Outlet',
             'original_device_class': None,
             'original_icon': None,
             'original_name': 'VOCOlinc-VP3-123456 Outlet',

@@ -20,12 +20,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Daily usage',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
       }),
     }),
-    'object_id_base': 'Daily usage',
     'original_device_class': <SensorDeviceClass.WATER: 'water'>,
     'original_icon': None,
     'original_name': 'Daily usage',
@@ -74,12 +74,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Monthly usage',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
       }),
     }),
-    'object_id_base': 'Monthly usage',
     'original_device_class': <SensorDeviceClass.WATER: 'water'>,
     'original_icon': None,
     'original_name': 'Monthly usage',
@@ -128,12 +128,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Yearly usage',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
       }),
     }),
-    'object_id_base': 'Yearly usage',
     'original_device_class': <SensorDeviceClass.WATER: 'water'>,
     'original_icon': None,
     'original_name': 'Yearly usage',

@@ -25,9 +25,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Degree minutes',
     'options': dict({
     }),
-    'object_id_base': 'Degree minutes',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Degree minutes',
@@ -84,9 +84,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Degree minutes',
     'options': dict({
     }),
-    'object_id_base': 'Degree minutes',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Degree minutes',
@@ -143,9 +143,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Heating offset climate system 1',
     'options': dict({
     }),
-    'object_id_base': 'Heating offset climate system 1',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Heating offset climate system 1',
@@ -201,9 +201,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Heating offset climate system 1',
     'options': dict({
     }),
-    'object_id_base': 'Heating offset climate system 1',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Heating offset climate system 1',
@@ -259,9 +259,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Room sensor set point value heating climate system 1',
     'options': dict({
     }),
-    'object_id_base': 'Room sensor set point value heating climate system 1',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Room sensor set point value heating climate system 1',
@@ -317,9 +317,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Room sensor set point value heating climate system 1',
     'options': dict({
     }),
-    'object_id_base': 'Room sensor set point value heating climate system 1',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Room sensor set point value heating climate system 1',
@@ -375,9 +375,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'start diff additional heat',
     'options': dict({
     }),
-    'object_id_base': 'start diff additional heat',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'start diff additional heat',
@@ -434,9 +434,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'start diff additional heat',
     'options': dict({
     }),
-    'object_id_base': 'start diff additional heat',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'start diff additional heat',

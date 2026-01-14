@@ -20,9 +20,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Allocate all stat points',
     'options': dict({
     }),
-    'object_id_base': 'Allocate all stat points',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Allocate all stat points',
@@ -69,9 +69,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Blessing',
     'options': dict({
     }),
-    'object_id_base': 'Blessing',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Blessing',
@@ -119,9 +119,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Buy a health potion',
     'options': dict({
     }),
-    'object_id_base': 'Buy a health potion',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Buy a health potion',
@@ -169,9 +169,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Healing light',
     'options': dict({
     }),
-    'object_id_base': 'Healing light',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Healing light',
@@ -219,9 +219,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Protective aura',
     'options': dict({
     }),
-    'object_id_base': 'Protective aura',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Protective aura',
@@ -269,9 +269,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Revive from death',
     'options': dict({
     }),
-    'object_id_base': 'Revive from death',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Revive from death',
@@ -318,9 +318,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Searing brightness',
     'options': dict({
     }),
-    'object_id_base': 'Searing brightness',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Searing brightness',
@@ -368,9 +368,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Start my day',
     'options': dict({
     }),
-    'object_id_base': 'Start my day',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Start my day',
@@ -417,9 +417,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Allocate all stat points',
     'options': dict({
     }),
-    'object_id_base': 'Allocate all stat points',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Allocate all stat points',
@@ -466,9 +466,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Buy a health potion',
     'options': dict({
     }),
-    'object_id_base': 'Buy a health potion',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Buy a health potion',
@@ -516,9 +516,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Revive from death',
     'options': dict({
     }),
-    'object_id_base': 'Revive from death',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Revive from death',
@@ -565,9 +565,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Start my day',
     'options': dict({
     }),
-    'object_id_base': 'Start my day',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Start my day',
@@ -614,9 +614,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Stealth',
     'options': dict({
     }),
-    'object_id_base': 'Stealth',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Stealth',
@@ -664,9 +664,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Tools of the trade',
     'options': dict({
     }),
-    'object_id_base': 'Tools of the trade',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Tools of the trade',
@@ -714,9 +714,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Allocate all stat points',
     'options': dict({
     }),
-    'object_id_base': 'Allocate all stat points',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Allocate all stat points',
@@ -763,9 +763,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Buy a health potion',
     'options': dict({
     }),
-    'object_id_base': 'Buy a health potion',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Buy a health potion',
@@ -813,9 +813,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Defensive stance',
     'options': dict({
     }),
-    'object_id_base': 'Defensive stance',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Defensive stance',
@@ -863,9 +863,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Intimidating gaze',
     'options': dict({
     }),
-    'object_id_base': 'Intimidating gaze',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Intimidating gaze',
@@ -913,9 +913,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Revive from death',
     'options': dict({
     }),
-    'object_id_base': 'Revive from death',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Revive from death',
@@ -962,9 +962,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Start my day',
     'options': dict({
     }),
-    'object_id_base': 'Start my day',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Start my day',
@@ -1011,9 +1011,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Valorous presence',
     'options': dict({
     }),
-    'object_id_base': 'Valorous presence',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Valorous presence',
@@ -1061,9 +1061,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Allocate all stat points',
     'options': dict({
     }),
-    'object_id_base': 'Allocate all stat points',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Allocate all stat points',
@@ -1110,9 +1110,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Buy a health potion',
     'options': dict({
     }),
-    'object_id_base': 'Buy a health potion',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Buy a health potion',
@@ -1160,9 +1160,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Chilling frost',
     'options': dict({
     }),
-    'object_id_base': 'Chilling frost',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Chilling frost',
@@ -1210,9 +1210,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Earthquake',
     'options': dict({
     }),
-    'object_id_base': 'Earthquake',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Earthquake',
@@ -1260,9 +1260,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Ethereal surge',
     'options': dict({
     }),
-    'object_id_base': 'Ethereal surge',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Ethereal surge',
@@ -1310,9 +1310,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Revive from death',
     'options': dict({
     }),
-    'object_id_base': 'Revive from death',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Revive from death',
@@ -1359,9 +1359,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Start my day',
     'options': dict({
     }),
-    'object_id_base': 'Start my day',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Start my day',

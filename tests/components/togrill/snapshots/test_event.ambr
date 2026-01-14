@@ -35,9 +35,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Event',
     'options': dict({
     }),
-    'object_id_base': 'Event',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Event',
@@ -114,9 +114,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Event',
     'options': dict({
     }),
-    'object_id_base': 'Event',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Event',
@@ -193,9 +193,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Event',
     'options': dict({
     }),
-    'object_id_base': 'Event',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Event',
@@ -272,9 +272,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Event',
     'options': dict({
     }),
-    'object_id_base': 'Event',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Event',
@@ -351,9 +351,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Event',
     'options': dict({
     }),
-    'object_id_base': 'Event',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Event',
@@ -430,9 +430,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Event',
     'options': dict({
     }),
-    'object_id_base': 'Event',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Event',

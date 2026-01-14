@@ -20,9 +20,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
-    'object_id_base': None,
     'original_device_class': None,
     'original_icon': 'mdi:printer',
     'original_name': None,
@@ -71,9 +71,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Active alerts',
     'options': dict({
     }),
-    'object_id_base': 'Active alerts',
     'original_device_class': None,
     'original_icon': 'mdi:printer',
     'original_name': 'Active alerts',
@@ -122,9 +122,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Black toner level',
     'options': dict({
     }),
-    'object_id_base': 'Black toner level',
     'original_device_class': None,
     'original_icon': 'mdi:printer',
     'original_name': 'Black toner level',
@@ -177,9 +177,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Cyan toner level',
     'options': dict({
     }),
-    'object_id_base': 'Cyan toner level',
     'original_device_class': None,
     'original_icon': 'mdi:printer',
     'original_name': 'Cyan toner level',
@@ -232,9 +232,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Input tray 1',
     'options': dict({
     }),
-    'object_id_base': 'Input tray 1',
     'original_device_class': None,
     'original_icon': 'mdi:printer',
     'original_name': 'Input tray 1',
@@ -290,9 +290,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Magenta toner level',
     'options': dict({
     }),
-    'object_id_base': 'Magenta toner level',
     'original_device_class': None,
     'original_icon': 'mdi:printer',
     'original_name': 'Magenta toner level',
@@ -345,9 +345,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Output tray 1',
     'options': dict({
     }),
-    'object_id_base': 'Output tray 1',
     'original_device_class': None,
     'original_icon': 'mdi:printer',
     'original_name': 'Output tray 1',
@@ -398,9 +398,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Yellow toner level',
     'options': dict({
     }),
-    'object_id_base': 'Yellow toner level',
     'original_device_class': None,
     'original_icon': 'mdi:printer',
     'original_name': 'Yellow toner level',

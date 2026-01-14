@@ -260,9 +260,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Alarm delay',
     'options': dict({
     }),
-    'object_id_base': 'Alarm delay',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Alarm delay',
@@ -312,9 +312,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery',
     'options': dict({
     }),
-    'object_id_base': 'Battery',
     'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
     'original_icon': None,
     'original_name': 'Battery',
@@ -364,12 +364,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery nominal voltage',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
       }),
     }),
-    'object_id_base': 'Battery nominal voltage',
     'original_device_class': <SensorDeviceClass.VOLTAGE: 'voltage'>,
     'original_icon': None,
     'original_name': 'Battery nominal voltage',
@@ -418,9 +418,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery replaced',
     'options': dict({
     }),
-    'object_id_base': 'Battery replaced',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Battery replaced',
@@ -467,9 +467,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery shutdown',
     'options': dict({
     }),
-    'object_id_base': 'Battery shutdown',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Battery shutdown',
@@ -517,9 +517,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery timeout',
     'options': dict({
     }),
-    'object_id_base': 'Battery timeout',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Battery timeout',
@@ -569,12 +569,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery voltage',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
       }),
     }),
-    'object_id_base': 'Battery voltage',
     'original_device_class': <SensorDeviceClass.VOLTAGE: 'voltage'>,
     'original_icon': None,
     'original_name': 'Battery voltage',
@@ -624,9 +624,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Cable type',
     'options': dict({
     }),
-    'object_id_base': 'Cable type',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Cable type',
@@ -673,9 +673,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Daemon version',
     'options': dict({
     }),
-    'object_id_base': 'Daemon version',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Daemon version',
@@ -722,9 +722,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Date and time',
     'options': dict({
     }),
-    'object_id_base': 'Date and time',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Date and time',
@@ -771,9 +771,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Driver',
     'options': dict({
     }),
-    'object_id_base': 'Driver',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Driver',
@@ -820,9 +820,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Firmware version',
     'options': dict({
     }),
-    'object_id_base': 'Firmware version',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Firmware version',
@@ -871,12 +871,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Input voltage',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
       }),
     }),
-    'object_id_base': 'Input voltage',
     'original_device_class': <SensorDeviceClass.VOLTAGE: 'voltage'>,
     'original_icon': None,
     'original_name': 'Input voltage',
@@ -928,12 +928,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Internal temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
       }),
     }),
-    'object_id_base': 'Internal temperature',
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Internal temperature',
@@ -983,9 +983,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Last self-test',
     'options': dict({
     }),
-    'object_id_base': 'Last self-test',
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
     'original_icon': None,
     'original_name': 'Last self-test',
@@ -1033,9 +1033,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Last transfer',
     'options': dict({
     }),
-    'object_id_base': 'Last transfer',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Last transfer',
@@ -1084,9 +1084,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Load',
     'options': dict({
     }),
-    'object_id_base': 'Load',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Load',
@@ -1184,9 +1184,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Mode',
     'options': dict({
     }),
-    'object_id_base': 'Mode',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Mode',
@@ -1233,9 +1233,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Model',
     'options': dict({
     }),
-    'object_id_base': 'Model',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Model',
@@ -1282,9 +1282,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Model',
     'options': dict({
     }),
-    'object_id_base': 'Model',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Model',
@@ -1331,9 +1331,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Name',
     'options': dict({
     }),
-    'object_id_base': 'Name',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Name',
@@ -1380,12 +1380,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Nominal apparent power',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
       }),
     }),
-    'object_id_base': 'Nominal apparent power',
     'original_device_class': <SensorDeviceClass.APPARENT_POWER: 'apparent_power'>,
     'original_icon': None,
     'original_name': 'Nominal apparent power',
@@ -1434,12 +1434,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Nominal input voltage',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
       }),
     }),
-    'object_id_base': 'Nominal input voltage',
     'original_device_class': <SensorDeviceClass.VOLTAGE: 'voltage'>,
     'original_icon': None,
     'original_name': 'Nominal input voltage',
@@ -1488,12 +1488,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Nominal output power',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
       }),
     }),
-    'object_id_base': 'Nominal output power',
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
     'original_icon': None,
     'original_name': 'Nominal output power',
@@ -1544,12 +1544,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Output current',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
       }),
     }),
-    'object_id_base': 'Output current',
     'original_device_class': <SensorDeviceClass.CURRENT: 'current'>,
     'original_icon': None,
     'original_name': 'Output current',
@@ -1599,9 +1599,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Self-test interval',
     'options': dict({
     }),
-    'object_id_base': 'Self-test interval',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Self-test interval',
@@ -1649,9 +1649,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Self-test result',
     'options': dict({
     }),
-    'object_id_base': 'Self-test result',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Self-test result',
@@ -1698,9 +1698,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Sensitivity',
     'options': dict({
     }),
-    'object_id_base': 'Sensitivity',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Sensitivity',
@@ -1747,9 +1747,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Serial number',
     'options': dict({
     }),
-    'object_id_base': 'Serial number',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Serial number',
@@ -1796,9 +1796,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Shutdown time',
     'options': dict({
     }),
-    'object_id_base': 'Shutdown time',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Shutdown time',
@@ -1895,9 +1895,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Status',
     'options': dict({
     }),
-    'object_id_base': 'Status',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Status',
@@ -1944,9 +1944,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Status data',
     'options': dict({
     }),
-    'object_id_base': 'Status data',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Status data',
@@ -1993,9 +1993,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Status date',
     'options': dict({
     }),
-    'object_id_base': 'Status date',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Status date',
@@ -2042,9 +2042,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Status flag',
     'options': dict({
     }),
-    'object_id_base': 'Status flag',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Status flag',
@@ -2093,12 +2093,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Time left',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
       }),
     }),
-    'object_id_base': 'Time left',
     'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
     'original_icon': None,
     'original_name': 'Time left',
@@ -2150,12 +2150,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Time on battery',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
       }),
     }),
-    'object_id_base': 'Time on battery',
     'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
     'original_icon': None,
     'original_name': 'Time on battery',
@@ -2207,12 +2207,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Total time on battery',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
       }),
     }),
-    'object_id_base': 'Total time on battery',
     'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
     'original_icon': None,
     'original_name': 'Total time on battery',
@@ -2264,9 +2264,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Transfer count',
     'options': dict({
     }),
-    'object_id_base': 'Transfer count',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Transfer count',
@@ -2314,9 +2314,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Transfer from battery',
     'options': dict({
     }),
-    'object_id_base': 'Transfer from battery',
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
     'original_icon': None,
     'original_name': 'Transfer from battery',
@@ -2364,12 +2364,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Transfer high',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
       }),
     }),
-    'object_id_base': 'Transfer high',
     'original_device_class': <SensorDeviceClass.VOLTAGE: 'voltage'>,
     'original_icon': None,
     'original_name': 'Transfer high',
@@ -2418,12 +2418,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Transfer low',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
       }),
     }),
-    'object_id_base': 'Transfer low',
     'original_device_class': <SensorDeviceClass.VOLTAGE: 'voltage'>,
     'original_icon': None,
     'original_name': 'Transfer low',
@@ -2472,9 +2472,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Transfer to battery',
     'options': dict({
     }),
-    'object_id_base': 'Transfer to battery',
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
     'original_icon': None,
     'original_name': 'Transfer to battery',

@@ -22,9 +22,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Containers active',
     'options': dict({
     }),
-    'object_id_base': 'Containers active',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Containers active',
@@ -74,9 +74,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Containers CPU usage',
     'options': dict({
     }),
-    'object_id_base': 'Containers CPU usage',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Containers CPU usage',
@@ -127,12 +127,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Containers memory used',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
       }),
     }),
-    'object_id_base': 'Containers memory used',
     'original_device_class': <SensorDeviceClass.DATA_SIZE: 'data_size'>,
     'original_icon': None,
     'original_name': 'Containers memory used',
@@ -184,12 +184,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'cpu_thermal 1 temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
       }),
     }),
-    'object_id_base': 'cpu_thermal 1 temperature',
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'cpu_thermal 1 temperature',
@@ -241,6 +241,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'dummy0 RX',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -249,7 +250,6 @@
         'suggested_unit_of_measurement': <UnitOfDataRate.MEGABITS_PER_SECOND: 'Mbit/s'>,
       }),
     }),
-    'object_id_base': 'dummy0 RX',
     'original_device_class': <SensorDeviceClass.DATA_RATE: 'data_rate'>,
     'original_icon': None,
     'original_name': 'dummy0 RX',
@@ -301,6 +301,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'dummy0 TX',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -309,7 +310,6 @@
         'suggested_unit_of_measurement': <UnitOfDataRate.MEGABITS_PER_SECOND: 'Mbit/s'>,
       }),
     }),
-    'object_id_base': 'dummy0 TX',
     'original_device_class': <SensorDeviceClass.DATA_RATE: 'data_rate'>,
     'original_icon': None,
     'original_name': 'dummy0 TX',
@@ -361,12 +361,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'err_temp temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
       }),
     }),
-    'object_id_base': 'err_temp temperature',
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'err_temp temperature',
@@ -418,6 +418,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'eth0 RX',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -426,7 +427,6 @@
         'suggested_unit_of_measurement': <UnitOfDataRate.MEGABITS_PER_SECOND: 'Mbit/s'>,
       }),
     }),
-    'object_id_base': 'eth0 RX',
     'original_device_class': <SensorDeviceClass.DATA_RATE: 'data_rate'>,
     'original_icon': None,
     'original_name': 'eth0 RX',
@@ -478,6 +478,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'eth0 TX',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -486,7 +487,6 @@
         'suggested_unit_of_measurement': <UnitOfDataRate.MEGABITS_PER_SECOND: 'Mbit/s'>,
       }),
     }),
-    'object_id_base': 'eth0 TX',
     'original_device_class': <SensorDeviceClass.DATA_RATE: 'data_rate'>,
     'original_icon': None,
     'original_name': 'eth0 TX',
@@ -538,6 +538,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'lo RX',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -546,7 +547,6 @@
         'suggested_unit_of_measurement': <UnitOfDataRate.MEGABITS_PER_SECOND: 'Mbit/s'>,
       }),
     }),
-    'object_id_base': 'lo RX',
     'original_device_class': <SensorDeviceClass.DATA_RATE: 'data_rate'>,
     'original_icon': None,
     'original_name': 'lo RX',
@@ -598,6 +598,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'lo TX',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -606,7 +607,6 @@
         'suggested_unit_of_measurement': <UnitOfDataRate.MEGABITS_PER_SECOND: 'Mbit/s'>,
       }),
     }),
-    'object_id_base': 'lo TX',
     'original_device_class': <SensorDeviceClass.DATA_RATE: 'data_rate'>,
     'original_icon': None,
     'original_name': 'lo TX',
@@ -658,9 +658,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'md1 available',
     'options': dict({
     }),
-    'object_id_base': 'md1 available',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'md1 available',
@@ -710,9 +710,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'md1 used',
     'options': dict({
     }),
-    'object_id_base': 'md1 used',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'md1 used',
@@ -762,9 +762,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'md3 available',
     'options': dict({
     }),
-    'object_id_base': 'md3 available',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'md3 available',
@@ -814,9 +814,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'md3 used',
     'options': dict({
     }),
-    'object_id_base': 'md3 used',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'md3 used',
@@ -866,12 +866,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': '/media disk free',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
       }),
     }),
-    'object_id_base': '/media disk free',
     'original_device_class': <SensorDeviceClass.DATA_SIZE: 'data_size'>,
     'original_icon': None,
     'original_name': '/media disk free',
@@ -923,9 +923,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': '/media disk usage',
     'options': dict({
     }),
-    'object_id_base': '/media disk usage',
     'original_device_class': None,
     'original_icon': None,
     'original_name': '/media disk usage',
@@ -976,12 +976,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': '/media disk used',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
       }),
     }),
-    'object_id_base': '/media disk used',
     'original_device_class': <SensorDeviceClass.DATA_SIZE: 'data_size'>,
     'original_icon': None,
     'original_name': '/media disk used',
@@ -1033,12 +1033,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Memory free',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
       }),
     }),
-    'object_id_base': 'Memory free',
     'original_device_class': <SensorDeviceClass.DATA_SIZE: 'data_size'>,
     'original_icon': None,
     'original_name': 'Memory free',
@@ -1090,9 +1090,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Memory usage',
     'options': dict({
     }),
-    'object_id_base': 'Memory usage',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Memory usage',
@@ -1143,12 +1143,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Memory use',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
       }),
     }),
-    'object_id_base': 'Memory use',
     'original_device_class': <SensorDeviceClass.DATA_SIZE: 'data_size'>,
     'original_icon': None,
     'original_name': 'Memory use',
@@ -1200,12 +1200,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'na_temp temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
       }),
     }),
-    'object_id_base': 'na_temp temperature',
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'na_temp temperature',
@@ -1257,9 +1257,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'NVIDIA GeForce RTX 3080 (GPU 0) fan speed',
     'options': dict({
     }),
-    'object_id_base': 'NVIDIA GeForce RTX 3080 (GPU 0) fan speed',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'NVIDIA GeForce RTX 3080 (GPU 0) fan speed',
@@ -1310,9 +1310,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'NVIDIA GeForce RTX 3080 (GPU 0) memory usage',
     'options': dict({
     }),
-    'object_id_base': 'NVIDIA GeForce RTX 3080 (GPU 0) memory usage',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'NVIDIA GeForce RTX 3080 (GPU 0) memory usage',
@@ -1363,12 +1363,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'NVIDIA GeForce RTX 3080 (GPU 0) processor usage',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
       }),
     }),
-    'object_id_base': 'NVIDIA GeForce RTX 3080 (GPU 0) processor usage',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'NVIDIA GeForce RTX 3080 (GPU 0) processor usage',
@@ -1419,12 +1419,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'NVIDIA GeForce RTX 3080 (GPU 0) temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
       }),
     }),
-    'object_id_base': 'NVIDIA GeForce RTX 3080 (GPU 0) temperature',
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'NVIDIA GeForce RTX 3080 (GPU 0) temperature',
@@ -1476,6 +1476,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'nvme0n1 disk read',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -1484,7 +1485,6 @@
         'suggested_unit_of_measurement': <UnitOfDataRate.MEGABYTES_PER_SECOND: 'MB/s'>,
       }),
     }),
-    'object_id_base': 'nvme0n1 disk read',
     'original_device_class': <SensorDeviceClass.DATA_RATE: 'data_rate'>,
     'original_icon': None,
     'original_name': 'nvme0n1 disk read',
@@ -1536,6 +1536,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'nvme0n1 disk write',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -1544,7 +1545,6 @@
         'suggested_unit_of_measurement': <UnitOfDataRate.MEGABYTES_PER_SECOND: 'MB/s'>,
       }),
     }),
-    'object_id_base': 'nvme0n1 disk write',
     'original_device_class': <SensorDeviceClass.DATA_RATE: 'data_rate'>,
     'original_icon': None,
     'original_name': 'nvme0n1 disk write',
@@ -1596,6 +1596,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'sda disk read',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -1604,7 +1605,6 @@
         'suggested_unit_of_measurement': <UnitOfDataRate.MEGABYTES_PER_SECOND: 'MB/s'>,
       }),
     }),
-    'object_id_base': 'sda disk read',
     'original_device_class': <SensorDeviceClass.DATA_RATE: 'data_rate'>,
     'original_icon': None,
     'original_name': 'sda disk read',
@@ -1656,6 +1656,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'sda disk write',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -1664,7 +1665,6 @@
         'suggested_unit_of_measurement': <UnitOfDataRate.MEGABYTES_PER_SECOND: 'MB/s'>,
       }),
     }),
-    'object_id_base': 'sda disk write',
     'original_device_class': <SensorDeviceClass.DATA_RATE: 'data_rate'>,
     'original_icon': None,
     'original_name': 'sda disk write',
@@ -1716,12 +1716,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': '/ssl disk free',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
       }),
     }),
-    'object_id_base': '/ssl disk free',
     'original_device_class': <SensorDeviceClass.DATA_SIZE: 'data_size'>,
     'original_icon': None,
     'original_name': '/ssl disk free',
@@ -1773,9 +1773,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': '/ssl disk usage',
     'options': dict({
     }),
-    'object_id_base': '/ssl disk usage',
     'original_device_class': None,
     'original_icon': None,
     'original_name': '/ssl disk usage',
@@ -1826,12 +1826,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': '/ssl disk used',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
       }),
     }),
-    'object_id_base': '/ssl disk used',
     'original_device_class': <SensorDeviceClass.DATA_SIZE: 'data_size'>,
     'original_icon': None,
     'original_name': '/ssl disk used',
@@ -1881,9 +1881,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Uptime',
     'options': dict({
     }),
-    'object_id_base': 'Uptime',
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
     'original_icon': None,
     'original_name': 'Uptime',

@@ -25,9 +25,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Combustion power',
     'options': dict({
     }),
-    'object_id_base': 'Combustion power',
     'original_device_class': <NumberDeviceClass.POWER_FACTOR: 'power_factor'>,
     'original_icon': None,
     'original_name': 'Combustion power',
@@ -84,9 +84,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Left fan speed',
     'options': dict({
     }),
-    'object_id_base': 'Left fan speed',
     'original_device_class': <NumberDeviceClass.WIND_SPEED: 'wind_speed'>,
     'original_icon': None,
     'original_name': 'Left fan speed',
@@ -143,9 +143,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Right fan speed',
     'options': dict({
     }),
-    'object_id_base': 'Right fan speed',
     'original_device_class': <NumberDeviceClass.WIND_SPEED: 'wind_speed'>,
     'original_icon': None,
     'original_name': 'Right fan speed',

@@ -25,9 +25,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Dynamic limit',
     'options': dict({
     }),
-    'object_id_base': 'Dynamic limit',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Dynamic limit',
@@ -84,9 +84,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'LED brightness',
     'options': dict({
     }),
-    'object_id_base': 'LED brightness',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'LED brightness',

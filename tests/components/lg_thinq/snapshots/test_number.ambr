@@ -25,9 +25,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Schedule turn-off',
     'options': dict({
     }),
-    'object_id_base': 'Schedule turn-off',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Schedule turn-off',
@@ -84,9 +84,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Schedule turn-on',
     'options': dict({
     }),
-    'object_id_base': 'Schedule turn-on',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Schedule turn-on',
@@ -143,9 +143,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Delayed start',
     'options': dict({
     }),
-    'object_id_base': 'Delayed start',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Delayed start',

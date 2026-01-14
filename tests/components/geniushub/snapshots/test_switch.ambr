@@ -20,9 +20,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Bedroom Socket',
     'options': dict({
     }),
-    'object_id_base': 'Bedroom Socket',
     'original_device_class': <SwitchDeviceClass.OUTLET: 'outlet'>,
     'original_icon': None,
     'original_name': 'Bedroom Socket',
@@ -78,9 +78,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Kitchen Socket',
     'options': dict({
     }),
-    'object_id_base': 'Kitchen Socket',
     'original_device_class': <SwitchDeviceClass.OUTLET: 'outlet'>,
     'original_icon': None,
     'original_name': 'Kitchen Socket',
@@ -136,9 +136,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Study Socket',
     'options': dict({
     }),
-    'object_id_base': 'Study Socket',
     'original_device_class': <SwitchDeviceClass.OUTLET: 'outlet'>,
     'original_icon': None,
     'original_name': 'Study Socket',

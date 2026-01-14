@@ -20,9 +20,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Damper',
     'options': dict({
     }),
-    'object_id_base': 'Damper',
     'original_device_class': <CoverDeviceClass.DAMPER: 'damper'>,
     'original_icon': None,
     'original_name': 'Damper',
@@ -72,9 +72,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Damper',
     'options': dict({
     }),
-    'object_id_base': 'Damper',
     'original_device_class': <CoverDeviceClass.DAMPER: 'damper'>,
     'original_icon': None,
     'original_name': 'Damper',

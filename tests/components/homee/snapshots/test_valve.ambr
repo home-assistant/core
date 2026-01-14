@@ -20,9 +20,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Valve position',
     'options': dict({
     }),
-    'object_id_base': 'Valve position',
     'original_device_class': <ValveDeviceClass.WATER: 'water'>,
     'original_icon': None,
     'original_name': 'Valve position',

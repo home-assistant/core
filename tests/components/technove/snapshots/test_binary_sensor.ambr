@@ -20,9 +20,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery protected',
     'options': dict({
     }),
-    'object_id_base': 'Battery protected',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Battery protected',
@@ -69,9 +69,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Conflict with power sharing mode',
     'options': dict({
     }),
-    'object_id_base': 'Conflict with power sharing mode',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Conflict with power sharing mode',
@@ -118,9 +118,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power sharing mode',
     'options': dict({
     }),
-    'object_id_base': 'Power sharing mode',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Power sharing mode',
@@ -167,9 +167,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Static IP',
     'options': dict({
     }),
-    'object_id_base': 'Static IP',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Static IP',
@@ -216,9 +216,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Update',
     'options': dict({
     }),
-    'object_id_base': 'Update',
     'original_device_class': <BinarySensorDeviceClass.UPDATE: 'update'>,
     'original_icon': None,
     'original_name': 'Update',

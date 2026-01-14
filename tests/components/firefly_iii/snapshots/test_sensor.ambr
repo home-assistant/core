@@ -22,9 +22,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Budget',
     'options': dict({
     }),
-    'object_id_base': 'Budget',
     'original_device_class': <SensorDeviceClass.MONETARY: 'monetary'>,
     'original_icon': None,
     'original_name': 'Budget',
@@ -76,9 +76,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Account Balance',
     'options': dict({
     }),
-    'object_id_base': 'Account Balance',
     'original_device_class': <SensorDeviceClass.MONETARY: 'monetary'>,
     'original_icon': None,
     'original_name': 'Account Balance',
@@ -128,9 +128,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Account Role',
     'options': dict({
     }),
-    'object_id_base': 'Account Role',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Account Role',
@@ -177,9 +177,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Account Type',
     'options': dict({
     }),
-    'object_id_base': 'Account Type',
     'original_device_class': None,
     'original_icon': 'mdi:hand-coin',
     'original_name': 'Account Type',
@@ -229,9 +229,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Earned/Spent',
     'options': dict({
     }),
-    'object_id_base': 'Earned/Spent',
     'original_device_class': <SensorDeviceClass.MONETARY: 'monetary'>,
     'original_icon': None,
     'original_name': 'Earned/Spent',
@@ -283,9 +283,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Account Balance',
     'options': dict({
     }),
-    'object_id_base': 'Account Balance',
     'original_device_class': <SensorDeviceClass.MONETARY: 'monetary'>,
     'original_icon': None,
     'original_name': 'Account Balance',
@@ -335,9 +335,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Account Role',
     'options': dict({
     }),
-    'object_id_base': 'Account Role',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Account Role',
@@ -384,9 +384,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Account Type',
     'options': dict({
     }),
-    'object_id_base': 'Account Type',
     'original_device_class': None,
     'original_icon': 'mdi:account-cash',
     'original_name': 'Account Type',
@@ -436,9 +436,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Account Balance',
     'options': dict({
     }),
-    'object_id_base': 'Account Balance',
     'original_device_class': <SensorDeviceClass.MONETARY: 'monetary'>,
     'original_icon': None,
     'original_name': 'Account Balance',
@@ -488,9 +488,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Account Role',
     'options': dict({
     }),
-    'object_id_base': 'Account Role',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Account Role',
@@ -537,9 +537,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Account Type',
     'options': dict({
     }),
-    'object_id_base': 'Account Type',
     'original_device_class': None,
     'original_icon': 'mdi:cash-minus',
     'original_name': 'Account Type',

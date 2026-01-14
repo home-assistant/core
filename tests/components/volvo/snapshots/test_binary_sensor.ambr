@@ -20,9 +20,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Brake fluid',
     'options': dict({
     }),
-    'object_id_base': 'Brake fluid',
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
     'original_icon': None,
     'original_name': 'Brake fluid',
@@ -70,9 +70,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Brake light center',
     'options': dict({
     }),
-    'object_id_base': 'Brake light center',
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
     'original_icon': None,
     'original_name': 'Brake light center',
@@ -120,9 +120,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Brake light left',
     'options': dict({
     }),
-    'object_id_base': 'Brake light left',
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
     'original_icon': None,
     'original_name': 'Brake light left',
@@ -170,9 +170,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Brake light right',
     'options': dict({
     }),
-    'object_id_base': 'Brake light right',
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
     'original_icon': None,
     'original_name': 'Brake light right',
@@ -220,9 +220,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Coolant level',
     'options': dict({
     }),
-    'object_id_base': 'Coolant level',
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
     'original_icon': None,
     'original_name': 'Coolant level',
@@ -270,9 +270,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Daytime running light left',
     'options': dict({
     }),
-    'object_id_base': 'Daytime running light left',
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
     'original_icon': None,
     'original_name': 'Daytime running light left',
@@ -320,9 +320,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Daytime running light right',
     'options': dict({
     }),
-    'object_id_base': 'Daytime running light right',
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
     'original_icon': None,
     'original_name': 'Daytime running light right',
@@ -370,9 +370,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Door front left',
     'options': dict({
     }),
-    'object_id_base': 'Door front left',
     'original_device_class': <BinarySensorDeviceClass.DOOR: 'door'>,
     'original_icon': None,
     'original_name': 'Door front left',
@@ -420,9 +420,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Door front right',
     'options': dict({
     }),
-    'object_id_base': 'Door front right',
     'original_device_class': <BinarySensorDeviceClass.DOOR: 'door'>,
     'original_icon': None,
     'original_name': 'Door front right',
@@ -470,9 +470,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Door rear left',
     'options': dict({
     }),
-    'object_id_base': 'Door rear left',
     'original_device_class': <BinarySensorDeviceClass.DOOR: 'door'>,
     'original_icon': None,
     'original_name': 'Door rear left',
@@ -520,9 +520,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Door rear right',
     'options': dict({
     }),
-    'object_id_base': 'Door rear right',
     'original_device_class': <BinarySensorDeviceClass.DOOR: 'door'>,
     'original_icon': None,
     'original_name': 'Door rear right',
@@ -570,9 +570,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Engine status',
     'options': dict({
     }),
-    'object_id_base': 'Engine status',
     'original_device_class': <BinarySensorDeviceClass.RUNNING: 'running'>,
     'original_icon': None,
     'original_name': 'Engine status',
@@ -620,9 +620,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Fog light front',
     'options': dict({
     }),
-    'object_id_base': 'Fog light front',
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
     'original_icon': None,
     'original_name': 'Fog light front',
@@ -670,9 +670,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Fog light rear',
     'options': dict({
     }),
-    'object_id_base': 'Fog light rear',
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
     'original_icon': None,
     'original_name': 'Fog light rear',
@@ -720,9 +720,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Hazard lights',
     'options': dict({
     }),
-    'object_id_base': 'Hazard lights',
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
     'original_icon': None,
     'original_name': 'Hazard lights',
@@ -770,9 +770,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'High beam left',
     'options': dict({
     }),
-    'object_id_base': 'High beam left',
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
     'original_icon': None,
     'original_name': 'High beam left',
@@ -820,9 +820,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'High beam right',
     'options': dict({
     }),
-    'object_id_base': 'High beam right',
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
     'original_icon': None,
     'original_name': 'High beam right',
@@ -870,9 +870,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Hood',
     'options': dict({
     }),
-    'object_id_base': 'Hood',
     'original_device_class': <BinarySensorDeviceClass.DOOR: 'door'>,
     'original_icon': None,
     'original_name': 'Hood',
@@ -920,9 +920,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Low beam left',
     'options': dict({
     }),
-    'object_id_base': 'Low beam left',
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
     'original_icon': None,
     'original_name': 'Low beam left',
@@ -970,9 +970,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Low beam right',
     'options': dict({
     }),
-    'object_id_base': 'Low beam right',
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
     'original_icon': None,
     'original_name': 'Low beam right',
@@ -1020,9 +1020,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Oil level',
     'options': dict({
     }),
-    'object_id_base': 'Oil level',
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
     'original_icon': None,
     'original_name': 'Oil level',
@@ -1070,9 +1070,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Position light front left',
     'options': dict({
     }),
-    'object_id_base': 'Position light front left',
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
     'original_icon': None,
     'original_name': 'Position light front left',
@@ -1120,9 +1120,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Position light front right',
     'options': dict({
     }),
-    'object_id_base': 'Position light front right',
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
     'original_icon': None,
     'original_name': 'Position light front right',
@@ -1170,9 +1170,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Position light rear left',
     'options': dict({
     }),
-    'object_id_base': 'Position light rear left',
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
     'original_icon': None,
     'original_name': 'Position light rear left',
@@ -1220,9 +1220,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Position light rear right',
     'options': dict({
     }),
-    'object_id_base': 'Position light rear right',
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
     'original_icon': None,
     'original_name': 'Position light rear right',
@@ -1270,9 +1270,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Registration plate light',
     'options': dict({
     }),
-    'object_id_base': 'Registration plate light',
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
     'original_icon': None,
     'original_name': 'Registration plate light',
@@ -1320,9 +1320,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Reverse lights',
     'options': dict({
     }),
-    'object_id_base': 'Reverse lights',
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
     'original_icon': None,
     'original_name': 'Reverse lights',
@@ -1370,9 +1370,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Side mark lights',
     'options': dict({
     }),
-    'object_id_base': 'Side mark lights',
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
     'original_icon': None,
     'original_name': 'Side mark lights',
@@ -1420,9 +1420,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Sunroof',
     'options': dict({
     }),
-    'object_id_base': 'Sunroof',
     'original_device_class': <BinarySensorDeviceClass.WINDOW: 'window'>,
     'original_icon': None,
     'original_name': 'Sunroof',
@@ -1470,9 +1470,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Tailgate',
     'options': dict({
     }),
-    'object_id_base': 'Tailgate',
     'original_device_class': <BinarySensorDeviceClass.DOOR: 'door'>,
     'original_icon': None,
     'original_name': 'Tailgate',
@@ -1520,9 +1520,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Tank lid',
     'options': dict({
     }),
-    'object_id_base': 'Tank lid',
     'original_device_class': <BinarySensorDeviceClass.DOOR: 'door'>,
     'original_icon': None,
     'original_name': 'Tank lid',
@@ -1570,9 +1570,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Tire front left',
     'options': dict({
     }),
-    'object_id_base': 'Tire front left',
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
     'original_icon': None,
     'original_name': 'Tire front left',
@@ -1620,9 +1620,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Tire front right',
     'options': dict({
     }),
-    'object_id_base': 'Tire front right',
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
     'original_icon': None,
     'original_name': 'Tire front right',
@@ -1670,9 +1670,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Tire rear left',
     'options': dict({
     }),
-    'object_id_base': 'Tire rear left',
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
     'original_icon': None,
     'original_name': 'Tire rear left',
@@ -1720,9 +1720,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Tire rear right',
     'options': dict({
     }),
-    'object_id_base': 'Tire rear right',
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
     'original_icon': None,
     'original_name': 'Tire rear right',
@@ -1770,9 +1770,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Turn indication front left',
     'options': dict({
     }),
-    'object_id_base': 'Turn indication front left',
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
     'original_icon': None,
     'original_name': 'Turn indication front left',
@@ -1820,9 +1820,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Turn indication front right',
     'options': dict({
     }),
-    'object_id_base': 'Turn indication front right',
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
     'original_icon': None,
     'original_name': 'Turn indication front right',
@@ -1870,9 +1870,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Turn indication rear left',
     'options': dict({
     }),
-    'object_id_base': 'Turn indication rear left',
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
     'original_icon': None,
     'original_name': 'Turn indication rear left',
@@ -1920,9 +1920,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Turn indication rear right',
     'options': dict({
     }),
-    'object_id_base': 'Turn indication rear right',
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
     'original_icon': None,
     'original_name': 'Turn indication rear right',
@@ -1970,9 +1970,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Washer fluid',
     'options': dict({
     }),
-    'object_id_base': 'Washer fluid',
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
     'original_icon': None,
     'original_name': 'Washer fluid',
@@ -2020,9 +2020,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Window front left',
     'options': dict({
     }),
-    'object_id_base': 'Window front left',
     'original_device_class': <BinarySensorDeviceClass.WINDOW: 'window'>,
     'original_icon': None,
     'original_name': 'Window front left',
@@ -2070,9 +2070,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Window front right',
     'options': dict({
     }),
-    'object_id_base': 'Window front right',
     'original_device_class': <BinarySensorDeviceClass.WINDOW: 'window'>,
     'original_icon': None,
     'original_name': 'Window front right',
@@ -2120,9 +2120,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Window rear left',
     'options': dict({
     }),
-    'object_id_base': 'Window rear left',
     'original_device_class': <BinarySensorDeviceClass.WINDOW: 'window'>,
     'original_icon': None,
     'original_name': 'Window rear left',
@@ -2170,9 +2170,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Window rear right',
     'options': dict({
     }),
-    'object_id_base': 'Window rear right',
     'original_device_class': <BinarySensorDeviceClass.WINDOW: 'window'>,
     'original_icon': None,
     'original_name': 'Window rear right',
@@ -2220,9 +2220,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Brake fluid',
     'options': dict({
     }),
-    'object_id_base': 'Brake fluid',
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
     'original_icon': None,
     'original_name': 'Brake fluid',
@@ -2270,9 +2270,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Brake light center',
     'options': dict({
     }),
-    'object_id_base': 'Brake light center',
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
     'original_icon': None,
     'original_name': 'Brake light center',
@@ -2320,9 +2320,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Brake light left',
     'options': dict({
     }),
-    'object_id_base': 'Brake light left',
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
     'original_icon': None,
     'original_name': 'Brake light left',
@@ -2370,9 +2370,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Brake light right',
     'options': dict({
     }),
-    'object_id_base': 'Brake light right',
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
     'original_icon': None,
     'original_name': 'Brake light right',
@@ -2420,9 +2420,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Coolant level',
     'options': dict({
     }),
-    'object_id_base': 'Coolant level',
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
     'original_icon': None,
     'original_name': 'Coolant level',
@@ -2470,9 +2470,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Daytime running light left',
     'options': dict({
     }),
-    'object_id_base': 'Daytime running light left',
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
     'original_icon': None,
     'original_name': 'Daytime running light left',
@@ -2520,9 +2520,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Daytime running light right',
     'options': dict({
     }),
-    'object_id_base': 'Daytime running light right',
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
     'original_icon': None,
     'original_name': 'Daytime running light right',
@@ -2570,9 +2570,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Door front left',
     'options': dict({
     }),
-    'object_id_base': 'Door front left',
     'original_device_class': <BinarySensorDeviceClass.DOOR: 'door'>,
     'original_icon': None,
     'original_name': 'Door front left',
@@ -2620,9 +2620,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Door front right',
     'options': dict({
     }),
-    'object_id_base': 'Door front right',
     'original_device_class': <BinarySensorDeviceClass.DOOR: 'door'>,
     'original_icon': None,
     'original_name': 'Door front right',
@@ -2670,9 +2670,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Door rear left',
     'options': dict({
     }),
-    'object_id_base': 'Door rear left',
     'original_device_class': <BinarySensorDeviceClass.DOOR: 'door'>,
     'original_icon': None,
     'original_name': 'Door rear left',
@@ -2720,9 +2720,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Door rear right',
     'options': dict({
     }),
-    'object_id_base': 'Door rear right',
     'original_device_class': <BinarySensorDeviceClass.DOOR: 'door'>,
     'original_icon': None,
     'original_name': 'Door rear right',
@@ -2770,9 +2770,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Engine status',
     'options': dict({
     }),
-    'object_id_base': 'Engine status',
     'original_device_class': <BinarySensorDeviceClass.RUNNING: 'running'>,
     'original_icon': None,
     'original_name': 'Engine status',
@@ -2820,9 +2820,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Fog light front',
     'options': dict({
     }),
-    'object_id_base': 'Fog light front',
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
     'original_icon': None,
     'original_name': 'Fog light front',
@@ -2870,9 +2870,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Fog light rear',
     'options': dict({
     }),
-    'object_id_base': 'Fog light rear',
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
     'original_icon': None,
     'original_name': 'Fog light rear',
@@ -2920,9 +2920,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Hazard lights',
     'options': dict({
     }),
-    'object_id_base': 'Hazard lights',
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
     'original_icon': None,
     'original_name': 'Hazard lights',
@@ -2970,9 +2970,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'High beam left',
     'options': dict({
     }),
-    'object_id_base': 'High beam left',
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
     'original_icon': None,
     'original_name': 'High beam left',
@@ -3020,9 +3020,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'High beam right',
     'options': dict({
     }),
-    'object_id_base': 'High beam right',
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
     'original_icon': None,
     'original_name': 'High beam right',
@@ -3070,9 +3070,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Hood',
     'options': dict({
     }),
-    'object_id_base': 'Hood',
     'original_device_class': <BinarySensorDeviceClass.DOOR: 'door'>,
     'original_icon': None,
     'original_name': 'Hood',
@@ -3120,9 +3120,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Low beam left',
     'options': dict({
     }),
-    'object_id_base': 'Low beam left',
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
     'original_icon': None,
     'original_name': 'Low beam left',
@@ -3170,9 +3170,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Low beam right',
     'options': dict({
     }),
-    'object_id_base': 'Low beam right',
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
     'original_icon': None,
     'original_name': 'Low beam right',
@@ -3220,9 +3220,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Oil level',
     'options': dict({
     }),
-    'object_id_base': 'Oil level',
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
     'original_icon': None,
     'original_name': 'Oil level',
@@ -3270,9 +3270,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Position light front left',
     'options': dict({
     }),
-    'object_id_base': 'Position light front left',
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
     'original_icon': None,
     'original_name': 'Position light front left',
@@ -3320,9 +3320,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Position light front right',
     'options': dict({
     }),
-    'object_id_base': 'Position light front right',
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
     'original_icon': None,
     'original_name': 'Position light front right',
@@ -3370,9 +3370,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Position light rear left',
     'options': dict({
     }),
-    'object_id_base': 'Position light rear left',
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
     'original_icon': None,
     'original_name': 'Position light rear left',
@@ -3420,9 +3420,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Position light rear right',
     'options': dict({
     }),
-    'object_id_base': 'Position light rear right',
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
     'original_icon': None,
     'original_name': 'Position light rear right',
@@ -3470,9 +3470,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Registration plate light',
     'options': dict({
     }),
-    'object_id_base': 'Registration plate light',
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
     'original_icon': None,
     'original_name': 'Registration plate light',
@@ -3520,9 +3520,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Reverse lights',
     'options': dict({
     }),
-    'object_id_base': 'Reverse lights',
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
     'original_icon': None,
     'original_name': 'Reverse lights',
@@ -3570,9 +3570,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Side mark lights',
     'options': dict({
     }),
-    'object_id_base': 'Side mark lights',
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
     'original_icon': None,
     'original_name': 'Side mark lights',
@@ -3620,9 +3620,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Sunroof',
     'options': dict({
     }),
-    'object_id_base': 'Sunroof',
     'original_device_class': <BinarySensorDeviceClass.WINDOW: 'window'>,
     'original_icon': None,
     'original_name': 'Sunroof',
@@ -3670,9 +3670,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Tailgate',
     'options': dict({
     }),
-    'object_id_base': 'Tailgate',
     'original_device_class': <BinarySensorDeviceClass.DOOR: 'door'>,
     'original_icon': None,
     'original_name': 'Tailgate',
@@ -3720,9 +3720,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Tank lid',
     'options': dict({
     }),
-    'object_id_base': 'Tank lid',
     'original_device_class': <BinarySensorDeviceClass.DOOR: 'door'>,
     'original_icon': None,
     'original_name': 'Tank lid',
@@ -3770,9 +3770,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Tire front left',
     'options': dict({
     }),
-    'object_id_base': 'Tire front left',
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
     'original_icon': None,
     'original_name': 'Tire front left',
@@ -3820,9 +3820,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Tire front right',
     'options': dict({
     }),
-    'object_id_base': 'Tire front right',
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
     'original_icon': None,
     'original_name': 'Tire front right',
@@ -3870,9 +3870,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Tire rear left',
     'options': dict({
     }),
-    'object_id_base': 'Tire rear left',
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
     'original_icon': None,
     'original_name': 'Tire rear left',
@@ -3920,9 +3920,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Tire rear right',
     'options': dict({
     }),
-    'object_id_base': 'Tire rear right',
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
     'original_icon': None,
     'original_name': 'Tire rear right',
@@ -3970,9 +3970,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Turn indication front left',
     'options': dict({
     }),
-    'object_id_base': 'Turn indication front left',
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
     'original_icon': None,
     'original_name': 'Turn indication front left',
@@ -4020,9 +4020,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Turn indication front right',
     'options': dict({
     }),
-    'object_id_base': 'Turn indication front right',
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
     'original_icon': None,
     'original_name': 'Turn indication front right',
@@ -4070,9 +4070,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Turn indication rear left',
     'options': dict({
     }),
-    'object_id_base': 'Turn indication rear left',
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
     'original_icon': None,
     'original_name': 'Turn indication rear left',
@@ -4120,9 +4120,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Turn indication rear right',
     'options': dict({
     }),
-    'object_id_base': 'Turn indication rear right',
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
     'original_icon': None,
     'original_name': 'Turn indication rear right',
@@ -4170,9 +4170,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Washer fluid',
     'options': dict({
     }),
-    'object_id_base': 'Washer fluid',
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
     'original_icon': None,
     'original_name': 'Washer fluid',
@@ -4220,9 +4220,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Window front left',
     'options': dict({
     }),
-    'object_id_base': 'Window front left',
     'original_device_class': <BinarySensorDeviceClass.WINDOW: 'window'>,
     'original_icon': None,
     'original_name': 'Window front left',
@@ -4270,9 +4270,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Window front right',
     'options': dict({
     }),
-    'object_id_base': 'Window front right',
     'original_device_class': <BinarySensorDeviceClass.WINDOW: 'window'>,
     'original_icon': None,
     'original_name': 'Window front right',
@@ -4320,9 +4320,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Window rear left',
     'options': dict({
     }),
-    'object_id_base': 'Window rear left',
     'original_device_class': <BinarySensorDeviceClass.WINDOW: 'window'>,
     'original_icon': None,
     'original_name': 'Window rear left',
@@ -4370,9 +4370,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Window rear right',
     'options': dict({
     }),
-    'object_id_base': 'Window rear right',
     'original_device_class': <BinarySensorDeviceClass.WINDOW: 'window'>,
     'original_icon': None,
     'original_name': 'Window rear right',
@@ -4420,9 +4420,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Brake fluid',
     'options': dict({
     }),
-    'object_id_base': 'Brake fluid',
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
     'original_icon': None,
     'original_name': 'Brake fluid',
@@ -4470,9 +4470,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Brake light center',
     'options': dict({
     }),
-    'object_id_base': 'Brake light center',
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
     'original_icon': None,
     'original_name': 'Brake light center',
@@ -4520,9 +4520,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Brake light left',
     'options': dict({
     }),
-    'object_id_base': 'Brake light left',
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
     'original_icon': None,
     'original_name': 'Brake light left',
@@ -4570,9 +4570,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Brake light right',
     'options': dict({
     }),
-    'object_id_base': 'Brake light right',
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
     'original_icon': None,
     'original_name': 'Brake light right',
@@ -4620,9 +4620,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Coolant level',
     'options': dict({
     }),
-    'object_id_base': 'Coolant level',
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
     'original_icon': None,
     'original_name': 'Coolant level',
@@ -4670,9 +4670,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Daytime running light left',
     'options': dict({
     }),
-    'object_id_base': 'Daytime running light left',
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
     'original_icon': None,
     'original_name': 'Daytime running light left',
@@ -4720,9 +4720,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Daytime running light right',
     'options': dict({
     }),
-    'object_id_base': 'Daytime running light right',
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
     'original_icon': None,
     'original_name': 'Daytime running light right',
@@ -4770,9 +4770,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Door front left',
     'options': dict({
     }),
-    'object_id_base': 'Door front left',
     'original_device_class': <BinarySensorDeviceClass.DOOR: 'door'>,
     'original_icon': None,
     'original_name': 'Door front left',
@@ -4820,9 +4820,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Door front right',
     'options': dict({
     }),
-    'object_id_base': 'Door front right',
     'original_device_class': <BinarySensorDeviceClass.DOOR: 'door'>,
     'original_icon': None,
     'original_name': 'Door front right',
@@ -4870,9 +4870,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Door rear left',
     'options': dict({
     }),
-    'object_id_base': 'Door rear left',
     'original_device_class': <BinarySensorDeviceClass.DOOR: 'door'>,
     'original_icon': None,
     'original_name': 'Door rear left',
@@ -4920,9 +4920,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Door rear right',
     'options': dict({
     }),
-    'object_id_base': 'Door rear right',
     'original_device_class': <BinarySensorDeviceClass.DOOR: 'door'>,
     'original_icon': None,
     'original_name': 'Door rear right',
@@ -4970,9 +4970,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Engine status',
     'options': dict({
     }),
-    'object_id_base': 'Engine status',
     'original_device_class': <BinarySensorDeviceClass.RUNNING: 'running'>,
     'original_icon': None,
     'original_name': 'Engine status',
@@ -5020,9 +5020,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Fog light front',
     'options': dict({
     }),
-    'object_id_base': 'Fog light front',
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
     'original_icon': None,
     'original_name': 'Fog light front',
@@ -5070,9 +5070,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Fog light rear',
     'options': dict({
     }),
-    'object_id_base': 'Fog light rear',
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
     'original_icon': None,
     'original_name': 'Fog light rear',
@@ -5120,9 +5120,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Hazard lights',
     'options': dict({
     }),
-    'object_id_base': 'Hazard lights',
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
     'original_icon': None,
     'original_name': 'Hazard lights',
@@ -5170,9 +5170,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'High beam left',
     'options': dict({
     }),
-    'object_id_base': 'High beam left',
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
     'original_icon': None,
     'original_name': 'High beam left',
@@ -5220,9 +5220,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'High beam right',
     'options': dict({
     }),
-    'object_id_base': 'High beam right',
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
     'original_icon': None,
     'original_name': 'High beam right',
@@ -5270,9 +5270,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Hood',
     'options': dict({
     }),
-    'object_id_base': 'Hood',
     'original_device_class': <BinarySensorDeviceClass.DOOR: 'door'>,
     'original_icon': None,
     'original_name': 'Hood',
@@ -5320,9 +5320,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Low beam left',
     'options': dict({
     }),
-    'object_id_base': 'Low beam left',
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
     'original_icon': None,
     'original_name': 'Low beam left',
@@ -5370,9 +5370,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Low beam right',
     'options': dict({
     }),
-    'object_id_base': 'Low beam right',
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
     'original_icon': None,
     'original_name': 'Low beam right',
@@ -5420,9 +5420,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Oil level',
     'options': dict({
     }),
-    'object_id_base': 'Oil level',
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
     'original_icon': None,
     'original_name': 'Oil level',
@@ -5470,9 +5470,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Position light front left',
     'options': dict({
     }),
-    'object_id_base': 'Position light front left',
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
     'original_icon': None,
     'original_name': 'Position light front left',
@@ -5520,9 +5520,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Position light front right',
     'options': dict({
     }),
-    'object_id_base': 'Position light front right',
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
     'original_icon': None,
     'original_name': 'Position light front right',
@@ -5570,9 +5570,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Position light rear left',
     'options': dict({
     }),
-    'object_id_base': 'Position light rear left',
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
     'original_icon': None,
     'original_name': 'Position light rear left',
@@ -5620,9 +5620,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Position light rear right',
     'options': dict({
     }),
-    'object_id_base': 'Position light rear right',
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
     'original_icon': None,
     'original_name': 'Position light rear right',
@@ -5670,9 +5670,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Registration plate light',
     'options': dict({
     }),
-    'object_id_base': 'Registration plate light',
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
     'original_icon': None,
     'original_name': 'Registration plate light',
@@ -5720,9 +5720,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Reverse lights',
     'options': dict({
     }),
-    'object_id_base': 'Reverse lights',
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
     'original_icon': None,
     'original_name': 'Reverse lights',
@@ -5770,9 +5770,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Side mark lights',
     'options': dict({
     }),
-    'object_id_base': 'Side mark lights',
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
     'original_icon': None,
     'original_name': 'Side mark lights',
@@ -5820,9 +5820,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Sunroof',
     'options': dict({
     }),
-    'object_id_base': 'Sunroof',
     'original_device_class': <BinarySensorDeviceClass.WINDOW: 'window'>,
     'original_icon': None,
     'original_name': 'Sunroof',
@@ -5870,9 +5870,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Tailgate',
     'options': dict({
     }),
-    'object_id_base': 'Tailgate',
     'original_device_class': <BinarySensorDeviceClass.DOOR: 'door'>,
     'original_icon': None,
     'original_name': 'Tailgate',
@@ -5920,9 +5920,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Tank lid',
     'options': dict({
     }),
-    'object_id_base': 'Tank lid',
     'original_device_class': <BinarySensorDeviceClass.DOOR: 'door'>,
     'original_icon': None,
     'original_name': 'Tank lid',
@@ -5970,9 +5970,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Tire front left',
     'options': dict({
     }),
-    'object_id_base': 'Tire front left',
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
     'original_icon': None,
     'original_name': 'Tire front left',
@@ -6020,9 +6020,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Tire front right',
     'options': dict({
     }),
-    'object_id_base': 'Tire front right',
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
     'original_icon': None,
     'original_name': 'Tire front right',
@@ -6070,9 +6070,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Tire rear left',
     'options': dict({
     }),
-    'object_id_base': 'Tire rear left',
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
     'original_icon': None,
     'original_name': 'Tire rear left',
@@ -6120,9 +6120,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Tire rear right',
     'options': dict({
     }),
-    'object_id_base': 'Tire rear right',
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
     'original_icon': None,
     'original_name': 'Tire rear right',
@@ -6170,9 +6170,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Turn indication front left',
     'options': dict({
     }),
-    'object_id_base': 'Turn indication front left',
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
     'original_icon': None,
     'original_name': 'Turn indication front left',
@@ -6220,9 +6220,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Turn indication front right',
     'options': dict({
     }),
-    'object_id_base': 'Turn indication front right',
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
     'original_icon': None,
     'original_name': 'Turn indication front right',
@@ -6270,9 +6270,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Turn indication rear left',
     'options': dict({
     }),
-    'object_id_base': 'Turn indication rear left',
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
     'original_icon': None,
     'original_name': 'Turn indication rear left',
@@ -6320,9 +6320,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Turn indication rear right',
     'options': dict({
     }),
-    'object_id_base': 'Turn indication rear right',
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
     'original_icon': None,
     'original_name': 'Turn indication rear right',
@@ -6370,9 +6370,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Washer fluid',
     'options': dict({
     }),
-    'object_id_base': 'Washer fluid',
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
     'original_icon': None,
     'original_name': 'Washer fluid',
@@ -6420,9 +6420,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Window front left',
     'options': dict({
     }),
-    'object_id_base': 'Window front left',
     'original_device_class': <BinarySensorDeviceClass.WINDOW: 'window'>,
     'original_icon': None,
     'original_name': 'Window front left',
@@ -6470,9 +6470,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Window front right',
     'options': dict({
     }),
-    'object_id_base': 'Window front right',
     'original_device_class': <BinarySensorDeviceClass.WINDOW: 'window'>,
     'original_icon': None,
     'original_name': 'Window front right',
@@ -6520,9 +6520,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Window rear left',
     'options': dict({
     }),
-    'object_id_base': 'Window rear left',
     'original_device_class': <BinarySensorDeviceClass.WINDOW: 'window'>,
     'original_icon': None,
     'original_name': 'Window rear left',
@@ -6570,9 +6570,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Window rear right',
     'options': dict({
     }),
-    'object_id_base': 'Window rear right',
     'original_device_class': <BinarySensorDeviceClass.WINDOW: 'window'>,
     'original_icon': None,
     'original_name': 'Window rear right',
@@ -6620,9 +6620,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Brake fluid',
     'options': dict({
     }),
-    'object_id_base': 'Brake fluid',
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
     'original_icon': None,
     'original_name': 'Brake fluid',
@@ -6670,9 +6670,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Brake light center',
     'options': dict({
     }),
-    'object_id_base': 'Brake light center',
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
     'original_icon': None,
     'original_name': 'Brake light center',
@@ -6720,9 +6720,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Brake light left',
     'options': dict({
     }),
-    'object_id_base': 'Brake light left',
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
     'original_icon': None,
     'original_name': 'Brake light left',
@@ -6770,9 +6770,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Brake light right',
     'options': dict({
     }),
-    'object_id_base': 'Brake light right',
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
     'original_icon': None,
     'original_name': 'Brake light right',
@@ -6820,9 +6820,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Coolant level',
     'options': dict({
     }),
-    'object_id_base': 'Coolant level',
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
     'original_icon': None,
     'original_name': 'Coolant level',
@@ -6870,9 +6870,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Daytime running light left',
     'options': dict({
     }),
-    'object_id_base': 'Daytime running light left',
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
     'original_icon': None,
     'original_name': 'Daytime running light left',
@@ -6920,9 +6920,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Daytime running light right',
     'options': dict({
     }),
-    'object_id_base': 'Daytime running light right',
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
     'original_icon': None,
     'original_name': 'Daytime running light right',
@@ -6970,9 +6970,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Door front left',
     'options': dict({
     }),
-    'object_id_base': 'Door front left',
     'original_device_class': <BinarySensorDeviceClass.DOOR: 'door'>,
     'original_icon': None,
     'original_name': 'Door front left',
@@ -7020,9 +7020,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Door front right',
     'options': dict({
     }),
-    'object_id_base': 'Door front right',
     'original_device_class': <BinarySensorDeviceClass.DOOR: 'door'>,
     'original_icon': None,
     'original_name': 'Door front right',
@@ -7070,9 +7070,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Door rear left',
     'options': dict({
     }),
-    'object_id_base': 'Door rear left',
     'original_device_class': <BinarySensorDeviceClass.DOOR: 'door'>,
     'original_icon': None,
     'original_name': 'Door rear left',
@@ -7120,9 +7120,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Door rear right',
     'options': dict({
     }),
-    'object_id_base': 'Door rear right',
     'original_device_class': <BinarySensorDeviceClass.DOOR: 'door'>,
     'original_icon': None,
     'original_name': 'Door rear right',
@@ -7170,9 +7170,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Engine status',
     'options': dict({
     }),
-    'object_id_base': 'Engine status',
     'original_device_class': <BinarySensorDeviceClass.RUNNING: 'running'>,
     'original_icon': None,
     'original_name': 'Engine status',
@@ -7220,9 +7220,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Fog light front',
     'options': dict({
     }),
-    'object_id_base': 'Fog light front',
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
     'original_icon': None,
     'original_name': 'Fog light front',
@@ -7270,9 +7270,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Fog light rear',
     'options': dict({
     }),
-    'object_id_base': 'Fog light rear',
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
     'original_icon': None,
     'original_name': 'Fog light rear',
@@ -7320,9 +7320,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Hazard lights',
     'options': dict({
     }),
-    'object_id_base': 'Hazard lights',
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
     'original_icon': None,
     'original_name': 'Hazard lights',
@@ -7370,9 +7370,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'High beam left',
     'options': dict({
     }),
-    'object_id_base': 'High beam left',
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
     'original_icon': None,
     'original_name': 'High beam left',
@@ -7420,9 +7420,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'High beam right',
     'options': dict({
     }),
-    'object_id_base': 'High beam right',
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
     'original_icon': None,
     'original_name': 'High beam right',
@@ -7470,9 +7470,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Hood',
     'options': dict({
     }),
-    'object_id_base': 'Hood',
     'original_device_class': <BinarySensorDeviceClass.DOOR: 'door'>,
     'original_icon': None,
     'original_name': 'Hood',
@@ -7520,9 +7520,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Low beam left',
     'options': dict({
     }),
-    'object_id_base': 'Low beam left',
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
     'original_icon': None,
     'original_name': 'Low beam left',
@@ -7570,9 +7570,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Low beam right',
     'options': dict({
     }),
-    'object_id_base': 'Low beam right',
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
     'original_icon': None,
     'original_name': 'Low beam right',
@@ -7620,9 +7620,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Oil level',
     'options': dict({
     }),
-    'object_id_base': 'Oil level',
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
     'original_icon': None,
     'original_name': 'Oil level',
@@ -7670,9 +7670,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Position light front left',
     'options': dict({
     }),
-    'object_id_base': 'Position light front left',
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
     'original_icon': None,
     'original_name': 'Position light front left',
@@ -7720,9 +7720,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Position light front right',
     'options': dict({
     }),
-    'object_id_base': 'Position light front right',
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
     'original_icon': None,
     'original_name': 'Position light front right',
@@ -7770,9 +7770,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Position light rear left',
     'options': dict({
     }),
-    'object_id_base': 'Position light rear left',
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
     'original_icon': None,
     'original_name': 'Position light rear left',
@@ -7820,9 +7820,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Position light rear right',
     'options': dict({
     }),
-    'object_id_base': 'Position light rear right',
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
     'original_icon': None,
     'original_name': 'Position light rear right',
@@ -7870,9 +7870,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Registration plate light',
     'options': dict({
     }),
-    'object_id_base': 'Registration plate light',
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
     'original_icon': None,
     'original_name': 'Registration plate light',
@@ -7920,9 +7920,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Reverse lights',
     'options': dict({
     }),
-    'object_id_base': 'Reverse lights',
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
     'original_icon': None,
     'original_name': 'Reverse lights',
@@ -7970,9 +7970,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Side mark lights',
     'options': dict({
     }),
-    'object_id_base': 'Side mark lights',
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
     'original_icon': None,
     'original_name': 'Side mark lights',
@@ -8020,9 +8020,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Sunroof',
     'options': dict({
     }),
-    'object_id_base': 'Sunroof',
     'original_device_class': <BinarySensorDeviceClass.WINDOW: 'window'>,
     'original_icon': None,
     'original_name': 'Sunroof',
@@ -8070,9 +8070,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Tailgate',
     'options': dict({
     }),
-    'object_id_base': 'Tailgate',
     'original_device_class': <BinarySensorDeviceClass.DOOR: 'door'>,
     'original_icon': None,
     'original_name': 'Tailgate',
@@ -8120,9 +8120,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Tank lid',
     'options': dict({
     }),
-    'object_id_base': 'Tank lid',
     'original_device_class': <BinarySensorDeviceClass.DOOR: 'door'>,
     'original_icon': None,
     'original_name': 'Tank lid',
@@ -8170,9 +8170,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Tire front left',
     'options': dict({
     }),
-    'object_id_base': 'Tire front left',
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
     'original_icon': None,
     'original_name': 'Tire front left',
@@ -8220,9 +8220,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Tire front right',
     'options': dict({
     }),
-    'object_id_base': 'Tire front right',
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
     'original_icon': None,
     'original_name': 'Tire front right',
@@ -8270,9 +8270,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Tire rear left',
     'options': dict({
     }),
-    'object_id_base': 'Tire rear left',
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
     'original_icon': None,
     'original_name': 'Tire rear left',
@@ -8320,9 +8320,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Tire rear right',
     'options': dict({
     }),
-    'object_id_base': 'Tire rear right',
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
     'original_icon': None,
     'original_name': 'Tire rear right',
@@ -8370,9 +8370,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Turn indication front left',
     'options': dict({
     }),
-    'object_id_base': 'Turn indication front left',
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
     'original_icon': None,
     'original_name': 'Turn indication front left',
@@ -8420,9 +8420,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Turn indication front right',
     'options': dict({
     }),
-    'object_id_base': 'Turn indication front right',
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
     'original_icon': None,
     'original_name': 'Turn indication front right',
@@ -8470,9 +8470,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Turn indication rear left',
     'options': dict({
     }),
-    'object_id_base': 'Turn indication rear left',
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
     'original_icon': None,
     'original_name': 'Turn indication rear left',
@@ -8520,9 +8520,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Turn indication rear right',
     'options': dict({
     }),
-    'object_id_base': 'Turn indication rear right',
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
     'original_icon': None,
     'original_name': 'Turn indication rear right',
@@ -8570,9 +8570,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Washer fluid',
     'options': dict({
     }),
-    'object_id_base': 'Washer fluid',
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
     'original_icon': None,
     'original_name': 'Washer fluid',
@@ -8620,9 +8620,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Window front left',
     'options': dict({
     }),
-    'object_id_base': 'Window front left',
     'original_device_class': <BinarySensorDeviceClass.WINDOW: 'window'>,
     'original_icon': None,
     'original_name': 'Window front left',
@@ -8670,9 +8670,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Window front right',
     'options': dict({
     }),
-    'object_id_base': 'Window front right',
     'original_device_class': <BinarySensorDeviceClass.WINDOW: 'window'>,
     'original_icon': None,
     'original_name': 'Window front right',
@@ -8720,9 +8720,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Window rear left',
     'options': dict({
     }),
-    'object_id_base': 'Window rear left',
     'original_device_class': <BinarySensorDeviceClass.WINDOW: 'window'>,
     'original_icon': None,
     'original_name': 'Window rear left',
@@ -8770,9 +8770,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Window rear right',
     'options': dict({
     }),
-    'object_id_base': 'Window rear right',
     'original_device_class': <BinarySensorDeviceClass.WINDOW: 'window'>,
     'original_icon': None,
     'original_name': 'Window rear right',

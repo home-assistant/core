@@ -20,9 +20,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Restart container',
     'options': dict({
     }),
-    'object_id_base': 'Restart container',
     'original_device_class': <ButtonDeviceClass.RESTART: 'restart'>,
     'original_icon': None,
     'original_name': 'Restart container',
@@ -70,9 +70,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Restart container',
     'options': dict({
     }),
-    'object_id_base': 'Restart container',
     'original_device_class': <ButtonDeviceClass.RESTART: 'restart'>,
     'original_icon': None,
     'original_name': 'Restart container',
@@ -120,9 +120,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Prune unused images',
     'options': dict({
     }),
-    'object_id_base': 'Prune unused images',
     'original_device_class': <ButtonDeviceClass.RESTART: 'restart'>,
     'original_icon': None,
     'original_name': 'Prune unused images',
@@ -170,9 +170,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Restart container',
     'options': dict({
     }),
-    'object_id_base': 'Restart container',
     'original_device_class': <ButtonDeviceClass.RESTART: 'restart'>,
     'original_icon': None,
     'original_name': 'Restart container',
@@ -220,9 +220,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Restart container',
     'options': dict({
     }),
-    'object_id_base': 'Restart container',
     'original_device_class': <ButtonDeviceClass.RESTART: 'restart'>,
     'original_icon': None,
     'original_name': 'Restart container',
@@ -270,9 +270,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Restart container',
     'options': dict({
     }),
-    'object_id_base': 'Restart container',
     'original_device_class': <ButtonDeviceClass.RESTART: 'restart'>,
     'original_icon': None,
     'original_name': 'Restart container',

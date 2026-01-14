@@ -20,9 +20,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Rest in the inn',
     'options': dict({
     }),
-    'object_id_base': 'Rest in the inn',
     'original_device_class': <SwitchDeviceClass.SWITCH: 'switch'>,
     'original_icon': None,
     'original_name': 'Rest in the inn',

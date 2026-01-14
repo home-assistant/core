@@ -42,9 +42,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
-    'object_id_base': None,
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': 'mdi:coffee-maker',
     'original_name': None,
@@ -148,9 +148,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Program',
     'options': dict({
     }),
-    'object_id_base': 'Program',
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
     'original_name': 'Program',
@@ -247,9 +247,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Program phase',
     'options': dict({
     }),
-    'object_id_base': 'Program phase',
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
     'original_name': 'Program phase',
@@ -319,9 +319,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Program type',
     'options': dict({
     }),
-    'object_id_base': 'Program type',
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
     'original_name': 'Program type',
@@ -376,9 +376,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Rinse aid level',
     'options': dict({
     }),
-    'object_id_base': 'Rinse aid level',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Rinse aid level',
@@ -426,9 +426,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Salt level',
     'options': dict({
     }),
-    'object_id_base': 'Salt level',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Salt level',
@@ -476,9 +476,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'TwinDos 1 level',
     'options': dict({
     }),
-    'object_id_base': 'TwinDos 1 level',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'TwinDos 1 level',
@@ -526,9 +526,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'TwinDos 1 level',
     'options': dict({
     }),
-    'object_id_base': 'TwinDos 1 level',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'TwinDos 1 level',
@@ -576,9 +576,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'TwinDos 2 level',
     'options': dict({
     }),
-    'object_id_base': 'TwinDos 2 level',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'TwinDos 2 level',
@@ -626,9 +626,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'TwinDos 2 level',
     'options': dict({
     }),
-    'object_id_base': 'TwinDos 2 level',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'TwinDos 2 level',
@@ -698,9 +698,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
-    'object_id_base': None,
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': 'mdi:pot-steam-outline',
     'original_name': None,
@@ -792,9 +792,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
-    'object_id_base': None,
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': 'mdi:pot-steam-outline',
     'original_name': None,
@@ -889,9 +889,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Plate 1',
     'options': dict({
     }),
-    'object_id_base': 'Plate 1',
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
     'original_name': 'Plate 1',
@@ -988,9 +988,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Plate 1',
     'options': dict({
     }),
-    'object_id_base': 'Plate 1',
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
     'original_name': 'Plate 1',
@@ -1087,9 +1087,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Plate 2',
     'options': dict({
     }),
-    'object_id_base': 'Plate 2',
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
     'original_name': 'Plate 2',
@@ -1186,9 +1186,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Plate 2',
     'options': dict({
     }),
-    'object_id_base': 'Plate 2',
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
     'original_name': 'Plate 2',
@@ -1285,9 +1285,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Plate 3',
     'options': dict({
     }),
-    'object_id_base': 'Plate 3',
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
     'original_name': 'Plate 3',
@@ -1384,9 +1384,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Plate 3',
     'options': dict({
     }),
-    'object_id_base': 'Plate 3',
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
     'original_name': 'Plate 3',
@@ -1483,9 +1483,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Plate 4',
     'options': dict({
     }),
-    'object_id_base': 'Plate 4',
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
     'original_name': 'Plate 4',
@@ -1582,9 +1582,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Plate 4',
     'options': dict({
     }),
-    'object_id_base': 'Plate 4',
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
     'original_name': 'Plate 4',
@@ -1681,9 +1681,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Plate 5',
     'options': dict({
     }),
-    'object_id_base': 'Plate 5',
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
     'original_name': 'Plate 5',
@@ -1777,9 +1777,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
-    'object_id_base': None,
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': 'mdi:turbine',
     'original_name': None,
@@ -1849,9 +1849,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Rinse aid level',
     'options': dict({
     }),
-    'object_id_base': 'Rinse aid level',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Rinse aid level',
@@ -1899,9 +1899,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Salt level',
     'options': dict({
     }),
-    'object_id_base': 'Salt level',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Salt level',
@@ -1949,9 +1949,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'TwinDos 1 level',
     'options': dict({
     }),
-    'object_id_base': 'TwinDos 1 level',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'TwinDos 1 level',
@@ -1999,9 +1999,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'TwinDos 1 level',
     'options': dict({
     }),
-    'object_id_base': 'TwinDos 1 level',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'TwinDos 1 level',
@@ -2049,9 +2049,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'TwinDos 2 level',
     'options': dict({
     }),
-    'object_id_base': 'TwinDos 2 level',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'TwinDos 2 level',
@@ -2099,9 +2099,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'TwinDos 2 level',
     'options': dict({
     }),
-    'object_id_base': 'TwinDos 2 level',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'TwinDos 2 level',
@@ -2171,9 +2171,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
-    'object_id_base': None,
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': 'mdi:fridge-outline',
     'original_name': None,
@@ -2265,9 +2265,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
-    'object_id_base': None,
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': 'mdi:fridge-outline',
     'original_name': None,
@@ -2339,12 +2339,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
       }),
     }),
-    'object_id_base': 'Temperature',
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Temperature',
@@ -2396,12 +2396,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
       }),
     }),
-    'object_id_base': 'Temperature',
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Temperature',
@@ -2453,12 +2453,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Temperature zone 2',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
       }),
     }),
-    'object_id_base': 'Temperature zone 2',
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Temperature zone 2',
@@ -2508,9 +2508,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Rinse aid level',
     'options': dict({
     }),
-    'object_id_base': 'Rinse aid level',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Rinse aid level',
@@ -2558,9 +2558,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Salt level',
     'options': dict({
     }),
-    'object_id_base': 'Salt level',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Salt level',
@@ -2608,9 +2608,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'TwinDos 1 level',
     'options': dict({
     }),
-    'object_id_base': 'TwinDos 1 level',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'TwinDos 1 level',
@@ -2658,9 +2658,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'TwinDos 1 level',
     'options': dict({
     }),
-    'object_id_base': 'TwinDos 1 level',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'TwinDos 1 level',
@@ -2708,9 +2708,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'TwinDos 2 level',
     'options': dict({
     }),
-    'object_id_base': 'TwinDos 2 level',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'TwinDos 2 level',
@@ -2758,9 +2758,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'TwinDos 2 level',
     'options': dict({
     }),
-    'object_id_base': 'TwinDos 2 level',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'TwinDos 2 level',
@@ -2830,9 +2830,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
-    'object_id_base': None,
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': 'mdi:pot-steam-outline',
     'original_name': None,
@@ -2927,9 +2927,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Plate 1',
     'options': dict({
     }),
-    'object_id_base': 'Plate 1',
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
     'original_name': 'Plate 1',
@@ -3026,9 +3026,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Plate 2',
     'options': dict({
     }),
-    'object_id_base': 'Plate 2',
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
     'original_name': 'Plate 2',
@@ -3125,9 +3125,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Plate 3',
     'options': dict({
     }),
-    'object_id_base': 'Plate 3',
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
     'original_name': 'Plate 3',
@@ -3224,9 +3224,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Plate 4',
     'options': dict({
     }),
-    'object_id_base': 'Plate 4',
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
     'original_name': 'Plate 4',
@@ -3323,9 +3323,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Plate 5',
     'options': dict({
     }),
-    'object_id_base': 'Plate 5',
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
     'original_name': 'Plate 5',
@@ -3397,9 +3397,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Rinse aid level',
     'options': dict({
     }),
-    'object_id_base': 'Rinse aid level',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Rinse aid level',
@@ -3447,9 +3447,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Salt level',
     'options': dict({
     }),
-    'object_id_base': 'Salt level',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Salt level',
@@ -3497,9 +3497,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'TwinDos 1 level',
     'options': dict({
     }),
-    'object_id_base': 'TwinDos 1 level',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'TwinDos 1 level',
@@ -3547,9 +3547,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'TwinDos 1 level',
     'options': dict({
     }),
-    'object_id_base': 'TwinDos 1 level',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'TwinDos 1 level',
@@ -3597,9 +3597,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'TwinDos 2 level',
     'options': dict({
     }),
-    'object_id_base': 'TwinDos 2 level',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'TwinDos 2 level',
@@ -3647,9 +3647,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'TwinDos 2 level',
     'options': dict({
     }),
-    'object_id_base': 'TwinDos 2 level',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'TwinDos 2 level',
@@ -3719,9 +3719,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
-    'object_id_base': None,
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': 'mdi:fridge-industrial-outline',
     'original_name': None,
@@ -3793,12 +3793,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
       }),
     }),
-    'object_id_base': 'Temperature',
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Temperature',
@@ -3870,9 +3870,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
-    'object_id_base': None,
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': 'mdi:turbine',
     'original_name': None,
@@ -3942,9 +3942,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Rinse aid level',
     'options': dict({
     }),
-    'object_id_base': 'Rinse aid level',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Rinse aid level',
@@ -3992,9 +3992,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Salt level',
     'options': dict({
     }),
-    'object_id_base': 'Salt level',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Salt level',
@@ -4042,9 +4042,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'TwinDos 1 level',
     'options': dict({
     }),
-    'object_id_base': 'TwinDos 1 level',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'TwinDos 1 level',
@@ -4092,9 +4092,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'TwinDos 2 level',
     'options': dict({
     }),
-    'object_id_base': 'TwinDos 2 level',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'TwinDos 2 level',
@@ -4164,9 +4164,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
-    'object_id_base': None,
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': 'mdi:chef-hat',
     'original_name': None,
@@ -4238,12 +4238,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Core temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
       }),
     }),
-    'object_id_base': 'Core temperature',
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Core temperature',
@@ -4293,12 +4293,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Elapsed time',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
       }),
     }),
-    'object_id_base': 'Elapsed time',
     'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
     'original_icon': None,
     'original_name': 'Elapsed time',
@@ -4347,9 +4347,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Finish',
     'options': dict({
     }),
-    'object_id_base': 'Finish',
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
     'original_icon': None,
     'original_name': 'Finish',
@@ -4556,9 +4556,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Program',
     'options': dict({
     }),
-    'object_id_base': 'Program',
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
     'original_name': 'Program',
@@ -4773,9 +4773,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Program phase',
     'options': dict({
     }),
-    'object_id_base': 'Program phase',
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
     'original_name': 'Program phase',
@@ -4839,9 +4839,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Program type',
     'options': dict({
     }),
-    'object_id_base': 'Program type',
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
     'original_name': 'Program type',
@@ -4896,12 +4896,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Remaining time',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
       }),
     }),
-    'object_id_base': 'Remaining time',
     'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
     'original_icon': None,
     'original_name': 'Remaining time',
@@ -4950,9 +4950,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Start',
     'options': dict({
     }),
-    'object_id_base': 'Start',
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
     'original_icon': None,
     'original_name': 'Start',
@@ -5000,6 +5000,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Start in',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -5008,7 +5009,6 @@
         'suggested_unit_of_measurement': <UnitOfTime.HOURS: 'h'>,
       }),
     }),
-    'object_id_base': 'Start in',
     'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
     'original_icon': None,
     'original_name': 'Start in',
@@ -5059,12 +5059,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Target temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
       }),
     }),
-    'object_id_base': 'Target temperature',
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Target temperature',
@@ -5116,12 +5116,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
       }),
     }),
-    'object_id_base': 'Temperature',
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Temperature',
@@ -5193,9 +5193,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
-    'object_id_base': None,
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': 'mdi:fridge-industrial-outline',
     'original_name': None,
@@ -5267,12 +5267,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
       }),
     }),
-    'object_id_base': 'Temperature',
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Temperature',
@@ -5344,9 +5344,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
-    'object_id_base': None,
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': 'mdi:washing-machine',
     'original_name': None,
@@ -5416,12 +5416,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Elapsed time',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
       }),
     }),
-    'object_id_base': 'Elapsed time',
     'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
     'original_icon': None,
     'original_name': 'Elapsed time',
@@ -5472,12 +5472,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Energy consumption',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
       }),
     }),
-    'object_id_base': 'Energy consumption',
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
     'original_name': 'Energy consumption',
@@ -5527,9 +5527,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Energy forecast',
     'options': dict({
     }),
-    'object_id_base': 'Energy forecast',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Energy forecast',
@@ -5577,9 +5577,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Finish',
     'options': dict({
     }),
-    'object_id_base': 'Finish',
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
     'original_icon': None,
     'original_name': 'Finish',
@@ -5675,9 +5675,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Program',
     'options': dict({
     }),
-    'object_id_base': 'Program',
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
     'original_name': 'Program',
@@ -5796,9 +5796,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Program phase',
     'options': dict({
     }),
-    'object_id_base': 'Program phase',
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
     'original_name': 'Program phase',
@@ -5877,9 +5877,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Program type',
     'options': dict({
     }),
-    'object_id_base': 'Program type',
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
     'original_name': 'Program type',
@@ -5934,12 +5934,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Remaining time',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
       }),
     }),
-    'object_id_base': 'Remaining time',
     'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
     'original_icon': None,
     'original_name': 'Remaining time',
@@ -5988,9 +5988,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Spin speed',
     'options': dict({
     }),
-    'object_id_base': 'Spin speed',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Spin speed',
@@ -6038,9 +6038,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Start',
     'options': dict({
     }),
-    'object_id_base': 'Start',
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
     'original_icon': None,
     'original_name': 'Start',
@@ -6088,6 +6088,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Start in',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -6096,7 +6097,6 @@
         'suggested_unit_of_measurement': <UnitOfTime.HOURS: 'h'>,
       }),
     }),
-    'object_id_base': 'Start in',
     'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
     'original_icon': None,
     'original_name': 'Start in',
@@ -6147,12 +6147,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Target temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
       }),
     }),
-    'object_id_base': 'Target temperature',
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Target temperature',
@@ -6202,9 +6202,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'TwinDos 1 level',
     'options': dict({
     }),
-    'object_id_base': 'TwinDos 1 level',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'TwinDos 1 level',
@@ -6252,9 +6252,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'TwinDos 2 level',
     'options': dict({
     }),
-    'object_id_base': 'TwinDos 2 level',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'TwinDos 2 level',
@@ -6304,12 +6304,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Water consumption',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
       }),
     }),
-    'object_id_base': 'Water consumption',
     'original_device_class': <SensorDeviceClass.WATER: 'water'>,
     'original_icon': None,
     'original_name': 'Water consumption',
@@ -6359,9 +6359,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Water forecast',
     'options': dict({
     }),
-    'object_id_base': 'Water forecast',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Water forecast',
@@ -6431,9 +6431,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
-    'object_id_base': None,
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': 'mdi:fridge-industrial-outline',
     'original_name': None,
@@ -6505,12 +6505,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
       }),
     }),
-    'object_id_base': 'Temperature',
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Temperature',
@@ -6582,9 +6582,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
-    'object_id_base': None,
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': 'mdi:turbine',
     'original_name': None,
@@ -6654,9 +6654,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Rinse aid level',
     'options': dict({
     }),
-    'object_id_base': 'Rinse aid level',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Rinse aid level',
@@ -6704,9 +6704,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Salt level',
     'options': dict({
     }),
-    'object_id_base': 'Salt level',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Salt level',
@@ -6754,9 +6754,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'TwinDos 1 level',
     'options': dict({
     }),
-    'object_id_base': 'TwinDos 1 level',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'TwinDos 1 level',
@@ -6804,9 +6804,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'TwinDos 2 level',
     'options': dict({
     }),
-    'object_id_base': 'TwinDos 2 level',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'TwinDos 2 level',
@@ -6876,9 +6876,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
-    'object_id_base': None,
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': 'mdi:chef-hat',
     'original_name': None,
@@ -6950,12 +6950,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Core temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
       }),
     }),
-    'object_id_base': 'Core temperature',
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Core temperature',
@@ -7005,12 +7005,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Elapsed time',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
       }),
     }),
-    'object_id_base': 'Elapsed time',
     'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
     'original_icon': None,
     'original_name': 'Elapsed time',
@@ -7059,9 +7059,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Finish',
     'options': dict({
     }),
-    'object_id_base': 'Finish',
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
     'original_icon': None,
     'original_name': 'Finish',
@@ -7268,9 +7268,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Program',
     'options': dict({
     }),
-    'object_id_base': 'Program',
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
     'original_name': 'Program',
@@ -7485,9 +7485,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Program phase',
     'options': dict({
     }),
-    'object_id_base': 'Program phase',
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
     'original_name': 'Program phase',
@@ -7551,9 +7551,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Program type',
     'options': dict({
     }),
-    'object_id_base': 'Program type',
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
     'original_name': 'Program type',
@@ -7608,12 +7608,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Remaining time',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
       }),
     }),
-    'object_id_base': 'Remaining time',
     'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
     'original_icon': None,
     'original_name': 'Remaining time',
@@ -7662,9 +7662,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Start',
     'options': dict({
     }),
-    'object_id_base': 'Start',
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
     'original_icon': None,
     'original_name': 'Start',
@@ -7712,6 +7712,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Start in',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -7720,7 +7721,6 @@
         'suggested_unit_of_measurement': <UnitOfTime.HOURS: 'h'>,
       }),
     }),
-    'object_id_base': 'Start in',
     'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
     'original_icon': None,
     'original_name': 'Start in',
@@ -7771,12 +7771,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Target temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
       }),
     }),
-    'object_id_base': 'Target temperature',
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Target temperature',
@@ -7828,12 +7828,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
       }),
     }),
-    'object_id_base': 'Temperature',
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Temperature',
@@ -7905,9 +7905,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
-    'object_id_base': None,
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': 'mdi:fridge-industrial-outline',
     'original_name': None,
@@ -7979,12 +7979,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
       }),
     }),
-    'object_id_base': 'Temperature',
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Temperature',
@@ -8056,9 +8056,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
-    'object_id_base': None,
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': 'mdi:washing-machine',
     'original_name': None,
@@ -8128,12 +8128,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Elapsed time',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
       }),
     }),
-    'object_id_base': 'Elapsed time',
     'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
     'original_icon': None,
     'original_name': 'Elapsed time',
@@ -8184,12 +8184,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Energy consumption',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
       }),
     }),
-    'object_id_base': 'Energy consumption',
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
     'original_name': 'Energy consumption',
@@ -8239,9 +8239,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Energy forecast',
     'options': dict({
     }),
-    'object_id_base': 'Energy forecast',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Energy forecast',
@@ -8289,9 +8289,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Finish',
     'options': dict({
     }),
-    'object_id_base': 'Finish',
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
     'original_icon': None,
     'original_name': 'Finish',
@@ -8387,9 +8387,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Program',
     'options': dict({
     }),
-    'object_id_base': 'Program',
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
     'original_name': 'Program',
@@ -8508,9 +8508,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Program phase',
     'options': dict({
     }),
-    'object_id_base': 'Program phase',
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
     'original_name': 'Program phase',
@@ -8589,9 +8589,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Program type',
     'options': dict({
     }),
-    'object_id_base': 'Program type',
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
     'original_name': 'Program type',
@@ -8646,12 +8646,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Remaining time',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
       }),
     }),
-    'object_id_base': 'Remaining time',
     'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
     'original_icon': None,
     'original_name': 'Remaining time',
@@ -8700,9 +8700,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Spin speed',
     'options': dict({
     }),
-    'object_id_base': 'Spin speed',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Spin speed',
@@ -8750,9 +8750,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Start',
     'options': dict({
     }),
-    'object_id_base': 'Start',
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
     'original_icon': None,
     'original_name': 'Start',
@@ -8800,6 +8800,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Start in',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -8808,7 +8809,6 @@
         'suggested_unit_of_measurement': <UnitOfTime.HOURS: 'h'>,
       }),
     }),
-    'object_id_base': 'Start in',
     'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
     'original_icon': None,
     'original_name': 'Start in',
@@ -8859,12 +8859,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Target temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
       }),
     }),
-    'object_id_base': 'Target temperature',
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Target temperature',
@@ -8914,9 +8914,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'TwinDos 1 level',
     'options': dict({
     }),
-    'object_id_base': 'TwinDos 1 level',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'TwinDos 1 level',
@@ -8964,9 +8964,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'TwinDos 2 level',
     'options': dict({
     }),
-    'object_id_base': 'TwinDos 2 level',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'TwinDos 2 level',
@@ -9016,12 +9016,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Water consumption',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
       }),
     }),
-    'object_id_base': 'Water consumption',
     'original_device_class': <SensorDeviceClass.WATER: 'water'>,
     'original_icon': None,
     'original_name': 'Water consumption',
@@ -9071,9 +9071,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Water forecast',
     'options': dict({
     }),
-    'object_id_base': 'Water forecast',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Water forecast',
@@ -9121,9 +9121,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Rinse aid level',
     'options': dict({
     }),
-    'object_id_base': 'Rinse aid level',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Rinse aid level',
@@ -9171,9 +9171,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Salt level',
     'options': dict({
     }),
-    'object_id_base': 'Salt level',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Salt level',
@@ -9221,9 +9221,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'TwinDos 1 level',
     'options': dict({
     }),
-    'object_id_base': 'TwinDos 1 level',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'TwinDos 1 level',
@@ -9271,9 +9271,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'TwinDos 1 level',
     'options': dict({
     }),
-    'object_id_base': 'TwinDos 1 level',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'TwinDos 1 level',
@@ -9321,9 +9321,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'TwinDos 2 level',
     'options': dict({
     }),
-    'object_id_base': 'TwinDos 2 level',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'TwinDos 2 level',
@@ -9371,9 +9371,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'TwinDos 2 level',
     'options': dict({
     }),
-    'object_id_base': 'TwinDos 2 level',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'TwinDos 2 level',
@@ -9443,9 +9443,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
-    'object_id_base': None,
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': 'mdi:robot-vacuum',
     'original_name': None,
@@ -9515,9 +9515,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery',
     'options': dict({
     }),
-    'object_id_base': 'Battery',
     'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
     'original_icon': None,
     'original_name': 'Battery',
@@ -9566,12 +9566,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Elapsed time',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
       }),
     }),
-    'object_id_base': 'Elapsed time',
     'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
     'original_icon': None,
     'original_name': 'Elapsed time',
@@ -9620,9 +9620,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Finish',
     'options': dict({
     }),
-    'object_id_base': 'Finish',
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
     'original_icon': None,
     'original_name': 'Finish',
@@ -9678,9 +9678,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Program',
     'options': dict({
     }),
-    'object_id_base': 'Program',
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
     'original_name': 'Program',
@@ -9743,9 +9743,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Program type',
     'options': dict({
     }),
-    'object_id_base': 'Program type',
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
     'original_name': 'Program type',
@@ -9800,12 +9800,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Remaining time',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
       }),
     }),
-    'object_id_base': 'Remaining time',
     'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
     'original_icon': None,
     'original_name': 'Remaining time',
@@ -9854,9 +9854,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Start',
     'options': dict({
     }),
-    'object_id_base': 'Start',
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
     'original_icon': None,
     'original_name': 'Start',

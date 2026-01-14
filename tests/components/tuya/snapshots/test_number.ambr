@@ -25,9 +25,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Alarm duration',
     'options': dict({
     }),
-    'object_id_base': 'Alarm duration',
     'original_device_class': <NumberDeviceClass.DURATION: 'duration'>,
     'original_icon': None,
     'original_name': 'Alarm duration',
@@ -85,9 +85,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Volume',
     'options': dict({
     }),
-    'object_id_base': 'Volume',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Volume',
@@ -144,9 +144,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Temperature correction',
     'options': dict({
     }),
-    'object_id_base': 'Temperature correction',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Temperature correction',
@@ -203,9 +203,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Volume',
     'options': dict({
     }),
-    'object_id_base': 'Volume',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Volume',
@@ -262,9 +262,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Feed',
     'options': dict({
     }),
-    'object_id_base': 'Feed',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Feed',
@@ -321,9 +321,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Voice times',
     'options': dict({
     }),
-    'object_id_base': 'Voice times',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Voice times',
@@ -380,9 +380,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery backup reserve',
     'options': dict({
     }),
-    'object_id_base': 'Battery backup reserve',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Battery backup reserve',
@@ -439,9 +439,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Inverter output power limit',
     'options': dict({
     }),
-    'object_id_base': 'Inverter output power limit',
     'original_device_class': <NumberDeviceClass.POWER: 'power'>,
     'original_icon': None,
     'original_name': 'Inverter output power limit',
@@ -499,9 +499,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Feed',
     'options': dict({
     }),
-    'object_id_base': 'Feed',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Feed',
@@ -558,9 +558,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Cooking temperature',
     'options': dict({
     }),
-    'object_id_base': 'Cooking temperature',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Cooking temperature',
@@ -617,9 +617,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Cooking temperature 2',
     'options': dict({
     }),
-    'object_id_base': 'Cooking temperature 2',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Cooking temperature 2',
@@ -676,9 +676,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Temperature',
     'options': dict({
     }),
-    'object_id_base': 'Temperature',
     'original_device_class': <NumberDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Temperature',
@@ -736,9 +736,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Alarm maximum',
     'options': dict({
     }),
-    'object_id_base': 'Alarm maximum',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Alarm maximum',
@@ -795,9 +795,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Alarm minimum',
     'options': dict({
     }),
-    'object_id_base': 'Alarm minimum',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Alarm minimum',
@@ -854,9 +854,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Installation height',
     'options': dict({
     }),
-    'object_id_base': 'Installation height',
     'original_device_class': <NumberDeviceClass.DISTANCE: 'distance'>,
     'original_icon': None,
     'original_name': 'Installation height',
@@ -914,9 +914,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Maximum liquid depth',
     'options': dict({
     }),
-    'object_id_base': 'Maximum liquid depth',
     'original_device_class': <NumberDeviceClass.DISTANCE: 'distance'>,
     'original_icon': None,
     'original_name': 'Maximum liquid depth',
@@ -974,9 +974,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Far detection',
     'options': dict({
     }),
-    'object_id_base': 'Far detection',
     'original_device_class': <NumberDeviceClass.DISTANCE: 'distance'>,
     'original_icon': None,
     'original_name': 'Far detection',
@@ -1034,9 +1034,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Near detection',
     'options': dict({
     }),
-    'object_id_base': 'Near detection',
     'original_device_class': <NumberDeviceClass.DISTANCE: 'distance'>,
     'original_icon': None,
     'original_name': 'Near detection',
@@ -1094,9 +1094,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Sensitivity',
     'options': dict({
     }),
-    'object_id_base': 'Sensitivity',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Sensitivity',
@@ -1153,9 +1153,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Irrigation duration 1',
     'options': dict({
     }),
-    'object_id_base': 'Irrigation duration 1',
     'original_device_class': <NumberDeviceClass.DURATION: 'duration'>,
     'original_icon': None,
     'original_name': 'Irrigation duration 1',
@@ -1213,9 +1213,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Irrigation duration 2',
     'options': dict({
     }),
-    'object_id_base': 'Irrigation duration 2',
     'original_device_class': <NumberDeviceClass.DURATION: 'duration'>,
     'original_icon': None,
     'original_name': 'Irrigation duration 2',
@@ -1273,9 +1273,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Irrigation duration 3',
     'options': dict({
     }),
-    'object_id_base': 'Irrigation duration 3',
     'original_device_class': <NumberDeviceClass.DURATION: 'duration'>,
     'original_icon': None,
     'original_name': 'Irrigation duration 3',
@@ -1333,9 +1333,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Irrigation duration 4',
     'options': dict({
     }),
-    'object_id_base': 'Irrigation duration 4',
     'original_device_class': <NumberDeviceClass.DURATION: 'duration'>,
     'original_icon': None,
     'original_name': 'Irrigation duration 4',
@@ -1393,9 +1393,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Irrigation duration 5',
     'options': dict({
     }),
-    'object_id_base': 'Irrigation duration 5',
     'original_device_class': <NumberDeviceClass.DURATION: 'duration'>,
     'original_icon': None,
     'original_name': 'Irrigation duration 5',
@@ -1453,9 +1453,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Irrigation duration 6',
     'options': dict({
     }),
-    'object_id_base': 'Irrigation duration 6',
     'original_device_class': <NumberDeviceClass.DURATION: 'duration'>,
     'original_icon': None,
     'original_name': 'Irrigation duration 6',
@@ -1513,9 +1513,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Irrigation duration 7',
     'options': dict({
     }),
-    'object_id_base': 'Irrigation duration 7',
     'original_device_class': <NumberDeviceClass.DURATION: 'duration'>,
     'original_icon': None,
     'original_name': 'Irrigation duration 7',
@@ -1573,9 +1573,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Irrigation duration 8',
     'options': dict({
     }),
-    'object_id_base': 'Irrigation duration 8',
     'original_device_class': <NumberDeviceClass.DURATION: 'duration'>,
     'original_icon': None,
     'original_name': 'Irrigation duration 8',
@@ -1633,9 +1633,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Temperature correction',
     'options': dict({
     }),
-    'object_id_base': 'Temperature correction',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Temperature correction',
@@ -1692,9 +1692,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Delay clean time',
     'options': dict({
     }),
-    'object_id_base': 'Delay clean time',
     'original_device_class': <NumberDeviceClass.DURATION: 'duration'>,
     'original_icon': None,
     'original_name': 'Delay clean time',
@@ -1752,9 +1752,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Volume',
     'options': dict({
     }),
-    'object_id_base': 'Volume',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Volume',
@@ -1811,9 +1811,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Alarm delay',
     'options': dict({
     }),
-    'object_id_base': 'Alarm delay',
     'original_device_class': <NumberDeviceClass.DURATION: 'duration'>,
     'original_icon': None,
     'original_name': 'Alarm delay',
@@ -1871,9 +1871,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Arm delay',
     'options': dict({
     }),
-    'object_id_base': 'Arm delay',
     'original_device_class': <NumberDeviceClass.DURATION: 'duration'>,
     'original_icon': None,
     'original_name': 'Arm delay',
@@ -1931,9 +1931,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Siren duration',
     'options': dict({
     }),
-    'object_id_base': 'Siren duration',
     'original_device_class': <NumberDeviceClass.DURATION: 'duration'>,
     'original_icon': None,
     'original_name': 'Siren duration',
@@ -1991,9 +1991,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Delay clean time',
     'options': dict({
     }),
-    'object_id_base': 'Delay clean time',
     'original_device_class': <NumberDeviceClass.DURATION: 'duration'>,
     'original_icon': None,
     'original_name': 'Delay clean time',
@@ -2051,9 +2051,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Alarm maximum',
     'options': dict({
     }),
-    'object_id_base': 'Alarm maximum',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Alarm maximum',
@@ -2110,9 +2110,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Alarm minimum',
     'options': dict({
     }),
-    'object_id_base': 'Alarm minimum',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Alarm minimum',
@@ -2169,9 +2169,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Installation height',
     'options': dict({
     }),
-    'object_id_base': 'Installation height',
     'original_device_class': <NumberDeviceClass.DISTANCE: 'distance'>,
     'original_icon': None,
     'original_name': 'Installation height',
@@ -2229,9 +2229,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Maximum liquid depth',
     'options': dict({
     }),
-    'object_id_base': 'Maximum liquid depth',
     'original_device_class': <NumberDeviceClass.DISTANCE: 'distance'>,
     'original_icon': None,
     'original_name': 'Maximum liquid depth',
@@ -2289,9 +2289,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Time',
     'options': dict({
     }),
-    'object_id_base': 'Time',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Time',
@@ -2348,9 +2348,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Time',
     'options': dict({
     }),
-    'object_id_base': 'Time',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Time',
@@ -2407,9 +2407,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Temperature correction',
     'options': dict({
     }),
-    'object_id_base': 'Temperature correction',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Temperature correction',
@@ -2466,9 +2466,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Volume',
     'options': dict({
     }),
-    'object_id_base': 'Volume',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Volume',
@@ -2525,9 +2525,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Cooking temperature',
     'options': dict({
     }),
-    'object_id_base': 'Cooking temperature',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Cooking temperature',
@@ -2584,9 +2584,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Cooking time',
     'options': dict({
     }),
-    'object_id_base': 'Cooking time',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Cooking time',
@@ -2643,9 +2643,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Volume',
     'options': dict({
     }),
-    'object_id_base': 'Volume',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Volume',
@@ -2702,9 +2702,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Volume',
     'options': dict({
     }),
-    'object_id_base': 'Volume',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Volume',
@@ -2761,9 +2761,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Temperature correction',
     'options': dict({
     }),
-    'object_id_base': 'Temperature correction',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Temperature correction',

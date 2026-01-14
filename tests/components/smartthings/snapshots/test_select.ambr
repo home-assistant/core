@@ -27,9 +27,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Dust filter alarm threshold',
     'options': dict({
     }),
-    'object_id_base': 'Dust filter alarm threshold',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Dust filter alarm threshold',
@@ -89,9 +89,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Dust filter alarm threshold',
     'options': dict({
     }),
-    'object_id_base': 'Dust filter alarm threshold',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Dust filter alarm threshold',
@@ -150,9 +150,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Lamp',
     'options': dict({
     }),
-    'object_id_base': 'Lamp',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Lamp',
@@ -209,9 +209,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Lamp',
     'options': dict({
     }),
-    'object_id_base': 'Lamp',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Lamp',
@@ -267,9 +267,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Lamp',
     'options': dict({
     }),
-    'object_id_base': 'Lamp',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Lamp',
@@ -325,9 +325,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Lamp',
     'options': dict({
     }),
-    'object_id_base': 'Lamp',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Lamp',
@@ -383,9 +383,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Lamp',
     'options': dict({
     }),
-    'object_id_base': 'Lamp',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Lamp',
@@ -441,9 +441,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Lamp',
     'options': dict({
     }),
-    'object_id_base': 'Lamp',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Lamp',
@@ -500,9 +500,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
-    'object_id_base': None,
     'original_device_class': None,
     'original_icon': None,
     'original_name': None,
@@ -560,9 +560,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
-    'object_id_base': None,
     'original_device_class': None,
     'original_icon': None,
     'original_name': None,
@@ -620,9 +620,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
-    'object_id_base': None,
     'original_device_class': None,
     'original_icon': None,
     'original_name': None,
@@ -680,9 +680,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
-    'object_id_base': None,
     'original_device_class': None,
     'original_icon': None,
     'original_name': None,
@@ -740,9 +740,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
-    'object_id_base': None,
     'original_device_class': None,
     'original_icon': None,
     'original_name': None,
@@ -800,9 +800,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
-    'object_id_base': None,
     'original_device_class': None,
     'original_icon': None,
     'original_name': None,
@@ -860,9 +860,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
-    'object_id_base': None,
     'original_device_class': None,
     'original_icon': None,
     'original_name': None,
@@ -923,9 +923,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Soil level',
     'options': dict({
     }),
-    'object_id_base': 'Soil level',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Soil level',
@@ -989,9 +989,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Spin level',
     'options': dict({
     }),
-    'object_id_base': 'Spin level',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Spin level',
@@ -1055,9 +1055,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Water temperature',
     'options': dict({
     }),
-    'object_id_base': 'Water temperature',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Water temperature',
@@ -1118,9 +1118,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
-    'object_id_base': None,
     'original_device_class': None,
     'original_icon': None,
     'original_name': None,
@@ -1182,9 +1182,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Spin level',
     'options': dict({
     }),
-    'object_id_base': 'Spin level',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Spin level',
@@ -1250,9 +1250,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Water temperature',
     'options': dict({
     }),
-    'object_id_base': 'Water temperature',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Water temperature',
@@ -1314,9 +1314,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
-    'object_id_base': None,
     'original_device_class': None,
     'original_icon': None,
     'original_name': None,
@@ -1375,9 +1375,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Detergent dispense amount',
     'options': dict({
     }),
-    'object_id_base': 'Detergent dispense amount',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Detergent dispense amount',
@@ -1437,9 +1437,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Flexible compartment dispense amount',
     'options': dict({
     }),
-    'object_id_base': 'Flexible compartment dispense amount',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Flexible compartment dispense amount',
@@ -1502,9 +1502,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Spin level',
     'options': dict({
     }),
-    'object_id_base': 'Spin level',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Spin level',
@@ -1570,9 +1570,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Water temperature',
     'options': dict({
     }),
-    'object_id_base': 'Water temperature',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Water temperature',
@@ -1634,9 +1634,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
-    'object_id_base': None,
     'original_device_class': None,
     'original_icon': None,
     'original_name': None,
@@ -1694,9 +1694,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
-    'object_id_base': None,
     'original_device_class': None,
     'original_icon': None,
     'original_name': None,

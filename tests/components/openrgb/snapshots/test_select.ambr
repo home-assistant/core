@@ -23,9 +23,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Profile',
     'options': dict({
     }),
-    'object_id_base': 'Profile',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Profile',

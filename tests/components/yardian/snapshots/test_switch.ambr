@@ -20,9 +20,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Zone 1',
     'options': dict({
     }),
-    'object_id_base': 'Zone 1',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Zone 1',
@@ -69,9 +69,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Zone 2',
     'options': dict({
     }),
-    'object_id_base': 'Zone 2',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Zone 2',

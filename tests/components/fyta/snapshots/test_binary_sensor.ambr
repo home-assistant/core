@@ -20,9 +20,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery',
     'options': dict({
     }),
-    'object_id_base': 'Battery',
     'original_device_class': <BinarySensorDeviceClass.BATTERY: 'battery'>,
     'original_icon': None,
     'original_name': 'Battery',
@@ -70,9 +70,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Light notification',
     'options': dict({
     }),
-    'object_id_base': 'Light notification',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Light notification',
@@ -119,9 +119,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Nutrition notification',
     'options': dict({
     }),
-    'object_id_base': 'Nutrition notification',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Nutrition notification',
@@ -168,9 +168,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Productive plant',
     'options': dict({
     }),
-    'object_id_base': 'Productive plant',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Productive plant',
@@ -217,9 +217,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Repotted',
     'options': dict({
     }),
-    'object_id_base': 'Repotted',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Repotted',
@@ -266,9 +266,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Temperature notification',
     'options': dict({
     }),
-    'object_id_base': 'Temperature notification',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Temperature notification',
@@ -315,9 +315,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Update',
     'options': dict({
     }),
-    'object_id_base': 'Update',
     'original_device_class': <BinarySensorDeviceClass.UPDATE: 'update'>,
     'original_icon': None,
     'original_name': 'Update',
@@ -365,9 +365,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Water notification',
     'options': dict({
     }),
-    'object_id_base': 'Water notification',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Water notification',
@@ -414,9 +414,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery',
     'options': dict({
     }),
-    'object_id_base': 'Battery',
     'original_device_class': <BinarySensorDeviceClass.BATTERY: 'battery'>,
     'original_icon': None,
     'original_name': 'Battery',
@@ -464,9 +464,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Light notification',
     'options': dict({
     }),
-    'object_id_base': 'Light notification',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Light notification',
@@ -513,9 +513,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Nutrition notification',
     'options': dict({
     }),
-    'object_id_base': 'Nutrition notification',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Nutrition notification',
@@ -562,9 +562,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Productive plant',
     'options': dict({
     }),
-    'object_id_base': 'Productive plant',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Productive plant',
@@ -611,9 +611,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Repotted',
     'options': dict({
     }),
-    'object_id_base': 'Repotted',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Repotted',
@@ -660,9 +660,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Temperature notification',
     'options': dict({
     }),
-    'object_id_base': 'Temperature notification',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Temperature notification',
@@ -709,9 +709,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Update',
     'options': dict({
     }),
-    'object_id_base': 'Update',
     'original_device_class': <BinarySensorDeviceClass.UPDATE: 'update'>,
     'original_icon': None,
     'original_name': 'Update',
@@ -759,9 +759,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Water notification',
     'options': dict({
     }),
-    'object_id_base': 'Water notification',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Water notification',

@@ -20,9 +20,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Bronze trophies',
     'options': dict({
     }),
-    'object_id_base': 'Bronze trophies',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Bronze trophies',
@@ -70,9 +70,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Gold trophies',
     'options': dict({
     }),
-    'object_id_base': 'Gold trophies',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Gold trophies',
@@ -120,9 +120,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Last online',
     'options': dict({
     }),
-    'object_id_base': 'Last online',
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
     'original_icon': None,
     'original_name': 'Last online',
@@ -170,9 +170,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Next level',
     'options': dict({
     }),
-    'object_id_base': 'Next level',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Next level',
@@ -220,9 +220,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Now playing',
     'options': dict({
     }),
-    'object_id_base': 'Now playing',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Now playing',
@@ -269,9 +269,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Online ID',
     'options': dict({
     }),
-    'object_id_base': 'Online ID',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Online ID',
@@ -325,9 +325,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Online status',
     'options': dict({
     }),
-    'object_id_base': 'Online status',
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
     'original_name': 'Online status',
@@ -381,9 +381,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Platinum trophies',
     'options': dict({
     }),
-    'object_id_base': 'Platinum trophies',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Platinum trophies',
@@ -431,9 +431,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Silver trophies',
     'options': dict({
     }),
-    'object_id_base': 'Silver trophies',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Silver trophies',
@@ -481,9 +481,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Trophy level',
     'options': dict({
     }),
-    'object_id_base': 'Trophy level',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Trophy level',
@@ -530,9 +530,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Bronze trophies',
     'options': dict({
     }),
-    'object_id_base': 'Bronze trophies',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Bronze trophies',
@@ -580,9 +580,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Gold trophies',
     'options': dict({
     }),
-    'object_id_base': 'Gold trophies',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Gold trophies',
@@ -630,9 +630,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Last online',
     'options': dict({
     }),
-    'object_id_base': 'Last online',
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
     'original_icon': None,
     'original_name': 'Last online',
@@ -680,9 +680,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Next level',
     'options': dict({
     }),
-    'object_id_base': 'Next level',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Next level',
@@ -730,9 +730,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Now playing',
     'options': dict({
     }),
-    'object_id_base': 'Now playing',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Now playing',
@@ -779,9 +779,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Online ID',
     'options': dict({
     }),
-    'object_id_base': 'Online ID',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Online ID',
@@ -836,9 +836,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Online status',
     'options': dict({
     }),
-    'object_id_base': 'Online status',
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
     'original_name': 'Online status',
@@ -892,9 +892,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Platinum trophies',
     'options': dict({
     }),
-    'object_id_base': 'Platinum trophies',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Platinum trophies',
@@ -942,9 +942,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Silver trophies',
     'options': dict({
     }),
-    'object_id_base': 'Silver trophies',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Silver trophies',
@@ -992,9 +992,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Trophy level',
     'options': dict({
     }),
-    'object_id_base': 'Trophy level',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Trophy level',

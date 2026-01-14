@@ -26,9 +26,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Activity',
     'options': dict({
     }),
-    'object_id_base': 'Activity',
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
     'original_name': 'Activity',
@@ -83,9 +83,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Activity time',
     'options': dict({
     }),
-    'object_id_base': 'Activity time',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Activity time',
@@ -136,9 +136,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Calories burned',
     'options': dict({
     }),
-    'object_id_base': 'Calories burned',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Calories burned',
@@ -187,9 +187,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Daily goal',
     'options': dict({
     }),
-    'object_id_base': 'Daily goal',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Daily goal',
@@ -239,9 +239,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Day sleep',
     'options': dict({
     }),
-    'object_id_base': 'Day sleep',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Day sleep',
@@ -292,9 +292,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Night sleep',
     'options': dict({
     }),
-    'object_id_base': 'Night sleep',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Night sleep',
@@ -345,9 +345,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Rest time',
     'options': dict({
     }),
-    'object_id_base': 'Rest time',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Rest time',
@@ -402,9 +402,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Sleep',
     'options': dict({
     }),
-    'object_id_base': 'Sleep',
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
     'original_name': 'Sleep',
@@ -457,9 +457,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Tracker battery',
     'options': dict({
     }),
-    'object_id_base': 'Tracker battery',
     'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
     'original_icon': None,
     'original_name': 'Tracker battery',
@@ -516,9 +516,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Tracker state',
     'options': dict({
     }),
-    'object_id_base': 'Tracker state',
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
     'original_name': 'Tracker state',

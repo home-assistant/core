@@ -20,9 +20,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Loudness',
     'options': dict({
     }),
-    'object_id_base': 'Loudness',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Loudness',
@@ -69,9 +69,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Loudness',
     'options': dict({
     }),
-    'object_id_base': 'Loudness',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Loudness',
@@ -118,9 +118,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Loudness',
     'options': dict({
     }),
-    'object_id_base': 'Loudness',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Loudness',
@@ -167,9 +167,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Loudness',
     'options': dict({
     }),
-    'object_id_base': 'Loudness',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Loudness',

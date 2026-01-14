@@ -25,9 +25,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Presence sensor Delay',
     'options': dict({
     }),
-    'object_id_base': 'Presence sensor Delay',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Presence sensor Delay',
@@ -83,9 +83,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Presence sensor Duration',
     'options': dict({
     }),
-    'object_id_base': 'Presence sensor Duration',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Presence sensor Duration',

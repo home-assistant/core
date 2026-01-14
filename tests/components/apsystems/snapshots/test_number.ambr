@@ -25,9 +25,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Max output',
     'options': dict({
     }),
-    'object_id_base': 'Max output',
     'original_device_class': <NumberDeviceClass.POWER: 'power'>,
     'original_icon': None,
     'original_name': 'Max output',

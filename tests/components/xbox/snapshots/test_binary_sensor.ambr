@@ -20,9 +20,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
-    'object_id_base': None,
     'original_device_class': None,
     'original_icon': None,
     'original_name': None,
@@ -74,9 +74,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'In game',
     'options': dict({
     }),
-    'object_id_base': 'In game',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'In game',
@@ -123,9 +123,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Subscribed to Xbox Game Pass',
     'options': dict({
     }),
-    'object_id_base': 'Subscribed to Xbox Game Pass',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Subscribed to Xbox Game Pass',
@@ -172,9 +172,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
-    'object_id_base': None,
     'original_device_class': None,
     'original_icon': None,
     'original_name': None,
@@ -226,9 +226,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'In game',
     'options': dict({
     }),
-    'object_id_base': 'In game',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'In game',
@@ -275,9 +275,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Subscribed to Xbox Game Pass',
     'options': dict({
     }),
-    'object_id_base': 'Subscribed to Xbox Game Pass',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Subscribed to Xbox Game Pass',
@@ -324,9 +324,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
-    'object_id_base': None,
     'original_device_class': None,
     'original_icon': None,
     'original_name': None,
@@ -378,9 +378,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'In game',
     'options': dict({
     }),
-    'object_id_base': 'In game',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'In game',
@@ -427,9 +427,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Subscribed to Xbox Game Pass',
     'options': dict({
     }),
-    'object_id_base': 'Subscribed to Xbox Game Pass',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Subscribed to Xbox Game Pass',

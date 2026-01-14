@@ -22,9 +22,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Core (Tctl/Tdie) Temperature',
     'options': dict({
     }),
-    'object_id_base': 'Core (Tctl/Tdie) Temperature',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Core (Tctl/Tdie) Temperature',
@@ -77,9 +77,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'CPU Total Load',
     'options': dict({
     }),
-    'object_id_base': 'CPU Total Load',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'CPU Total Load',
@@ -132,9 +132,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Package Power',
     'options': dict({
     }),
-    'object_id_base': 'Package Power',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Package Power',
@@ -187,9 +187,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Package Temperature',
     'options': dict({
     }),
-    'object_id_base': 'Package Temperature',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Package Temperature',
@@ -242,9 +242,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'VDDCR SoC Voltage',
     'options': dict({
     }),
-    'object_id_base': 'VDDCR SoC Voltage',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'VDDCR SoC Voltage',
@@ -297,9 +297,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'VDDCR Voltage',
     'options': dict({
     }),
-    'object_id_base': 'VDDCR Voltage',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'VDDCR Voltage',
@@ -352,9 +352,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': '+12V Voltage',
     'options': dict({
     }),
-    'object_id_base': '+12V Voltage',
     'original_device_class': None,
     'original_icon': None,
     'original_name': '+12V Voltage',
@@ -407,9 +407,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': '+5V Voltage',
     'options': dict({
     }),
-    'object_id_base': '+5V Voltage',
     'original_device_class': None,
     'original_icon': None,
     'original_name': '+5V Voltage',
@@ -462,9 +462,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'CPU Fan Fan',
     'options': dict({
     }),
-    'object_id_base': 'CPU Fan Fan',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'CPU Fan Fan',
@@ -517,9 +517,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'CPU Temperature',
     'options': dict({
     }),
-    'object_id_base': 'CPU Temperature',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'CPU Temperature',
@@ -572,9 +572,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Pump Fan Fan',
     'options': dict({
     }),
-    'object_id_base': 'Pump Fan Fan',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Pump Fan Fan',
@@ -627,9 +627,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'System Fan #1 Fan',
     'options': dict({
     }),
-    'object_id_base': 'System Fan #1 Fan',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'System Fan #1 Fan',
@@ -681,9 +681,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'System Temperature',
     'options': dict({
     }),
-    'object_id_base': 'System Temperature',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'System Temperature',
@@ -736,9 +736,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Vcore Voltage',
     'options': dict({
     }),
-    'object_id_base': 'Vcore Voltage',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Vcore Voltage',
@@ -791,9 +791,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'GPU Core Clock',
     'options': dict({
     }),
-    'object_id_base': 'GPU Core Clock',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'GPU Core Clock',
@@ -846,9 +846,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'GPU Core Load',
     'options': dict({
     }),
-    'object_id_base': 'GPU Core Load',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'GPU Core Load',
@@ -901,9 +901,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'GPU Core Temperature',
     'options': dict({
     }),
-    'object_id_base': 'GPU Core Temperature',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'GPU Core Temperature',
@@ -956,9 +956,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'GPU Fan 1 Fan',
     'options': dict({
     }),
-    'object_id_base': 'GPU Fan 1 Fan',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'GPU Fan 1 Fan',
@@ -1011,9 +1011,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'GPU Fan 2 Fan',
     'options': dict({
     }),
-    'object_id_base': 'GPU Fan 2 Fan',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'GPU Fan 2 Fan',
@@ -1066,9 +1066,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'GPU Hot Spot Temperature',
     'options': dict({
     }),
-    'object_id_base': 'GPU Hot Spot Temperature',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'GPU Hot Spot Temperature',
@@ -1121,9 +1121,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'GPU Memory Clock',
     'options': dict({
     }),
-    'object_id_base': 'GPU Memory Clock',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'GPU Memory Clock',
@@ -1176,9 +1176,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'GPU Memory Controller Load',
     'options': dict({
     }),
-    'object_id_base': 'GPU Memory Controller Load',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'GPU Memory Controller Load',
@@ -1231,9 +1231,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'GPU Package Power',
     'options': dict({
     }),
-    'object_id_base': 'GPU Package Power',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'GPU Package Power',
@@ -1286,9 +1286,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'GPU PCIe Tx Throughput',
     'options': dict({
     }),
-    'object_id_base': 'GPU PCIe Tx Throughput',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'GPU PCIe Tx Throughput',
@@ -1341,9 +1341,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'GPU Video Engine Load',
     'options': dict({
     }),
-    'object_id_base': 'GPU Video Engine Load',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'GPU Video Engine Load',

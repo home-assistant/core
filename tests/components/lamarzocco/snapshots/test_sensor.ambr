@@ -20,9 +20,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Brewing start time',
     'options': dict({
     }),
-    'object_id_base': 'Brewing start time',
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
     'original_icon': None,
     'original_name': 'Brewing start time',
@@ -70,9 +70,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Coffee boiler ready time',
     'options': dict({
     }),
-    'object_id_base': 'Coffee boiler ready time',
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
     'original_icon': None,
     'original_name': 'Coffee boiler ready time',
@@ -120,9 +120,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Last cleaning time',
     'options': dict({
     }),
-    'object_id_base': 'Last cleaning time',
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
     'original_icon': None,
     'original_name': 'Last cleaning time',
@@ -170,9 +170,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Steam boiler ready time',
     'options': dict({
     }),
-    'object_id_base': 'Steam boiler ready time',
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
     'original_icon': None,
     'original_name': 'Steam boiler ready time',
@@ -222,9 +222,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Total coffees made',
     'options': dict({
     }),
-    'object_id_base': 'Total coffees made',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Total coffees made',
@@ -275,9 +275,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Total flushes done',
     'options': dict({
     }),
-    'object_id_base': 'Total flushes done',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Total flushes done',

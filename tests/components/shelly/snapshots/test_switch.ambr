@@ -20,9 +20,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Away mode',
     'options': dict({
     }),
-    'object_id_base': 'Away mode',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Away mode',
@@ -69,9 +69,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Left slot',
     'options': dict({
     }),
-    'object_id_base': 'Left slot',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Left slot',
@@ -118,9 +118,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Left slot boost',
     'options': dict({
     }),
-    'object_id_base': 'Left slot boost',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Left slot boost',
@@ -167,9 +167,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Right slot',
     'options': dict({
     }),
-    'object_id_base': 'Right slot',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Right slot',
@@ -216,9 +216,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Right slot boost',
     'options': dict({
     }),
-    'object_id_base': 'Right slot boost',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Right slot boost',

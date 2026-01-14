@@ -54,9 +54,9 @@
       'labels': set({
       }),
       'name': None,
+      'object_id_base': 'Display',
       'options': dict({
       }),
-      'object_id_base': 'Display',
       'original_device_class': None,
       'original_icon': None,
       'original_name': 'Display',
@@ -138,9 +138,9 @@
       'labels': set({
       }),
       'name': None,
+      'object_id_base': 'Display',
       'options': dict({
       }),
-      'object_id_base': 'Display',
       'original_device_class': None,
       'original_icon': None,
       'original_name': 'Display',
@@ -172,9 +172,9 @@
       'labels': set({
       }),
       'name': None,
+      'object_id_base': 'Child lock',
       'options': dict({
       }),
-      'object_id_base': 'Child lock',
       'original_device_class': None,
       'original_icon': None,
       'original_name': 'Child lock',
@@ -269,9 +269,9 @@
       'labels': set({
       }),
       'name': None,
+      'object_id_base': 'Display',
       'options': dict({
       }),
-      'object_id_base': 'Display',
       'original_device_class': None,
       'original_icon': None,
       'original_name': 'Display',
@@ -303,9 +303,9 @@
       'labels': set({
       }),
       'name': None,
+      'object_id_base': 'Child lock',
       'options': dict({
       }),
-      'object_id_base': 'Child lock',
       'original_device_class': None,
       'original_icon': None,
       'original_name': 'Child lock',
@@ -400,9 +400,9 @@
       'labels': set({
       }),
       'name': None,
+      'object_id_base': 'Display',
       'options': dict({
       }),
-      'object_id_base': 'Display',
       'original_device_class': None,
       'original_icon': None,
       'original_name': 'Display',
@@ -434,9 +434,9 @@
       'labels': set({
       }),
       'name': None,
+      'object_id_base': 'Child lock',
       'options': dict({
       }),
-      'object_id_base': 'Child lock',
       'original_device_class': None,
       'original_icon': None,
       'original_name': 'Child lock',
@@ -679,9 +679,9 @@
       'labels': set({
       }),
       'name': None,
+      'object_id_base': 'Display',
       'options': dict({
       }),
-      'object_id_base': 'Display',
       'original_device_class': None,
       'original_icon': None,
       'original_name': 'Display',
@@ -713,9 +713,9 @@
       'labels': set({
       }),
       'name': None,
+      'object_id_base': 'Auto Off',
       'options': dict({
       }),
-      'object_id_base': 'Auto Off',
       'original_device_class': None,
       'original_icon': None,
       'original_name': 'Auto Off',
@@ -810,9 +810,9 @@
       'labels': set({
       }),
       'name': None,
+      'object_id_base': 'Display',
       'options': dict({
       }),
-      'object_id_base': 'Display',
       'original_device_class': None,
       'original_icon': None,
       'original_name': 'Display',
@@ -844,9 +844,9 @@
       'labels': set({
       }),
       'name': None,
+      'object_id_base': 'Child lock',
       'options': dict({
       }),
-      'object_id_base': 'Child lock',
       'original_device_class': None,
       'original_icon': None,
       'original_name': 'Child lock',
@@ -878,9 +878,9 @@
       'labels': set({
       }),
       'name': None,
+      'object_id_base': 'Auto Off',
       'options': dict({
       }),
-      'object_id_base': 'Auto Off',
       'original_device_class': None,
       'original_icon': None,
       'original_name': 'Auto Off',
@@ -988,9 +988,9 @@
       'labels': set({
       }),
       'name': None,
+      'object_id_base': 'Display',
       'options': dict({
       }),
-      'object_id_base': 'Display',
       'original_device_class': None,
       'original_icon': None,
       'original_name': 'Display',
@@ -1022,9 +1022,9 @@
       'labels': set({
       }),
       'name': None,
+      'object_id_base': 'Auto Off',
       'options': dict({
       }),
-      'object_id_base': 'Auto Off',
       'original_device_class': None,
       'original_icon': None,
       'original_name': 'Auto Off',
@@ -1119,9 +1119,9 @@
       'labels': set({
       }),
       'name': None,
+      'object_id_base': None,
       'options': dict({
       }),
-      'object_id_base': None,
       'original_device_class': <SwitchDeviceClass.OUTLET: 'outlet'>,
       'original_icon': None,
       'original_name': None,
@@ -1204,9 +1204,9 @@
       'labels': set({
       }),
       'name': None,
+      'object_id_base': 'Display',
       'options': dict({
       }),
-      'object_id_base': 'Display',
       'original_device_class': None,
       'original_icon': None,
       'original_name': 'Display',
@@ -1325,9 +1325,9 @@
       'labels': set({
       }),
       'name': None,
+      'object_id_base': None,
       'options': dict({
       }),
-      'object_id_base': None,
       'original_device_class': <SwitchDeviceClass.SWITCH: 'switch'>,
       'original_icon': None,
       'original_name': None,

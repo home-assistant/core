@@ -20,9 +20,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Relay',
     'options': dict({
     }),
-    'object_id_base': 'Relay',
     'original_device_class': <SwitchDeviceClass.SWITCH: 'switch'>,
     'original_icon': None,
     'original_name': 'Relay',
@@ -70,9 +70,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Lock',
     'options': dict({
     }),
-    'object_id_base': 'Lock',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Lock',
@@ -119,9 +119,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Relay',
     'options': dict({
     }),
-    'object_id_base': 'Relay',
     'original_device_class': <SwitchDeviceClass.SWITCH: 'switch'>,
     'original_icon': None,
     'original_name': 'Relay',
@@ -169,9 +169,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Lock',
     'options': dict({
     }),
-    'object_id_base': 'Lock',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Lock',
@@ -218,9 +218,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Relay',
     'options': dict({
     }),
-    'object_id_base': 'Relay',
     'original_device_class': <SwitchDeviceClass.SWITCH: 'switch'>,
     'original_icon': None,
     'original_name': 'Relay',
@@ -268,9 +268,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Lock',
     'options': dict({
     }),
-    'object_id_base': 'Lock',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Lock',
@@ -317,9 +317,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Relay',
     'options': dict({
     }),
-    'object_id_base': 'Relay',
     'original_device_class': <SwitchDeviceClass.SWITCH: 'switch'>,
     'original_icon': None,
     'original_name': 'Relay',
@@ -367,9 +367,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Lock',
     'options': dict({
     }),
-    'object_id_base': 'Lock',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Lock',
@@ -416,9 +416,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Relay',
     'options': dict({
     }),
-    'object_id_base': 'Relay',
     'original_device_class': <SwitchDeviceClass.SWITCH: 'switch'>,
     'original_icon': None,
     'original_name': 'Relay',
@@ -466,9 +466,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Relay',
     'options': dict({
     }),
-    'object_id_base': 'Relay',
     'original_device_class': <SwitchDeviceClass.SWITCH: 'switch'>,
     'original_icon': None,
     'original_name': 'Relay',
@@ -516,9 +516,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Lock',
     'options': dict({
     }),
-    'object_id_base': 'Lock',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Lock',
@@ -565,9 +565,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Relay',
     'options': dict({
     }),
-    'object_id_base': 'Relay',
     'original_device_class': <SwitchDeviceClass.SWITCH: 'switch'>,
     'original_icon': None,
     'original_name': 'Relay',
@@ -615,9 +615,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Lock',
     'options': dict({
     }),
-    'object_id_base': 'Lock',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Lock',
@@ -664,9 +664,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Relay',
     'options': dict({
     }),
-    'object_id_base': 'Relay',
     'original_device_class': <SwitchDeviceClass.SWITCH: 'switch'>,
     'original_icon': None,
     'original_name': 'Relay',
@@ -714,9 +714,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Lock',
     'options': dict({
     }),
-    'object_id_base': 'Lock',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Lock',
@@ -763,9 +763,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Relay',
     'options': dict({
     }),
-    'object_id_base': 'Relay',
     'original_device_class': <SwitchDeviceClass.SWITCH: 'switch'>,
     'original_icon': None,
     'original_name': 'Relay',
@@ -813,9 +813,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Lock',
     'options': dict({
     }),
-    'object_id_base': 'Lock',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Lock',
@@ -862,9 +862,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Relay',
     'options': dict({
     }),
-    'object_id_base': 'Relay',
     'original_device_class': <SwitchDeviceClass.SWITCH: 'switch'>,
     'original_icon': None,
     'original_name': 'Relay',
@@ -912,9 +912,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Lock',
     'options': dict({
     }),
-    'object_id_base': 'Lock',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Lock',
@@ -961,9 +961,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Relay',
     'options': dict({
     }),
-    'object_id_base': 'Relay',
     'original_device_class': <SwitchDeviceClass.SWITCH: 'switch'>,
     'original_icon': None,
     'original_name': 'Relay',
@@ -1011,9 +1011,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Relay',
     'options': dict({
     }),
-    'object_id_base': 'Relay',
     'original_device_class': <SwitchDeviceClass.SWITCH: 'switch'>,
     'original_icon': None,
     'original_name': 'Relay',
@@ -1061,9 +1061,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Relay',
     'options': dict({
     }),
-    'object_id_base': 'Relay',
     'original_device_class': <SwitchDeviceClass.SWITCH: 'switch'>,
     'original_icon': None,
     'original_name': 'Relay',
@@ -1111,9 +1111,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Lock',
     'options': dict({
     }),
-    'object_id_base': 'Lock',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Lock',
@@ -1160,9 +1160,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Relay',
     'options': dict({
     }),
-    'object_id_base': 'Relay',
     'original_device_class': <SwitchDeviceClass.SWITCH: 'switch'>,
     'original_icon': None,
     'original_name': 'Relay',
@@ -1210,9 +1210,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Lock',
     'options': dict({
     }),
-    'object_id_base': 'Lock',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Lock',
@@ -1259,9 +1259,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Relay',
     'options': dict({
     }),
-    'object_id_base': 'Relay',
     'original_device_class': <SwitchDeviceClass.SWITCH: 'switch'>,
     'original_icon': None,
     'original_name': 'Relay',

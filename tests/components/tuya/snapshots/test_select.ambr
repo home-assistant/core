@@ -26,9 +26,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Indicator light mode',
     'options': dict({
     }),
-    'object_id_base': 'Indicator light mode',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Indicator light mode',
@@ -86,9 +86,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power on behavior',
     'options': dict({
     }),
-    'object_id_base': 'Power on behavior',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Power on behavior',
@@ -146,9 +146,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power on behavior',
     'options': dict({
     }),
-    'object_id_base': 'Power on behavior',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Power on behavior',
@@ -206,9 +206,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power on behavior',
     'options': dict({
     }),
-    'object_id_base': 'Power on behavior',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Power on behavior',
@@ -267,9 +267,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Volume',
     'options': dict({
     }),
-    'object_id_base': 'Volume',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Volume',
@@ -328,9 +328,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Countdown',
     'options': dict({
     }),
-    'object_id_base': 'Countdown',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Countdown',
@@ -387,9 +387,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Target humidity',
     'options': dict({
     }),
-    'object_id_base': 'Target humidity',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Target humidity',
@@ -446,9 +446,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Indicator light mode',
     'options': dict({
     }),
-    'object_id_base': 'Indicator light mode',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Indicator light mode',
@@ -506,9 +506,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power on behavior',
     'options': dict({
     }),
-    'object_id_base': 'Power on behavior',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Power on behavior',
@@ -566,9 +566,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Indicator light mode',
     'options': dict({
     }),
-    'object_id_base': 'Indicator light mode',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Indicator light mode',
@@ -626,9 +626,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power on behavior',
     'options': dict({
     }),
-    'object_id_base': 'Power on behavior',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Power on behavior',
@@ -687,9 +687,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Weather delay',
     'options': dict({
     }),
-    'object_id_base': 'Weather delay',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Weather delay',
@@ -748,9 +748,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Indicator light mode',
     'options': dict({
     }),
-    'object_id_base': 'Indicator light mode',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Indicator light mode',
@@ -808,9 +808,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power on behavior',
     'options': dict({
     }),
-    'object_id_base': 'Power on behavior',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Power on behavior',
@@ -867,9 +867,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Mode',
     'options': dict({
     }),
-    'object_id_base': 'Mode',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Mode',
@@ -929,9 +929,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Countdown',
     'options': dict({
     }),
-    'object_id_base': 'Countdown',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Countdown',
@@ -992,9 +992,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Anti-flicker',
     'options': dict({
     }),
-    'object_id_base': 'Anti-flicker',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Anti-flicker',
@@ -1052,9 +1052,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Motion detection sensitivity',
     'options': dict({
     }),
-    'object_id_base': 'Motion detection sensitivity',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Motion detection sensitivity',
@@ -1112,9 +1112,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Night vision',
     'options': dict({
     }),
-    'object_id_base': 'Night vision',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Night vision',
@@ -1171,9 +1171,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Record mode',
     'options': dict({
     }),
-    'object_id_base': 'Record mode',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Record mode',
@@ -1229,9 +1229,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Sound detection sensitivity',
     'options': dict({
     }),
-    'object_id_base': 'Sound detection sensitivity',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Sound detection sensitivity',
@@ -1287,9 +1287,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'IPC mode',
     'options': dict({
     }),
-    'object_id_base': 'IPC mode',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'IPC mode',
@@ -1346,9 +1346,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Motion detection sensitivity',
     'options': dict({
     }),
-    'object_id_base': 'Motion detection sensitivity',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Motion detection sensitivity',
@@ -1405,9 +1405,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Record mode',
     'options': dict({
     }),
-    'object_id_base': 'Record mode',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Record mode',
@@ -1464,9 +1464,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Motion detection sensitivity',
     'options': dict({
     }),
-    'object_id_base': 'Motion detection sensitivity',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Motion detection sensitivity',
@@ -1524,9 +1524,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Night vision',
     'options': dict({
     }),
-    'object_id_base': 'Night vision',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Night vision',
@@ -1583,9 +1583,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Record mode',
     'options': dict({
     }),
-    'object_id_base': 'Record mode',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Record mode',
@@ -1641,9 +1641,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Sound detection sensitivity',
     'options': dict({
     }),
-    'object_id_base': 'Sound detection sensitivity',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Sound detection sensitivity',
@@ -1700,9 +1700,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Motion detection sensitivity',
     'options': dict({
     }),
-    'object_id_base': 'Motion detection sensitivity',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Motion detection sensitivity',
@@ -1759,9 +1759,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Record mode',
     'options': dict({
     }),
-    'object_id_base': 'Record mode',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Record mode',
@@ -1817,9 +1817,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Sound detection sensitivity',
     'options': dict({
     }),
-    'object_id_base': 'Sound detection sensitivity',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Sound detection sensitivity',
@@ -1875,9 +1875,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Inverter work mode',
     'options': dict({
     }),
-    'object_id_base': 'Inverter work mode',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Inverter work mode',
@@ -1936,9 +1936,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Countdown',
     'options': dict({
     }),
-    'object_id_base': 'Countdown',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Countdown',
@@ -1999,9 +1999,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Countdown',
     'options': dict({
     }),
-    'object_id_base': 'Countdown',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Countdown',
@@ -2061,9 +2061,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Countdown',
     'options': dict({
     }),
-    'object_id_base': 'Countdown',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Countdown',
@@ -2122,9 +2122,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Indicator light mode',
     'options': dict({
     }),
-    'object_id_base': 'Indicator light mode',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Indicator light mode',
@@ -2182,9 +2182,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power on behavior',
     'options': dict({
     }),
-    'object_id_base': 'Power on behavior',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Power on behavior',
@@ -2243,9 +2243,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Countdown',
     'options': dict({
     }),
-    'object_id_base': 'Countdown',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Countdown',
@@ -2303,9 +2303,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Motor mode',
     'options': dict({
     }),
-    'object_id_base': 'Motor mode',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Motor mode',
@@ -2362,9 +2362,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Indicator light mode',
     'options': dict({
     }),
-    'object_id_base': 'Indicator light mode',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Indicator light mode',
@@ -2422,9 +2422,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power on behavior',
     'options': dict({
     }),
-    'object_id_base': 'Power on behavior',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Power on behavior',
@@ -2482,9 +2482,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Indicator light mode',
     'options': dict({
     }),
-    'object_id_base': 'Indicator light mode',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Indicator light mode',
@@ -2542,9 +2542,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power on behavior',
     'options': dict({
     }),
-    'object_id_base': 'Power on behavior',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Power on behavior',
@@ -2602,9 +2602,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Indicator light mode',
     'options': dict({
     }),
-    'object_id_base': 'Indicator light mode',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Indicator light mode',
@@ -2662,9 +2662,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power on behavior',
     'options': dict({
     }),
-    'object_id_base': 'Power on behavior',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Power on behavior',
@@ -2722,9 +2722,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power on behavior',
     'options': dict({
     }),
-    'object_id_base': 'Power on behavior',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Power on behavior',
@@ -2782,9 +2782,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Motion detection sensitivity',
     'options': dict({
     }),
-    'object_id_base': 'Motion detection sensitivity',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Motion detection sensitivity',
@@ -2841,9 +2841,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Record mode',
     'options': dict({
     }),
-    'object_id_base': 'Record mode',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Record mode',
@@ -2901,9 +2901,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Weather delay',
     'options': dict({
     }),
-    'object_id_base': 'Weather delay',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Weather delay',
@@ -2962,9 +2962,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Indicator light mode',
     'options': dict({
     }),
-    'object_id_base': 'Indicator light mode',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Indicator light mode',
@@ -3022,9 +3022,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power on behavior',
     'options': dict({
     }),
-    'object_id_base': 'Power on behavior',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Power on behavior',
@@ -3083,9 +3083,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Mode',
     'options': dict({
     }),
-    'object_id_base': 'Mode',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Mode',
@@ -3144,9 +3144,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power on behavior',
     'options': dict({
     }),
-    'object_id_base': 'Power on behavior',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Power on behavior',
@@ -3204,9 +3204,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Motion detection sensitivity',
     'options': dict({
     }),
-    'object_id_base': 'Motion detection sensitivity',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Motion detection sensitivity',
@@ -3267,9 +3267,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Countdown',
     'options': dict({
     }),
-    'object_id_base': 'Countdown',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Countdown',
@@ -3333,9 +3333,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Countdown',
     'options': dict({
     }),
-    'object_id_base': 'Countdown',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Countdown',
@@ -3396,9 +3396,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power on behavior',
     'options': dict({
     }),
-    'object_id_base': 'Power on behavior',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Power on behavior',
@@ -3456,9 +3456,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Indicator light mode',
     'options': dict({
     }),
-    'object_id_base': 'Indicator light mode',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Indicator light mode',
@@ -3516,9 +3516,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power on behavior',
     'options': dict({
     }),
-    'object_id_base': 'Power on behavior',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Power on behavior',
@@ -3579,9 +3579,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Countdown',
     'options': dict({
     }),
-    'object_id_base': 'Countdown',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Countdown',
@@ -3641,9 +3641,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Motor mode',
     'options': dict({
     }),
-    'object_id_base': 'Motor mode',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Motor mode',
@@ -3706,9 +3706,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Spraying level',
     'options': dict({
     }),
-    'object_id_base': 'Spraying level',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Spraying level',
@@ -3772,9 +3772,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Indicator light mode',
     'options': dict({
     }),
-    'object_id_base': 'Indicator light mode',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Indicator light mode',
@@ -3832,9 +3832,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power on behavior',
     'options': dict({
     }),
-    'object_id_base': 'Power on behavior',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Power on behavior',
@@ -3893,9 +3893,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Countdown',
     'options': dict({
     }),
-    'object_id_base': 'Countdown',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Countdown',
@@ -3955,9 +3955,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Level',
     'options': dict({
     }),
-    'object_id_base': 'Level',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Level',
@@ -4016,9 +4016,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Up/Down',
     'options': dict({
     }),
-    'object_id_base': 'Up/Down',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Up/Down',
@@ -4076,9 +4076,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Anti-flicker',
     'options': dict({
     }),
-    'object_id_base': 'Anti-flicker',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Anti-flicker',
@@ -4135,9 +4135,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'IPC mode',
     'options': dict({
     }),
-    'object_id_base': 'IPC mode',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'IPC mode',
@@ -4194,9 +4194,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Indicator light mode',
     'options': dict({
     }),
-    'object_id_base': 'Indicator light mode',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Indicator light mode',
@@ -4254,9 +4254,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power on behavior',
     'options': dict({
     }),
-    'object_id_base': 'Power on behavior',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Power on behavior',
@@ -4313,9 +4313,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Motor mode',
     'options': dict({
     }),
-    'object_id_base': 'Motor mode',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Motor mode',
@@ -4371,9 +4371,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Motor mode',
     'options': dict({
     }),
-    'object_id_base': 'Motor mode',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Motor mode',
@@ -4430,9 +4430,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Indicator light mode',
     'options': dict({
     }),
-    'object_id_base': 'Indicator light mode',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Indicator light mode',
@@ -4490,9 +4490,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power on behavior',
     'options': dict({
     }),
-    'object_id_base': 'Power on behavior',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Power on behavior',
@@ -4550,9 +4550,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power on behavior',
     'options': dict({
     }),
-    'object_id_base': 'Power on behavior',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Power on behavior',
@@ -4610,9 +4610,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Indicator light mode',
     'options': dict({
     }),
-    'object_id_base': 'Indicator light mode',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Indicator light mode',
@@ -4670,9 +4670,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power on behavior',
     'options': dict({
     }),
-    'object_id_base': 'Power on behavior',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Power on behavior',
@@ -4731,9 +4731,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Siren mode',
     'options': dict({
     }),
-    'object_id_base': 'Siren mode',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Siren mode',
@@ -4793,9 +4793,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Volume',
     'options': dict({
     }),
-    'object_id_base': 'Volume',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Volume',
@@ -4855,9 +4855,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Volume',
     'options': dict({
     }),
-    'object_id_base': 'Volume',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Volume',
@@ -4915,9 +4915,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Odor elimination mode',
     'options': dict({
     }),
-    'object_id_base': 'Odor elimination mode',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Odor elimination mode',
@@ -4975,9 +4975,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Weather delay',
     'options': dict({
     }),
-    'object_id_base': 'Weather delay',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Weather delay',
@@ -5036,9 +5036,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power on behavior',
     'options': dict({
     }),
-    'object_id_base': 'Power on behavior',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Power on behavior',
@@ -5096,9 +5096,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Indicator light mode',
     'options': dict({
     }),
-    'object_id_base': 'Indicator light mode',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Indicator light mode',
@@ -5156,9 +5156,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power on behavior',
     'options': dict({
     }),
-    'object_id_base': 'Power on behavior',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Power on behavior',
@@ -5216,9 +5216,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Indicator light mode',
     'options': dict({
     }),
-    'object_id_base': 'Indicator light mode',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Indicator light mode',
@@ -5276,9 +5276,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power on behavior',
     'options': dict({
     }),
-    'object_id_base': 'Power on behavior',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Power on behavior',
@@ -5343,9 +5343,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Level',
     'options': dict({
     }),
-    'object_id_base': 'Level',
     'original_device_class': None,
     'original_icon': 'mdi:thermometer-lines',
     'original_name': 'Level',
@@ -5418,9 +5418,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Level 1',
     'options': dict({
     }),
-    'object_id_base': 'Level 1',
     'original_device_class': None,
     'original_icon': 'mdi:thermometer-lines',
     'original_name': 'Level 1',
@@ -5493,9 +5493,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Level 2',
     'options': dict({
     }),
-    'object_id_base': 'Level 2',
     'original_device_class': None,
     'original_icon': 'mdi:thermometer-lines',
     'original_name': 'Level 2',
@@ -5562,9 +5562,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Mode',
     'options': dict({
     }),
-    'object_id_base': 'Mode',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Mode',
@@ -5623,9 +5623,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Water tank adjustment',
     'options': dict({
     }),
-    'object_id_base': 'Water tank adjustment',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Water tank adjustment',
@@ -5684,9 +5684,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Weather delay',
     'options': dict({
     }),
-    'object_id_base': 'Weather delay',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Weather delay',
@@ -5744,9 +5744,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Motor mode',
     'options': dict({
     }),
-    'object_id_base': 'Motor mode',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Motor mode',
@@ -5803,9 +5803,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Indicator light mode',
     'options': dict({
     }),
-    'object_id_base': 'Indicator light mode',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Indicator light mode',
@@ -5863,9 +5863,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power on behavior',
     'options': dict({
     }),
-    'object_id_base': 'Power on behavior',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Power on behavior',
@@ -5923,9 +5923,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Indicator light mode',
     'options': dict({
     }),
-    'object_id_base': 'Indicator light mode',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Indicator light mode',
@@ -5983,9 +5983,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power on behavior',
     'options': dict({
     }),
-    'object_id_base': 'Power on behavior',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Power on behavior',
@@ -6043,9 +6043,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power on behavior',
     'options': dict({
     }),
-    'object_id_base': 'Power on behavior',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Power on behavior',

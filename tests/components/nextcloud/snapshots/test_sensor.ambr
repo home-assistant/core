@@ -22,9 +22,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Amount of active users last 5 minutes',
     'options': dict({
     }),
-    'object_id_base': 'Amount of active users last 5 minutes',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Amount of active users last 5 minutes',
@@ -74,9 +74,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Amount of active users last day',
     'options': dict({
     }),
-    'object_id_base': 'Amount of active users last day',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Amount of active users last day',
@@ -126,9 +126,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Amount of active users last hour',
     'options': dict({
     }),
-    'object_id_base': 'Amount of active users last hour',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Amount of active users last hour',
@@ -178,9 +178,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Amount of files',
     'options': dict({
     }),
-    'object_id_base': 'Amount of files',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Amount of files',
@@ -230,9 +230,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Amount of group shares',
     'options': dict({
     }),
-    'object_id_base': 'Amount of group shares',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Amount of group shares',
@@ -282,9 +282,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Amount of link shares',
     'options': dict({
     }),
-    'object_id_base': 'Amount of link shares',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Amount of link shares',
@@ -334,9 +334,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Amount of local storages',
     'options': dict({
     }),
-    'object_id_base': 'Amount of local storages',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Amount of local storages',
@@ -386,9 +386,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Amount of mail shares',
     'options': dict({
     }),
-    'object_id_base': 'Amount of mail shares',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Amount of mail shares',
@@ -438,9 +438,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Amount of other storages',
     'options': dict({
     }),
-    'object_id_base': 'Amount of other storages',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Amount of other storages',
@@ -490,9 +490,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Amount of passwordless link shares',
     'options': dict({
     }),
-    'object_id_base': 'Amount of passwordless link shares',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Amount of passwordless link shares',
@@ -542,9 +542,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Amount of room shares',
     'options': dict({
     }),
-    'object_id_base': 'Amount of room shares',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Amount of room shares',
@@ -594,9 +594,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Amount of shares',
     'options': dict({
     }),
-    'object_id_base': 'Amount of shares',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Amount of shares',
@@ -646,9 +646,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Amount of shares received',
     'options': dict({
     }),
-    'object_id_base': 'Amount of shares received',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Amount of shares received',
@@ -698,9 +698,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Amount of shares sent',
     'options': dict({
     }),
-    'object_id_base': 'Amount of shares sent',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Amount of shares sent',
@@ -750,9 +750,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Amount of storages',
     'options': dict({
     }),
-    'object_id_base': 'Amount of storages',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Amount of storages',
@@ -802,9 +802,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Amount of storages at home',
     'options': dict({
     }),
-    'object_id_base': 'Amount of storages at home',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Amount of storages at home',
@@ -854,9 +854,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Amount of user',
     'options': dict({
     }),
-    'object_id_base': 'Amount of user',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Amount of user',
@@ -906,9 +906,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Amount of user shares',
     'options': dict({
     }),
-    'object_id_base': 'Amount of user shares',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Amount of user shares',
@@ -958,9 +958,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Apps installed',
     'options': dict({
     }),
-    'object_id_base': 'Apps installed',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Apps installed',
@@ -1010,9 +1010,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Cache expunges',
     'options': dict({
     }),
-    'object_id_base': 'Cache expunges',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Cache expunges',
@@ -1060,9 +1060,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Cache memory',
     'options': dict({
     }),
-    'object_id_base': 'Cache memory',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Cache memory',
@@ -1109,6 +1109,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Cache memory size',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -1117,7 +1118,6 @@
         'suggested_unit_of_measurement': <UnitOfInformation.MEGABYTES: 'MB'>,
       }),
     }),
-    'object_id_base': 'Cache memory size',
     'original_device_class': <SensorDeviceClass.DATA_SIZE: 'data_size'>,
     'original_icon': None,
     'original_name': 'Cache memory size',
@@ -1168,9 +1168,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Cache number of entries',
     'options': dict({
     }),
-    'object_id_base': 'Cache number of entries',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Cache number of entries',
@@ -1220,9 +1220,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Cache number of hits',
     'options': dict({
     }),
-    'object_id_base': 'Cache number of hits',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Cache number of hits',
@@ -1272,9 +1272,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Cache number of inserts',
     'options': dict({
     }),
-    'object_id_base': 'Cache number of inserts',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Cache number of inserts',
@@ -1324,9 +1324,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Cache number of misses',
     'options': dict({
     }),
-    'object_id_base': 'Cache number of misses',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Cache number of misses',
@@ -1376,9 +1376,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Cache number of slots',
     'options': dict({
     }),
-    'object_id_base': 'Cache number of slots',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Cache number of slots',
@@ -1426,9 +1426,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Cache start time',
     'options': dict({
     }),
-    'object_id_base': 'Cache start time',
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
     'original_icon': None,
     'original_name': 'Cache start time',
@@ -1476,9 +1476,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Cache TTL',
     'options': dict({
     }),
-    'object_id_base': 'Cache TTL',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Cache TTL',
@@ -1525,12 +1525,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'CPU load last 15 minutes',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
       }),
     }),
-    'object_id_base': 'CPU load last 15 minutes',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'CPU load last 15 minutes',
@@ -1578,12 +1578,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'CPU load last 1 minute',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
       }),
     }),
-    'object_id_base': 'CPU load last 1 minute',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'CPU load last 1 minute',
@@ -1631,12 +1631,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'CPU load last 5 minutes',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
       }),
     }),
-    'object_id_base': 'CPU load last 5 minutes',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'CPU load last 5 minutes',
@@ -1684,6 +1684,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Database size',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -1692,7 +1693,6 @@
         'suggested_unit_of_measurement': <UnitOfInformation.MEGABYTES: 'MB'>,
       }),
     }),
-    'object_id_base': 'Database size',
     'original_device_class': <SensorDeviceClass.DATA_SIZE: 'data_size'>,
     'original_icon': None,
     'original_name': 'Database size',
@@ -1741,9 +1741,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Database type',
     'options': dict({
     }),
-    'object_id_base': 'Database type',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Database type',
@@ -1790,9 +1790,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Database version',
     'options': dict({
     }),
-    'object_id_base': 'Database version',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Database version',
@@ -1839,6 +1839,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Free memory',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -1847,7 +1848,6 @@
         'suggested_unit_of_measurement': <UnitOfInformation.GIGABYTES: 'GB'>,
       }),
     }),
-    'object_id_base': 'Free memory',
     'original_device_class': <SensorDeviceClass.DATA_SIZE: 'data_size'>,
     'original_icon': None,
     'original_name': 'Free memory',
@@ -1896,6 +1896,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Free space',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -1904,7 +1905,6 @@
         'suggested_unit_of_measurement': <UnitOfInformation.GIGABYTES: 'GB'>,
       }),
     }),
-    'object_id_base': 'Free space',
     'original_device_class': <SensorDeviceClass.DATA_SIZE: 'data_size'>,
     'original_icon': None,
     'original_name': 'Free space',
@@ -1953,6 +1953,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Free swap memory',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -1961,7 +1962,6 @@
         'suggested_unit_of_measurement': <UnitOfInformation.GIGABYTES: 'GB'>,
       }),
     }),
-    'object_id_base': 'Free swap memory',
     'original_device_class': <SensorDeviceClass.DATA_SIZE: 'data_size'>,
     'original_icon': None,
     'original_name': 'Free swap memory',
@@ -2010,6 +2010,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Interned buffer size',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -2018,7 +2019,6 @@
         'suggested_unit_of_measurement': <UnitOfInformation.MEGABYTES: 'MB'>,
       }),
     }),
-    'object_id_base': 'Interned buffer size',
     'original_device_class': <SensorDeviceClass.DATA_SIZE: 'data_size'>,
     'original_icon': None,
     'original_name': 'Interned buffer size',
@@ -2067,6 +2067,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Interned free memory',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -2075,7 +2076,6 @@
         'suggested_unit_of_measurement': <UnitOfInformation.MEGABYTES: 'MB'>,
       }),
     }),
-    'object_id_base': 'Interned free memory',
     'original_device_class': <SensorDeviceClass.DATA_SIZE: 'data_size'>,
     'original_icon': None,
     'original_name': 'Interned free memory',
@@ -2126,9 +2126,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Interned number of strings',
     'options': dict({
     }),
-    'object_id_base': 'Interned number of strings',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Interned number of strings',
@@ -2176,6 +2176,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Interned used memory',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -2184,7 +2185,6 @@
         'suggested_unit_of_measurement': <UnitOfInformation.MEGABYTES: 'MB'>,
       }),
     }),
-    'object_id_base': 'Interned used memory',
     'original_device_class': <SensorDeviceClass.DATA_SIZE: 'data_size'>,
     'original_icon': None,
     'original_name': 'Interned used memory',
@@ -2233,6 +2233,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'JIT buffer free',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -2241,7 +2242,6 @@
         'suggested_unit_of_measurement': <UnitOfInformation.MEGABYTES: 'MB'>,
       }),
     }),
-    'object_id_base': 'JIT buffer free',
     'original_device_class': <SensorDeviceClass.DATA_SIZE: 'data_size'>,
     'original_icon': None,
     'original_name': 'JIT buffer free',
@@ -2290,6 +2290,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'JIT buffer size',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -2298,7 +2299,6 @@
         'suggested_unit_of_measurement': <UnitOfInformation.MEGABYTES: 'MB'>,
       }),
     }),
-    'object_id_base': 'JIT buffer size',
     'original_device_class': <SensorDeviceClass.DATA_SIZE: 'data_size'>,
     'original_icon': None,
     'original_name': 'JIT buffer size',
@@ -2347,9 +2347,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'JIT kind',
     'options': dict({
     }),
-    'object_id_base': 'JIT kind',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'JIT kind',
@@ -2396,9 +2396,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'JIT opt flags',
     'options': dict({
     }),
-    'object_id_base': 'JIT opt flags',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'JIT opt flags',
@@ -2445,9 +2445,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'JIT opt level',
     'options': dict({
     }),
-    'object_id_base': 'JIT opt level',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'JIT opt level',
@@ -2496,9 +2496,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Opcache blacklist miss ratio',
     'options': dict({
     }),
-    'object_id_base': 'Opcache blacklist miss ratio',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Opcache blacklist miss ratio',
@@ -2549,9 +2549,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Opcache blacklist misses',
     'options': dict({
     }),
-    'object_id_base': 'Opcache blacklist misses',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Opcache blacklist misses',
@@ -2601,9 +2601,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Opcache cached keys',
     'options': dict({
     }),
-    'object_id_base': 'Opcache cached keys',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Opcache cached keys',
@@ -2653,9 +2653,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Opcache cached scripts',
     'options': dict({
     }),
-    'object_id_base': 'Opcache cached scripts',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Opcache cached scripts',
@@ -2703,12 +2703,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Opcache current wasted percentage',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
       }),
     }),
-    'object_id_base': 'Opcache current wasted percentage',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Opcache current wasted percentage',
@@ -2756,6 +2756,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Opcache free memory',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -2764,7 +2765,6 @@
         'suggested_unit_of_measurement': <UnitOfInformation.MEGABYTES: 'MB'>,
       }),
     }),
-    'object_id_base': 'Opcache free memory',
     'original_device_class': <SensorDeviceClass.DATA_SIZE: 'data_size'>,
     'original_icon': None,
     'original_name': 'Opcache free memory',
@@ -2815,9 +2815,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Opcache hash restarts',
     'options': dict({
     }),
-    'object_id_base': 'Opcache hash restarts',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Opcache hash restarts',
@@ -2865,12 +2865,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Opcache hit rate',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
       }),
     }),
-    'object_id_base': 'Opcache hit rate',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Opcache hit rate',
@@ -2920,9 +2920,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Opcache hits',
     'options': dict({
     }),
-    'object_id_base': 'Opcache hits',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Opcache hits',
@@ -2970,9 +2970,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Opcache last restart time',
     'options': dict({
     }),
-    'object_id_base': 'Opcache last restart time',
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
     'original_icon': None,
     'original_name': 'Opcache last restart time',
@@ -3022,9 +3022,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Opcache manual restarts',
     'options': dict({
     }),
-    'object_id_base': 'Opcache manual restarts',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Opcache manual restarts',
@@ -3074,9 +3074,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Opcache max cached keys',
     'options': dict({
     }),
-    'object_id_base': 'Opcache max cached keys',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Opcache max cached keys',
@@ -3126,9 +3126,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Opcache misses',
     'options': dict({
     }),
-    'object_id_base': 'Opcache misses',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Opcache misses',
@@ -3178,9 +3178,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Opcache out of memory restarts',
     'options': dict({
     }),
-    'object_id_base': 'Opcache out of memory restarts',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Opcache out of memory restarts',
@@ -3228,9 +3228,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Opcache start time',
     'options': dict({
     }),
-    'object_id_base': 'Opcache start time',
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
     'original_icon': None,
     'original_name': 'Opcache start time',
@@ -3278,6 +3278,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Opcache used memory',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -3286,7 +3287,6 @@
         'suggested_unit_of_measurement': <UnitOfInformation.MEGABYTES: 'MB'>,
       }),
     }),
-    'object_id_base': 'Opcache used memory',
     'original_device_class': <SensorDeviceClass.DATA_SIZE: 'data_size'>,
     'original_icon': None,
     'original_name': 'Opcache used memory',
@@ -3335,6 +3335,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Opcache wasted memory',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -3343,7 +3344,6 @@
         'suggested_unit_of_measurement': <UnitOfInformation.MEGABYTES: 'MB'>,
       }),
     }),
-    'object_id_base': 'Opcache wasted memory',
     'original_device_class': <SensorDeviceClass.DATA_SIZE: 'data_size'>,
     'original_icon': None,
     'original_name': 'Opcache wasted memory',
@@ -3392,12 +3392,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'PHP max execution time',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
       }),
     }),
-    'object_id_base': 'PHP max execution time',
     'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
     'original_icon': None,
     'original_name': 'PHP max execution time',
@@ -3446,6 +3446,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'PHP memory limit',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -3454,7 +3455,6 @@
         'suggested_unit_of_measurement': <UnitOfInformation.MEGABYTES: 'MB'>,
       }),
     }),
-    'object_id_base': 'PHP memory limit',
     'original_device_class': <SensorDeviceClass.DATA_SIZE: 'data_size'>,
     'original_icon': None,
     'original_name': 'PHP memory limit',
@@ -3503,6 +3503,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'PHP upload maximum filesize',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -3511,7 +3512,6 @@
         'suggested_unit_of_measurement': <UnitOfInformation.MEGABYTES: 'MB'>,
       }),
     }),
-    'object_id_base': 'PHP upload maximum filesize',
     'original_device_class': <SensorDeviceClass.DATA_SIZE: 'data_size'>,
     'original_icon': None,
     'original_name': 'PHP upload maximum filesize',
@@ -3560,9 +3560,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'PHP version',
     'options': dict({
     }),
-    'object_id_base': 'PHP version',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'PHP version',
@@ -3609,6 +3609,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'SMA available memory',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -3617,7 +3618,6 @@
         'suggested_unit_of_measurement': <UnitOfInformation.MEGABYTES: 'MB'>,
       }),
     }),
-    'object_id_base': 'SMA available memory',
     'original_device_class': <SensorDeviceClass.DATA_SIZE: 'data_size'>,
     'original_icon': None,
     'original_name': 'SMA available memory',
@@ -3668,9 +3668,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'SMA number of segments',
     'options': dict({
     }),
-    'object_id_base': 'SMA number of segments',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'SMA number of segments',
@@ -3718,6 +3718,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'SMA segment size',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -3726,7 +3727,6 @@
         'suggested_unit_of_measurement': <UnitOfInformation.MEGABYTES: 'MB'>,
       }),
     }),
-    'object_id_base': 'SMA segment size',
     'original_device_class': <SensorDeviceClass.DATA_SIZE: 'data_size'>,
     'original_icon': None,
     'original_name': 'SMA segment size',
@@ -3775,9 +3775,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'System memcache distributed',
     'options': dict({
     }),
-    'object_id_base': 'System memcache distributed',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'System memcache distributed',
@@ -3824,9 +3824,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'System memcache local',
     'options': dict({
     }),
-    'object_id_base': 'System memcache local',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'System memcache local',
@@ -3873,9 +3873,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'System memcache locking',
     'options': dict({
     }),
-    'object_id_base': 'System memcache locking',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'System memcache locking',
@@ -3922,9 +3922,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'System theme',
     'options': dict({
     }),
-    'object_id_base': 'System theme',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'System theme',
@@ -3971,9 +3971,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'System version',
     'options': dict({
     }),
-    'object_id_base': 'System version',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'System version',
@@ -4020,6 +4020,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Total memory',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -4028,7 +4029,6 @@
         'suggested_unit_of_measurement': <UnitOfInformation.GIGABYTES: 'GB'>,
       }),
     }),
-    'object_id_base': 'Total memory',
     'original_device_class': <SensorDeviceClass.DATA_SIZE: 'data_size'>,
     'original_icon': None,
     'original_name': 'Total memory',
@@ -4077,6 +4077,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Total swap memory',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -4085,7 +4086,6 @@
         'suggested_unit_of_measurement': <UnitOfInformation.GIGABYTES: 'GB'>,
       }),
     }),
-    'object_id_base': 'Total swap memory',
     'original_device_class': <SensorDeviceClass.DATA_SIZE: 'data_size'>,
     'original_icon': None,
     'original_name': 'Total swap memory',
@@ -4136,9 +4136,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Updates available',
     'options': dict({
     }),
-    'object_id_base': 'Updates available',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Updates available',
@@ -4186,9 +4186,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Webserver',
     'options': dict({
     }),
-    'object_id_base': 'Webserver',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Webserver',

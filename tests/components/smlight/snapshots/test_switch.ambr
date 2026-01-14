@@ -20,9 +20,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Auto Zigbee update',
     'options': dict({
     }),
-    'object_id_base': 'Auto Zigbee update',
     'original_device_class': <SwitchDeviceClass.SWITCH: 'switch'>,
     'original_icon': None,
     'original_name': 'Auto Zigbee update',
@@ -70,9 +70,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Disable LEDs',
     'options': dict({
     }),
-    'object_id_base': 'Disable LEDs',
     'original_device_class': <SwitchDeviceClass.SWITCH: 'switch'>,
     'original_icon': None,
     'original_name': 'Disable LEDs',
@@ -120,9 +120,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'LED night mode',
     'options': dict({
     }),
-    'object_id_base': 'LED night mode',
     'original_device_class': <SwitchDeviceClass.SWITCH: 'switch'>,
     'original_icon': None,
     'original_name': 'LED night mode',
@@ -170,9 +170,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'VPN enabled',
     'options': dict({
     }),
-    'object_id_base': 'VPN enabled',
     'original_device_class': <SwitchDeviceClass.SWITCH: 'switch'>,
     'original_icon': None,
     'original_name': 'VPN enabled',

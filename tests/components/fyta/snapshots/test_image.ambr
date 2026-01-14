@@ -20,9 +20,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Plant image',
     'options': dict({
     }),
-    'object_id_base': 'Plant image',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Plant image',
@@ -71,9 +71,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'User image',
     'options': dict({
     }),
-    'object_id_base': 'User image',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'User image',
@@ -122,9 +122,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Plant image',
     'options': dict({
     }),
-    'object_id_base': 'Plant image',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Plant image',
@@ -173,9 +173,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'User image',
     'options': dict({
     }),
-    'object_id_base': 'User image',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'User image',

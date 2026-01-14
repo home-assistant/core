@@ -20,9 +20,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Flash',
     'options': dict({
     }),
-    'object_id_base': 'Flash',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Flash',
@@ -69,9 +69,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Honk',
     'options': dict({
     }),
-    'object_id_base': 'Honk',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Honk',
@@ -118,9 +118,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Honk & flash',
     'options': dict({
     }),
-    'object_id_base': 'Honk & flash',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Honk & flash',
@@ -167,9 +167,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Lock reduced guard',
     'options': dict({
     }),
-    'object_id_base': 'Lock reduced guard',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Lock reduced guard',
@@ -216,9 +216,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Start climatization',
     'options': dict({
     }),
-    'object_id_base': 'Start climatization',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Start climatization',
@@ -265,9 +265,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Stop climatization',
     'options': dict({
     }),
-    'object_id_base': 'Stop climatization',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Stop climatization',
@@ -314,9 +314,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Flash',
     'options': dict({
     }),
-    'object_id_base': 'Flash',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Flash',
@@ -363,9 +363,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Honk',
     'options': dict({
     }),
-    'object_id_base': 'Honk',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Honk',
@@ -412,9 +412,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Honk & flash',
     'options': dict({
     }),
-    'object_id_base': 'Honk & flash',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Honk & flash',
@@ -461,9 +461,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Lock reduced guard',
     'options': dict({
     }),
-    'object_id_base': 'Lock reduced guard',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Lock reduced guard',
@@ -510,9 +510,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Start climatization',
     'options': dict({
     }),
-    'object_id_base': 'Start climatization',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Start climatization',
@@ -559,9 +559,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Stop climatization',
     'options': dict({
     }),
-    'object_id_base': 'Stop climatization',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Stop climatization',
@@ -608,9 +608,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Flash',
     'options': dict({
     }),
-    'object_id_base': 'Flash',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Flash',
@@ -657,9 +657,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Honk',
     'options': dict({
     }),
-    'object_id_base': 'Honk',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Honk',
@@ -706,9 +706,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Honk & flash',
     'options': dict({
     }),
-    'object_id_base': 'Honk & flash',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Honk & flash',
@@ -755,9 +755,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Lock reduced guard',
     'options': dict({
     }),
-    'object_id_base': 'Lock reduced guard',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Lock reduced guard',
@@ -804,9 +804,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Start climatization',
     'options': dict({
     }),
-    'object_id_base': 'Start climatization',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Start climatization',
@@ -853,9 +853,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Stop climatization',
     'options': dict({
     }),
-    'object_id_base': 'Stop climatization',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Stop climatization',
@@ -902,9 +902,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Flash',
     'options': dict({
     }),
-    'object_id_base': 'Flash',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Flash',
@@ -951,9 +951,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Honk',
     'options': dict({
     }),
-    'object_id_base': 'Honk',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Honk',
@@ -1000,9 +1000,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Honk & flash',
     'options': dict({
     }),
-    'object_id_base': 'Honk & flash',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Honk & flash',
@@ -1049,9 +1049,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Lock reduced guard',
     'options': dict({
     }),
-    'object_id_base': 'Lock reduced guard',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Lock reduced guard',
@@ -1098,9 +1098,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Start climatization',
     'options': dict({
     }),
-    'object_id_base': 'Start climatization',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Start climatization',
@@ -1147,9 +1147,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Start engine',
     'options': dict({
     }),
-    'object_id_base': 'Start engine',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Start engine',
@@ -1196,9 +1196,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Stop climatization',
     'options': dict({
     }),
-    'object_id_base': 'Stop climatization',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Stop climatization',
@@ -1245,9 +1245,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Stop engine',
     'options': dict({
     }),
-    'object_id_base': 'Stop engine',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Stop engine',

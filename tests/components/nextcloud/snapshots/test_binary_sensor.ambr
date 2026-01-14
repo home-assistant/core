@@ -20,9 +20,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Avatars enabled',
     'options': dict({
     }),
-    'object_id_base': 'Avatars enabled',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Avatars enabled',
@@ -69,9 +69,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Debug enabled',
     'options': dict({
     }),
-    'object_id_base': 'Debug enabled',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Debug enabled',
@@ -118,9 +118,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Filelocking enabled',
     'options': dict({
     }),
-    'object_id_base': 'Filelocking enabled',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Filelocking enabled',
@@ -167,9 +167,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'JIT active',
     'options': dict({
     }),
-    'object_id_base': 'JIT active',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'JIT active',
@@ -216,9 +216,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'JIT enabled',
     'options': dict({
     }),
-    'object_id_base': 'JIT enabled',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'JIT enabled',
@@ -265,9 +265,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Previews enabled',
     'options': dict({
     }),
-    'object_id_base': 'Previews enabled',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Previews enabled',

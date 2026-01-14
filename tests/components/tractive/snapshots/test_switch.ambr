@@ -20,9 +20,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Live tracking',
     'options': dict({
     }),
-    'object_id_base': 'Live tracking',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Live tracking',
@@ -69,9 +69,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Tracker buzzer',
     'options': dict({
     }),
-    'object_id_base': 'Tracker buzzer',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Tracker buzzer',
@@ -118,9 +118,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Tracker LED',
     'options': dict({
     }),
-    'object_id_base': 'Tracker LED',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Tracker LED',

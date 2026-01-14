@@ -26,9 +26,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Filter mode',
     'options': dict({
     }),
-    'object_id_base': 'Filter mode',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Filter mode',
@@ -98,9 +98,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Constant flow speed',
     'options': dict({
     }),
-    'object_id_base': 'Constant flow speed',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Constant flow speed',
@@ -183,9 +183,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Day speed',
     'options': dict({
     }),
-    'object_id_base': 'Day speed',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Day speed',
@@ -257,9 +257,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Filter mode',
     'options': dict({
     }),
-    'object_id_base': 'Filter mode',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Filter mode',
@@ -330,9 +330,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'High pulse speed',
     'options': dict({
     }),
-    'object_id_base': 'High pulse speed',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'High pulse speed',
@@ -415,9 +415,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Low pulse speed',
     'options': dict({
     }),
-    'object_id_base': 'Low pulse speed',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Low pulse speed',
@@ -500,9 +500,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Manual speed',
     'options': dict({
     }),
-    'object_id_base': 'Manual speed',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Manual speed',
@@ -585,9 +585,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Night speed',
     'options': dict({
     }),
-    'object_id_base': 'Night speed',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Night speed',

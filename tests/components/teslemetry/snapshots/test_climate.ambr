@@ -29,9 +29,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Cabin overheat protection',
     'options': dict({
     }),
-    'object_id_base': 'Cabin overheat protection',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Cabin overheat protection',
@@ -106,9 +106,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Climate',
     'options': dict({
     }),
-    'object_id_base': 'Climate',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Climate',
@@ -185,9 +185,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Cabin overheat protection',
     'options': dict({
     }),
-    'object_id_base': 'Cabin overheat protection',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Cabin overheat protection',
@@ -261,9 +261,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Climate',
     'options': dict({
     }),
-    'object_id_base': 'Climate',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Climate',
@@ -340,9 +340,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Cabin overheat protection',
     'options': dict({
     }),
-    'object_id_base': 'Cabin overheat protection',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Cabin overheat protection',
@@ -383,9 +383,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Climate',
     'options': dict({
     }),
-    'object_id_base': 'Climate',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Climate',

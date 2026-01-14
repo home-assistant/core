@@ -20,9 +20,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Start air conditioner',
     'options': dict({
     }),
-    'object_id_base': 'Start air conditioner',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Start air conditioner',
@@ -69,9 +69,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Start charge',
     'options': dict({
     }),
-    'object_id_base': 'Start charge',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Start charge',
@@ -118,9 +118,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Stop charge',
     'options': dict({
     }),
-    'object_id_base': 'Stop charge',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Stop charge',
@@ -167,9 +167,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Start air conditioner',
     'options': dict({
     }),
-    'object_id_base': 'Start air conditioner',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Start air conditioner',
@@ -216,9 +216,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Start charge',
     'options': dict({
     }),
-    'object_id_base': 'Start charge',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Start charge',
@@ -265,9 +265,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Stop charge',
     'options': dict({
     }),
-    'object_id_base': 'Stop charge',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Stop charge',
@@ -314,9 +314,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Start air conditioner',
     'options': dict({
     }),
-    'object_id_base': 'Start air conditioner',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Start air conditioner',
@@ -363,9 +363,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Start charge',
     'options': dict({
     }),
-    'object_id_base': 'Start charge',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Start charge',
@@ -412,9 +412,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Stop charge',
     'options': dict({
     }),
-    'object_id_base': 'Stop charge',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Stop charge',
@@ -461,9 +461,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Start air conditioner',
     'options': dict({
     }),
-    'object_id_base': 'Start air conditioner',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Start air conditioner',
@@ -510,9 +510,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Start charge',
     'options': dict({
     }),
-    'object_id_base': 'Start charge',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Start charge',
@@ -559,9 +559,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Stop charge',
     'options': dict({
     }),
-    'object_id_base': 'Stop charge',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Stop charge',
@@ -608,9 +608,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Start air conditioner',
     'options': dict({
     }),
-    'object_id_base': 'Start air conditioner',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Start air conditioner',
@@ -657,9 +657,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Start air conditioner',
     'options': dict({
     }),
-    'object_id_base': 'Start air conditioner',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Start air conditioner',
@@ -706,9 +706,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Start charge',
     'options': dict({
     }),
-    'object_id_base': 'Start charge',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Start charge',
@@ -755,9 +755,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Stop charge',
     'options': dict({
     }),
-    'object_id_base': 'Stop charge',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Stop charge',
@@ -804,9 +804,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Start air conditioner',
     'options': dict({
     }),
-    'object_id_base': 'Start air conditioner',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Start air conditioner',
@@ -853,9 +853,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Start charge',
     'options': dict({
     }),
-    'object_id_base': 'Start charge',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Start charge',
@@ -902,9 +902,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Stop charge',
     'options': dict({
     }),
-    'object_id_base': 'Stop charge',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Stop charge',
@@ -951,9 +951,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Start air conditioner',
     'options': dict({
     }),
-    'object_id_base': 'Start air conditioner',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Start air conditioner',
@@ -1000,9 +1000,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Start charge',
     'options': dict({
     }),
-    'object_id_base': 'Start charge',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Start charge',
@@ -1049,9 +1049,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Stop charge',
     'options': dict({
     }),
-    'object_id_base': 'Stop charge',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Stop charge',
@@ -1098,9 +1098,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Start air conditioner',
     'options': dict({
     }),
-    'object_id_base': 'Start air conditioner',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Start air conditioner',
@@ -1147,9 +1147,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Start charge',
     'options': dict({
     }),
-    'object_id_base': 'Start charge',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Start charge',
@@ -1196,9 +1196,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Stop charge',
     'options': dict({
     }),
-    'object_id_base': 'Stop charge',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Stop charge',

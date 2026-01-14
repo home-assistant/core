@@ -22,12 +22,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Lifetime production of P1',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
       }),
     }),
-    'object_id_base': 'Lifetime production of P1',
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
     'original_name': 'Lifetime production of P1',
@@ -79,12 +79,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Lifetime production of P2',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
       }),
     }),
-    'object_id_base': 'Lifetime production of P2',
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
     'original_name': 'Lifetime production of P2',
@@ -136,12 +136,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power of P1',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
       }),
     }),
-    'object_id_base': 'Power of P1',
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
     'original_icon': None,
     'original_name': 'Power of P1',
@@ -193,12 +193,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power of P2',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
       }),
     }),
-    'object_id_base': 'Power of P2',
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
     'original_icon': None,
     'original_name': 'Power of P2',
@@ -250,12 +250,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Production of today',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
       }),
     }),
-    'object_id_base': 'Production of today',
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
     'original_name': 'Production of today',
@@ -307,12 +307,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Production of today from P1',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
       }),
     }),
-    'object_id_base': 'Production of today from P1',
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
     'original_name': 'Production of today from P1',
@@ -364,12 +364,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Production of today from P2',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
       }),
     }),
-    'object_id_base': 'Production of today from P2',
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
     'original_name': 'Production of today from P2',
@@ -421,12 +421,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Total lifetime production',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
       }),
     }),
-    'object_id_base': 'Total lifetime production',
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
     'original_name': 'Total lifetime production',
@@ -478,12 +478,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Total power',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
       }),
     }),
-    'object_id_base': 'Total power',
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
     'original_icon': None,
     'original_name': 'Total power',

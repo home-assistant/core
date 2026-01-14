@@ -22,9 +22,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Followers',
     'options': dict({
     }),
-    'object_id_base': 'Followers',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Followers',
@@ -75,9 +75,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Following',
     'options': dict({
     }),
-    'object_id_base': 'Following',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Following',
@@ -128,9 +128,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Posts',
     'options': dict({
     }),
-    'object_id_base': 'Posts',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Posts',

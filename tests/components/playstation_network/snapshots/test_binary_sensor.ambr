@@ -20,9 +20,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Subscribed to PlayStation Plus',
     'options': dict({
     }),
-    'object_id_base': 'Subscribed to PlayStation Plus',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Subscribed to PlayStation Plus',

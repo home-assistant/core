@@ -25,9 +25,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Boost temperature',
     'options': dict({
     }),
-    'object_id_base': 'Boost temperature',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Boost temperature',
@@ -84,9 +84,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Calibration offset',
     'options': dict({
     }),
-    'object_id_base': 'Calibration offset',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Calibration offset',
@@ -143,9 +143,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Display brightness',
     'options': dict({
     }),
-    'object_id_base': 'Display brightness',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Display brightness',
@@ -201,9 +201,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Hall effect sensitivity',
     'options': dict({
     }),
-    'object_id_base': 'Hall effect sensitivity',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Hall effect sensitivity',
@@ -259,9 +259,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Hall sensor sleep timeout',
     'options': dict({
     }),
-    'object_id_base': 'Hall sensor sleep timeout',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Hall sensor sleep timeout',
@@ -318,9 +318,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Keep-awake pulse delay',
     'options': dict({
     }),
-    'object_id_base': 'Keep-awake pulse delay',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Keep-awake pulse delay',
@@ -377,9 +377,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Keep-awake pulse duration',
     'options': dict({
     }),
-    'object_id_base': 'Keep-awake pulse duration',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Keep-awake pulse duration',
@@ -436,9 +436,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Keep-awake pulse intensity',
     'options': dict({
     }),
-    'object_id_base': 'Keep-awake pulse intensity',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Keep-awake pulse intensity',
@@ -495,9 +495,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Long-press temperature step',
     'options': dict({
     }),
-    'object_id_base': 'Long-press temperature step',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Long-press temperature step',
@@ -554,9 +554,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Min. voltage per cell',
     'options': dict({
     }),
-    'object_id_base': 'Min. voltage per cell',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Min. voltage per cell',
@@ -613,9 +613,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Motion sensitivity',
     'options': dict({
     }),
-    'object_id_base': 'Motion sensitivity',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Motion sensitivity',
@@ -671,9 +671,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power Delivery timeout',
     'options': dict({
     }),
-    'object_id_base': 'Power Delivery timeout',
     'original_device_class': <NumberDeviceClass.DURATION: 'duration'>,
     'original_icon': None,
     'original_name': 'Power Delivery timeout',
@@ -731,9 +731,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power limit',
     'options': dict({
     }),
-    'object_id_base': 'Power limit',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Power limit',
@@ -790,9 +790,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Quick Charge voltage',
     'options': dict({
     }),
-    'object_id_base': 'Quick Charge voltage',
     'original_device_class': <NumberDeviceClass.VOLTAGE: 'voltage'>,
     'original_icon': None,
     'original_name': 'Quick Charge voltage',
@@ -850,9 +850,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Setpoint temperature',
     'options': dict({
     }),
-    'object_id_base': 'Setpoint temperature',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Setpoint temperature',
@@ -909,9 +909,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Short-press temperature step',
     'options': dict({
     }),
-    'object_id_base': 'Short-press temperature step',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Short-press temperature step',
@@ -968,9 +968,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Shutdown timeout',
     'options': dict({
     }),
-    'object_id_base': 'Shutdown timeout',
     'original_device_class': <NumberDeviceClass.DURATION: 'duration'>,
     'original_icon': None,
     'original_name': 'Shutdown timeout',
@@ -1028,9 +1028,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Sleep temperature',
     'options': dict({
     }),
-    'object_id_base': 'Sleep temperature',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Sleep temperature',
@@ -1087,9 +1087,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Sleep timeout',
     'options': dict({
     }),
-    'object_id_base': 'Sleep timeout',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Sleep timeout',
@@ -1146,9 +1146,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Voltage divider',
     'options': dict({
     }),
-    'object_id_base': 'Voltage divider',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Voltage divider',

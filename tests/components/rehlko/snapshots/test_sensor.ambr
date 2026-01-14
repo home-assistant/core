@@ -22,12 +22,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery voltage',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
       }),
     }),
-    'object_id_base': 'Battery voltage',
     'original_device_class': <SensorDeviceClass.VOLTAGE: 'voltage'>,
     'original_icon': None,
     'original_name': 'Battery voltage',
@@ -79,12 +79,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Controller temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
       }),
     }),
-    'object_id_base': 'Controller temperature',
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Controller temperature',
@@ -134,9 +134,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Device IP address',
     'options': dict({
     }),
-    'object_id_base': 'Device IP address',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Device IP address',
@@ -185,12 +185,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Engine compartment temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
       }),
     }),
-    'object_id_base': 'Engine compartment temperature',
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Engine compartment temperature',
@@ -242,12 +242,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Engine coolant temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
       }),
     }),
-    'object_id_base': 'Engine coolant temperature',
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Engine coolant temperature',
@@ -299,12 +299,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Engine frequency',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
       }),
     }),
-    'object_id_base': 'Engine frequency',
     'original_device_class': <SensorDeviceClass.FREQUENCY: 'frequency'>,
     'original_icon': None,
     'original_name': 'Engine frequency',
@@ -356,6 +356,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Engine oil pressure',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -364,7 +365,6 @@
         'suggested_unit_of_measurement': <UnitOfPressure.KPA: 'kPa'>,
       }),
     }),
-    'object_id_base': 'Engine oil pressure',
     'original_device_class': <SensorDeviceClass.PRESSURE: 'pressure'>,
     'original_icon': None,
     'original_name': 'Engine oil pressure',
@@ -416,9 +416,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Engine speed',
     'options': dict({
     }),
-    'object_id_base': 'Engine speed',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Engine speed',
@@ -467,9 +467,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Engine state',
     'options': dict({
     }),
-    'object_id_base': 'Engine state',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Engine state',
@@ -518,12 +518,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Generator load',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
       }),
     }),
-    'object_id_base': 'Generator load',
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
     'original_icon': None,
     'original_name': 'Generator load',
@@ -575,9 +575,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Generator load percentage',
     'options': dict({
     }),
-    'object_id_base': 'Generator load percentage',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Generator load percentage',
@@ -626,9 +626,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Generator status',
     'options': dict({
     }),
-    'object_id_base': 'Generator status',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Generator status',
@@ -675,9 +675,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Last exercise',
     'options': dict({
     }),
-    'object_id_base': 'Last exercise',
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
     'original_icon': None,
     'original_name': 'Last exercise',
@@ -725,9 +725,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Last maintainance',
     'options': dict({
     }),
-    'object_id_base': 'Last maintainance',
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
     'original_icon': None,
     'original_name': 'Last maintainance',
@@ -775,9 +775,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Last run',
     'options': dict({
     }),
-    'object_id_base': 'Last run',
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
     'original_icon': None,
     'original_name': 'Last run',
@@ -827,12 +827,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Lube oil temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
       }),
     }),
-    'object_id_base': 'Lube oil temperature',
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Lube oil temperature',
@@ -882,9 +882,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Next exercise',
     'options': dict({
     }),
-    'object_id_base': 'Next exercise',
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
     'original_icon': None,
     'original_name': 'Next exercise',
@@ -932,9 +932,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Next maintainance',
     'options': dict({
     }),
-    'object_id_base': 'Next maintainance',
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
     'original_icon': None,
     'original_name': 'Next maintainance',
@@ -982,9 +982,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power source',
     'options': dict({
     }),
-    'object_id_base': 'Power source',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Power source',
@@ -1033,12 +1033,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Runtime since last maintenance',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
       }),
     }),
-    'object_id_base': 'Runtime since last maintenance',
     'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
     'original_icon': None,
     'original_name': 'Runtime since last maintenance',
@@ -1088,9 +1088,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Server IP address',
     'options': dict({
     }),
-    'object_id_base': 'Server IP address',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Server IP address',
@@ -1139,12 +1139,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Total operation',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
       }),
     }),
-    'object_id_base': 'Total operation',
     'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
     'original_icon': None,
     'original_name': 'Total operation',
@@ -1196,12 +1196,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Total runtime',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
       }),
     }),
-    'object_id_base': 'Total runtime',
     'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
     'original_icon': None,
     'original_name': 'Total runtime',
@@ -1253,12 +1253,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Utility voltage',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
       }),
     }),
-    'object_id_base': 'Utility voltage',
     'original_device_class': <SensorDeviceClass.VOLTAGE: 'voltage'>,
     'original_icon': None,
     'original_name': 'Utility voltage',
@@ -1310,12 +1310,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Voltage',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
       }),
     }),
-    'object_id_base': 'Voltage',
     'original_device_class': <SensorDeviceClass.VOLTAGE: 'voltage'>,
     'original_icon': None,
     'original_name': 'Voltage',

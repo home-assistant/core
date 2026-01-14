@@ -22,9 +22,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Build up index',
     'options': dict({
     }),
-    'object_id_base': 'Build up index',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Build up index',
@@ -75,9 +75,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Drought code',
     'options': dict({
     }),
-    'object_id_base': 'Drought code',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Drought code',
@@ -128,9 +128,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Duff moisture code',
     'options': dict({
     }),
-    'object_id_base': 'Duff moisture code',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Duff moisture code',
@@ -181,9 +181,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Fine fuel moisture code',
     'options': dict({
     }),
-    'object_id_base': 'Fine fuel moisture code',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Fine fuel moisture code',
@@ -234,9 +234,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Fire weather index',
     'options': dict({
     }),
-    'object_id_base': 'Fire weather index',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Fire weather index',
@@ -285,9 +285,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Frozen precipitation',
     'options': dict({
     }),
-    'object_id_base': 'Frozen precipitation',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Frozen precipitation',
@@ -345,9 +345,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Fuel drying',
     'options': dict({
     }),
-    'object_id_base': 'Fuel drying',
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
     'original_name': 'Fuel drying',
@@ -413,9 +413,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'FWI index',
     'options': dict({
     }),
-    'object_id_base': 'FWI index',
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
     'original_name': 'FWI index',
@@ -472,9 +472,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'High cloud coverage',
     'options': dict({
     }),
-    'object_id_base': 'High cloud coverage',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'High cloud coverage',
@@ -532,9 +532,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Highest grass fire risk',
     'options': dict({
     }),
-    'object_id_base': 'Highest grass fire risk',
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
     'original_name': 'Highest grass fire risk',
@@ -593,9 +593,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Initial spread index',
     'options': dict({
     }),
-    'object_id_base': 'Initial spread index',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Initial spread index',
@@ -644,9 +644,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Low cloud coverage',
     'options': dict({
     }),
-    'object_id_base': 'Low cloud coverage',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Low cloud coverage',
@@ -695,9 +695,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Medium cloud coverage',
     'options': dict({
     }),
-    'object_id_base': 'Medium cloud coverage',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Medium cloud coverage',
@@ -748,12 +748,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Potential rate of spread',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
       }),
     }),
-    'object_id_base': 'Potential rate of spread',
     'original_device_class': <SensorDeviceClass.SPEED: 'speed'>,
     'original_icon': None,
     'original_name': 'Potential rate of spread',
@@ -814,9 +814,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Precipitation category',
     'options': dict({
     }),
-    'object_id_base': 'Precipitation category',
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
     'original_name': 'Precipitation category',
@@ -874,9 +874,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Thunder probability',
     'options': dict({
     }),
-    'object_id_base': 'Thunder probability',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Thunder probability',
@@ -925,9 +925,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Total cloud coverage',
     'options': dict({
     }),
-    'object_id_base': 'Total cloud coverage',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Total cloud coverage',

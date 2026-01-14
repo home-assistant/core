@@ -22,9 +22,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery',
     'options': dict({
     }),
-    'object_id_base': 'Battery',
     'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
     'original_icon': None,
     'original_name': 'Battery',
@@ -76,9 +76,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Oxydo reduction potential',
     'options': dict({
     }),
-    'object_id_base': 'Oxydo reduction potential',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Oxydo reduction potential',
@@ -129,9 +129,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'pH',
     'options': dict({
     }),
-    'object_id_base': 'pH',
     'original_device_class': <SensorDeviceClass.PH: 'ph'>,
     'original_icon': None,
     'original_name': 'pH',
@@ -182,9 +182,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'RSSI',
     'options': dict({
     }),
-    'object_id_base': 'RSSI',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'RSSI',
@@ -235,9 +235,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Salt',
     'options': dict({
     }),
-    'object_id_base': 'Salt',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Salt',
@@ -288,9 +288,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'TDS',
     'options': dict({
     }),
-    'object_id_base': 'TDS',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'TDS',
@@ -341,12 +341,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
       }),
     }),
-    'object_id_base': 'Temperature',
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Temperature',
@@ -398,9 +398,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery',
     'options': dict({
     }),
-    'object_id_base': 'Battery',
     'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
     'original_icon': None,
     'original_name': 'Battery',
@@ -452,9 +452,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Oxydo reduction potential',
     'options': dict({
     }),
-    'object_id_base': 'Oxydo reduction potential',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Oxydo reduction potential',
@@ -505,9 +505,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'pH',
     'options': dict({
     }),
-    'object_id_base': 'pH',
     'original_device_class': <SensorDeviceClass.PH: 'ph'>,
     'original_icon': None,
     'original_name': 'pH',
@@ -558,9 +558,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'RSSI',
     'options': dict({
     }),
-    'object_id_base': 'RSSI',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'RSSI',
@@ -611,9 +611,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Salt',
     'options': dict({
     }),
-    'object_id_base': 'Salt',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Salt',
@@ -664,9 +664,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'TDS',
     'options': dict({
     }),
-    'object_id_base': 'TDS',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'TDS',
@@ -717,12 +717,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
       }),
     }),
-    'object_id_base': 'Temperature',
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Temperature',

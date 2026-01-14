@@ -22,9 +22,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'CO2 intensity',
     'options': dict({
     }),
-    'object_id_base': 'CO2 intensity',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'CO2 intensity',
@@ -77,9 +77,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Grid fossil fuel percentage',
     'options': dict({
     }),
-    'object_id_base': 'Grid fossil fuel percentage',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Grid fossil fuel percentage',

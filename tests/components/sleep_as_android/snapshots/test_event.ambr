@@ -29,9 +29,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Alarm clock',
     'options': dict({
     }),
-    'object_id_base': 'Alarm clock',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Alarm clock',
@@ -92,9 +92,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Jet lag prevention',
     'options': dict({
     }),
-    'object_id_base': 'Jet lag prevention',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Jet lag prevention',
@@ -152,9 +152,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Lullaby',
     'options': dict({
     }),
-    'object_id_base': 'Lullaby',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Lullaby',
@@ -212,9 +212,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Sleep health',
     'options': dict({
     }),
-    'object_id_base': 'Sleep health',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Sleep health',
@@ -274,9 +274,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Sleep phase',
     'options': dict({
     }),
-    'object_id_base': 'Sleep phase',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Sleep phase',
@@ -338,9 +338,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Sleep tracking',
     'options': dict({
     }),
-    'object_id_base': 'Sleep tracking',
     'original_device_class': <EventDeviceClass.BUTTON: 'button'>,
     'original_icon': None,
     'original_name': 'Sleep tracking',
@@ -400,9 +400,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Smart wake-up',
     'options': dict({
     }),
-    'object_id_base': 'Smart wake-up',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Smart wake-up',
@@ -462,9 +462,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Sound recognition',
     'options': dict({
     }),
-    'object_id_base': 'Sound recognition',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Sound recognition',
@@ -525,9 +525,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'User notification',
     'options': dict({
     }),
-    'object_id_base': 'User notification',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'User notification',

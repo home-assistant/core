@@ -20,9 +20,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Long parking capacity',
     'options': dict({
     }),
-    'object_id_base': 'Long parking capacity',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Long parking capacity',
@@ -73,9 +73,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Long parking free space',
     'options': dict({
     }),
-    'object_id_base': 'Long parking free space',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Long parking free space',
@@ -125,9 +125,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Short parking capacity',
     'options': dict({
     }),
-    'object_id_base': 'Short parking capacity',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Short parking capacity',
@@ -178,9 +178,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Short parking free space',
     'options': dict({
     }),
-    'object_id_base': 'Short parking free space',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Short parking free space',

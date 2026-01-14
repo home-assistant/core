@@ -20,12 +20,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Extract air temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
       }),
     }),
-    'object_id_base': 'Extract air temperature',
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Extract air temperature',
@@ -74,9 +74,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Extract fan speed',
     'options': dict({
     }),
-    'object_id_base': 'Extract fan speed',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Extract fan speed',
@@ -124,9 +124,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Filter days left',
     'options': dict({
     }),
-    'object_id_base': 'Filter days left',
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
     'original_icon': None,
     'original_name': 'Filter days left',
@@ -174,12 +174,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Outdoor air temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
       }),
     }),
-    'object_id_base': 'Outdoor air temperature',
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Outdoor air temperature',
@@ -228,12 +228,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Supply air temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
       }),
     }),
-    'object_id_base': 'Supply air temperature',
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Supply air temperature',
@@ -282,9 +282,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Supply fan speed',
     'options': dict({
     }),
-    'object_id_base': 'Supply fan speed',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Supply fan speed',

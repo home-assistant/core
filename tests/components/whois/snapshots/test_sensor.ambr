@@ -33,9 +33,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Admin',
     'options': dict({
     }),
-    'object_id_base': 'Admin',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Admin',
@@ -114,9 +114,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Created',
     'options': dict({
     }),
-    'object_id_base': 'Created',
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
     'original_icon': None,
     'original_name': 'Created',
@@ -199,9 +199,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Days until expiration',
     'options': dict({
     }),
-    'object_id_base': 'Days until expiration',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Days until expiration',
@@ -280,9 +280,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Expires',
     'options': dict({
     }),
-    'object_id_base': 'Expires',
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
     'original_icon': None,
     'original_name': 'Expires',
@@ -361,9 +361,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Last updated',
     'options': dict({
     }),
-    'object_id_base': 'Last updated',
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
     'original_icon': None,
     'original_name': 'Last updated',
@@ -441,9 +441,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Owner',
     'options': dict({
     }),
-    'object_id_base': 'Owner',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Owner',
@@ -521,9 +521,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Registrant',
     'options': dict({
     }),
-    'object_id_base': 'Registrant',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Registrant',
@@ -601,9 +601,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Registrar',
     'options': dict({
     }),
-    'object_id_base': 'Registrar',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Registrar',
@@ -681,9 +681,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Reseller',
     'options': dict({
     }),
-    'object_id_base': 'Reseller',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Reseller',
@@ -813,9 +813,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Status',
     'options': dict({
     }),
-    'object_id_base': 'Status',
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
     'original_name': 'Status',
@@ -894,9 +894,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Last updated',
     'options': dict({
     }),
-    'object_id_base': 'Last updated',
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
     'original_icon': None,
     'original_name': 'Last updated',

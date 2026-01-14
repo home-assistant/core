@@ -20,9 +20,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'In\xadcreased venti\xadlation',
     'options': dict({
     }),
-    'object_id_base': 'In\xadcreased venti\xadlation',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'In\xadcreased venti\xadlation',
@@ -69,9 +69,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'In\xadcreased venti\xadlation',
     'options': dict({
     }),
-    'object_id_base': 'In\xadcreased venti\xadlation',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'In\xadcreased venti\xadlation',
@@ -118,9 +118,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Tempo\xadrary lux',
     'options': dict({
     }),
-    'object_id_base': 'Tempo\xadrary lux',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Tempo\xadrary lux',
@@ -167,9 +167,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Tempo\xadrary lux',
     'options': dict({
     }),
-    'object_id_base': 'Tempo\xadrary lux',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Tempo\xadrary lux',

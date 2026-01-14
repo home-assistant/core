@@ -23,9 +23,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Domestic hot water',
     'options': dict({
     }),
-    'object_id_base': 'Domestic hot water',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Domestic hot water',
@@ -82,9 +82,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Domestic hot water',
     'options': dict({
     }),
-    'object_id_base': 'Domestic hot water',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Domestic hot water',

@@ -55,9 +55,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
-    'object_id_base': None,
     'original_device_class': None,
     'original_icon': None,
     'original_name': None,
@@ -104,9 +104,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Auto-off enabled',
     'options': dict({
     }),
-    'object_id_base': 'Auto-off enabled',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Auto-off enabled',
@@ -153,9 +153,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Auto-update enabled',
     'options': dict({
     }),
-    'object_id_base': 'Auto-update enabled',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Auto-update enabled',
@@ -202,9 +202,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Baby cry detection',
     'options': dict({
     }),
-    'object_id_base': 'Baby cry detection',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Baby cry detection',
@@ -251,9 +251,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Carpet boost',
     'options': dict({
     }),
-    'object_id_base': 'Carpet boost',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Carpet boost',
@@ -300,9 +300,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Child lock',
     'options': dict({
     }),
-    'object_id_base': 'Child lock',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Child lock',
@@ -349,9 +349,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Fan sleep mode',
     'options': dict({
     }),
-    'object_id_base': 'Fan sleep mode',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Fan sleep mode',
@@ -398,9 +398,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'LED',
     'options': dict({
     }),
-    'object_id_base': 'LED',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'LED',
@@ -447,9 +447,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Motion detection',
     'options': dict({
     }),
-    'object_id_base': 'Motion detection',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Motion detection',
@@ -496,9 +496,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Motion sensor',
     'options': dict({
     }),
-    'object_id_base': 'Motion sensor',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Motion sensor',
@@ -545,9 +545,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Person detection',
     'options': dict({
     }),
-    'object_id_base': 'Person detection',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Person detection',
@@ -594,9 +594,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Smooth transitions',
     'options': dict({
     }),
-    'object_id_base': 'Smooth transitions',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Smooth transitions',
@@ -643,9 +643,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Tamper detection',
     'options': dict({
     }),
-    'object_id_base': 'Tamper detection',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Tamper detection',

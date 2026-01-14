@@ -20,9 +20,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Alarm',
     'options': dict({
     }),
-    'object_id_base': 'Alarm',
     'original_device_class': <BinarySensorDeviceClass.WINDOW: 'window'>,
     'original_icon': None,
     'original_name': 'Alarm',
@@ -70,9 +70,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery',
     'options': dict({
     }),
-    'object_id_base': 'Battery',
     'original_device_class': <BinarySensorDeviceClass.BATTERY: 'battery'>,
     'original_icon': None,
     'original_name': 'Battery',
@@ -120,9 +120,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Button lock on device',
     'options': dict({
     }),
-    'object_id_base': 'Button lock on device',
     'original_device_class': <BinarySensorDeviceClass.LOCK: 'lock'>,
     'original_icon': None,
     'original_name': 'Button lock on device',
@@ -170,9 +170,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Button lock via UI',
     'options': dict({
     }),
-    'object_id_base': 'Button lock via UI',
     'original_device_class': <BinarySensorDeviceClass.LOCK: 'lock'>,
     'original_icon': None,
     'original_name': 'Button lock via UI',
@@ -220,9 +220,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Holiday mode',
     'options': dict({
     }),
-    'object_id_base': 'Holiday mode',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Holiday mode',
@@ -269,9 +269,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Open window detected',
     'options': dict({
     }),
-    'object_id_base': 'Open window detected',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Open window detected',
@@ -318,9 +318,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Summer mode',
     'options': dict({
     }),
-    'object_id_base': 'Summer mode',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Summer mode',

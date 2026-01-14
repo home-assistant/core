@@ -20,9 +20,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
-    'object_id_base': None,
     'original_device_class': <SwitchDeviceClass.SWITCH: 'switch'>,
     'original_icon': None,
     'original_name': None,
@@ -70,9 +70,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Block Media Streaming',
     'options': dict({
     }),
-    'object_id_base': 'Block Media Streaming',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Block Media Streaming',
@@ -119,9 +119,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Outlet 2',
     'options': dict({
     }),
-    'object_id_base': 'Outlet 2',
     'original_device_class': <SwitchDeviceClass.OUTLET: 'outlet'>,
     'original_icon': None,
     'original_name': 'Outlet 2',
@@ -169,9 +169,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'USB Outlet 1',
     'options': dict({
     }),
-    'object_id_base': 'USB Outlet 1',
     'original_device_class': <SwitchDeviceClass.OUTLET: 'outlet'>,
     'original_icon': None,
     'original_name': 'USB Outlet 1',
@@ -219,9 +219,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Port 1',
     'options': dict({
     }),
-    'object_id_base': 'Port 1',
     'original_device_class': <SwitchDeviceClass.SWITCH: 'switch'>,
     'original_icon': None,
     'original_name': 'Port 1',
@@ -269,9 +269,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Port 1 PoE',
     'options': dict({
     }),
-    'object_id_base': 'Port 1 PoE',
     'original_device_class': <SwitchDeviceClass.OUTLET: 'outlet'>,
     'original_icon': None,
     'original_name': 'Port 1 PoE',
@@ -319,9 +319,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Port 2',
     'options': dict({
     }),
-    'object_id_base': 'Port 2',
     'original_device_class': <SwitchDeviceClass.SWITCH: 'switch'>,
     'original_icon': None,
     'original_name': 'Port 2',
@@ -369,9 +369,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Port 2 PoE',
     'options': dict({
     }),
-    'object_id_base': 'Port 2 PoE',
     'original_device_class': <SwitchDeviceClass.OUTLET: 'outlet'>,
     'original_icon': None,
     'original_name': 'Port 2 PoE',
@@ -419,9 +419,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Port 3',
     'options': dict({
     }),
-    'object_id_base': 'Port 3',
     'original_device_class': <SwitchDeviceClass.SWITCH: 'switch'>,
     'original_icon': None,
     'original_name': 'Port 3',
@@ -469,9 +469,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Port 4',
     'options': dict({
     }),
-    'object_id_base': 'Port 4',
     'original_device_class': <SwitchDeviceClass.SWITCH: 'switch'>,
     'original_icon': None,
     'original_name': 'Port 4',
@@ -519,9 +519,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Port 4 PoE',
     'options': dict({
     }),
-    'object_id_base': 'Port 4 PoE',
     'original_device_class': <SwitchDeviceClass.OUTLET: 'outlet'>,
     'original_icon': None,
     'original_name': 'Port 4 PoE',
@@ -569,9 +569,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Outlet 1',
     'options': dict({
     }),
-    'object_id_base': 'Outlet 1',
     'original_device_class': <SwitchDeviceClass.OUTLET: 'outlet'>,
     'original_icon': None,
     'original_name': 'Outlet 1',
@@ -619,9 +619,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
-    'object_id_base': None,
     'original_device_class': <SwitchDeviceClass.SWITCH: 'switch'>,
     'original_icon': None,
     'original_name': None,
@@ -669,9 +669,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'plex',
     'options': dict({
     }),
-    'object_id_base': 'plex',
     'original_device_class': <SwitchDeviceClass.SWITCH: 'switch'>,
     'original_icon': None,
     'original_name': 'plex',
@@ -719,9 +719,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Test Traffic Rule',
     'options': dict({
     }),
-    'object_id_base': 'Test Traffic Rule',
     'original_device_class': <SwitchDeviceClass.SWITCH: 'switch'>,
     'original_icon': None,
     'original_name': 'Test Traffic Rule',

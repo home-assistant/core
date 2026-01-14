@@ -20,9 +20,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'FRITZ!OS',
     'options': dict({
     }),
-    'object_id_base': 'FRITZ!OS',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'FRITZ!OS',
@@ -81,9 +81,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'FRITZ!OS',
     'options': dict({
     }),
-    'object_id_base': 'FRITZ!OS',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'FRITZ!OS',
@@ -142,9 +142,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'FRITZ!OS',
     'options': dict({
     }),
-    'object_id_base': 'FRITZ!OS',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'FRITZ!OS',

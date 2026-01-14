@@ -20,9 +20,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Scene Store Current Scene',
     'options': dict({
     }),
-    'object_id_base': 'Scene Store Current Scene',
     'original_device_class': None,
     'original_icon': 'mdi:inbox-arrow-down',
     'original_name': 'Scene Store Current Scene',
@@ -70,9 +70,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Aqara FP1 Reset Presence',
     'options': dict({
     }),
-    'object_id_base': 'Aqara FP1 Reset Presence',
     'original_device_class': <ButtonDeviceClass.RESTART: 'restart'>,
     'original_icon': None,
     'original_name': 'Aqara FP1 Reset Presence',

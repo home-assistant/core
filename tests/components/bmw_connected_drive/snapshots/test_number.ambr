@@ -25,9 +25,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Target SoC',
     'options': dict({
     }),
-    'object_id_base': 'Target SoC',
     'original_device_class': <NumberDeviceClass.BATTERY: 'battery'>,
     'original_icon': None,
     'original_name': 'Target SoC',
@@ -84,9 +84,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Target SoC',
     'options': dict({
     }),
-    'object_id_base': 'Target SoC',
     'original_device_class': <NumberDeviceClass.BATTERY: 'battery'>,
     'original_icon': None,
     'original_name': 'Target SoC',

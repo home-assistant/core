@@ -25,9 +25,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Away extract fan setpoint',
     'options': dict({
     }),
-    'object_id_base': 'Away extract fan setpoint',
     'original_device_class': <NumberDeviceClass.POWER_FACTOR: 'power_factor'>,
     'original_icon': None,
     'original_name': 'Away extract fan setpoint',
@@ -85,9 +85,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Away supply fan setpoint',
     'options': dict({
     }),
-    'object_id_base': 'Away supply fan setpoint',
     'original_device_class': <NumberDeviceClass.POWER_FACTOR: 'power_factor'>,
     'original_icon': None,
     'original_name': 'Away supply fan setpoint',
@@ -145,9 +145,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Cooker hood extract fan setpoint',
     'options': dict({
     }),
-    'object_id_base': 'Cooker hood extract fan setpoint',
     'original_device_class': <NumberDeviceClass.POWER_FACTOR: 'power_factor'>,
     'original_icon': None,
     'original_name': 'Cooker hood extract fan setpoint',
@@ -205,9 +205,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Cooker hood supply fan setpoint',
     'options': dict({
     }),
-    'object_id_base': 'Cooker hood supply fan setpoint',
     'original_device_class': <NumberDeviceClass.POWER_FACTOR: 'power_factor'>,
     'original_icon': None,
     'original_name': 'Cooker hood supply fan setpoint',
@@ -265,9 +265,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Fireplace extract fan setpoint',
     'options': dict({
     }),
-    'object_id_base': 'Fireplace extract fan setpoint',
     'original_device_class': <NumberDeviceClass.POWER_FACTOR: 'power_factor'>,
     'original_icon': None,
     'original_name': 'Fireplace extract fan setpoint',
@@ -325,9 +325,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Fireplace mode runtime',
     'options': dict({
     }),
-    'object_id_base': 'Fireplace mode runtime',
     'original_device_class': <NumberDeviceClass.DURATION: 'duration'>,
     'original_icon': None,
     'original_name': 'Fireplace mode runtime',
@@ -385,9 +385,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Fireplace supply fan setpoint',
     'options': dict({
     }),
-    'object_id_base': 'Fireplace supply fan setpoint',
     'original_device_class': <NumberDeviceClass.POWER_FACTOR: 'power_factor'>,
     'original_icon': None,
     'original_name': 'Fireplace supply fan setpoint',
@@ -445,9 +445,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'High extract fan setpoint',
     'options': dict({
     }),
-    'object_id_base': 'High extract fan setpoint',
     'original_device_class': <NumberDeviceClass.POWER_FACTOR: 'power_factor'>,
     'original_icon': None,
     'original_name': 'High extract fan setpoint',
@@ -505,9 +505,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'High supply fan setpoint',
     'options': dict({
     }),
-    'object_id_base': 'High supply fan setpoint',
     'original_device_class': <NumberDeviceClass.POWER_FACTOR: 'power_factor'>,
     'original_icon': None,
     'original_name': 'High supply fan setpoint',
@@ -565,9 +565,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Home extract fan setpoint',
     'options': dict({
     }),
-    'object_id_base': 'Home extract fan setpoint',
     'original_device_class': <NumberDeviceClass.POWER_FACTOR: 'power_factor'>,
     'original_icon': None,
     'original_name': 'Home extract fan setpoint',
@@ -625,9 +625,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Home supply fan setpoint',
     'options': dict({
     }),
-    'object_id_base': 'Home supply fan setpoint',
     'original_device_class': <NumberDeviceClass.POWER_FACTOR: 'power_factor'>,
     'original_icon': None,
     'original_name': 'Home supply fan setpoint',

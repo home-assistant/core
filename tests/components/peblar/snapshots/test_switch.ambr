@@ -20,9 +20,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Charge',
     'options': dict({
     }),
-    'object_id_base': 'Charge',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Charge',
@@ -69,9 +69,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Force single phase',
     'options': dict({
     }),
-    'object_id_base': 'Force single phase',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Force single phase',

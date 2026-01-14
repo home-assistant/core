@@ -20,9 +20,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Calibrate',
     'options': dict({
     }),
-    'object_id_base': 'Calibrate',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Calibrate',
@@ -69,9 +69,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Restart',
     'options': dict({
     }),
-    'object_id_base': 'Restart',
     'original_device_class': <ButtonDeviceClass.RESTART: 'restart'>,
     'original_icon': None,
     'original_name': 'Restart',
@@ -119,9 +119,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Button',
     'options': dict({
     }),
-    'object_id_base': 'Button',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Button',
@@ -168,9 +168,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Turn off the screen',
     'options': dict({
     }),
-    'object_id_base': 'Turn off the screen',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Turn off the screen',
@@ -217,9 +217,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Turn on the screen',
     'options': dict({
     }),
-    'object_id_base': 'Turn on the screen',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Turn on the screen',
@@ -266,9 +266,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Button',
     'options': dict({
     }),
-    'object_id_base': 'Button',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Button',

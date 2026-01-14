@@ -51,12 +51,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Energy Parameter',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
       }),
     }),
-    'object_id_base': 'Energy Parameter',
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
     'original_name': 'Energy Parameter',
@@ -108,12 +108,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Flow Parameter',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
       }),
     }),
-    'object_id_base': 'Flow Parameter',
     'original_device_class': <SensorDeviceClass.VOLUME_FLOW_RATE: 'volume_flow_rate'>,
     'original_icon': None,
     'original_name': 'Flow Parameter',
@@ -165,12 +165,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Frequency Parameter',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
       }),
     }),
-    'object_id_base': 'Frequency Parameter',
     'original_device_class': <SensorDeviceClass.FREQUENCY: 'frequency'>,
     'original_icon': None,
     'original_name': 'Frequency Parameter',
@@ -222,9 +222,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Hours Parameter',
     'options': dict({
     }),
-    'object_id_base': 'Hours Parameter',
     'original_device_class': None,
     'original_icon': 'mdi:clock',
     'original_name': 'Hours Parameter',
@@ -276,9 +276,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'List Item Parameter',
     'options': dict({
     }),
-    'object_id_base': 'List Item Parameter',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'List Item Parameter',
@@ -328,9 +328,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Percentage Parameter',
     'options': dict({
     }),
-    'object_id_base': 'Percentage Parameter',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Percentage Parameter',
@@ -381,12 +381,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power Parameter',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
       }),
     }),
-    'object_id_base': 'Power Parameter',
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
     'original_icon': None,
     'original_name': 'Power Parameter',
@@ -438,12 +438,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Pressure Parameter',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
       }),
     }),
-    'object_id_base': 'Pressure Parameter',
     'original_device_class': <SensorDeviceClass.PRESSURE: 'pressure'>,
     'original_icon': None,
     'original_name': 'Pressure Parameter',
@@ -497,9 +497,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'RPM Parameter',
     'options': dict({
     }),
-    'object_id_base': 'RPM Parameter',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'RPM Parameter',
@@ -551,9 +551,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Simple Parameter',
     'options': dict({
     }),
-    'object_id_base': 'Simple Parameter',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Simple Parameter',
@@ -603,12 +603,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Temperature Parameter',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
       }),
     }),
-    'object_id_base': 'Temperature Parameter',
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Temperature Parameter',

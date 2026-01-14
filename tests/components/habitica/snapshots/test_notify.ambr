@@ -20,9 +20,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Party chat',
     'options': dict({
     }),
-    'object_id_base': 'Party chat',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Party chat',
@@ -70,9 +70,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Private message: test-partymember-displayname',
     'options': dict({
     }),
-    'object_id_base': 'Private message: test-partymember-displayname',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Private message: test-partymember-displayname',

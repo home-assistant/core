@@ -29,9 +29,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Operation mode',
     'options': dict({
     }),
-    'object_id_base': 'Operation mode',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Operation mode',
@@ -94,9 +94,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Port select TX0',
     'options': dict({
     }),
-    'object_id_base': 'Port select TX0',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Port select TX0',
@@ -158,9 +158,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Port select TX1',
     'options': dict({
     }),
-    'object_id_base': 'Port select TX1',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Port select TX1',

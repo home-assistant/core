@@ -20,9 +20,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Communicating',
     'options': dict({
     }),
-    'object_id_base': 'Communicating',
     'original_device_class': <BinarySensorDeviceClass.CONNECTIVITY: 'connectivity'>,
     'original_icon': None,
     'original_name': 'Communicating',
@@ -70,9 +70,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'DC switch',
     'options': dict({
     }),
-    'object_id_base': 'DC switch',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'DC switch',
@@ -119,9 +119,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Communicating',
     'options': dict({
     }),
-    'object_id_base': 'Communicating',
     'original_device_class': <BinarySensorDeviceClass.CONNECTIVITY: 'connectivity'>,
     'original_icon': None,
     'original_name': 'Communicating',
@@ -169,9 +169,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Communicating',
     'options': dict({
     }),
-    'object_id_base': 'Communicating',
     'original_device_class': <BinarySensorDeviceClass.CONNECTIVITY: 'connectivity'>,
     'original_icon': None,
     'original_name': 'Communicating',
@@ -219,9 +219,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Communicating',
     'options': dict({
     }),
-    'object_id_base': 'Communicating',
     'original_device_class': <BinarySensorDeviceClass.CONNECTIVITY: 'connectivity'>,
     'original_icon': None,
     'original_name': 'Communicating',
@@ -269,9 +269,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'DC switch',
     'options': dict({
     }),
-    'object_id_base': 'DC switch',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'DC switch',
@@ -318,9 +318,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Communicating',
     'options': dict({
     }),
-    'object_id_base': 'Communicating',
     'original_device_class': <BinarySensorDeviceClass.CONNECTIVITY: 'connectivity'>,
     'original_icon': None,
     'original_name': 'Communicating',
@@ -368,9 +368,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Grid status',
     'options': dict({
     }),
-    'object_id_base': 'Grid status',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Grid status',

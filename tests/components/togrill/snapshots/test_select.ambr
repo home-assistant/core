@@ -39,9 +39,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Grill type',
     'options': dict({
     }),
-    'object_id_base': 'Grill type',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Grill type',
@@ -115,9 +115,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Taste',
     'options': dict({
     }),
-    'object_id_base': 'Taste',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Taste',
@@ -191,9 +191,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Grill type',
     'options': dict({
     }),
-    'object_id_base': 'Grill type',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Grill type',
@@ -267,9 +267,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Taste',
     'options': dict({
     }),
-    'object_id_base': 'Taste',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Taste',
@@ -343,9 +343,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Grill type',
     'options': dict({
     }),
-    'object_id_base': 'Grill type',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Grill type',
@@ -419,9 +419,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Taste',
     'options': dict({
     }),
-    'object_id_base': 'Taste',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Taste',
@@ -495,9 +495,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Grill type',
     'options': dict({
     }),
-    'object_id_base': 'Grill type',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Grill type',
@@ -571,9 +571,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Taste',
     'options': dict({
     }),
-    'object_id_base': 'Taste',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Taste',
@@ -647,9 +647,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Grill type',
     'options': dict({
     }),
-    'object_id_base': 'Grill type',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Grill type',
@@ -723,9 +723,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Taste',
     'options': dict({
     }),
-    'object_id_base': 'Taste',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Taste',
@@ -799,9 +799,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Grill type',
     'options': dict({
     }),
-    'object_id_base': 'Grill type',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Grill type',
@@ -875,9 +875,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Taste',
     'options': dict({
     }),
-    'object_id_base': 'Taste',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Taste',

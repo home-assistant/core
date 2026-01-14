@@ -20,9 +20,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Nightlight',
     'options': dict({
     }),
-    'object_id_base': 'Nightlight',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Nightlight',
@@ -71,9 +71,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Reverse',
     'options': dict({
     }),
-    'object_id_base': 'Reverse',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Reverse',
@@ -120,9 +120,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Segment 1 reverse',
     'options': dict({
     }),
-    'object_id_base': 'Segment 1 reverse',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Segment 1 reverse',
@@ -169,9 +169,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Sync receive',
     'options': dict({
     }),
-    'object_id_base': 'Sync receive',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Sync receive',
@@ -219,9 +219,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Sync send',
     'options': dict({
     }),
-    'object_id_base': 'Sync send',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Sync send',
@@ -269,9 +269,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Nightlight',
     'options': dict({
     }),
-    'object_id_base': 'Nightlight',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Nightlight',
@@ -320,9 +320,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Reverse',
     'options': dict({
     }),
-    'object_id_base': 'Reverse',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Reverse',
@@ -369,9 +369,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Sync receive',
     'options': dict({
     }),
-    'object_id_base': 'Sync receive',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Sync receive',
@@ -419,9 +419,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Sync send',
     'options': dict({
     }),
-    'object_id_base': 'Sync send',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Sync send',

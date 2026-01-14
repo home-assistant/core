@@ -22,12 +22,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Air filter operating time',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
       }),
     }),
-    'object_id_base': 'Air filter operating time',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Air filter operating time',
@@ -76,12 +76,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Electric heater power',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 3,
       }),
     }),
-    'object_id_base': 'Electric heater power',
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
     'original_icon': None,
     'original_name': 'Electric heater power',
@@ -132,9 +132,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Exhaust air fan',
     'options': dict({
     }),
-    'object_id_base': 'Exhaust air fan',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Exhaust air fan',
@@ -185,9 +185,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Exhaust air fan control signal',
     'options': dict({
     }),
-    'object_id_base': 'Exhaust air fan control signal',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Exhaust air fan control signal',
@@ -238,12 +238,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Exhaust air temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
       }),
     }),
-    'object_id_base': 'Exhaust air temperature',
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Exhaust air temperature',
@@ -295,12 +295,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Extract air temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
       }),
     }),
-    'object_id_base': 'Extract air temperature',
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Extract air temperature',
@@ -352,12 +352,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Fireplace ventilation remaining duration',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
       }),
     }),
-    'object_id_base': 'Fireplace ventilation remaining duration',
     'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
     'original_icon': None,
     'original_name': 'Fireplace ventilation remaining duration',
@@ -409,9 +409,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Heat exchanger efficiency',
     'options': dict({
     }),
-    'object_id_base': 'Heat exchanger efficiency',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Heat exchanger efficiency',
@@ -462,9 +462,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Heat exchanger speed',
     'options': dict({
     }),
-    'object_id_base': 'Heat exchanger speed',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Heat exchanger speed',
@@ -515,12 +515,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Outside air temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
       }),
     }),
-    'object_id_base': 'Outside air temperature',
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Outside air temperature',
@@ -572,12 +572,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Rapid ventilation remaining duration',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
       }),
     }),
-    'object_id_base': 'Rapid ventilation remaining duration',
     'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
     'original_icon': None,
     'original_name': 'Rapid ventilation remaining duration',
@@ -629,12 +629,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Room temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
       }),
     }),
-    'object_id_base': 'Room temperature',
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Room temperature',
@@ -686,9 +686,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Supply air fan',
     'options': dict({
     }),
-    'object_id_base': 'Supply air fan',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Supply air fan',
@@ -739,9 +739,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Supply air fan control signal',
     'options': dict({
     }),
-    'object_id_base': 'Supply air fan control signal',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Supply air fan control signal',
@@ -792,12 +792,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Supply air temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
       }),
     }),
-    'object_id_base': 'Supply air temperature',
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Supply air temperature',

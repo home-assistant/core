@@ -20,9 +20,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Restore default settings',
     'options': dict({
     }),
-    'object_id_base': 'Restore default settings',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Restore default settings',
@@ -69,9 +69,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Save settings',
     'options': dict({
     }),
-    'object_id_base': 'Save settings',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Save settings',

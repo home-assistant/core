@@ -85,6 +85,7 @@
               'labels': list([
               ]),
               'name': None,
+              'object_id_base': 'Current power production',
               'options': dict({
                 'sensor': dict({
                   'suggested_display_precision': 3,
@@ -93,7 +94,6 @@
                   'suggested_unit_of_measurement': 'kW',
                 }),
               }),
-              'object_id_base': 'Current power production',
               'original_device_class': 'power',
               'original_icon': None,
               'original_name': 'Current power production',
@@ -139,6 +139,7 @@
               'labels': list([
               ]),
               'name': None,
+              'object_id_base': 'Energy production today',
               'options': dict({
                 'sensor': dict({
                   'suggested_display_precision': 2,
@@ -147,7 +148,6 @@
                   'suggested_unit_of_measurement': 'kWh',
                 }),
               }),
-              'object_id_base': 'Energy production today',
               'original_device_class': 'energy',
               'original_icon': None,
               'original_name': 'Energy production today',
@@ -191,6 +191,7 @@
               'labels': list([
               ]),
               'name': None,
+              'object_id_base': 'Energy production last seven days',
               'options': dict({
                 'sensor': dict({
                   'suggested_display_precision': 1,
@@ -199,7 +200,6 @@
                   'suggested_unit_of_measurement': 'kWh',
                 }),
               }),
-              'object_id_base': 'Energy production last seven days',
               'original_device_class': 'energy',
               'original_icon': None,
               'original_name': 'Energy production last seven days',
@@ -244,6 +244,7 @@
               'labels': list([
               ]),
               'name': None,
+              'object_id_base': 'Lifetime energy production',
               'options': dict({
                 'sensor': dict({
                   'suggested_display_precision': 3,
@@ -252,7 +253,6 @@
                   'suggested_unit_of_measurement': 'MWh',
                 }),
               }),
-              'object_id_base': 'Lifetime energy production',
               'original_device_class': 'energy',
               'original_icon': None,
               'original_name': 'Lifetime energy production',
@@ -335,12 +335,12 @@
               'labels': list([
               ]),
               'name': None,
+              'object_id_base': None,
               'options': dict({
                 'sensor': dict({
                   'suggested_display_precision': 0,
                 }),
               }),
-              'object_id_base': None,
               'original_device_class': 'power',
               'original_icon': None,
               'original_name': None,
@@ -386,9 +386,9 @@
               'labels': list([
               ]),
               'name': None,
+              'object_id_base': 'DC voltage',
               'options': dict({
               }),
-              'object_id_base': 'DC voltage',
               'original_device_class': 'voltage',
               'original_icon': None,
               'original_name': 'DC voltage',
@@ -425,9 +425,9 @@
               'labels': list([
               ]),
               'name': None,
+              'object_id_base': 'DC current',
               'options': dict({
               }),
-              'object_id_base': 'DC current',
               'original_device_class': 'current',
               'original_icon': None,
               'original_name': 'DC current',
@@ -464,9 +464,9 @@
               'labels': list([
               ]),
               'name': None,
+              'object_id_base': 'AC voltage',
               'options': dict({
               }),
-              'object_id_base': 'AC voltage',
               'original_device_class': 'voltage',
               'original_icon': None,
               'original_name': 'AC voltage',
@@ -503,9 +503,9 @@
               'labels': list([
               ]),
               'name': None,
+              'object_id_base': 'AC current',
               'options': dict({
               }),
-              'object_id_base': 'AC current',
               'original_device_class': 'current',
               'original_icon': None,
               'original_name': 'AC current',
@@ -542,9 +542,9 @@
               'labels': list([
               ]),
               'name': None,
+              'object_id_base': 'Frequency',
               'options': dict({
               }),
-              'object_id_base': 'Frequency',
               'original_device_class': 'frequency',
               'original_icon': None,
               'original_name': 'Frequency',
@@ -581,9 +581,9 @@
               'labels': list([
               ]),
               'name': None,
+              'object_id_base': 'Temperature',
               'options': dict({
               }),
-              'object_id_base': 'Temperature',
               'original_device_class': 'temperature',
               'original_icon': None,
               'original_name': 'Temperature',
@@ -620,12 +620,12 @@
               'labels': list([
               ]),
               'name': None,
+              'object_id_base': 'Lifetime energy production',
               'options': dict({
                 'sensor.private': dict({
                   'suggested_unit_of_measurement': 'kWh',
                 }),
               }),
-              'object_id_base': 'Lifetime energy production',
               'original_device_class': 'energy',
               'original_icon': None,
               'original_name': 'Lifetime energy production',
@@ -662,9 +662,9 @@
               'labels': list([
               ]),
               'name': None,
+              'object_id_base': 'Energy production today',
               'options': dict({
               }),
-              'object_id_base': 'Energy production today',
               'original_device_class': 'energy',
               'original_icon': None,
               'original_name': 'Energy production today',
@@ -701,9 +701,9 @@
               'labels': list([
               ]),
               'name': None,
+              'object_id_base': 'Last report duration',
               'options': dict({
               }),
-              'object_id_base': 'Last report duration',
               'original_device_class': 'duration',
               'original_icon': None,
               'original_name': 'Last report duration',
@@ -740,9 +740,9 @@
               'labels': list([
               ]),
               'name': None,
+              'object_id_base': 'Energy production since previous report',
               'options': dict({
               }),
-              'object_id_base': 'Energy production since previous report',
               'original_device_class': 'energy',
               'original_icon': None,
               'original_name': 'Energy production since previous report',
@@ -779,9 +779,9 @@
               'labels': list([
               ]),
               'name': None,
+              'object_id_base': 'Lifetime maximum power',
               'options': dict({
               }),
-              'object_id_base': 'Lifetime maximum power',
               'original_device_class': 'power',
               'original_icon': None,
               'original_name': 'Lifetime maximum power',
@@ -816,9 +816,9 @@
               'labels': list([
               ]),
               'name': None,
+              'object_id_base': 'Last reported',
               'options': dict({
               }),
-              'object_id_base': 'Last reported',
               'original_device_class': 'timestamp',
               'original_icon': None,
               'original_name': 'Last reported',
@@ -983,6 +983,7 @@
               'labels': list([
               ]),
               'name': None,
+              'object_id_base': 'Current power production',
               'options': dict({
                 'sensor': dict({
                   'suggested_display_precision': 3,
@@ -991,7 +992,6 @@
                   'suggested_unit_of_measurement': 'kW',
                 }),
               }),
-              'object_id_base': 'Current power production',
               'original_device_class': 'power',
               'original_icon': None,
               'original_name': 'Current power production',
@@ -1037,6 +1037,7 @@
               'labels': list([
               ]),
               'name': None,
+              'object_id_base': 'Energy production today',
               'options': dict({
                 'sensor': dict({
                   'suggested_display_precision': 2,
@@ -1045,7 +1046,6 @@
                   'suggested_unit_of_measurement': 'kWh',
                 }),
               }),
-              'object_id_base': 'Energy production today',
               'original_device_class': 'energy',
               'original_icon': None,
               'original_name': 'Energy production today',
@@ -1089,6 +1089,7 @@
               'labels': list([
               ]),
               'name': None,
+              'object_id_base': 'Energy production last seven days',
               'options': dict({
                 'sensor': dict({
                   'suggested_display_precision': 1,
@@ -1097,7 +1098,6 @@
                   'suggested_unit_of_measurement': 'kWh',
                 }),
               }),
-              'object_id_base': 'Energy production last seven days',
               'original_device_class': 'energy',
               'original_icon': None,
               'original_name': 'Energy production last seven days',
@@ -1142,6 +1142,7 @@
               'labels': list([
               ]),
               'name': None,
+              'object_id_base': 'Lifetime energy production',
               'options': dict({
                 'sensor': dict({
                   'suggested_display_precision': 3,
@@ -1150,7 +1151,6 @@
                   'suggested_unit_of_measurement': 'MWh',
                 }),
               }),
-              'object_id_base': 'Lifetime energy production',
               'original_device_class': 'energy',
               'original_icon': None,
               'original_name': 'Lifetime energy production',
@@ -1233,12 +1233,12 @@
               'labels': list([
               ]),
               'name': None,
+              'object_id_base': None,
               'options': dict({
                 'sensor': dict({
                   'suggested_display_precision': 0,
                 }),
               }),
-              'object_id_base': None,
               'original_device_class': 'power',
               'original_icon': None,
               'original_name': None,
@@ -1284,9 +1284,9 @@
               'labels': list([
               ]),
               'name': None,
+              'object_id_base': 'DC voltage',
               'options': dict({
               }),
-              'object_id_base': 'DC voltage',
               'original_device_class': 'voltage',
               'original_icon': None,
               'original_name': 'DC voltage',
@@ -1323,9 +1323,9 @@
               'labels': list([
               ]),
               'name': None,
+              'object_id_base': 'DC current',
               'options': dict({
               }),
-              'object_id_base': 'DC current',
               'original_device_class': 'current',
               'original_icon': None,
               'original_name': 'DC current',
@@ -1362,9 +1362,9 @@
               'labels': list([
               ]),
               'name': None,
+              'object_id_base': 'AC voltage',
               'options': dict({
               }),
-              'object_id_base': 'AC voltage',
               'original_device_class': 'voltage',
               'original_icon': None,
               'original_name': 'AC voltage',
@@ -1401,9 +1401,9 @@
               'labels': list([
               ]),
               'name': None,
+              'object_id_base': 'AC current',
               'options': dict({
               }),
-              'object_id_base': 'AC current',
               'original_device_class': 'current',
               'original_icon': None,
               'original_name': 'AC current',
@@ -1440,9 +1440,9 @@
               'labels': list([
               ]),
               'name': None,
+              'object_id_base': 'Frequency',
               'options': dict({
               }),
-              'object_id_base': 'Frequency',
               'original_device_class': 'frequency',
               'original_icon': None,
               'original_name': 'Frequency',
@@ -1479,9 +1479,9 @@
               'labels': list([
               ]),
               'name': None,
+              'object_id_base': 'Temperature',
               'options': dict({
               }),
-              'object_id_base': 'Temperature',
               'original_device_class': 'temperature',
               'original_icon': None,
               'original_name': 'Temperature',
@@ -1518,12 +1518,12 @@
               'labels': list([
               ]),
               'name': None,
+              'object_id_base': 'Lifetime energy production',
               'options': dict({
                 'sensor.private': dict({
                   'suggested_unit_of_measurement': 'kWh',
                 }),
               }),
-              'object_id_base': 'Lifetime energy production',
               'original_device_class': 'energy',
               'original_icon': None,
               'original_name': 'Lifetime energy production',
@@ -1560,9 +1560,9 @@
               'labels': list([
               ]),
               'name': None,
+              'object_id_base': 'Energy production today',
               'options': dict({
               }),
-              'object_id_base': 'Energy production today',
               'original_device_class': 'energy',
               'original_icon': None,
               'original_name': 'Energy production today',
@@ -1599,9 +1599,9 @@
               'labels': list([
               ]),
               'name': None,
+              'object_id_base': 'Last report duration',
               'options': dict({
               }),
-              'object_id_base': 'Last report duration',
               'original_device_class': 'duration',
               'original_icon': None,
               'original_name': 'Last report duration',
@@ -1638,9 +1638,9 @@
               'labels': list([
               ]),
               'name': None,
+              'object_id_base': 'Energy production since previous report',
               'options': dict({
               }),
-              'object_id_base': 'Energy production since previous report',
               'original_device_class': 'energy',
               'original_icon': None,
               'original_name': 'Energy production since previous report',
@@ -1677,9 +1677,9 @@
               'labels': list([
               ]),
               'name': None,
+              'object_id_base': 'Lifetime maximum power',
               'options': dict({
               }),
-              'object_id_base': 'Lifetime maximum power',
               'original_device_class': 'power',
               'original_icon': None,
               'original_name': 'Lifetime maximum power',
@@ -1714,9 +1714,9 @@
               'labels': list([
               ]),
               'name': None,
+              'object_id_base': 'Last reported',
               'options': dict({
               }),
-              'object_id_base': 'Last reported',
               'original_device_class': 'timestamp',
               'original_icon': None,
               'original_name': 'Last reported',
@@ -1925,6 +1925,7 @@
               'labels': list([
               ]),
               'name': None,
+              'object_id_base': 'Current power production',
               'options': dict({
                 'sensor': dict({
                   'suggested_display_precision': 3,
@@ -1933,7 +1934,6 @@
                   'suggested_unit_of_measurement': 'kW',
                 }),
               }),
-              'object_id_base': 'Current power production',
               'original_device_class': 'power',
               'original_icon': None,
               'original_name': 'Current power production',
@@ -1979,6 +1979,7 @@
               'labels': list([
               ]),
               'name': None,
+              'object_id_base': 'Energy production today',
               'options': dict({
                 'sensor': dict({
                   'suggested_display_precision': 2,
@@ -1987,7 +1988,6 @@
                   'suggested_unit_of_measurement': 'kWh',
                 }),
               }),
-              'object_id_base': 'Energy production today',
               'original_device_class': 'energy',
               'original_icon': None,
               'original_name': 'Energy production today',
@@ -2031,6 +2031,7 @@
               'labels': list([
               ]),
               'name': None,
+              'object_id_base': 'Energy production last seven days',
               'options': dict({
                 'sensor': dict({
                   'suggested_display_precision': 1,
@@ -2039,7 +2040,6 @@
                   'suggested_unit_of_measurement': 'kWh',
                 }),
               }),
-              'object_id_base': 'Energy production last seven days',
               'original_device_class': 'energy',
               'original_icon': None,
               'original_name': 'Energy production last seven days',
@@ -2084,6 +2084,7 @@
               'labels': list([
               ]),
               'name': None,
+              'object_id_base': 'Lifetime energy production',
               'options': dict({
                 'sensor': dict({
                   'suggested_display_precision': 3,
@@ -2092,7 +2093,6 @@
                   'suggested_unit_of_measurement': 'MWh',
                 }),
               }),
-              'object_id_base': 'Lifetime energy production',
               'original_device_class': 'energy',
               'original_icon': None,
               'original_name': 'Lifetime energy production',
@@ -2175,12 +2175,12 @@
               'labels': list([
               ]),
               'name': None,
+              'object_id_base': None,
               'options': dict({
                 'sensor': dict({
                   'suggested_display_precision': 0,
                 }),
               }),
-              'object_id_base': None,
               'original_device_class': 'power',
               'original_icon': None,
               'original_name': None,
@@ -2226,9 +2226,9 @@
               'labels': list([
               ]),
               'name': None,
+              'object_id_base': 'DC voltage',
               'options': dict({
               }),
-              'object_id_base': 'DC voltage',
               'original_device_class': 'voltage',
               'original_icon': None,
               'original_name': 'DC voltage',
@@ -2265,9 +2265,9 @@
               'labels': list([
               ]),
               'name': None,
+              'object_id_base': 'DC current',
               'options': dict({
               }),
-              'object_id_base': 'DC current',
               'original_device_class': 'current',
               'original_icon': None,
               'original_name': 'DC current',
@@ -2304,9 +2304,9 @@
               'labels': list([
               ]),
               'name': None,
+              'object_id_base': 'AC voltage',
               'options': dict({
               }),
-              'object_id_base': 'AC voltage',
               'original_device_class': 'voltage',
               'original_icon': None,
               'original_name': 'AC voltage',
@@ -2343,9 +2343,9 @@
               'labels': list([
               ]),
               'name': None,
+              'object_id_base': 'AC current',
               'options': dict({
               }),
-              'object_id_base': 'AC current',
               'original_device_class': 'current',
               'original_icon': None,
               'original_name': 'AC current',
@@ -2382,9 +2382,9 @@
               'labels': list([
               ]),
               'name': None,
+              'object_id_base': 'Frequency',
               'options': dict({
               }),
-              'object_id_base': 'Frequency',
               'original_device_class': 'frequency',
               'original_icon': None,
               'original_name': 'Frequency',
@@ -2421,9 +2421,9 @@
               'labels': list([
               ]),
               'name': None,
+              'object_id_base': 'Temperature',
               'options': dict({
               }),
-              'object_id_base': 'Temperature',
               'original_device_class': 'temperature',
               'original_icon': None,
               'original_name': 'Temperature',
@@ -2460,12 +2460,12 @@
               'labels': list([
               ]),
               'name': None,
+              'object_id_base': 'Lifetime energy production',
               'options': dict({
                 'sensor.private': dict({
                   'suggested_unit_of_measurement': 'kWh',
                 }),
               }),
-              'object_id_base': 'Lifetime energy production',
               'original_device_class': 'energy',
               'original_icon': None,
               'original_name': 'Lifetime energy production',
@@ -2502,9 +2502,9 @@
               'labels': list([
               ]),
               'name': None,
+              'object_id_base': 'Energy production today',
               'options': dict({
               }),
-              'object_id_base': 'Energy production today',
               'original_device_class': 'energy',
               'original_icon': None,
               'original_name': 'Energy production today',
@@ -2541,9 +2541,9 @@
               'labels': list([
               ]),
               'name': None,
+              'object_id_base': 'Last report duration',
               'options': dict({
               }),
-              'object_id_base': 'Last report duration',
               'original_device_class': 'duration',
               'original_icon': None,
               'original_name': 'Last report duration',
@@ -2580,9 +2580,9 @@
               'labels': list([
               ]),
               'name': None,
+              'object_id_base': 'Energy production since previous report',
               'options': dict({
               }),
-              'object_id_base': 'Energy production since previous report',
               'original_device_class': 'energy',
               'original_icon': None,
               'original_name': 'Energy production since previous report',
@@ -2619,9 +2619,9 @@
               'labels': list([
               ]),
               'name': None,
+              'object_id_base': 'Lifetime maximum power',
               'options': dict({
               }),
-              'object_id_base': 'Lifetime maximum power',
               'original_device_class': 'power',
               'original_icon': None,
               'original_name': 'Lifetime maximum power',
@@ -2656,9 +2656,9 @@
               'labels': list([
               ]),
               'name': None,
+              'object_id_base': 'Last reported',
               'options': dict({
               }),
-              'object_id_base': 'Last reported',
               'original_device_class': 'timestamp',
               'original_icon': None,
               'original_name': 'Last reported',
@@ -2888,12 +2888,12 @@
               'labels': list([
               ]),
               'name': None,
+              'object_id_base': None,
               'options': dict({
                 'sensor': dict({
                   'suggested_display_precision': 0,
                 }),
               }),
-              'object_id_base': None,
               'original_device_class': 'power',
               'original_icon': None,
               'original_name': None,
@@ -2939,9 +2939,9 @@
               'labels': list([
               ]),
               'name': None,
+              'object_id_base': 'DC voltage',
               'options': dict({
               }),
-              'object_id_base': 'DC voltage',
               'original_device_class': 'voltage',
               'original_icon': None,
               'original_name': 'DC voltage',
@@ -2978,9 +2978,9 @@
               'labels': list([
               ]),
               'name': None,
+              'object_id_base': 'DC current',
               'options': dict({
               }),
-              'object_id_base': 'DC current',
               'original_device_class': 'current',
               'original_icon': None,
               'original_name': 'DC current',
@@ -3017,9 +3017,9 @@
               'labels': list([
               ]),
               'name': None,
+              'object_id_base': 'AC voltage',
               'options': dict({
               }),
-              'object_id_base': 'AC voltage',
               'original_device_class': 'voltage',
               'original_icon': None,
               'original_name': 'AC voltage',
@@ -3056,9 +3056,9 @@
               'labels': list([
               ]),
               'name': None,
+              'object_id_base': 'AC current',
               'options': dict({
               }),
-              'object_id_base': 'AC current',
               'original_device_class': 'current',
               'original_icon': None,
               'original_name': 'AC current',
@@ -3095,9 +3095,9 @@
               'labels': list([
               ]),
               'name': None,
+              'object_id_base': 'Frequency',
               'options': dict({
               }),
-              'object_id_base': 'Frequency',
               'original_device_class': 'frequency',
               'original_icon': None,
               'original_name': 'Frequency',
@@ -3134,9 +3134,9 @@
               'labels': list([
               ]),
               'name': None,
+              'object_id_base': 'Temperature',
               'options': dict({
               }),
-              'object_id_base': 'Temperature',
               'original_device_class': 'temperature',
               'original_icon': None,
               'original_name': 'Temperature',
@@ -3173,12 +3173,12 @@
               'labels': list([
               ]),
               'name': None,
+              'object_id_base': 'Lifetime energy production',
               'options': dict({
                 'sensor.private': dict({
                   'suggested_unit_of_measurement': 'kWh',
                 }),
               }),
-              'object_id_base': 'Lifetime energy production',
               'original_device_class': 'energy',
               'original_icon': None,
               'original_name': 'Lifetime energy production',
@@ -3215,9 +3215,9 @@
               'labels': list([
               ]),
               'name': None,
+              'object_id_base': 'Energy production today',
               'options': dict({
               }),
-              'object_id_base': 'Energy production today',
               'original_device_class': 'energy',
               'original_icon': None,
               'original_name': 'Energy production today',
@@ -3254,9 +3254,9 @@
               'labels': list([
               ]),
               'name': None,
+              'object_id_base': 'Last report duration',
               'options': dict({
               }),
-              'object_id_base': 'Last report duration',
               'original_device_class': 'duration',
               'original_icon': None,
               'original_name': 'Last report duration',
@@ -3293,9 +3293,9 @@
               'labels': list([
               ]),
               'name': None,
+              'object_id_base': 'Energy production since previous report',
               'options': dict({
               }),
-              'object_id_base': 'Energy production since previous report',
               'original_device_class': 'energy',
               'original_icon': None,
               'original_name': 'Energy production since previous report',
@@ -3332,9 +3332,9 @@
               'labels': list([
               ]),
               'name': None,
+              'object_id_base': 'Lifetime maximum power',
               'options': dict({
               }),
-              'object_id_base': 'Lifetime maximum power',
               'original_device_class': 'power',
               'original_icon': None,
               'original_name': 'Lifetime maximum power',
@@ -3369,9 +3369,9 @@
               'labels': list([
               ]),
               'name': None,
+              'object_id_base': 'Last reported',
               'options': dict({
               }),
-              'object_id_base': 'Last reported',
               'original_device_class': 'timestamp',
               'original_icon': None,
               'original_name': 'Last reported',
@@ -3449,6 +3449,7 @@
               'labels': list([
               ]),
               'name': None,
+              'object_id_base': 'Current power production',
               'options': dict({
                 'sensor': dict({
                   'suggested_display_precision': 3,
@@ -3457,7 +3458,6 @@
                   'suggested_unit_of_measurement': 'kW',
                 }),
               }),
-              'object_id_base': 'Current power production',
               'original_device_class': 'power',
               'original_icon': None,
               'original_name': 'Current power production',
@@ -3503,6 +3503,7 @@
               'labels': list([
               ]),
               'name': None,
+              'object_id_base': 'Energy production today',
               'options': dict({
                 'sensor': dict({
                   'suggested_display_precision': 2,
@@ -3511,7 +3512,6 @@
                   'suggested_unit_of_measurement': 'kWh',
                 }),
               }),
-              'object_id_base': 'Energy production today',
               'original_device_class': 'energy',
               'original_icon': None,
               'original_name': 'Energy production today',
@@ -3555,6 +3555,7 @@
               'labels': list([
               ]),
               'name': None,
+              'object_id_base': 'Energy production last seven days',
               'options': dict({
                 'sensor': dict({
                   'suggested_display_precision': 1,
@@ -3563,7 +3564,6 @@
                   'suggested_unit_of_measurement': 'kWh',
                 }),
               }),
-              'object_id_base': 'Energy production last seven days',
               'original_device_class': 'energy',
               'original_icon': None,
               'original_name': 'Energy production last seven days',
@@ -3608,6 +3608,7 @@
               'labels': list([
               ]),
               'name': None,
+              'object_id_base': 'Lifetime energy production',
               'options': dict({
                 'sensor': dict({
                   'suggested_display_precision': 3,
@@ -3616,7 +3617,6 @@
                   'suggested_unit_of_measurement': 'MWh',
                 }),
               }),
-              'object_id_base': 'Lifetime energy production',
               'original_device_class': 'energy',
               'original_icon': None,
               'original_name': 'Lifetime energy production',
@@ -3795,6 +3795,7 @@
               'labels': list([
               ]),
               'name': None,
+              'object_id_base': 'Current power production',
               'options': dict({
                 'sensor': dict({
                   'suggested_display_precision': 3,
@@ -3803,7 +3804,6 @@
                   'suggested_unit_of_measurement': 'kW',
                 }),
               }),
-              'object_id_base': 'Current power production',
               'original_device_class': 'power',
               'original_icon': None,
               'original_name': 'Current power production',
@@ -3849,6 +3849,7 @@
               'labels': list([
               ]),
               'name': None,
+              'object_id_base': 'Energy production today',
               'options': dict({
                 'sensor': dict({
                   'suggested_display_precision': 2,
@@ -3857,7 +3858,6 @@
                   'suggested_unit_of_measurement': 'kWh',
                 }),
               }),
-              'object_id_base': 'Energy production today',
               'original_device_class': 'energy',
               'original_icon': None,
               'original_name': 'Energy production today',
@@ -3901,6 +3901,7 @@
               'labels': list([
               ]),
               'name': None,
+              'object_id_base': 'Energy production last seven days',
               'options': dict({
                 'sensor': dict({
                   'suggested_display_precision': 1,
@@ -3909,7 +3910,6 @@
                   'suggested_unit_of_measurement': 'kWh',
                 }),
               }),
-              'object_id_base': 'Energy production last seven days',
               'original_device_class': 'energy',
               'original_icon': None,
               'original_name': 'Energy production last seven days',
@@ -3954,6 +3954,7 @@
               'labels': list([
               ]),
               'name': None,
+              'object_id_base': 'Lifetime energy production',
               'options': dict({
                 'sensor': dict({
                   'suggested_display_precision': 3,
@@ -3962,7 +3963,6 @@
                   'suggested_unit_of_measurement': 'MWh',
                 }),
               }),
-              'object_id_base': 'Lifetime energy production',
               'original_device_class': 'energy',
               'original_icon': None,
               'original_name': 'Lifetime energy production',
@@ -4008,6 +4008,7 @@
               'labels': list([
               ]),
               'name': None,
+              'object_id_base': 'Current power consumption',
               'options': dict({
                 'sensor': dict({
                   'suggested_display_precision': 3,
@@ -4016,7 +4017,6 @@
                   'suggested_unit_of_measurement': 'kW',
                 }),
               }),
-              'object_id_base': 'Current power consumption',
               'original_device_class': 'power',
               'original_icon': None,
               'original_name': 'Current power consumption',
@@ -4062,6 +4062,7 @@
               'labels': list([
               ]),
               'name': None,
+              'object_id_base': 'Energy consumption today',
               'options': dict({
                 'sensor': dict({
                   'suggested_display_precision': 2,
@@ -4070,7 +4071,6 @@
                   'suggested_unit_of_measurement': 'kWh',
                 }),
               }),
-              'object_id_base': 'Energy consumption today',
               'original_device_class': 'energy',
               'original_icon': None,
               'original_name': 'Energy consumption today',
@@ -4114,6 +4114,7 @@
               'labels': list([
               ]),
               'name': None,
+              'object_id_base': 'Energy consumption last seven days',
               'options': dict({
                 'sensor': dict({
                   'suggested_display_precision': 1,
@@ -4122,7 +4123,6 @@
                   'suggested_unit_of_measurement': 'kWh',
                 }),
               }),
-              'object_id_base': 'Energy consumption last seven days',
               'original_device_class': 'energy',
               'original_icon': None,
               'original_name': 'Energy consumption last seven days',
@@ -4167,6 +4167,7 @@
               'labels': list([
               ]),
               'name': None,
+              'object_id_base': 'Lifetime energy consumption',
               'options': dict({
                 'sensor': dict({
                   'suggested_display_precision': 3,
@@ -4175,7 +4176,6 @@
                   'suggested_unit_of_measurement': 'MWh',
                 }),
               }),
-              'object_id_base': 'Lifetime energy consumption',
               'original_device_class': 'energy',
               'original_icon': None,
               'original_name': 'Lifetime energy consumption',
@@ -4221,12 +4221,12 @@
               'labels': list([
               ]),
               'name': None,
+              'object_id_base': 'Balanced net power consumption',
               'options': dict({
                 'sensor.private': dict({
                   'suggested_unit_of_measurement': 'kW',
                 }),
               }),
-              'object_id_base': 'Balanced net power consumption',
               'original_device_class': 'power',
               'original_icon': None,
               'original_name': 'Balanced net power consumption',
@@ -4263,12 +4263,12 @@
               'labels': list([
               ]),
               'name': None,
+              'object_id_base': 'Lifetime balanced net energy consumption',
               'options': dict({
                 'sensor.private': dict({
                   'suggested_unit_of_measurement': 'kWh',
                 }),
               }),
-              'object_id_base': 'Lifetime balanced net energy consumption',
               'original_device_class': 'energy',
               'original_icon': None,
               'original_name': 'Lifetime balanced net energy consumption',
@@ -4305,12 +4305,12 @@
               'labels': list([
               ]),
               'name': None,
+              'object_id_base': 'Current power production l1',
               'options': dict({
                 'sensor.private': dict({
                   'suggested_unit_of_measurement': 'kW',
                 }),
               }),
-              'object_id_base': 'Current power production l1',
               'original_device_class': 'power',
               'original_icon': None,
               'original_name': 'Current power production l1',
@@ -4347,12 +4347,12 @@
               'labels': list([
               ]),
               'name': None,
+              'object_id_base': 'Energy production today l1',
               'options': dict({
                 'sensor.private': dict({
                   'suggested_unit_of_measurement': 'kWh',
                 }),
               }),
-              'object_id_base': 'Energy production today l1',
               'original_device_class': 'energy',
               'original_icon': None,
               'original_name': 'Energy production today l1',
@@ -4387,12 +4387,12 @@
               'labels': list([
               ]),
               'name': None,
+              'object_id_base': 'Energy production last seven days l1',
               'options': dict({
                 'sensor.private': dict({
                   'suggested_unit_of_measurement': 'kWh',
                 }),
               }),
-              'object_id_base': 'Energy production last seven days l1',
               'original_device_class': 'energy',
               'original_icon': None,
               'original_name': 'Energy production last seven days l1',
@@ -4429,12 +4429,12 @@
               'labels': list([
               ]),
               'name': None,
+              'object_id_base': 'Lifetime energy production l1',
               'options': dict({
                 'sensor.private': dict({
                   'suggested_unit_of_measurement': 'MWh',
                 }),
               }),
-              'object_id_base': 'Lifetime energy production l1',
               'original_device_class': 'energy',
               'original_icon': None,
               'original_name': 'Lifetime energy production l1',
@@ -4471,12 +4471,12 @@
               'labels': list([
               ]),
               'name': None,
+              'object_id_base': 'Current power production l2',
               'options': dict({
                 'sensor.private': dict({
                   'suggested_unit_of_measurement': 'kW',
                 }),
               }),
-              'object_id_base': 'Current power production l2',
               'original_device_class': 'power',
               'original_icon': None,
               'original_name': 'Current power production l2',
@@ -4513,12 +4513,12 @@
               'labels': list([
               ]),
               'name': None,
+              'object_id_base': 'Energy production today l2',
               'options': dict({
                 'sensor.private': dict({
                   'suggested_unit_of_measurement': 'kWh',
                 }),
               }),
-              'object_id_base': 'Energy production today l2',
               'original_device_class': 'energy',
               'original_icon': None,
               'original_name': 'Energy production today l2',
@@ -4553,12 +4553,12 @@
               'labels': list([
               ]),
               'name': None,
+              'object_id_base': 'Energy production last seven days l2',
               'options': dict({
                 'sensor.private': dict({
                   'suggested_unit_of_measurement': 'kWh',
                 }),
               }),
-              'object_id_base': 'Energy production last seven days l2',
               'original_device_class': 'energy',
               'original_icon': None,
               'original_name': 'Energy production last seven days l2',
@@ -4595,12 +4595,12 @@
               'labels': list([
               ]),
               'name': None,
+              'object_id_base': 'Lifetime energy production l2',
               'options': dict({
                 'sensor.private': dict({
                   'suggested_unit_of_measurement': 'MWh',
                 }),
               }),
-              'object_id_base': 'Lifetime energy production l2',
               'original_device_class': 'energy',
               'original_icon': None,
               'original_name': 'Lifetime energy production l2',
@@ -4637,12 +4637,12 @@
               'labels': list([
               ]),
               'name': None,
+              'object_id_base': 'Current power production l3',
               'options': dict({
                 'sensor.private': dict({
                   'suggested_unit_of_measurement': 'kW',
                 }),
               }),
-              'object_id_base': 'Current power production l3',
               'original_device_class': 'power',
               'original_icon': None,
               'original_name': 'Current power production l3',
@@ -4679,12 +4679,12 @@
               'labels': list([
               ]),
               'name': None,
+              'object_id_base': 'Energy production today l3',
               'options': dict({
                 'sensor.private': dict({
                   'suggested_unit_of_measurement': 'kWh',
                 }),
               }),
-              'object_id_base': 'Energy production today l3',
               'original_device_class': 'energy',
               'original_icon': None,
               'original_name': 'Energy production today l3',
@@ -4719,12 +4719,12 @@
               'labels': list([
               ]),
               'name': None,
+              'object_id_base': 'Energy production last seven days l3',
               'options': dict({
                 'sensor.private': dict({
                   'suggested_unit_of_measurement': 'kWh',
                 }),
               }),
-              'object_id_base': 'Energy production last seven days l3',
               'original_device_class': 'energy',
               'original_icon': None,
               'original_name': 'Energy production last seven days l3',
@@ -4761,12 +4761,12 @@
               'labels': list([
               ]),
               'name': None,
+              'object_id_base': 'Lifetime energy production l3',
               'options': dict({
                 'sensor.private': dict({
                   'suggested_unit_of_measurement': 'MWh',
                 }),
               }),
-              'object_id_base': 'Lifetime energy production l3',
               'original_device_class': 'energy',
               'original_icon': None,
               'original_name': 'Lifetime energy production l3',
@@ -4803,12 +4803,12 @@
               'labels': list([
               ]),
               'name': None,
+              'object_id_base': 'Current power consumption l1',
               'options': dict({
                 'sensor.private': dict({
                   'suggested_unit_of_measurement': 'kW',
                 }),
               }),
-              'object_id_base': 'Current power consumption l1',
               'original_device_class': 'power',
               'original_icon': None,
               'original_name': 'Current power consumption l1',
@@ -4845,12 +4845,12 @@
               'labels': list([
               ]),
               'name': None,
+              'object_id_base': 'Energy consumption today l1',
               'options': dict({
                 'sensor.private': dict({
                   'suggested_unit_of_measurement': 'kWh',
                 }),
               }),
-              'object_id_base': 'Energy consumption today l1',
               'original_device_class': 'energy',
               'original_icon': None,
               'original_name': 'Energy consumption today l1',
@@ -4885,12 +4885,12 @@
               'labels': list([
               ]),
               'name': None,
+              'object_id_base': 'Energy consumption last seven days l1',
               'options': dict({
                 'sensor.private': dict({
                   'suggested_unit_of_measurement': 'kWh',
                 }),
               }),
-              'object_id_base': 'Energy consumption last seven days l1',
               'original_device_class': 'energy',
               'original_icon': None,
               'original_name': 'Energy consumption last seven days l1',
@@ -4927,12 +4927,12 @@
               'labels': list([
               ]),
               'name': None,
+              'object_id_base': 'Lifetime energy consumption l1',
               'options': dict({
                 'sensor.private': dict({
                   'suggested_unit_of_measurement': 'MWh',
                 }),
               }),
-              'object_id_base': 'Lifetime energy consumption l1',
               'original_device_class': 'energy',
               'original_icon': None,
               'original_name': 'Lifetime energy consumption l1',
@@ -4969,12 +4969,12 @@
               'labels': list([
               ]),
               'name': None,
+              'object_id_base': 'Current power consumption l2',
               'options': dict({
                 'sensor.private': dict({
                   'suggested_unit_of_measurement': 'kW',
                 }),
               }),
-              'object_id_base': 'Current power consumption l2',
               'original_device_class': 'power',
               'original_icon': None,
               'original_name': 'Current power consumption l2',
@@ -5011,12 +5011,12 @@
               'labels': list([
               ]),
               'name': None,
+              'object_id_base': 'Energy consumption today l2',
               'options': dict({
                 'sensor.private': dict({
                   'suggested_unit_of_measurement': 'kWh',
                 }),
               }),
-              'object_id_base': 'Energy consumption today l2',
               'original_device_class': 'energy',
               'original_icon': None,
               'original_name': 'Energy consumption today l2',
@@ -5051,12 +5051,12 @@
               'labels': list([
               ]),
               'name': None,
+              'object_id_base': 'Energy consumption last seven days l2',
               'options': dict({
                 'sensor.private': dict({
                   'suggested_unit_of_measurement': 'kWh',
                 }),
               }),
-              'object_id_base': 'Energy consumption last seven days l2',
               'original_device_class': 'energy',
               'original_icon': None,
               'original_name': 'Energy consumption last seven days l2',
@@ -5093,12 +5093,12 @@
               'labels': list([
               ]),
               'name': None,
+              'object_id_base': 'Lifetime energy consumption l2',
               'options': dict({
                 'sensor.private': dict({
                   'suggested_unit_of_measurement': 'MWh',
                 }),
               }),
-              'object_id_base': 'Lifetime energy consumption l2',
               'original_device_class': 'energy',
               'original_icon': None,
               'original_name': 'Lifetime energy consumption l2',
@@ -5135,12 +5135,12 @@
               'labels': list([
               ]),
               'name': None,
+              'object_id_base': 'Current power consumption l3',
               'options': dict({
                 'sensor.private': dict({
                   'suggested_unit_of_measurement': 'kW',
                 }),
               }),
-              'object_id_base': 'Current power consumption l3',
               'original_device_class': 'power',
               'original_icon': None,
               'original_name': 'Current power consumption l3',
@@ -5177,12 +5177,12 @@
               'labels': list([
               ]),
               'name': None,
+              'object_id_base': 'Energy consumption today l3',
               'options': dict({
                 'sensor.private': dict({
                   'suggested_unit_of_measurement': 'kWh',
                 }),
               }),
-              'object_id_base': 'Energy consumption today l3',
               'original_device_class': 'energy',
               'original_icon': None,
               'original_name': 'Energy consumption today l3',
@@ -5217,12 +5217,12 @@
               'labels': list([
               ]),
               'name': None,
+              'object_id_base': 'Energy consumption last seven days l3',
               'options': dict({
                 'sensor.private': dict({
                   'suggested_unit_of_measurement': 'kWh',
                 }),
               }),
-              'object_id_base': 'Energy consumption last seven days l3',
               'original_device_class': 'energy',
               'original_icon': None,
               'original_name': 'Energy consumption last seven days l3',
@@ -5259,12 +5259,12 @@
               'labels': list([
               ]),
               'name': None,
+              'object_id_base': 'Lifetime energy consumption l3',
               'options': dict({
                 'sensor.private': dict({
                   'suggested_unit_of_measurement': 'MWh',
                 }),
               }),
-              'object_id_base': 'Lifetime energy consumption l3',
               'original_device_class': 'energy',
               'original_icon': None,
               'original_name': 'Lifetime energy consumption l3',
@@ -5301,12 +5301,12 @@
               'labels': list([
               ]),
               'name': None,
+              'object_id_base': 'Balanced net power consumption l1',
               'options': dict({
                 'sensor.private': dict({
                   'suggested_unit_of_measurement': 'kW',
                 }),
               }),
-              'object_id_base': 'Balanced net power consumption l1',
               'original_device_class': 'power',
               'original_icon': None,
               'original_name': 'Balanced net power consumption l1',
@@ -5343,12 +5343,12 @@
               'labels': list([
               ]),
               'name': None,
+              'object_id_base': 'Lifetime balanced net energy consumption l1',
               'options': dict({
                 'sensor.private': dict({
                   'suggested_unit_of_measurement': 'kWh',
                 }),
               }),
-              'object_id_base': 'Lifetime balanced net energy consumption l1',
               'original_device_class': 'energy',
               'original_icon': None,
               'original_name': 'Lifetime balanced net energy consumption l1',
@@ -5385,12 +5385,12 @@
               'labels': list([
               ]),
               'name': None,
+              'object_id_base': 'Balanced net power consumption l2',
               'options': dict({
                 'sensor.private': dict({
                   'suggested_unit_of_measurement': 'kW',
                 }),
               }),
-              'object_id_base': 'Balanced net power consumption l2',
               'original_device_class': 'power',
               'original_icon': None,
               'original_name': 'Balanced net power consumption l2',
@@ -5427,12 +5427,12 @@
               'labels': list([
               ]),
               'name': None,
+              'object_id_base': 'Lifetime balanced net energy consumption l2',
               'options': dict({
                 'sensor.private': dict({
                   'suggested_unit_of_measurement': 'kWh',
                 }),
               }),
-              'object_id_base': 'Lifetime balanced net energy consumption l2',
               'original_device_class': 'energy',
               'original_icon': None,
               'original_name': 'Lifetime balanced net energy consumption l2',
@@ -5469,12 +5469,12 @@
               'labels': list([
               ]),
               'name': None,
+              'object_id_base': 'Balanced net power consumption l3',
               'options': dict({
                 'sensor.private': dict({
                   'suggested_unit_of_measurement': 'kW',
                 }),
               }),
-              'object_id_base': 'Balanced net power consumption l3',
               'original_device_class': 'power',
               'original_icon': None,
               'original_name': 'Balanced net power consumption l3',
@@ -5511,12 +5511,12 @@
               'labels': list([
               ]),
               'name': None,
+              'object_id_base': 'Lifetime balanced net energy consumption l3',
               'options': dict({
                 'sensor.private': dict({
                   'suggested_unit_of_measurement': 'kWh',
                 }),
               }),
-              'object_id_base': 'Lifetime balanced net energy consumption l3',
               'original_device_class': 'energy',
               'original_icon': None,
               'original_name': 'Lifetime balanced net energy consumption l3',
@@ -5553,6 +5553,7 @@
               'labels': list([
               ]),
               'name': None,
+              'object_id_base': 'Lifetime net energy consumption',
               'options': dict({
                 'sensor': dict({
                   'suggested_display_precision': 3,
@@ -5561,7 +5562,6 @@
                   'suggested_unit_of_measurement': 'MWh',
                 }),
               }),
-              'object_id_base': 'Lifetime net energy consumption',
               'original_device_class': 'energy',
               'original_icon': None,
               'original_name': 'Lifetime net energy consumption',
@@ -5607,6 +5607,7 @@
               'labels': list([
               ]),
               'name': None,
+              'object_id_base': 'Lifetime battery energy discharged',
               'options': dict({
                 'sensor': dict({
                   'suggested_display_precision': 3,
@@ -5615,7 +5616,6 @@
                   'suggested_unit_of_measurement': 'MWh',
                 }),
               }),
-              'object_id_base': 'Lifetime battery energy discharged',
               'original_device_class': 'energy',
               'original_icon': None,
               'original_name': 'Lifetime battery energy discharged',
@@ -5661,6 +5661,7 @@
               'labels': list([
               ]),
               'name': None,
+              'object_id_base': 'Lifetime net energy production',
               'options': dict({
                 'sensor': dict({
                   'suggested_display_precision': 3,
@@ -5669,7 +5670,6 @@
                   'suggested_unit_of_measurement': 'MWh',
                 }),
               }),
-              'object_id_base': 'Lifetime net energy production',
               'original_device_class': 'energy',
               'original_icon': None,
               'original_name': 'Lifetime net energy production',
@@ -5715,6 +5715,7 @@
               'labels': list([
               ]),
               'name': None,
+              'object_id_base': 'Lifetime battery energy charged',
               'options': dict({
                 'sensor': dict({
                   'suggested_display_precision': 3,
@@ -5723,7 +5724,6 @@
                   'suggested_unit_of_measurement': 'MWh',
                 }),
               }),
-              'object_id_base': 'Lifetime battery energy charged',
               'original_device_class': 'energy',
               'original_icon': None,
               'original_name': 'Lifetime battery energy charged',
@@ -5769,6 +5769,7 @@
               'labels': list([
               ]),
               'name': None,
+              'object_id_base': 'Current net power consumption',
               'options': dict({
                 'sensor': dict({
                   'suggested_display_precision': 3,
@@ -5777,7 +5778,6 @@
                   'suggested_unit_of_measurement': 'kW',
                 }),
               }),
-              'object_id_base': 'Current net power consumption',
               'original_device_class': 'power',
               'original_icon': None,
               'original_name': 'Current net power consumption',
@@ -5823,6 +5823,7 @@
               'labels': list([
               ]),
               'name': None,
+              'object_id_base': 'Current battery discharge',
               'options': dict({
                 'sensor': dict({
                   'suggested_display_precision': 3,
@@ -5831,7 +5832,6 @@
                   'suggested_unit_of_measurement': 'kW',
                 }),
               }),
-              'object_id_base': 'Current battery discharge',
               'original_device_class': 'power',
               'original_icon': None,
               'original_name': 'Current battery discharge',
@@ -5877,9 +5877,9 @@
               'labels': list([
               ]),
               'name': None,
+              'object_id_base': 'Frequency net consumption CT',
               'options': dict({
               }),
-              'object_id_base': 'Frequency net consumption CT',
               'original_device_class': 'frequency',
               'original_icon': None,
               'original_name': 'Frequency net consumption CT',
@@ -5916,9 +5916,9 @@
               'labels': list([
               ]),
               'name': None,
+              'object_id_base': 'Frequency production CT',
               'options': dict({
               }),
-              'object_id_base': 'Frequency production CT',
               'original_device_class': 'frequency',
               'original_icon': None,
               'original_name': 'Frequency production CT',
@@ -5955,9 +5955,9 @@
               'labels': list([
               ]),
               'name': None,
+              'object_id_base': 'Frequency storage CT',
               'options': dict({
               }),
-              'object_id_base': 'Frequency storage CT',
               'original_device_class': 'frequency',
               'original_icon': None,
               'original_name': 'Frequency storage CT',
@@ -5994,12 +5994,12 @@
               'labels': list([
               ]),
               'name': None,
+              'object_id_base': 'Voltage net consumption CT',
               'options': dict({
                 'sensor.private': dict({
                   'suggested_unit_of_measurement': 'V',
                 }),
               }),
-              'object_id_base': 'Voltage net consumption CT',
               'original_device_class': 'voltage',
               'original_icon': None,
               'original_name': 'Voltage net consumption CT',
@@ -6036,12 +6036,12 @@
               'labels': list([
               ]),
               'name': None,
+              'object_id_base': 'Voltage production CT',
               'options': dict({
                 'sensor.private': dict({
                   'suggested_unit_of_measurement': 'V',
                 }),
               }),
-              'object_id_base': 'Voltage production CT',
               'original_device_class': 'voltage',
               'original_icon': None,
               'original_name': 'Voltage production CT',
@@ -6078,12 +6078,12 @@
               'labels': list([
               ]),
               'name': None,
+              'object_id_base': 'Voltage storage CT',
               'options': dict({
                 'sensor.private': dict({
                   'suggested_unit_of_measurement': 'V',
                 }),
               }),
-              'object_id_base': 'Voltage storage CT',
               'original_device_class': 'voltage',
               'original_icon': None,
               'original_name': 'Voltage storage CT',
@@ -6120,12 +6120,12 @@
               'labels': list([
               ]),
               'name': None,
+              'object_id_base': 'Net consumption CT current',
               'options': dict({
                 'sensor.private': dict({
                   'suggested_unit_of_measurement': 'A',
                 }),
               }),
-              'object_id_base': 'Net consumption CT current',
               'original_device_class': 'current',
               'original_icon': None,
               'original_name': 'Net consumption CT current',
@@ -6162,12 +6162,12 @@
               'labels': list([
               ]),
               'name': None,
+              'object_id_base': 'Production CT current',
               'options': dict({
                 'sensor.private': dict({
                   'suggested_unit_of_measurement': 'A',
                 }),
               }),
-              'object_id_base': 'Production CT current',
               'original_device_class': 'current',
               'original_icon': None,
               'original_name': 'Production CT current',
@@ -6204,12 +6204,12 @@
               'labels': list([
               ]),
               'name': None,
+              'object_id_base': 'Storage CT current',
               'options': dict({
                 'sensor.private': dict({
                   'suggested_unit_of_measurement': 'A',
                 }),
               }),
-              'object_id_base': 'Storage CT current',
               'original_device_class': 'current',
               'original_icon': None,
               'original_name': 'Storage CT current',
@@ -6246,9 +6246,9 @@
               'labels': list([
               ]),
               'name': None,
+              'object_id_base': 'Power factor net consumption CT',
               'options': dict({
               }),
-              'object_id_base': 'Power factor net consumption CT',
               'original_device_class': 'power_factor',
               'original_icon': None,
               'original_name': 'Power factor net consumption CT',
@@ -6285,9 +6285,9 @@
               'labels': list([
               ]),
               'name': None,
+              'object_id_base': 'Power factor production CT',
               'options': dict({
               }),
-              'object_id_base': 'Power factor production CT',
               'original_device_class': 'power_factor',
               'original_icon': None,
               'original_name': 'Power factor production CT',
@@ -6324,9 +6324,9 @@
               'labels': list([
               ]),
               'name': None,
+              'object_id_base': 'Power factor storage CT',
               'options': dict({
               }),
-              'object_id_base': 'Power factor storage CT',
               'original_device_class': 'power_factor',
               'original_icon': None,
               'original_name': 'Power factor storage CT',
@@ -6367,9 +6367,9 @@
               'labels': list([
               ]),
               'name': None,
+              'object_id_base': 'Metering status net consumption CT',
               'options': dict({
               }),
-              'object_id_base': 'Metering status net consumption CT',
               'original_device_class': 'enum',
               'original_icon': None,
               'original_name': 'Metering status net consumption CT',
@@ -6410,9 +6410,9 @@
               'labels': list([
               ]),
               'name': None,
+              'object_id_base': 'Metering status production CT',
               'options': dict({
               }),
-              'object_id_base': 'Metering status production CT',
               'original_device_class': 'enum',
               'original_icon': None,
               'original_name': 'Metering status production CT',
@@ -6453,9 +6453,9 @@
               'labels': list([
               ]),
               'name': None,
+              'object_id_base': 'Metering status storage CT',
               'options': dict({
               }),
-              'object_id_base': 'Metering status storage CT',
               'original_device_class': 'enum',
               'original_icon': None,
               'original_name': 'Metering status storage CT',
@@ -6490,9 +6490,9 @@
               'labels': list([
               ]),
               'name': None,
+              'object_id_base': 'Meter status flags active net consumption CT',
               'options': dict({
               }),
-              'object_id_base': 'Meter status flags active net consumption CT',
               'original_device_class': None,
               'original_icon': None,
               'original_name': 'Meter status flags active net consumption CT',
@@ -6527,9 +6527,9 @@
               'labels': list([
               ]),
               'name': None,
+              'object_id_base': 'Meter status flags active production CT',
               'options': dict({
               }),
-              'object_id_base': 'Meter status flags active production CT',
               'original_device_class': None,
               'original_icon': None,
               'original_name': 'Meter status flags active production CT',
@@ -6564,9 +6564,9 @@
               'labels': list([
               ]),
               'name': None,
+              'object_id_base': 'Meter status flags active storage CT',
               'options': dict({
               }),
-              'object_id_base': 'Meter status flags active storage CT',
               'original_device_class': None,
               'original_icon': None,
               'original_name': 'Meter status flags active storage CT',
@@ -6603,12 +6603,12 @@
               'labels': list([
               ]),
               'name': None,
+              'object_id_base': 'Lifetime net energy consumption l1',
               'options': dict({
                 'sensor.private': dict({
                   'suggested_unit_of_measurement': 'MWh',
                 }),
               }),
-              'object_id_base': 'Lifetime net energy consumption l1',
               'original_device_class': 'energy',
               'original_icon': None,
               'original_name': 'Lifetime net energy consumption l1',
@@ -6645,12 +6645,12 @@
               'labels': list([
               ]),
               'name': None,
+              'object_id_base': 'Lifetime battery energy discharged l1',
               'options': dict({
                 'sensor.private': dict({
                   'suggested_unit_of_measurement': 'MWh',
                 }),
               }),
-              'object_id_base': 'Lifetime battery energy discharged l1',
               'original_device_class': 'energy',
               'original_icon': None,
               'original_name': 'Lifetime battery energy discharged l1',
@@ -6687,12 +6687,12 @@
               'labels': list([
               ]),
               'name': None,
+              'object_id_base': 'Lifetime net energy production l1',
               'options': dict({
                 'sensor.private': dict({
                   'suggested_unit_of_measurement': 'MWh',
                 }),
               }),
-              'object_id_base': 'Lifetime net energy production l1',
               'original_device_class': 'energy',
               'original_icon': None,
               'original_name': 'Lifetime net energy production l1',
@@ -6729,12 +6729,12 @@
               'labels': list([
               ]),
               'name': None,
+              'object_id_base': 'Lifetime battery energy charged l1',
               'options': dict({
                 'sensor.private': dict({
                   'suggested_unit_of_measurement': 'MWh',
                 }),
               }),
-              'object_id_base': 'Lifetime battery energy charged l1',
               'original_device_class': 'energy',
               'original_icon': None,
               'original_name': 'Lifetime battery energy charged l1',
@@ -6771,12 +6771,12 @@
               'labels': list([
               ]),
               'name': None,
+              'object_id_base': 'Current net power consumption l1',
               'options': dict({
                 'sensor.private': dict({
                   'suggested_unit_of_measurement': 'kW',
                 }),
               }),
-              'object_id_base': 'Current net power consumption l1',
               'original_device_class': 'power',
               'original_icon': None,
               'original_name': 'Current net power consumption l1',
@@ -6813,12 +6813,12 @@
               'labels': list([
               ]),
               'name': None,
+              'object_id_base': 'Current battery discharge l1',
               'options': dict({
                 'sensor.private': dict({
                   'suggested_unit_of_measurement': 'kW',
                 }),
               }),
-              'object_id_base': 'Current battery discharge l1',
               'original_device_class': 'power',
               'original_icon': None,
               'original_name': 'Current battery discharge l1',
@@ -6855,9 +6855,9 @@
               'labels': list([
               ]),
               'name': None,
+              'object_id_base': 'Frequency net consumption CT l1',
               'options': dict({
               }),
-              'object_id_base': 'Frequency net consumption CT l1',
               'original_device_class': 'frequency',
               'original_icon': None,
               'original_name': 'Frequency net consumption CT l1',
@@ -6894,9 +6894,9 @@
               'labels': list([
               ]),
               'name': None,
+              'object_id_base': 'Frequency production CT l1',
               'options': dict({
               }),
-              'object_id_base': 'Frequency production CT l1',
               'original_device_class': 'frequency',
               'original_icon': None,
               'original_name': 'Frequency production CT l1',
@@ -6933,9 +6933,9 @@
               'labels': list([
               ]),
               'name': None,
+              'object_id_base': 'Frequency storage CT l1',
               'options': dict({
               }),
-              'object_id_base': 'Frequency storage CT l1',
               'original_device_class': 'frequency',
               'original_icon': None,
               'original_name': 'Frequency storage CT l1',
@@ -6972,12 +6972,12 @@
               'labels': list([
               ]),
               'name': None,
+              'object_id_base': 'Voltage net consumption CT l1',
               'options': dict({
                 'sensor.private': dict({
                   'suggested_unit_of_measurement': 'V',
                 }),
               }),
-              'object_id_base': 'Voltage net consumption CT l1',
               'original_device_class': 'voltage',
               'original_icon': None,
               'original_name': 'Voltage net consumption CT l1',
@@ -7014,12 +7014,12 @@
               'labels': list([
               ]),
               'name': None,
+              'object_id_base': 'Voltage production CT l1',
               'options': dict({
                 'sensor.private': dict({
                   'suggested_unit_of_measurement': 'V',
                 }),
               }),
-              'object_id_base': 'Voltage production CT l1',
               'original_device_class': 'voltage',
               'original_icon': None,
               'original_name': 'Voltage production CT l1',
@@ -7056,12 +7056,12 @@
               'labels': list([
               ]),
               'name': None,
+              'object_id_base': 'Voltage storage CT l1',
               'options': dict({
                 'sensor.private': dict({
                   'suggested_unit_of_measurement': 'V',
                 }),
               }),
-              'object_id_base': 'Voltage storage CT l1',
               'original_device_class': 'voltage',
               'original_icon': None,
               'original_name': 'Voltage storage CT l1',
@@ -7098,12 +7098,12 @@
               'labels': list([
               ]),
               'name': None,
+              'object_id_base': 'Net consumption CT current l1',
               'options': dict({
                 'sensor.private': dict({
                   'suggested_unit_of_measurement': 'A',
                 }),
               }),
-              'object_id_base': 'Net consumption CT current l1',
               'original_device_class': 'current',
               'original_icon': None,
               'original_name': 'Net consumption CT current l1',
@@ -7140,12 +7140,12 @@
               'labels': list([
               ]),
               'name': None,
+              'object_id_base': 'Production CT current l1',
               'options': dict({
                 'sensor.private': dict({
                   'suggested_unit_of_measurement': 'A',
                 }),
               }),
-              'object_id_base': 'Production CT current l1',
               'original_device_class': 'current',
               'original_icon': None,
               'original_name': 'Production CT current l1',
@@ -7182,12 +7182,12 @@
               'labels': list([
               ]),
               'name': None,
+              'object_id_base': 'Storage CT current l1',
               'options': dict({
                 'sensor.private': dict({
                   'suggested_unit_of_measurement': 'A',
                 }),
               }),
-              'object_id_base': 'Storage CT current l1',
               'original_device_class': 'current',
               'original_icon': None,
               'original_name': 'Storage CT current l1',
@@ -7224,9 +7224,9 @@
               'labels': list([
               ]),
               'name': None,
+              'object_id_base': 'Power factor net consumption CT l1',
               'options': dict({
               }),
-              'object_id_base': 'Power factor net consumption CT l1',
               'original_device_class': 'power_factor',
               'original_icon': None,
               'original_name': 'Power factor net consumption CT l1',
@@ -7263,9 +7263,9 @@
               'labels': list([
               ]),
               'name': None,
+              'object_id_base': 'Power factor production CT l1',
               'options': dict({
               }),
-              'object_id_base': 'Power factor production CT l1',
               'original_device_class': 'power_factor',
               'original_icon': None,
               'original_name': 'Power factor production CT l1',
@@ -7302,9 +7302,9 @@
               'labels': list([
               ]),
               'name': None,
+              'object_id_base': 'Power factor storage CT l1',
               'options': dict({
               }),
-              'object_id_base': 'Power factor storage CT l1',
               'original_device_class': 'power_factor',
               'original_icon': None,
               'original_name': 'Power factor storage CT l1',
@@ -7345,9 +7345,9 @@
               'labels': list([
               ]),
               'name': None,
+              'object_id_base': 'Metering status net consumption CT l1',
               'options': dict({
               }),
-              'object_id_base': 'Metering status net consumption CT l1',
               'original_device_class': 'enum',
               'original_icon': None,
               'original_name': 'Metering status net consumption CT l1',
@@ -7388,9 +7388,9 @@
               'labels': list([
               ]),
               'name': None,
+              'object_id_base': 'Metering status production CT l1',
               'options': dict({
               }),
-              'object_id_base': 'Metering status production CT l1',
               'original_device_class': 'enum',
               'original_icon': None,
               'original_name': 'Metering status production CT l1',
@@ -7431,9 +7431,9 @@
               'labels': list([
               ]),
               'name': None,
+              'object_id_base': 'Metering status storage CT l1',
               'options': dict({
               }),
-              'object_id_base': 'Metering status storage CT l1',
               'original_device_class': 'enum',
               'original_icon': None,
               'original_name': 'Metering status storage CT l1',
@@ -7468,9 +7468,9 @@
               'labels': list([
               ]),
               'name': None,
+              'object_id_base': 'Meter status flags active net consumption CT l1',
               'options': dict({
               }),
-              'object_id_base': 'Meter status flags active net consumption CT l1',
               'original_device_class': None,
               'original_icon': None,
               'original_name': 'Meter status flags active net consumption CT l1',
@@ -7505,9 +7505,9 @@
               'labels': list([
               ]),
               'name': None,
+              'object_id_base': 'Meter status flags active production CT l1',
               'options': dict({
               }),
-              'object_id_base': 'Meter status flags active production CT l1',
               'original_device_class': None,
               'original_icon': None,
               'original_name': 'Meter status flags active production CT l1',
@@ -7542,9 +7542,9 @@
               'labels': list([
               ]),
               'name': None,
+              'object_id_base': 'Meter status flags active storage CT l1',
               'options': dict({
               }),
-              'object_id_base': 'Meter status flags active storage CT l1',
               'original_device_class': None,
               'original_icon': None,
               'original_name': 'Meter status flags active storage CT l1',
@@ -7581,12 +7581,12 @@
               'labels': list([
               ]),
               'name': None,
+              'object_id_base': 'Lifetime net energy consumption l2',
               'options': dict({
                 'sensor.private': dict({
                   'suggested_unit_of_measurement': 'MWh',
                 }),
               }),
-              'object_id_base': 'Lifetime net energy consumption l2',
               'original_device_class': 'energy',
               'original_icon': None,
               'original_name': 'Lifetime net energy consumption l2',
@@ -7623,12 +7623,12 @@
               'labels': list([
               ]),
               'name': None,
+              'object_id_base': 'Lifetime battery energy discharged l2',
               'options': dict({
                 'sensor.private': dict({
                   'suggested_unit_of_measurement': 'MWh',
                 }),
               }),
-              'object_id_base': 'Lifetime battery energy discharged l2',
               'original_device_class': 'energy',
               'original_icon': None,
               'original_name': 'Lifetime battery energy discharged l2',
@@ -7665,12 +7665,12 @@
               'labels': list([
               ]),
               'name': None,
+              'object_id_base': 'Lifetime net energy production l2',
               'options': dict({
                 'sensor.private': dict({
                   'suggested_unit_of_measurement': 'MWh',
                 }),
               }),
-              'object_id_base': 'Lifetime net energy production l2',
               'original_device_class': 'energy',
               'original_icon': None,
               'original_name': 'Lifetime net energy production l2',
@@ -7707,12 +7707,12 @@
               'labels': list([
               ]),
               'name': None,
+              'object_id_base': 'Lifetime battery energy charged l2',
               'options': dict({
                 'sensor.private': dict({
                   'suggested_unit_of_measurement': 'MWh',
                 }),
               }),
-              'object_id_base': 'Lifetime battery energy charged l2',
               'original_device_class': 'energy',
               'original_icon': None,
               'original_name': 'Lifetime battery energy charged l2',
@@ -7749,12 +7749,12 @@
               'labels': list([
               ]),
               'name': None,
+              'object_id_base': 'Current net power consumption l2',
               'options': dict({
                 'sensor.private': dict({
                   'suggested_unit_of_measurement': 'kW',
                 }),
               }),
-              'object_id_base': 'Current net power consumption l2',
               'original_device_class': 'power',
               'original_icon': None,
               'original_name': 'Current net power consumption l2',
@@ -7791,12 +7791,12 @@
               'labels': list([
               ]),
               'name': None,
+              'object_id_base': 'Current battery discharge l2',
               'options': dict({
                 'sensor.private': dict({
                   'suggested_unit_of_measurement': 'kW',
                 }),
               }),
-              'object_id_base': 'Current battery discharge l2',
               'original_device_class': 'power',
               'original_icon': None,
               'original_name': 'Current battery discharge l2',
@@ -7833,9 +7833,9 @@
               'labels': list([
               ]),
               'name': None,
+              'object_id_base': 'Frequency net consumption CT l2',
               'options': dict({
               }),
-              'object_id_base': 'Frequency net consumption CT l2',
               'original_device_class': 'frequency',
               'original_icon': None,
               'original_name': 'Frequency net consumption CT l2',
@@ -7872,9 +7872,9 @@
               'labels': list([
               ]),
               'name': None,
+              'object_id_base': 'Frequency production CT l2',
               'options': dict({
               }),
-              'object_id_base': 'Frequency production CT l2',
               'original_device_class': 'frequency',
               'original_icon': None,
               'original_name': 'Frequency production CT l2',
@@ -7911,9 +7911,9 @@
               'labels': list([
               ]),
               'name': None,
+              'object_id_base': 'Frequency storage CT l2',
               'options': dict({
               }),
-              'object_id_base': 'Frequency storage CT l2',
               'original_device_class': 'frequency',
               'original_icon': None,
               'original_name': 'Frequency storage CT l2',
@@ -7950,12 +7950,12 @@
               'labels': list([
               ]),
               'name': None,
+              'object_id_base': 'Voltage net consumption CT l2',
               'options': dict({
                 'sensor.private': dict({
                   'suggested_unit_of_measurement': 'V',
                 }),
               }),
-              'object_id_base': 'Voltage net consumption CT l2',
               'original_device_class': 'voltage',
               'original_icon': None,
               'original_name': 'Voltage net consumption CT l2',
@@ -7992,12 +7992,12 @@
               'labels': list([
               ]),
               'name': None,
+              'object_id_base': 'Voltage production CT l2',
               'options': dict({
                 'sensor.private': dict({
                   'suggested_unit_of_measurement': 'V',
                 }),
               }),
-              'object_id_base': 'Voltage production CT l2',
               'original_device_class': 'voltage',
               'original_icon': None,
               'original_name': 'Voltage production CT l2',
@@ -8034,12 +8034,12 @@
               'labels': list([
               ]),
               'name': None,
+              'object_id_base': 'Voltage storage CT l2',
               'options': dict({
                 'sensor.private': dict({
                   'suggested_unit_of_measurement': 'V',
                 }),
               }),
-              'object_id_base': 'Voltage storage CT l2',
               'original_device_class': 'voltage',
               'original_icon': None,
               'original_name': 'Voltage storage CT l2',
@@ -8076,12 +8076,12 @@
               'labels': list([
               ]),
               'name': None,
+              'object_id_base': 'Net consumption CT current l2',
               'options': dict({
                 'sensor.private': dict({
                   'suggested_unit_of_measurement': 'A',
                 }),
               }),
-              'object_id_base': 'Net consumption CT current l2',
               'original_device_class': 'current',
               'original_icon': None,
               'original_name': 'Net consumption CT current l2',
@@ -8118,12 +8118,12 @@
               'labels': list([
               ]),
               'name': None,
+              'object_id_base': 'Production CT current l2',
               'options': dict({
                 'sensor.private': dict({
                   'suggested_unit_of_measurement': 'A',
                 }),
               }),
-              'object_id_base': 'Production CT current l2',
               'original_device_class': 'current',
               'original_icon': None,
               'original_name': 'Production CT current l2',
@@ -8160,12 +8160,12 @@
               'labels': list([
               ]),
               'name': None,
+              'object_id_base': 'Storage CT current l2',
               'options': dict({
                 'sensor.private': dict({
                   'suggested_unit_of_measurement': 'A',
                 }),
               }),
-              'object_id_base': 'Storage CT current l2',
               'original_device_class': 'current',
               'original_icon': None,
               'original_name': 'Storage CT current l2',
@@ -8202,9 +8202,9 @@
               'labels': list([
               ]),
               'name': None,
+              'object_id_base': 'Power factor net consumption CT l2',
               'options': dict({
               }),
-              'object_id_base': 'Power factor net consumption CT l2',
               'original_device_class': 'power_factor',
               'original_icon': None,
               'original_name': 'Power factor net consumption CT l2',
@@ -8241,9 +8241,9 @@
               'labels': list([
               ]),
               'name': None,
+              'object_id_base': 'Power factor production CT l2',
               'options': dict({
               }),
-              'object_id_base': 'Power factor production CT l2',
               'original_device_class': 'power_factor',
               'original_icon': None,
               'original_name': 'Power factor production CT l2',
@@ -8280,9 +8280,9 @@
               'labels': list([
               ]),
               'name': None,
+              'object_id_base': 'Power factor storage CT l2',
               'options': dict({
               }),
-              'object_id_base': 'Power factor storage CT l2',
               'original_device_class': 'power_factor',
               'original_icon': None,
               'original_name': 'Power factor storage CT l2',
@@ -8323,9 +8323,9 @@
               'labels': list([
               ]),
               'name': None,
+              'object_id_base': 'Metering status net consumption CT l2',
               'options': dict({
               }),
-              'object_id_base': 'Metering status net consumption CT l2',
               'original_device_class': 'enum',
               'original_icon': None,
               'original_name': 'Metering status net consumption CT l2',
@@ -8366,9 +8366,9 @@
               'labels': list([
               ]),
               'name': None,
+              'object_id_base': 'Metering status production CT l2',
               'options': dict({
               }),
-              'object_id_base': 'Metering status production CT l2',
               'original_device_class': 'enum',
               'original_icon': None,
               'original_name': 'Metering status production CT l2',
@@ -8409,9 +8409,9 @@
               'labels': list([
               ]),
               'name': None,
+              'object_id_base': 'Metering status storage CT l2',
               'options': dict({
               }),
-              'object_id_base': 'Metering status storage CT l2',
               'original_device_class': 'enum',
               'original_icon': None,
               'original_name': 'Metering status storage CT l2',
@@ -8446,9 +8446,9 @@
               'labels': list([
               ]),
               'name': None,
+              'object_id_base': 'Meter status flags active net consumption CT l2',
               'options': dict({
               }),
-              'object_id_base': 'Meter status flags active net consumption CT l2',
               'original_device_class': None,
               'original_icon': None,
               'original_name': 'Meter status flags active net consumption CT l2',
@@ -8483,9 +8483,9 @@
               'labels': list([
               ]),
               'name': None,
+              'object_id_base': 'Meter status flags active production CT l2',
               'options': dict({
               }),
-              'object_id_base': 'Meter status flags active production CT l2',
               'original_device_class': None,
               'original_icon': None,
               'original_name': 'Meter status flags active production CT l2',
@@ -8520,9 +8520,9 @@
               'labels': list([
               ]),
               'name': None,
+              'object_id_base': 'Meter status flags active storage CT l2',
               'options': dict({
               }),
-              'object_id_base': 'Meter status flags active storage CT l2',
               'original_device_class': None,
               'original_icon': None,
               'original_name': 'Meter status flags active storage CT l2',
@@ -8559,12 +8559,12 @@
               'labels': list([
               ]),
               'name': None,
+              'object_id_base': 'Lifetime net energy consumption l3',
               'options': dict({
                 'sensor.private': dict({
                   'suggested_unit_of_measurement': 'MWh',
                 }),
               }),
-              'object_id_base': 'Lifetime net energy consumption l3',
               'original_device_class': 'energy',
               'original_icon': None,
               'original_name': 'Lifetime net energy consumption l3',
@@ -8601,12 +8601,12 @@
               'labels': list([
               ]),
               'name': None,
+              'object_id_base': 'Lifetime battery energy discharged l3',
               'options': dict({
                 'sensor.private': dict({
                   'suggested_unit_of_measurement': 'MWh',
                 }),
               }),
-              'object_id_base': 'Lifetime battery energy discharged l3',
               'original_device_class': 'energy',
               'original_icon': None,
               'original_name': 'Lifetime battery energy discharged l3',
@@ -8643,12 +8643,12 @@
               'labels': list([
               ]),
               'name': None,
+              'object_id_base': 'Lifetime net energy production l3',
               'options': dict({
                 'sensor.private': dict({
                   'suggested_unit_of_measurement': 'MWh',
                 }),
               }),
-              'object_id_base': 'Lifetime net energy production l3',
               'original_device_class': 'energy',
               'original_icon': None,
               'original_name': 'Lifetime net energy production l3',
@@ -8685,12 +8685,12 @@
               'labels': list([
               ]),
               'name': None,
+              'object_id_base': 'Lifetime battery energy charged l3',
               'options': dict({
                 'sensor.private': dict({
                   'suggested_unit_of_measurement': 'MWh',
                 }),
               }),
-              'object_id_base': 'Lifetime battery energy charged l3',
               'original_device_class': 'energy',
               'original_icon': None,
               'original_name': 'Lifetime battery energy charged l3',
@@ -8727,12 +8727,12 @@
               'labels': list([
               ]),
               'name': None,
+              'object_id_base': 'Current net power consumption l3',
               'options': dict({
                 'sensor.private': dict({
                   'suggested_unit_of_measurement': 'kW',
                 }),
               }),
-              'object_id_base': 'Current net power consumption l3',
               'original_device_class': 'power',
               'original_icon': None,
               'original_name': 'Current net power consumption l3',
@@ -8769,12 +8769,12 @@
               'labels': list([
               ]),
               'name': None,
+              'object_id_base': 'Current battery discharge l3',
               'options': dict({
                 'sensor.private': dict({
                   'suggested_unit_of_measurement': 'kW',
                 }),
               }),
-              'object_id_base': 'Current battery discharge l3',
               'original_device_class': 'power',
               'original_icon': None,
               'original_name': 'Current battery discharge l3',
@@ -8811,9 +8811,9 @@
               'labels': list([
               ]),
               'name': None,
+              'object_id_base': 'Frequency net consumption CT l3',
               'options': dict({
               }),
-              'object_id_base': 'Frequency net consumption CT l3',
               'original_device_class': 'frequency',
               'original_icon': None,
               'original_name': 'Frequency net consumption CT l3',
@@ -8850,9 +8850,9 @@
               'labels': list([
               ]),
               'name': None,
+              'object_id_base': 'Frequency production CT l3',
               'options': dict({
               }),
-              'object_id_base': 'Frequency production CT l3',
               'original_device_class': 'frequency',
               'original_icon': None,
               'original_name': 'Frequency production CT l3',
@@ -8889,9 +8889,9 @@
               'labels': list([
               ]),
               'name': None,
+              'object_id_base': 'Frequency storage CT l3',
               'options': dict({
               }),
-              'object_id_base': 'Frequency storage CT l3',
               'original_device_class': 'frequency',
               'original_icon': None,
               'original_name': 'Frequency storage CT l3',
@@ -8928,12 +8928,12 @@
               'labels': list([
               ]),
               'name': None,
+              'object_id_base': 'Voltage net consumption CT l3',
               'options': dict({
                 'sensor.private': dict({
                   'suggested_unit_of_measurement': 'V',
                 }),
               }),
-              'object_id_base': 'Voltage net consumption CT l3',
               'original_device_class': 'voltage',
               'original_icon': None,
               'original_name': 'Voltage net consumption CT l3',
@@ -8970,12 +8970,12 @@
               'labels': list([
               ]),
               'name': None,
+              'object_id_base': 'Voltage production CT l3',
               'options': dict({
                 'sensor.private': dict({
                   'suggested_unit_of_measurement': 'V',
                 }),
               }),
-              'object_id_base': 'Voltage production CT l3',
               'original_device_class': 'voltage',
               'original_icon': None,
               'original_name': 'Voltage production CT l3',
@@ -9012,12 +9012,12 @@
               'labels': list([
               ]),
               'name': None,
+              'object_id_base': 'Voltage storage CT l3',
               'options': dict({
                 'sensor.private': dict({
                   'suggested_unit_of_measurement': 'V',
                 }),
               }),
-              'object_id_base': 'Voltage storage CT l3',
               'original_device_class': 'voltage',
               'original_icon': None,
               'original_name': 'Voltage storage CT l3',
@@ -9054,12 +9054,12 @@
               'labels': list([
               ]),
               'name': None,
+              'object_id_base': 'Net consumption CT current l3',
               'options': dict({
                 'sensor.private': dict({
                   'suggested_unit_of_measurement': 'A',
                 }),
               }),
-              'object_id_base': 'Net consumption CT current l3',
               'original_device_class': 'current',
               'original_icon': None,
               'original_name': 'Net consumption CT current l3',
@@ -9096,12 +9096,12 @@
               'labels': list([
               ]),
               'name': None,
+              'object_id_base': 'Production CT current l3',
               'options': dict({
                 'sensor.private': dict({
                   'suggested_unit_of_measurement': 'A',
                 }),
               }),
-              'object_id_base': 'Production CT current l3',
               'original_device_class': 'current',
               'original_icon': None,
               'original_name': 'Production CT current l3',
@@ -9138,12 +9138,12 @@
               'labels': list([
               ]),
               'name': None,
+              'object_id_base': 'Storage CT current l3',
               'options': dict({
                 'sensor.private': dict({
                   'suggested_unit_of_measurement': 'A',
                 }),
               }),
-              'object_id_base': 'Storage CT current l3',
               'original_device_class': 'current',
               'original_icon': None,
               'original_name': 'Storage CT current l3',
@@ -9180,9 +9180,9 @@
               'labels': list([
               ]),
               'name': None,
+              'object_id_base': 'Power factor net consumption CT l3',
               'options': dict({
               }),
-              'object_id_base': 'Power factor net consumption CT l3',
               'original_device_class': 'power_factor',
               'original_icon': None,
               'original_name': 'Power factor net consumption CT l3',
@@ -9219,9 +9219,9 @@
               'labels': list([
               ]),
               'name': None,
+              'object_id_base': 'Power factor production CT l3',
               'options': dict({
               }),
-              'object_id_base': 'Power factor production CT l3',
               'original_device_class': 'power_factor',
               'original_icon': None,
               'original_name': 'Power factor production CT l3',
@@ -9258,9 +9258,9 @@
               'labels': list([
               ]),
               'name': None,
+              'object_id_base': 'Power factor storage CT l3',
               'options': dict({
               }),
-              'object_id_base': 'Power factor storage CT l3',
               'original_device_class': 'power_factor',
               'original_icon': None,
               'original_name': 'Power factor storage CT l3',
@@ -9301,9 +9301,9 @@
               'labels': list([
               ]),
               'name': None,
+              'object_id_base': 'Metering status net consumption CT l3',
               'options': dict({
               }),
-              'object_id_base': 'Metering status net consumption CT l3',
               'original_device_class': 'enum',
               'original_icon': None,
               'original_name': 'Metering status net consumption CT l3',
@@ -9344,9 +9344,9 @@
               'labels': list([
               ]),
               'name': None,
+              'object_id_base': 'Metering status production CT l3',
               'options': dict({
               }),
-              'object_id_base': 'Metering status production CT l3',
               'original_device_class': 'enum',
               'original_icon': None,
               'original_name': 'Metering status production CT l3',
@@ -9387,9 +9387,9 @@
               'labels': list([
               ]),
               'name': None,
+              'object_id_base': 'Metering status storage CT l3',
               'options': dict({
               }),
-              'object_id_base': 'Metering status storage CT l3',
               'original_device_class': 'enum',
               'original_icon': None,
               'original_name': 'Metering status storage CT l3',
@@ -9424,9 +9424,9 @@
               'labels': list([
               ]),
               'name': None,
+              'object_id_base': 'Meter status flags active net consumption CT l3',
               'options': dict({
               }),
-              'object_id_base': 'Meter status flags active net consumption CT l3',
               'original_device_class': None,
               'original_icon': None,
               'original_name': 'Meter status flags active net consumption CT l3',
@@ -9461,9 +9461,9 @@
               'labels': list([
               ]),
               'name': None,
+              'object_id_base': 'Meter status flags active production CT l3',
               'options': dict({
               }),
-              'object_id_base': 'Meter status flags active production CT l3',
               'original_device_class': None,
               'original_icon': None,
               'original_name': 'Meter status flags active production CT l3',
@@ -9498,9 +9498,9 @@
               'labels': list([
               ]),
               'name': None,
+              'object_id_base': 'Meter status flags active storage CT l3',
               'options': dict({
               }),
-              'object_id_base': 'Meter status flags active storage CT l3',
               'original_device_class': None,
               'original_icon': None,
               'original_name': 'Meter status flags active storage CT l3',
@@ -9537,9 +9537,9 @@
               'labels': list([
               ]),
               'name': None,
+              'object_id_base': 'Battery',
               'options': dict({
               }),
-              'object_id_base': 'Battery',
               'original_device_class': 'battery',
               'original_icon': None,
               'original_name': 'Battery',
@@ -9585,9 +9585,9 @@
               'labels': list([
               ]),
               'name': None,
+              'object_id_base': 'Reserve battery level',
               'options': dict({
               }),
-              'object_id_base': 'Reserve battery level',
               'original_device_class': 'battery',
               'original_icon': None,
               'original_name': 'Reserve battery level',
@@ -9633,12 +9633,12 @@
               'labels': list([
               ]),
               'name': None,
+              'object_id_base': 'Available battery energy',
               'options': dict({
                 'sensor': dict({
                   'suggested_display_precision': 0,
                 }),
               }),
-              'object_id_base': 'Available battery energy',
               'original_device_class': 'energy_storage',
               'original_icon': None,
               'original_name': 'Available battery energy',
@@ -9684,12 +9684,12 @@
               'labels': list([
               ]),
               'name': None,
+              'object_id_base': 'Reserve battery energy',
               'options': dict({
                 'sensor': dict({
                   'suggested_display_precision': 0,
                 }),
               }),
-              'object_id_base': 'Reserve battery energy',
               'original_device_class': 'energy_storage',
               'original_icon': None,
               'original_name': 'Reserve battery energy',
@@ -9733,12 +9733,12 @@
               'labels': list([
               ]),
               'name': None,
+              'object_id_base': 'Battery capacity',
               'options': dict({
                 'sensor': dict({
                   'suggested_display_precision': 0,
                 }),
               }),
-              'object_id_base': 'Battery capacity',
               'original_device_class': 'energy_storage',
               'original_icon': None,
               'original_name': 'Battery capacity',
@@ -9818,9 +9818,9 @@
               'labels': list([
               ]),
               'name': None,
+              'object_id_base': 'Communicating',
               'options': dict({
               }),
-              'object_id_base': 'Communicating',
               'original_device_class': 'connectivity',
               'original_icon': None,
               'original_name': 'Communicating',
@@ -9862,9 +9862,9 @@
               'labels': list([
               ]),
               'name': None,
+              'object_id_base': 'DC switch',
               'options': dict({
               }),
-              'object_id_base': 'DC switch',
               'original_device_class': None,
               'original_icon': None,
               'original_name': 'DC switch',
@@ -9907,12 +9907,12 @@
               'labels': list([
               ]),
               'name': None,
+              'object_id_base': 'Temperature',
               'options': dict({
                 'sensor': dict({
                   'suggested_display_precision': 1,
                 }),
               }),
-              'object_id_base': 'Temperature',
               'original_device_class': 'temperature',
               'original_icon': None,
               'original_name': 'Temperature',
@@ -9956,9 +9956,9 @@
               'labels': list([
               ]),
               'name': None,
+              'object_id_base': 'Last reported',
               'options': dict({
               }),
-              'object_id_base': 'Last reported',
               'original_device_class': 'timestamp',
               'original_icon': None,
               'original_name': 'Last reported',
@@ -10002,9 +10002,9 @@
               'labels': list([
               ]),
               'name': None,
+              'object_id_base': 'Battery',
               'options': dict({
               }),
-              'object_id_base': 'Battery',
               'original_device_class': 'battery',
               'original_icon': None,
               'original_name': 'Battery',
@@ -10050,12 +10050,12 @@
               'labels': list([
               ]),
               'name': None,
+              'object_id_base': 'Apparent power',
               'options': dict({
                 'sensor': dict({
                   'suggested_display_precision': 0,
                 }),
               }),
-              'object_id_base': 'Apparent power',
               'original_device_class': 'apparent_power',
               'original_icon': None,
               'original_name': 'Apparent power',
@@ -10101,12 +10101,12 @@
               'labels': list([
               ]),
               'name': None,
+              'object_id_base': 'Power',
               'options': dict({
                 'sensor': dict({
                   'suggested_display_precision': 0,
                 }),
               }),
-              'object_id_base': 'Power',
               'original_device_class': 'power',
               'original_icon': None,
               'original_name': 'Power',
@@ -10187,9 +10187,9 @@
               'labels': list([
               ]),
               'name': None,
+              'object_id_base': 'Communicating',
               'options': dict({
               }),
-              'object_id_base': 'Communicating',
               'original_device_class': 'connectivity',
               'original_icon': None,
               'original_name': 'Communicating',
@@ -10231,9 +10231,9 @@
               'labels': list([
               ]),
               'name': None,
+              'object_id_base': 'Grid status',
               'options': dict({
               }),
-              'object_id_base': 'Grid status',
               'original_device_class': None,
               'original_icon': None,
               'original_name': 'Grid status',
@@ -10279,9 +10279,9 @@
               'labels': list([
               ]),
               'name': None,
+              'object_id_base': 'Reserve battery level',
               'options': dict({
               }),
-              'object_id_base': 'Reserve battery level',
               'original_device_class': 'battery',
               'original_icon': None,
               'original_name': 'Reserve battery level',
@@ -10334,9 +10334,9 @@
               'labels': list([
               ]),
               'name': None,
+              'object_id_base': 'Storage mode',
               'options': dict({
               }),
-              'object_id_base': 'Storage mode',
               'original_device_class': None,
               'original_icon': None,
               'original_name': 'Storage mode',
@@ -10384,12 +10384,12 @@
               'labels': list([
               ]),
               'name': None,
+              'object_id_base': 'Temperature',
               'options': dict({
                 'sensor': dict({
                   'suggested_display_precision': 1,
                 }),
               }),
-              'object_id_base': 'Temperature',
               'original_device_class': 'temperature',
               'original_icon': None,
               'original_name': 'Temperature',
@@ -10433,9 +10433,9 @@
               'labels': list([
               ]),
               'name': None,
+              'object_id_base': 'Last reported',
               'options': dict({
               }),
-              'object_id_base': 'Last reported',
               'original_device_class': 'timestamp',
               'original_icon': None,
               'original_name': 'Last reported',
@@ -10477,9 +10477,9 @@
               'labels': list([
               ]),
               'name': None,
+              'object_id_base': 'Grid enabled',
               'options': dict({
               }),
-              'object_id_base': 'Grid enabled',
               'original_device_class': None,
               'original_icon': None,
               'original_name': 'Grid enabled',
@@ -10520,9 +10520,9 @@
               'labels': list([
               ]),
               'name': None,
+              'object_id_base': 'Charge from grid',
               'options': dict({
               }),
-              'object_id_base': 'Charge from grid',
               'original_device_class': None,
               'original_icon': None,
               'original_name': 'Charge from grid',
@@ -10600,9 +10600,9 @@
               'labels': list([
               ]),
               'name': None,
+              'object_id_base': 'Communicating',
               'options': dict({
               }),
-              'object_id_base': 'Communicating',
               'original_device_class': 'connectivity',
               'original_icon': None,
               'original_name': 'Communicating',
@@ -10646,12 +10646,12 @@
               'labels': list([
               ]),
               'name': None,
+              'object_id_base': 'Temperature',
               'options': dict({
                 'sensor': dict({
                   'suggested_display_precision': 1,
                 }),
               }),
-              'object_id_base': 'Temperature',
               'original_device_class': 'temperature',
               'original_icon': None,
               'original_name': 'Temperature',
@@ -10695,9 +10695,9 @@
               'labels': list([
               ]),
               'name': None,
+              'object_id_base': 'Last reported',
               'options': dict({
               }),
-              'object_id_base': 'Last reported',
               'original_device_class': 'timestamp',
               'original_icon': None,
               'original_name': 'Last reported',
@@ -10739,9 +10739,9 @@
               'labels': list([
               ]),
               'name': None,
+              'object_id_base': 'Grid status',
               'options': dict({
               }),
-              'object_id_base': 'Grid status',
               'original_device_class': None,
               'original_icon': None,
               'original_name': 'Grid status',
@@ -10782,9 +10782,9 @@
               'labels': list([
               ]),
               'name': None,
+              'object_id_base': 'Admin state',
               'options': dict({
               }),
-              'object_id_base': 'Admin state',
               'original_device_class': None,
               'original_icon': None,
               'original_name': 'Admin state',
@@ -10825,9 +10825,9 @@
               'labels': list([
               ]),
               'name': None,
+              'object_id_base': 'MID state',
               'options': dict({
               }),
-              'object_id_base': 'MID state',
               'original_device_class': None,
               'original_icon': None,
               'original_name': 'MID state',
@@ -10905,9 +10905,9 @@
               'labels': list([
               ]),
               'name': None,
+              'object_id_base': 'Communicating',
               'options': dict({
               }),
-              'object_id_base': 'Communicating',
               'original_device_class': 'connectivity',
               'original_icon': None,
               'original_name': 'Communicating',
@@ -10949,9 +10949,9 @@
               'labels': list([
               ]),
               'name': None,
+              'object_id_base': 'Last reported',
               'options': dict({
               }),
-              'object_id_base': 'Last reported',
               'original_device_class': 'timestamp',
               'original_icon': None,
               'original_name': 'Last reported',
@@ -11035,9 +11035,9 @@
               'labels': list([
               ]),
               'name': None,
+              'object_id_base': 'Cutoff battery level',
               'options': dict({
               }),
-              'object_id_base': 'Cutoff battery level',
               'original_device_class': 'battery',
               'original_icon': None,
               'original_name': 'Cutoff battery level',
@@ -11088,9 +11088,9 @@
               'labels': list([
               ]),
               'name': None,
+              'object_id_base': 'Restore battery level',
               'options': dict({
               }),
-              'object_id_base': 'Restore battery level',
               'original_device_class': 'battery',
               'original_icon': None,
               'original_name': 'Restore battery level',
@@ -11141,9 +11141,9 @@
               'labels': list([
               ]),
               'name': None,
+              'object_id_base': 'Mode',
               'options': dict({
               }),
-              'object_id_base': 'Mode',
               'original_device_class': None,
               'original_icon': None,
               'original_name': 'Mode',
@@ -11195,9 +11195,9 @@
               'labels': list([
               ]),
               'name': None,
+              'object_id_base': 'Grid action',
               'options': dict({
               }),
-              'object_id_base': 'Grid action',
               'original_device_class': None,
               'original_icon': None,
               'original_name': 'Grid action',
@@ -11251,9 +11251,9 @@
               'labels': list([
               ]),
               'name': None,
+              'object_id_base': 'Microgrid action',
               'options': dict({
               }),
-              'object_id_base': 'Microgrid action',
               'original_device_class': None,
               'original_icon': None,
               'original_name': 'Microgrid action',
@@ -11307,9 +11307,9 @@
               'labels': list([
               ]),
               'name': None,
+              'object_id_base': 'Generator action',
               'options': dict({
               }),
-              'object_id_base': 'Generator action',
               'original_device_class': None,
               'original_icon': None,
               'original_name': 'Generator action',
@@ -11356,9 +11356,9 @@
               'labels': list([
               ]),
               'name': None,
+              'object_id_base': None,
               'options': dict({
               }),
-              'object_id_base': None,
               'original_device_class': None,
               'original_icon': None,
               'original_name': None,
@@ -11441,9 +11441,9 @@
               'labels': list([
               ]),
               'name': None,
+              'object_id_base': 'Cutoff battery level',
               'options': dict({
               }),
-              'object_id_base': 'Cutoff battery level',
               'original_device_class': 'battery',
               'original_icon': None,
               'original_name': 'Cutoff battery level',
@@ -11494,9 +11494,9 @@
               'labels': list([
               ]),
               'name': None,
+              'object_id_base': 'Restore battery level',
               'options': dict({
               }),
-              'object_id_base': 'Restore battery level',
               'original_device_class': 'battery',
               'original_icon': None,
               'original_name': 'Restore battery level',
@@ -11547,9 +11547,9 @@
               'labels': list([
               ]),
               'name': None,
+              'object_id_base': 'Mode',
               'options': dict({
               }),
-              'object_id_base': 'Mode',
               'original_device_class': None,
               'original_icon': None,
               'original_name': 'Mode',
@@ -11601,9 +11601,9 @@
               'labels': list([
               ]),
               'name': None,
+              'object_id_base': 'Grid action',
               'options': dict({
               }),
-              'object_id_base': 'Grid action',
               'original_device_class': None,
               'original_icon': None,
               'original_name': 'Grid action',
@@ -11657,9 +11657,9 @@
               'labels': list([
               ]),
               'name': None,
+              'object_id_base': 'Microgrid action',
               'options': dict({
               }),
-              'object_id_base': 'Microgrid action',
               'original_device_class': None,
               'original_icon': None,
               'original_name': 'Microgrid action',
@@ -11713,9 +11713,9 @@
               'labels': list([
               ]),
               'name': None,
+              'object_id_base': 'Generator action',
               'options': dict({
               }),
-              'object_id_base': 'Generator action',
               'original_device_class': None,
               'original_icon': None,
               'original_name': 'Generator action',
@@ -11762,9 +11762,9 @@
               'labels': list([
               ]),
               'name': None,
+              'object_id_base': None,
               'options': dict({
               }),
-              'object_id_base': None,
               'original_device_class': None,
               'original_icon': None,
               'original_name': None,
@@ -11847,9 +11847,9 @@
               'labels': list([
               ]),
               'name': None,
+              'object_id_base': 'Cutoff battery level',
               'options': dict({
               }),
-              'object_id_base': 'Cutoff battery level',
               'original_device_class': 'battery',
               'original_icon': None,
               'original_name': 'Cutoff battery level',
@@ -11900,9 +11900,9 @@
               'labels': list([
               ]),
               'name': None,
+              'object_id_base': 'Restore battery level',
               'options': dict({
               }),
-              'object_id_base': 'Restore battery level',
               'original_device_class': 'battery',
               'original_icon': None,
               'original_name': 'Restore battery level',
@@ -11953,9 +11953,9 @@
               'labels': list([
               ]),
               'name': None,
+              'object_id_base': 'Mode',
               'options': dict({
               }),
-              'object_id_base': 'Mode',
               'original_device_class': None,
               'original_icon': None,
               'original_name': 'Mode',
@@ -12007,9 +12007,9 @@
               'labels': list([
               ]),
               'name': None,
+              'object_id_base': 'Grid action',
               'options': dict({
               }),
-              'object_id_base': 'Grid action',
               'original_device_class': None,
               'original_icon': None,
               'original_name': 'Grid action',
@@ -12063,9 +12063,9 @@
               'labels': list([
               ]),
               'name': None,
+              'object_id_base': 'Microgrid action',
               'options': dict({
               }),
-              'object_id_base': 'Microgrid action',
               'original_device_class': None,
               'original_icon': None,
               'original_name': 'Microgrid action',
@@ -12119,9 +12119,9 @@
               'labels': list([
               ]),
               'name': None,
+              'object_id_base': 'Generator action',
               'options': dict({
               }),
-              'object_id_base': 'Generator action',
               'original_device_class': None,
               'original_icon': None,
               'original_name': 'Generator action',
@@ -12168,9 +12168,9 @@
               'labels': list([
               ]),
               'name': None,
+              'object_id_base': None,
               'options': dict({
               }),
-              'object_id_base': None,
               'original_device_class': None,
               'original_icon': None,
               'original_name': None,
@@ -12250,12 +12250,12 @@
               'labels': list([
               ]),
               'name': None,
+              'object_id_base': None,
               'options': dict({
                 'sensor': dict({
                   'suggested_display_precision': 0,
                 }),
               }),
-              'object_id_base': None,
               'original_device_class': 'power',
               'original_icon': None,
               'original_name': None,
@@ -12301,9 +12301,9 @@
               'labels': list([
               ]),
               'name': None,
+              'object_id_base': 'DC voltage',
               'options': dict({
               }),
-              'object_id_base': 'DC voltage',
               'original_device_class': 'voltage',
               'original_icon': None,
               'original_name': 'DC voltage',
@@ -12340,9 +12340,9 @@
               'labels': list([
               ]),
               'name': None,
+              'object_id_base': 'DC current',
               'options': dict({
               }),
-              'object_id_base': 'DC current',
               'original_device_class': 'current',
               'original_icon': None,
               'original_name': 'DC current',
@@ -12379,9 +12379,9 @@
               'labels': list([
               ]),
               'name': None,
+              'object_id_base': 'AC voltage',
               'options': dict({
               }),
-              'object_id_base': 'AC voltage',
               'original_device_class': 'voltage',
               'original_icon': None,
               'original_name': 'AC voltage',
@@ -12418,9 +12418,9 @@
               'labels': list([
               ]),
               'name': None,
+              'object_id_base': 'AC current',
               'options': dict({
               }),
-              'object_id_base': 'AC current',
               'original_device_class': 'current',
               'original_icon': None,
               'original_name': 'AC current',
@@ -12457,9 +12457,9 @@
               'labels': list([
               ]),
               'name': None,
+              'object_id_base': 'Frequency',
               'options': dict({
               }),
-              'object_id_base': 'Frequency',
               'original_device_class': 'frequency',
               'original_icon': None,
               'original_name': 'Frequency',
@@ -12496,9 +12496,9 @@
               'labels': list([
               ]),
               'name': None,
+              'object_id_base': 'Temperature',
               'options': dict({
               }),
-              'object_id_base': 'Temperature',
               'original_device_class': 'temperature',
               'original_icon': None,
               'original_name': 'Temperature',
@@ -12535,12 +12535,12 @@
               'labels': list([
               ]),
               'name': None,
+              'object_id_base': 'Lifetime energy production',
               'options': dict({
                 'sensor.private': dict({
                   'suggested_unit_of_measurement': 'kWh',
                 }),
               }),
-              'object_id_base': 'Lifetime energy production',
               'original_device_class': 'energy',
               'original_icon': None,
               'original_name': 'Lifetime energy production',
@@ -12577,9 +12577,9 @@
               'labels': list([
               ]),
               'name': None,
+              'object_id_base': 'Energy production today',
               'options': dict({
               }),
-              'object_id_base': 'Energy production today',
               'original_device_class': 'energy',
               'original_icon': None,
               'original_name': 'Energy production today',
@@ -12616,9 +12616,9 @@
               'labels': list([
               ]),
               'name': None,
+              'object_id_base': 'Last report duration',
               'options': dict({
               }),
-              'object_id_base': 'Last report duration',
               'original_device_class': 'duration',
               'original_icon': None,
               'original_name': 'Last report duration',
@@ -12655,9 +12655,9 @@
               'labels': list([
               ]),
               'name': None,
+              'object_id_base': 'Energy production since previous report',
               'options': dict({
               }),
-              'object_id_base': 'Energy production since previous report',
               'original_device_class': 'energy',
               'original_icon': None,
               'original_name': 'Energy production since previous report',
@@ -12694,9 +12694,9 @@
               'labels': list([
               ]),
               'name': None,
+              'object_id_base': 'Lifetime maximum power',
               'options': dict({
               }),
-              'object_id_base': 'Lifetime maximum power',
               'original_device_class': 'power',
               'original_icon': None,
               'original_name': 'Lifetime maximum power',
@@ -12731,9 +12731,9 @@
               'labels': list([
               ]),
               'name': None,
+              'object_id_base': 'Last reported',
               'options': dict({
               }),
-              'object_id_base': 'Last reported',
               'original_device_class': 'timestamp',
               'original_icon': None,
               'original_name': 'Last reported',

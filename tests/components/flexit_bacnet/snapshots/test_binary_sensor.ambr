@@ -20,9 +20,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Air filter polluted',
     'options': dict({
     }),
-    'object_id_base': 'Air filter polluted',
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
     'original_icon': None,
     'original_name': 'Air filter polluted',

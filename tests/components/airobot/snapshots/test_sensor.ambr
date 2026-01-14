@@ -22,12 +22,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Air temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
       }),
     }),
-    'object_id_base': 'Air temperature',
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Air temperature',
@@ -77,9 +77,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Device uptime',
     'options': dict({
     }),
-    'object_id_base': 'Device uptime',
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
     'original_icon': None,
     'original_name': 'Device uptime',
@@ -129,9 +129,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Error count',
     'options': dict({
     }),
-    'object_id_base': 'Error count',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Error count',
@@ -181,6 +181,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Heating uptime',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -189,7 +190,6 @@
         'suggested_unit_of_measurement': <UnitOfTime.HOURS: 'h'>,
       }),
     }),
-    'object_id_base': 'Heating uptime',
     'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
     'original_icon': None,
     'original_name': 'Heating uptime',
@@ -241,9 +241,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Humidity',
     'options': dict({
     }),
-    'object_id_base': 'Humidity',
     'original_device_class': <SensorDeviceClass.HUMIDITY: 'humidity'>,
     'original_icon': None,
     'original_name': 'Humidity',

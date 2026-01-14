@@ -20,9 +20,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Cleanup',
     'options': dict({
     }),
-    'object_id_base': 'Cleanup',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Cleanup',
@@ -69,9 +69,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Firmware update',
     'options': dict({
     }),
-    'object_id_base': 'Firmware update',
     'original_device_class': <ButtonDeviceClass.UPDATE: 'update'>,
     'original_icon': None,
     'original_name': 'Firmware update',
@@ -119,9 +119,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Reconnect',
     'options': dict({
     }),
-    'object_id_base': 'Reconnect',
     'original_device_class': <ButtonDeviceClass.RESTART: 'restart'>,
     'original_icon': None,
     'original_name': 'Reconnect',
@@ -169,9 +169,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Restart',
     'options': dict({
     }),
-    'object_id_base': 'Restart',
     'original_device_class': <ButtonDeviceClass.RESTART: 'restart'>,
     'original_icon': None,
     'original_name': 'Restart',
@@ -219,9 +219,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'printer Wake on LAN',
     'options': dict({
     }),
-    'object_id_base': 'printer Wake on LAN',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Wake on LAN',

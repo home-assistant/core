@@ -34,9 +34,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Socket 0',
     'options': dict({
     }),
-    'object_id_base': 'Socket 0',
     'original_device_class': <SwitchDeviceClass.OUTLET: 'outlet'>,
     'original_icon': None,
     'original_name': 'Socket 0',
@@ -84,9 +84,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Socket 1',
     'options': dict({
     }),
-    'object_id_base': 'Socket 1',
     'original_device_class': <SwitchDeviceClass.OUTLET: 'outlet'>,
     'original_icon': None,
     'original_name': 'Socket 1',
@@ -134,9 +134,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Socket 2',
     'options': dict({
     }),
-    'object_id_base': 'Socket 2',
     'original_device_class': <SwitchDeviceClass.OUTLET: 'outlet'>,
     'original_icon': None,
     'original_name': 'Socket 2',
@@ -184,9 +184,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Socket 3',
     'options': dict({
     }),
-    'object_id_base': 'Socket 3',
     'original_device_class': <SwitchDeviceClass.OUTLET: 'outlet'>,
     'original_icon': None,
     'original_name': 'Socket 3',

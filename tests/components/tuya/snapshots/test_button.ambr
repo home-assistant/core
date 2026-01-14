@@ -20,9 +20,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Factory reset',
     'options': dict({
     }),
-    'object_id_base': 'Factory reset',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Factory reset',
@@ -69,9 +69,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Manual clean',
     'options': dict({
     }),
-    'object_id_base': 'Manual clean',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Manual clean',
@@ -118,9 +118,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Factory reset',
     'options': dict({
     }),
-    'object_id_base': 'Factory reset',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Factory reset',
@@ -167,9 +167,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Manual clean',
     'options': dict({
     }),
-    'object_id_base': 'Manual clean',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Manual clean',
@@ -216,9 +216,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Reset duster cloth',
     'options': dict({
     }),
-    'object_id_base': 'Reset duster cloth',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Reset duster cloth',
@@ -265,9 +265,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Reset edge brush',
     'options': dict({
     }),
-    'object_id_base': 'Reset edge brush',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Reset edge brush',
@@ -314,9 +314,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Reset filter',
     'options': dict({
     }),
-    'object_id_base': 'Reset filter',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Reset filter',
@@ -363,9 +363,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Reset map',
     'options': dict({
     }),
-    'object_id_base': 'Reset map',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Reset map',
@@ -412,9 +412,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Reset roll brush',
     'options': dict({
     }),
-    'object_id_base': 'Reset roll brush',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Reset roll brush',

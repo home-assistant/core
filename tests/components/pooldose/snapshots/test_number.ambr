@@ -25,9 +25,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Chlorine overfeed alarm lower limit',
     'options': dict({
     }),
-    'object_id_base': 'Chlorine overfeed alarm lower limit',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Chlorine overfeed alarm lower limit',
@@ -84,9 +84,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Chlorine overfeed alarm upper limit',
     'options': dict({
     }),
-    'object_id_base': 'Chlorine overfeed alarm upper limit',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Chlorine overfeed alarm upper limit',
@@ -143,9 +143,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Chlorine target',
     'options': dict({
     }),
-    'object_id_base': 'Chlorine target',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Chlorine target',
@@ -202,9 +202,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'ORP overfeed alarm lower limit',
     'options': dict({
     }),
-    'object_id_base': 'ORP overfeed alarm lower limit',
     'original_device_class': <NumberDeviceClass.VOLTAGE: 'voltage'>,
     'original_icon': None,
     'original_name': 'ORP overfeed alarm lower limit',
@@ -262,9 +262,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'ORP overfeed alarm upper limit',
     'options': dict({
     }),
-    'object_id_base': 'ORP overfeed alarm upper limit',
     'original_device_class': <NumberDeviceClass.VOLTAGE: 'voltage'>,
     'original_icon': None,
     'original_name': 'ORP overfeed alarm upper limit',
@@ -322,9 +322,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'ORP target',
     'options': dict({
     }),
-    'object_id_base': 'ORP target',
     'original_device_class': <NumberDeviceClass.VOLTAGE: 'voltage'>,
     'original_icon': None,
     'original_name': 'ORP target',
@@ -382,9 +382,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'pH overfeed alarm lower limit',
     'options': dict({
     }),
-    'object_id_base': 'pH overfeed alarm lower limit',
     'original_device_class': <NumberDeviceClass.PH: 'ph'>,
     'original_icon': None,
     'original_name': 'pH overfeed alarm lower limit',
@@ -441,9 +441,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'pH overfeed alarm upper limit',
     'options': dict({
     }),
-    'object_id_base': 'pH overfeed alarm upper limit',
     'original_device_class': <NumberDeviceClass.PH: 'ph'>,
     'original_icon': None,
     'original_name': 'pH overfeed alarm upper limit',
@@ -500,9 +500,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'pH target',
     'options': dict({
     }),
-    'object_id_base': 'pH target',
     'original_device_class': <NumberDeviceClass.PH: 'ph'>,
     'original_icon': None,
     'original_name': 'pH target',

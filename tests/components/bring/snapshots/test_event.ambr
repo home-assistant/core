@@ -26,9 +26,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Activities',
     'options': dict({
     }),
-    'object_id_base': 'Activities',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Activities',
@@ -112,9 +112,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Activities',
     'options': dict({
     }),
-    'object_id_base': 'Activities',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Activities',

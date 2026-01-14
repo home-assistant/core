@@ -218,9 +218,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
-    'object_id_base': None,
     'original_device_class': None,
     'original_icon': None,
     'original_name': None,
@@ -677,9 +677,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
-    'object_id_base': None,
     'original_device_class': None,
     'original_icon': None,
     'original_name': None,
@@ -939,9 +939,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Main',
     'options': dict({
     }),
-    'object_id_base': 'Main',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Main',
@@ -1187,9 +1187,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Segment 1',
     'options': dict({
     }),
-    'object_id_base': 'Segment 1',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Segment 1',
@@ -1638,9 +1638,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
-    'object_id_base': None,
     'original_device_class': None,
     'original_icon': None,
     'original_name': None,
@@ -2089,9 +2089,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
-    'object_id_base': None,
     'original_device_class': None,
     'original_icon': None,
     'original_name': None,
@@ -2540,9 +2540,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
-    'object_id_base': None,
     'original_device_class': None,
     'original_icon': None,
     'original_name': None,

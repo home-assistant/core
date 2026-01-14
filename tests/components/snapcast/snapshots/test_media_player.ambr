@@ -25,9 +25,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'test_client_1 Snapcast Client',
     'options': dict({
     }),
-    'object_id_base': 'test_client_1 Snapcast Client',
     'original_device_class': <MediaPlayerDeviceClass.SPEAKER: 'speaker'>,
     'original_icon': None,
     'original_name': 'test_client_1 Snapcast Client',
@@ -101,9 +101,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'test_client_2 Snapcast Client',
     'options': dict({
     }),
-    'object_id_base': 'test_client_2 Snapcast Client',
     'original_device_class': <MediaPlayerDeviceClass.SPEAKER: 'speaker'>,
     'original_icon': None,
     'original_name': 'test_client_2 Snapcast Client',
@@ -169,9 +169,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Test Group 1 Snapcast Group',
     'options': dict({
     }),
-    'object_id_base': 'Test Group 1 Snapcast Group',
     'original_device_class': <MediaPlayerDeviceClass.SPEAKER: 'speaker'>,
     'original_icon': None,
     'original_name': 'Test Group 1 Snapcast Group',
@@ -241,9 +241,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Test Group 2 Snapcast Group',
     'options': dict({
     }),
-    'object_id_base': 'Test Group 2 Snapcast Group',
     'original_device_class': <MediaPlayerDeviceClass.SPEAKER: 'speaker'>,
     'original_icon': None,
     'original_name': 'Test Group 2 Snapcast Group',

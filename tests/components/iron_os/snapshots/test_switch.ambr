@@ -20,9 +20,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Animation loop',
     'options': dict({
     }),
-    'object_id_base': 'Animation loop',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Animation loop',
@@ -69,9 +69,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Boost',
     'options': dict({
     }),
-    'object_id_base': 'Boost',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Boost',
@@ -118,9 +118,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Calibrate CJC',
     'options': dict({
     }),
-    'object_id_base': 'Calibrate CJC',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Calibrate CJC',
@@ -167,9 +167,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Cool down screen flashing',
     'options': dict({
     }),
-    'object_id_base': 'Cool down screen flashing',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Cool down screen flashing',
@@ -216,9 +216,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Detailed idle screen',
     'options': dict({
     }),
-    'object_id_base': 'Detailed idle screen',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Detailed idle screen',
@@ -265,9 +265,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Detailed solder screen',
     'options': dict({
     }),
-    'object_id_base': 'Detailed solder screen',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Detailed solder screen',
@@ -314,9 +314,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Invert screen',
     'options': dict({
     }),
-    'object_id_base': 'Invert screen',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Invert screen',
@@ -363,9 +363,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Swap +/- buttons',
     'options': dict({
     }),
-    'object_id_base': 'Swap +/- buttons',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Swap +/- buttons',

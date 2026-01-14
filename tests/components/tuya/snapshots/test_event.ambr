@@ -47,9 +47,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Button 1',
     'options': dict({
     }),
-    'object_id_base': 'Button 1',
     'original_device_class': <EventDeviceClass.BUTTON: 'button'>,
     'original_icon': None,
     'original_name': 'Button 1',
@@ -107,9 +107,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Button 2',
     'options': dict({
     }),
-    'object_id_base': 'Button 2',
     'original_device_class': <EventDeviceClass.BUTTON: 'button'>,
     'original_icon': None,
     'original_name': 'Button 2',
@@ -168,9 +168,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Button 1',
     'options': dict({
     }),
-    'object_id_base': 'Button 1',
     'original_device_class': <EventDeviceClass.BUTTON: 'button'>,
     'original_icon': None,
     'original_name': 'Button 1',
@@ -228,9 +228,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Doorbell message',
     'options': dict({
     }),
-    'object_id_base': 'Doorbell message',
     'original_device_class': <EventDeviceClass.DOORBELL: 'doorbell'>,
     'original_icon': None,
     'original_name': 'Doorbell message',
@@ -287,9 +287,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Doorbell message',
     'options': dict({
     }),
-    'object_id_base': 'Doorbell message',
     'original_device_class': <EventDeviceClass.DOORBELL: 'doorbell'>,
     'original_icon': None,
     'original_name': 'Doorbell message',
@@ -346,9 +346,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Doorbell picture',
     'options': dict({
     }),
-    'object_id_base': 'Doorbell picture',
     'original_device_class': <EventDeviceClass.DOORBELL: 'doorbell'>,
     'original_icon': None,
     'original_name': 'Doorbell picture',
@@ -405,9 +405,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Doorbell message',
     'options': dict({
     }),
-    'object_id_base': 'Doorbell message',
     'original_device_class': <EventDeviceClass.DOORBELL: 'doorbell'>,
     'original_icon': None,
     'original_name': 'Doorbell message',
@@ -464,9 +464,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Doorbell message',
     'options': dict({
     }),
-    'object_id_base': 'Doorbell message',
     'original_device_class': <EventDeviceClass.DOORBELL: 'doorbell'>,
     'original_icon': None,
     'original_name': 'Doorbell message',
@@ -523,9 +523,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Doorbell picture',
     'options': dict({
     }),
-    'object_id_base': 'Doorbell picture',
     'original_device_class': <EventDeviceClass.DOORBELL: 'doorbell'>,
     'original_icon': None,
     'original_name': 'Doorbell picture',
@@ -582,9 +582,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Doorbell message',
     'options': dict({
     }),
-    'object_id_base': 'Doorbell message',
     'original_device_class': <EventDeviceClass.DOORBELL: 'doorbell'>,
     'original_icon': None,
     'original_name': 'Doorbell message',
@@ -641,9 +641,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Doorbell picture',
     'options': dict({
     }),
-    'object_id_base': 'Doorbell picture',
     'original_device_class': <EventDeviceClass.DOORBELL: 'doorbell'>,
     'original_icon': None,
     'original_name': 'Doorbell picture',

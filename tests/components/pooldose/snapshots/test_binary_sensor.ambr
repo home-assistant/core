@@ -20,9 +20,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Alarm relay status',
     'options': dict({
     }),
-    'object_id_base': 'Alarm relay status',
     'original_device_class': <BinarySensorDeviceClass.POWER: 'power'>,
     'original_icon': None,
     'original_name': 'Alarm relay status',
@@ -70,9 +70,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Auxiliary relay 1 status',
     'options': dict({
     }),
-    'object_id_base': 'Auxiliary relay 1 status',
     'original_device_class': <BinarySensorDeviceClass.POWER: 'power'>,
     'original_icon': None,
     'original_name': 'Auxiliary relay 1 status',
@@ -120,9 +120,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Auxiliary relay 2 status',
     'options': dict({
     }),
-    'object_id_base': 'Auxiliary relay 2 status',
     'original_device_class': <BinarySensorDeviceClass.POWER: 'power'>,
     'original_icon': None,
     'original_name': 'Auxiliary relay 2 status',
@@ -170,9 +170,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Auxiliary relay 3 status',
     'options': dict({
     }),
-    'object_id_base': 'Auxiliary relay 3 status',
     'original_device_class': <BinarySensorDeviceClass.POWER: 'power'>,
     'original_icon': None,
     'original_name': 'Auxiliary relay 3 status',
@@ -220,9 +220,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Chlorine tank level',
     'options': dict({
     }),
-    'object_id_base': 'Chlorine tank level',
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
     'original_icon': None,
     'original_name': 'Chlorine tank level',
@@ -270,9 +270,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Flow rate',
     'options': dict({
     }),
-    'object_id_base': 'Flow rate',
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
     'original_icon': None,
     'original_name': 'Flow rate',
@@ -320,9 +320,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'ORP overfeed',
     'options': dict({
     }),
-    'object_id_base': 'ORP overfeed',
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
     'original_icon': None,
     'original_name': 'ORP overfeed',
@@ -370,9 +370,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'ORP tank level',
     'options': dict({
     }),
-    'object_id_base': 'ORP tank level',
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
     'original_icon': None,
     'original_name': 'ORP tank level',
@@ -420,9 +420,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'pH overfeed',
     'options': dict({
     }),
-    'object_id_base': 'pH overfeed',
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
     'original_icon': None,
     'original_name': 'pH overfeed',
@@ -470,9 +470,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'pH tank level',
     'options': dict({
     }),
-    'object_id_base': 'pH tank level',
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
     'original_icon': None,
     'original_name': 'pH tank level',
@@ -520,9 +520,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Recirculation',
     'options': dict({
     }),
-    'object_id_base': 'Recirculation',
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
     'original_icon': None,
     'original_name': 'Recirculation',

@@ -27,9 +27,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'comfort mode',
     'options': dict({
     }),
-    'object_id_base': 'comfort mode',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'comfort mode',
@@ -89,9 +89,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'comfort mode',
     'options': dict({
     }),
-    'object_id_base': 'comfort mode',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'comfort mode',

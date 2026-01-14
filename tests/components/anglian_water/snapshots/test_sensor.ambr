@@ -22,12 +22,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Latest reading',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
       }),
     }),
-    'object_id_base': 'Latest reading',
     'original_device_class': <SensorDeviceClass.WATER: 'water'>,
     'original_icon': None,
     'original_name': 'Latest reading',
@@ -77,9 +77,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': "Yesterday's sewerage cost",
     'options': dict({
     }),
-    'object_id_base': "Yesterday's sewerage cost",
     'original_device_class': <SensorDeviceClass.MONETARY: 'monetary'>,
     'original_icon': None,
     'original_name': "Yesterday's sewerage cost",
@@ -130,12 +130,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': "Yesterday's usage",
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
       }),
     }),
-    'object_id_base': "Yesterday's usage",
     'original_device_class': <SensorDeviceClass.WATER: 'water'>,
     'original_icon': None,
     'original_name': "Yesterday's usage",
@@ -185,9 +185,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': "Yesterday's water cost",
     'options': dict({
     }),
-    'object_id_base': "Yesterday's water cost",
     'original_device_class': <SensorDeviceClass.MONETARY: 'monetary'>,
     'original_icon': None,
     'original_name': "Yesterday's water cost",

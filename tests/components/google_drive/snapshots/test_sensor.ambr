@@ -51,6 +51,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Total available storage',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -59,7 +60,6 @@
         'suggested_unit_of_measurement': <UnitOfInformation.GIBIBYTES: 'GiB'>,
       }),
     }),
-    'object_id_base': 'Total available storage',
     'original_device_class': <SensorDeviceClass.DATA_SIZE: 'data_size'>,
     'original_icon': None,
     'original_name': 'Total available storage',
@@ -108,6 +108,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Total size of backups',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -116,7 +117,6 @@
         'suggested_unit_of_measurement': <UnitOfInformation.MEBIBYTES: 'MiB'>,
       }),
     }),
-    'object_id_base': 'Total size of backups',
     'original_device_class': <SensorDeviceClass.DATA_SIZE: 'data_size'>,
     'original_icon': None,
     'original_name': 'Total size of backups',
@@ -165,6 +165,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Used storage',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -173,7 +174,6 @@
         'suggested_unit_of_measurement': <UnitOfInformation.GIBIBYTES: 'GiB'>,
       }),
     }),
-    'object_id_base': 'Used storage',
     'original_device_class': <SensorDeviceClass.DATA_SIZE: 'data_size'>,
     'original_icon': None,
     'original_name': 'Used storage',
@@ -222,6 +222,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Used storage in Drive',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -230,7 +231,6 @@
         'suggested_unit_of_measurement': <UnitOfInformation.GIBIBYTES: 'GiB'>,
       }),
     }),
-    'object_id_base': 'Used storage in Drive',
     'original_device_class': <SensorDeviceClass.DATA_SIZE: 'data_size'>,
     'original_icon': None,
     'original_name': 'Used storage in Drive',
@@ -279,6 +279,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Used storage in Drive Trash',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -287,7 +288,6 @@
         'suggested_unit_of_measurement': <UnitOfInformation.GIBIBYTES: 'GiB'>,
       }),
     }),
-    'object_id_base': 'Used storage in Drive Trash',
     'original_device_class': <SensorDeviceClass.DATA_SIZE: 'data_size'>,
     'original_icon': None,
     'original_name': 'Used storage in Drive Trash',

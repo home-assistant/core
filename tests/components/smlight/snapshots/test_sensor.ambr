@@ -26,9 +26,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Connection mode',
     'options': dict({
     }),
-    'object_id_base': 'Connection mode',
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
     'original_name': 'Connection mode',
@@ -83,12 +83,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Core chip temp',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
       }),
     }),
-    'object_id_base': 'Core chip temp',
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Core chip temp',
@@ -138,9 +138,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Core uptime',
     'options': dict({
     }),
-    'object_id_base': 'Core uptime',
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
     'original_icon': None,
     'original_name': 'Core uptime',
@@ -188,12 +188,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Filesystem usage',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
       }),
     }),
-    'object_id_base': 'Filesystem usage',
     'original_device_class': <SensorDeviceClass.DATA_SIZE: 'data_size'>,
     'original_icon': None,
     'original_name': 'Filesystem usage',
@@ -247,9 +247,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Firmware channel',
     'options': dict({
     }),
-    'object_id_base': 'Firmware channel',
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
     'original_name': 'Firmware channel',
@@ -301,12 +301,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'RAM usage',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
       }),
     }),
-    'object_id_base': 'RAM usage',
     'original_device_class': <SensorDeviceClass.DATA_SIZE: 'data_size'>,
     'original_icon': None,
     'original_name': 'RAM usage',
@@ -357,12 +357,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Zigbee chip temp',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
       }),
     }),
-    'object_id_base': 'Zigbee chip temp',
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Zigbee chip temp',
@@ -418,9 +418,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Zigbee type',
     'options': dict({
     }),
-    'object_id_base': 'Zigbee type',
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
     'original_name': 'Zigbee type',
@@ -473,9 +473,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Zigbee uptime',
     'options': dict({
     }),
-    'object_id_base': 'Zigbee uptime',
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
     'original_icon': None,
     'original_name': 'Zigbee uptime',

@@ -20,9 +20,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Possible error',
     'options': dict({
     }),
-    'object_id_base': 'Possible error',
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
     'original_icon': None,
     'original_name': 'Possible error',
@@ -71,9 +71,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Possible error',
     'options': dict({
     }),
-    'object_id_base': 'Possible error',
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
     'original_icon': None,
     'original_name': 'Possible error',
@@ -122,9 +122,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Possible error',
     'options': dict({
     }),
-    'object_id_base': 'Possible error',
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
     'original_icon': None,
     'original_name': 'Possible error',
@@ -173,9 +173,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Possible error',
     'options': dict({
     }),
-    'object_id_base': 'Possible error',
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
     'original_icon': None,
     'original_name': 'Possible error',
@@ -224,9 +224,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Possible error',
     'options': dict({
     }),
-    'object_id_base': 'Possible error',
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
     'original_icon': None,
     'original_name': 'Possible error',
@@ -275,9 +275,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Possible error',
     'options': dict({
     }),
-    'object_id_base': 'Possible error',
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
     'original_icon': None,
     'original_name': 'Possible error',
@@ -326,9 +326,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Possible error',
     'options': dict({
     }),
-    'object_id_base': 'Possible error',
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
     'original_icon': None,
     'original_name': 'Possible error',
@@ -377,9 +377,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Possible error',
     'options': dict({
     }),
-    'object_id_base': 'Possible error',
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
     'original_icon': None,
     'original_name': 'Possible error',

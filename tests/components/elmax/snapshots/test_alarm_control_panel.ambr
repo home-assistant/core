@@ -20,9 +20,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'AREA 1',
     'options': dict({
     }),
-    'object_id_base': 'AREA 1',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'AREA 1',
@@ -73,9 +73,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'AREA 2',
     'options': dict({
     }),
-    'object_id_base': 'AREA 2',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'AREA 2',
@@ -126,9 +126,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'AREA 3',
     'options': dict({
     }),
-    'object_id_base': 'AREA 3',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'AREA 3',

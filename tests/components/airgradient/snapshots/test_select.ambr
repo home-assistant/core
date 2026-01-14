@@ -29,9 +29,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'CO2 automatic baseline duration',
     'options': dict({
     }),
-    'object_id_base': 'CO2 automatic baseline duration',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'CO2 automatic baseline duration',
@@ -91,9 +91,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Configuration source',
     'options': dict({
     }),
-    'object_id_base': 'Configuration source',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Configuration source',
@@ -149,9 +149,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Display PM standard',
     'options': dict({
     }),
-    'object_id_base': 'Display PM standard',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Display PM standard',
@@ -207,9 +207,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Display temperature unit',
     'options': dict({
     }),
-    'object_id_base': 'Display temperature unit',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Display temperature unit',
@@ -266,9 +266,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'LED bar mode',
     'options': dict({
     }),
-    'object_id_base': 'LED bar mode',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'LED bar mode',
@@ -328,9 +328,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'NOx index learning offset',
     'options': dict({
     }),
-    'object_id_base': 'NOx index learning offset',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'NOx index learning offset',
@@ -392,9 +392,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'VOC index learning offset',
     'options': dict({
     }),
-    'object_id_base': 'VOC index learning offset',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'VOC index learning offset',
@@ -457,9 +457,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'CO2 automatic baseline duration',
     'options': dict({
     }),
-    'object_id_base': 'CO2 automatic baseline duration',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'CO2 automatic baseline duration',
@@ -519,9 +519,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Configuration source',
     'options': dict({
     }),
-    'object_id_base': 'Configuration source',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Configuration source',
@@ -580,9 +580,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'NOx index learning offset',
     'options': dict({
     }),
-    'object_id_base': 'NOx index learning offset',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'NOx index learning offset',
@@ -644,9 +644,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'VOC index learning offset',
     'options': dict({
     }),
-    'object_id_base': 'VOC index learning offset',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'VOC index learning offset',

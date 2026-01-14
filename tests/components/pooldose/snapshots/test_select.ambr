@@ -27,9 +27,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Chlorine dosing method',
     'options': dict({
     }),
-    'object_id_base': 'Chlorine dosing method',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Chlorine dosing method',
@@ -87,9 +87,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Chlorine dosing set',
     'options': dict({
     }),
-    'object_id_base': 'Chlorine dosing set',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Chlorine dosing set',
@@ -145,9 +145,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Flow rate unit',
     'options': dict({
     }),
-    'object_id_base': 'Flow rate unit',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Flow rate unit',
@@ -205,9 +205,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'ORP dosing method',
     'options': dict({
     }),
-    'object_id_base': 'ORP dosing method',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'ORP dosing method',
@@ -265,9 +265,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'ORP dosing set',
     'options': dict({
     }),
-    'object_id_base': 'ORP dosing set',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'ORP dosing set',
@@ -325,9 +325,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'pH dosing method',
     'options': dict({
     }),
-    'object_id_base': 'pH dosing method',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'pH dosing method',
@@ -385,9 +385,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'pH dosing set',
     'options': dict({
     }),
-    'object_id_base': 'pH dosing set',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'pH dosing set',
@@ -443,9 +443,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Water meter unit',
     'options': dict({
     }),
-    'object_id_base': 'Water meter unit',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Water meter unit',

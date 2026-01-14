@@ -22,9 +22,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Air quality index',
     'options': dict({
     }),
-    'object_id_base': 'Air quality index',
     'original_device_class': <SensorDeviceClass.AQI: 'aqi'>,
     'original_icon': None,
     'original_name': 'Air quality index',
@@ -76,9 +76,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Carbon monoxide',
     'options': dict({
     }),
-    'object_id_base': 'Carbon monoxide',
     'original_device_class': <SensorDeviceClass.CO: 'carbon_monoxide'>,
     'original_icon': None,
     'original_name': 'Carbon monoxide',
@@ -131,9 +131,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Nitrogen dioxide',
     'options': dict({
     }),
-    'object_id_base': 'Nitrogen dioxide',
     'original_device_class': <SensorDeviceClass.NITROGEN_DIOXIDE: 'nitrogen_dioxide'>,
     'original_icon': None,
     'original_name': 'Nitrogen dioxide',
@@ -186,9 +186,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Nitrogen monoxide',
     'options': dict({
     }),
-    'object_id_base': 'Nitrogen monoxide',
     'original_device_class': <SensorDeviceClass.NITROGEN_MONOXIDE: 'nitrogen_monoxide'>,
     'original_icon': None,
     'original_name': 'Nitrogen monoxide',
@@ -241,9 +241,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Ozone',
     'options': dict({
     }),
-    'object_id_base': 'Ozone',
     'original_device_class': <SensorDeviceClass.OZONE: 'ozone'>,
     'original_icon': None,
     'original_name': 'Ozone',
@@ -296,9 +296,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'PM10',
     'options': dict({
     }),
-    'object_id_base': 'PM10',
     'original_device_class': <SensorDeviceClass.PM10: 'pm10'>,
     'original_icon': None,
     'original_name': 'PM10',
@@ -351,9 +351,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'PM2.5',
     'options': dict({
     }),
-    'object_id_base': 'PM2.5',
     'original_device_class': <SensorDeviceClass.PM25: 'pm25'>,
     'original_icon': None,
     'original_name': 'PM2.5',
@@ -406,9 +406,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Sulphur dioxide',
     'options': dict({
     }),
-    'object_id_base': 'Sulphur dioxide',
     'original_device_class': <SensorDeviceClass.SULPHUR_DIOXIDE: 'sulphur_dioxide'>,
     'original_icon': None,
     'original_name': 'Sulphur dioxide',
@@ -461,12 +461,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Apparent temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
       }),
     }),
-    'object_id_base': 'Apparent temperature',
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Apparent temperature',
@@ -519,9 +519,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Cloud coverage',
     'options': dict({
     }),
-    'object_id_base': 'Cloud coverage',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Cloud coverage',
@@ -571,9 +571,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Condition',
     'options': dict({
     }),
-    'object_id_base': 'Condition',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Condition',
@@ -623,12 +623,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Dew point temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
       }),
     }),
-    'object_id_base': 'Dew point temperature',
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Dew point temperature',
@@ -681,9 +681,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Humidity',
     'options': dict({
     }),
-    'object_id_base': 'Humidity',
     'original_device_class': <SensorDeviceClass.HUMIDITY: 'humidity'>,
     'original_icon': None,
     'original_name': 'Humidity',
@@ -734,9 +734,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Precipitation kind',
     'options': dict({
     }),
-    'object_id_base': 'Precipitation kind',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Precipitation kind',
@@ -786,12 +786,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Pressure',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
       }),
     }),
-    'object_id_base': 'Pressure',
     'original_device_class': <SensorDeviceClass.PRESSURE: 'pressure'>,
     'original_icon': None,
     'original_name': 'Pressure',
@@ -844,12 +844,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Rain intensity',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
       }),
     }),
-    'object_id_base': 'Rain intensity',
     'original_device_class': <SensorDeviceClass.PRECIPITATION_INTENSITY: 'precipitation_intensity'>,
     'original_icon': None,
     'original_name': 'Rain intensity',
@@ -902,12 +902,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Snow intensity',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
       }),
     }),
-    'object_id_base': 'Snow intensity',
     'original_device_class': <SensorDeviceClass.PRECIPITATION_INTENSITY: 'precipitation_intensity'>,
     'original_icon': None,
     'original_name': 'Snow intensity',
@@ -960,12 +960,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
       }),
     }),
-    'object_id_base': 'Temperature',
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Temperature',
@@ -1018,9 +1018,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'UV index',
     'options': dict({
     }),
-    'object_id_base': 'UV index',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'UV index',
@@ -1072,12 +1072,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Visibility',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
       }),
     }),
-    'object_id_base': 'Visibility',
     'original_device_class': <SensorDeviceClass.DISTANCE: 'distance'>,
     'original_icon': None,
     'original_name': 'Visibility',
@@ -1128,9 +1128,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Weather',
     'options': dict({
     }),
-    'object_id_base': 'Weather',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Weather',
@@ -1178,9 +1178,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Weather code',
     'options': dict({
     }),
-    'object_id_base': 'Weather code',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Weather code',
@@ -1230,9 +1230,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Wind direction',
     'options': dict({
     }),
-    'object_id_base': 'Wind direction',
     'original_device_class': <SensorDeviceClass.WIND_DIRECTION: 'wind_direction'>,
     'original_icon': None,
     'original_name': 'Wind direction',
@@ -1285,6 +1285,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Wind gust speed',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -1293,7 +1294,6 @@
         'suggested_unit_of_measurement': <UnitOfSpeed.KILOMETERS_PER_HOUR: 'km/h'>,
       }),
     }),
-    'object_id_base': 'Wind gust speed',
     'original_device_class': <SensorDeviceClass.WIND_SPEED: 'wind_speed'>,
     'original_icon': None,
     'original_name': 'Wind gust speed',
@@ -1346,6 +1346,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Wind speed',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -1354,7 +1355,6 @@
         'suggested_unit_of_measurement': <UnitOfSpeed.KILOMETERS_PER_HOUR: 'km/h'>,
       }),
     }),
-    'object_id_base': 'Wind speed',
     'original_device_class': <SensorDeviceClass.WIND_SPEED: 'wind_speed'>,
     'original_icon': None,
     'original_name': 'Wind speed',
@@ -1407,12 +1407,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Apparent temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
       }),
     }),
-    'object_id_base': 'Apparent temperature',
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Apparent temperature',
@@ -1465,9 +1465,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Cloud coverage',
     'options': dict({
     }),
-    'object_id_base': 'Cloud coverage',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Cloud coverage',
@@ -1517,9 +1517,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Condition',
     'options': dict({
     }),
-    'object_id_base': 'Condition',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Condition',
@@ -1569,12 +1569,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Dew point temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
       }),
     }),
-    'object_id_base': 'Dew point temperature',
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Dew point temperature',
@@ -1627,9 +1627,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Humidity',
     'options': dict({
     }),
-    'object_id_base': 'Humidity',
     'original_device_class': <SensorDeviceClass.HUMIDITY: 'humidity'>,
     'original_icon': None,
     'original_name': 'Humidity',
@@ -1680,9 +1680,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Precipitation kind',
     'options': dict({
     }),
-    'object_id_base': 'Precipitation kind',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Precipitation kind',
@@ -1732,12 +1732,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Pressure',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
       }),
     }),
-    'object_id_base': 'Pressure',
     'original_device_class': <SensorDeviceClass.PRESSURE: 'pressure'>,
     'original_icon': None,
     'original_name': 'Pressure',
@@ -1790,12 +1790,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Rain intensity',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
       }),
     }),
-    'object_id_base': 'Rain intensity',
     'original_device_class': <SensorDeviceClass.PRECIPITATION_INTENSITY: 'precipitation_intensity'>,
     'original_icon': None,
     'original_name': 'Rain intensity',
@@ -1848,12 +1848,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Snow intensity',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
       }),
     }),
-    'object_id_base': 'Snow intensity',
     'original_device_class': <SensorDeviceClass.PRECIPITATION_INTENSITY: 'precipitation_intensity'>,
     'original_icon': None,
     'original_name': 'Snow intensity',
@@ -1906,12 +1906,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
       }),
     }),
-    'object_id_base': 'Temperature',
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Temperature',
@@ -1964,9 +1964,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'UV index',
     'options': dict({
     }),
-    'object_id_base': 'UV index',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'UV index',
@@ -2018,12 +2018,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Visibility',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
       }),
     }),
-    'object_id_base': 'Visibility',
     'original_device_class': <SensorDeviceClass.DISTANCE: 'distance'>,
     'original_icon': None,
     'original_name': 'Visibility',
@@ -2074,9 +2074,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Weather',
     'options': dict({
     }),
-    'object_id_base': 'Weather',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Weather',
@@ -2124,9 +2124,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Weather code',
     'options': dict({
     }),
-    'object_id_base': 'Weather code',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Weather code',
@@ -2176,9 +2176,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Wind direction',
     'options': dict({
     }),
-    'object_id_base': 'Wind direction',
     'original_device_class': <SensorDeviceClass.WIND_DIRECTION: 'wind_direction'>,
     'original_icon': None,
     'original_name': 'Wind direction',
@@ -2231,6 +2231,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Wind gust speed',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -2239,7 +2240,6 @@
         'suggested_unit_of_measurement': <UnitOfSpeed.KILOMETERS_PER_HOUR: 'km/h'>,
       }),
     }),
-    'object_id_base': 'Wind gust speed',
     'original_device_class': <SensorDeviceClass.WIND_SPEED: 'wind_speed'>,
     'original_icon': None,
     'original_name': 'Wind gust speed',
@@ -2292,6 +2292,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Wind speed',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -2300,7 +2301,6 @@
         'suggested_unit_of_measurement': <UnitOfSpeed.KILOMETERS_PER_HOUR: 'km/h'>,
       }),
     }),
-    'object_id_base': 'Wind speed',
     'original_device_class': <SensorDeviceClass.WIND_SPEED: 'wind_speed'>,
     'original_icon': None,
     'original_name': 'Wind speed',

@@ -54,9 +54,9 @@
       'labels': set({
       }),
       'name': None,
+      'object_id_base': 'Firmware',
       'options': dict({
       }),
-      'object_id_base': 'Firmware',
       'original_device_class': <UpdateDeviceClass.FIRMWARE: 'firmware'>,
       'original_icon': None,
       'original_name': 'Firmware',
@@ -151,9 +151,9 @@
       'labels': set({
       }),
       'name': None,
+      'object_id_base': 'Firmware',
       'options': dict({
       }),
-      'object_id_base': 'Firmware',
       'original_device_class': <UpdateDeviceClass.FIRMWARE: 'firmware'>,
       'original_icon': None,
       'original_name': 'Firmware',
@@ -248,9 +248,9 @@
       'labels': set({
       }),
       'name': None,
+      'object_id_base': 'Firmware',
       'options': dict({
       }),
-      'object_id_base': 'Firmware',
       'original_device_class': <UpdateDeviceClass.FIRMWARE: 'firmware'>,
       'original_icon': None,
       'original_name': 'Firmware',
@@ -345,9 +345,9 @@
       'labels': set({
       }),
       'name': None,
+      'object_id_base': 'Firmware',
       'options': dict({
       }),
-      'object_id_base': 'Firmware',
       'original_device_class': <UpdateDeviceClass.FIRMWARE: 'firmware'>,
       'original_icon': None,
       'original_name': 'Firmware',
@@ -442,9 +442,9 @@
       'labels': set({
       }),
       'name': None,
+      'object_id_base': 'Firmware',
       'options': dict({
       }),
-      'object_id_base': 'Firmware',
       'original_device_class': <UpdateDeviceClass.FIRMWARE: 'firmware'>,
       'original_icon': None,
       'original_name': 'Firmware',
@@ -539,9 +539,9 @@
       'labels': set({
       }),
       'name': None,
+      'object_id_base': 'Firmware',
       'options': dict({
       }),
-      'object_id_base': 'Firmware',
       'original_device_class': <UpdateDeviceClass.FIRMWARE: 'firmware'>,
       'original_icon': None,
       'original_name': 'Firmware',
@@ -636,9 +636,9 @@
       'labels': set({
       }),
       'name': None,
+      'object_id_base': 'Firmware',
       'options': dict({
       }),
-      'object_id_base': 'Firmware',
       'original_device_class': <UpdateDeviceClass.FIRMWARE: 'firmware'>,
       'original_icon': None,
       'original_name': 'Firmware',
@@ -723,9 +723,9 @@
       'labels': set({
       }),
       'name': None,
+      'object_id_base': 'Firmware',
       'options': dict({
       }),
-      'object_id_base': 'Firmware',
       'original_device_class': <UpdateDeviceClass.FIRMWARE: 'firmware'>,
       'original_icon': None,
       'original_name': 'Firmware',
@@ -820,9 +820,9 @@
       'labels': set({
       }),
       'name': None,
+      'object_id_base': 'Firmware',
       'options': dict({
       }),
-      'object_id_base': 'Firmware',
       'original_device_class': <UpdateDeviceClass.FIRMWARE: 'firmware'>,
       'original_icon': None,
       'original_name': 'Firmware',
@@ -917,9 +917,9 @@
       'labels': set({
       }),
       'name': None,
+      'object_id_base': 'Firmware',
       'options': dict({
       }),
-      'object_id_base': 'Firmware',
       'original_device_class': <UpdateDeviceClass.FIRMWARE: 'firmware'>,
       'original_icon': None,
       'original_name': 'Firmware',
@@ -1014,9 +1014,9 @@
       'labels': set({
       }),
       'name': None,
+      'object_id_base': 'Firmware',
       'options': dict({
       }),
-      'object_id_base': 'Firmware',
       'original_device_class': <UpdateDeviceClass.FIRMWARE: 'firmware'>,
       'original_icon': None,
       'original_name': 'Firmware',
@@ -1111,9 +1111,9 @@
       'labels': set({
       }),
       'name': None,
+      'object_id_base': 'Firmware',
       'options': dict({
       }),
-      'object_id_base': 'Firmware',
       'original_device_class': <UpdateDeviceClass.FIRMWARE: 'firmware'>,
       'original_icon': None,
       'original_name': 'Firmware',
@@ -1208,9 +1208,9 @@
       'labels': set({
       }),
       'name': None,
+      'object_id_base': 'Firmware',
       'options': dict({
       }),
-      'object_id_base': 'Firmware',
       'original_device_class': <UpdateDeviceClass.FIRMWARE: 'firmware'>,
       'original_icon': None,
       'original_name': 'Firmware',
@@ -1305,9 +1305,9 @@
       'labels': set({
       }),
       'name': None,
+      'object_id_base': 'Firmware',
       'options': dict({
       }),
-      'object_id_base': 'Firmware',
       'original_device_class': <UpdateDeviceClass.FIRMWARE: 'firmware'>,
       'original_icon': None,
       'original_name': 'Firmware',
@@ -1402,9 +1402,9 @@
       'labels': set({
       }),
       'name': None,
+      'object_id_base': 'Firmware',
       'options': dict({
       }),
-      'object_id_base': 'Firmware',
       'original_device_class': <UpdateDeviceClass.FIRMWARE: 'firmware'>,
       'original_icon': None,
       'original_name': 'Firmware',

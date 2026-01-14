@@ -20,9 +20,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Stop',
     'options': dict({
     }),
-    'object_id_base': 'Stop',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Stop',
@@ -69,9 +69,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Start',
     'options': dict({
     }),
-    'object_id_base': 'Start',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Start',
@@ -118,9 +118,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Stop',
     'options': dict({
     }),
-    'object_id_base': 'Stop',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Stop',
@@ -167,9 +167,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Pause',
     'options': dict({
     }),
-    'object_id_base': 'Pause',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Pause',
@@ -216,9 +216,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Start',
     'options': dict({
     }),
-    'object_id_base': 'Start',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Start',
@@ -265,9 +265,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Stop',
     'options': dict({
     }),
-    'object_id_base': 'Stop',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Stop',
@@ -314,9 +314,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Stop',
     'options': dict({
     }),
-    'object_id_base': 'Stop',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Stop',
@@ -363,9 +363,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Start',
     'options': dict({
     }),
-    'object_id_base': 'Start',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Start',
@@ -412,9 +412,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Stop',
     'options': dict({
     }),
-    'object_id_base': 'Stop',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Stop',
@@ -461,9 +461,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Pause',
     'options': dict({
     }),
-    'object_id_base': 'Pause',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Pause',
@@ -510,9 +510,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Start',
     'options': dict({
     }),
-    'object_id_base': 'Start',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Start',
@@ -559,9 +559,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Stop',
     'options': dict({
     }),
-    'object_id_base': 'Stop',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Stop',

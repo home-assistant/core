@@ -34,9 +34,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Connected to router',
     'options': dict({
     }),
-    'object_id_base': 'Connected to router',
     'original_device_class': <BinarySensorDeviceClass.PLUG: 'plug'>,
     'original_icon': None,
     'original_name': 'Connected to router',

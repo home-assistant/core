@@ -27,9 +27,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Charge mode',
     'options': dict({
     }),
-    'object_id_base': 'Charge mode',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Charge mode',
@@ -89,9 +89,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Charge mode',
     'options': dict({
     }),
-    'object_id_base': 'Charge mode',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Charge mode',
@@ -151,9 +151,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Charge mode',
     'options': dict({
     }),
-    'object_id_base': 'Charge mode',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Charge mode',

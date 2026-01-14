@@ -20,9 +20,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Abort all running downloads',
     'options': dict({
     }),
-    'object_id_base': 'Abort all running downloads',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Abort all running downloads',
@@ -69,9 +69,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Delete finished files/packages',
     'options': dict({
     }),
-    'object_id_base': 'Delete finished files/packages',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Delete finished files/packages',
@@ -118,9 +118,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Restart all failed files',
     'options': dict({
     }),
-    'object_id_base': 'Restart all failed files',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Restart all failed files',
@@ -167,9 +167,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Restart pyload core',
     'options': dict({
     }),
-    'object_id_base': 'Restart pyload core',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Restart pyload core',

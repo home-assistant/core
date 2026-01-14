@@ -20,9 +20,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Pure Boost',
     'options': dict({
     }),
-    'object_id_base': 'Pure Boost',
     'original_device_class': <SwitchDeviceClass.SWITCH: 'switch'>,
     'original_icon': None,
     'original_name': 'Pure Boost',
@@ -70,9 +70,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Climate React',
     'options': dict({
     }),
-    'object_id_base': 'Climate React',
     'original_device_class': <SwitchDeviceClass.SWITCH: 'switch'>,
     'original_icon': None,
     'original_name': 'Climate React',
@@ -121,9 +121,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Timer',
     'options': dict({
     }),
-    'object_id_base': 'Timer',
     'original_device_class': <SwitchDeviceClass.SWITCH: 'switch'>,
     'original_icon': None,
     'original_name': 'Timer',
@@ -173,9 +173,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Pure Boost',
     'options': dict({
     }),
-    'object_id_base': 'Pure Boost',
     'original_device_class': <SwitchDeviceClass.SWITCH: 'switch'>,
     'original_icon': None,
     'original_name': 'Pure Boost',

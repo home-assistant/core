@@ -22,9 +22,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
-    'object_id_base': None,
     'original_device_class': None,
     'original_icon': None,
     'original_name': None,
@@ -78,9 +78,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'my_fan_0',
     'options': dict({
     }),
-    'object_id_base': 'my_fan_0',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'my_fan_0',
@@ -134,9 +134,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'my_fan_1',
     'options': dict({
     }),
-    'object_id_base': 'my_fan_1',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'my_fan_1',

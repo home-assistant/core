@@ -20,9 +20,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Avatar',
     'options': dict({
     }),
-    'object_id_base': 'Avatar',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Avatar',
@@ -71,9 +71,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Gamerpic',
     'options': dict({
     }),
-    'object_id_base': 'Gamerpic',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Gamerpic',
@@ -122,9 +122,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Now playing',
     'options': dict({
     }),
-    'object_id_base': 'Now playing',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Now playing',
@@ -173,9 +173,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Avatar',
     'options': dict({
     }),
-    'object_id_base': 'Avatar',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Avatar',
@@ -224,9 +224,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Gamerpic',
     'options': dict({
     }),
-    'object_id_base': 'Gamerpic',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Gamerpic',
@@ -275,9 +275,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Now playing',
     'options': dict({
     }),
-    'object_id_base': 'Now playing',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Now playing',
@@ -326,9 +326,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Avatar',
     'options': dict({
     }),
-    'object_id_base': 'Avatar',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Avatar',
@@ -377,9 +377,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Gamerpic',
     'options': dict({
     }),
-    'object_id_base': 'Gamerpic',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Gamerpic',
@@ -428,9 +428,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Now playing',
     'options': dict({
     }),
-    'object_id_base': 'Now playing',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Now playing',

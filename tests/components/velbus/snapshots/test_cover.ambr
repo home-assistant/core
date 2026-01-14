@@ -20,9 +20,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'CoverName',
     'options': dict({
     }),
-    'object_id_base': 'CoverName',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'CoverName',
@@ -71,9 +71,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'CoverNameNoPos',
     'options': dict({
     }),
-    'object_id_base': 'CoverNameNoPos',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'CoverNameNoPos',

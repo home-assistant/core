@@ -34,9 +34,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Identify device with a blinking LED',
     'options': dict({
     }),
-    'object_id_base': 'Identify device with a blinking LED',
     'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
     'original_icon': None,
     'original_name': 'Identify device with a blinking LED',
@@ -84,9 +84,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Restart device',
     'options': dict({
     }),
-    'object_id_base': 'Restart device',
     'original_device_class': <ButtonDeviceClass.RESTART: 'restart'>,
     'original_icon': None,
     'original_name': 'Restart device',
@@ -133,9 +133,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Start PLC pairing',
     'options': dict({
     }),
-    'object_id_base': 'Start PLC pairing',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Start PLC pairing',
@@ -182,9 +182,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Start WPS',
     'options': dict({
     }),
-    'object_id_base': 'Start WPS',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Start WPS',

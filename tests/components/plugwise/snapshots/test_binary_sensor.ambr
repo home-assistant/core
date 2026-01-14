@@ -20,9 +20,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Plugwise notification',
     'options': dict({
     }),
-    'object_id_base': 'Plugwise notification',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Plugwise notification',
@@ -78,9 +78,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery',
     'options': dict({
     }),
-    'object_id_base': 'Battery',
     'original_device_class': <BinarySensorDeviceClass.BATTERY: 'battery'>,
     'original_icon': None,
     'original_name': 'Battery',
@@ -128,9 +128,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery',
     'options': dict({
     }),
-    'object_id_base': 'Battery',
     'original_device_class': <BinarySensorDeviceClass.BATTERY: 'battery'>,
     'original_icon': None,
     'original_name': 'Battery',
@@ -178,9 +178,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Heating',
     'options': dict({
     }),
-    'object_id_base': 'Heating',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Heating',
@@ -227,9 +227,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery',
     'options': dict({
     }),
-    'object_id_base': 'Battery',
     'original_device_class': <BinarySensorDeviceClass.BATTERY: 'battery'>,
     'original_icon': None,
     'original_name': 'Battery',
@@ -277,9 +277,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery',
     'options': dict({
     }),
-    'object_id_base': 'Battery',
     'original_device_class': <BinarySensorDeviceClass.BATTERY: 'battery'>,
     'original_icon': None,
     'original_name': 'Battery',
@@ -327,9 +327,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery',
     'options': dict({
     }),
-    'object_id_base': 'Battery',
     'original_device_class': <BinarySensorDeviceClass.BATTERY: 'battery'>,
     'original_icon': None,
     'original_name': 'Battery',
@@ -377,9 +377,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery',
     'options': dict({
     }),
-    'object_id_base': 'Battery',
     'original_device_class': <BinarySensorDeviceClass.BATTERY: 'battery'>,
     'original_icon': None,
     'original_name': 'Battery',
@@ -427,9 +427,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery',
     'options': dict({
     }),
-    'object_id_base': 'Battery',
     'original_device_class': <BinarySensorDeviceClass.BATTERY: 'battery'>,
     'original_icon': None,
     'original_name': 'Battery',
@@ -477,9 +477,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery',
     'options': dict({
     }),
-    'object_id_base': 'Battery',
     'original_device_class': <BinarySensorDeviceClass.BATTERY: 'battery'>,
     'original_icon': None,
     'original_name': 'Battery',
@@ -527,9 +527,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Compressor state',
     'options': dict({
     }),
-    'object_id_base': 'Compressor state',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Compressor state',
@@ -576,9 +576,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Cooling',
     'options': dict({
     }),
-    'object_id_base': 'Cooling',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Cooling',
@@ -625,9 +625,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Cooling enabled',
     'options': dict({
     }),
-    'object_id_base': 'Cooling enabled',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Cooling enabled',
@@ -674,9 +674,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'DHW state',
     'options': dict({
     }),
-    'object_id_base': 'DHW state',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'DHW state',
@@ -723,9 +723,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Flame state',
     'options': dict({
     }),
-    'object_id_base': 'Flame state',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Flame state',
@@ -772,9 +772,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Heating',
     'options': dict({
     }),
-    'object_id_base': 'Heating',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Heating',
@@ -821,9 +821,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Secondary boiler state',
     'options': dict({
     }),
-    'object_id_base': 'Secondary boiler state',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Secondary boiler state',
@@ -870,9 +870,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Plugwise notification',
     'options': dict({
     }),
-    'object_id_base': 'Plugwise notification',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Plugwise notification',
@@ -927,9 +927,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Plugwise notification',
     'options': dict({
     }),
-    'object_id_base': 'Plugwise notification',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Plugwise notification',

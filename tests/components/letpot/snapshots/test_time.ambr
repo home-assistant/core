@@ -20,9 +20,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Light off',
     'options': dict({
     }),
-    'object_id_base': 'Light off',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Light off',
@@ -69,9 +69,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Light on',
     'options': dict({
     }),
-    'object_id_base': 'Light on',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Light on',

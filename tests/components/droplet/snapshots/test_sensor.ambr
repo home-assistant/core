@@ -22,6 +22,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Flow rate',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -30,7 +31,6 @@
         'suggested_unit_of_measurement': <UnitOfVolumeFlowRate.GALLONS_PER_MINUTE: 'gal/min'>,
       }),
     }),
-    'object_id_base': 'Flow rate',
     'original_device_class': <SensorDeviceClass.VOLUME_FLOW_RATE: 'volume_flow_rate'>,
     'original_icon': None,
     'original_name': 'Flow rate',
@@ -86,9 +86,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Server status',
     'options': dict({
     }),
-    'object_id_base': 'Server status',
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
     'original_name': 'Server status',
@@ -147,9 +147,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Signal quality',
     'options': dict({
     }),
-    'object_id_base': 'Signal quality',
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
     'original_name': 'Signal quality',
@@ -204,6 +204,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Water',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -212,7 +213,6 @@
         'suggested_unit_of_measurement': <UnitOfVolume.GALLONS: 'gal'>,
       }),
     }),
-    'object_id_base': 'Water',
     'original_device_class': <SensorDeviceClass.WATER: 'water'>,
     'original_icon': None,
     'original_name': 'Water',

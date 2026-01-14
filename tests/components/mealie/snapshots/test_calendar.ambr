@@ -154,9 +154,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Breakfast',
     'options': dict({
     }),
-    'object_id_base': 'Breakfast',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Breakfast',
@@ -209,9 +209,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Dessert',
     'options': dict({
     }),
-    'object_id_base': 'Dessert',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Dessert',
@@ -264,9 +264,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Dinner',
     'options': dict({
     }),
-    'object_id_base': 'Dinner',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Dinner',
@@ -319,9 +319,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Drink',
     'options': dict({
     }),
-    'object_id_base': 'Drink',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Drink',
@@ -374,9 +374,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Lunch',
     'options': dict({
     }),
-    'object_id_base': 'Lunch',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Lunch',
@@ -429,9 +429,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Side',
     'options': dict({
     }),
-    'object_id_base': 'Side',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Side',
@@ -484,9 +484,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Snack',
     'options': dict({
     }),
-    'object_id_base': 'Snack',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Snack',

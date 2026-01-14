@@ -20,9 +20,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Area ready to arm away',
     'options': dict({
     }),
-    'object_id_base': 'Area ready to arm away',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Area ready to arm away',
@@ -69,9 +69,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Area ready to arm home',
     'options': dict({
     }),
-    'object_id_base': 'Area ready to arm home',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Area ready to arm home',
@@ -118,9 +118,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
-    'object_id_base': None,
     'original_device_class': None,
     'original_icon': None,
     'original_name': None,
@@ -167,9 +167,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'AC failure',
     'options': dict({
     }),
-    'object_id_base': 'AC failure',
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
     'original_icon': None,
     'original_name': 'AC failure',
@@ -217,9 +217,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery',
     'options': dict({
     }),
-    'object_id_base': 'Battery',
     'original_device_class': <BinarySensorDeviceClass.BATTERY: 'battery'>,
     'original_icon': None,
     'original_name': 'Battery',
@@ -267,9 +267,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery missing',
     'options': dict({
     }),
-    'object_id_base': 'Battery missing',
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
     'original_icon': None,
     'original_name': 'Battery missing',
@@ -317,9 +317,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'CRC failure in panel configuration',
     'options': dict({
     }),
-    'object_id_base': 'CRC failure in panel configuration',
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
     'original_icon': None,
     'original_name': 'CRC failure in panel configuration',
@@ -367,9 +367,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Failure to call RPS since last RPS connection',
     'options': dict({
     }),
-    'object_id_base': 'Failure to call RPS since last RPS connection',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Failure to call RPS since last RPS connection',
@@ -416,9 +416,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Log overflow',
     'options': dict({
     }),
-    'object_id_base': 'Log overflow',
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
     'original_icon': None,
     'original_name': 'Log overflow',
@@ -466,9 +466,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Log threshold reached',
     'options': dict({
     }),
-    'object_id_base': 'Log threshold reached',
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
     'original_icon': None,
     'original_name': 'Log threshold reached',
@@ -516,9 +516,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Phone line failure',
     'options': dict({
     }),
-    'object_id_base': 'Phone line failure',
     'original_device_class': <BinarySensorDeviceClass.CONNECTIVITY: 'connectivity'>,
     'original_icon': None,
     'original_name': 'Phone line failure',
@@ -566,9 +566,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Point bus failure since last RPS connection',
     'options': dict({
     }),
-    'object_id_base': 'Point bus failure since last RPS connection',
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
     'original_icon': None,
     'original_name': 'Point bus failure since last RPS connection',
@@ -616,9 +616,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Problem',
     'options': dict({
     }),
-    'object_id_base': 'Problem',
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
     'original_icon': None,
     'original_name': 'Problem',
@@ -666,9 +666,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'SDI failure since last RPS connection',
     'options': dict({
     }),
-    'object_id_base': 'SDI failure since last RPS connection',
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
     'original_icon': None,
     'original_name': 'SDI failure since last RPS connection',
@@ -716,9 +716,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'User code tamper since last RPS connection',
     'options': dict({
     }),
-    'object_id_base': 'User code tamper since last RPS connection',
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
     'original_icon': None,
     'original_name': 'User code tamper since last RPS connection',
@@ -766,9 +766,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
-    'object_id_base': None,
     'original_device_class': None,
     'original_icon': None,
     'original_name': None,
@@ -815,9 +815,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
-    'object_id_base': None,
     'original_device_class': None,
     'original_icon': None,
     'original_name': None,
@@ -864,9 +864,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
-    'object_id_base': None,
     'original_device_class': None,
     'original_icon': None,
     'original_name': None,
@@ -913,9 +913,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
-    'object_id_base': None,
     'original_device_class': None,
     'original_icon': None,
     'original_name': None,
@@ -962,9 +962,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
-    'object_id_base': None,
     'original_device_class': None,
     'original_icon': None,
     'original_name': None,
@@ -1011,9 +1011,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
-    'object_id_base': None,
     'original_device_class': None,
     'original_icon': None,
     'original_name': None,
@@ -1060,9 +1060,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Area ready to arm away',
     'options': dict({
     }),
-    'object_id_base': 'Area ready to arm away',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Area ready to arm away',
@@ -1109,9 +1109,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Area ready to arm home',
     'options': dict({
     }),
-    'object_id_base': 'Area ready to arm home',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Area ready to arm home',
@@ -1158,9 +1158,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
-    'object_id_base': None,
     'original_device_class': None,
     'original_icon': None,
     'original_name': None,
@@ -1207,9 +1207,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'AC failure',
     'options': dict({
     }),
-    'object_id_base': 'AC failure',
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
     'original_icon': None,
     'original_name': 'AC failure',
@@ -1257,9 +1257,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery',
     'options': dict({
     }),
-    'object_id_base': 'Battery',
     'original_device_class': <BinarySensorDeviceClass.BATTERY: 'battery'>,
     'original_icon': None,
     'original_name': 'Battery',
@@ -1307,9 +1307,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery missing',
     'options': dict({
     }),
-    'object_id_base': 'Battery missing',
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
     'original_icon': None,
     'original_name': 'Battery missing',
@@ -1357,9 +1357,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'CRC failure in panel configuration',
     'options': dict({
     }),
-    'object_id_base': 'CRC failure in panel configuration',
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
     'original_icon': None,
     'original_name': 'CRC failure in panel configuration',
@@ -1407,9 +1407,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Failure to call RPS since last RPS connection',
     'options': dict({
     }),
-    'object_id_base': 'Failure to call RPS since last RPS connection',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Failure to call RPS since last RPS connection',
@@ -1456,9 +1456,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Log overflow',
     'options': dict({
     }),
-    'object_id_base': 'Log overflow',
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
     'original_icon': None,
     'original_name': 'Log overflow',
@@ -1506,9 +1506,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Log threshold reached',
     'options': dict({
     }),
-    'object_id_base': 'Log threshold reached',
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
     'original_icon': None,
     'original_name': 'Log threshold reached',
@@ -1556,9 +1556,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Phone line failure',
     'options': dict({
     }),
-    'object_id_base': 'Phone line failure',
     'original_device_class': <BinarySensorDeviceClass.CONNECTIVITY: 'connectivity'>,
     'original_icon': None,
     'original_name': 'Phone line failure',
@@ -1606,9 +1606,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Point bus failure since last RPS connection',
     'options': dict({
     }),
-    'object_id_base': 'Point bus failure since last RPS connection',
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
     'original_icon': None,
     'original_name': 'Point bus failure since last RPS connection',
@@ -1656,9 +1656,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Problem',
     'options': dict({
     }),
-    'object_id_base': 'Problem',
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
     'original_icon': None,
     'original_name': 'Problem',
@@ -1706,9 +1706,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'SDI failure since last RPS connection',
     'options': dict({
     }),
-    'object_id_base': 'SDI failure since last RPS connection',
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
     'original_icon': None,
     'original_name': 'SDI failure since last RPS connection',
@@ -1756,9 +1756,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'User code tamper since last RPS connection',
     'options': dict({
     }),
-    'object_id_base': 'User code tamper since last RPS connection',
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
     'original_icon': None,
     'original_name': 'User code tamper since last RPS connection',
@@ -1806,9 +1806,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
-    'object_id_base': None,
     'original_device_class': None,
     'original_icon': None,
     'original_name': None,
@@ -1855,9 +1855,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
-    'object_id_base': None,
     'original_device_class': None,
     'original_icon': None,
     'original_name': None,
@@ -1904,9 +1904,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
-    'object_id_base': None,
     'original_device_class': None,
     'original_icon': None,
     'original_name': None,
@@ -1953,9 +1953,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
-    'object_id_base': None,
     'original_device_class': None,
     'original_icon': None,
     'original_name': None,
@@ -2002,9 +2002,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
-    'object_id_base': None,
     'original_device_class': None,
     'original_icon': None,
     'original_name': None,
@@ -2051,9 +2051,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
-    'object_id_base': None,
     'original_device_class': None,
     'original_icon': None,
     'original_name': None,
@@ -2100,9 +2100,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Area ready to arm away',
     'options': dict({
     }),
-    'object_id_base': 'Area ready to arm away',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Area ready to arm away',
@@ -2149,9 +2149,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Area ready to arm home',
     'options': dict({
     }),
-    'object_id_base': 'Area ready to arm home',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Area ready to arm home',
@@ -2198,9 +2198,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
-    'object_id_base': None,
     'original_device_class': None,
     'original_icon': None,
     'original_name': None,
@@ -2247,9 +2247,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'AC failure',
     'options': dict({
     }),
-    'object_id_base': 'AC failure',
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
     'original_icon': None,
     'original_name': 'AC failure',
@@ -2297,9 +2297,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery',
     'options': dict({
     }),
-    'object_id_base': 'Battery',
     'original_device_class': <BinarySensorDeviceClass.BATTERY: 'battery'>,
     'original_icon': None,
     'original_name': 'Battery',
@@ -2347,9 +2347,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery missing',
     'options': dict({
     }),
-    'object_id_base': 'Battery missing',
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
     'original_icon': None,
     'original_name': 'Battery missing',
@@ -2397,9 +2397,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'CRC failure in panel configuration',
     'options': dict({
     }),
-    'object_id_base': 'CRC failure in panel configuration',
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
     'original_icon': None,
     'original_name': 'CRC failure in panel configuration',
@@ -2447,9 +2447,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Failure to call RPS since last RPS connection',
     'options': dict({
     }),
-    'object_id_base': 'Failure to call RPS since last RPS connection',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Failure to call RPS since last RPS connection',
@@ -2496,9 +2496,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Log overflow',
     'options': dict({
     }),
-    'object_id_base': 'Log overflow',
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
     'original_icon': None,
     'original_name': 'Log overflow',
@@ -2546,9 +2546,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Log threshold reached',
     'options': dict({
     }),
-    'object_id_base': 'Log threshold reached',
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
     'original_icon': None,
     'original_name': 'Log threshold reached',
@@ -2596,9 +2596,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Phone line failure',
     'options': dict({
     }),
-    'object_id_base': 'Phone line failure',
     'original_device_class': <BinarySensorDeviceClass.CONNECTIVITY: 'connectivity'>,
     'original_icon': None,
     'original_name': 'Phone line failure',
@@ -2646,9 +2646,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Point bus failure since last RPS connection',
     'options': dict({
     }),
-    'object_id_base': 'Point bus failure since last RPS connection',
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
     'original_icon': None,
     'original_name': 'Point bus failure since last RPS connection',
@@ -2696,9 +2696,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Problem',
     'options': dict({
     }),
-    'object_id_base': 'Problem',
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
     'original_icon': None,
     'original_name': 'Problem',
@@ -2746,9 +2746,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'SDI failure since last RPS connection',
     'options': dict({
     }),
-    'object_id_base': 'SDI failure since last RPS connection',
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
     'original_icon': None,
     'original_name': 'SDI failure since last RPS connection',
@@ -2796,9 +2796,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'User code tamper since last RPS connection',
     'options': dict({
     }),
-    'object_id_base': 'User code tamper since last RPS connection',
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
     'original_icon': None,
     'original_name': 'User code tamper since last RPS connection',
@@ -2846,9 +2846,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
-    'object_id_base': None,
     'original_device_class': None,
     'original_icon': None,
     'original_name': None,
@@ -2895,9 +2895,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
-    'object_id_base': None,
     'original_device_class': None,
     'original_icon': None,
     'original_name': None,
@@ -2944,9 +2944,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
-    'object_id_base': None,
     'original_device_class': None,
     'original_icon': None,
     'original_name': None,
@@ -2993,9 +2993,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
-    'object_id_base': None,
     'original_device_class': None,
     'original_icon': None,
     'original_name': None,
@@ -3042,9 +3042,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
-    'object_id_base': None,
     'original_device_class': None,
     'original_icon': None,
     'original_name': None,
@@ -3091,9 +3091,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
-    'object_id_base': None,
     'original_device_class': None,
     'original_icon': None,
     'original_name': None,

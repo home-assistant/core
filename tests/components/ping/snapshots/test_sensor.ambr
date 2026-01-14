@@ -22,12 +22,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Jitter',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
       }),
     }),
-    'object_id_base': 'Jitter',
     'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
     'original_icon': None,
     'original_name': 'Jitter',
@@ -78,9 +78,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Packet loss',
     'options': dict({
     }),
-    'object_id_base': 'Packet loss',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Packet loss',
@@ -130,12 +130,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Round-trip time average',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
       }),
     }),
-    'object_id_base': 'Round-trip time average',
     'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
     'original_icon': None,
     'original_name': 'Round-trip time average',
@@ -186,12 +186,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Round-trip time maximum',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
       }),
     }),
-    'object_id_base': 'Round-trip time maximum',
     'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
     'original_icon': None,
     'original_name': 'Round-trip time maximum',
@@ -248,12 +248,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Round-trip time minimum',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
       }),
     }),
-    'object_id_base': 'Round-trip time minimum',
     'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
     'original_icon': None,
     'original_name': 'Round-trip time minimum',

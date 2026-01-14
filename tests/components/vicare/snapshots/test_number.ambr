@@ -25,9 +25,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Comfort temperature',
     'options': dict({
     }),
-    'object_id_base': 'Comfort temperature',
     'original_device_class': <NumberDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Comfort temperature',
@@ -85,9 +85,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Comfort temperature',
     'options': dict({
     }),
-    'object_id_base': 'Comfort temperature',
     'original_device_class': <NumberDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Comfort temperature',
@@ -145,9 +145,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'DHW temperature',
     'options': dict({
     }),
-    'object_id_base': 'DHW temperature',
     'original_device_class': <NumberDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'DHW temperature',
@@ -205,9 +205,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Heating curve shift',
     'options': dict({
     }),
-    'object_id_base': 'Heating curve shift',
     'original_device_class': <NumberDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Heating curve shift',
@@ -265,9 +265,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Heating curve shift',
     'options': dict({
     }),
-    'object_id_base': 'Heating curve shift',
     'original_device_class': <NumberDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Heating curve shift',
@@ -325,9 +325,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Heating curve slope',
     'options': dict({
     }),
-    'object_id_base': 'Heating curve slope',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Heating curve slope',
@@ -383,9 +383,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Heating curve slope',
     'options': dict({
     }),
-    'object_id_base': 'Heating curve slope',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Heating curve slope',
@@ -441,9 +441,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Normal temperature',
     'options': dict({
     }),
-    'object_id_base': 'Normal temperature',
     'original_device_class': <NumberDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Normal temperature',
@@ -501,9 +501,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Normal temperature',
     'options': dict({
     }),
-    'object_id_base': 'Normal temperature',
     'original_device_class': <NumberDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Normal temperature',
@@ -561,9 +561,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Reduced temperature',
     'options': dict({
     }),
-    'object_id_base': 'Reduced temperature',
     'original_device_class': <NumberDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Reduced temperature',
@@ -621,9 +621,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Reduced temperature',
     'options': dict({
     }),
-    'object_id_base': 'Reduced temperature',
     'original_device_class': <NumberDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Reduced temperature',

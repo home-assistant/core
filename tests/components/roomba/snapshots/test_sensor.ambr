@@ -20,9 +20,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Average mission time',
     'options': dict({
     }),
-    'object_id_base': 'Average mission time',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Average mission time',
@@ -70,9 +70,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery',
     'options': dict({
     }),
-    'object_id_base': 'Battery',
     'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
     'original_icon': None,
     'original_name': 'Battery',
@@ -123,9 +123,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery cycles',
     'options': dict({
     }),
-    'object_id_base': 'Battery cycles',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Battery cycles',
@@ -175,9 +175,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Canceled missions',
     'options': dict({
     }),
-    'object_id_base': 'Canceled missions',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Canceled missions',
@@ -226,9 +226,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Dock tank level',
     'options': dict({
     }),
-    'object_id_base': 'Dock tank level',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Dock tank level',
@@ -278,9 +278,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Failed missions',
     'options': dict({
     }),
-    'object_id_base': 'Failed missions',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Failed missions',
@@ -329,9 +329,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Last mission start time',
     'options': dict({
     }),
-    'object_id_base': 'Last mission start time',
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
     'original_icon': None,
     'original_name': 'Last mission start time',
@@ -381,9 +381,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Scrubs',
     'options': dict({
     }),
-    'object_id_base': 'Scrubs',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Scrubs',
@@ -434,9 +434,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Successful missions',
     'options': dict({
     }),
-    'object_id_base': 'Successful missions',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Successful missions',
@@ -485,9 +485,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Tank level',
     'options': dict({
     }),
-    'object_id_base': 'Tank level',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Tank level',
@@ -535,12 +535,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Total cleaned area',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
       }),
     }),
-    'object_id_base': 'Total cleaned area',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Total cleaned area',
@@ -588,9 +588,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Total cleaning time',
     'options': dict({
     }),
-    'object_id_base': 'Total cleaning time',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Total cleaning time',
@@ -640,9 +640,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Total missions',
     'options': dict({
     }),
-    'object_id_base': 'Total missions',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Total missions',

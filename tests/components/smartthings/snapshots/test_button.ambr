@@ -20,9 +20,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Reset filter',
     'options': dict({
     }),
-    'object_id_base': 'Reset filter',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Reset filter',
@@ -69,9 +69,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Stop',
     'options': dict({
     }),
-    'object_id_base': 'Stop',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Stop',
@@ -118,9 +118,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Stop',
     'options': dict({
     }),
-    'object_id_base': 'Stop',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Stop',
@@ -167,9 +167,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Stop',
     'options': dict({
     }),
-    'object_id_base': 'Stop',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Stop',
@@ -216,9 +216,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Stop',
     'options': dict({
     }),
-    'object_id_base': 'Stop',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Stop',
@@ -265,9 +265,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Stop',
     'options': dict({
     }),
-    'object_id_base': 'Stop',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Stop',
@@ -314,9 +314,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Reset water filter',
     'options': dict({
     }),
-    'object_id_base': 'Reset water filter',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Reset water filter',
@@ -363,9 +363,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Reset water filter',
     'options': dict({
     }),
-    'object_id_base': 'Reset water filter',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Reset water filter',
@@ -412,9 +412,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Reset water filter',
     'options': dict({
     }),
-    'object_id_base': 'Reset water filter',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Reset water filter',

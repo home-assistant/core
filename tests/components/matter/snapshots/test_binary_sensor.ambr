@@ -20,9 +20,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Door',
     'options': dict({
     }),
-    'object_id_base': 'Door',
     'original_device_class': <BinarySensorDeviceClass.DOOR: 'door'>,
     'original_icon': None,
     'original_name': 'Door',
@@ -70,9 +70,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Occupancy',
     'options': dict({
     }),
-    'object_id_base': 'Occupancy',
     'original_device_class': <BinarySensorDeviceClass.OCCUPANCY: 'occupancy'>,
     'original_icon': None,
     'original_name': 'Occupancy',
@@ -120,9 +120,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Occupancy',
     'options': dict({
     }),
-    'object_id_base': 'Occupancy',
     'original_device_class': <BinarySensorDeviceClass.OCCUPANCY: 'occupancy'>,
     'original_icon': None,
     'original_name': 'Occupancy',
@@ -170,9 +170,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery',
     'options': dict({
     }),
-    'object_id_base': 'Battery',
     'original_device_class': <BinarySensorDeviceClass.BATTERY: 'battery'>,
     'original_icon': None,
     'original_name': 'Battery',
@@ -220,9 +220,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery',
     'options': dict({
     }),
-    'object_id_base': 'Battery',
     'original_device_class': <BinarySensorDeviceClass.BATTERY: 'battery'>,
     'original_icon': None,
     'original_name': 'Battery',
@@ -270,9 +270,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Door',
     'options': dict({
     }),
-    'object_id_base': 'Door',
     'original_device_class': <BinarySensorDeviceClass.DOOR: 'door'>,
     'original_icon': None,
     'original_name': 'Door',
@@ -320,9 +320,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Door',
     'options': dict({
     }),
-    'object_id_base': 'Door',
     'original_device_class': <BinarySensorDeviceClass.DOOR: 'door'>,
     'original_icon': None,
     'original_name': 'Door',
@@ -370,9 +370,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Problem',
     'options': dict({
     }),
-    'object_id_base': 'Problem',
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
     'original_icon': None,
     'original_name': 'Problem',
@@ -420,9 +420,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Local temperature remote sensing',
     'options': dict({
     }),
-    'object_id_base': 'Local temperature remote sensing',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Local temperature remote sensing',
@@ -469,9 +469,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Outdoor temperature remote sensing',
     'options': dict({
     }),
-    'object_id_base': 'Outdoor temperature remote sensing',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Local temperature remote sensing',
@@ -518,9 +518,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Occupancy',
     'options': dict({
     }),
-    'object_id_base': 'Occupancy',
     'original_device_class': <BinarySensorDeviceClass.OCCUPANCY: 'occupancy'>,
     'original_icon': None,
     'original_name': 'Occupancy',
@@ -568,9 +568,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Water leak',
     'options': dict({
     }),
-    'object_id_base': 'Water leak',
     'original_device_class': <BinarySensorDeviceClass.MOISTURE: 'moisture'>,
     'original_icon': None,
     'original_name': 'Water leak',
@@ -618,9 +618,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Occupancy',
     'options': dict({
     }),
-    'object_id_base': 'Occupancy',
     'original_device_class': <BinarySensorDeviceClass.OCCUPANCY: 'occupancy'>,
     'original_icon': None,
     'original_name': 'Occupancy',
@@ -668,9 +668,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery',
     'options': dict({
     }),
-    'object_id_base': 'Battery',
     'original_device_class': <BinarySensorDeviceClass.BATTERY: 'battery'>,
     'original_icon': None,
     'original_name': 'Battery',
@@ -718,9 +718,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Door',
     'options': dict({
     }),
-    'object_id_base': 'Door',
     'original_device_class': <BinarySensorDeviceClass.DOOR: 'door'>,
     'original_icon': None,
     'original_name': 'Door',
@@ -768,9 +768,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Local temperature remote sensing',
     'options': dict({
     }),
-    'object_id_base': 'Local temperature remote sensing',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Local temperature remote sensing',
@@ -817,9 +817,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Occupancy remote sensing',
     'options': dict({
     }),
-    'object_id_base': 'Occupancy remote sensing',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Occupancy remote sensing',
@@ -866,9 +866,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Outdoor temperature remote sensing',
     'options': dict({
     }),
-    'object_id_base': 'Outdoor temperature remote sensing',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Outdoor temperature remote sensing',
@@ -915,9 +915,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Occupancy',
     'options': dict({
     }),
-    'object_id_base': 'Occupancy',
     'original_device_class': <BinarySensorDeviceClass.OCCUPANCY: 'occupancy'>,
     'original_icon': None,
     'original_name': 'Occupancy',
@@ -965,9 +965,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Occupancy',
     'options': dict({
     }),
-    'object_id_base': 'Occupancy',
     'original_device_class': <BinarySensorDeviceClass.OCCUPANCY: 'occupancy'>,
     'original_icon': None,
     'original_name': 'Occupancy',
@@ -1015,9 +1015,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Occupancy',
     'options': dict({
     }),
-    'object_id_base': 'Occupancy',
     'original_device_class': <BinarySensorDeviceClass.OCCUPANCY: 'occupancy'>,
     'original_icon': None,
     'original_name': 'Occupancy',
@@ -1065,9 +1065,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Problem',
     'options': dict({
     }),
-    'object_id_base': 'Problem',
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
     'original_icon': None,
     'original_name': 'Problem',
@@ -1115,9 +1115,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Running',
     'options': dict({
     }),
-    'object_id_base': 'Running',
     'original_device_class': <BinarySensorDeviceClass.RUNNING: 'running'>,
     'original_icon': None,
     'original_name': 'Running',
@@ -1165,9 +1165,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Door alarm',
     'options': dict({
     }),
-    'object_id_base': 'Door alarm',
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
     'original_icon': None,
     'original_name': 'Door alarm',
@@ -1215,9 +1215,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Inflow alarm',
     'options': dict({
     }),
-    'object_id_base': 'Inflow alarm',
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
     'original_icon': None,
     'original_name': 'Inflow alarm',
@@ -1265,9 +1265,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Charger supply state',
     'options': dict({
     }),
-    'object_id_base': 'Charger supply state',
     'original_device_class': <BinarySensorDeviceClass.RUNNING: 'running'>,
     'original_icon': None,
     'original_name': 'Charger supply state',
@@ -1315,9 +1315,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Charging status',
     'options': dict({
     }),
-    'object_id_base': 'Charging status',
     'original_device_class': <BinarySensorDeviceClass.BATTERY_CHARGING: 'battery_charging'>,
     'original_icon': None,
     'original_name': 'Charging status',
@@ -1365,9 +1365,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Plug',
     'options': dict({
     }),
-    'object_id_base': 'Plug',
     'original_device_class': <BinarySensorDeviceClass.PLUG: 'plug'>,
     'original_icon': None,
     'original_name': 'Plug',
@@ -1415,9 +1415,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Door alarm',
     'options': dict({
     }),
-    'object_id_base': 'Door alarm',
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
     'original_icon': None,
     'original_name': 'Door alarm',
@@ -1465,9 +1465,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Boost state',
     'options': dict({
     }),
-    'object_id_base': 'Boost state',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Boost state',
@@ -1514,9 +1514,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery alert',
     'options': dict({
     }),
-    'object_id_base': 'Battery alert',
     'original_device_class': <BinarySensorDeviceClass.BATTERY: 'battery'>,
     'original_icon': None,
     'original_name': 'Battery alert',
@@ -1564,9 +1564,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'End of service',
     'options': dict({
     }),
-    'object_id_base': 'End of service',
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
     'original_icon': None,
     'original_name': 'End of service',
@@ -1614,9 +1614,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Hardware fault',
     'options': dict({
     }),
-    'object_id_base': 'Hardware fault',
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
     'original_icon': None,
     'original_name': 'Hardware fault',
@@ -1664,9 +1664,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Muted',
     'options': dict({
     }),
-    'object_id_base': 'Muted',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Muted',
@@ -1713,9 +1713,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Smoke',
     'options': dict({
     }),
-    'object_id_base': 'Smoke',
     'original_device_class': <BinarySensorDeviceClass.SMOKE: 'smoke'>,
     'original_icon': None,
     'original_name': 'Smoke',
@@ -1763,9 +1763,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Test in progress',
     'options': dict({
     }),
-    'object_id_base': 'Test in progress',
     'original_device_class': <BinarySensorDeviceClass.RUNNING: 'running'>,
     'original_icon': None,
     'original_name': 'Test in progress',
@@ -1813,9 +1813,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'General fault',
     'options': dict({
     }),
-    'object_id_base': 'General fault',
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
     'original_icon': None,
     'original_name': 'General fault',
@@ -1863,9 +1863,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Valve blocked',
     'options': dict({
     }),
-    'object_id_base': 'Valve blocked',
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
     'original_icon': None,
     'original_name': 'Valve blocked',
@@ -1913,9 +1913,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Valve leaking',
     'options': dict({
     }),
-    'object_id_base': 'Valve leaking',
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
     'original_icon': None,
     'original_name': 'Valve leaking',
@@ -1963,9 +1963,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Problem',
     'options': dict({
     }),
-    'object_id_base': 'Problem',
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
     'original_icon': None,
     'original_name': 'Problem',
@@ -2013,9 +2013,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Problem',
     'options': dict({
     }),
-    'object_id_base': 'Problem',
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
     'original_icon': None,
     'original_name': 'Problem',
@@ -2063,9 +2063,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Problem',
     'options': dict({
     }),
-    'object_id_base': 'Problem',
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
     'original_icon': None,
     'original_name': 'Problem',
@@ -2113,9 +2113,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Problem',
     'options': dict({
     }),
-    'object_id_base': 'Problem',
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
     'original_icon': None,
     'original_name': 'Problem',
@@ -2163,9 +2163,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Problem',
     'options': dict({
     }),
-    'object_id_base': 'Problem',
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
     'original_icon': None,
     'original_name': 'Problem',
@@ -2213,9 +2213,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Problem',
     'options': dict({
     }),
-    'object_id_base': 'Problem',
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
     'original_icon': None,
     'original_name': 'Problem',

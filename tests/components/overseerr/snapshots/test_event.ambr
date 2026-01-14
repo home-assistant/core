@@ -29,9 +29,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Last media event',
     'options': dict({
     }),
-    'object_id_base': 'Last media event',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Last media event',

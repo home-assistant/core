@@ -22,9 +22,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Gravity',
     'options': dict({
     }),
-    'object_id_base': 'Gravity',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Gravity',
@@ -75,12 +75,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
       }),
     }),
-    'object_id_base': 'Temperature',
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Temperature',
@@ -132,9 +132,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Gravity',
     'options': dict({
     }),
-    'object_id_base': 'Gravity',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Gravity',
@@ -185,12 +185,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
       }),
     }),
-    'object_id_base': 'Temperature',
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Temperature',

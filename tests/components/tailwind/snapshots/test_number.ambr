@@ -43,9 +43,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Status LED brightness',
     'options': dict({
     }),
-    'object_id_base': 'Status LED brightness',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Status LED brightness',

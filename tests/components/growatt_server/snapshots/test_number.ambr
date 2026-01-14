@@ -25,9 +25,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery charge power limit',
     'options': dict({
     }),
-    'object_id_base': 'Battery charge power limit',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Battery charge power limit',
@@ -84,9 +84,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery charge SOC limit',
     'options': dict({
     }),
-    'object_id_base': 'Battery charge SOC limit',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Battery charge SOC limit',
@@ -143,9 +143,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery discharge power limit',
     'options': dict({
     }),
-    'object_id_base': 'Battery discharge power limit',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Battery discharge power limit',
@@ -202,9 +202,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery discharge SOC limit',
     'options': dict({
     }),
-    'object_id_base': 'Battery discharge SOC limit',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Battery discharge SOC limit',

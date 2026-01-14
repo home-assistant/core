@@ -20,9 +20,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Guest Wi-Fi credentials as QR code',
     'options': dict({
     }),
-    'object_id_base': 'Guest Wi-Fi credentials as QR code',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Guest Wi-Fi credentials as QR code',

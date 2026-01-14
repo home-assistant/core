@@ -20,9 +20,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': '32 Weather alert',
     'options': dict({
     }),
-    'object_id_base': '32 Weather alert',
     'original_device_class': None,
     'original_icon': 'mdi:weather-cloudy-alert',
     'original_name': '32 Weather alert',
@@ -77,9 +77,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'La Clusaz Cloud cover',
     'options': dict({
     }),
-    'object_id_base': 'La Clusaz Cloud cover',
     'original_device_class': None,
     'original_icon': 'mdi:weather-partly-cloudy',
     'original_name': 'La Clusaz Cloud cover',
@@ -129,9 +129,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'La Clusaz Daily original condition',
     'options': dict({
     }),
-    'object_id_base': 'La Clusaz Daily original condition',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'La Clusaz Daily original condition',
@@ -179,12 +179,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'La Clusaz Daily precipitation',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
       }),
     }),
-    'object_id_base': 'La Clusaz Daily precipitation',
     'original_device_class': <SensorDeviceClass.PRECIPITATION: 'precipitation'>,
     'original_icon': None,
     'original_name': 'La Clusaz Daily precipitation',
@@ -234,9 +234,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'La Clusaz Freeze chance',
     'options': dict({
     }),
-    'object_id_base': 'La Clusaz Freeze chance',
     'original_device_class': None,
     'original_icon': 'mdi:snowflake',
     'original_name': 'La Clusaz Freeze chance',
@@ -288,9 +288,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'La Clusaz Humidity',
     'options': dict({
     }),
-    'object_id_base': 'La Clusaz Humidity',
     'original_device_class': <SensorDeviceClass.HUMIDITY: 'humidity'>,
     'original_icon': None,
     'original_name': 'La Clusaz Humidity',
@@ -341,9 +341,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'La Clusaz Original condition',
     'options': dict({
     }),
-    'object_id_base': 'La Clusaz Original condition',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'La Clusaz Original condition',
@@ -393,12 +393,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'La Clusaz Pressure',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
       }),
     }),
-    'object_id_base': 'La Clusaz Pressure',
     'original_device_class': <SensorDeviceClass.ATMOSPHERIC_PRESSURE: 'atmospheric_pressure'>,
     'original_icon': None,
     'original_name': 'La Clusaz Pressure',
@@ -449,9 +449,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'La Clusaz Rain chance',
     'options': dict({
     }),
-    'object_id_base': 'La Clusaz Rain chance',
     'original_device_class': None,
     'original_icon': 'mdi:weather-rainy',
     'original_name': 'La Clusaz Rain chance',
@@ -501,9 +501,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'La Clusaz Snow chance',
     'options': dict({
     }),
-    'object_id_base': 'La Clusaz Snow chance',
     'original_device_class': None,
     'original_icon': 'mdi:weather-snowy',
     'original_name': 'La Clusaz Snow chance',
@@ -555,12 +555,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'La Clusaz Temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
       }),
     }),
-    'object_id_base': 'La Clusaz Temperature',
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'La Clusaz Temperature',
@@ -611,9 +611,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'La Clusaz UV',
     'options': dict({
     }),
-    'object_id_base': 'La Clusaz UV',
     'original_device_class': None,
     'original_icon': 'mdi:sunglasses',
     'original_name': 'La Clusaz UV',
@@ -665,12 +665,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'La Clusaz Wind gust',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
       }),
     }),
-    'object_id_base': 'La Clusaz Wind gust',
     'original_device_class': <SensorDeviceClass.WIND_SPEED: 'wind_speed'>,
     'original_icon': 'mdi:weather-windy-variant',
     'original_name': 'La Clusaz Wind gust',
@@ -724,12 +724,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'La Clusaz Wind speed',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
       }),
     }),
-    'object_id_base': 'La Clusaz Wind speed',
     'original_device_class': <SensorDeviceClass.WIND_SPEED: 'wind_speed'>,
     'original_icon': None,
     'original_name': 'La Clusaz Wind speed',
@@ -780,9 +780,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Meudon Next rain',
     'options': dict({
     }),
-    'object_id_base': 'Meudon Next rain',
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
     'original_icon': None,
     'original_name': 'Meudon Next rain',

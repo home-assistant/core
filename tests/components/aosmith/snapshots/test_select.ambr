@@ -27,9 +27,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'hot_water_plus_level',
     'options': dict({
     }),
-    'object_id_base': 'hot_water_plus_level',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Hot Water+ level',

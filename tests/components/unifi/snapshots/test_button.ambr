@@ -20,9 +20,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Regenerate Password',
     'options': dict({
     }),
-    'object_id_base': 'Regenerate Password',
     'original_device_class': <ButtonDeviceClass.UPDATE: 'update'>,
     'original_icon': None,
     'original_name': 'Regenerate Password',
@@ -70,9 +70,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Port 1 Power Cycle',
     'options': dict({
     }),
-    'object_id_base': 'Port 1 Power Cycle',
     'original_device_class': <ButtonDeviceClass.RESTART: 'restart'>,
     'original_icon': None,
     'original_name': 'Port 1 Power Cycle',
@@ -120,9 +120,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Restart',
     'options': dict({
     }),
-    'object_id_base': 'Restart',
     'original_device_class': <ButtonDeviceClass.RESTART: 'restart'>,
     'original_icon': None,
     'original_name': 'Restart',

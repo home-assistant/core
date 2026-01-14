@@ -22,12 +22,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Available storage',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
       }),
     }),
-    'object_id_base': 'Available storage',
     'original_device_class': <SensorDeviceClass.DATA_SIZE: 'data_size'>,
     'original_icon': None,
     'original_name': 'Available storage',
@@ -79,9 +79,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Correspondents',
     'options': dict({
     }),
-    'object_id_base': 'Correspondents',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Correspondents',
@@ -132,9 +132,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Document types',
     'options': dict({
     }),
-    'object_id_base': 'Document types',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Document types',
@@ -185,9 +185,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Documents in inbox',
     'options': dict({
     }),
-    'object_id_base': 'Documents in inbox',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Documents in inbox',
@@ -242,9 +242,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Status Celery',
     'options': dict({
     }),
-    'object_id_base': 'Status Celery',
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
     'original_name': 'Status Celery',
@@ -303,9 +303,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Status classifier',
     'options': dict({
     }),
-    'object_id_base': 'Status classifier',
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
     'original_name': 'Status classifier',
@@ -364,9 +364,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Status database',
     'options': dict({
     }),
-    'object_id_base': 'Status database',
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
     'original_name': 'Status database',
@@ -425,9 +425,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Status index',
     'options': dict({
     }),
-    'object_id_base': 'Status index',
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
     'original_name': 'Status index',
@@ -486,9 +486,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Status Redis',
     'options': dict({
     }),
-    'object_id_base': 'Status Redis',
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
     'original_name': 'Status Redis',
@@ -547,9 +547,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Status sanity',
     'options': dict({
     }),
-    'object_id_base': 'Status sanity',
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
     'original_name': 'Status sanity',
@@ -604,9 +604,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Tags',
     'options': dict({
     }),
-    'object_id_base': 'Tags',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Tags',
@@ -657,9 +657,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Total characters',
     'options': dict({
     }),
-    'object_id_base': 'Total characters',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Total characters',
@@ -710,9 +710,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Total documents',
     'options': dict({
     }),
-    'object_id_base': 'Total documents',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Total documents',
@@ -763,12 +763,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Total storage',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
       }),
     }),
-    'object_id_base': 'Total storage',
     'original_device_class': <SensorDeviceClass.DATA_SIZE: 'data_size'>,
     'original_icon': None,
     'original_name': 'Total storage',

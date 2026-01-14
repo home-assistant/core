@@ -20,9 +20,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Away mode',
     'options': dict({
     }),
-    'object_id_base': 'Away mode',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Away mode',
@@ -69,9 +69,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Continuous fan',
     'options': dict({
     }),
-    'object_id_base': 'Continuous fan',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Continuous fan',
@@ -118,9 +118,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Quiet mode',
     'options': dict({
     }),
-    'object_id_base': 'Quiet mode',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Quiet mode',
@@ -167,9 +167,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Turbo mode',
     'options': dict({
     }),
-    'object_id_base': 'Turbo mode',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Turbo mode',

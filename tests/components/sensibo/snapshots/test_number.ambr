@@ -25,9 +25,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Humidity calibration',
     'options': dict({
     }),
-    'object_id_base': 'Humidity calibration',
     'original_device_class': <NumberDeviceClass.HUMIDITY: 'humidity'>,
     'original_icon': None,
     'original_name': 'Humidity calibration',
@@ -85,9 +85,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Temperature calibration',
     'options': dict({
     }),
-    'object_id_base': 'Temperature calibration',
     'original_device_class': <NumberDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Temperature calibration',
@@ -145,9 +145,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Humidity calibration',
     'options': dict({
     }),
-    'object_id_base': 'Humidity calibration',
     'original_device_class': <NumberDeviceClass.HUMIDITY: 'humidity'>,
     'original_icon': None,
     'original_name': 'Humidity calibration',
@@ -205,9 +205,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Temperature calibration',
     'options': dict({
     }),
-    'object_id_base': 'Temperature calibration',
     'original_device_class': <NumberDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Temperature calibration',
@@ -265,9 +265,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Humidity calibration',
     'options': dict({
     }),
-    'object_id_base': 'Humidity calibration',
     'original_device_class': <NumberDeviceClass.HUMIDITY: 'humidity'>,
     'original_icon': None,
     'original_name': 'Humidity calibration',
@@ -325,9 +325,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Temperature calibration',
     'options': dict({
     }),
-    'object_id_base': 'Temperature calibration',
     'original_device_class': <NumberDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Temperature calibration',

@@ -22,12 +22,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Boiler temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
       }),
     }),
-    'object_id_base': 'Boiler temperature',
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Boiler temperature',
@@ -79,9 +79,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Burner hours',
     'options': dict({
     }),
-    'object_id_base': 'Burner hours',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Burner hours',
@@ -132,9 +132,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Burner modulation',
     'options': dict({
     }),
-    'object_id_base': 'Burner modulation',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Burner modulation',
@@ -185,9 +185,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Burner starts',
     'options': dict({
     }),
-    'object_id_base': 'Burner starts',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Burner starts',
@@ -237,9 +237,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'DHW gas consumption this month',
     'options': dict({
     }),
-    'object_id_base': 'DHW gas consumption this month',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'DHW gas consumption this month',
@@ -289,9 +289,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'DHW gas consumption this week',
     'options': dict({
     }),
-    'object_id_base': 'DHW gas consumption this week',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'DHW gas consumption this week',
@@ -341,9 +341,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'DHW gas consumption this year',
     'options': dict({
     }),
-    'object_id_base': 'DHW gas consumption this year',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'DHW gas consumption this year',
@@ -393,9 +393,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'DHW gas consumption today',
     'options': dict({
     }),
-    'object_id_base': 'DHW gas consumption today',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'DHW gas consumption today',
@@ -445,12 +445,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'DHW max temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
       }),
     }),
-    'object_id_base': 'DHW max temperature',
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'DHW max temperature',
@@ -502,12 +502,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'DHW min temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
       }),
     }),
-    'object_id_base': 'DHW min temperature',
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'DHW min temperature',
@@ -559,12 +559,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Electricity consumption this week',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
       }),
     }),
-    'object_id_base': 'Electricity consumption this week',
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
     'original_name': 'Electricity consumption this week',
@@ -616,12 +616,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Electricity consumption this year',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
       }),
     }),
-    'object_id_base': 'Electricity consumption this year',
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
     'original_name': 'Electricity consumption this year',
@@ -673,12 +673,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Electricity consumption today',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
       }),
     }),
-    'object_id_base': 'Electricity consumption today',
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
     'original_name': 'Electricity consumption today',
@@ -730,12 +730,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Energy',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
       }),
     }),
-    'object_id_base': 'Energy',
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
     'original_name': 'Energy',
@@ -787,9 +787,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Heating gas consumption this month',
     'options': dict({
     }),
-    'object_id_base': 'Heating gas consumption this month',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Heating gas consumption this month',
@@ -839,9 +839,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Heating gas consumption this week',
     'options': dict({
     }),
-    'object_id_base': 'Heating gas consumption this week',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Heating gas consumption this week',
@@ -891,9 +891,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Heating gas consumption this year',
     'options': dict({
     }),
-    'object_id_base': 'Heating gas consumption this year',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Heating gas consumption this year',
@@ -943,9 +943,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Heating gas consumption today',
     'options': dict({
     }),
-    'object_id_base': 'Heating gas consumption today',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Heating gas consumption today',
@@ -995,12 +995,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Outside temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
       }),
     }),
-    'object_id_base': 'Outside temperature',
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Outside temperature',
@@ -1052,12 +1052,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Supply temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
       }),
     }),
-    'object_id_base': 'Supply temperature',
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Supply temperature',
@@ -1109,12 +1109,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Supply temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
       }),
     }),
-    'object_id_base': 'Supply temperature',
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Supply temperature',
@@ -1166,9 +1166,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Signal strength',
     'options': dict({
     }),
-    'object_id_base': 'Signal strength',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Signal strength',
@@ -1219,9 +1219,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Signal strength',
     'options': dict({
     }),
-    'object_id_base': 'Signal strength',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Signal strength',
@@ -1272,12 +1272,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Supply temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
       }),
     }),
-    'object_id_base': 'Supply temperature',
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Supply temperature',
@@ -1329,12 +1329,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Boiler supply temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
       }),
     }),
-    'object_id_base': 'Boiler supply temperature',
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Boiler supply temperature',
@@ -1386,12 +1386,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Buffer main temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
       }),
     }),
-    'object_id_base': 'Buffer main temperature',
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Buffer main temperature',
@@ -1443,9 +1443,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Compressor hours',
     'options': dict({
     }),
-    'object_id_base': 'Compressor hours',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Compressor hours',
@@ -1494,9 +1494,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Compressor phase',
     'options': dict({
     }),
-    'object_id_base': 'Compressor phase',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Compressor phase',
@@ -1545,9 +1545,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Compressor starts',
     'options': dict({
     }),
-    'object_id_base': 'Compressor starts',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Compressor starts',
@@ -1597,12 +1597,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'DHW electricity consumption last seven days',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
       }),
     }),
-    'object_id_base': 'DHW electricity consumption last seven days',
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
     'original_name': 'DHW electricity consumption last seven days',
@@ -1654,12 +1654,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'DHW electricity consumption this month',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
       }),
     }),
-    'object_id_base': 'DHW electricity consumption this month',
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
     'original_name': 'DHW electricity consumption this month',
@@ -1711,12 +1711,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'DHW electricity consumption this year',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
       }),
     }),
-    'object_id_base': 'DHW electricity consumption this year',
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
     'original_name': 'DHW electricity consumption this year',
@@ -1768,12 +1768,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'DHW electricity consumption today',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
       }),
     }),
-    'object_id_base': 'DHW electricity consumption today',
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
     'original_name': 'DHW electricity consumption today',
@@ -1825,12 +1825,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'DHW max temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
       }),
     }),
-    'object_id_base': 'DHW max temperature',
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'DHW max temperature',
@@ -1882,12 +1882,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'DHW min temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
       }),
     }),
-    'object_id_base': 'DHW min temperature',
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'DHW min temperature',
@@ -1939,12 +1939,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'DHW storage temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
       }),
     }),
-    'object_id_base': 'DHW storage temperature',
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'DHW storage temperature',
@@ -1996,12 +1996,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Electricity consumption today',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
       }),
     }),
-    'object_id_base': 'Electricity consumption today',
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
     'original_name': 'Electricity consumption today',
@@ -2053,12 +2053,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Heating electricity consumption last seven days',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
       }),
     }),
-    'object_id_base': 'Heating electricity consumption last seven days',
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
     'original_name': 'Heating electricity consumption last seven days',
@@ -2110,12 +2110,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Heating electricity consumption this month',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
       }),
     }),
-    'object_id_base': 'Heating electricity consumption this month',
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
     'original_name': 'Heating electricity consumption this month',
@@ -2167,12 +2167,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Heating electricity consumption this year',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
       }),
     }),
-    'object_id_base': 'Heating electricity consumption this year',
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
     'original_name': 'Heating electricity consumption this year',
@@ -2224,12 +2224,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Heating electricity consumption today',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
       }),
     }),
-    'object_id_base': 'Heating electricity consumption today',
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
     'original_name': 'Heating electricity consumption today',
@@ -2281,9 +2281,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Heating rod hours',
     'options': dict({
     }),
-    'object_id_base': 'Heating rod hours',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Heating rod hours',
@@ -2334,9 +2334,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Heating rod starts',
     'options': dict({
     }),
-    'object_id_base': 'Heating rod starts',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Heating rod starts',
@@ -2386,12 +2386,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Outside temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
       }),
     }),
-    'object_id_base': 'Outside temperature',
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Outside temperature',
@@ -2443,12 +2443,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Primary circuit supply temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
       }),
     }),
-    'object_id_base': 'Primary circuit supply temperature',
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Primary circuit supply temperature',
@@ -2500,12 +2500,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Return temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
       }),
     }),
-    'object_id_base': 'Return temperature',
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Return temperature',
@@ -2557,9 +2557,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Seasonal performance factor',
     'options': dict({
     }),
-    'object_id_base': 'Seasonal performance factor',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Seasonal performance factor',
@@ -2609,9 +2609,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Seasonal performance factor - domestic hot water',
     'options': dict({
     }),
-    'object_id_base': 'Seasonal performance factor - domestic hot water',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Seasonal performance factor - domestic hot water',
@@ -2661,9 +2661,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Seasonal performance factor - heating',
     'options': dict({
     }),
-    'object_id_base': 'Seasonal performance factor - heating',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Seasonal performance factor - heating',
@@ -2713,12 +2713,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Secondary circuit supply temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
       }),
     }),
-    'object_id_base': 'Secondary circuit supply temperature',
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Secondary circuit supply temperature',
@@ -2770,12 +2770,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Supply pressure',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
       }),
     }),
-    'object_id_base': 'Supply pressure',
     'original_device_class': <SensorDeviceClass.PRESSURE: 'pressure'>,
     'original_icon': None,
     'original_name': 'Supply pressure',
@@ -2827,12 +2827,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Supply temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
       }),
     }),
-    'object_id_base': 'Supply temperature',
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Supply temperature',
@@ -2884,9 +2884,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Volumetric flow',
     'options': dict({
     }),
-    'object_id_base': 'Volumetric flow',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Volumetric flow',
@@ -2937,12 +2937,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Buffer main temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
       }),
     }),
-    'object_id_base': 'Buffer main temperature',
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Buffer main temperature',
@@ -2994,12 +2994,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Buffer top temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
       }),
     }),
-    'object_id_base': 'Buffer top temperature',
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Buffer top temperature',
@@ -3051,9 +3051,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Compressor hours',
     'options': dict({
     }),
-    'object_id_base': 'Compressor hours',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Compressor hours',
@@ -3102,12 +3102,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Compressor inlet pressure',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
       }),
     }),
-    'object_id_base': 'Compressor inlet pressure',
     'original_device_class': <SensorDeviceClass.PRESSURE: 'pressure'>,
     'original_icon': None,
     'original_name': 'Compressor inlet pressure',
@@ -3156,12 +3156,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Compressor inlet temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
       }),
     }),
-    'object_id_base': 'Compressor inlet temperature',
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Compressor inlet temperature',
@@ -3210,12 +3210,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Compressor outlet temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
       }),
     }),
-    'object_id_base': 'Compressor outlet temperature',
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Compressor outlet temperature',
@@ -3264,9 +3264,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Compressor phase',
     'options': dict({
     }),
-    'object_id_base': 'Compressor phase',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Compressor phase',
@@ -3315,9 +3315,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Compressor starts',
     'options': dict({
     }),
-    'object_id_base': 'Compressor starts',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Compressor starts',
@@ -3365,12 +3365,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Condenser subcooling temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
       }),
     }),
-    'object_id_base': 'Condenser subcooling temperature',
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Condenser subcooling temperature',
@@ -3421,12 +3421,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'DHW max temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
       }),
     }),
-    'object_id_base': 'DHW max temperature',
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'DHW max temperature',
@@ -3478,12 +3478,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'DHW min temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
       }),
     }),
-    'object_id_base': 'DHW min temperature',
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'DHW min temperature',
@@ -3535,12 +3535,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'DHW storage temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
       }),
     }),
-    'object_id_base': 'DHW storage temperature',
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'DHW storage temperature',
@@ -3592,12 +3592,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'DHW storage top temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
       }),
     }),
-    'object_id_base': 'DHW storage top temperature',
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'DHW storage top temperature',
@@ -3647,12 +3647,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Evaporator liquid temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
       }),
     }),
-    'object_id_base': 'Evaporator liquid temperature',
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Evaporator liquid temperature',
@@ -3701,12 +3701,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Evaporator overheat temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
       }),
     }),
-    'object_id_base': 'Evaporator overheat temperature',
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Evaporator overheat temperature',
@@ -3757,12 +3757,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Outside temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
       }),
     }),
-    'object_id_base': 'Outside temperature',
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Outside temperature',
@@ -3814,12 +3814,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Primary circuit return temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
       }),
     }),
-    'object_id_base': 'Primary circuit return temperature',
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Primary circuit return temperature',
@@ -3871,12 +3871,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Primary circuit supply temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
       }),
     }),
-    'object_id_base': 'Primary circuit supply temperature',
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Primary circuit supply temperature',
@@ -3928,12 +3928,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Return temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
       }),
     }),
-    'object_id_base': 'Return temperature',
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Return temperature',
@@ -3985,12 +3985,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Secondary circuit supply temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
       }),
     }),
-    'object_id_base': 'Secondary circuit supply temperature',
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Secondary circuit supply temperature',
@@ -4042,12 +4042,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Supply temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
       }),
     }),
-    'object_id_base': 'Supply temperature',
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Supply temperature',
@@ -4099,9 +4099,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Ventilation input volume flow',
     'options': dict({
     }),
-    'object_id_base': 'Ventilation input volume flow',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Ventilation input volume flow',
@@ -4158,9 +4158,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Ventilation level',
     'options': dict({
     }),
-    'object_id_base': 'Ventilation level',
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
     'original_name': 'Ventilation level',
@@ -4217,9 +4217,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Ventilation output volume flow',
     'options': dict({
     }),
-    'object_id_base': 'Ventilation output volume flow',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Ventilation output volume flow',
@@ -4277,9 +4277,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Ventilation reason',
     'options': dict({
     }),
-    'object_id_base': 'Ventilation reason',
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
     'original_name': 'Ventilation reason',
@@ -4343,9 +4343,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Ventilation level',
     'options': dict({
     }),
-    'object_id_base': 'Ventilation level',
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
     'original_name': 'Ventilation level',
@@ -4409,9 +4409,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Ventilation reason',
     'options': dict({
     }),
-    'object_id_base': 'Ventilation reason',
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
     'original_name': 'Ventilation reason',
@@ -4469,9 +4469,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Filter hours',
     'options': dict({
     }),
-    'object_id_base': 'Filter hours',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Filter hours',
@@ -4522,9 +4522,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Filter overdue hours',
     'options': dict({
     }),
-    'object_id_base': 'Filter overdue hours',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Filter overdue hours',
@@ -4575,9 +4575,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Filter remaining hours',
     'options': dict({
     }),
-    'object_id_base': 'Filter remaining hours',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Filter remaining hours',
@@ -4628,9 +4628,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'PM1',
     'options': dict({
     }),
-    'object_id_base': 'PM1',
     'original_device_class': <SensorDeviceClass.PM1: 'pm1'>,
     'original_icon': None,
     'original_name': 'PM1',
@@ -4682,9 +4682,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'PM10',
     'options': dict({
     }),
-    'object_id_base': 'PM10',
     'original_device_class': <SensorDeviceClass.PM10: 'pm10'>,
     'original_icon': None,
     'original_name': 'PM10',
@@ -4736,9 +4736,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'PM2.5',
     'options': dict({
     }),
-    'object_id_base': 'PM2.5',
     'original_device_class': <SensorDeviceClass.PM25: 'pm25'>,
     'original_icon': None,
     'original_name': 'PM2.5',
@@ -4790,9 +4790,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'PM4',
     'options': dict({
     }),
-    'object_id_base': 'PM4',
     'original_device_class': <SensorDeviceClass.PM4: 'pm4'>,
     'original_icon': None,
     'original_name': 'PM4',
@@ -4844,9 +4844,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Supply fan hours',
     'options': dict({
     }),
-    'object_id_base': 'Supply fan hours',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Supply fan hours',
@@ -4897,9 +4897,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Supply fan speed',
     'options': dict({
     }),
-    'object_id_base': 'Supply fan speed',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Supply fan speed',
@@ -4950,9 +4950,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Supply humidity',
     'options': dict({
     }),
-    'object_id_base': 'Supply humidity',
     'original_device_class': <SensorDeviceClass.HUMIDITY: 'humidity'>,
     'original_icon': None,
     'original_name': 'Supply humidity',
@@ -5004,12 +5004,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Supply temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
       }),
     }),
-    'object_id_base': 'Supply temperature',
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Supply temperature',
@@ -5067,9 +5067,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Ventilation level',
     'options': dict({
     }),
-    'object_id_base': 'Ventilation level',
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
     'original_name': 'Ventilation level',
@@ -5133,9 +5133,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Ventilation reason',
     'options': dict({
     }),
-    'object_id_base': 'Ventilation reason',
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
     'original_name': 'Ventilation reason',
@@ -5193,12 +5193,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery charge total',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
       }),
     }),
-    'object_id_base': 'Battery charge total',
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
     'original_name': 'Battery charge total',
@@ -5250,9 +5250,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery',
     'options': dict({
     }),
-    'object_id_base': 'Battery',
     'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
     'original_icon': None,
     'original_name': 'Battery',
@@ -5304,9 +5304,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Humidity',
     'options': dict({
     }),
-    'object_id_base': 'Humidity',
     'original_device_class': <SensorDeviceClass.HUMIDITY: 'humidity'>,
     'original_icon': None,
     'original_name': 'Humidity',
@@ -5358,12 +5358,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
       }),
     }),
-    'object_id_base': 'Temperature',
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Temperature',
@@ -5415,9 +5415,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Humidity',
     'options': dict({
     }),
-    'object_id_base': 'Humidity',
     'original_device_class': <SensorDeviceClass.HUMIDITY: 'humidity'>,
     'original_icon': None,
     'original_name': 'Humidity',
@@ -5469,12 +5469,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
       }),
     }),
-    'object_id_base': 'Temperature',
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Temperature',
@@ -5526,9 +5526,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery',
     'options': dict({
     }),
-    'object_id_base': 'Battery',
     'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
     'original_icon': None,
     'original_name': 'Battery',
@@ -5580,9 +5580,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Signal strength',
     'options': dict({
     }),
-    'object_id_base': 'Signal strength',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Signal strength',
@@ -5633,12 +5633,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
       }),
     }),
-    'object_id_base': 'Temperature',
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Temperature',
@@ -5690,9 +5690,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Valve position',
     'options': dict({
     }),
-    'object_id_base': 'Valve position',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Valve position',
@@ -5743,12 +5743,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Hydraulic separator temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
       }),
     }),
-    'object_id_base': 'Hydraulic separator temperature',
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Hydraulic separator temperature',

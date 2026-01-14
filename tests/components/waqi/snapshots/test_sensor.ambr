@@ -22,9 +22,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Air quality index',
     'options': dict({
     }),
-    'object_id_base': 'Air quality index',
     'original_device_class': <SensorDeviceClass.AQI: 'aqi'>,
     'original_icon': None,
     'original_name': 'Air quality index',
@@ -76,9 +76,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Carbon monoxide',
     'options': dict({
     }),
-    'object_id_base': 'Carbon monoxide',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Carbon monoxide',
@@ -137,9 +137,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Dominant pollutant',
     'options': dict({
     }),
-    'object_id_base': 'Dominant pollutant',
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
     'original_name': 'Dominant pollutant',
@@ -199,9 +199,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Humidity',
     'options': dict({
     }),
-    'object_id_base': 'Humidity',
     'original_device_class': <SensorDeviceClass.HUMIDITY: 'humidity'>,
     'original_icon': None,
     'original_name': 'Humidity',
@@ -254,9 +254,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Nitrogen dioxide',
     'options': dict({
     }),
-    'object_id_base': 'Nitrogen dioxide',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Nitrogen dioxide',
@@ -307,9 +307,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Ozone',
     'options': dict({
     }),
-    'object_id_base': 'Ozone',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Ozone',
@@ -360,9 +360,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'PM10',
     'options': dict({
     }),
-    'object_id_base': 'PM10',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'PM10',
@@ -413,9 +413,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'PM2.5',
     'options': dict({
     }),
-    'object_id_base': 'PM2.5',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'PM2.5',
@@ -466,12 +466,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Pressure',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
       }),
     }),
-    'object_id_base': 'Pressure',
     'original_device_class': <SensorDeviceClass.PRESSURE: 'pressure'>,
     'original_icon': None,
     'original_name': 'Pressure',
@@ -524,9 +524,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Sulphur dioxide',
     'options': dict({
     }),
-    'object_id_base': 'Sulphur dioxide',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Sulphur dioxide',
@@ -577,12 +577,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
       }),
     }),
-    'object_id_base': 'Temperature',
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Temperature',
@@ -635,9 +635,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Visibility using nephelometry',
     'options': dict({
     }),
-    'object_id_base': 'Visibility using nephelometry',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Visibility using nephelometry',

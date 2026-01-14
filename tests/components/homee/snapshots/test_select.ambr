@@ -25,9 +25,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Displayed temperature',
     'options': dict({
     }),
-    'object_id_base': 'Displayed temperature',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Displayed temperature',
@@ -84,9 +84,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Repeater mode',
     'options': dict({
     }),
-    'object_id_base': 'Repeater mode',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Repeater mode',

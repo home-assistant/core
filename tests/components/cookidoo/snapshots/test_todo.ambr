@@ -20,9 +20,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Additional purchases',
     'options': dict({
     }),
-    'object_id_base': 'Additional purchases',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Additional purchases',
@@ -70,9 +70,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Shopping list',
     'options': dict({
     }),
-    'object_id_base': 'Shopping list',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Shopping list',

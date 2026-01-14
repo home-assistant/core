@@ -44,9 +44,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery group mode',
     'options': dict({
     }),
-    'object_id_base': 'Battery group mode',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Battery group mode',

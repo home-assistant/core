@@ -22,9 +22,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'CPU usage',
     'options': dict({
     }),
-    'object_id_base': 'CPU usage',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'CPU usage',
@@ -83,9 +83,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Device status',
     'options': dict({
     }),
-    'object_id_base': 'Device status',
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
     'original_name': 'Device status',
@@ -144,9 +144,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Memory usage',
     'options': dict({
     }),
-    'object_id_base': 'Memory usage',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Memory usage',
@@ -197,9 +197,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'CPU usage',
     'options': dict({
     }),
-    'object_id_base': 'CPU usage',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'CPU usage',
@@ -258,9 +258,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Device status',
     'options': dict({
     }),
-    'object_id_base': 'Device status',
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
     'original_name': 'Device status',
@@ -319,9 +319,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Memory usage',
     'options': dict({
     }),
-    'object_id_base': 'Memory usage',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Memory usage',

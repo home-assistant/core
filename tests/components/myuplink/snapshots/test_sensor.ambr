@@ -22,12 +22,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Average outdoor temp (BT1)',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
       }),
     }),
-    'object_id_base': 'Average outdoor temp (BT1)',
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Average outdoor temp (BT1)',
@@ -79,12 +79,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Average outdoor temp (BT1)',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
       }),
     }),
-    'object_id_base': 'Average outdoor temp (BT1)',
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Average outdoor temp (BT1)',
@@ -136,12 +136,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Calculated supply climate system 1',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
       }),
     }),
-    'object_id_base': 'Calculated supply climate system 1',
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Calculated supply climate system 1',
@@ -193,12 +193,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Calculated supply climate system 1',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
       }),
     }),
-    'object_id_base': 'Calculated supply climate system 1',
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Calculated supply climate system 1',
@@ -250,12 +250,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Condenser (BT12)',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
       }),
     }),
-    'object_id_base': 'Condenser (BT12)',
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Condenser (BT12)',
@@ -307,12 +307,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Condenser (BT12)',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
       }),
     }),
-    'object_id_base': 'Condenser (BT12)',
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Condenser (BT12)',
@@ -364,12 +364,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Current (BE1)',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
       }),
     }),
-    'object_id_base': 'Current (BE1)',
     'original_device_class': <SensorDeviceClass.CURRENT: 'current'>,
     'original_icon': None,
     'original_name': 'Current (BE1)',
@@ -421,12 +421,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Current (BE1)',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
       }),
     }),
-    'object_id_base': 'Current (BE1)',
     'original_device_class': <SensorDeviceClass.CURRENT: 'current'>,
     'original_icon': None,
     'original_name': 'Current (BE1)',
@@ -478,12 +478,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Current (BE2)',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
       }),
     }),
-    'object_id_base': 'Current (BE2)',
     'original_device_class': <SensorDeviceClass.CURRENT: 'current'>,
     'original_icon': None,
     'original_name': 'Current (BE2)',
@@ -535,12 +535,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Current (BE2)',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
       }),
     }),
-    'object_id_base': 'Current (BE2)',
     'original_device_class': <SensorDeviceClass.CURRENT: 'current'>,
     'original_icon': None,
     'original_name': 'Current (BE2)',
@@ -592,12 +592,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Current (BE3)',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
       }),
     }),
-    'object_id_base': 'Current (BE3)',
     'original_device_class': <SensorDeviceClass.CURRENT: 'current'>,
     'original_icon': None,
     'original_name': 'Current (BE3)',
@@ -649,12 +649,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Current (BE3)',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
       }),
     }),
-    'object_id_base': 'Current (BE3)',
     'original_device_class': <SensorDeviceClass.CURRENT: 'current'>,
     'original_icon': None,
     'original_name': 'Current (BE3)',
@@ -706,12 +706,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Current compressor frequency',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
       }),
     }),
-    'object_id_base': 'Current compressor frequency',
     'original_device_class': <SensorDeviceClass.FREQUENCY: 'frequency'>,
     'original_icon': None,
     'original_name': 'Current compressor frequency',
@@ -763,12 +763,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Current compressor frequency',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
       }),
     }),
-    'object_id_base': 'Current compressor frequency',
     'original_device_class': <SensorDeviceClass.FREQUENCY: 'frequency'>,
     'original_icon': None,
     'original_name': 'Current compressor frequency',
@@ -818,9 +818,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Current fan mode',
     'options': dict({
     }),
-    'object_id_base': 'Current fan mode',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Current fan mode',
@@ -867,9 +867,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Current fan mode',
     'options': dict({
     }),
-    'object_id_base': 'Current fan mode',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Current fan mode',
@@ -916,9 +916,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Current hot water mode',
     'options': dict({
     }),
-    'object_id_base': 'Current hot water mode',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Current hot water mode',
@@ -966,9 +966,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Current hot water mode',
     'options': dict({
     }),
-    'object_id_base': 'Current hot water mode',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Current hot water mode',
@@ -1018,12 +1018,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Current outd temp (BT1)',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
       }),
     }),
-    'object_id_base': 'Current outd temp (BT1)',
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Current outd temp (BT1)',
@@ -1075,12 +1075,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Current outd temp (BT1)',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
       }),
     }),
-    'object_id_base': 'Current outd temp (BT1)',
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Current outd temp (BT1)',
@@ -1130,9 +1130,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Decrease from reference value',
     'options': dict({
     }),
-    'object_id_base': 'Decrease from reference value',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Decrease from reference value',
@@ -1180,9 +1180,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Decrease from reference value',
     'options': dict({
     }),
-    'object_id_base': 'Decrease from reference value',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Decrease from reference value',
@@ -1232,12 +1232,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Defrosting time',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
       }),
     }),
-    'object_id_base': 'Defrosting time',
     'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
     'original_icon': None,
     'original_name': 'Defrosting time',
@@ -1289,12 +1289,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Defrosting time',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
       }),
     }),
-    'object_id_base': 'Defrosting time',
     'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
     'original_icon': None,
     'original_name': 'Defrosting time',
@@ -1344,9 +1344,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Degree minutes',
     'options': dict({
     }),
-    'object_id_base': 'Degree minutes',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Degree minutes',
@@ -1394,9 +1394,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Degree minutes',
     'options': dict({
     }),
-    'object_id_base': 'Degree minutes',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Degree minutes',
@@ -1444,9 +1444,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Desired humidity',
     'options': dict({
     }),
-    'object_id_base': 'Desired humidity',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Desired humidity',
@@ -1494,9 +1494,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Desired humidity',
     'options': dict({
     }),
-    'object_id_base': 'Desired humidity',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Desired humidity',
@@ -1544,9 +1544,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Desired humidity',
     'options': dict({
     }),
-    'object_id_base': 'Desired humidity',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Desired humidity',
@@ -1594,9 +1594,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Desired humidity',
     'options': dict({
     }),
-    'object_id_base': 'Desired humidity',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Desired humidity',
@@ -1646,12 +1646,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Discharge (BT14)',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
       }),
     }),
-    'object_id_base': 'Discharge (BT14)',
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Discharge (BT14)',
@@ -1703,12 +1703,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Discharge (BT14)',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
       }),
     }),
-    'object_id_base': 'Discharge (BT14)',
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Discharge (BT14)',
@@ -1760,12 +1760,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'dT Inverter - exh air (BT20)',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
       }),
     }),
-    'object_id_base': 'dT Inverter - exh air (BT20)',
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'dT Inverter - exh air (BT20)',
@@ -1817,12 +1817,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'dT Inverter - exh air (BT20)',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
       }),
     }),
-    'object_id_base': 'dT Inverter - exh air (BT20)',
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'dT Inverter - exh air (BT20)',
@@ -1874,12 +1874,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Evaporator (BT16)',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
       }),
     }),
-    'object_id_base': 'Evaporator (BT16)',
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Evaporator (BT16)',
@@ -1931,12 +1931,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Evaporator (BT16)',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
       }),
     }),
-    'object_id_base': 'Evaporator (BT16)',
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Evaporator (BT16)',
@@ -1988,12 +1988,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Exhaust air (BT20)',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
       }),
     }),
-    'object_id_base': 'Exhaust air (BT20)',
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Exhaust air (BT20)',
@@ -2045,12 +2045,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Exhaust air (BT20)',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
       }),
     }),
-    'object_id_base': 'Exhaust air (BT20)',
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Exhaust air (BT20)',
@@ -2102,12 +2102,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Extract air (BT21)',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
       }),
     }),
-    'object_id_base': 'Extract air (BT21)',
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Extract air (BT21)',
@@ -2159,12 +2159,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Extract air (BT21)',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
       }),
     }),
-    'object_id_base': 'Extract air (BT21)',
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Extract air (BT21)',
@@ -2214,9 +2214,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Heating medium pump speed (GP1)',
     'options': dict({
     }),
-    'object_id_base': 'Heating medium pump speed (GP1)',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Heating medium pump speed (GP1)',
@@ -2264,9 +2264,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Heating medium pump speed (GP1)',
     'options': dict({
     }),
-    'object_id_base': 'Heating medium pump speed (GP1)',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Heating medium pump speed (GP1)',
@@ -2316,12 +2316,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Hot water: charge current value ((BT12 | BT63))',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
       }),
     }),
-    'object_id_base': 'Hot water: charge current value ((BT12 | BT63))',
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Hot water: charge current value ((BT12 | BT63))',
@@ -2373,12 +2373,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Hot water: charge current value ((BT12 | BT63))',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
       }),
     }),
-    'object_id_base': 'Hot water: charge current value ((BT12 | BT63))',
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Hot water: charge current value ((BT12 | BT63))',
@@ -2430,12 +2430,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Hot water: charge set point value',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
       }),
     }),
-    'object_id_base': 'Hot water: charge set point value',
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Hot water: charge set point value',
@@ -2487,12 +2487,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Hot water: charge set point value',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
       }),
     }),
-    'object_id_base': 'Hot water: charge set point value',
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Hot water: charge set point value',
@@ -2544,12 +2544,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Hot water charging (BT6)',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
       }),
     }),
-    'object_id_base': 'Hot water charging (BT6)',
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Hot water charging (BT6)',
@@ -2601,12 +2601,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Hot water charging (BT6)',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
       }),
     }),
-    'object_id_base': 'Hot water charging (BT6)',
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Hot water charging (BT6)',
@@ -2658,12 +2658,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Hot water top (BT7)',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
       }),
     }),
-    'object_id_base': 'Hot water top (BT7)',
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Hot water top (BT7)',
@@ -2715,12 +2715,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Hot water top (BT7)',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
       }),
     }),
-    'object_id_base': 'Hot water top (BT7)',
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Hot water top (BT7)',
@@ -2780,9 +2780,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Int elec add heat',
     'options': dict({
     }),
-    'object_id_base': 'Int elec add heat',
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
     'original_name': 'Int elec add heat',
@@ -2849,9 +2849,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Int elec add heat',
     'options': dict({
     }),
-    'object_id_base': 'Int elec add heat',
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
     'original_name': 'Int elec add heat',
@@ -2908,9 +2908,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Int elec add heat raw',
     'options': dict({
     }),
-    'object_id_base': 'Int elec add heat raw',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Int elec add heat raw',
@@ -2957,9 +2957,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Int elec add heat raw',
     'options': dict({
     }),
-    'object_id_base': 'Int elec add heat raw',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Int elec add heat raw',
@@ -3008,12 +3008,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Inverter temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
       }),
     }),
-    'object_id_base': 'Inverter temperature',
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Inverter temperature',
@@ -3065,12 +3065,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Inverter temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
       }),
     }),
-    'object_id_base': 'Inverter temperature',
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Inverter temperature',
@@ -3122,12 +3122,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Liquid line (BT15)',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
       }),
     }),
-    'object_id_base': 'Liquid line (BT15)',
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Liquid line (BT15)',
@@ -3179,12 +3179,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Liquid line (BT15)',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
       }),
     }),
-    'object_id_base': 'Liquid line (BT15)',
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Liquid line (BT15)',
@@ -3236,12 +3236,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Max compressor frequency',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
       }),
     }),
-    'object_id_base': 'Max compressor frequency',
     'original_device_class': <SensorDeviceClass.FREQUENCY: 'frequency'>,
     'original_icon': None,
     'original_name': 'Max compressor frequency',
@@ -3293,12 +3293,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Max compressor frequency',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
       }),
     }),
-    'object_id_base': 'Max compressor frequency',
     'original_device_class': <SensorDeviceClass.FREQUENCY: 'frequency'>,
     'original_icon': None,
     'original_name': 'Max compressor frequency',
@@ -3350,12 +3350,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Min compressor frequency',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
       }),
     }),
-    'object_id_base': 'Min compressor frequency',
     'original_device_class': <SensorDeviceClass.FREQUENCY: 'frequency'>,
     'original_icon': None,
     'original_name': 'Min compressor frequency',
@@ -3407,12 +3407,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Min compressor frequency',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
       }),
     }),
-    'object_id_base': 'Min compressor frequency',
     'original_device_class': <SensorDeviceClass.FREQUENCY: 'frequency'>,
     'original_icon': None,
     'original_name': 'Min compressor frequency',
@@ -3464,12 +3464,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Oil temperature (BT29)',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
       }),
     }),
-    'object_id_base': 'Oil temperature (BT29)',
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Oil temperature (BT29)',
@@ -3521,12 +3521,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Oil temperature (BT29)',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
       }),
     }),
-    'object_id_base': 'Oil temperature (BT29)',
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Oil temperature (BT29)',
@@ -3578,12 +3578,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Oil temperature (EP15-BT29)',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
       }),
     }),
-    'object_id_base': 'Oil temperature (EP15-BT29)',
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Oil temperature (EP15-BT29)',
@@ -3635,12 +3635,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Oil temperature (EP15-BT29)',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
       }),
     }),
-    'object_id_base': 'Oil temperature (EP15-BT29)',
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Oil temperature (EP15-BT29)',
@@ -3700,9 +3700,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Priority',
     'options': dict({
     }),
-    'object_id_base': 'Priority',
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
     'original_name': 'Priority',
@@ -3769,9 +3769,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Priority',
     'options': dict({
     }),
-    'object_id_base': 'Priority',
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
     'original_name': 'Priority',
@@ -3828,9 +3828,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Prior\xadity raw',
     'options': dict({
     }),
-    'object_id_base': 'Prior\xadity raw',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Prior\xadity raw',
@@ -3877,9 +3877,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Prior\xadity raw',
     'options': dict({
     }),
-    'object_id_base': 'Prior\xadity raw',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Prior\xadity raw',
@@ -3926,9 +3926,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'r start diff additional heat',
     'options': dict({
     }),
-    'object_id_base': 'r start diff additional heat',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'r start diff additional heat',
@@ -3976,9 +3976,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'r start diff additional heat',
     'options': dict({
     }),
-    'object_id_base': 'r start diff additional heat',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'r start diff additional heat',
@@ -4028,12 +4028,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Reference, air speed sensor',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
       }),
     }),
-    'object_id_base': 'Reference, air speed sensor',
     'original_device_class': <SensorDeviceClass.VOLUME_FLOW_RATE: 'volume_flow_rate'>,
     'original_icon': None,
     'original_name': 'Reference, air speed sensor',
@@ -4085,12 +4085,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Reference, air speed sensor',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
       }),
     }),
-    'object_id_base': 'Reference, air speed sensor',
     'original_device_class': <SensorDeviceClass.VOLUME_FLOW_RATE: 'volume_flow_rate'>,
     'original_icon': None,
     'original_name': 'Reference, air speed sensor',
@@ -4142,12 +4142,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Return line (BT3)',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
       }),
     }),
-    'object_id_base': 'Return line (BT3)',
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Return line (BT3)',
@@ -4199,12 +4199,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Return line (BT3)',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
       }),
     }),
-    'object_id_base': 'Return line (BT3)',
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Return line (BT3)',
@@ -4256,12 +4256,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Return line (BT62)',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
       }),
     }),
-    'object_id_base': 'Return line (BT62)',
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Return line (BT62)',
@@ -4313,12 +4313,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Return line (BT62)',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
       }),
     }),
-    'object_id_base': 'Return line (BT62)',
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Return line (BT62)',
@@ -4370,12 +4370,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Room temperature (BT50)',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
       }),
     }),
-    'object_id_base': 'Room temperature (BT50)',
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Room temperature (BT50)',
@@ -4427,12 +4427,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Room temperature (BT50)',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
       }),
     }),
-    'object_id_base': 'Room temperature (BT50)',
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Room temperature (BT50)',
@@ -4489,9 +4489,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Status compressor',
     'options': dict({
     }),
-    'object_id_base': 'Status compressor',
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
     'original_name': 'Status compressor',
@@ -4552,9 +4552,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Status compressor',
     'options': dict({
     }),
-    'object_id_base': 'Status compressor',
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
     'original_name': 'Status compressor',
@@ -4608,9 +4608,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Status com\xadpressor raw',
     'options': dict({
     }),
-    'object_id_base': 'Status com\xadpressor raw',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Status com\xadpressor raw',
@@ -4657,9 +4657,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Status com\xadpressor raw',
     'options': dict({
     }),
-    'object_id_base': 'Status com\xadpressor raw',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Status com\xadpressor raw',
@@ -4708,12 +4708,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Suction gas (BT17)',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
       }),
     }),
-    'object_id_base': 'Suction gas (BT17)',
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Suction gas (BT17)',
@@ -4765,12 +4765,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Suction gas (BT17)',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
       }),
     }),
-    'object_id_base': 'Suction gas (BT17)',
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Suction gas (BT17)',
@@ -4822,12 +4822,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Supply line (BT2)',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
       }),
     }),
-    'object_id_base': 'Supply line (BT2)',
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Supply line (BT2)',
@@ -4879,12 +4879,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Supply line (BT2)',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
       }),
     }),
-    'object_id_base': 'Supply line (BT2)',
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Supply line (BT2)',
@@ -4936,12 +4936,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Supply line (BT61)',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
       }),
     }),
-    'object_id_base': 'Supply line (BT61)',
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Supply line (BT61)',
@@ -4993,12 +4993,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Supply line (BT61)',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
       }),
     }),
-    'object_id_base': 'Supply line (BT61)',
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Supply line (BT61)',
@@ -5048,9 +5048,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Time factor add heat',
     'options': dict({
     }),
-    'object_id_base': 'Time factor add heat',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Time factor add heat',
@@ -5098,9 +5098,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Time factor add heat',
     'options': dict({
     }),
-    'object_id_base': 'Time factor add heat',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Time factor add heat',
@@ -5148,9 +5148,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Value, air velocity sensor (BS1)',
     'options': dict({
     }),
-    'object_id_base': 'Value, air velocity sensor (BS1)',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Value, air velocity sensor (BS1)',
@@ -5198,9 +5198,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Value, air velocity sensor (BS1)',
     'options': dict({
     }),
-    'object_id_base': 'Value, air velocity sensor (BS1)',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Value, air velocity sensor (BS1)',

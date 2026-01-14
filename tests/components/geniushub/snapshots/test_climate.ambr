@@ -30,9 +30,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Bedroom',
     'options': dict({
     }),
-    'object_id_base': 'Bedroom',
     'original_device_class': None,
     'original_icon': 'mdi:radiator',
     'original_name': 'Bedroom',
@@ -113,9 +113,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Ensuite',
     'options': dict({
     }),
-    'object_id_base': 'Ensuite',
     'original_device_class': None,
     'original_icon': 'mdi:radiator',
     'original_name': 'Ensuite',
@@ -198,9 +198,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Guest room',
     'options': dict({
     }),
-    'object_id_base': 'Guest room',
     'original_device_class': None,
     'original_icon': 'mdi:radiator',
     'original_name': 'Guest room',
@@ -283,9 +283,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Hall',
     'options': dict({
     }),
-    'object_id_base': 'Hall',
     'original_device_class': None,
     'original_icon': 'mdi:radiator',
     'original_name': 'Hall',
@@ -368,9 +368,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Kitchen',
     'options': dict({
     }),
-    'object_id_base': 'Kitchen',
     'original_device_class': None,
     'original_icon': 'mdi:radiator',
     'original_name': 'Kitchen',
@@ -452,9 +452,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Lounge',
     'options': dict({
     }),
-    'object_id_base': 'Lounge',
     'original_device_class': None,
     'original_icon': 'mdi:radiator',
     'original_name': 'Lounge',
@@ -535,9 +535,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Study',
     'options': dict({
     }),
-    'object_id_base': 'Study',
     'original_device_class': None,
     'original_icon': 'mdi:radiator',
     'original_name': 'Study',

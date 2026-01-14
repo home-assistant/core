@@ -134,9 +134,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Dailies',
     'options': dict({
     }),
-    'object_id_base': 'Dailies',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Dailies',
@@ -184,9 +184,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': "To-Do's",
     'options': dict({
     }),
-    'object_id_base': "To-Do's",
     'original_device_class': None,
     'original_icon': None,
     'original_name': "To-Do's",

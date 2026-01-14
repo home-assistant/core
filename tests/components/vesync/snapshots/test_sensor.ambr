@@ -54,9 +54,9 @@
       'labels': set({
       }),
       'name': None,
+      'object_id_base': 'Air quality',
       'options': dict({
       }),
-      'object_id_base': 'Air quality',
       'original_device_class': None,
       'original_icon': None,
       'original_name': 'Air quality',
@@ -90,9 +90,9 @@
       'labels': set({
       }),
       'name': None,
+      'object_id_base': 'Filter lifetime',
       'options': dict({
       }),
-      'object_id_base': 'Filter lifetime',
       'original_device_class': None,
       'original_icon': None,
       'original_name': 'Filter lifetime',
@@ -191,9 +191,9 @@
       'labels': set({
       }),
       'name': None,
+      'object_id_base': 'Filter lifetime',
       'options': dict({
       }),
-      'object_id_base': 'Filter lifetime',
       'original_device_class': None,
       'original_icon': None,
       'original_name': 'Filter lifetime',
@@ -277,9 +277,9 @@
       'labels': set({
       }),
       'name': None,
+      'object_id_base': 'Air quality',
       'options': dict({
       }),
-      'object_id_base': 'Air quality',
       'original_device_class': None,
       'original_icon': None,
       'original_name': 'Air quality',
@@ -313,9 +313,9 @@
       'labels': set({
       }),
       'name': None,
+      'object_id_base': 'PM2.5',
       'options': dict({
       }),
-      'object_id_base': 'PM2.5',
       'original_device_class': <SensorDeviceClass.PM25: 'pm25'>,
       'original_icon': None,
       'original_name': 'PM2.5',
@@ -349,9 +349,9 @@
       'labels': set({
       }),
       'name': None,
+      'object_id_base': 'Filter lifetime',
       'options': dict({
       }),
-      'object_id_base': 'Filter lifetime',
       'original_device_class': None,
       'original_icon': None,
       'original_name': 'Filter lifetime',
@@ -464,9 +464,9 @@
       'labels': set({
       }),
       'name': None,
+      'object_id_base': 'Air quality',
       'options': dict({
       }),
-      'object_id_base': 'Air quality',
       'original_device_class': None,
       'original_icon': None,
       'original_name': 'Air quality',
@@ -500,9 +500,9 @@
       'labels': set({
       }),
       'name': None,
+      'object_id_base': 'PM2.5',
       'options': dict({
       }),
-      'object_id_base': 'PM2.5',
       'original_device_class': <SensorDeviceClass.PM25: 'pm25'>,
       'original_icon': None,
       'original_name': 'PM2.5',
@@ -536,9 +536,9 @@
       'labels': set({
       }),
       'name': None,
+      'object_id_base': 'Filter lifetime',
       'options': dict({
       }),
-      'object_id_base': 'Filter lifetime',
       'original_device_class': None,
       'original_icon': None,
       'original_name': 'Filter lifetime',
@@ -653,12 +653,12 @@
       'labels': set({
       }),
       'name': None,
+      'object_id_base': 'Current temperature',
       'options': dict({
         'sensor': dict({
           'suggested_display_precision': 1,
         }),
       }),
-      'object_id_base': 'Current temperature',
       'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
       'original_icon': None,
       'original_name': 'Current temperature',
@@ -692,12 +692,12 @@
       'labels': set({
       }),
       'name': None,
+      'object_id_base': 'Cooking set temperature',
       'options': dict({
         'sensor': dict({
           'suggested_display_precision': 1,
         }),
       }),
-      'object_id_base': 'Cooking set temperature',
       'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
       'original_icon': None,
       'original_name': 'Cooking set temperature',
@@ -729,12 +729,12 @@
       'labels': set({
       }),
       'name': None,
+      'object_id_base': 'Cooking set time',
       'options': dict({
         'sensor': dict({
           'suggested_display_precision': 2,
         }),
       }),
-      'object_id_base': 'Cooking set time',
       'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
       'original_icon': None,
       'original_name': 'Cooking set time',
@@ -766,12 +766,12 @@
       'labels': set({
       }),
       'name': None,
+      'object_id_base': 'Preheating set time',
       'options': dict({
         'sensor': dict({
           'suggested_display_precision': 2,
         }),
       }),
-      'object_id_base': 'Preheating set time',
       'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
       'original_icon': None,
       'original_name': 'Preheating set time',
@@ -814,9 +814,9 @@
       'labels': set({
       }),
       'name': None,
+      'object_id_base': 'Cooking status',
       'options': dict({
       }),
-      'object_id_base': 'Cooking status',
       'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
       'original_icon': None,
       'original_name': 'Cooking status',
@@ -973,9 +973,9 @@
       'labels': set({
       }),
       'name': None,
+      'object_id_base': 'Current temperature',
       'options': dict({
       }),
-      'object_id_base': 'Current temperature',
       'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
       'original_icon': None,
       'original_name': 'Current temperature',
@@ -1009,9 +1009,9 @@
       'labels': set({
       }),
       'name': None,
+      'object_id_base': 'Cooking set temperature',
       'options': dict({
       }),
-      'object_id_base': 'Cooking set temperature',
       'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
       'original_icon': None,
       'original_name': 'Cooking set temperature',
@@ -1043,12 +1043,12 @@
       'labels': set({
       }),
       'name': None,
+      'object_id_base': 'Cooking set time',
       'options': dict({
         'sensor': dict({
           'suggested_display_precision': 2,
         }),
       }),
-      'object_id_base': 'Cooking set time',
       'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
       'original_icon': None,
       'original_name': 'Cooking set time',
@@ -1080,12 +1080,12 @@
       'labels': set({
       }),
       'name': None,
+      'object_id_base': 'Preheating set time',
       'options': dict({
         'sensor': dict({
           'suggested_display_precision': 2,
         }),
       }),
-      'object_id_base': 'Preheating set time',
       'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
       'original_icon': None,
       'original_name': 'Preheating set time',
@@ -1128,9 +1128,9 @@
       'labels': set({
       }),
       'name': None,
+      'object_id_base': 'Cooking status',
       'options': dict({
       }),
-      'object_id_base': 'Cooking status',
       'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
       'original_icon': None,
       'original_name': 'Cooking status',
@@ -1359,9 +1359,9 @@
       'labels': set({
       }),
       'name': None,
+      'object_id_base': 'Humidity',
       'options': dict({
       }),
-      'object_id_base': 'Humidity',
       'original_device_class': <SensorDeviceClass.HUMIDITY: 'humidity'>,
       'original_icon': None,
       'original_name': 'Humidity',
@@ -1448,9 +1448,9 @@
       'labels': set({
       }),
       'name': None,
+      'object_id_base': 'Humidity',
       'options': dict({
       }),
-      'object_id_base': 'Humidity',
       'original_device_class': <SensorDeviceClass.HUMIDITY: 'humidity'>,
       'original_icon': None,
       'original_name': 'Humidity',
@@ -1484,12 +1484,12 @@
       'labels': set({
       }),
       'name': None,
+      'object_id_base': 'Temperature',
       'options': dict({
         'sensor': dict({
           'suggested_display_precision': 1,
         }),
       }),
-      'object_id_base': 'Temperature',
       'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
       'original_icon': None,
       'original_name': 'Temperature',
@@ -1523,9 +1523,9 @@
       'labels': set({
       }),
       'name': None,
+      'object_id_base': 'Filter lifetime',
       'options': dict({
       }),
-      'object_id_base': 'Filter lifetime',
       'original_device_class': None,
       'original_icon': None,
       'original_name': 'Filter lifetime',
@@ -1643,9 +1643,9 @@
       'labels': set({
       }),
       'name': None,
+      'object_id_base': 'Humidity',
       'options': dict({
       }),
-      'object_id_base': 'Humidity',
       'original_device_class': <SensorDeviceClass.HUMIDITY: 'humidity'>,
       'original_icon': None,
       'original_name': 'Humidity',
@@ -1732,12 +1732,12 @@
       'labels': set({
       }),
       'name': None,
+      'object_id_base': 'Energy use today',
       'options': dict({
         'sensor': dict({
           'suggested_display_precision': 2,
         }),
       }),
-      'object_id_base': 'Energy use today',
       'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
       'original_icon': None,
       'original_name': 'Energy use today',
@@ -1771,12 +1771,12 @@
       'labels': set({
       }),
       'name': None,
+      'object_id_base': 'Energy use weekly',
       'options': dict({
         'sensor': dict({
           'suggested_display_precision': 2,
         }),
       }),
-      'object_id_base': 'Energy use weekly',
       'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
       'original_icon': None,
       'original_name': 'Energy use weekly',
@@ -1810,12 +1810,12 @@
       'labels': set({
       }),
       'name': None,
+      'object_id_base': 'Energy use monthly',
       'options': dict({
         'sensor': dict({
           'suggested_display_precision': 2,
         }),
       }),
-      'object_id_base': 'Energy use monthly',
       'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
       'original_icon': None,
       'original_name': 'Energy use monthly',
@@ -1849,12 +1849,12 @@
       'labels': set({
       }),
       'name': None,
+      'object_id_base': 'Energy use yearly',
       'options': dict({
         'sensor': dict({
           'suggested_display_precision': 2,
         }),
       }),
-      'object_id_base': 'Energy use yearly',
       'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
       'original_icon': None,
       'original_name': 'Energy use yearly',
@@ -1888,12 +1888,12 @@
       'labels': set({
       }),
       'name': None,
+      'object_id_base': 'Current voltage',
       'options': dict({
         'sensor': dict({
           'suggested_display_precision': 0,
         }),
       }),
-      'object_id_base': 'Current voltage',
       'original_device_class': <SensorDeviceClass.VOLTAGE: 'voltage'>,
       'original_icon': None,
       'original_name': 'Current voltage',
@@ -1927,12 +1927,12 @@
       'labels': set({
       }),
       'name': None,
+      'object_id_base': 'Current power',
       'options': dict({
         'sensor': dict({
           'suggested_display_precision': 0,
         }),
       }),
-      'object_id_base': 'Current power',
       'original_device_class': <SensorDeviceClass.POWER: 'power'>,
       'original_icon': None,
       'original_name': 'Current power',

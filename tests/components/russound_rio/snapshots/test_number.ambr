@@ -25,9 +25,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Balance',
     'options': dict({
     }),
-    'object_id_base': 'Balance',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Balance',
@@ -83,9 +83,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Bass',
     'options': dict({
     }),
-    'object_id_base': 'Bass',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Bass',
@@ -141,9 +141,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Treble',
     'options': dict({
     }),
-    'object_id_base': 'Treble',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Treble',
@@ -199,9 +199,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Turn-on volume',
     'options': dict({
     }),
-    'object_id_base': 'Turn-on volume',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Turn-on volume',
@@ -257,9 +257,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Balance',
     'options': dict({
     }),
-    'object_id_base': 'Balance',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Balance',
@@ -315,9 +315,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Bass',
     'options': dict({
     }),
-    'object_id_base': 'Bass',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Bass',
@@ -373,9 +373,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Treble',
     'options': dict({
     }),
-    'object_id_base': 'Treble',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Treble',
@@ -431,9 +431,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Turn-on volume',
     'options': dict({
     }),
-    'object_id_base': 'Turn-on volume',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Turn-on volume',
@@ -489,9 +489,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Balance',
     'options': dict({
     }),
-    'object_id_base': 'Balance',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Balance',
@@ -547,9 +547,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Bass',
     'options': dict({
     }),
-    'object_id_base': 'Bass',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Bass',
@@ -605,9 +605,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Treble',
     'options': dict({
     }),
-    'object_id_base': 'Treble',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Treble',
@@ -663,9 +663,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Turn-on volume',
     'options': dict({
     }),
-    'object_id_base': 'Turn-on volume',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Turn-on volume',
@@ -721,9 +721,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Balance',
     'options': dict({
     }),
-    'object_id_base': 'Balance',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Balance',
@@ -779,9 +779,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Bass',
     'options': dict({
     }),
-    'object_id_base': 'Bass',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Bass',
@@ -837,9 +837,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Treble',
     'options': dict({
     }),
-    'object_id_base': 'Treble',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Treble',
@@ -895,9 +895,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Turn-on volume',
     'options': dict({
     }),
-    'object_id_base': 'Turn-on volume',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Turn-on volume',

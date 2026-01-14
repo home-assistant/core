@@ -25,9 +25,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Back lawn cutting height',
     'options': dict({
     }),
-    'object_id_base': 'Back lawn cutting height',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Back lawn cutting height',
@@ -84,9 +84,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Cutting height',
     'options': dict({
     }),
-    'object_id_base': 'Cutting height',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Cutting height',
@@ -142,9 +142,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Front lawn cutting height',
     'options': dict({
     }),
-    'object_id_base': 'Front lawn cutting height',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Front lawn cutting height',
@@ -201,9 +201,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'My lawn cutting height',
     'options': dict({
     }),
-    'object_id_base': 'My lawn cutting height',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'My lawn cutting height',

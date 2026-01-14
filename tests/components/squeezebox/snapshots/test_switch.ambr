@@ -20,9 +20,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Alarm (1)',
     'options': dict({
     }),
-    'object_id_base': 'Alarm (1)',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Alarm (1)',
@@ -70,9 +70,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Alarms enabled',
     'options': dict({
     }),
-    'object_id_base': 'Alarms enabled',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Alarms enabled',

@@ -22,9 +22,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Ceiling fan',
     'options': dict({
     }),
-    'object_id_base': 'Ceiling fan',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Ceiling fan',

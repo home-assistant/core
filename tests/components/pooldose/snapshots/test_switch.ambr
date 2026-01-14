@@ -20,9 +20,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Frequency input',
     'options': dict({
     }),
-    'object_id_base': 'Frequency input',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Frequency input',
@@ -69,9 +69,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Pause dosing',
     'options': dict({
     }),
-    'object_id_base': 'Pause dosing',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Pause dosing',
@@ -118,9 +118,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Pump monitoring',
     'options': dict({
     }),
-    'object_id_base': 'Pump monitoring',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Pump monitoring',

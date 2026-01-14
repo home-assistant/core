@@ -20,9 +20,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Kitchen Bright',
     'options': dict({
     }),
-    'object_id_base': 'Kitchen Bright',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Kitchen Bright',
@@ -69,9 +69,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Living Room Evening',
     'options': dict({
     }),
-    'object_id_base': 'Living Room Evening',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Living Room Evening',

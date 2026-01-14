@@ -44,9 +44,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Brew by weight dose mode',
     'options': dict({
     }),
-    'object_id_base': 'Brew by weight dose mode',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Brew by weight dose mode',
@@ -104,9 +104,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Prebrew/-infusion mode',
     'options': dict({
     }),
-    'object_id_base': 'Prebrew/-infusion mode',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Prebrew/-infusion mode',
@@ -164,9 +164,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Prebrew/-infusion mode',
     'options': dict({
     }),
-    'object_id_base': 'Prebrew/-infusion mode',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Prebrew/-infusion mode',
@@ -224,9 +224,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Prebrew/-infusion mode',
     'options': dict({
     }),
-    'object_id_base': 'Prebrew/-infusion mode',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Prebrew/-infusion mode',
@@ -282,9 +282,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Smart standby mode',
     'options': dict({
     }),
-    'object_id_base': 'Smart standby mode',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Smart standby mode',
@@ -342,9 +342,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Steam level',
     'options': dict({
     }),
-    'object_id_base': 'Steam level',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Steam level',

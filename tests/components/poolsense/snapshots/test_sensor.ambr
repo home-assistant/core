@@ -20,9 +20,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery',
     'options': dict({
     }),
-    'object_id_base': 'Battery',
     'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
     'original_icon': None,
     'original_name': 'Battery',
@@ -72,9 +72,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Chlorine',
     'options': dict({
     }),
-    'object_id_base': 'Chlorine',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Chlorine',
@@ -123,9 +123,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Chlorine high',
     'options': dict({
     }),
-    'object_id_base': 'Chlorine high',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Chlorine high',
@@ -174,9 +174,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Chlorine low',
     'options': dict({
     }),
-    'object_id_base': 'Chlorine low',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Chlorine low',
@@ -225,9 +225,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Last seen',
     'options': dict({
     }),
-    'object_id_base': 'Last seen',
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
     'original_icon': None,
     'original_name': 'Last seen',
@@ -276,9 +276,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'pH',
     'options': dict({
     }),
-    'object_id_base': 'pH',
     'original_device_class': <SensorDeviceClass.PH: 'ph'>,
     'original_icon': None,
     'original_name': 'pH',
@@ -327,9 +327,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'pH high',
     'options': dict({
     }),
-    'object_id_base': 'pH high',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'pH high',
@@ -377,9 +377,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'pH low',
     'options': dict({
     }),
-    'object_id_base': 'pH low',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'pH low',
@@ -427,12 +427,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
       }),
     }),
-    'object_id_base': 'Temperature',
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Temperature',

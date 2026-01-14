@@ -34,9 +34,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Operational problem',
     'options': dict({
     }),
-    'object_id_base': 'Operational problem',
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
     'original_icon': None,
     'original_name': 'Operational problem',
@@ -115,9 +115,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Operational problem',
     'options': dict({
     }),
-    'object_id_base': 'Operational problem',
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
     'original_icon': None,
     'original_name': 'Operational problem',

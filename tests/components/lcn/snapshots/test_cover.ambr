@@ -20,9 +20,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Cover_Outputs',
     'options': dict({
     }),
-    'object_id_base': 'Cover_Outputs',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Cover_Outputs',
@@ -71,9 +71,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Cover_Relays',
     'options': dict({
     }),
-    'object_id_base': 'Cover_Relays',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Cover_Relays',
@@ -122,9 +122,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Cover_Relays_BS4',
     'options': dict({
     }),
-    'object_id_base': 'Cover_Relays_BS4',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Cover_Relays_BS4',
@@ -173,9 +173,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Cover_Relays_Module',
     'options': dict({
     }),
-    'object_id_base': 'Cover_Relays_Module',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Cover_Relays_Module',

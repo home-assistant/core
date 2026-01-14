@@ -20,9 +20,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Charge start',
     'options': dict({
     }),
-    'object_id_base': 'Charge start',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Charge start',
@@ -69,9 +69,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Charge stop',
     'options': dict({
     }),
-    'object_id_base': 'Charge stop',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Charge stop',
@@ -118,9 +118,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Charging schedule override',
     'options': dict({
     }),
-    'object_id_base': 'Charging schedule override',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Charging schedule override',
@@ -167,9 +167,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Restart',
     'options': dict({
     }),
-    'object_id_base': 'Restart',
     'original_device_class': <ButtonDeviceClass.RESTART: 'restart'>,
     'original_icon': None,
     'original_name': 'Restart',

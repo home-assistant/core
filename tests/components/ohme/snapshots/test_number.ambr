@@ -25,9 +25,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Preconditioning duration',
     'options': dict({
     }),
-    'object_id_base': 'Preconditioning duration',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Preconditioning duration',
@@ -84,9 +84,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Target percentage',
     'options': dict({
     }),
-    'object_id_base': 'Target percentage',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Target percentage',

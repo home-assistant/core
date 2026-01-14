@@ -22,9 +22,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Categories',
     'options': dict({
     }),
-    'object_id_base': 'Categories',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Categories',
@@ -75,9 +75,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Recipes',
     'options': dict({
     }),
-    'object_id_base': 'Recipes',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Recipes',
@@ -128,9 +128,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Tags',
     'options': dict({
     }),
-    'object_id_base': 'Tags',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Tags',
@@ -181,9 +181,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Tools',
     'options': dict({
     }),
-    'object_id_base': 'Tools',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Tools',
@@ -234,9 +234,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Users',
     'options': dict({
     }),
-    'object_id_base': 'Users',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Users',

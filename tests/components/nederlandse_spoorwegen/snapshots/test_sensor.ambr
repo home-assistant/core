@@ -20,9 +20,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Actual arrival platform',
     'options': dict({
     }),
-    'object_id_base': 'Actual arrival platform',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Actual arrival platform',
@@ -70,9 +70,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Actual arrival time',
     'options': dict({
     }),
-    'object_id_base': 'Actual arrival time',
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
     'original_icon': None,
     'original_name': 'Actual arrival time',
@@ -121,9 +121,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Actual departure platform',
     'options': dict({
     }),
-    'object_id_base': 'Actual departure platform',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Actual departure platform',
@@ -171,9 +171,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Actual departure time',
     'options': dict({
     }),
-    'object_id_base': 'Actual departure time',
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
     'original_icon': None,
     'original_name': 'Actual departure time',
@@ -222,9 +222,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Departure',
     'options': dict({
     }),
-    'object_id_base': 'Departure',
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
     'original_icon': None,
     'original_name': 'Departure',
@@ -294,9 +294,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Next departure',
     'options': dict({
     }),
-    'object_id_base': 'Next departure',
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
     'original_icon': None,
     'original_name': 'Next departure',
@@ -345,9 +345,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Planned arrival platform',
     'options': dict({
     }),
-    'object_id_base': 'Planned arrival platform',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Planned arrival platform',
@@ -395,9 +395,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Planned arrival time',
     'options': dict({
     }),
-    'object_id_base': 'Planned arrival time',
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
     'original_icon': None,
     'original_name': 'Planned arrival time',
@@ -446,9 +446,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Planned departure platform',
     'options': dict({
     }),
-    'object_id_base': 'Planned departure platform',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Planned departure platform',
@@ -496,9 +496,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Planned departure time',
     'options': dict({
     }),
-    'object_id_base': 'Planned departure time',
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
     'original_icon': None,
     'original_name': 'Planned departure time',
@@ -547,9 +547,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Route',
     'options': dict({
     }),
-    'object_id_base': 'Route',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Route',
@@ -602,9 +602,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Status',
     'options': dict({
     }),
-    'object_id_base': 'Status',
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
     'original_name': 'Status',
@@ -657,9 +657,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Transfers',
     'options': dict({
     }),
-    'object_id_base': 'Transfers',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Transfers',
@@ -707,9 +707,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Actual arrival platform',
     'options': dict({
     }),
-    'object_id_base': 'Actual arrival platform',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Actual arrival platform',
@@ -757,9 +757,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Actual arrival time',
     'options': dict({
     }),
-    'object_id_base': 'Actual arrival time',
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
     'original_icon': None,
     'original_name': 'Actual arrival time',
@@ -808,9 +808,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Actual departure platform',
     'options': dict({
     }),
-    'object_id_base': 'Actual departure platform',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Actual departure platform',
@@ -858,9 +858,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Actual departure time',
     'options': dict({
     }),
-    'object_id_base': 'Actual departure time',
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
     'original_icon': None,
     'original_name': 'Actual departure time',
@@ -909,9 +909,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Departure',
     'options': dict({
     }),
-    'object_id_base': 'Departure',
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
     'original_icon': None,
     'original_name': 'Departure',
@@ -981,9 +981,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Next departure',
     'options': dict({
     }),
-    'object_id_base': 'Next departure',
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
     'original_icon': None,
     'original_name': 'Next departure',
@@ -1032,9 +1032,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Planned arrival platform',
     'options': dict({
     }),
-    'object_id_base': 'Planned arrival platform',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Planned arrival platform',
@@ -1082,9 +1082,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Planned arrival time',
     'options': dict({
     }),
-    'object_id_base': 'Planned arrival time',
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
     'original_icon': None,
     'original_name': 'Planned arrival time',
@@ -1133,9 +1133,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Planned departure platform',
     'options': dict({
     }),
-    'object_id_base': 'Planned departure platform',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Planned departure platform',
@@ -1183,9 +1183,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Planned departure time',
     'options': dict({
     }),
-    'object_id_base': 'Planned departure time',
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
     'original_icon': None,
     'original_name': 'Planned departure time',
@@ -1234,9 +1234,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Route',
     'options': dict({
     }),
-    'object_id_base': 'Route',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Route',
@@ -1289,9 +1289,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Status',
     'options': dict({
     }),
-    'object_id_base': 'Status',
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
     'original_name': 'Status',
@@ -1344,9 +1344,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Transfers',
     'options': dict({
     }),
-    'object_id_base': 'Transfers',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Transfers',
@@ -1394,9 +1394,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Actual arrival platform',
     'options': dict({
     }),
-    'object_id_base': 'Actual arrival platform',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Actual arrival platform',
@@ -1444,9 +1444,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Actual arrival time',
     'options': dict({
     }),
-    'object_id_base': 'Actual arrival time',
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
     'original_icon': None,
     'original_name': 'Actual arrival time',
@@ -1495,9 +1495,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Actual departure platform',
     'options': dict({
     }),
-    'object_id_base': 'Actual departure platform',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Actual departure platform',
@@ -1545,9 +1545,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Actual departure time',
     'options': dict({
     }),
-    'object_id_base': 'Actual departure time',
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
     'original_icon': None,
     'original_name': 'Actual departure time',
@@ -1596,9 +1596,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Departure',
     'options': dict({
     }),
-    'object_id_base': 'Departure',
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
     'original_icon': None,
     'original_name': 'Departure',
@@ -1668,9 +1668,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Next departure',
     'options': dict({
     }),
-    'object_id_base': 'Next departure',
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
     'original_icon': None,
     'original_name': 'Next departure',
@@ -1719,9 +1719,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Planned arrival platform',
     'options': dict({
     }),
-    'object_id_base': 'Planned arrival platform',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Planned arrival platform',
@@ -1769,9 +1769,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Planned arrival time',
     'options': dict({
     }),
-    'object_id_base': 'Planned arrival time',
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
     'original_icon': None,
     'original_name': 'Planned arrival time',
@@ -1820,9 +1820,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Planned departure platform',
     'options': dict({
     }),
-    'object_id_base': 'Planned departure platform',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Planned departure platform',
@@ -1870,9 +1870,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Planned departure time',
     'options': dict({
     }),
-    'object_id_base': 'Planned departure time',
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
     'original_icon': None,
     'original_name': 'Planned departure time',
@@ -1921,9 +1921,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Route',
     'options': dict({
     }),
-    'object_id_base': 'Route',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Route',
@@ -1976,9 +1976,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Status',
     'options': dict({
     }),
-    'object_id_base': 'Status',
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
     'original_name': 'Status',
@@ -2031,9 +2031,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Transfers',
     'options': dict({
     }),
-    'object_id_base': 'Transfers',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Transfers',
@@ -2081,9 +2081,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Actual arrival platform',
     'options': dict({
     }),
-    'object_id_base': 'Actual arrival platform',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Actual arrival platform',
@@ -2131,9 +2131,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Actual arrival time',
     'options': dict({
     }),
-    'object_id_base': 'Actual arrival time',
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
     'original_icon': None,
     'original_name': 'Actual arrival time',
@@ -2182,9 +2182,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Actual departure platform',
     'options': dict({
     }),
-    'object_id_base': 'Actual departure platform',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Actual departure platform',
@@ -2232,9 +2232,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Actual departure time',
     'options': dict({
     }),
-    'object_id_base': 'Actual departure time',
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
     'original_icon': None,
     'original_name': 'Actual departure time',
@@ -2283,9 +2283,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Departure',
     'options': dict({
     }),
-    'object_id_base': 'Departure',
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
     'original_icon': None,
     'original_name': 'Departure',
@@ -2355,9 +2355,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Next departure',
     'options': dict({
     }),
-    'object_id_base': 'Next departure',
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
     'original_icon': None,
     'original_name': 'Next departure',
@@ -2406,9 +2406,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Planned arrival platform',
     'options': dict({
     }),
-    'object_id_base': 'Planned arrival platform',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Planned arrival platform',
@@ -2456,9 +2456,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Planned arrival time',
     'options': dict({
     }),
-    'object_id_base': 'Planned arrival time',
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
     'original_icon': None,
     'original_name': 'Planned arrival time',
@@ -2507,9 +2507,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Planned departure platform',
     'options': dict({
     }),
-    'object_id_base': 'Planned departure platform',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Planned departure platform',
@@ -2557,9 +2557,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Planned departure time',
     'options': dict({
     }),
-    'object_id_base': 'Planned departure time',
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
     'original_icon': None,
     'original_name': 'Planned departure time',
@@ -2608,9 +2608,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Route',
     'options': dict({
     }),
-    'object_id_base': 'Route',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Route',
@@ -2663,9 +2663,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Status',
     'options': dict({
     }),
-    'object_id_base': 'Status',
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
     'original_name': 'Status',
@@ -2718,9 +2718,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Transfers',
     'options': dict({
     }),
-    'object_id_base': 'Transfers',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Transfers',

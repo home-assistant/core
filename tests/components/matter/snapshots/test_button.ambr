@@ -20,9 +20,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Reset filter condition',
     'options': dict({
     }),
-    'object_id_base': 'Reset filter condition',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Reset filter condition',
@@ -69,9 +69,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Reset filter condition',
     'options': dict({
     }),
-    'object_id_base': 'Reset filter condition',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Reset filter condition',
@@ -118,9 +118,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Identify',
     'options': dict({
     }),
-    'object_id_base': 'Identify',
     'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
     'original_icon': None,
     'original_name': 'Identify',
@@ -168,9 +168,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Identify (1)',
     'options': dict({
     }),
-    'object_id_base': 'Identify (1)',
     'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
     'original_icon': None,
     'original_name': 'Identify (1)',
@@ -218,9 +218,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Identify (2)',
     'options': dict({
     }),
-    'object_id_base': 'Identify (2)',
     'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
     'original_icon': None,
     'original_name': 'Identify (2)',
@@ -268,9 +268,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Identify (1)',
     'options': dict({
     }),
-    'object_id_base': 'Identify (1)',
     'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
     'original_icon': None,
     'original_name': 'Identify (1)',
@@ -318,9 +318,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Identify (2)',
     'options': dict({
     }),
-    'object_id_base': 'Identify (2)',
     'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
     'original_icon': None,
     'original_name': 'Identify (2)',
@@ -368,9 +368,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Identify (3)',
     'options': dict({
     }),
-    'object_id_base': 'Identify (3)',
     'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
     'original_icon': None,
     'original_name': 'Identify (3)',
@@ -418,9 +418,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Identify (4)',
     'options': dict({
     }),
-    'object_id_base': 'Identify (4)',
     'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
     'original_icon': None,
     'original_name': 'Identify (4)',
@@ -468,9 +468,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Identify (1)',
     'options': dict({
     }),
-    'object_id_base': 'Identify (1)',
     'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
     'original_icon': None,
     'original_name': 'Identify (1)',
@@ -518,9 +518,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Identify (2)',
     'options': dict({
     }),
-    'object_id_base': 'Identify (2)',
     'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
     'original_icon': None,
     'original_name': 'Identify (2)',
@@ -568,9 +568,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Identify (3)',
     'options': dict({
     }),
-    'object_id_base': 'Identify (3)',
     'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
     'original_icon': None,
     'original_name': 'Identify (3)',
@@ -618,9 +618,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Identify (4)',
     'options': dict({
     }),
-    'object_id_base': 'Identify (4)',
     'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
     'original_icon': None,
     'original_name': 'Identify (4)',
@@ -668,9 +668,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Identify (5)',
     'options': dict({
     }),
-    'object_id_base': 'Identify (5)',
     'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
     'original_icon': None,
     'original_name': 'Identify (5)',
@@ -718,9 +718,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Identify (1)',
     'options': dict({
     }),
-    'object_id_base': 'Identify (1)',
     'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
     'original_icon': None,
     'original_name': 'Identify (1)',
@@ -768,9 +768,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Identify (2)',
     'options': dict({
     }),
-    'object_id_base': 'Identify (2)',
     'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
     'original_icon': None,
     'original_name': 'Identify (2)',
@@ -818,9 +818,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Identify',
     'options': dict({
     }),
-    'object_id_base': 'Identify',
     'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
     'original_icon': None,
     'original_name': 'Identify',
@@ -868,9 +868,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Identify',
     'options': dict({
     }),
-    'object_id_base': 'Identify',
     'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
     'original_icon': None,
     'original_name': 'Identify',
@@ -918,9 +918,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Identify',
     'options': dict({
     }),
-    'object_id_base': 'Identify',
     'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
     'original_icon': None,
     'original_name': 'Identify',
@@ -968,9 +968,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Identify',
     'options': dict({
     }),
-    'object_id_base': 'Identify',
     'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
     'original_icon': None,
     'original_name': 'Identify',
@@ -1018,9 +1018,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Identify',
     'options': dict({
     }),
-    'object_id_base': 'Identify',
     'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
     'original_icon': None,
     'original_name': 'Identify',
@@ -1068,9 +1068,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Identify (0)',
     'options': dict({
     }),
-    'object_id_base': 'Identify (0)',
     'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
     'original_icon': None,
     'original_name': 'Identify (0)',
@@ -1118,9 +1118,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Identify (1)',
     'options': dict({
     }),
-    'object_id_base': 'Identify (1)',
     'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
     'original_icon': None,
     'original_name': 'Identify (1)',
@@ -1168,9 +1168,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Identify',
     'options': dict({
     }),
-    'object_id_base': 'Identify',
     'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
     'original_icon': None,
     'original_name': 'Identify',
@@ -1218,9 +1218,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Identify (bottom)',
     'options': dict({
     }),
-    'object_id_base': 'Identify (bottom)',
     'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
     'original_icon': None,
     'original_name': 'Identify (bottom)',
@@ -1268,9 +1268,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Identify (top)',
     'options': dict({
     }),
-    'object_id_base': 'Identify (top)',
     'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
     'original_icon': None,
     'original_name': 'Identify (top)',
@@ -1318,9 +1318,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Identify',
     'options': dict({
     }),
-    'object_id_base': 'Identify',
     'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
     'original_icon': None,
     'original_name': 'Identify',
@@ -1368,9 +1368,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Identify',
     'options': dict({
     }),
-    'object_id_base': 'Identify',
     'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
     'original_icon': None,
     'original_name': 'Identify',
@@ -1418,9 +1418,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Identify',
     'options': dict({
     }),
-    'object_id_base': 'Identify',
     'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
     'original_icon': None,
     'original_name': 'Identify',
@@ -1468,9 +1468,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Identify',
     'options': dict({
     }),
-    'object_id_base': 'Identify',
     'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
     'original_icon': None,
     'original_name': 'Identify',
@@ -1567,9 +1567,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Identify (1)',
     'options': dict({
     }),
-    'object_id_base': 'Identify (1)',
     'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
     'original_icon': None,
     'original_name': 'Identify (1)',
@@ -1617,9 +1617,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Identify (2)',
     'options': dict({
     }),
-    'object_id_base': 'Identify (2)',
     'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
     'original_icon': None,
     'original_name': 'Identify (2)',
@@ -1667,9 +1667,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Identify',
     'options': dict({
     }),
-    'object_id_base': 'Identify',
     'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
     'original_icon': None,
     'original_name': 'Identify',
@@ -1717,9 +1717,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Reset filter condition',
     'options': dict({
     }),
-    'object_id_base': 'Reset filter condition',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Reset filter condition',
@@ -1766,9 +1766,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Reset filter condition',
     'options': dict({
     }),
-    'object_id_base': 'Reset filter condition',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Reset filter condition',
@@ -1815,9 +1815,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Identify (Fan)',
     'options': dict({
     }),
-    'object_id_base': 'Identify (Fan)',
     'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
     'original_icon': None,
     'original_name': 'Identify (Fan)',
@@ -1865,9 +1865,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Identify (1)',
     'options': dict({
     }),
-    'object_id_base': 'Identify (1)',
     'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
     'original_icon': None,
     'original_name': 'Identify (1)',
@@ -1915,9 +1915,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Identify (1)',
     'options': dict({
     }),
-    'object_id_base': 'Identify (1)',
     'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
     'original_icon': None,
     'original_name': 'Identify (1)',
@@ -1965,9 +1965,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Identify',
     'options': dict({
     }),
-    'object_id_base': 'Identify',
     'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
     'original_icon': None,
     'original_name': 'Identify',
@@ -2015,9 +2015,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Identify (Load Control)',
     'options': dict({
     }),
-    'object_id_base': 'Identify (Load Control)',
     'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
     'original_icon': None,
     'original_name': 'Identify (Load Control)',
@@ -2065,9 +2065,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Pause',
     'options': dict({
     }),
-    'object_id_base': 'Pause',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Pause',
@@ -2114,9 +2114,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Resume',
     'options': dict({
     }),
-    'object_id_base': 'Resume',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Resume',
@@ -2163,9 +2163,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Start',
     'options': dict({
     }),
-    'object_id_base': 'Start',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Start',
@@ -2212,9 +2212,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Stop',
     'options': dict({
     }),
-    'object_id_base': 'Stop',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Stop',
@@ -2261,9 +2261,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Identify',
     'options': dict({
     }),
-    'object_id_base': 'Identify',
     'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
     'original_icon': None,
     'original_name': 'Identify',
@@ -2311,9 +2311,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Pause',
     'options': dict({
     }),
-    'object_id_base': 'Pause',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Pause',
@@ -2360,9 +2360,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Resume',
     'options': dict({
     }),
-    'object_id_base': 'Resume',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Resume',
@@ -2409,9 +2409,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Start',
     'options': dict({
     }),
-    'object_id_base': 'Start',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Start',
@@ -2458,9 +2458,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Stop',
     'options': dict({
     }),
-    'object_id_base': 'Stop',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Stop',
@@ -2507,9 +2507,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Identify',
     'options': dict({
     }),
-    'object_id_base': 'Identify',
     'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
     'original_icon': None,
     'original_name': 'Identify',
@@ -2557,9 +2557,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Identify (0)',
     'options': dict({
     }),
-    'object_id_base': 'Identify (0)',
     'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
     'original_icon': None,
     'original_name': 'Identify (0)',
@@ -2607,9 +2607,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Identify (1)',
     'options': dict({
     }),
-    'object_id_base': 'Identify (1)',
     'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
     'original_icon': None,
     'original_name': 'Identify (1)',
@@ -2657,9 +2657,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Identify (1)',
     'options': dict({
     }),
-    'object_id_base': 'Identify (1)',
     'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
     'original_icon': None,
     'original_name': 'Identify (1)',
@@ -2707,9 +2707,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Identify (2)',
     'options': dict({
     }),
-    'object_id_base': 'Identify (2)',
     'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
     'original_icon': None,
     'original_name': 'Identify (2)',
@@ -2757,9 +2757,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Identify (6)',
     'options': dict({
     }),
-    'object_id_base': 'Identify (6)',
     'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
     'original_icon': None,
     'original_name': 'Identify (6)',
@@ -2807,9 +2807,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Identify (Config)',
     'options': dict({
     }),
-    'object_id_base': 'Identify (Config)',
     'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
     'original_icon': None,
     'original_name': 'Identify (Config)',
@@ -2857,9 +2857,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Identify (Down)',
     'options': dict({
     }),
-    'object_id_base': 'Identify (Down)',
     'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
     'original_icon': None,
     'original_name': 'Identify (Down)',
@@ -2907,9 +2907,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Identify (Up)',
     'options': dict({
     }),
-    'object_id_base': 'Identify (Up)',
     'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
     'original_icon': None,
     'original_name': 'Identify (Up)',
@@ -2957,9 +2957,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Identify',
     'options': dict({
     }),
-    'object_id_base': 'Identify',
     'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
     'original_icon': None,
     'original_name': 'Identify',
@@ -3007,9 +3007,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Identify',
     'options': dict({
     }),
-    'object_id_base': 'Identify',
     'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
     'original_icon': None,
     'original_name': 'Identify',
@@ -3057,9 +3057,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Identify',
     'options': dict({
     }),
-    'object_id_base': 'Identify',
     'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
     'original_icon': None,
     'original_name': 'Identify',
@@ -3107,9 +3107,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Identify',
     'options': dict({
     }),
-    'object_id_base': 'Identify',
     'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
     'original_icon': None,
     'original_name': 'Identify',
@@ -3157,9 +3157,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Identify',
     'options': dict({
     }),
-    'object_id_base': 'Identify',
     'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
     'original_icon': None,
     'original_name': 'Identify',
@@ -3207,9 +3207,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Pause',
     'options': dict({
     }),
-    'object_id_base': 'Pause',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Pause',
@@ -3256,9 +3256,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Start',
     'options': dict({
     }),
-    'object_id_base': 'Start',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Start',
@@ -3305,9 +3305,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Stop',
     'options': dict({
     }),
-    'object_id_base': 'Stop',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Stop',
@@ -3354,9 +3354,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Identify',
     'options': dict({
     }),
-    'object_id_base': 'Identify',
     'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
     'original_icon': None,
     'original_name': 'Identify',
@@ -3404,9 +3404,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Pause',
     'options': dict({
     }),
-    'object_id_base': 'Pause',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Pause',
@@ -3453,9 +3453,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Resume',
     'options': dict({
     }),
-    'object_id_base': 'Resume',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Resume',
@@ -3502,9 +3502,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Start',
     'options': dict({
     }),
-    'object_id_base': 'Start',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Start',
@@ -3551,9 +3551,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Stop',
     'options': dict({
     }),
-    'object_id_base': 'Stop',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Stop',
@@ -3600,9 +3600,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Identify (1)',
     'options': dict({
     }),
-    'object_id_base': 'Identify (1)',
     'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
     'original_icon': None,
     'original_name': 'Identify (1)',
@@ -3650,9 +3650,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Identify',
     'options': dict({
     }),
-    'object_id_base': 'Identify',
     'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
     'original_icon': None,
     'original_name': 'Identify',
@@ -3700,9 +3700,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Cancel boost',
     'options': dict({
     }),
-    'object_id_base': 'Cancel boost',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Cancel boost',
@@ -3749,9 +3749,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Identify',
     'options': dict({
     }),
-    'object_id_base': 'Identify',
     'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
     'original_icon': None,
     'original_name': 'Identify',
@@ -3799,9 +3799,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Self-test',
     'options': dict({
     }),
-    'object_id_base': 'Self-test',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Self-test',
@@ -3848,9 +3848,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Identify',
     'options': dict({
     }),
-    'object_id_base': 'Identify',
     'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
     'original_icon': None,
     'original_name': 'Identify',
@@ -3898,9 +3898,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Identify',
     'options': dict({
     }),
-    'object_id_base': 'Identify',
     'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
     'original_icon': None,
     'original_name': 'Identify',
@@ -3948,9 +3948,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Identify',
     'options': dict({
     }),
-    'object_id_base': 'Identify',
     'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
     'original_icon': None,
     'original_name': 'Identify',
@@ -3998,9 +3998,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Identify',
     'options': dict({
     }),
-    'object_id_base': 'Identify',
     'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
     'original_icon': None,
     'original_name': 'Identify',
@@ -4048,9 +4048,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Identify',
     'options': dict({
     }),
-    'object_id_base': 'Identify',
     'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
     'original_icon': None,
     'original_name': 'Identify',

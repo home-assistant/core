@@ -20,9 +20,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power (1)',
     'options': dict({
     }),
-    'object_id_base': 'Power (1)',
     'original_device_class': <SwitchDeviceClass.SWITCH: 'switch'>,
     'original_icon': None,
     'original_name': 'Power (1)',
@@ -70,9 +70,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power (2)',
     'options': dict({
     }),
-    'object_id_base': 'Power (2)',
     'original_device_class': <SwitchDeviceClass.SWITCH: 'switch'>,
     'original_icon': None,
     'original_name': 'Power (2)',
@@ -120,9 +120,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
-    'object_id_base': None,
     'original_device_class': <SwitchDeviceClass.OUTLET: 'outlet'>,
     'original_icon': None,
     'original_name': None,
@@ -170,9 +170,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Privacy mode button',
     'options': dict({
     }),
-    'object_id_base': 'Privacy mode button',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Privacy mode button',
@@ -219,9 +219,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
-    'object_id_base': None,
     'original_device_class': <SwitchDeviceClass.OUTLET: 'outlet'>,
     'original_icon': None,
     'original_name': None,
@@ -269,9 +269,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Privacy mode button',
     'options': dict({
     }),
-    'object_id_base': 'Privacy mode button',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Privacy mode button',
@@ -318,9 +318,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Switch (bottom)',
     'options': dict({
     }),
-    'object_id_base': 'Switch (bottom)',
     'original_device_class': <SwitchDeviceClass.OUTLET: 'outlet'>,
     'original_icon': None,
     'original_name': 'Switch (bottom)',
@@ -368,9 +368,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Switch (top)',
     'options': dict({
     }),
-    'object_id_base': 'Switch (top)',
     'original_device_class': <SwitchDeviceClass.OUTLET: 'outlet'>,
     'original_icon': None,
     'original_name': 'Switch (top)',
@@ -418,9 +418,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
-    'object_id_base': None,
     'original_device_class': <SwitchDeviceClass.OUTLET: 'outlet'>,
     'original_icon': None,
     'original_name': None,
@@ -468,9 +468,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
-    'object_id_base': None,
     'original_device_class': <SwitchDeviceClass.OUTLET: 'outlet'>,
     'original_icon': None,
     'original_name': None,
@@ -518,9 +518,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Child lock',
     'options': dict({
     }),
-    'object_id_base': 'Child lock',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Child lock',
@@ -615,9 +615,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
-    'object_id_base': None,
     'original_device_class': <SwitchDeviceClass.OUTLET: 'outlet'>,
     'original_icon': None,
     'original_name': None,
@@ -665,9 +665,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Switch (Load Control)',
     'options': dict({
     }),
-    'object_id_base': 'Switch (Load Control)',
     'original_device_class': <SwitchDeviceClass.OUTLET: 'outlet'>,
     'original_icon': None,
     'original_name': 'Switch (Load Control)',
@@ -715,9 +715,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power',
     'options': dict({
     }),
-    'object_id_base': 'Power',
     'original_device_class': <SwitchDeviceClass.SWITCH: 'switch'>,
     'original_icon': None,
     'original_name': 'Power',
@@ -765,9 +765,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
-    'object_id_base': None,
     'original_device_class': <SwitchDeviceClass.OUTLET: 'outlet'>,
     'original_icon': None,
     'original_name': None,
@@ -815,9 +815,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Privacy mode button',
     'options': dict({
     }),
-    'object_id_base': 'Privacy mode button',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Privacy mode button',
@@ -864,9 +864,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
-    'object_id_base': None,
     'original_device_class': <SwitchDeviceClass.OUTLET: 'outlet'>,
     'original_icon': None,
     'original_name': None,
@@ -914,9 +914,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power (3)',
     'options': dict({
     }),
-    'object_id_base': 'Power (3)',
     'original_device_class': <SwitchDeviceClass.SWITCH: 'switch'>,
     'original_icon': None,
     'original_name': 'Power (3)',
@@ -964,9 +964,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power (4)',
     'options': dict({
     }),
-    'object_id_base': 'Power (4)',
     'original_device_class': <SwitchDeviceClass.SWITCH: 'switch'>,
     'original_icon': None,
     'original_name': 'Power (4)',
@@ -1014,9 +1014,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power',
     'options': dict({
     }),
-    'object_id_base': 'Power',
     'original_device_class': <SwitchDeviceClass.SWITCH: 'switch'>,
     'original_icon': None,
     'original_name': 'Power',
@@ -1064,9 +1064,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power',
     'options': dict({
     }),
-    'object_id_base': 'Power',
     'original_device_class': <SwitchDeviceClass.SWITCH: 'switch'>,
     'original_icon': None,
     'original_name': 'Power',
@@ -1114,9 +1114,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Enable charging',
     'options': dict({
     }),
-    'object_id_base': 'Enable charging',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Enable charging',
@@ -1163,9 +1163,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power',
     'options': dict({
     }),
-    'object_id_base': 'Power',
     'original_device_class': <SwitchDeviceClass.SWITCH: 'switch'>,
     'original_icon': None,
     'original_name': 'Power',
@@ -1213,9 +1213,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Mute',
     'options': dict({
     }),
-    'object_id_base': 'Mute',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Mute',
@@ -1262,9 +1262,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
-    'object_id_base': None,
     'original_device_class': <SwitchDeviceClass.OUTLET: 'outlet'>,
     'original_icon': None,
     'original_name': None,
@@ -1312,9 +1312,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
-    'object_id_base': None,
     'original_device_class': <SwitchDeviceClass.OUTLET: 'outlet'>,
     'original_icon': None,
     'original_name': None,

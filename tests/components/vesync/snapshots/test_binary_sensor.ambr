@@ -378,9 +378,9 @@
       'labels': set({
       }),
       'name': None,
+      'object_id_base': 'Low water',
       'options': dict({
       }),
-      'object_id_base': 'Low water',
       'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
       'original_icon': None,
       'original_name': 'Low water',
@@ -412,9 +412,9 @@
       'labels': set({
       }),
       'name': None,
+      'object_id_base': 'Water tank lifted',
       'options': dict({
       }),
-      'object_id_base': 'Water tank lifted',
       'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
       'original_icon': None,
       'original_name': 'Water tank lifted',
@@ -511,9 +511,9 @@
       'labels': set({
       }),
       'name': None,
+      'object_id_base': 'Low water',
       'options': dict({
       }),
-      'object_id_base': 'Low water',
       'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
       'original_icon': None,
       'original_name': 'Low water',
@@ -545,9 +545,9 @@
       'labels': set({
       }),
       'name': None,
+      'object_id_base': 'Water tank lifted',
       'options': dict({
       }),
-      'object_id_base': 'Water tank lifted',
       'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
       'original_icon': None,
       'original_name': 'Water tank lifted',
@@ -644,9 +644,9 @@
       'labels': set({
       }),
       'name': None,
+      'object_id_base': 'Low water',
       'options': dict({
       }),
-      'object_id_base': 'Low water',
       'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
       'original_icon': None,
       'original_name': 'Low water',
@@ -678,9 +678,9 @@
       'labels': set({
       }),
       'name': None,
+      'object_id_base': 'Water tank lifted',
       'options': dict({
       }),
-      'object_id_base': 'Water tank lifted',
       'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
       'original_icon': None,
       'original_name': 'Water tank lifted',

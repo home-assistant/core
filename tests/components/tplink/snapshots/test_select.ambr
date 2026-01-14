@@ -77,9 +77,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Alarm sound',
     'options': dict({
     }),
-    'object_id_base': 'Alarm sound',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Alarm sound',
@@ -153,9 +153,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Alarm volume',
     'options': dict({
     }),
-    'object_id_base': 'Alarm volume',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Alarm volume',
@@ -213,9 +213,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Light preset',
     'options': dict({
     }),
-    'object_id_base': 'Light preset',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Light preset',

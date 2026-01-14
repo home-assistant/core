@@ -20,9 +20,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Activate air conditioning',
     'options': dict({
     }),
-    'object_id_base': 'Activate air conditioning',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Activate air conditioning',
@@ -69,9 +69,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Find vehicle',
     'options': dict({
     }),
-    'object_id_base': 'Find vehicle',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Find vehicle',
@@ -118,9 +118,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Flash lights',
     'options': dict({
     }),
-    'object_id_base': 'Flash lights',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Flash lights',
@@ -167,9 +167,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Sound horn',
     'options': dict({
     }),
-    'object_id_base': 'Sound horn',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Sound horn',
@@ -216,9 +216,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Activate air conditioning',
     'options': dict({
     }),
-    'object_id_base': 'Activate air conditioning',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Activate air conditioning',
@@ -265,9 +265,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Deactivate air conditioning',
     'options': dict({
     }),
-    'object_id_base': 'Deactivate air conditioning',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Deactivate air conditioning',
@@ -314,9 +314,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Find vehicle',
     'options': dict({
     }),
-    'object_id_base': 'Find vehicle',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Find vehicle',
@@ -363,9 +363,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Flash lights',
     'options': dict({
     }),
-    'object_id_base': 'Flash lights',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Flash lights',
@@ -412,9 +412,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Sound horn',
     'options': dict({
     }),
-    'object_id_base': 'Sound horn',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Sound horn',
@@ -461,9 +461,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Activate air conditioning',
     'options': dict({
     }),
-    'object_id_base': 'Activate air conditioning',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Activate air conditioning',
@@ -510,9 +510,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Deactivate air conditioning',
     'options': dict({
     }),
-    'object_id_base': 'Deactivate air conditioning',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Deactivate air conditioning',
@@ -559,9 +559,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Find vehicle',
     'options': dict({
     }),
-    'object_id_base': 'Find vehicle',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Find vehicle',
@@ -608,9 +608,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Flash lights',
     'options': dict({
     }),
-    'object_id_base': 'Flash lights',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Flash lights',
@@ -657,9 +657,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Sound horn',
     'options': dict({
     }),
-    'object_id_base': 'Sound horn',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Sound horn',
@@ -706,9 +706,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Activate air conditioning',
     'options': dict({
     }),
-    'object_id_base': 'Activate air conditioning',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Activate air conditioning',
@@ -755,9 +755,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Deactivate air conditioning',
     'options': dict({
     }),
-    'object_id_base': 'Deactivate air conditioning',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Deactivate air conditioning',
@@ -804,9 +804,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Find vehicle',
     'options': dict({
     }),
-    'object_id_base': 'Find vehicle',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Find vehicle',
@@ -853,9 +853,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Flash lights',
     'options': dict({
     }),
-    'object_id_base': 'Flash lights',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Flash lights',
@@ -902,9 +902,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Sound horn',
     'options': dict({
     }),
-    'object_id_base': 'Sound horn',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Sound horn',

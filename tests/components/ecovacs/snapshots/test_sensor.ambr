@@ -20,9 +20,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery',
     'options': dict({
     }),
-    'object_id_base': 'Battery',
     'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
     'original_icon': 'mdi:battery-unknown',
     'original_name': 'Battery',
@@ -72,9 +72,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Filter lifespan',
     'options': dict({
     }),
-    'object_id_base': 'Filter lifespan',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Filter lifespan',
@@ -122,9 +122,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Main brush lifespan',
     'options': dict({
     }),
-    'object_id_base': 'Main brush lifespan',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Main brush lifespan',
@@ -172,9 +172,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Side brush lifespan',
     'options': dict({
     }),
-    'object_id_base': 'Side brush lifespan',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Side brush lifespan',
@@ -230,6 +230,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Area cleaned',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -238,7 +239,6 @@
         'suggested_unit_of_measurement': <UnitOfArea.SQUARE_METERS: 'm²'>,
       }),
     }),
-    'object_id_base': 'Area cleaned',
     'original_device_class': <SensorDeviceClass.AREA: 'area'>,
     'original_icon': None,
     'original_name': 'Area cleaned',
@@ -287,9 +287,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery',
     'options': dict({
     }),
-    'object_id_base': 'Battery',
     'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
     'original_icon': None,
     'original_name': 'Battery',
@@ -338,9 +338,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Blade lifespan',
     'options': dict({
     }),
-    'object_id_base': 'Blade lifespan',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Blade lifespan',
@@ -388,6 +388,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Cleaning duration',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -396,7 +397,6 @@
         'suggested_unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
       }),
     }),
-    'object_id_base': 'Cleaning duration',
     'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
     'original_icon': None,
     'original_name': 'Cleaning duration',
@@ -445,9 +445,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Error',
     'options': dict({
     }),
-    'object_id_base': 'Error',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Error',
@@ -495,9 +495,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'IP address',
     'options': dict({
     }),
-    'object_id_base': 'IP address',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'IP address',
@@ -544,9 +544,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Lens brush lifespan',
     'options': dict({
     }),
-    'object_id_base': 'Lens brush lifespan',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Lens brush lifespan',
@@ -596,12 +596,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Total area cleaned',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
       }),
     }),
-    'object_id_base': 'Total area cleaned',
     'original_device_class': <SensorDeviceClass.AREA: 'area'>,
     'original_icon': None,
     'original_name': 'Total area cleaned',
@@ -653,6 +653,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Total cleaning duration',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -661,7 +662,6 @@
         'suggested_unit_of_measurement': <UnitOfTime.HOURS: 'h'>,
       }),
     }),
-    'object_id_base': 'Total cleaning duration',
     'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
     'original_icon': None,
     'original_name': 'Total cleaning duration',
@@ -713,9 +713,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Total cleanings',
     'options': dict({
     }),
-    'object_id_base': 'Total cleanings',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Total cleanings',
@@ -763,9 +763,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Wi-Fi RSSI',
     'options': dict({
     }),
-    'object_id_base': 'Wi-Fi RSSI',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Wi-Fi RSSI',
@@ -812,9 +812,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Wi-Fi SSID',
     'options': dict({
     }),
-    'object_id_base': 'Wi-Fi SSID',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Wi-Fi SSID',
@@ -861,6 +861,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Area cleaned',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -869,7 +870,6 @@
         'suggested_unit_of_measurement': <UnitOfArea.SQUARE_METERS: 'm²'>,
       }),
     }),
-    'object_id_base': 'Area cleaned',
     'original_device_class': <SensorDeviceClass.AREA: 'area'>,
     'original_icon': None,
     'original_name': 'Area cleaned',
@@ -918,9 +918,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery',
     'options': dict({
     }),
-    'object_id_base': 'Battery',
     'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
     'original_icon': None,
     'original_name': 'Battery',
@@ -969,6 +969,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Cleaning duration',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -977,7 +978,6 @@
         'suggested_unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
       }),
     }),
-    'object_id_base': 'Cleaning duration',
     'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
     'original_icon': None,
     'original_name': 'Cleaning duration',
@@ -1026,9 +1026,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Error',
     'options': dict({
     }),
-    'object_id_base': 'Error',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Error',
@@ -1076,9 +1076,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Filter lifespan',
     'options': dict({
     }),
-    'object_id_base': 'Filter lifespan',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Filter lifespan',
@@ -1126,9 +1126,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'IP address',
     'options': dict({
     }),
-    'object_id_base': 'IP address',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'IP address',
@@ -1175,9 +1175,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Main brush lifespan',
     'options': dict({
     }),
-    'object_id_base': 'Main brush lifespan',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Main brush lifespan',
@@ -1225,9 +1225,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Round mop lifespan',
     'options': dict({
     }),
-    'object_id_base': 'Round mop lifespan',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Round mop lifespan',
@@ -1275,9 +1275,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Side brush lifespan',
     'options': dict({
     }),
-    'object_id_base': 'Side brush lifespan',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Side brush lifespan',
@@ -1332,9 +1332,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Station state',
     'options': dict({
     }),
-    'object_id_base': 'Station state',
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
     'original_name': 'Station state',
@@ -1390,12 +1390,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Total area cleaned',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
       }),
     }),
-    'object_id_base': 'Total area cleaned',
     'original_device_class': <SensorDeviceClass.AREA: 'area'>,
     'original_icon': None,
     'original_name': 'Total area cleaned',
@@ -1447,6 +1447,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Total cleaning duration',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -1455,7 +1456,6 @@
         'suggested_unit_of_measurement': <UnitOfTime.HOURS: 'h'>,
       }),
     }),
-    'object_id_base': 'Total cleaning duration',
     'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
     'original_icon': None,
     'original_name': 'Total cleaning duration',
@@ -1507,9 +1507,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Total cleanings',
     'options': dict({
     }),
-    'object_id_base': 'Total cleanings',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Total cleanings',
@@ -1557,9 +1557,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Unit care lifespan',
     'options': dict({
     }),
-    'object_id_base': 'Unit care lifespan',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Unit care lifespan',
@@ -1607,9 +1607,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Wi-Fi RSSI',
     'options': dict({
     }),
-    'object_id_base': 'Wi-Fi RSSI',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Wi-Fi RSSI',
@@ -1656,9 +1656,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Wi-Fi SSID',
     'options': dict({
     }),
-    'object_id_base': 'Wi-Fi SSID',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Wi-Fi SSID',
@@ -1705,6 +1705,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Area cleaned',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -1713,7 +1714,6 @@
         'suggested_unit_of_measurement': <UnitOfArea.SQUARE_METERS: 'm²'>,
       }),
     }),
-    'object_id_base': 'Area cleaned',
     'original_device_class': <SensorDeviceClass.AREA: 'area'>,
     'original_icon': None,
     'original_name': 'Area cleaned',
@@ -1762,9 +1762,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery',
     'options': dict({
     }),
-    'object_id_base': 'Battery',
     'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
     'original_icon': None,
     'original_name': 'Battery',
@@ -1813,6 +1813,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Cleaning duration',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -1821,7 +1822,6 @@
         'suggested_unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
       }),
     }),
-    'object_id_base': 'Cleaning duration',
     'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
     'original_icon': None,
     'original_name': 'Cleaning duration',
@@ -1870,9 +1870,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Error',
     'options': dict({
     }),
-    'object_id_base': 'Error',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Error',
@@ -1920,9 +1920,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Filter lifespan',
     'options': dict({
     }),
-    'object_id_base': 'Filter lifespan',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Filter lifespan',
@@ -1970,9 +1970,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'IP address',
     'options': dict({
     }),
-    'object_id_base': 'IP address',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'IP address',
@@ -2019,9 +2019,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Main brush lifespan',
     'options': dict({
     }),
-    'object_id_base': 'Main brush lifespan',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Main brush lifespan',
@@ -2069,9 +2069,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Side brush lifespan',
     'options': dict({
     }),
-    'object_id_base': 'Side brush lifespan',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Side brush lifespan',
@@ -2121,12 +2121,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Total area cleaned',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
       }),
     }),
-    'object_id_base': 'Total area cleaned',
     'original_device_class': <SensorDeviceClass.AREA: 'area'>,
     'original_icon': None,
     'original_name': 'Total area cleaned',
@@ -2178,6 +2178,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Total cleaning duration',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -2186,7 +2187,6 @@
         'suggested_unit_of_measurement': <UnitOfTime.HOURS: 'h'>,
       }),
     }),
-    'object_id_base': 'Total cleaning duration',
     'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
     'original_icon': None,
     'original_name': 'Total cleaning duration',
@@ -2238,9 +2238,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Total cleanings',
     'options': dict({
     }),
-    'object_id_base': 'Total cleanings',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Total cleanings',
@@ -2288,9 +2288,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Wi-Fi RSSI',
     'options': dict({
     }),
-    'object_id_base': 'Wi-Fi RSSI',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Wi-Fi RSSI',
@@ -2337,9 +2337,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Wi-Fi SSID',
     'options': dict({
     }),
-    'object_id_base': 'Wi-Fi SSID',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Wi-Fi SSID',

@@ -20,9 +20,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Advanced mode',
     'options': dict({
     }),
-    'object_id_base': 'Advanced mode',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Advanced mode',
@@ -69,9 +69,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Border switch',
     'options': dict({
     }),
-    'object_id_base': 'Border switch',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Border switch',
@@ -118,9 +118,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Child lock',
     'options': dict({
     }),
-    'object_id_base': 'Child lock',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Child lock',
@@ -167,9 +167,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Cross map border warning',
     'options': dict({
     }),
-    'object_id_base': 'Cross map border warning',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Cross map border warning',
@@ -216,9 +216,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Move up warning',
     'options': dict({
     }),
-    'object_id_base': 'Move up warning',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Move up warning',
@@ -265,9 +265,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Safe protect',
     'options': dict({
     }),
-    'object_id_base': 'Safe protect',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Safe protect',
@@ -314,9 +314,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'True detect',
     'options': dict({
     }),
-    'object_id_base': 'True detect',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'True detect',
@@ -363,9 +363,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Advanced mode',
     'options': dict({
     }),
-    'object_id_base': 'Advanced mode',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Advanced mode',
@@ -412,9 +412,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Carpet auto-boost suction',
     'options': dict({
     }),
-    'object_id_base': 'Carpet auto-boost suction',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Carpet auto-boost suction',
@@ -461,9 +461,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Continuous cleaning',
     'options': dict({
     }),
-    'object_id_base': 'Continuous cleaning',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Continuous cleaning',
@@ -510,9 +510,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Continuous cleaning',
     'options': dict({
     }),
-    'object_id_base': 'Continuous cleaning',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Continuous cleaning',
@@ -546,9 +546,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Carpet auto-boost suction',
     'options': dict({
     }),
-    'object_id_base': 'Carpet auto-boost suction',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Carpet auto-boost suction',
@@ -582,9 +582,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'True detect',
     'options': dict({
     }),
-    'object_id_base': 'True detect',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'True detect',
@@ -618,9 +618,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Child lock',
     'options': dict({
     }),
-    'object_id_base': 'Child lock',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Child lock',
@@ -654,9 +654,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Border spin',
     'options': dict({
     }),
-    'object_id_base': 'Border spin',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Border spin',

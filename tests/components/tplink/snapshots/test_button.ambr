@@ -20,9 +20,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Pair new device',
     'options': dict({
     }),
-    'object_id_base': 'Pair new device',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Pair new device',
@@ -69,9 +69,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Pan left',
     'options': dict({
     }),
-    'object_id_base': 'Pan left',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Pan left',
@@ -118,9 +118,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Pan right',
     'options': dict({
     }),
-    'object_id_base': 'Pan right',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Pan right',
@@ -167,9 +167,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Reset charging contacts consumable',
     'options': dict({
     }),
-    'object_id_base': 'Reset charging contacts consumable',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Reset charging contacts consumable',
@@ -203,9 +203,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Reset filter consumable',
     'options': dict({
     }),
-    'object_id_base': 'Reset filter consumable',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Reset filter consumable',
@@ -239,9 +239,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Reset main brush consumable',
     'options': dict({
     }),
-    'object_id_base': 'Reset main brush consumable',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Reset main brush consumable',
@@ -275,9 +275,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Reset sensor consumable',
     'options': dict({
     }),
-    'object_id_base': 'Reset sensor consumable',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Reset sensor consumable',
@@ -311,9 +311,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Reset side brush consumable',
     'options': dict({
     }),
-    'object_id_base': 'Reset side brush consumable',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Reset side brush consumable',
@@ -347,9 +347,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Restart',
     'options': dict({
     }),
-    'object_id_base': 'Restart',
     'original_device_class': <ButtonDeviceClass.RESTART: 'restart'>,
     'original_icon': None,
     'original_name': 'Restart',
@@ -383,9 +383,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Stop alarm',
     'options': dict({
     }),
-    'object_id_base': 'Stop alarm',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Stop alarm',
@@ -432,9 +432,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Test alarm',
     'options': dict({
     }),
-    'object_id_base': 'Test alarm',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Test alarm',
@@ -481,9 +481,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Tilt down',
     'options': dict({
     }),
-    'object_id_base': 'Tilt down',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Tilt down',
@@ -530,9 +530,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Tilt up',
     'options': dict({
     }),
-    'object_id_base': 'Tilt up',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Tilt up',
@@ -579,9 +579,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Unpair device',
     'options': dict({
     }),
-    'object_id_base': 'Unpair device',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Unpair device',

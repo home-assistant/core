@@ -22,9 +22,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Antenna gain',
     'options': dict({
     }),
-    'object_id_base': 'Antenna gain',
     'original_device_class': <SensorDeviceClass.SIGNAL_STRENGTH: 'signal_strength'>,
     'original_icon': None,
     'original_name': 'Antenna gain',
@@ -76,12 +76,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'CPU load',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
       }),
     }),
-    'object_id_base': 'CPU load',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'CPU load',
@@ -132,6 +132,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Download capacity',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -140,7 +141,6 @@
         'suggested_unit_of_measurement': <UnitOfDataRate.MEGABITS_PER_SECOND: 'Mbit/s'>,
       }),
     }),
-    'object_id_base': 'Download capacity',
     'original_device_class': <SensorDeviceClass.DATA_RATE: 'data_rate'>,
     'original_icon': None,
     'original_name': 'Download capacity',
@@ -195,9 +195,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Network role',
     'options': dict({
     }),
-    'object_id_base': 'Network role',
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
     'original_name': 'Network role',
@@ -251,6 +251,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Throughput receive (actual)',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -259,7 +260,6 @@
         'suggested_unit_of_measurement': <UnitOfDataRate.MEGABITS_PER_SECOND: 'Mbit/s'>,
       }),
     }),
-    'object_id_base': 'Throughput receive (actual)',
     'original_device_class': <SensorDeviceClass.DATA_RATE: 'data_rate'>,
     'original_icon': None,
     'original_name': 'Throughput receive (actual)',
@@ -311,6 +311,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Throughput transmit (actual)',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -319,7 +320,6 @@
         'suggested_unit_of_measurement': <UnitOfDataRate.MEGABITS_PER_SECOND: 'Mbit/s'>,
       }),
     }),
-    'object_id_base': 'Throughput transmit (actual)',
     'original_device_class': <SensorDeviceClass.DATA_RATE: 'data_rate'>,
     'original_icon': None,
     'original_name': 'Throughput transmit (actual)',
@@ -371,6 +371,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Upload capacity',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -379,7 +380,6 @@
         'suggested_unit_of_measurement': <UnitOfDataRate.MEGABITS_PER_SECOND: 'Mbit/s'>,
       }),
     }),
-    'object_id_base': 'Upload capacity',
     'original_device_class': <SensorDeviceClass.DATA_RATE: 'data_rate'>,
     'original_icon': None,
     'original_name': 'Upload capacity',
@@ -429,6 +429,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Uptime',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -437,7 +438,6 @@
         'suggested_unit_of_measurement': <UnitOfTime.DAYS: 'd'>,
       }),
     }),
-    'object_id_base': 'Uptime',
     'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
     'original_icon': None,
     'original_name': 'Uptime',
@@ -486,6 +486,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Wireless distance',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -494,7 +495,6 @@
         'suggested_unit_of_measurement': <UnitOfLength.KILOMETERS: 'km'>,
       }),
     }),
-    'object_id_base': 'Wireless distance',
     'original_device_class': <SensorDeviceClass.DISTANCE: 'distance'>,
     'original_icon': None,
     'original_name': 'Wireless distance',
@@ -545,9 +545,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Wireless frequency',
     'options': dict({
     }),
-    'object_id_base': 'Wireless frequency',
     'original_device_class': <SensorDeviceClass.FREQUENCY: 'frequency'>,
     'original_icon': None,
     'original_name': 'Wireless frequency',
@@ -602,9 +602,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Wireless mode',
     'options': dict({
     }),
-    'object_id_base': 'Wireless mode',
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
     'original_name': 'Wireless mode',
@@ -661,9 +661,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Wireless role',
     'options': dict({
     }),
-    'object_id_base': 'Wireless role',
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
     'original_name': 'Wireless role',
@@ -715,9 +715,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Wireless SSID',
     'options': dict({
     }),
-    'object_id_base': 'Wireless SSID',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Wireless SSID',

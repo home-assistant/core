@@ -22,9 +22,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Active downloads',
     'options': dict({
     }),
-    'object_id_base': 'Active downloads',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Active downloads',
@@ -75,9 +75,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Downloads in queue',
     'options': dict({
     }),
-    'object_id_base': 'Downloads in queue',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Downloads in queue',
@@ -126,6 +126,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Free space',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -134,7 +135,6 @@
         'suggested_unit_of_measurement': <UnitOfInformation.GIBIBYTES: 'GiB'>,
       }),
     }),
-    'object_id_base': 'Free space',
     'original_device_class': <SensorDeviceClass.DATA_SIZE: 'data_size'>,
     'original_icon': None,
     'original_name': 'Free space',
@@ -183,6 +183,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Speed',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -191,7 +192,6 @@
         'suggested_unit_of_measurement': <UnitOfDataRate.MEGABITS_PER_SECOND: 'Mbit/s'>,
       }),
     }),
-    'object_id_base': 'Speed',
     'original_device_class': <SensorDeviceClass.DATA_RATE: 'data_rate'>,
     'original_icon': None,
     'original_name': 'Speed',
@@ -242,9 +242,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Total downloads',
     'options': dict({
     }),
-    'object_id_base': 'Total downloads',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Total downloads',
@@ -295,9 +295,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Active downloads',
     'options': dict({
     }),
-    'object_id_base': 'Active downloads',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Active downloads',
@@ -348,9 +348,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Downloads in queue',
     'options': dict({
     }),
-    'object_id_base': 'Downloads in queue',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Downloads in queue',
@@ -399,6 +399,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Free space',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -407,7 +408,6 @@
         'suggested_unit_of_measurement': <UnitOfInformation.GIBIBYTES: 'GiB'>,
       }),
     }),
-    'object_id_base': 'Free space',
     'original_device_class': <SensorDeviceClass.DATA_SIZE: 'data_size'>,
     'original_icon': None,
     'original_name': 'Free space',
@@ -456,6 +456,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Speed',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -464,7 +465,6 @@
         'suggested_unit_of_measurement': <UnitOfDataRate.MEGABITS_PER_SECOND: 'Mbit/s'>,
       }),
     }),
-    'object_id_base': 'Speed',
     'original_device_class': <SensorDeviceClass.DATA_RATE: 'data_rate'>,
     'original_icon': None,
     'original_name': 'Speed',
@@ -515,9 +515,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Total downloads',
     'options': dict({
     }),
-    'object_id_base': 'Total downloads',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Total downloads',
@@ -568,9 +568,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Active downloads',
     'options': dict({
     }),
-    'object_id_base': 'Active downloads',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Active downloads',
@@ -621,9 +621,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Downloads in queue',
     'options': dict({
     }),
-    'object_id_base': 'Downloads in queue',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Downloads in queue',
@@ -672,6 +672,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Free space',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -680,7 +681,6 @@
         'suggested_unit_of_measurement': <UnitOfInformation.GIBIBYTES: 'GiB'>,
       }),
     }),
-    'object_id_base': 'Free space',
     'original_device_class': <SensorDeviceClass.DATA_SIZE: 'data_size'>,
     'original_icon': None,
     'original_name': 'Free space',
@@ -729,6 +729,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Speed',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -737,7 +738,6 @@
         'suggested_unit_of_measurement': <UnitOfDataRate.MEGABITS_PER_SECOND: 'Mbit/s'>,
       }),
     }),
-    'object_id_base': 'Speed',
     'original_device_class': <SensorDeviceClass.DATA_RATE: 'data_rate'>,
     'original_icon': None,
     'original_name': 'Speed',
@@ -788,9 +788,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Total downloads',
     'options': dict({
     }),
-    'object_id_base': 'Total downloads',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Total downloads',
@@ -841,9 +841,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Active downloads',
     'options': dict({
     }),
-    'object_id_base': 'Active downloads',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Active downloads',
@@ -894,9 +894,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Downloads in queue',
     'options': dict({
     }),
-    'object_id_base': 'Downloads in queue',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Downloads in queue',
@@ -945,6 +945,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Free space',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -953,7 +954,6 @@
         'suggested_unit_of_measurement': <UnitOfInformation.GIBIBYTES: 'GiB'>,
       }),
     }),
-    'object_id_base': 'Free space',
     'original_device_class': <SensorDeviceClass.DATA_SIZE: 'data_size'>,
     'original_icon': None,
     'original_name': 'Free space',
@@ -1002,6 +1002,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Speed',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -1010,7 +1011,6 @@
         'suggested_unit_of_measurement': <UnitOfDataRate.MEGABITS_PER_SECOND: 'Mbit/s'>,
       }),
     }),
-    'object_id_base': 'Speed',
     'original_device_class': <SensorDeviceClass.DATA_RATE: 'data_rate'>,
     'original_icon': None,
     'original_name': 'Speed',
@@ -1061,9 +1061,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Total downloads',
     'options': dict({
     }),
-    'object_id_base': 'Total downloads',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Total downloads',

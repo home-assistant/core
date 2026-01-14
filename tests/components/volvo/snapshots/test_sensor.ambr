@@ -22,12 +22,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
       }),
     }),
-    'object_id_base': 'Battery',
     'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
     'original_icon': None,
     'original_name': 'Battery',
@@ -77,12 +77,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery capacity',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
       }),
     }),
-    'object_id_base': 'Battery capacity',
     'original_device_class': <SensorDeviceClass.ENERGY_STORAGE: 'energy_storage'>,
     'original_icon': None,
     'original_name': 'Battery capacity',
@@ -139,9 +139,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Car connection',
     'options': dict({
     }),
-    'object_id_base': 'Car connection',
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
     'original_name': 'Car connection',
@@ -202,9 +202,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Charging connection status',
     'options': dict({
     }),
-    'object_id_base': 'Charging connection status',
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
     'original_name': 'Charging connection status',
@@ -259,12 +259,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Charging power',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
       }),
     }),
-    'object_id_base': 'Charging power',
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
     'original_icon': None,
     'original_name': 'Charging power',
@@ -321,9 +321,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Charging power status',
     'options': dict({
     }),
-    'object_id_base': 'Charging power status',
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
     'original_name': 'Charging power status',
@@ -386,9 +386,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Charging status',
     'options': dict({
     }),
-    'object_id_base': 'Charging status',
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
     'original_name': 'Charging status',
@@ -450,9 +450,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Charging type',
     'options': dict({
     }),
-    'object_id_base': 'Charging type',
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
     'original_name': 'Charging type',
@@ -505,12 +505,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Direction',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
       }),
     }),
-    'object_id_base': 'Direction',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Direction',
@@ -560,12 +560,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Distance to empty battery',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
       }),
     }),
-    'object_id_base': 'Distance to empty battery',
     'original_device_class': <SensorDeviceClass.DISTANCE: 'distance'>,
     'original_icon': None,
     'original_name': 'Distance to empty battery',
@@ -617,12 +617,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Distance to service',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
       }),
     }),
-    'object_id_base': 'Distance to service',
     'original_device_class': <SensorDeviceClass.DISTANCE: 'distance'>,
     'original_icon': None,
     'original_name': 'Distance to service',
@@ -674,12 +674,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Estimated charging time',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
       }),
     }),
-    'object_id_base': 'Estimated charging time',
     'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
     'original_icon': None,
     'original_name': 'Estimated charging time',
@@ -731,12 +731,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Odometer',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
       }),
     }),
-    'object_id_base': 'Odometer',
     'original_device_class': <SensorDeviceClass.DISTANCE: 'distance'>,
     'original_icon': None,
     'original_name': 'Odometer',
@@ -800,9 +800,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Service',
     'options': dict({
     }),
-    'object_id_base': 'Service',
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
     'original_name': 'Service',
@@ -863,12 +863,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Target battery charge level',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
       }),
     }),
-    'object_id_base': 'Target battery charge level',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Target battery charge level',
@@ -918,12 +918,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Time to engine service',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
       }),
     }),
-    'object_id_base': 'Time to engine service',
     'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
     'original_icon': None,
     'original_name': 'Time to engine service',
@@ -975,12 +975,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Time to service',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
       }),
     }),
-    'object_id_base': 'Time to service',
     'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
     'original_icon': None,
     'original_name': 'Time to service',
@@ -1032,12 +1032,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Trip automatic average speed',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
       }),
     }),
-    'object_id_base': 'Trip automatic average speed',
     'original_device_class': <SensorDeviceClass.SPEED: 'speed'>,
     'original_icon': None,
     'original_name': 'Trip automatic average speed',
@@ -1089,12 +1089,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Trip automatic distance',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
       }),
     }),
-    'object_id_base': 'Trip automatic distance',
     'original_device_class': <SensorDeviceClass.DISTANCE: 'distance'>,
     'original_icon': None,
     'original_name': 'Trip automatic distance',
@@ -1146,12 +1146,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Trip manual average energy consumption',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
       }),
     }),
-    'object_id_base': 'Trip manual average energy consumption',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Trip manual average energy consumption',
@@ -1202,12 +1202,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Trip manual average speed',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
       }),
     }),
-    'object_id_base': 'Trip manual average speed',
     'original_device_class': <SensorDeviceClass.SPEED: 'speed'>,
     'original_icon': None,
     'original_name': 'Trip manual average speed',
@@ -1259,12 +1259,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Trip manual distance',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
       }),
     }),
-    'object_id_base': 'Trip manual distance',
     'original_device_class': <SensorDeviceClass.DISTANCE: 'distance'>,
     'original_icon': None,
     'original_name': 'Trip manual distance',
@@ -1316,12 +1316,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
       }),
     }),
-    'object_id_base': 'Battery',
     'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
     'original_icon': None,
     'original_name': 'Battery',
@@ -1379,9 +1379,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Car connection',
     'options': dict({
     }),
-    'object_id_base': 'Car connection',
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
     'original_name': 'Car connection',
@@ -1436,12 +1436,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Direction',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
       }),
     }),
-    'object_id_base': 'Direction',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Direction',
@@ -1491,12 +1491,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Distance to empty tank',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
       }),
     }),
-    'object_id_base': 'Distance to empty tank',
     'original_device_class': <SensorDeviceClass.DISTANCE: 'distance'>,
     'original_icon': None,
     'original_name': 'Distance to empty tank',
@@ -1548,12 +1548,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Distance to service',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
       }),
     }),
-    'object_id_base': 'Distance to service',
     'original_device_class': <SensorDeviceClass.DISTANCE: 'distance'>,
     'original_icon': None,
     'original_name': 'Distance to service',
@@ -1605,12 +1605,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Fuel amount',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
       }),
     }),
-    'object_id_base': 'Fuel amount',
     'original_device_class': <SensorDeviceClass.VOLUME_STORAGE: 'volume_storage'>,
     'original_icon': None,
     'original_name': 'Fuel amount',
@@ -1662,12 +1662,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Odometer',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
       }),
     }),
-    'object_id_base': 'Odometer',
     'original_device_class': <SensorDeviceClass.DISTANCE: 'distance'>,
     'original_icon': None,
     'original_name': 'Odometer',
@@ -1731,9 +1731,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Service',
     'options': dict({
     }),
-    'object_id_base': 'Service',
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
     'original_name': 'Service',
@@ -1796,12 +1796,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Time to engine service',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
       }),
     }),
-    'object_id_base': 'Time to engine service',
     'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
     'original_icon': None,
     'original_name': 'Time to engine service',
@@ -1853,12 +1853,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Time to service',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
       }),
     }),
-    'object_id_base': 'Time to service',
     'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
     'original_icon': None,
     'original_name': 'Time to service',
@@ -1910,12 +1910,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Trip automatic average speed',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
       }),
     }),
-    'object_id_base': 'Trip automatic average speed',
     'original_device_class': <SensorDeviceClass.SPEED: 'speed'>,
     'original_icon': None,
     'original_name': 'Trip automatic average speed',
@@ -1967,12 +1967,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Trip automatic distance',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
       }),
     }),
-    'object_id_base': 'Trip automatic distance',
     'original_device_class': <SensorDeviceClass.DISTANCE: 'distance'>,
     'original_icon': None,
     'original_name': 'Trip automatic distance',
@@ -2024,12 +2024,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Trip manual average fuel consumption',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
       }),
     }),
-    'object_id_base': 'Trip manual average fuel consumption',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Trip manual average fuel consumption',
@@ -2080,12 +2080,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Trip manual average speed',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
       }),
     }),
-    'object_id_base': 'Trip manual average speed',
     'original_device_class': <SensorDeviceClass.SPEED: 'speed'>,
     'original_icon': None,
     'original_name': 'Trip manual average speed',
@@ -2137,12 +2137,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Trip manual distance',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
       }),
     }),
-    'object_id_base': 'Trip manual distance',
     'original_device_class': <SensorDeviceClass.DISTANCE: 'distance'>,
     'original_icon': None,
     'original_name': 'Trip manual distance',
@@ -2194,12 +2194,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
       }),
     }),
-    'object_id_base': 'Battery',
     'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
     'original_icon': None,
     'original_name': 'Battery',
@@ -2249,12 +2249,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery capacity',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
       }),
     }),
-    'object_id_base': 'Battery capacity',
     'original_device_class': <SensorDeviceClass.ENERGY_STORAGE: 'energy_storage'>,
     'original_icon': None,
     'original_name': 'Battery capacity',
@@ -2311,9 +2311,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Car connection',
     'options': dict({
     }),
-    'object_id_base': 'Car connection',
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
     'original_name': 'Car connection',
@@ -2374,9 +2374,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Charging connection status',
     'options': dict({
     }),
-    'object_id_base': 'Charging connection status',
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
     'original_name': 'Charging connection status',
@@ -2431,12 +2431,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Charging limit',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
       }),
     }),
-    'object_id_base': 'Charging limit',
     'original_device_class': <SensorDeviceClass.CURRENT: 'current'>,
     'original_icon': None,
     'original_name': 'Charging limit',
@@ -2488,12 +2488,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Charging power',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
       }),
     }),
-    'object_id_base': 'Charging power',
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
     'original_icon': None,
     'original_name': 'Charging power',
@@ -2550,9 +2550,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Charging power status',
     'options': dict({
     }),
-    'object_id_base': 'Charging power status',
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
     'original_name': 'Charging power status',
@@ -2615,9 +2615,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Charging status',
     'options': dict({
     }),
-    'object_id_base': 'Charging status',
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
     'original_name': 'Charging status',
@@ -2679,9 +2679,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Charging type',
     'options': dict({
     }),
-    'object_id_base': 'Charging type',
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
     'original_name': 'Charging type',
@@ -2734,12 +2734,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Direction',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
       }),
     }),
-    'object_id_base': 'Direction',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Direction',
@@ -2789,12 +2789,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Distance to empty battery',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
       }),
     }),
-    'object_id_base': 'Distance to empty battery',
     'original_device_class': <SensorDeviceClass.DISTANCE: 'distance'>,
     'original_icon': None,
     'original_name': 'Distance to empty battery',
@@ -2846,12 +2846,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Distance to service',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
       }),
     }),
-    'object_id_base': 'Distance to service',
     'original_device_class': <SensorDeviceClass.DISTANCE: 'distance'>,
     'original_icon': None,
     'original_name': 'Distance to service',
@@ -2903,12 +2903,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Estimated charging time',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
       }),
     }),
-    'object_id_base': 'Estimated charging time',
     'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
     'original_icon': None,
     'original_name': 'Estimated charging time',
@@ -2960,12 +2960,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Odometer',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
       }),
     }),
-    'object_id_base': 'Odometer',
     'original_device_class': <SensorDeviceClass.DISTANCE: 'distance'>,
     'original_icon': None,
     'original_name': 'Odometer',
@@ -3029,9 +3029,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Service',
     'options': dict({
     }),
-    'object_id_base': 'Service',
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
     'original_name': 'Service',
@@ -3092,12 +3092,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Target battery charge level',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
       }),
     }),
-    'object_id_base': 'Target battery charge level',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Target battery charge level',
@@ -3147,12 +3147,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Time to engine service',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
       }),
     }),
-    'object_id_base': 'Time to engine service',
     'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
     'original_icon': None,
     'original_name': 'Time to engine service',
@@ -3204,12 +3204,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Time to service',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
       }),
     }),
-    'object_id_base': 'Time to service',
     'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
     'original_icon': None,
     'original_name': 'Time to service',
@@ -3261,12 +3261,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Trip automatic average speed',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
       }),
     }),
-    'object_id_base': 'Trip automatic average speed',
     'original_device_class': <SensorDeviceClass.SPEED: 'speed'>,
     'original_icon': None,
     'original_name': 'Trip automatic average speed',
@@ -3318,12 +3318,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Trip automatic distance',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
       }),
     }),
-    'object_id_base': 'Trip automatic distance',
     'original_device_class': <SensorDeviceClass.DISTANCE: 'distance'>,
     'original_icon': None,
     'original_name': 'Trip automatic distance',
@@ -3375,12 +3375,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Trip manual average energy consumption',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
       }),
     }),
-    'object_id_base': 'Trip manual average energy consumption',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Trip manual average energy consumption',
@@ -3431,12 +3431,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Trip manual average speed',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
       }),
     }),
-    'object_id_base': 'Trip manual average speed',
     'original_device_class': <SensorDeviceClass.SPEED: 'speed'>,
     'original_icon': None,
     'original_name': 'Trip manual average speed',
@@ -3488,12 +3488,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Trip manual distance',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
       }),
     }),
-    'object_id_base': 'Trip manual distance',
     'original_device_class': <SensorDeviceClass.DISTANCE: 'distance'>,
     'original_icon': None,
     'original_name': 'Trip manual distance',
@@ -3545,12 +3545,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
       }),
     }),
-    'object_id_base': 'Battery',
     'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
     'original_icon': None,
     'original_name': 'Battery',
@@ -3600,12 +3600,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery capacity',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
       }),
     }),
-    'object_id_base': 'Battery capacity',
     'original_device_class': <SensorDeviceClass.ENERGY_STORAGE: 'energy_storage'>,
     'original_icon': None,
     'original_name': 'Battery capacity',
@@ -3662,9 +3662,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Car connection',
     'options': dict({
     }),
-    'object_id_base': 'Car connection',
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
     'original_name': 'Car connection',
@@ -3725,9 +3725,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Charging connection status',
     'options': dict({
     }),
-    'object_id_base': 'Charging connection status',
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
     'original_name': 'Charging connection status',
@@ -3789,9 +3789,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Charging status',
     'options': dict({
     }),
-    'object_id_base': 'Charging status',
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
     'original_name': 'Charging status',
@@ -3847,12 +3847,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Direction',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
       }),
     }),
-    'object_id_base': 'Direction',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Direction',
@@ -3902,12 +3902,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Distance to empty battery',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
       }),
     }),
-    'object_id_base': 'Distance to empty battery',
     'original_device_class': <SensorDeviceClass.DISTANCE: 'distance'>,
     'original_icon': None,
     'original_name': 'Distance to empty battery',
@@ -3959,12 +3959,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Distance to empty tank',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
       }),
     }),
-    'object_id_base': 'Distance to empty tank',
     'original_device_class': <SensorDeviceClass.DISTANCE: 'distance'>,
     'original_icon': None,
     'original_name': 'Distance to empty tank',
@@ -4016,12 +4016,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Distance to service',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
       }),
     }),
-    'object_id_base': 'Distance to service',
     'original_device_class': <SensorDeviceClass.DISTANCE: 'distance'>,
     'original_icon': None,
     'original_name': 'Distance to service',
@@ -4073,12 +4073,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Fuel amount',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
       }),
     }),
-    'object_id_base': 'Fuel amount',
     'original_device_class': <SensorDeviceClass.VOLUME_STORAGE: 'volume_storage'>,
     'original_icon': None,
     'original_name': 'Fuel amount',
@@ -4130,12 +4130,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Odometer',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
       }),
     }),
-    'object_id_base': 'Odometer',
     'original_device_class': <SensorDeviceClass.DISTANCE: 'distance'>,
     'original_icon': None,
     'original_name': 'Odometer',
@@ -4199,9 +4199,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Service',
     'options': dict({
     }),
-    'object_id_base': 'Service',
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
     'original_name': 'Service',
@@ -4262,12 +4262,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Target battery charge level',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
       }),
     }),
-    'object_id_base': 'Target battery charge level',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Target battery charge level',
@@ -4317,12 +4317,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Time to engine service',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
       }),
     }),
-    'object_id_base': 'Time to engine service',
     'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
     'original_icon': None,
     'original_name': 'Time to engine service',
@@ -4374,12 +4374,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Time to service',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
       }),
     }),
-    'object_id_base': 'Time to service',
     'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
     'original_icon': None,
     'original_name': 'Time to service',
@@ -4431,12 +4431,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Trip automatic distance',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
       }),
     }),
-    'object_id_base': 'Trip automatic distance',
     'original_device_class': <SensorDeviceClass.DISTANCE: 'distance'>,
     'original_icon': None,
     'original_name': 'Trip automatic distance',
@@ -4488,12 +4488,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Trip manual average fuel consumption',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
       }),
     }),
-    'object_id_base': 'Trip manual average fuel consumption',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Trip manual average fuel consumption',
@@ -4544,12 +4544,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Trip manual average speed',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
       }),
     }),
-    'object_id_base': 'Trip manual average speed',
     'original_device_class': <SensorDeviceClass.SPEED: 'speed'>,
     'original_icon': None,
     'original_name': 'Trip manual average speed',
@@ -4601,12 +4601,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Trip manual distance',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
       }),
     }),
-    'object_id_base': 'Trip manual distance',
     'original_device_class': <SensorDeviceClass.DISTANCE: 'distance'>,
     'original_icon': None,
     'original_name': 'Trip manual distance',
@@ -4658,12 +4658,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
       }),
     }),
-    'object_id_base': 'Battery',
     'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
     'original_icon': None,
     'original_name': 'Battery',
@@ -4721,9 +4721,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Car connection',
     'options': dict({
     }),
-    'object_id_base': 'Car connection',
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
     'original_name': 'Car connection',
@@ -4778,12 +4778,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Direction',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
       }),
     }),
-    'object_id_base': 'Direction',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Direction',
@@ -4833,12 +4833,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Distance to empty tank',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
       }),
     }),
-    'object_id_base': 'Distance to empty tank',
     'original_device_class': <SensorDeviceClass.DISTANCE: 'distance'>,
     'original_icon': None,
     'original_name': 'Distance to empty tank',
@@ -4890,12 +4890,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Distance to service',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
       }),
     }),
-    'object_id_base': 'Distance to service',
     'original_device_class': <SensorDeviceClass.DISTANCE: 'distance'>,
     'original_icon': None,
     'original_name': 'Distance to service',
@@ -4947,12 +4947,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Fuel amount',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
       }),
     }),
-    'object_id_base': 'Fuel amount',
     'original_device_class': <SensorDeviceClass.VOLUME_STORAGE: 'volume_storage'>,
     'original_icon': None,
     'original_name': 'Fuel amount',
@@ -5004,12 +5004,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Odometer',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
       }),
     }),
-    'object_id_base': 'Odometer',
     'original_device_class': <SensorDeviceClass.DISTANCE: 'distance'>,
     'original_icon': None,
     'original_name': 'Odometer',
@@ -5073,9 +5073,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Service',
     'options': dict({
     }),
-    'object_id_base': 'Service',
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
     'original_name': 'Service',
@@ -5138,12 +5138,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Time to engine service',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
       }),
     }),
-    'object_id_base': 'Time to engine service',
     'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
     'original_icon': None,
     'original_name': 'Time to engine service',
@@ -5195,12 +5195,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Time to service',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
       }),
     }),
-    'object_id_base': 'Time to service',
     'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
     'original_icon': None,
     'original_name': 'Time to service',
@@ -5252,12 +5252,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Trip automatic average speed',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
       }),
     }),
-    'object_id_base': 'Trip automatic average speed',
     'original_device_class': <SensorDeviceClass.SPEED: 'speed'>,
     'original_icon': None,
     'original_name': 'Trip automatic average speed',
@@ -5309,12 +5309,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Trip automatic distance',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
       }),
     }),
-    'object_id_base': 'Trip automatic distance',
     'original_device_class': <SensorDeviceClass.DISTANCE: 'distance'>,
     'original_icon': None,
     'original_name': 'Trip automatic distance',
@@ -5366,12 +5366,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Trip manual average fuel consumption',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
       }),
     }),
-    'object_id_base': 'Trip manual average fuel consumption',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Trip manual average fuel consumption',
@@ -5422,12 +5422,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Trip manual average speed',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
       }),
     }),
-    'object_id_base': 'Trip manual average speed',
     'original_device_class': <SensorDeviceClass.SPEED: 'speed'>,
     'original_icon': None,
     'original_name': 'Trip manual average speed',
@@ -5479,12 +5479,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Trip manual distance',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
       }),
     }),
-    'object_id_base': 'Trip manual distance',
     'original_device_class': <SensorDeviceClass.DISTANCE: 'distance'>,
     'original_icon': None,
     'original_name': 'Trip manual distance',
@@ -5536,12 +5536,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
       }),
     }),
-    'object_id_base': 'Battery',
     'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
     'original_icon': None,
     'original_name': 'Battery',
@@ -5591,12 +5591,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery capacity',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
       }),
     }),
-    'object_id_base': 'Battery capacity',
     'original_device_class': <SensorDeviceClass.ENERGY_STORAGE: 'energy_storage'>,
     'original_icon': None,
     'original_name': 'Battery capacity',
@@ -5653,9 +5653,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Car connection',
     'options': dict({
     }),
-    'object_id_base': 'Car connection',
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
     'original_name': 'Car connection',
@@ -5716,9 +5716,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Charging connection status',
     'options': dict({
     }),
-    'object_id_base': 'Charging connection status',
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
     'original_name': 'Charging connection status',
@@ -5778,9 +5778,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Charging power status',
     'options': dict({
     }),
-    'object_id_base': 'Charging power status',
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
     'original_name': 'Charging power status',
@@ -5843,9 +5843,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Charging status',
     'options': dict({
     }),
-    'object_id_base': 'Charging status',
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
     'original_name': 'Charging status',
@@ -5907,9 +5907,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Charging type',
     'options': dict({
     }),
-    'object_id_base': 'Charging type',
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
     'original_name': 'Charging type',
@@ -5962,12 +5962,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Direction',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
       }),
     }),
-    'object_id_base': 'Direction',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Direction',
@@ -6017,12 +6017,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Distance to empty battery',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
       }),
     }),
-    'object_id_base': 'Distance to empty battery',
     'original_device_class': <SensorDeviceClass.DISTANCE: 'distance'>,
     'original_icon': None,
     'original_name': 'Distance to empty battery',
@@ -6074,12 +6074,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Distance to empty tank',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
       }),
     }),
-    'object_id_base': 'Distance to empty tank',
     'original_device_class': <SensorDeviceClass.DISTANCE: 'distance'>,
     'original_icon': None,
     'original_name': 'Distance to empty tank',
@@ -6131,12 +6131,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Distance to service',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
       }),
     }),
-    'object_id_base': 'Distance to service',
     'original_device_class': <SensorDeviceClass.DISTANCE: 'distance'>,
     'original_icon': None,
     'original_name': 'Distance to service',
@@ -6188,12 +6188,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Estimated charging time',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
       }),
     }),
-    'object_id_base': 'Estimated charging time',
     'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
     'original_icon': None,
     'original_name': 'Estimated charging time',
@@ -6245,12 +6245,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Fuel amount',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
       }),
     }),
-    'object_id_base': 'Fuel amount',
     'original_device_class': <SensorDeviceClass.VOLUME_STORAGE: 'volume_storage'>,
     'original_icon': None,
     'original_name': 'Fuel amount',
@@ -6302,12 +6302,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Odometer',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
       }),
     }),
-    'object_id_base': 'Odometer',
     'original_device_class': <SensorDeviceClass.DISTANCE: 'distance'>,
     'original_icon': None,
     'original_name': 'Odometer',
@@ -6371,9 +6371,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Service',
     'options': dict({
     }),
-    'object_id_base': 'Service',
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
     'original_name': 'Service',
@@ -6434,12 +6434,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Target battery charge level',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
       }),
     }),
-    'object_id_base': 'Target battery charge level',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Target battery charge level',
@@ -6489,12 +6489,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Time to engine service',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
       }),
     }),
-    'object_id_base': 'Time to engine service',
     'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
     'original_icon': None,
     'original_name': 'Time to engine service',
@@ -6546,12 +6546,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Time to service',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
       }),
     }),
-    'object_id_base': 'Time to service',
     'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
     'original_icon': None,
     'original_name': 'Time to service',
@@ -6603,12 +6603,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Trip automatic average fuel consumption',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
       }),
     }),
-    'object_id_base': 'Trip automatic average fuel consumption',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Trip automatic average fuel consumption',
@@ -6659,12 +6659,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Trip automatic average speed',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
       }),
     }),
-    'object_id_base': 'Trip automatic average speed',
     'original_device_class': <SensorDeviceClass.SPEED: 'speed'>,
     'original_icon': None,
     'original_name': 'Trip automatic average speed',
@@ -6716,12 +6716,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Trip automatic distance',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
       }),
     }),
-    'object_id_base': 'Trip automatic distance',
     'original_device_class': <SensorDeviceClass.DISTANCE: 'distance'>,
     'original_icon': None,
     'original_name': 'Trip automatic distance',
@@ -6773,12 +6773,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Trip manual average energy consumption',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
       }),
     }),
-    'object_id_base': 'Trip manual average energy consumption',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Trip manual average energy consumption',
@@ -6829,12 +6829,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Trip manual average fuel consumption',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
       }),
     }),
-    'object_id_base': 'Trip manual average fuel consumption',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Trip manual average fuel consumption',
@@ -6885,12 +6885,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Trip manual average speed',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
       }),
     }),
-    'object_id_base': 'Trip manual average speed',
     'original_device_class': <SensorDeviceClass.SPEED: 'speed'>,
     'original_icon': None,
     'original_name': 'Trip manual average speed',
@@ -6942,12 +6942,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Trip manual distance',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
       }),
     }),
-    'object_id_base': 'Trip manual distance',
     'original_device_class': <SensorDeviceClass.DISTANCE: 'distance'>,
     'original_icon': None,
     'original_name': 'Trip manual distance',

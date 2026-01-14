@@ -20,9 +20,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery',
     'options': dict({
     }),
-    'object_id_base': 'Battery',
     'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
     'original_icon': None,
     'original_name': 'Battery',
@@ -71,9 +71,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Last update',
     'options': dict({
     }),
-    'object_id_base': 'Last update',
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
     'original_icon': None,
     'original_name': 'Last update',
@@ -123,9 +123,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Salt left side percentage',
     'options': dict({
     }),
-    'object_id_base': 'Salt left side percentage',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Salt left side percentage',
@@ -174,12 +174,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Salt left side time remaining',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
       }),
     }),
-    'object_id_base': 'Salt left side time remaining',
     'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
     'original_icon': None,
     'original_name': 'Salt left side time remaining',
@@ -230,9 +230,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Salt right side percentage',
     'options': dict({
     }),
-    'object_id_base': 'Salt right side percentage',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Salt right side percentage',
@@ -281,12 +281,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Salt right side time remaining',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
       }),
     }),
-    'object_id_base': 'Salt right side time remaining',
     'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
     'original_icon': None,
     'original_name': 'Salt right side time remaining',
@@ -341,9 +341,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Wi-Fi strength',
     'options': dict({
     }),
-    'object_id_base': 'Wi-Fi strength',
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
     'original_name': 'Wi-Fi strength',

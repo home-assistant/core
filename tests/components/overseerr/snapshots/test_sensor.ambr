@@ -22,9 +22,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Audio issues',
     'options': dict({
     }),
-    'object_id_base': 'Audio issues',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Audio issues',
@@ -74,9 +74,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Available requests',
     'options': dict({
     }),
-    'object_id_base': 'Available requests',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Available requests',
@@ -127,9 +127,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Closed issues',
     'options': dict({
     }),
-    'object_id_base': 'Closed issues',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Closed issues',
@@ -179,9 +179,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Declined requests',
     'options': dict({
     }),
-    'object_id_base': 'Declined requests',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Declined requests',
@@ -232,9 +232,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Movie requests',
     'options': dict({
     }),
-    'object_id_base': 'Movie requests',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Movie requests',
@@ -285,9 +285,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Open issues',
     'options': dict({
     }),
-    'object_id_base': 'Open issues',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Open issues',
@@ -337,9 +337,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Pending requests',
     'options': dict({
     }),
-    'object_id_base': 'Pending requests',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Pending requests',
@@ -390,9 +390,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Processing requests',
     'options': dict({
     }),
-    'object_id_base': 'Processing requests',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Processing requests',
@@ -443,9 +443,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Subtitle issues',
     'options': dict({
     }),
-    'object_id_base': 'Subtitle issues',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Subtitle issues',
@@ -495,9 +495,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Total issues',
     'options': dict({
     }),
-    'object_id_base': 'Total issues',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Total issues',
@@ -547,9 +547,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Total requests',
     'options': dict({
     }),
-    'object_id_base': 'Total requests',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Total requests',
@@ -600,9 +600,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'TV requests',
     'options': dict({
     }),
-    'object_id_base': 'TV requests',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'TV requests',
@@ -653,9 +653,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Video issues',
     'options': dict({
     }),
-    'object_id_base': 'Video issues',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Video issues',

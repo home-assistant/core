@@ -20,9 +20,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Calibration',
     'options': dict({
     }),
-    'object_id_base': 'Calibration',
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
     'original_icon': None,
     'original_name': 'Calibration',
@@ -70,9 +70,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Kitchen cable unplugged',
     'options': dict({
     }),
-    'object_id_base': 'Kitchen cable unplugged',
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
     'original_icon': None,
     'original_name': 'Kitchen cable unplugged',
@@ -120,9 +120,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Kitchen flood',
     'options': dict({
     }),
-    'object_id_base': 'Kitchen flood',
     'original_device_class': <BinarySensorDeviceClass.MOISTURE: 'moisture'>,
     'original_icon': None,
     'original_name': 'Kitchen flood',
@@ -170,9 +170,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Kitchen mute',
     'options': dict({
     }),
-    'object_id_base': 'Kitchen mute',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Kitchen mute',

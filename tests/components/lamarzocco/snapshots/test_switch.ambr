@@ -20,9 +20,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Auto on/off (Os2OswX)',
     'options': dict({
     }),
-    'object_id_base': 'Auto on/off (Os2OswX)',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Auto on/off (Os2OswX)',
@@ -56,9 +56,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Auto on/off (aXFz5bJ)',
     'options': dict({
     }),
-    'object_id_base': 'Auto on/off (aXFz5bJ)',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Auto on/off (aXFz5bJ)',
@@ -118,9 +118,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
-    'object_id_base': None,
     'original_device_class': None,
     'original_icon': None,
     'original_name': None,
@@ -168,9 +168,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Auto on/off (aXFz5bJ)',
     'options': dict({
     }),
-    'object_id_base': 'Auto on/off (aXFz5bJ)',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Auto on/off (aXFz5bJ)',
@@ -217,9 +217,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Auto on/off (Os2OswX)',
     'options': dict({
     }),
-    'object_id_base': 'Auto on/off (Os2OswX)',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Auto on/off (Os2OswX)',
@@ -266,9 +266,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Smart standby enabled',
     'options': dict({
     }),
-    'object_id_base': 'Smart standby enabled',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Smart standby enabled',
@@ -315,9 +315,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Steam boiler',
     'options': dict({
     }),
-    'object_id_base': 'Steam boiler',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Steam boiler',

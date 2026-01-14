@@ -20,9 +20,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery',
     'options': dict({
     }),
-    'object_id_base': 'Battery',
     'original_device_class': <BinarySensorDeviceClass.BATTERY: 'battery'>,
     'original_icon': None,
     'original_name': 'Battery',
@@ -56,9 +56,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Cloud connection',
     'options': dict({
     }),
-    'object_id_base': 'Cloud connection',
     'original_device_class': <BinarySensorDeviceClass.CONNECTIVITY: 'connectivity'>,
     'original_icon': None,
     'original_name': 'Cloud connection',
@@ -106,9 +106,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Door',
     'options': dict({
     }),
-    'object_id_base': 'Door',
     'original_device_class': <BinarySensorDeviceClass.DOOR: 'door'>,
     'original_icon': None,
     'original_name': 'Door',
@@ -156,9 +156,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Humidity warning',
     'options': dict({
     }),
-    'object_id_base': 'Humidity warning',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Humidity warning',
@@ -192,9 +192,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Moisture',
     'options': dict({
     }),
-    'object_id_base': 'Moisture',
     'original_device_class': <BinarySensorDeviceClass.MOISTURE: 'moisture'>,
     'original_icon': None,
     'original_name': 'Moisture',
@@ -242,9 +242,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Motion',
     'options': dict({
     }),
-    'object_id_base': 'Motion',
     'original_device_class': <BinarySensorDeviceClass.MOTION: 'motion'>,
     'original_icon': None,
     'original_name': 'Motion',
@@ -292,9 +292,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Overheated',
     'options': dict({
     }),
-    'object_id_base': 'Overheated',
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
     'original_icon': None,
     'original_name': 'Overheated',
@@ -342,9 +342,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Overloaded',
     'options': dict({
     }),
-    'object_id_base': 'Overloaded',
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
     'original_icon': None,
     'original_name': 'Overloaded',
@@ -392,9 +392,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Temperature warning',
     'options': dict({
     }),
-    'object_id_base': 'Temperature warning',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Temperature warning',

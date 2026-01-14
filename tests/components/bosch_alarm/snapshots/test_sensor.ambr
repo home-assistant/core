@@ -20,9 +20,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Burglary alarm issues',
     'options': dict({
     }),
-    'object_id_base': 'Burglary alarm issues',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Burglary alarm issues',
@@ -69,9 +69,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Faulting points',
     'options': dict({
     }),
-    'object_id_base': 'Faulting points',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Faulting points',
@@ -119,9 +119,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Fire alarm issues',
     'options': dict({
     }),
-    'object_id_base': 'Fire alarm issues',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Fire alarm issues',
@@ -168,9 +168,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Gas alarm issues',
     'options': dict({
     }),
-    'object_id_base': 'Gas alarm issues',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Gas alarm issues',
@@ -217,9 +217,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Burglary alarm issues',
     'options': dict({
     }),
-    'object_id_base': 'Burglary alarm issues',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Burglary alarm issues',
@@ -266,9 +266,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Faulting points',
     'options': dict({
     }),
-    'object_id_base': 'Faulting points',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Faulting points',
@@ -316,9 +316,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Fire alarm issues',
     'options': dict({
     }),
-    'object_id_base': 'Fire alarm issues',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Fire alarm issues',
@@ -365,9 +365,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Gas alarm issues',
     'options': dict({
     }),
-    'object_id_base': 'Gas alarm issues',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Gas alarm issues',
@@ -414,9 +414,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Burglary alarm issues',
     'options': dict({
     }),
-    'object_id_base': 'Burglary alarm issues',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Burglary alarm issues',
@@ -463,9 +463,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Faulting points',
     'options': dict({
     }),
-    'object_id_base': 'Faulting points',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Faulting points',
@@ -513,9 +513,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Fire alarm issues',
     'options': dict({
     }),
-    'object_id_base': 'Fire alarm issues',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Fire alarm issues',
@@ -562,9 +562,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Gas alarm issues',
     'options': dict({
     }),
-    'object_id_base': 'Gas alarm issues',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Gas alarm issues',

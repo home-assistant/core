@@ -20,9 +20,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Alarm',
     'options': dict({
     }),
-    'object_id_base': 'Alarm',
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
     'original_icon': None,
     'original_name': 'Alarm',
@@ -70,9 +70,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Connectivity',
     'options': dict({
     }),
-    'object_id_base': 'Connectivity',
     'original_device_class': <BinarySensorDeviceClass.CONNECTIVITY: 'connectivity'>,
     'original_icon': None,
     'original_name': 'Connectivity',
@@ -120,9 +120,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Connectivity',
     'options': dict({
     }),
-    'object_id_base': 'Connectivity',
     'original_device_class': <BinarySensorDeviceClass.CONNECTIVITY: 'connectivity'>,
     'original_icon': None,
     'original_name': 'Connectivity',
@@ -170,9 +170,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Extern. adjust\xadment climate system 1',
     'options': dict({
     }),
-    'object_id_base': 'Extern. adjust\xadment climate system 1',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Extern. adjust\xadment climate system 1',
@@ -219,9 +219,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Extern. adjust\xadment climate system 1',
     'options': dict({
     }),
-    'object_id_base': 'Extern. adjust\xadment climate system 1',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Extern. adjust\xadment climate system 1',
@@ -268,9 +268,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Pump: Heating medium (GP1)',
     'options': dict({
     }),
-    'object_id_base': 'Pump: Heating medium (GP1)',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Pump: Heating medium (GP1)',
@@ -317,9 +317,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Pump: Heating medium (GP1)',
     'options': dict({
     }),
-    'object_id_base': 'Pump: Heating medium (GP1)',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Pump: Heating medium (GP1)',

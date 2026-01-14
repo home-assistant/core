@@ -20,9 +20,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Pending quest invitation',
     'options': dict({
     }),
-    'object_id_base': 'Pending quest invitation',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Pending quest invitation',
@@ -70,9 +70,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Quest status',
     'options': dict({
     }),
-    'object_id_base': 'Quest status',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Quest status',

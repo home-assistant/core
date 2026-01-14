@@ -20,9 +20,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'DHCP client',
     'options': dict({
     }),
-    'object_id_base': 'DHCP client',
     'original_device_class': <BinarySensorDeviceClass.RUNNING: 'running'>,
     'original_icon': None,
     'original_name': 'DHCP client',
@@ -70,9 +70,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'DHCP server',
     'options': dict({
     }),
-    'object_id_base': 'DHCP server',
     'original_device_class': <BinarySensorDeviceClass.RUNNING: 'running'>,
     'original_icon': None,
     'original_name': 'DHCP server',
@@ -120,9 +120,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'DHCPv6 server',
     'options': dict({
     }),
-    'object_id_base': 'DHCPv6 server',
     'original_device_class': <BinarySensorDeviceClass.RUNNING: 'running'>,
     'original_icon': None,
     'original_name': 'DHCPv6 server',
@@ -170,9 +170,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Port forwarding',
     'options': dict({
     }),
-    'object_id_base': 'Port forwarding',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Port forwarding',
@@ -219,9 +219,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'PPPoE link',
     'options': dict({
     }),
-    'object_id_base': 'PPPoE link',
     'original_device_class': <BinarySensorDeviceClass.CONNECTIVITY: 'connectivity'>,
     'original_icon': None,
     'original_name': 'PPPoE link',

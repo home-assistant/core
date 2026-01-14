@@ -34,9 +34,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Christmas tree pickup',
     'options': dict({
     }),
-    'object_id_base': 'Christmas tree pickup',
     'original_device_class': <SensorDeviceClass.DATE: 'date'>,
     'original_icon': None,
     'original_name': 'Christmas tree pickup',
@@ -115,9 +115,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Non-recyclable waste pickup',
     'options': dict({
     }),
-    'object_id_base': 'Non-recyclable waste pickup',
     'original_device_class': <SensorDeviceClass.DATE: 'date'>,
     'original_icon': None,
     'original_name': 'Non-recyclable waste pickup',
@@ -196,9 +196,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Organic waste pickup',
     'options': dict({
     }),
-    'object_id_base': 'Organic waste pickup',
     'original_device_class': <SensorDeviceClass.DATE: 'date'>,
     'original_icon': None,
     'original_name': 'Organic waste pickup',
@@ -277,9 +277,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Packages waste pickup',
     'options': dict({
     }),
-    'object_id_base': 'Packages waste pickup',
     'original_device_class': <SensorDeviceClass.DATE: 'date'>,
     'original_icon': None,
     'original_name': 'Packages waste pickup',
@@ -358,9 +358,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Paper waste pickup',
     'options': dict({
     }),
-    'object_id_base': 'Paper waste pickup',
     'original_device_class': <SensorDeviceClass.DATE: 'date'>,
     'original_icon': None,
     'original_name': 'Paper waste pickup',

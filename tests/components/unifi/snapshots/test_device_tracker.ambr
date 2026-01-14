@@ -20,9 +20,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Switch 1',
     'options': dict({
     }),
-    'object_id_base': 'Switch 1',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Switch 1',
@@ -72,9 +72,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'wd_client_1',
     'options': dict({
     }),
-    'object_id_base': 'wd_client_1',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'wd_client_1',
@@ -124,9 +124,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'ws_client_1',
     'options': dict({
     }),
-    'object_id_base': 'ws_client_1',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'ws_client_1',

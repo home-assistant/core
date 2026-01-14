@@ -20,9 +20,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'AI-Driven threat detection',
     'options': dict({
     }),
-    'object_id_base': 'AI-Driven threat detection',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'AI-Driven threat detection',
@@ -69,9 +69,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Allow affiliate & tracking links',
     'options': dict({
     }),
-    'object_id_base': 'Allow affiliate & tracking links',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Allow affiliate & tracking links',
@@ -118,9 +118,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Anonymized EDNS client subnet',
     'options': dict({
     }),
-    'object_id_base': 'Anonymized EDNS client subnet',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Anonymized EDNS client subnet',
@@ -167,9 +167,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Block 9GAG',
     'options': dict({
     }),
-    'object_id_base': 'Block 9GAG',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Block 9GAG',
@@ -216,9 +216,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Block Amazon',
     'options': dict({
     }),
-    'object_id_base': 'Block Amazon',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Block Amazon',
@@ -265,9 +265,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Block BeReal',
     'options': dict({
     }),
-    'object_id_base': 'Block BeReal',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Block BeReal',
@@ -314,9 +314,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Block Blizzard',
     'options': dict({
     }),
-    'object_id_base': 'Block Blizzard',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Block Blizzard',
@@ -363,9 +363,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Block bypass methods',
     'options': dict({
     }),
-    'object_id_base': 'Block bypass methods',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Block bypass methods',
@@ -412,9 +412,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Block ChatGPT',
     'options': dict({
     }),
-    'object_id_base': 'Block ChatGPT',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Block ChatGPT',
@@ -461,9 +461,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Block child sexual abuse material',
     'options': dict({
     }),
-    'object_id_base': 'Block child sexual abuse material',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Block child sexual abuse material',
@@ -510,9 +510,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Block Dailymotion',
     'options': dict({
     }),
-    'object_id_base': 'Block Dailymotion',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Block Dailymotion',
@@ -559,9 +559,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Block dating',
     'options': dict({
     }),
-    'object_id_base': 'Block dating',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Block dating',
@@ -608,9 +608,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Block Discord',
     'options': dict({
     }),
-    'object_id_base': 'Block Discord',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Block Discord',
@@ -657,9 +657,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Block disguised third-party trackers',
     'options': dict({
     }),
-    'object_id_base': 'Block disguised third-party trackers',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Block disguised third-party trackers',
@@ -706,9 +706,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Block Disney Plus',
     'options': dict({
     }),
-    'object_id_base': 'Block Disney Plus',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Block Disney Plus',
@@ -755,9 +755,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Block dynamic DNS hostnames',
     'options': dict({
     }),
-    'object_id_base': 'Block dynamic DNS hostnames',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Block dynamic DNS hostnames',
@@ -804,9 +804,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Block eBay',
     'options': dict({
     }),
-    'object_id_base': 'Block eBay',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Block eBay',
@@ -853,9 +853,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Block Facebook',
     'options': dict({
     }),
-    'object_id_base': 'Block Facebook',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Block Facebook',
@@ -902,9 +902,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Block Fortnite',
     'options': dict({
     }),
-    'object_id_base': 'Block Fortnite',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Block Fortnite',
@@ -951,9 +951,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Block gambling',
     'options': dict({
     }),
-    'object_id_base': 'Block gambling',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Block gambling',
@@ -1000,9 +1000,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Block Google Chat',
     'options': dict({
     }),
-    'object_id_base': 'Block Google Chat',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Block Google Chat',
@@ -1049,9 +1049,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Block HBO Max',
     'options': dict({
     }),
-    'object_id_base': 'Block HBO Max',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Block HBO Max',
@@ -1098,9 +1098,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Block Hulu',
     'options': dict({
     }),
-    'object_id_base': 'Block Hulu',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Block Hulu',
@@ -1147,9 +1147,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Block Imgur',
     'options': dict({
     }),
-    'object_id_base': 'Block Imgur',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Block Imgur',
@@ -1196,9 +1196,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Block Instagram',
     'options': dict({
     }),
-    'object_id_base': 'Block Instagram',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Block Instagram',
@@ -1245,9 +1245,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Block League of Legends',
     'options': dict({
     }),
-    'object_id_base': 'Block League of Legends',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Block League of Legends',
@@ -1294,9 +1294,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Block Mastodon',
     'options': dict({
     }),
-    'object_id_base': 'Block Mastodon',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Block Mastodon',
@@ -1343,9 +1343,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Block Messenger',
     'options': dict({
     }),
-    'object_id_base': 'Block Messenger',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Block Messenger',
@@ -1392,9 +1392,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Block Minecraft',
     'options': dict({
     }),
-    'object_id_base': 'Block Minecraft',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Block Minecraft',
@@ -1441,9 +1441,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Block Netflix',
     'options': dict({
     }),
-    'object_id_base': 'Block Netflix',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Block Netflix',
@@ -1490,9 +1490,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Block newly registered domains',
     'options': dict({
     }),
-    'object_id_base': 'Block newly registered domains',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Block newly registered domains',
@@ -1539,9 +1539,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Block online gaming',
     'options': dict({
     }),
-    'object_id_base': 'Block online gaming',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Block online gaming',
@@ -1588,9 +1588,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Block page',
     'options': dict({
     }),
-    'object_id_base': 'Block page',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Block page',
@@ -1637,9 +1637,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Block parked domains',
     'options': dict({
     }),
-    'object_id_base': 'Block parked domains',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Block parked domains',
@@ -1686,9 +1686,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Block Pinterest',
     'options': dict({
     }),
-    'object_id_base': 'Block Pinterest',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Block Pinterest',
@@ -1735,9 +1735,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Block piracy',
     'options': dict({
     }),
-    'object_id_base': 'Block piracy',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Block piracy',
@@ -1784,9 +1784,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Block PlayStation Network',
     'options': dict({
     }),
-    'object_id_base': 'Block PlayStation Network',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Block PlayStation Network',
@@ -1833,9 +1833,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Block porn',
     'options': dict({
     }),
-    'object_id_base': 'Block porn',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Block porn',
@@ -1882,9 +1882,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Block Prime Video',
     'options': dict({
     }),
-    'object_id_base': 'Block Prime Video',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Block Prime Video',
@@ -1931,9 +1931,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Block Reddit',
     'options': dict({
     }),
-    'object_id_base': 'Block Reddit',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Block Reddit',
@@ -1980,9 +1980,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Block Roblox',
     'options': dict({
     }),
-    'object_id_base': 'Block Roblox',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Block Roblox',
@@ -2029,9 +2029,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Block Signal',
     'options': dict({
     }),
-    'object_id_base': 'Block Signal',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Block Signal',
@@ -2078,9 +2078,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Block Skype',
     'options': dict({
     }),
-    'object_id_base': 'Block Skype',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Block Skype',
@@ -2127,9 +2127,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Block Snapchat',
     'options': dict({
     }),
-    'object_id_base': 'Block Snapchat',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Block Snapchat',
@@ -2176,9 +2176,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Block social networks',
     'options': dict({
     }),
-    'object_id_base': 'Block social networks',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Block social networks',
@@ -2225,9 +2225,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Block Spotify',
     'options': dict({
     }),
-    'object_id_base': 'Block Spotify',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Block Spotify',
@@ -2274,9 +2274,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Block Steam',
     'options': dict({
     }),
-    'object_id_base': 'Block Steam',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Block Steam',
@@ -2323,9 +2323,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Block Telegram',
     'options': dict({
     }),
-    'object_id_base': 'Block Telegram',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Block Telegram',
@@ -2372,9 +2372,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Block TikTok',
     'options': dict({
     }),
-    'object_id_base': 'Block TikTok',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Block TikTok',
@@ -2421,9 +2421,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Block Tinder',
     'options': dict({
     }),
-    'object_id_base': 'Block Tinder',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Block Tinder',
@@ -2470,9 +2470,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Block Tumblr',
     'options': dict({
     }),
-    'object_id_base': 'Block Tumblr',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Block Tumblr',
@@ -2519,9 +2519,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Block Twitch',
     'options': dict({
     }),
-    'object_id_base': 'Block Twitch',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Block Twitch',
@@ -2568,9 +2568,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Block video streaming',
     'options': dict({
     }),
-    'object_id_base': 'Block video streaming',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Block video streaming',
@@ -2617,9 +2617,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Block Vimeo',
     'options': dict({
     }),
-    'object_id_base': 'Block Vimeo',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Block Vimeo',
@@ -2666,9 +2666,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Block VK',
     'options': dict({
     }),
-    'object_id_base': 'Block VK',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Block VK',
@@ -2715,9 +2715,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Block WhatsApp',
     'options': dict({
     }),
-    'object_id_base': 'Block WhatsApp',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Block WhatsApp',
@@ -2764,9 +2764,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Block X (formerly Twitter)',
     'options': dict({
     }),
-    'object_id_base': 'Block X (formerly Twitter)',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Block X (formerly Twitter)',
@@ -2813,9 +2813,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Block Xbox Network',
     'options': dict({
     }),
-    'object_id_base': 'Block Xbox Network',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Block Xbox Network',
@@ -2862,9 +2862,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Block YouTube',
     'options': dict({
     }),
-    'object_id_base': 'Block YouTube',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Block YouTube',
@@ -2911,9 +2911,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Block Zoom',
     'options': dict({
     }),
-    'object_id_base': 'Block Zoom',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Block Zoom',
@@ -2960,9 +2960,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Bypass age verification',
     'options': dict({
     }),
-    'object_id_base': 'Bypass age verification',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Bypass age verification',
@@ -3009,9 +3009,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Cache boost',
     'options': dict({
     }),
-    'object_id_base': 'Cache boost',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Cache boost',
@@ -3058,9 +3058,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'CNAME flattening',
     'options': dict({
     }),
-    'object_id_base': 'CNAME flattening',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'CNAME flattening',
@@ -3107,9 +3107,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Cryptojacking protection',
     'options': dict({
     }),
-    'object_id_base': 'Cryptojacking protection',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Cryptojacking protection',
@@ -3156,9 +3156,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'DNS rebinding protection',
     'options': dict({
     }),
-    'object_id_base': 'DNS rebinding protection',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'DNS rebinding protection',
@@ -3205,9 +3205,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Domain generation algorithms protection',
     'options': dict({
     }),
-    'object_id_base': 'Domain generation algorithms protection',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Domain generation algorithms protection',
@@ -3254,9 +3254,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Force SafeSearch',
     'options': dict({
     }),
-    'object_id_base': 'Force SafeSearch',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Force SafeSearch',
@@ -3303,9 +3303,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Force YouTube restricted mode',
     'options': dict({
     }),
-    'object_id_base': 'Force YouTube restricted mode',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Force YouTube restricted mode',
@@ -3352,9 +3352,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Google safe browsing',
     'options': dict({
     }),
-    'object_id_base': 'Google safe browsing',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Google safe browsing',
@@ -3401,9 +3401,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'IDN homograph attacks protection',
     'options': dict({
     }),
-    'object_id_base': 'IDN homograph attacks protection',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'IDN homograph attacks protection',
@@ -3450,9 +3450,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Logs',
     'options': dict({
     }),
-    'object_id_base': 'Logs',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Logs',
@@ -3499,9 +3499,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Threat intelligence feeds',
     'options': dict({
     }),
-    'object_id_base': 'Threat intelligence feeds',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Threat intelligence feeds',
@@ -3548,9 +3548,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Typosquatting protection',
     'options': dict({
     }),
-    'object_id_base': 'Typosquatting protection',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Typosquatting protection',
@@ -3597,9 +3597,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Web3',
     'options': dict({
     }),
-    'object_id_base': 'Web3',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Web3',

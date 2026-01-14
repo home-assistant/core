@@ -25,9 +25,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Active map',
     'options': dict({
     }),
-    'object_id_base': 'Active map',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Active map',
@@ -83,9 +83,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Auto-empty frequency',
     'options': dict({
     }),
-    'object_id_base': 'Auto-empty frequency',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Auto-empty frequency',
@@ -143,9 +143,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Work mode',
     'options': dict({
     }),
-    'object_id_base': 'Work mode',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Work mode',
@@ -203,9 +203,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Active map',
     'options': dict({
     }),
-    'object_id_base': 'Active map',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Active map',
@@ -261,9 +261,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Auto-empty frequency',
     'options': dict({
     }),
-    'object_id_base': 'Auto-empty frequency',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Auto-empty frequency',
@@ -320,9 +320,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Water flow level',
     'options': dict({
     }),
-    'object_id_base': 'Water flow level',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Water flow level',
@@ -379,9 +379,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Active map',
     'options': dict({
     }),
-    'object_id_base': 'Active map',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Active map',
@@ -439,9 +439,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Water flow level',
     'options': dict({
     }),
-    'object_id_base': 'Water flow level',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Water flow level',

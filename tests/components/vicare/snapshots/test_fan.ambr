@@ -27,9 +27,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Ventilation',
     'options': dict({
     }),
-    'object_id_base': 'Ventilation',
     'original_device_class': None,
     'original_icon': 'mdi:fan',
     'original_name': 'Ventilation',
@@ -98,9 +98,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Ventilation',
     'options': dict({
     }),
-    'object_id_base': 'Ventilation',
     'original_device_class': None,
     'original_icon': 'mdi:fan',
     'original_name': 'Ventilation',
@@ -168,9 +168,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Ventilation',
     'options': dict({
     }),
-    'object_id_base': 'Ventilation',
     'original_device_class': None,
     'original_icon': 'mdi:fan',
     'original_name': 'Ventilation',

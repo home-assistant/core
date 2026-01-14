@@ -20,9 +20,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Büro IO device 1 battery',
     'options': dict({
     }),
-    'object_id_base': 'Büro IO device 1 battery',
     'original_device_class': <BinarySensorDeviceClass.BATTERY: 'battery'>,
     'original_icon': None,
     'original_name': 'Büro IO device 1 battery',

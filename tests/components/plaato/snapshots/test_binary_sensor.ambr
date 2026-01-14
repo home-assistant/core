@@ -20,9 +20,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Plaato Plaatodevicetype.Keg Device_Name Leaking',
     'options': dict({
     }),
-    'object_id_base': 'Plaato Plaatodevicetype.Keg Device_Name Leaking',
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
     'original_icon': None,
     'original_name': 'Plaato Plaatodevicetype.Keg Device_Name Leaking',
@@ -73,9 +73,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Plaato Plaatodevicetype.Keg Device_Name Pouring',
     'options': dict({
     }),
-    'object_id_base': 'Plaato Plaatodevicetype.Keg Device_Name Pouring',
     'original_device_class': <BinarySensorDeviceClass.OPENING: 'opening'>,
     'original_icon': None,
     'original_name': 'Plaato Plaatodevicetype.Keg Device_Name Pouring',

@@ -23,9 +23,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
-    'object_id_base': None,
     'original_device_class': <HumidifierDeviceClass.DEHUMIDIFIER: 'dehumidifier'>,
     'original_icon': None,
     'original_name': None,
@@ -80,9 +80,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
-    'object_id_base': None,
     'original_device_class': <HumidifierDeviceClass.DEHUMIDIFIER: 'dehumidifier'>,
     'original_icon': None,
     'original_name': None,
@@ -136,9 +136,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
-    'object_id_base': None,
     'original_device_class': <HumidifierDeviceClass.DEHUMIDIFIER: 'dehumidifier'>,
     'original_icon': None,
     'original_name': None,
@@ -194,9 +194,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
-    'object_id_base': None,
     'original_device_class': <HumidifierDeviceClass.DEHUMIDIFIER: 'dehumidifier'>,
     'original_icon': None,
     'original_name': None,
@@ -252,9 +252,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
-    'object_id_base': None,
     'original_device_class': <HumidifierDeviceClass.HUMIDIFIER: 'humidifier'>,
     'original_icon': None,
     'original_name': None,
@@ -308,9 +308,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
-    'object_id_base': None,
     'original_device_class': <HumidifierDeviceClass.DEHUMIDIFIER: 'dehumidifier'>,
     'original_icon': None,
     'original_name': None,

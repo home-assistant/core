@@ -22,6 +22,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Disk available',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -30,7 +31,6 @@
         'suggested_unit_of_measurement': <UnitOfInformation.GIBIBYTES: 'GiB'>,
       }),
     }),
-    'object_id_base': 'Disk available',
     'original_device_class': <SensorDeviceClass.DATA_SIZE: 'data_size'>,
     'original_icon': None,
     'original_name': 'Disk available',
@@ -82,6 +82,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Disk size',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -90,7 +91,6 @@
         'suggested_unit_of_measurement': <UnitOfInformation.GIBIBYTES: 'GiB'>,
       }),
     }),
-    'object_id_base': 'Disk size',
     'original_device_class': <SensorDeviceClass.DATA_SIZE: 'data_size'>,
     'original_icon': None,
     'original_name': 'Disk size',
@@ -142,9 +142,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Disk usage',
     'options': dict({
     }),
-    'object_id_base': 'Disk usage',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Disk usage',
@@ -195,6 +195,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Disk used',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -203,7 +204,6 @@
         'suggested_unit_of_measurement': <UnitOfInformation.GIBIBYTES: 'GiB'>,
       }),
     }),
-    'object_id_base': 'Disk used',
     'original_device_class': <SensorDeviceClass.DATA_SIZE: 'data_size'>,
     'original_icon': None,
     'original_name': 'Disk used',
@@ -255,6 +255,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Disk used by photos',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -263,7 +264,6 @@
         'suggested_unit_of_measurement': <UnitOfInformation.GIBIBYTES: 'GiB'>,
       }),
     }),
-    'object_id_base': 'Disk used by photos',
     'original_device_class': <SensorDeviceClass.DATA_SIZE: 'data_size'>,
     'original_icon': None,
     'original_name': 'Disk used by photos',
@@ -315,6 +315,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Disk used by videos',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -323,7 +324,6 @@
         'suggested_unit_of_measurement': <UnitOfInformation.GIBIBYTES: 'GiB'>,
       }),
     }),
-    'object_id_base': 'Disk used by videos',
     'original_device_class': <SensorDeviceClass.DATA_SIZE: 'data_size'>,
     'original_icon': None,
     'original_name': 'Disk used by videos',
@@ -375,9 +375,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Photos count',
     'options': dict({
     }),
-    'object_id_base': 'Photos count',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Photos count',
@@ -428,9 +428,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Videos count',
     'options': dict({
     }),
-    'object_id_base': 'Videos count',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Videos count',

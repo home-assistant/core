@@ -25,9 +25,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'System LED brightness',
     'options': dict({
     }),
-    'object_id_base': 'System LED brightness',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'System LED brightness',
@@ -84,9 +84,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Day speed',
     'options': dict({
     }),
-    'object_id_base': 'Day speed',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Day speed',
@@ -143,9 +143,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Manual speed',
     'options': dict({
     }),
-    'object_id_base': 'Manual speed',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Manual speed',
@@ -202,9 +202,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Night speed',
     'options': dict({
     }),
-    'object_id_base': 'Night speed',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Night speed',
@@ -261,9 +261,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'System LED brightness',
     'options': dict({
     }),
-    'object_id_base': 'System LED brightness',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'System LED brightness',
@@ -320,9 +320,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'High pulse duration',
     'options': dict({
     }),
-    'object_id_base': 'High pulse duration',
     'original_device_class': <NumberDeviceClass.DURATION: 'duration'>,
     'original_icon': None,
     'original_name': 'High pulse duration',
@@ -380,9 +380,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Low pulse duration',
     'options': dict({
     }),
-    'object_id_base': 'Low pulse duration',
     'original_device_class': <NumberDeviceClass.DURATION: 'duration'>,
     'original_icon': None,
     'original_name': 'Low pulse duration',
@@ -440,9 +440,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'System LED brightness',
     'options': dict({
     }),
-    'object_id_base': 'System LED brightness',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'System LED brightness',
@@ -499,9 +499,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Night temperature offset',
     'options': dict({
     }),
-    'object_id_base': 'Night temperature offset',
     'original_device_class': <NumberDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Night temperature offset',
@@ -558,9 +558,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'System LED brightness',
     'options': dict({
     }),
-    'object_id_base': 'System LED brightness',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'System LED brightness',
@@ -617,9 +617,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Temperature offset',
     'options': dict({
     }),
-    'object_id_base': 'Temperature offset',
     'original_device_class': <NumberDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Temperature offset',

@@ -20,9 +20,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Gateway firmware',
     'options': dict({
     }),
-    'object_id_base': 'Gateway firmware',
     'original_device_class': <UpdateDeviceClass.FIRMWARE: 'firmware'>,
     'original_icon': None,
     'original_name': 'Gateway firmware',
@@ -82,9 +82,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Machine firmware',
     'options': dict({
     }),
-    'object_id_base': 'Machine firmware',
     'original_device_class': <UpdateDeviceClass.FIRMWARE: 'firmware'>,
     'original_icon': None,
     'original_name': 'Machine firmware',

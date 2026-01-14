@@ -22,9 +22,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery',
     'options': dict({
     }),
-    'object_id_base': 'Battery',
     'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
     'original_icon': None,
     'original_name': 'Battery',
@@ -76,9 +76,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Signal strength',
     'options': dict({
     }),
-    'object_id_base': 'Signal strength',
     'original_device_class': <SensorDeviceClass.SIGNAL_STRENGTH: 'signal_strength'>,
     'original_icon': None,
     'original_name': 'Signal strength',
@@ -130,9 +130,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Valve position',
     'options': dict({
     }),
-    'object_id_base': 'Valve position',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Valve position',
@@ -183,9 +183,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Left slot level',
     'options': dict({
     }),
-    'object_id_base': 'Left slot level',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Left slot level',
@@ -234,9 +234,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Left slot vial',
     'options': dict({
     }),
-    'object_id_base': 'Left slot vial',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Left slot vial',
@@ -285,9 +285,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Right slot level',
     'options': dict({
     }),
-    'object_id_base': 'Right slot level',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Right slot level',
@@ -336,9 +336,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Right slot vial',
     'options': dict({
     }),
-    'object_id_base': 'Right slot vial',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Right slot vial',
@@ -396,9 +396,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Charger state',
     'options': dict({
     }),
-    'object_id_base': 'Charger state',
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
     'original_name': 'Charger state',
@@ -458,12 +458,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Phase A current',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
       }),
     }),
-    'object_id_base': 'Phase A current',
     'original_device_class': <SensorDeviceClass.CURRENT: 'current'>,
     'original_icon': None,
     'original_name': 'Phase A current',
@@ -515,12 +515,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Phase A power',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
       }),
     }),
-    'object_id_base': 'Phase A power',
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
     'original_icon': None,
     'original_name': 'Phase A power',
@@ -572,12 +572,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Phase A voltage',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
       }),
     }),
-    'object_id_base': 'Phase A voltage',
     'original_device_class': <SensorDeviceClass.VOLTAGE: 'voltage'>,
     'original_icon': None,
     'original_name': 'Phase A voltage',
@@ -629,12 +629,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Phase B current',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
       }),
     }),
-    'object_id_base': 'Phase B current',
     'original_device_class': <SensorDeviceClass.CURRENT: 'current'>,
     'original_icon': None,
     'original_name': 'Phase B current',
@@ -686,12 +686,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Phase B power',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
       }),
     }),
-    'object_id_base': 'Phase B power',
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
     'original_icon': None,
     'original_name': 'Phase B power',
@@ -743,12 +743,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Phase B voltage',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
       }),
     }),
-    'object_id_base': 'Phase B voltage',
     'original_device_class': <SensorDeviceClass.VOLTAGE: 'voltage'>,
     'original_icon': None,
     'original_name': 'Phase B voltage',
@@ -800,12 +800,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Phase C current',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
       }),
     }),
-    'object_id_base': 'Phase C current',
     'original_device_class': <SensorDeviceClass.CURRENT: 'current'>,
     'original_icon': None,
     'original_name': 'Phase C current',
@@ -857,12 +857,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Phase C power',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
       }),
     }),
-    'object_id_base': 'Phase C power',
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
     'original_icon': None,
     'original_name': 'Phase C power',
@@ -914,12 +914,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Phase C voltage',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
       }),
     }),
-    'object_id_base': 'Phase C voltage',
     'original_device_class': <SensorDeviceClass.VOLTAGE: 'voltage'>,
     'original_icon': None,
     'original_name': 'Phase C voltage',
@@ -969,12 +969,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Session duration',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
       }),
     }),
-    'object_id_base': 'Session duration',
     'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
     'original_icon': None,
     'original_name': 'Session duration',
@@ -1025,12 +1025,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Session energy',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
       }),
     }),
-    'object_id_base': 'Session energy',
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
     'original_name': 'Session energy',
@@ -1082,6 +1082,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'test switch_0 energy',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -1090,7 +1091,6 @@
         'suggested_unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
       }),
     }),
-    'object_id_base': 'test switch_0 energy',
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
     'original_name': 'test switch_0 energy',
@@ -1142,6 +1142,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'test switch_0 energy consumed',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -1150,7 +1151,6 @@
         'suggested_unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
       }),
     }),
-    'object_id_base': 'test switch_0 energy consumed',
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
     'original_name': 'test switch_0 energy consumed',
@@ -1202,6 +1202,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'test switch_0 energy returned',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -1210,7 +1211,6 @@
         'suggested_unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
       }),
     }),
-    'object_id_base': 'test switch_0 energy returned',
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
     'original_name': 'test switch_0 energy returned',
@@ -1260,12 +1260,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Average temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
       }),
     }),
-    'object_id_base': 'Average temperature',
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Average temperature',
@@ -1314,12 +1314,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Rainfall',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
       }),
     }),
-    'object_id_base': 'Rainfall',
     'original_device_class': <SensorDeviceClass.PRECIPITATION_INTENSITY: 'precipitation_intensity'>,
     'original_icon': None,
     'original_name': 'Rainfall',

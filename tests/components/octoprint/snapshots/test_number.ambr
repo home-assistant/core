@@ -25,9 +25,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Bed temperature',
     'options': dict({
     }),
-    'object_id_base': 'Bed temperature',
     'original_device_class': <NumberDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Bed temperature',
@@ -85,9 +85,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Extruder 1 temperature',
     'options': dict({
     }),
-    'object_id_base': 'Extruder 1 temperature',
     'original_device_class': <NumberDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Extruder 1 temperature',
@@ -145,9 +145,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Extruder temperature',
     'options': dict({
     }),
-    'object_id_base': 'Extruder temperature',
     'original_device_class': <NumberDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Extruder temperature',

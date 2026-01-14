@@ -20,9 +20,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Departure',
     'options': dict({
     }),
-    'object_id_base': 'Departure',
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
     'original_icon': None,
     'original_name': 'Departure',
@@ -71,9 +71,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Departure +1',
     'options': dict({
     }),
-    'object_id_base': 'Departure +1',
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
     'original_icon': None,
     'original_name': 'Departure +1',
@@ -122,9 +122,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Departure +2',
     'options': dict({
     }),
-    'object_id_base': 'Departure +2',
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
     'original_icon': None,
     'original_name': 'Departure +2',
@@ -173,9 +173,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Platform',
     'options': dict({
     }),
-    'object_id_base': 'Platform',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Platform',
@@ -223,9 +223,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Train number',
     'options': dict({
     }),
-    'object_id_base': 'Train number',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Train number',
@@ -273,9 +273,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Trains',
     'options': dict({
     }),
-    'object_id_base': 'Trains',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Trains',

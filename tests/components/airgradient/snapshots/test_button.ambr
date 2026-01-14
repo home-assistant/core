@@ -20,9 +20,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Calibrate CO2 sensor',
     'options': dict({
     }),
-    'object_id_base': 'Calibrate CO2 sensor',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Calibrate CO2 sensor',
@@ -69,9 +69,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Test LED bar',
     'options': dict({
     }),
-    'object_id_base': 'Test LED bar',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Test LED bar',
@@ -118,9 +118,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Calibrate CO2 sensor',
     'options': dict({
     }),
-    'object_id_base': 'Calibrate CO2 sensor',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Calibrate CO2 sensor',

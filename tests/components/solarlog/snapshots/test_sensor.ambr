@@ -22,6 +22,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Consumption year',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 3,
@@ -30,7 +31,6 @@
         'suggested_unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
       }),
     }),
-    'object_id_base': 'Consumption year',
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
     'original_name': 'Consumption year',
@@ -82,12 +82,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
       }),
     }),
-    'object_id_base': 'Power',
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
     'original_icon': None,
     'original_name': 'Power',
@@ -139,6 +139,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Consumption year',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 3,
@@ -147,7 +148,6 @@
         'suggested_unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
       }),
     }),
-    'object_id_base': 'Consumption year',
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
     'original_name': 'Consumption year',
@@ -199,12 +199,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
       }),
     }),
-    'object_id_base': 'Power',
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
     'original_icon': None,
     'original_name': 'Power',
@@ -256,12 +256,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Alternator loss',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
       }),
     }),
-    'object_id_base': 'Alternator loss',
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
     'original_icon': None,
     'original_name': 'Alternator loss',
@@ -313,12 +313,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Capacity',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
       }),
     }),
-    'object_id_base': 'Capacity',
     'original_device_class': <SensorDeviceClass.POWER_FACTOR: 'power_factor'>,
     'original_icon': None,
     'original_name': 'Capacity',
@@ -370,9 +370,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Charge level',
     'options': dict({
     }),
-    'object_id_base': 'Charge level',
     'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
     'original_icon': None,
     'original_name': 'Charge level',
@@ -424,12 +424,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Charging power',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
       }),
     }),
-    'object_id_base': 'Charging power',
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
     'original_icon': None,
     'original_name': 'Charging power',
@@ -481,12 +481,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Consumption AC',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
       }),
     }),
-    'object_id_base': 'Consumption AC',
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
     'original_icon': None,
     'original_name': 'Consumption AC',
@@ -538,6 +538,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Consumption day',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 3,
@@ -546,7 +547,6 @@
         'suggested_unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
       }),
     }),
-    'object_id_base': 'Consumption day',
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
     'original_name': 'Consumption day',
@@ -598,6 +598,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Consumption month',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 3,
@@ -606,7 +607,6 @@
         'suggested_unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
       }),
     }),
-    'object_id_base': 'Consumption month',
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
     'original_name': 'Consumption month',
@@ -658,6 +658,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Consumption total',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 3,
@@ -666,7 +667,6 @@
         'suggested_unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
       }),
     }),
-    'object_id_base': 'Consumption total',
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
     'original_name': 'Consumption total',
@@ -718,6 +718,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Consumption year',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 3,
@@ -726,7 +727,6 @@
         'suggested_unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
       }),
     }),
-    'object_id_base': 'Consumption year',
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
     'original_name': 'Consumption year',
@@ -776,6 +776,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Consumption yesterday',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 3,
@@ -784,7 +785,6 @@
         'suggested_unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
       }),
     }),
-    'object_id_base': 'Consumption yesterday',
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
     'original_name': 'Consumption yesterday',
@@ -835,12 +835,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Discharging power',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
       }),
     }),
-    'object_id_base': 'Discharging power',
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
     'original_icon': None,
     'original_name': 'Discharging power',
@@ -892,12 +892,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Efficiency',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
       }),
     }),
-    'object_id_base': 'Efficiency',
     'original_device_class': <SensorDeviceClass.POWER_FACTOR: 'power_factor'>,
     'original_icon': None,
     'original_name': 'Efficiency',
@@ -949,12 +949,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Installed peak power',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
       }),
     }),
-    'object_id_base': 'Installed peak power',
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
     'original_icon': None,
     'original_name': 'Installed peak power',
@@ -1004,9 +1004,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Last update',
     'options': dict({
     }),
-    'object_id_base': 'Last update',
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
     'original_icon': None,
     'original_name': 'Last update',
@@ -1056,12 +1056,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power AC',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
       }),
     }),
-    'object_id_base': 'Power AC',
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
     'original_icon': None,
     'original_name': 'Power AC',
@@ -1113,12 +1113,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power available',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
       }),
     }),
-    'object_id_base': 'Power available',
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
     'original_icon': None,
     'original_name': 'Power available',
@@ -1170,12 +1170,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power DC',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
       }),
     }),
-    'object_id_base': 'Power DC',
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
     'original_icon': None,
     'original_name': 'Power DC',
@@ -1227,12 +1227,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Self-consumption year',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
       }),
     }),
-    'object_id_base': 'Self-consumption year',
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
     'original_name': 'Self-consumption year',
@@ -1284,12 +1284,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Usage',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
       }),
     }),
-    'object_id_base': 'Usage',
     'original_device_class': <SensorDeviceClass.POWER_FACTOR: 'power_factor'>,
     'original_icon': None,
     'original_name': 'Usage',
@@ -1341,12 +1341,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Voltage AC',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
       }),
     }),
-    'object_id_base': 'Voltage AC',
     'original_device_class': <SensorDeviceClass.VOLTAGE: 'voltage'>,
     'original_icon': None,
     'original_name': 'Voltage AC',
@@ -1398,12 +1398,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Voltage DC',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
       }),
     }),
-    'object_id_base': 'Voltage DC',
     'original_device_class': <SensorDeviceClass.VOLTAGE: 'voltage'>,
     'original_icon': None,
     'original_name': 'Voltage DC',
@@ -1455,6 +1455,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Yield day',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 3,
@@ -1463,7 +1464,6 @@
         'suggested_unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
       }),
     }),
-    'object_id_base': 'Yield day',
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
     'original_name': 'Yield day',
@@ -1515,6 +1515,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Yield month',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 3,
@@ -1523,7 +1524,6 @@
         'suggested_unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
       }),
     }),
-    'object_id_base': 'Yield month',
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
     'original_name': 'Yield month',
@@ -1575,6 +1575,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Yield total',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 3,
@@ -1583,7 +1584,6 @@
         'suggested_unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
       }),
     }),
-    'object_id_base': 'Yield total',
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
     'original_name': 'Yield total',
@@ -1635,6 +1635,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Yield year',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -1643,7 +1644,6 @@
         'suggested_unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
       }),
     }),
-    'object_id_base': 'Yield year',
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
     'original_name': 'Yield year',
@@ -1693,6 +1693,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Yield yesterday',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 3,
@@ -1701,7 +1702,6 @@
         'suggested_unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
       }),
     }),
-    'object_id_base': 'Yield yesterday',
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
     'original_name': 'Yield yesterday',

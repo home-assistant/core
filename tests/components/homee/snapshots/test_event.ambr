@@ -26,9 +26,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Kitchen Light',
     'options': dict({
     }),
-    'object_id_base': 'Kitchen Light',
     'original_device_class': <EventDeviceClass.BUTTON: 'button'>,
     'original_icon': None,
     'original_name': 'Kitchen Light',
@@ -88,9 +88,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Switch 2',
     'options': dict({
     }),
-    'object_id_base': 'Switch 2',
     'original_device_class': <EventDeviceClass.BUTTON: 'button'>,
     'original_icon': None,
     'original_name': 'Switch 2',
@@ -157,9 +157,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Up/down remote',
     'options': dict({
     }),
-    'object_id_base': 'Up/down remote',
     'original_device_class': <EventDeviceClass.BUTTON: 'button'>,
     'original_icon': None,
     'original_name': 'Up/down remote',

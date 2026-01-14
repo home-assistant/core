@@ -22,12 +22,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Estimated current',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
       }),
     }),
-    'object_id_base': 'Estimated current',
     'original_device_class': <SensorDeviceClass.CURRENT: 'current'>,
     'original_icon': None,
     'original_name': 'Estimated current',
@@ -79,12 +79,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Free memory',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
       }),
     }),
-    'object_id_base': 'Free memory',
     'original_device_class': <SensorDeviceClass.DATA_SIZE: 'data_size'>,
     'original_icon': None,
     'original_name': 'Free memory',
@@ -134,9 +134,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'IP',
     'options': dict({
     }),
-    'object_id_base': 'IP',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'IP',
@@ -183,9 +183,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'LED count',
     'options': dict({
     }),
-    'object_id_base': 'LED count',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'LED count',
@@ -232,12 +232,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Max current',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
       }),
     }),
-    'object_id_base': 'Max current',
     'original_device_class': <SensorDeviceClass.CURRENT: 'current'>,
     'original_icon': None,
     'original_name': 'Max current',
@@ -286,9 +286,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Uptime',
     'options': dict({
     }),
-    'object_id_base': 'Uptime',
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
     'original_icon': None,
     'original_name': 'Uptime',
@@ -336,9 +336,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Wi-Fi BSSID',
     'options': dict({
     }),
-    'object_id_base': 'Wi-Fi BSSID',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Wi-Fi BSSID',
@@ -385,9 +385,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Wi-Fi channel',
     'options': dict({
     }),
-    'object_id_base': 'Wi-Fi channel',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Wi-Fi channel',
@@ -436,9 +436,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Wi-Fi RSSI',
     'options': dict({
     }),
-    'object_id_base': 'Wi-Fi RSSI',
     'original_device_class': <SensorDeviceClass.SIGNAL_STRENGTH: 'signal_strength'>,
     'original_icon': None,
     'original_name': 'Wi-Fi RSSI',
@@ -490,9 +490,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Wi-Fi signal',
     'options': dict({
     }),
-    'object_id_base': 'Wi-Fi signal',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Wi-Fi signal',

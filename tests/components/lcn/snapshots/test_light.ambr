@@ -24,9 +24,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Light_Output1',
     'options': dict({
     }),
-    'object_id_base': 'Light_Output1',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Light_Output1',
@@ -83,9 +83,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Light_Output2',
     'options': dict({
     }),
-    'object_id_base': 'Light_Output2',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Light_Output2',
@@ -141,9 +141,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Light_Relay1',
     'options': dict({
     }),
-    'object_id_base': 'Light_Relay1',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Light_Relay1',

@@ -25,9 +25,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Charge limit',
     'options': dict({
     }),
-    'object_id_base': 'Charge limit',
     'original_device_class': <NumberDeviceClass.CURRENT: 'current'>,
     'original_icon': None,
     'original_name': 'Charge limit',

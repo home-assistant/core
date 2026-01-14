@@ -20,9 +20,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power',
     'options': dict({
     }),
-    'object_id_base': 'Power',
     'original_device_class': <BinarySensorDeviceClass.POWER: 'power'>,
     'original_icon': None,
     'original_name': 'Power',
@@ -70,9 +70,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Sensor',
     'options': dict({
     }),
-    'object_id_base': 'Sensor',
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
     'original_icon': None,
     'original_name': 'Sensor',
@@ -120,9 +120,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Leak detected',
     'options': dict({
     }),
-    'object_id_base': 'Leak detected',
     'original_device_class': <BinarySensorDeviceClass.MOISTURE: 'moisture'>,
     'original_icon': None,
     'original_name': 'Leak detected',
@@ -170,9 +170,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Notification unread',
     'options': dict({
     }),
-    'object_id_base': 'Notification unread',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Notification unread',
@@ -219,9 +219,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Leak detected',
     'options': dict({
     }),
-    'object_id_base': 'Leak detected',
     'original_device_class': <BinarySensorDeviceClass.MOISTURE: 'moisture'>,
     'original_icon': None,
     'original_name': 'Leak detected',
@@ -269,9 +269,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Leak detected',
     'options': dict({
     }),
-    'object_id_base': 'Leak detected',
     'original_device_class': <BinarySensorDeviceClass.MOISTURE: 'moisture'>,
     'original_icon': None,
     'original_name': 'Leak detected',
@@ -319,9 +319,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Leak detected',
     'options': dict({
     }),
-    'object_id_base': 'Leak detected',
     'original_device_class': <BinarySensorDeviceClass.MOISTURE: 'moisture'>,
     'original_icon': None,
     'original_name': 'Leak detected',
@@ -369,9 +369,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Pump status',
     'options': dict({
     }),
-    'object_id_base': 'Pump status',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Pump status',
@@ -418,9 +418,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Leak detected',
     'options': dict({
     }),
-    'object_id_base': 'Leak detected',
     'original_device_class': <BinarySensorDeviceClass.MOISTURE: 'moisture'>,
     'original_icon': None,
     'original_name': 'Leak detected',
@@ -468,9 +468,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Reserve capacity in use',
     'options': dict({
     }),
-    'object_id_base': 'Reserve capacity in use',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Reserve capacity in use',

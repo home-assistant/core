@@ -20,9 +20,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Confirm error',
     'options': dict({
     }),
-    'object_id_base': 'Confirm error',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Confirm error',
@@ -69,9 +69,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Reset cutting blade usage time',
     'options': dict({
     }),
-    'object_id_base': 'Reset cutting blade usage time',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Reset cutting blade usage time',
@@ -118,9 +118,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Sync clock',
     'options': dict({
     }),
-    'object_id_base': 'Sync clock',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Sync clock',
@@ -167,9 +167,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Sync clock',
     'options': dict({
     }),
-    'object_id_base': 'Sync clock',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Sync clock',

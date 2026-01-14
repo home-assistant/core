@@ -21,9 +21,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Media player',
     'options': dict({
     }),
-    'object_id_base': 'Media player',
     'original_device_class': <MediaPlayerDeviceClass.SPEAKER: 'speaker'>,
     'original_icon': None,
     'original_name': 'Media player',
@@ -103,9 +103,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Media player',
     'options': dict({
     }),
-    'object_id_base': 'Media player',
     'original_device_class': <MediaPlayerDeviceClass.SPEAKER: 'speaker'>,
     'original_icon': None,
     'original_name': 'Media player',

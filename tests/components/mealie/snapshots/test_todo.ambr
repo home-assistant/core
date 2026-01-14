@@ -20,9 +20,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Freezer',
     'options': dict({
     }),
-    'object_id_base': 'Freezer',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Freezer',
@@ -70,9 +70,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Special groceries',
     'options': dict({
     }),
-    'object_id_base': 'Special groceries',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Special groceries',
@@ -120,9 +120,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Supermarket',
     'options': dict({
     }),
-    'object_id_base': 'Supermarket',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Supermarket',

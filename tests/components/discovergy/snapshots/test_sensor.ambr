@@ -20,9 +20,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Last transmitted',
     'options': dict({
     }),
-    'object_id_base': 'Last transmitted',
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
     'original_icon': None,
     'original_name': 'Last transmitted',
@@ -61,12 +61,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Total consumption',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 4,
       }),
     }),
-    'object_id_base': 'Total consumption',
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
     'original_name': 'Total consumption',
@@ -118,12 +118,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Total power',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 3,
       }),
     }),
-    'object_id_base': 'Total power',
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
     'original_icon': None,
     'original_name': 'Total power',
@@ -173,9 +173,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Last transmitted',
     'options': dict({
     }),
-    'object_id_base': 'Last transmitted',
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
     'original_icon': None,
     'original_name': 'Last transmitted',
@@ -214,12 +214,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Total gas consumption',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 4,
       }),
     }),
-    'object_id_base': 'Total gas consumption',
     'original_device_class': <SensorDeviceClass.GAS: 'gas'>,
     'original_icon': None,
     'original_name': 'Total gas consumption',

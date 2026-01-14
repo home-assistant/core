@@ -42,9 +42,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Segment 1 intensity',
     'options': dict({
     }),
-    'object_id_base': 'Segment 1 intensity',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Segment 1 intensity',
@@ -135,9 +135,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Segment 1 speed',
     'options': dict({
     }),
-    'object_id_base': 'Segment 1 speed',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Segment 1 speed',
@@ -211,9 +211,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Intensity',
     'options': dict({
     }),
-    'object_id_base': 'Intensity',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Intensity',
@@ -269,9 +269,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Segment 1 intensity',
     'options': dict({
     }),
-    'object_id_base': 'Segment 1 intensity',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Segment 1 intensity',
@@ -327,9 +327,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Segment 1 speed',
     'options': dict({
     }),
-    'object_id_base': 'Segment 1 speed',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Segment 1 speed',
@@ -385,9 +385,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Speed',
     'options': dict({
     }),
-    'object_id_base': 'Speed',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Speed',

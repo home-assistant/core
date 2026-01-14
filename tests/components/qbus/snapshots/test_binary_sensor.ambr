@@ -20,9 +20,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
-    'object_id_base': None,
     'original_device_class': <BinarySensorDeviceClass.CONNECTIVITY: 'connectivity'>,
     'original_icon': None,
     'original_name': None,
@@ -70,9 +70,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Raining',
     'options': dict({
     }),
-    'object_id_base': 'Raining',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Raining',
@@ -119,9 +119,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Twilight',
     'options': dict({
     }),
-    'object_id_base': 'Twilight',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Twilight',

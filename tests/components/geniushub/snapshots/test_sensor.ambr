@@ -20,9 +20,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'GeniusHub Errors',
     'options': dict({
     }),
-    'object_id_base': 'GeniusHub Errors',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'GeniusHub Errors',
@@ -71,9 +71,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'GeniusHub Information',
     'options': dict({
     }),
-    'object_id_base': 'GeniusHub Information',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'GeniusHub Information',
@@ -122,9 +122,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'GeniusHub Warnings',
     'options': dict({
     }),
-    'object_id_base': 'GeniusHub Warnings',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'GeniusHub Warnings',
@@ -173,9 +173,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Radiator Valve 11',
     'options': dict({
     }),
-    'object_id_base': 'Radiator Valve 11',
     'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
     'original_icon': 'mdi:battery-40',
     'original_name': 'Radiator Valve 11',
@@ -229,9 +229,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Radiator Valve 56',
     'options': dict({
     }),
-    'object_id_base': 'Radiator Valve 56',
     'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
     'original_icon': 'mdi:battery-50',
     'original_name': 'Radiator Valve 56',
@@ -285,9 +285,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Radiator Valve 68',
     'options': dict({
     }),
-    'object_id_base': 'Radiator Valve 68',
     'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
     'original_icon': 'mdi:battery-90',
     'original_name': 'Radiator Valve 68',
@@ -341,9 +341,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Radiator Valve 78',
     'options': dict({
     }),
-    'object_id_base': 'Radiator Valve 78',
     'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
     'original_icon': 'mdi:battery-40',
     'original_name': 'Radiator Valve 78',
@@ -397,9 +397,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Radiator Valve 85',
     'options': dict({
     }),
-    'object_id_base': 'Radiator Valve 85',
     'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
     'original_icon': 'mdi:battery-60',
     'original_name': 'Radiator Valve 85',
@@ -453,9 +453,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Radiator Valve 88',
     'options': dict({
     }),
-    'object_id_base': 'Radiator Valve 88',
     'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
     'original_icon': 'mdi:battery-50',
     'original_name': 'Radiator Valve 88',
@@ -509,9 +509,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Radiator Valve 89',
     'options': dict({
     }),
-    'object_id_base': 'Radiator Valve 89',
     'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
     'original_icon': 'mdi:battery-50',
     'original_name': 'Radiator Valve 89',
@@ -565,9 +565,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Radiator Valve 90',
     'options': dict({
     }),
-    'object_id_base': 'Radiator Valve 90',
     'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
     'original_icon': 'mdi:battery-90',
     'original_name': 'Radiator Valve 90',
@@ -621,9 +621,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Room Sensor 16',
     'options': dict({
     }),
-    'object_id_base': 'Room Sensor 16',
     'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
     'original_icon': 'mdi:battery',
     'original_name': 'Room Sensor 16',
@@ -679,9 +679,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Room Sensor 17',
     'options': dict({
     }),
-    'object_id_base': 'Room Sensor 17',
     'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
     'original_icon': 'mdi:battery',
     'original_name': 'Room Sensor 17',
@@ -737,9 +737,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Room Sensor 18',
     'options': dict({
     }),
-    'object_id_base': 'Room Sensor 18',
     'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
     'original_icon': 'mdi:battery-alert',
     'original_name': 'Room Sensor 18',
@@ -795,9 +795,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Room Sensor 20',
     'options': dict({
     }),
-    'object_id_base': 'Room Sensor 20',
     'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
     'original_icon': 'mdi:battery',
     'original_name': 'Room Sensor 20',
@@ -853,9 +853,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Room Sensor 21',
     'options': dict({
     }),
-    'object_id_base': 'Room Sensor 21',
     'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
     'original_icon': 'mdi:battery',
     'original_name': 'Room Sensor 21',
@@ -911,9 +911,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Room Sensor 50',
     'options': dict({
     }),
-    'object_id_base': 'Room Sensor 50',
     'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
     'original_icon': 'mdi:battery',
     'original_name': 'Room Sensor 50',
@@ -969,9 +969,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Room Sensor 53',
     'options': dict({
     }),
-    'object_id_base': 'Room Sensor 53',
     'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
     'original_icon': 'mdi:battery-alert',
     'original_name': 'Room Sensor 53',

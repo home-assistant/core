@@ -26,9 +26,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Automatic backup',
     'options': dict({
     }),
-    'object_id_base': 'Automatic backup',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Automatic backup',

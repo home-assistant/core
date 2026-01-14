@@ -20,9 +20,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Auto-Reconnect',
     'options': dict({
     }),
-    'object_id_base': 'Auto-Reconnect',
     'original_device_class': <SwitchDeviceClass.SWITCH: 'switch'>,
     'original_icon': None,
     'original_name': 'Auto-Reconnect',
@@ -70,9 +70,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Pause/Resume queue',
     'options': dict({
     }),
-    'object_id_base': 'Pause/Resume queue',
     'original_device_class': <SwitchDeviceClass.SWITCH: 'switch'>,
     'original_icon': None,
     'original_name': 'Pause/Resume queue',

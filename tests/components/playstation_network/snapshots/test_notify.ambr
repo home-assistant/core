@@ -20,9 +20,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Direct message: PublicUniversalFriend',
     'options': dict({
     }),
-    'object_id_base': 'Direct message: PublicUniversalFriend',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Direct message: PublicUniversalFriend',
@@ -70,9 +70,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Group: PublicUniversalFriend',
     'options': dict({
     }),
-    'object_id_base': 'Group: PublicUniversalFriend',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Group: PublicUniversalFriend',

@@ -20,9 +20,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Location',
     'options': dict({
     }),
-    'object_id_base': 'Location',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Location',
@@ -73,9 +73,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Route',
     'options': dict({
     }),
-    'object_id_base': 'Route',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Route',

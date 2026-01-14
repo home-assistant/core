@@ -20,9 +20,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Charging',
     'options': dict({
     }),
-    'object_id_base': 'Charging',
     'original_device_class': <BinarySensorDeviceClass.BATTERY_CHARGING: 'battery_charging'>,
     'original_icon': None,
     'original_name': 'Charging',
@@ -70,9 +70,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Lock uncalibrated',
     'options': dict({
     }),
-    'object_id_base': 'Lock uncalibrated',
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
     'original_icon': None,
     'original_name': 'Lock uncalibrated',
@@ -120,9 +120,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Pullspring enabled',
     'options': dict({
     }),
-    'object_id_base': 'Pullspring enabled',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Pullspring enabled',
@@ -169,9 +169,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Semi locked',
     'options': dict({
     }),
-    'object_id_base': 'Semi locked',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Semi locked',
@@ -218,9 +218,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Charging',
     'options': dict({
     }),
-    'object_id_base': 'Charging',
     'original_device_class': <BinarySensorDeviceClass.BATTERY_CHARGING: 'battery_charging'>,
     'original_icon': None,
     'original_name': 'Charging',
@@ -268,9 +268,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Door',
     'options': dict({
     }),
-    'object_id_base': 'Door',
     'original_device_class': <BinarySensorDeviceClass.DOOR: 'door'>,
     'original_icon': None,
     'original_name': 'Door',
@@ -318,9 +318,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Lock uncalibrated',
     'options': dict({
     }),
-    'object_id_base': 'Lock uncalibrated',
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
     'original_icon': None,
     'original_name': 'Lock uncalibrated',
@@ -368,9 +368,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Pullspring enabled',
     'options': dict({
     }),
-    'object_id_base': 'Pullspring enabled',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Pullspring enabled',
@@ -417,9 +417,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Semi locked',
     'options': dict({
     }),
-    'object_id_base': 'Semi locked',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Semi locked',

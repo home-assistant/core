@@ -20,9 +20,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Romantic',
     'options': dict({
     }),
-    'object_id_base': 'Romantic',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Romantic',
@@ -69,9 +69,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Romantic Transition',
     'options': dict({
     }),
-    'object_id_base': 'Romantic Transition',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Romantic Transition',

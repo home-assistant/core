@@ -25,9 +25,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'test_script.js',
     'options': dict({
     }),
-    'object_id_base': 'test_script.js',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'test_script.js',

@@ -22,9 +22,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'core_samba',
     'options': dict({
     }),
-    'object_id_base': 'core_samba',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'core_samba',
@@ -75,9 +75,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'hacs (custom)',
     'options': dict({
     }),
-    'object_id_base': 'hacs (custom)',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'hacs (custom)',
@@ -128,9 +128,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'myq',
     'options': dict({
     }),
-    'object_id_base': 'myq',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'myq',
@@ -181,9 +181,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'spotify',
     'options': dict({
     }),
-    'object_id_base': 'spotify',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'spotify',
@@ -234,9 +234,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Total active installations',
     'options': dict({
     }),
-    'object_id_base': 'Total active installations',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Total active installations',
@@ -287,9 +287,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Total reported integrations',
     'options': dict({
     }),
-    'object_id_base': 'Total reported integrations',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Total reported integrations',
@@ -340,9 +340,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'YouTube',
     'options': dict({
     }),
-    'object_id_base': 'YouTube',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'YouTube',

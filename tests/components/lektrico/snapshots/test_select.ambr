@@ -27,9 +27,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Load balancing mode',
     'options': dict({
     }),
-    'object_id_base': 'Load balancing mode',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Load balancing mode',

@@ -25,9 +25,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Light brightness',
     'options': dict({
     }),
-    'object_id_base': 'Light brightness',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Light brightness',
@@ -83,9 +83,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Light mode',
     'options': dict({
     }),
-    'object_id_base': 'Light mode',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Light mode',
@@ -141,9 +141,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Light mode',
     'options': dict({
     }),
-    'object_id_base': 'Light mode',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Light mode',
@@ -199,9 +199,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Temperature unit on display',
     'options': dict({
     }),
-    'object_id_base': 'Temperature unit on display',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Temperature unit on display',

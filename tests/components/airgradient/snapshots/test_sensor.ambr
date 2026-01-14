@@ -22,9 +22,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Carbon dioxide',
     'options': dict({
     }),
-    'object_id_base': 'Carbon dioxide',
     'original_device_class': <SensorDeviceClass.CO2: 'carbon_dioxide'>,
     'original_icon': None,
     'original_name': 'Carbon dioxide',
@@ -74,12 +74,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Carbon dioxide automatic baseline calibration',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
       }),
     }),
-    'object_id_base': 'Carbon dioxide automatic baseline calibration',
     'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
     'original_icon': None,
     'original_name': 'Carbon dioxide automatic baseline calibration',
@@ -128,9 +128,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Display brightness',
     'options': dict({
     }),
-    'object_id_base': 'Display brightness',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Display brightness',
@@ -183,9 +183,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Display PM standard',
     'options': dict({
     }),
-    'object_id_base': 'Display PM standard',
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
     'original_name': 'Display PM standard',
@@ -242,9 +242,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Display temperature unit',
     'options': dict({
     }),
-    'object_id_base': 'Display temperature unit',
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
     'original_name': 'Display temperature unit',
@@ -298,9 +298,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Humidity',
     'options': dict({
     }),
-    'object_id_base': 'Humidity',
     'original_device_class': <SensorDeviceClass.HUMIDITY: 'humidity'>,
     'original_icon': None,
     'original_name': 'Humidity',
@@ -350,9 +350,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'LED bar brightness',
     'options': dict({
     }),
-    'object_id_base': 'LED bar brightness',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'LED bar brightness',
@@ -406,9 +406,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'LED bar mode',
     'options': dict({
     }),
-    'object_id_base': 'LED bar mode',
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
     'original_name': 'LED bar mode',
@@ -463,9 +463,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'NOx index',
     'options': dict({
     }),
-    'object_id_base': 'NOx index',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'NOx index',
@@ -513,12 +513,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'NOx index learning offset',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
       }),
     }),
-    'object_id_base': 'NOx index learning offset',
     'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
     'original_icon': None,
     'original_name': 'NOx index learning offset',
@@ -569,9 +569,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'PM0.3',
     'options': dict({
     }),
-    'object_id_base': 'PM0.3',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'PM0.3',
@@ -622,9 +622,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'PM1',
     'options': dict({
     }),
-    'object_id_base': 'PM1',
     'original_device_class': <SensorDeviceClass.PM1: 'pm1'>,
     'original_icon': None,
     'original_name': 'PM1',
@@ -676,9 +676,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'PM10',
     'options': dict({
     }),
-    'object_id_base': 'PM10',
     'original_device_class': <SensorDeviceClass.PM10: 'pm10'>,
     'original_icon': None,
     'original_name': 'PM10',
@@ -730,9 +730,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'PM2.5',
     'options': dict({
     }),
-    'object_id_base': 'PM2.5',
     'original_device_class': <SensorDeviceClass.PM25: 'pm25'>,
     'original_icon': None,
     'original_name': 'PM2.5',
@@ -784,9 +784,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Raw NOx',
     'options': dict({
     }),
-    'object_id_base': 'Raw NOx',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Raw NOx',
@@ -837,9 +837,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Raw PM2.5',
     'options': dict({
     }),
-    'object_id_base': 'Raw PM2.5',
     'original_device_class': <SensorDeviceClass.PM25: 'pm25'>,
     'original_icon': None,
     'original_name': 'Raw PM2.5',
@@ -891,9 +891,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Raw VOC',
     'options': dict({
     }),
-    'object_id_base': 'Raw VOC',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Raw VOC',
@@ -944,9 +944,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Signal strength',
     'options': dict({
     }),
-    'object_id_base': 'Signal strength',
     'original_device_class': <SensorDeviceClass.SIGNAL_STRENGTH: 'signal_strength'>,
     'original_icon': None,
     'original_name': 'Signal strength',
@@ -998,12 +998,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
       }),
     }),
-    'object_id_base': 'Temperature',
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Temperature',
@@ -1055,9 +1055,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'VOC index',
     'options': dict({
     }),
-    'object_id_base': 'VOC index',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'VOC index',
@@ -1105,12 +1105,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'VOC index learning offset',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
       }),
     }),
-    'object_id_base': 'VOC index learning offset',
     'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
     'original_icon': None,
     'original_name': 'VOC index learning offset',
@@ -1159,12 +1159,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Carbon dioxide automatic baseline calibration',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
       }),
     }),
-    'object_id_base': 'Carbon dioxide automatic baseline calibration',
     'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
     'original_icon': None,
     'original_name': 'Carbon dioxide automatic baseline calibration',
@@ -1215,9 +1215,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'NOx index',
     'options': dict({
     }),
-    'object_id_base': 'NOx index',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'NOx index',
@@ -1265,12 +1265,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'NOx index learning offset',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
       }),
     }),
-    'object_id_base': 'NOx index learning offset',
     'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
     'original_icon': None,
     'original_name': 'NOx index learning offset',
@@ -1321,9 +1321,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Raw NOx',
     'options': dict({
     }),
-    'object_id_base': 'Raw NOx',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Raw NOx',
@@ -1374,9 +1374,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Raw VOC',
     'options': dict({
     }),
-    'object_id_base': 'Raw VOC',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Raw VOC',
@@ -1427,9 +1427,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Signal strength',
     'options': dict({
     }),
-    'object_id_base': 'Signal strength',
     'original_device_class': <SensorDeviceClass.SIGNAL_STRENGTH: 'signal_strength'>,
     'original_icon': None,
     'original_name': 'Signal strength',
@@ -1481,9 +1481,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'VOC index',
     'options': dict({
     }),
-    'object_id_base': 'VOC index',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'VOC index',
@@ -1531,12 +1531,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'VOC index learning offset',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
       }),
     }),
-    'object_id_base': 'VOC index learning offset',
     'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
     'original_icon': None,
     'original_name': 'VOC index learning offset',

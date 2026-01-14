@@ -22,9 +22,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery',
     'options': dict({
     }),
-    'object_id_base': 'Battery',
     'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
     'original_icon': None,
     'original_name': 'Battery',
@@ -74,9 +74,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Device number',
     'options': dict({
     }),
-    'object_id_base': 'Device number',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Device number',
@@ -125,12 +125,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Distance',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
       }),
     }),
-    'object_id_base': 'Distance',
     'original_device_class': <SensorDeviceClass.DISTANCE: 'distance'>,
     'original_icon': None,
     'original_name': 'Distance',
@@ -182,9 +182,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Filled',
     'options': dict({
     }),
-    'object_id_base': 'Filled',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Filled',
@@ -233,9 +233,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Service date',
     'options': dict({
     }),
-    'object_id_base': 'Service date',
     'original_device_class': <SensorDeviceClass.DATE: 'date'>,
     'original_icon': None,
     'original_name': 'Service date',
@@ -283,9 +283,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'SSID',
     'options': dict({
     }),
-    'object_id_base': 'SSID',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'SSID',

@@ -20,9 +20,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Pause',
     'options': dict({
     }),
-    'object_id_base': 'Pause',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Pause',
@@ -69,9 +69,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Resume',
     'options': dict({
     }),
-    'object_id_base': 'Resume',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Resume',

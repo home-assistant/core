@@ -27,9 +27,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
-    'object_id_base': None,
     'original_device_class': None,
     'original_icon': None,
     'original_name': None,
@@ -92,9 +92,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
-    'object_id_base': None,
     'original_device_class': None,
     'original_icon': None,
     'original_name': None,
@@ -157,9 +157,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
-    'object_id_base': None,
     'original_device_class': None,
     'original_icon': None,
     'original_name': None,
@@ -222,9 +222,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
-    'object_id_base': None,
     'original_device_class': None,
     'original_icon': None,
     'original_name': None,
@@ -287,9 +287,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Freezer',
     'options': dict({
     }),
-    'object_id_base': 'Freezer',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Freezer',
@@ -352,9 +352,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Freezer',
     'options': dict({
     }),
-    'object_id_base': 'Freezer',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Freezer',
@@ -417,9 +417,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Refrigerator',
     'options': dict({
     }),
-    'object_id_base': 'Refrigerator',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Refrigerator',
@@ -482,9 +482,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Refrigerator',
     'options': dict({
     }),
-    'object_id_base': 'Refrigerator',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Refrigerator',
@@ -547,9 +547,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Zone 3',
     'options': dict({
     }),
-    'object_id_base': 'Zone 3',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Zone 3',
@@ -612,9 +612,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Zone 3',
     'options': dict({
     }),
-    'object_id_base': 'Zone 3',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Zone 3',
@@ -677,9 +677,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Freezer',
     'options': dict({
     }),
-    'object_id_base': 'Freezer',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Freezer',
@@ -742,9 +742,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Freezer',
     'options': dict({
     }),
-    'object_id_base': 'Freezer',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Freezer',
@@ -807,9 +807,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Refrigerator',
     'options': dict({
     }),
-    'object_id_base': 'Refrigerator',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Refrigerator',
@@ -872,9 +872,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Refrigerator',
     'options': dict({
     }),
-    'object_id_base': 'Refrigerator',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Refrigerator',
@@ -937,9 +937,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Zone 3',
     'options': dict({
     }),
-    'object_id_base': 'Zone 3',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Zone 3',
@@ -1002,9 +1002,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Zone 3',
     'options': dict({
     }),
-    'object_id_base': 'Zone 3',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Zone 3',

@@ -20,9 +20,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Active torrents',
     'options': dict({
     }),
-    'object_id_base': 'Active torrents',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Active torrents',
@@ -72,6 +72,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'All-time download',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -80,7 +81,6 @@
         'suggested_unit_of_measurement': <UnitOfInformation.TEBIBYTES: 'TiB'>,
       }),
     }),
-    'object_id_base': 'All-time download',
     'original_device_class': <SensorDeviceClass.DATA_SIZE: 'data_size'>,
     'original_icon': None,
     'original_name': 'All-time download',
@@ -132,6 +132,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'All-time upload',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -140,7 +141,6 @@
         'suggested_unit_of_measurement': 'TiB',
       }),
     }),
-    'object_id_base': 'All-time upload',
     'original_device_class': <SensorDeviceClass.DATA_SIZE: 'data_size'>,
     'original_icon': None,
     'original_name': 'All-time upload',
@@ -190,9 +190,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'All torrents',
     'options': dict({
     }),
-    'object_id_base': 'All torrents',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'All torrents',
@@ -246,9 +246,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Connection status',
     'options': dict({
     }),
-    'object_id_base': 'Connection status',
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
     'original_name': 'Connection status',
@@ -303,6 +303,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Download speed',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -311,7 +312,6 @@
         'suggested_unit_of_measurement': <UnitOfDataRate.MEGABYTES_PER_SECOND: 'MB/s'>,
       }),
     }),
-    'object_id_base': 'Download speed',
     'original_device_class': <SensorDeviceClass.DATA_RATE: 'data_rate'>,
     'original_icon': None,
     'original_name': 'Download speed',
@@ -363,6 +363,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Download speed limit',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -371,7 +372,6 @@
         'suggested_unit_of_measurement': <UnitOfDataRate.MEGABYTES_PER_SECOND: 'MB/s'>,
       }),
     }),
-    'object_id_base': 'Download speed limit',
     'original_device_class': <SensorDeviceClass.DATA_RATE: 'data_rate'>,
     'original_icon': None,
     'original_name': 'Download speed limit',
@@ -421,9 +421,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Errored torrents',
     'options': dict({
     }),
-    'object_id_base': 'Errored torrents',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Errored torrents',
@@ -473,9 +473,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Global ratio',
     'options': dict({
     }),
-    'object_id_base': 'Global ratio',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Global ratio',
@@ -523,9 +523,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Inactive torrents',
     'options': dict({
     }),
-    'object_id_base': 'Inactive torrents',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Inactive torrents',
@@ -573,9 +573,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Paused torrents',
     'options': dict({
     }),
-    'object_id_base': 'Paused torrents',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Paused torrents',
@@ -630,9 +630,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Status',
     'options': dict({
     }),
-    'object_id_base': 'Status',
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
     'original_name': 'Status',
@@ -688,6 +688,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Upload speed',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -696,7 +697,6 @@
         'suggested_unit_of_measurement': <UnitOfDataRate.MEGABYTES_PER_SECOND: 'MB/s'>,
       }),
     }),
-    'object_id_base': 'Upload speed',
     'original_device_class': <SensorDeviceClass.DATA_RATE: 'data_rate'>,
     'original_icon': None,
     'original_name': 'Upload speed',
@@ -748,6 +748,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Upload speed limit',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -756,7 +757,6 @@
         'suggested_unit_of_measurement': <UnitOfDataRate.MEGABYTES_PER_SECOND: 'MB/s'>,
       }),
     }),
-    'object_id_base': 'Upload speed limit',
     'original_device_class': <SensorDeviceClass.DATA_RATE: 'data_rate'>,
     'original_icon': None,
     'original_name': 'Upload speed limit',

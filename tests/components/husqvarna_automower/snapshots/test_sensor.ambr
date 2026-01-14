@@ -22,9 +22,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery',
     'options': dict({
     }),
-    'object_id_base': 'Battery',
     'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
     'original_icon': None,
     'original_name': 'Battery',
@@ -76,6 +76,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Cutting blade usage time',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -84,7 +85,6 @@
         'suggested_unit_of_measurement': <UnitOfTime.HOURS: 'h'>,
       }),
     }),
-    'object_id_base': 'Cutting blade usage time',
     'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
     'original_icon': None,
     'original_name': 'Cutting blade usage time',
@@ -136,6 +136,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Downtime',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -144,7 +145,6 @@
         'suggested_unit_of_measurement': <UnitOfTime.HOURS: 'h'>,
       }),
     }),
-    'object_id_base': 'Downtime',
     'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
     'original_icon': None,
     'original_name': 'Downtime',
@@ -327,9 +327,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Error',
     'options': dict({
     }),
-    'object_id_base': 'Error',
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
     'original_name': 'Error',
@@ -509,9 +509,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Front lawn last time completed',
     'options': dict({
     }),
-    'object_id_base': 'Front lawn last time completed',
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
     'original_icon': None,
     'original_name': 'Front lawn last time completed',
@@ -561,9 +561,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Front lawn progress',
     'options': dict({
     }),
-    'object_id_base': 'Front lawn progress',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Front lawn progress',
@@ -618,9 +618,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Inactive reason',
     'options': dict({
     }),
-    'object_id_base': 'Inactive reason',
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
     'original_name': 'Inactive reason',
@@ -682,9 +682,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Mode',
     'options': dict({
     }),
-    'object_id_base': 'Mode',
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
     'original_name': 'Mode',
@@ -740,9 +740,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'My lawn last time completed',
     'options': dict({
     }),
-    'object_id_base': 'My lawn last time completed',
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
     'original_icon': None,
     'original_name': 'My lawn last time completed',
@@ -792,9 +792,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'My lawn progress',
     'options': dict({
     }),
-    'object_id_base': 'My lawn progress',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'My lawn progress',
@@ -843,9 +843,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Next start',
     'options': dict({
     }),
-    'object_id_base': 'Next start',
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
     'original_icon': None,
     'original_name': 'Next start',
@@ -895,9 +895,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Number of charging cycles',
     'options': dict({
     }),
-    'object_id_base': 'Number of charging cycles',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Number of charging cycles',
@@ -947,9 +947,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Number of collisions',
     'options': dict({
     }),
-    'object_id_base': 'Number of collisions',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Number of collisions',
@@ -997,6 +997,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Remaining charging time',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -1005,7 +1006,6 @@
         'suggested_unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
       }),
     }),
-    'object_id_base': 'Remaining charging time',
     'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
     'original_icon': None,
     'original_name': 'Remaining charging time',
@@ -1079,9 +1079,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Restricted reason',
     'options': dict({
     }),
-    'object_id_base': 'Restricted reason',
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
     'original_name': 'Restricted reason',
@@ -1155,6 +1155,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Total charging time',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -1163,7 +1164,6 @@
         'suggested_unit_of_measurement': <UnitOfTime.HOURS: 'h'>,
       }),
     }),
-    'object_id_base': 'Total charging time',
     'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
     'original_icon': None,
     'original_name': 'Total charging time',
@@ -1215,6 +1215,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Total cutting time',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -1223,7 +1224,6 @@
         'suggested_unit_of_measurement': <UnitOfTime.HOURS: 'h'>,
       }),
     }),
-    'object_id_base': 'Total cutting time',
     'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
     'original_icon': None,
     'original_name': 'Total cutting time',
@@ -1275,6 +1275,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Total drive distance',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -1283,7 +1284,6 @@
         'suggested_unit_of_measurement': <UnitOfLength.KILOMETERS: 'km'>,
       }),
     }),
-    'object_id_base': 'Total drive distance',
     'original_device_class': <SensorDeviceClass.DISTANCE: 'distance'>,
     'original_icon': None,
     'original_name': 'Total drive distance',
@@ -1335,6 +1335,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Total running time',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -1343,7 +1344,6 @@
         'suggested_unit_of_measurement': <UnitOfTime.HOURS: 'h'>,
       }),
     }),
-    'object_id_base': 'Total running time',
     'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
     'original_icon': None,
     'original_name': 'Total running time',
@@ -1395,6 +1395,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Total searching time',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -1403,7 +1404,6 @@
         'suggested_unit_of_measurement': <UnitOfTime.HOURS: 'h'>,
       }),
     }),
-    'object_id_base': 'Total searching time',
     'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
     'original_icon': None,
     'original_name': 'Total searching time',
@@ -1455,6 +1455,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Uptime',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -1463,7 +1464,6 @@
         'suggested_unit_of_measurement': <UnitOfTime.HOURS: 'h'>,
       }),
     }),
-    'object_id_base': 'Uptime',
     'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
     'original_icon': None,
     'original_name': 'Uptime',
@@ -1520,9 +1520,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Work area',
     'options': dict({
     }),
-    'object_id_base': 'Work area',
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
     'original_name': 'Work area',
@@ -1583,9 +1583,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery',
     'options': dict({
     }),
-    'object_id_base': 'Battery',
     'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
     'original_icon': None,
     'original_name': 'Battery',
@@ -1768,9 +1768,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Error',
     'options': dict({
     }),
-    'object_id_base': 'Error',
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
     'original_name': 'Error',
@@ -1959,9 +1959,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Mode',
     'options': dict({
     }),
-    'object_id_base': 'Mode',
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
     'original_name': 'Mode',
@@ -2017,9 +2017,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Next start',
     'options': dict({
     }),
-    'object_id_base': 'Next start',
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
     'original_icon': None,
     'original_name': 'Next start',
@@ -2067,6 +2067,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Remaining charging time',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -2075,7 +2076,6 @@
         'suggested_unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
       }),
     }),
-    'object_id_base': 'Remaining charging time',
     'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
     'original_icon': None,
     'original_name': 'Remaining charging time',
@@ -2149,9 +2149,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Restricted reason',
     'options': dict({
     }),
-    'object_id_base': 'Restricted reason',
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
     'original_name': 'Restricted reason',

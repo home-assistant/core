@@ -20,9 +20,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Charge port door',
     'options': dict({
     }),
-    'object_id_base': 'Charge port door',
     'original_device_class': <CoverDeviceClass.DOOR: 'door'>,
     'original_icon': None,
     'original_name': 'Charge port door',
@@ -71,9 +71,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Frunk',
     'options': dict({
     }),
-    'object_id_base': 'Frunk',
     'original_device_class': <CoverDeviceClass.DOOR: 'door'>,
     'original_icon': None,
     'original_name': 'Frunk',
@@ -122,9 +122,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Sunroof',
     'options': dict({
     }),
-    'object_id_base': 'Sunroof',
     'original_device_class': <CoverDeviceClass.WINDOW: 'window'>,
     'original_icon': None,
     'original_name': 'Sunroof',
@@ -173,9 +173,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Trunk',
     'options': dict({
     }),
-    'object_id_base': 'Trunk',
     'original_device_class': <CoverDeviceClass.DOOR: 'door'>,
     'original_icon': None,
     'original_name': 'Trunk',
@@ -224,9 +224,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Vent windows',
     'options': dict({
     }),
-    'object_id_base': 'Vent windows',
     'original_device_class': <CoverDeviceClass.WINDOW: 'window'>,
     'original_icon': None,
     'original_name': 'Vent windows',

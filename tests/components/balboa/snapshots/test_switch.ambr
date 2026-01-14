@@ -20,9 +20,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Filter cycle 2 enabled',
     'options': dict({
     }),
-    'object_id_base': 'Filter cycle 2 enabled',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Filter cycle 2 enabled',

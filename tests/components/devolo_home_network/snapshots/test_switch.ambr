@@ -33,9 +33,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Enable guest Wi-Fi',
     'options': dict({
     }),
-    'object_id_base': 'Enable guest Wi-Fi',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Enable guest Wi-Fi',
@@ -82,9 +82,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Enable LEDs',
     'options': dict({
     }),
-    'object_id_base': 'Enable LEDs',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Enable LEDs',

@@ -20,9 +20,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Mock Title Wi-Fi WiFi (2.4Ghz)',
     'options': dict({
     }),
-    'object_id_base': 'Mock Title Wi-Fi WiFi (2.4Ghz)',
     'original_device_class': None,
     'original_icon': 'mdi:wifi',
     'original_name': 'Mock Title Wi-Fi WiFi (2.4Ghz)',
@@ -70,9 +70,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Mock Title Wi-Fi WiFi (5Ghz)',
     'options': dict({
     }),
-    'object_id_base': 'Mock Title Wi-Fi WiFi (5Ghz)',
     'original_device_class': None,
     'original_icon': 'mdi:wifi',
     'original_name': 'Mock Title Wi-Fi WiFi (5Ghz)',
@@ -120,9 +120,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'printer Internet Access',
     'options': dict({
     }),
-    'object_id_base': 'printer Internet Access',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Internet access',
@@ -169,9 +169,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Mock Title Wi-Fi WiFi',
     'options': dict({
     }),
-    'object_id_base': 'Mock Title Wi-Fi WiFi',
     'original_device_class': None,
     'original_icon': 'mdi:wifi',
     'original_name': 'Mock Title Wi-Fi WiFi',
@@ -219,9 +219,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Mock Title Wi-Fi WiFi2',
     'options': dict({
     }),
-    'object_id_base': 'Mock Title Wi-Fi WiFi2',
     'original_device_class': None,
     'original_icon': 'mdi:wifi',
     'original_name': 'Mock Title Wi-Fi WiFi2',
@@ -269,9 +269,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'printer Internet Access',
     'options': dict({
     }),
-    'object_id_base': 'printer Internet Access',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Internet access',
@@ -318,9 +318,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Mock Title Wi-Fi WiFi (2.4Ghz)',
     'options': dict({
     }),
-    'object_id_base': 'Mock Title Wi-Fi WiFi (2.4Ghz)',
     'original_device_class': None,
     'original_icon': 'mdi:wifi',
     'original_name': 'Mock Title Wi-Fi WiFi (2.4Ghz)',
@@ -368,9 +368,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Mock Title Wi-Fi WiFi+ (5Ghz)',
     'options': dict({
     }),
-    'object_id_base': 'Mock Title Wi-Fi WiFi+ (5Ghz)',
     'original_device_class': None,
     'original_icon': 'mdi:wifi',
     'original_name': 'Mock Title Wi-Fi WiFi+ (5Ghz)',
@@ -418,9 +418,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'printer Internet Access',
     'options': dict({
     }),
-    'object_id_base': 'printer Internet Access',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Internet access',
@@ -467,9 +467,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Call deflection 0',
     'options': dict({
     }),
-    'object_id_base': 'Call deflection 0',
     'original_device_class': None,
     'original_icon': 'mdi:phone-forward',
     'original_name': 'Call deflection 0',
@@ -523,9 +523,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Mock Title Wi-Fi MyWifi',
     'options': dict({
     }),
-    'object_id_base': 'Mock Title Wi-Fi MyWifi',
     'original_device_class': None,
     'original_icon': 'mdi:wifi',
     'original_name': 'Mock Title Wi-Fi MyWifi',
@@ -573,9 +573,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'printer Internet Access',
     'options': dict({
     }),
-    'object_id_base': 'printer Internet Access',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Internet access',

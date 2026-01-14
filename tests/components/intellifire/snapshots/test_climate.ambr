@@ -28,9 +28,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Thermostat',
     'options': dict({
     }),
-    'object_id_base': 'Thermostat',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Thermostat',

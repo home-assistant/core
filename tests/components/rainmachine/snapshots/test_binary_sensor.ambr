@@ -20,9 +20,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Freeze restrictions',
     'options': dict({
     }),
-    'object_id_base': 'Freeze restrictions',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Freeze restrictions',
@@ -69,9 +69,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Hourly restrictions',
     'options': dict({
     }),
-    'object_id_base': 'Hourly restrictions',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Hourly restrictions',
@@ -118,9 +118,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Month restrictions',
     'options': dict({
     }),
-    'object_id_base': 'Month restrictions',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Month restrictions',
@@ -167,9 +167,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Rain delay restrictions',
     'options': dict({
     }),
-    'object_id_base': 'Rain delay restrictions',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Rain delay restrictions',
@@ -216,9 +216,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Rain sensor restrictions',
     'options': dict({
     }),
-    'object_id_base': 'Rain sensor restrictions',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Rain sensor restrictions',
@@ -265,9 +265,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Weekday restrictions',
     'options': dict({
     }),
-    'object_id_base': 'Weekday restrictions',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Weekday restrictions',

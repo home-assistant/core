@@ -20,9 +20,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Software',
     'options': dict({
     }),
-    'object_id_base': 'Software',
     'original_device_class': <UpdateDeviceClass.FIRMWARE: 'firmware'>,
     'original_icon': None,
     'original_name': 'Software',

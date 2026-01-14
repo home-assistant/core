@@ -20,9 +20,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Indoor unit auxiliary water pump',
     'options': dict({
     }),
-    'object_id_base': 'Indoor unit auxiliary water pump',
     'original_device_class': <BinarySensorDeviceClass.RUNNING: 'running'>,
     'original_icon': None,
     'original_name': 'Indoor unit auxiliary water pump',
@@ -70,9 +70,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Indoor unit electric heater',
     'options': dict({
     }),
-    'object_id_base': 'Indoor unit electric heater',
     'original_device_class': <BinarySensorDeviceClass.RUNNING: 'running'>,
     'original_icon': None,
     'original_name': 'Indoor unit electric heater',
@@ -120,9 +120,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Indoor unit gas boiler heating allowed',
     'options': dict({
     }),
-    'object_id_base': 'Indoor unit gas boiler heating allowed',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Indoor unit gas boiler heating allowed',
@@ -169,9 +169,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Indoor unit water pump',
     'options': dict({
     }),
-    'object_id_base': 'Indoor unit water pump',
     'original_device_class': <BinarySensorDeviceClass.RUNNING: 'running'>,
     'original_icon': None,
     'original_name': 'Indoor unit water pump',

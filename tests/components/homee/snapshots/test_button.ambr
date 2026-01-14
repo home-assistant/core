@@ -20,9 +20,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
-    'object_id_base': None,
     'original_device_class': None,
     'original_icon': None,
     'original_name': None,
@@ -69,9 +69,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Automatic mode',
     'options': dict({
     }),
-    'object_id_base': 'Automatic mode',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Automatic mode',
@@ -118,9 +118,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Briefly open',
     'options': dict({
     }),
-    'object_id_base': 'Briefly open',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Briefly open',
@@ -167,9 +167,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Identification mode',
     'options': dict({
     }),
-    'object_id_base': 'Identification mode',
     'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
     'original_icon': None,
     'original_name': 'Identification mode',
@@ -217,9 +217,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Impulse 1',
     'options': dict({
     }),
-    'object_id_base': 'Impulse 1',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Impulse 1',
@@ -266,9 +266,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Impulse 2',
     'options': dict({
     }),
-    'object_id_base': 'Impulse 2',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Impulse 2',
@@ -315,9 +315,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Light',
     'options': dict({
     }),
-    'object_id_base': 'Light',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Light',
@@ -364,9 +364,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Open partially',
     'options': dict({
     }),
-    'object_id_base': 'Open partially',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Open partially',
@@ -413,9 +413,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Open permanently',
     'options': dict({
     }),
-    'object_id_base': 'Open permanently',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Open permanently',
@@ -462,9 +462,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Reset meter 1',
     'options': dict({
     }),
-    'object_id_base': 'Reset meter 1',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Reset meter 1',
@@ -511,9 +511,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Reset meter 2',
     'options': dict({
     }),
-    'object_id_base': 'Reset meter 2',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Reset meter 2',
@@ -560,9 +560,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Ventilate',
     'options': dict({
     }),
-    'object_id_base': 'Ventilate',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Ventilate',

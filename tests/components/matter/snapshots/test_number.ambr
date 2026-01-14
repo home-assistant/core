@@ -25,9 +25,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Hold time',
     'options': dict({
     }),
-    'object_id_base': 'Hold time',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Hold time',
@@ -84,9 +84,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Hold time',
     'options': dict({
     }),
-    'object_id_base': 'Hold time',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Hold time',
@@ -201,9 +201,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'User code temporary disable time',
     'options': dict({
     }),
-    'object_id_base': 'User code temporary disable time',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'User code temporary disable time',
@@ -260,9 +260,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Wrong code limit',
     'options': dict({
     }),
-    'object_id_base': 'Wrong code limit',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Wrong code limit',
@@ -318,9 +318,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'On level',
     'options': dict({
     }),
-    'object_id_base': 'On level',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'On level',
@@ -376,9 +376,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Off transition time',
     'options': dict({
     }),
-    'object_id_base': 'Off transition time',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Off transition time',
@@ -435,9 +435,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'On level',
     'options': dict({
     }),
-    'object_id_base': 'On level',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'On level',
@@ -493,9 +493,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'On/Off transition time',
     'options': dict({
     }),
-    'object_id_base': 'On/Off transition time',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'On/Off transition time',
@@ -552,9 +552,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'On transition time',
     'options': dict({
     }),
-    'object_id_base': 'On transition time',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'On transition time',
@@ -611,9 +611,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'On level',
     'options': dict({
     }),
-    'object_id_base': 'On level',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'On level',
@@ -669,9 +669,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'On/Off transition time',
     'options': dict({
     }),
-    'object_id_base': 'On/Off transition time',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'On/Off transition time',
@@ -728,9 +728,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Auto-relock time',
     'options': dict({
     }),
-    'object_id_base': 'Auto-relock time',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Auto-relock time',
@@ -787,9 +787,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'User code temporary disable time',
     'options': dict({
     }),
-    'object_id_base': 'User code temporary disable time',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'User code temporary disable time',
@@ -846,9 +846,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Wrong code limit',
     'options': dict({
     }),
-    'object_id_base': 'Wrong code limit',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Wrong code limit',
@@ -904,9 +904,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Auto-relock time',
     'options': dict({
     }),
-    'object_id_base': 'Auto-relock time',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Auto-relock time',
@@ -963,9 +963,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'User code temporary disable time',
     'options': dict({
     }),
-    'object_id_base': 'User code temporary disable time',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'User code temporary disable time',
@@ -1022,9 +1022,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Wrong code limit',
     'options': dict({
     }),
-    'object_id_base': 'Wrong code limit',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Wrong code limit',
@@ -1080,9 +1080,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Temperature offset',
     'options': dict({
     }),
-    'object_id_base': 'Temperature offset',
     'original_device_class': <NumberDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Temperature offset',
@@ -1199,9 +1199,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Altitude above sea level',
     'options': dict({
     }),
-    'object_id_base': 'Altitude above sea level',
     'original_device_class': <NumberDeviceClass.DISTANCE: 'distance'>,
     'original_icon': None,
     'original_name': 'Altitude above sea level',
@@ -1259,9 +1259,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'On level',
     'options': dict({
     }),
-    'object_id_base': 'On level',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'On level',
@@ -1317,9 +1317,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Hold time',
     'options': dict({
     }),
-    'object_id_base': 'Hold time',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Hold time',
@@ -1376,9 +1376,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'LED off intensity (Load Control)',
     'options': dict({
     }),
-    'object_id_base': 'LED off intensity (Load Control)',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'LED off intensity (Load Control)',
@@ -1434,9 +1434,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'LED on intensity (Load Control)',
     'options': dict({
     }),
-    'object_id_base': 'LED on intensity (Load Control)',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'LED on intensity (Load Control)',
@@ -1492,9 +1492,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Off transition time (Load Control)',
     'options': dict({
     }),
-    'object_id_base': 'Off transition time (Load Control)',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Off transition time (Load Control)',
@@ -1551,9 +1551,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'On level (Load Control)',
     'options': dict({
     }),
-    'object_id_base': 'On level (Load Control)',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'On level (Load Control)',
@@ -1609,9 +1609,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'On level (RGB Indicator)',
     'options': dict({
     }),
-    'object_id_base': 'On level (RGB Indicator)',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'On level (RGB Indicator)',
@@ -1667,9 +1667,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'On/Off transition time (Load Control)',
     'options': dict({
     }),
-    'object_id_base': 'On/Off transition time (Load Control)',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'On/Off transition time (Load Control)',
@@ -1726,9 +1726,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'On/Off transition time (RGB Indicator)',
     'options': dict({
     }),
-    'object_id_base': 'On/Off transition time (RGB Indicator)',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'On/Off transition time (RGB Indicator)',
@@ -1785,9 +1785,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'On transition time (Load Control)',
     'options': dict({
     }),
-    'object_id_base': 'On transition time (Load Control)',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'On transition time (Load Control)',
@@ -1844,9 +1844,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Cooking time',
     'options': dict({
     }),
-    'object_id_base': 'Cooking time',
     'original_device_class': <NumberDeviceClass.DURATION: 'duration'>,
     'original_icon': None,
     'original_name': 'Cooking time',
@@ -1904,9 +1904,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Auto-relock time',
     'options': dict({
     }),
-    'object_id_base': 'Auto-relock time',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Auto-relock time',
@@ -1963,9 +1963,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'User code temporary disable time',
     'options': dict({
     }),
-    'object_id_base': 'User code temporary disable time',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'User code temporary disable time',
@@ -2022,9 +2022,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Wrong code limit',
     'options': dict({
     }),
-    'object_id_base': 'Wrong code limit',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Wrong code limit',
@@ -2080,9 +2080,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'On level',
     'options': dict({
     }),
-    'object_id_base': 'On level',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'On level',
@@ -2138,9 +2138,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'LED off intensity',
     'options': dict({
     }),
-    'object_id_base': 'LED off intensity',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'LED off intensity',
@@ -2196,9 +2196,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'LED on intensity',
     'options': dict({
     }),
-    'object_id_base': 'LED on intensity',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'LED on intensity',
@@ -2254,9 +2254,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Off transition time',
     'options': dict({
     }),
-    'object_id_base': 'Off transition time',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Off transition time',
@@ -2313,9 +2313,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'On level (1)',
     'options': dict({
     }),
-    'object_id_base': 'On level (1)',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'On level (1)',
@@ -2371,9 +2371,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'On level (6)',
     'options': dict({
     }),
-    'object_id_base': 'On level (6)',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'On level (6)',
@@ -2429,9 +2429,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'On/Off transition time',
     'options': dict({
     }),
-    'object_id_base': 'On/Off transition time',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'On/Off transition time',
@@ -2488,9 +2488,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'On transition time',
     'options': dict({
     }),
-    'object_id_base': 'On transition time',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'On transition time',
@@ -2547,9 +2547,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Off transition time',
     'options': dict({
     }),
-    'object_id_base': 'Off transition time',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Off transition time',
@@ -2606,9 +2606,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'On level',
     'options': dict({
     }),
-    'object_id_base': 'On level',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'On level',
@@ -2664,9 +2664,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'On/Off transition time',
     'options': dict({
     }),
-    'object_id_base': 'On/Off transition time',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'On/Off transition time',
@@ -2723,9 +2723,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'On transition time',
     'options': dict({
     }),
-    'object_id_base': 'On transition time',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'On transition time',
@@ -2782,9 +2782,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Off transition time',
     'options': dict({
     }),
-    'object_id_base': 'Off transition time',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Off transition time',
@@ -2841,9 +2841,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'On level',
     'options': dict({
     }),
-    'object_id_base': 'On level',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'On level',
@@ -2899,9 +2899,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'On/Off transition time',
     'options': dict({
     }),
-    'object_id_base': 'On/Off transition time',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'On/Off transition time',
@@ -2958,9 +2958,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'On transition time',
     'options': dict({
     }),
-    'object_id_base': 'On transition time',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'On transition time',
@@ -3017,9 +3017,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Off transition time',
     'options': dict({
     }),
-    'object_id_base': 'Off transition time',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Off transition time',
@@ -3076,9 +3076,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'On level',
     'options': dict({
     }),
-    'object_id_base': 'On level',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'On level',
@@ -3134,9 +3134,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'On/Off transition time',
     'options': dict({
     }),
-    'object_id_base': 'On/Off transition time',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'On/Off transition time',
@@ -3193,9 +3193,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'On transition time',
     'options': dict({
     }),
-    'object_id_base': 'On transition time',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'On transition time',
@@ -3252,9 +3252,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'On level',
     'options': dict({
     }),
-    'object_id_base': 'On level',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'On level',
@@ -3310,9 +3310,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'On/Off transition time',
     'options': dict({
     }),
-    'object_id_base': 'On/Off transition time',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'On/Off transition time',
@@ -3369,9 +3369,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Temperature setpoint',
     'options': dict({
     }),
-    'object_id_base': 'Temperature setpoint',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Temperature setpoint',
@@ -3428,9 +3428,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'On level',
     'options': dict({
     }),
-    'object_id_base': 'On level',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'On level',
@@ -3486,9 +3486,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Setpoint',
     'options': dict({
     }),
-    'object_id_base': 'Setpoint',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Setpoint',
@@ -3545,9 +3545,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Auto-relock time',
     'options': dict({
     }),
-    'object_id_base': 'Auto-relock time',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Auto-relock time',
@@ -3604,9 +3604,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'User code temporary disable time',
     'options': dict({
     }),
-    'object_id_base': 'User code temporary disable time',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'User code temporary disable time',
@@ -3663,9 +3663,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Wrong code limit',
     'options': dict({
     }),
-    'object_id_base': 'Wrong code limit',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Wrong code limit',
@@ -3721,9 +3721,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Temperature setpoint',
     'options': dict({
     }),
-    'object_id_base': 'Temperature setpoint',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Temperature setpoint',
@@ -3780,9 +3780,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Temperature setpoint (2)',
     'options': dict({
     }),
-    'object_id_base': 'Temperature setpoint (2)',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Temperature setpoint (2)',
@@ -3839,9 +3839,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Temperature setpoint (3)',
     'options': dict({
     }),
-    'object_id_base': 'Temperature setpoint (3)',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Temperature setpoint (3)',
@@ -3898,9 +3898,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Volume',
     'options': dict({
     }),
-    'object_id_base': 'Volume',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Volume',
@@ -3957,9 +3957,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Default open duration',
     'options': dict({
     }),
-    'object_id_base': 'Default open duration',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Default open duration',

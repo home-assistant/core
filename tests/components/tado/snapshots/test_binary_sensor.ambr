@@ -20,9 +20,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Connectivity',
     'options': dict({
     }),
-    'object_id_base': 'Connectivity',
     'original_device_class': <BinarySensorDeviceClass.CONNECTIVITY: 'connectivity'>,
     'original_icon': None,
     'original_name': 'Connectivity',
@@ -70,9 +70,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Overlay',
     'options': dict({
     }),
-    'object_id_base': 'Overlay',
     'original_device_class': <BinarySensorDeviceClass.POWER: 'power'>,
     'original_icon': None,
     'original_name': 'Overlay',
@@ -121,9 +121,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power',
     'options': dict({
     }),
-    'object_id_base': 'Power',
     'original_device_class': <BinarySensorDeviceClass.POWER: 'power'>,
     'original_icon': None,
     'original_name': 'Power',
@@ -171,9 +171,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Window',
     'options': dict({
     }),
-    'object_id_base': 'Window',
     'original_device_class': <BinarySensorDeviceClass.WINDOW: 'window'>,
     'original_icon': None,
     'original_name': 'Window',
@@ -221,9 +221,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Connectivity',
     'options': dict({
     }),
-    'object_id_base': 'Connectivity',
     'original_device_class': <BinarySensorDeviceClass.CONNECTIVITY: 'connectivity'>,
     'original_icon': None,
     'original_name': 'Connectivity',
@@ -271,9 +271,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Overlay',
     'options': dict({
     }),
-    'object_id_base': 'Overlay',
     'original_device_class': <BinarySensorDeviceClass.POWER: 'power'>,
     'original_icon': None,
     'original_name': 'Overlay',
@@ -322,9 +322,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power',
     'options': dict({
     }),
-    'object_id_base': 'Power',
     'original_device_class': <BinarySensorDeviceClass.POWER: 'power'>,
     'original_icon': None,
     'original_name': 'Power',
@@ -372,9 +372,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Window',
     'options': dict({
     }),
-    'object_id_base': 'Window',
     'original_device_class': <BinarySensorDeviceClass.WINDOW: 'window'>,
     'original_icon': None,
     'original_name': 'Window',
@@ -422,9 +422,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Connectivity',
     'options': dict({
     }),
-    'object_id_base': 'Connectivity',
     'original_device_class': <BinarySensorDeviceClass.CONNECTIVITY: 'connectivity'>,
     'original_icon': None,
     'original_name': 'Connectivity',
@@ -472,9 +472,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Overlay',
     'options': dict({
     }),
-    'object_id_base': 'Overlay',
     'original_device_class': <BinarySensorDeviceClass.POWER: 'power'>,
     'original_icon': None,
     'original_name': 'Overlay',
@@ -522,9 +522,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power',
     'options': dict({
     }),
-    'object_id_base': 'Power',
     'original_device_class': <BinarySensorDeviceClass.POWER: 'power'>,
     'original_icon': None,
     'original_name': 'Power',
@@ -572,9 +572,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Window',
     'options': dict({
     }),
-    'object_id_base': 'Window',
     'original_device_class': <BinarySensorDeviceClass.WINDOW: 'window'>,
     'original_icon': None,
     'original_name': 'Window',
@@ -622,9 +622,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Connectivity',
     'options': dict({
     }),
-    'object_id_base': 'Connectivity',
     'original_device_class': <BinarySensorDeviceClass.CONNECTIVITY: 'connectivity'>,
     'original_icon': None,
     'original_name': 'Connectivity',
@@ -672,9 +672,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Early start',
     'options': dict({
     }),
-    'object_id_base': 'Early start',
     'original_device_class': <BinarySensorDeviceClass.POWER: 'power'>,
     'original_icon': None,
     'original_name': 'Early start',
@@ -722,9 +722,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Overlay',
     'options': dict({
     }),
-    'object_id_base': 'Overlay',
     'original_device_class': <BinarySensorDeviceClass.POWER: 'power'>,
     'original_icon': None,
     'original_name': 'Overlay',
@@ -773,9 +773,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power',
     'options': dict({
     }),
-    'object_id_base': 'Power',
     'original_device_class': <BinarySensorDeviceClass.POWER: 'power'>,
     'original_icon': None,
     'original_name': 'Power',
@@ -823,9 +823,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Window',
     'options': dict({
     }),
-    'object_id_base': 'Window',
     'original_device_class': <BinarySensorDeviceClass.WINDOW: 'window'>,
     'original_icon': None,
     'original_name': 'Window',
@@ -873,9 +873,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Connectivity',
     'options': dict({
     }),
-    'object_id_base': 'Connectivity',
     'original_device_class': <BinarySensorDeviceClass.CONNECTIVITY: 'connectivity'>,
     'original_icon': None,
     'original_name': 'Connectivity',
@@ -923,9 +923,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Overlay',
     'options': dict({
     }),
-    'object_id_base': 'Overlay',
     'original_device_class': <BinarySensorDeviceClass.POWER: 'power'>,
     'original_icon': None,
     'original_name': 'Overlay',
@@ -974,9 +974,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power',
     'options': dict({
     }),
-    'object_id_base': 'Power',
     'original_device_class': <BinarySensorDeviceClass.POWER: 'power'>,
     'original_icon': None,
     'original_name': 'Power',
@@ -1024,9 +1024,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Connectivity',
     'options': dict({
     }),
-    'object_id_base': 'Connectivity',
     'original_device_class': <BinarySensorDeviceClass.CONNECTIVITY: 'connectivity'>,
     'original_icon': None,
     'original_name': 'Connectivity',
@@ -1074,9 +1074,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Overlay',
     'options': dict({
     }),
-    'object_id_base': 'Overlay',
     'original_device_class': <BinarySensorDeviceClass.POWER: 'power'>,
     'original_icon': None,
     'original_name': 'Overlay',
@@ -1124,9 +1124,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power',
     'options': dict({
     }),
-    'object_id_base': 'Power',
     'original_device_class': <BinarySensorDeviceClass.POWER: 'power'>,
     'original_icon': None,
     'original_name': 'Power',
@@ -1174,9 +1174,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Connection state',
     'options': dict({
     }),
-    'object_id_base': 'Connection state',
     'original_device_class': <BinarySensorDeviceClass.CONNECTIVITY: 'connectivity'>,
     'original_icon': None,
     'original_name': 'Connection state',
@@ -1224,9 +1224,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Connection state',
     'options': dict({
     }),
-    'object_id_base': 'Connection state',
     'original_device_class': <BinarySensorDeviceClass.CONNECTIVITY: 'connectivity'>,
     'original_icon': None,
     'original_name': 'Connection state',

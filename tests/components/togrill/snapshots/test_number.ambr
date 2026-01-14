@@ -25,9 +25,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Alarm interval',
     'options': dict({
     }),
-    'object_id_base': 'Alarm interval',
     'original_device_class': <NumberDeviceClass.DURATION: 'duration'>,
     'original_icon': None,
     'original_name': 'Alarm interval',
@@ -85,9 +85,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Maximum temperature',
     'options': dict({
     }),
-    'object_id_base': 'Maximum temperature',
     'original_device_class': <NumberDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': 'mdi:thermometer-chevron-up',
     'original_name': 'Maximum temperature',
@@ -146,9 +146,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Minimum temperature',
     'options': dict({
     }),
-    'object_id_base': 'Minimum temperature',
     'original_device_class': <NumberDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': 'mdi:thermometer-chevron-down',
     'original_name': 'Minimum temperature',
@@ -207,9 +207,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Target temperature',
     'options': dict({
     }),
-    'object_id_base': 'Target temperature',
     'original_device_class': <NumberDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': 'mdi:thermometer-check',
     'original_name': 'Target temperature',
@@ -268,9 +268,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Maximum temperature',
     'options': dict({
     }),
-    'object_id_base': 'Maximum temperature',
     'original_device_class': <NumberDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': 'mdi:thermometer-chevron-up',
     'original_name': 'Maximum temperature',
@@ -329,9 +329,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Minimum temperature',
     'options': dict({
     }),
-    'object_id_base': 'Minimum temperature',
     'original_device_class': <NumberDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': 'mdi:thermometer-chevron-down',
     'original_name': 'Minimum temperature',
@@ -390,9 +390,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Target temperature',
     'options': dict({
     }),
-    'object_id_base': 'Target temperature',
     'original_device_class': <NumberDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': 'mdi:thermometer-check',
     'original_name': 'Target temperature',
@@ -451,9 +451,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Alarm interval',
     'options': dict({
     }),
-    'object_id_base': 'Alarm interval',
     'original_device_class': <NumberDeviceClass.DURATION: 'duration'>,
     'original_icon': None,
     'original_name': 'Alarm interval',
@@ -511,9 +511,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Maximum temperature',
     'options': dict({
     }),
-    'object_id_base': 'Maximum temperature',
     'original_device_class': <NumberDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': 'mdi:thermometer-chevron-up',
     'original_name': 'Maximum temperature',
@@ -572,9 +572,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Minimum temperature',
     'options': dict({
     }),
-    'object_id_base': 'Minimum temperature',
     'original_device_class': <NumberDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': 'mdi:thermometer-chevron-down',
     'original_name': 'Minimum temperature',
@@ -633,9 +633,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Target temperature',
     'options': dict({
     }),
-    'object_id_base': 'Target temperature',
     'original_device_class': <NumberDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': 'mdi:thermometer-check',
     'original_name': 'Target temperature',
@@ -694,9 +694,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Maximum temperature',
     'options': dict({
     }),
-    'object_id_base': 'Maximum temperature',
     'original_device_class': <NumberDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': 'mdi:thermometer-chevron-up',
     'original_name': 'Maximum temperature',
@@ -755,9 +755,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Minimum temperature',
     'options': dict({
     }),
-    'object_id_base': 'Minimum temperature',
     'original_device_class': <NumberDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': 'mdi:thermometer-chevron-down',
     'original_name': 'Minimum temperature',
@@ -816,9 +816,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Target temperature',
     'options': dict({
     }),
-    'object_id_base': 'Target temperature',
     'original_device_class': <NumberDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': 'mdi:thermometer-check',
     'original_name': 'Target temperature',

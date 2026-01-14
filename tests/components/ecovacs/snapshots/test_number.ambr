@@ -25,9 +25,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Cut direction',
     'options': dict({
     }),
-    'object_id_base': 'Cut direction',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Cut direction',
@@ -84,9 +84,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Volume',
     'options': dict({
     }),
-    'object_id_base': 'Volume',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Volume',
@@ -142,9 +142,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Clean count',
     'options': dict({
     }),
-    'object_id_base': 'Clean count',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Clean count',
@@ -200,9 +200,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Volume',
     'options': dict({
     }),
-    'object_id_base': 'Volume',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Volume',
@@ -258,9 +258,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Water flow level',
     'options': dict({
     }),
-    'object_id_base': 'Water flow level',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Water flow level',
@@ -316,9 +316,9 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Volume',
     'options': dict({
     }),
-    'object_id_base': 'Volume',
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Volume',

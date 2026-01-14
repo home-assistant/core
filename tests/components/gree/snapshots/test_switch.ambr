@@ -85,9 +85,9 @@
       'labels': set({
       }),
       'name': None,
+      'object_id_base': 'Panel light',
       'options': dict({
       }),
-      'object_id_base': 'Panel light',
       'original_device_class': <SwitchDeviceClass.SWITCH: 'switch'>,
       'original_icon': None,
       'original_name': 'Panel light',
@@ -119,9 +119,9 @@
       'labels': set({
       }),
       'name': None,
+      'object_id_base': 'Quiet mode',
       'options': dict({
       }),
-      'object_id_base': 'Quiet mode',
       'original_device_class': <SwitchDeviceClass.SWITCH: 'switch'>,
       'original_icon': None,
       'original_name': 'Quiet mode',
@@ -153,9 +153,9 @@
       'labels': set({
       }),
       'name': None,
+      'object_id_base': 'Fresh air',
       'options': dict({
       }),
-      'object_id_base': 'Fresh air',
       'original_device_class': <SwitchDeviceClass.SWITCH: 'switch'>,
       'original_icon': None,
       'original_name': 'Fresh air',
@@ -187,9 +187,9 @@
       'labels': set({
       }),
       'name': None,
+      'object_id_base': 'Xtra fan',
       'options': dict({
       }),
-      'object_id_base': 'Xtra fan',
       'original_device_class': <SwitchDeviceClass.SWITCH: 'switch'>,
       'original_icon': None,
       'original_name': 'Xtra fan',
@@ -221,9 +221,9 @@
       'labels': set({
       }),
       'name': None,
+      'object_id_base': 'Health mode',
       'options': dict({
       }),
-      'object_id_base': 'Health mode',
       'original_device_class': <SwitchDeviceClass.SWITCH: 'switch'>,
       'original_icon': None,
       'original_name': 'Health mode',
