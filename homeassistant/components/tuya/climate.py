@@ -142,7 +142,11 @@ class _SwingModeWrapper(DeviceWrapper):
 
 
 def _filter_hvac_mode_mappings(range: list[str]) -> dict[str, HVACMode | None]:
-    """Filter TUYA_HVAC_TO_HA modes that are not in the range."""
+    """Filter TUYA_HVAC_TO_HA modes that are not in the range.
+
+    If multiple Tuya modes map to the same HA mode, set the mapping to None to avoid
+    ambiguity when converting back from HA to Tuya modes.
+    """
     modes_in_range = {tuya_mode: TUYA_HVAC_TO_HA.get(tuya_mode) for tuya_mode in range}
     modes_occurrences = collections.Counter(modes_in_range.values())
     for key, value in modes_in_range.items():
