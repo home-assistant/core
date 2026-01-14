@@ -56,7 +56,7 @@ class StateConditionBase(Condition):
         if TYPE_CHECKING:
             assert config.target
             assert config.options
-        self._target = config.target
+        self._target_selection = target.TargetSelection(config.target)
         self._behavior = config.options[ATTR_BEHAVIOR]
         self._state = state
 
@@ -80,9 +80,8 @@ class StateConditionBase(Condition):
 
         def test_state(**kwargs: Unpack[ConditionCheckParams]) -> bool:
             """Test state condition."""
-            target_selection = target.TargetSelection(self._target)
             targeted_entities = target.async_extract_referenced_entity_ids(
-                self._hass, target_selection, expand_group=False
+                self._hass, self._target_selection, expand_group=False
             )
             referenced_entity_ids = targeted_entities.referenced.union(
                 targeted_entities.indirectly_referenced
