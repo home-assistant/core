@@ -51,3 +51,26 @@ async def test_disabled_by_default_entities(
     assert entry
     assert entry.disabled
     assert entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION
+
+
+async def test_missing_sensor_graceful_handling(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_charger: MagicMock,
+) -> None:
+    """Test that missing sensor attributes are handled gracefully."""
+    # Remove an attribute to simulate missing sensor data
+    del mock_charger.vehicle_soc
+
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+
+    # The sensor with missing attribute should be unavailable
+    state = hass.states.get("sensor.openevse_mock_config_vehicle_state_of_charge")
+    assert state is not None
+    assert state.state == "unavailable"
+
+    # Other sensors should still work
+    state = hass.states.get("sensor.openevse_mock_config_charging_status")
+    assert state is not None
+    assert state.state == "Charging"

@@ -520,6 +520,20 @@ class OpenEVSESensor(CoordinatorEntity[OpenEVSEDataUpdateCoordinator], SensorEnt
             self._attr_device_info[ATTR_SERIAL_NUMBER] = unique_id
 
     @property
+    def available(self) -> bool:
+        """Return if entity is available."""
+        if not super().available:
+            return False
+        try:
+            self.entity_description.value_fn(self.coordinator.charger)
+        except (AttributeError, KeyError):
+            return False
+        return True
+
+    @property
     def native_value(self) -> StateType | datetime:
         """Return the state of the sensor."""
-        return self.entity_description.value_fn(self.coordinator.charger)
+        try:
+            return self.entity_description.value_fn(self.coordinator.charger)
+        except (AttributeError, KeyError):
+            return None
