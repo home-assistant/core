@@ -303,6 +303,7 @@ class MatterClimate(MatterEntity, ClimateEntity):
     @callback
     def _update_from_device(self) -> None:
         """Update from device."""
+        _LOGGER.debug("_update_from_device called")
         self._calculate_features()
 
         self._attr_current_temperature = self._get_temperature_in_degrees(
@@ -325,6 +326,7 @@ class MatterClimate(MatterEntity, ClimateEntity):
         self.matter_presets = self.get_matter_attribute_value(
             clusters.Thermostat.Attributes.Presets
         )
+        _LOGGER.debug("Matter presets: %s", self.matter_presets)
         # Build preset mapping and list
         self._preset_handle_by_name.clear()
         presets = []
@@ -336,9 +338,17 @@ class MatterClimate(MatterEntity, ClimateEntity):
         self._attr_preset_modes = presets
 
         # Update active preset mode
-        if active_preset_handle := self.get_matter_attribute_value(
+        active_preset_handle = self.get_matter_attribute_value(
             clusters.Thermostat.Attributes.ActivePresetHandle
-        ):
+        )
+        _LOGGER.debug(
+            "ActivePresetHandle raw value - type: %s, repr: %s, value: %s, bool: %s",
+            type(active_preset_handle).__name__,
+            repr(active_preset_handle),
+            active_preset_handle,
+            bool(active_preset_handle),
+        )
+        if active_preset_handle:
             # Debug: log the type and value of active_preset_handle
             _LOGGER.debug(
                 "Active preset handle - type: %s, repr: %s, value: %s",
