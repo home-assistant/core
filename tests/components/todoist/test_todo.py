@@ -41,12 +41,19 @@ async def set_time_zone(hass: HomeAssistant) -> None:
     ("tasks", "expected_state"),
     [
         ([], "0"),
-        ([make_api_task(id="12345", content="Soda", is_completed=False)], "1"),
-        ([make_api_task(id="12345", content="Soda", is_completed=True)], "0"),
+        ([make_api_task(id="12345", content="Soda", completed_at=None)], "1"),
         (
             [
-                make_api_task(id="12345", content="Milk", is_completed=False),
-                make_api_task(id="54321", content="Soda", is_completed=False),
+                make_api_task(
+                    id="12345", content="Soda", completed_at="2021-10-01T00:00:00"
+                )
+            ],
+            "0",
+        ),
+        (
+            [
+                make_api_task(id="12345", content="Milk", completed_at=None),
+                make_api_task(id="54321", content="Soda", completed_at=None),
             ],
             "2",
         ),
@@ -55,7 +62,7 @@ async def set_time_zone(hass: HomeAssistant) -> None:
                 make_api_task(
                     id="12345",
                     content="Soda",
-                    is_completed=False,
+                    completed_at=None,
                     project_id="other-project-id",
                 )
             ],
@@ -64,7 +71,7 @@ async def set_time_zone(hass: HomeAssistant) -> None:
         (
             [
                 make_api_task(
-                    id="12345", content="sub-task", is_completed=False, parent_id="1"
+                    id="12345", content="sub-task", completed_at=None, parent_id="1"
                 )
             ],
             "0",
@@ -89,7 +96,7 @@ async def test_todo_item_state(
         (
             [],
             {},
-            [make_api_task(id="task-id-1", content="Soda", is_completed=False)],
+            [make_api_task(id="task-id-1", content="Soda", completed_at=None)],
             {"content": "Soda", "due_string": "no date", "description": ""},
             {"uid": "task-id-1", "summary": "Soda", "status": "needs_action"},
         ),
@@ -100,7 +107,7 @@ async def test_todo_item_state(
                 make_api_task(
                     id="task-id-1",
                     content="Soda",
-                    is_completed=False,
+                    completed_at=None,
                     due=Due(is_recurring=False, date="2023-11-18", string="today"),
                 )
             ],
@@ -119,11 +126,10 @@ async def test_todo_item_state(
                 make_api_task(
                     id="task-id-1",
                     content="Soda",
-                    is_completed=False,
+                    completed_at=None,
                     due=Due(
-                        date="2023-11-18",
+                        date="2023-11-18T12:30:00.000000Z",
                         is_recurring=False,
-                        datetime="2023-11-18T12:30:00.000000Z",
                         string="today",
                     ),
                 )
@@ -147,7 +153,7 @@ async def test_todo_item_state(
                     id="task-id-1",
                     content="Soda",
                     description="6-pack",
-                    is_completed=False,
+                    completed_at=None,
                 )
             ],
             {"description": "6-pack", "due_string": "no date"},
@@ -209,7 +215,7 @@ async def test_add_todo_list_item(
 
 
 @pytest.mark.parametrize(
-    ("tasks"), [[make_api_task(id="task-id-1", content="Soda", is_completed=False)]]
+    ("tasks"), [[make_api_task(id="task-id-1", content="Soda", completed_at=None)]]
 )
 async def test_update_todo_item_status(
     hass: HomeAssistant,
@@ -222,12 +228,14 @@ async def test_update_todo_item_status(
     assert state
     assert state.state == "1"
 
-    api.close_task = AsyncMock()
-    api.reopen_task = AsyncMock()
+    api.complete_task = AsyncMock()
+    api.uncomplete_task = AsyncMock()
 
-    # Fake API response when state is refreshed after close
+    # Fake API response when state is refreshed after complete
     api.get_tasks.return_value = [
-        make_api_task(id="task-id-1", content="Soda", is_completed=True)
+        make_api_task(
+            id="task-id-1", content="Soda", completed_at="2021-10-01T00:00:00"
+        )
     ]
 
     await hass.services.async_call(
@@ -237,20 +245,20 @@ async def test_update_todo_item_status(
         target={ATTR_ENTITY_ID: "todo.name"},
         blocking=True,
     )
-    assert api.close_task.called
-    args = api.close_task.call_args
+    assert api.complete_task.called
+    args = api.complete_task.call_args
     assert args
     assert args.kwargs.get("task_id") == "task-id-1"
-    assert not api.reopen_task.called
+    assert not api.uncomplete_task.called
 
     # Verify state is refreshed
     state = hass.states.get("todo.name")
     assert state
     assert state.state == "0"
 
-    # Fake API response when state is refreshed after reopen
+    # Fake API response when state is refreshed after reopening task
     api.get_tasks.return_value = [
-        make_api_task(id="task-id-1", content="Soda", is_completed=False)
+        make_api_task(id="task-id-1", content="Soda", completed_at=None)
     ]
 
     await hass.services.async_call(
@@ -260,8 +268,8 @@ async def test_update_todo_item_status(
         target={ATTR_ENTITY_ID: "todo.name"},
         blocking=True,
     )
-    assert api.reopen_task.called
-    args = api.reopen_task.call_args
+    assert api.uncomplete_task.called
+    args = api.uncomplete_task.call_args
     assert args
     assert args.kwargs.get("task_id") == "task-id-1"
 
@@ -279,7 +287,7 @@ async def test_update_todo_item_status(
                 make_api_task(
                     id="task-id-1",
                     content="Soda",
-                    is_completed=False,
+                    completed_at=None,
                     description="desc",
                 )
             ],
@@ -288,7 +296,7 @@ async def test_update_todo_item_status(
                 make_api_task(
                     id="task-id-1",
                     content="Milk",
-                    is_completed=False,
+                    completed_at=None,
                     description="desc",
                 )
             ],
@@ -306,13 +314,13 @@ async def test_update_todo_item_status(
             },
         ),
         (
-            [make_api_task(id="task-id-1", content="Soda", is_completed=False)],
+            [make_api_task(id="task-id-1", content="Soda", completed_at=None)],
             {ATTR_DUE_DATE: "2023-11-18"},
             [
                 make_api_task(
                     id="task-id-1",
                     content="Soda",
-                    is_completed=False,
+                    completed_at=None,
                     due=Due(is_recurring=False, date="2023-11-18", string="today"),
                 )
             ],
@@ -330,17 +338,16 @@ async def test_update_todo_item_status(
             },
         ),
         (
-            [make_api_task(id="task-id-1", content="Soda", is_completed=False)],
+            [make_api_task(id="task-id-1", content="Soda", completed_at=None)],
             {ATTR_DUE_DATETIME: "2023-11-18T06:30:00"},
             [
                 make_api_task(
                     id="task-id-1",
                     content="Soda",
-                    is_completed=False,
+                    completed_at=None,
                     due=Due(
-                        date="2023-11-18",
+                        date="2023-11-18T12:30:00.000000Z",
                         is_recurring=False,
-                        datetime="2023-11-18T12:30:00.000000Z",
                         string="today",
                     ),
                 )
@@ -359,14 +366,14 @@ async def test_update_todo_item_status(
             },
         ),
         (
-            [make_api_task(id="task-id-1", content="Soda", is_completed=False)],
+            [make_api_task(id="task-id-1", content="Soda", completed_at=None)],
             {ATTR_DESCRIPTION: "6-pack"},
             [
                 make_api_task(
                     id="task-id-1",
                     content="Soda",
                     description="6-pack",
-                    is_completed=False,
+                    completed_at=None,
                 )
             ],
             {
@@ -388,7 +395,7 @@ async def test_update_todo_item_status(
                     id="task-id-1",
                     content="Soda",
                     description="6-pack",
-                    is_completed=False,
+                    completed_at=None,
                 )
             ],
             {ATTR_DESCRIPTION: None},
@@ -396,7 +403,7 @@ async def test_update_todo_item_status(
                 make_api_task(
                     id="task-id-1",
                     content="Soda",
-                    is_completed=False,
+                    completed_at=None,
                     description="",
                 )
             ],
@@ -418,7 +425,7 @@ async def test_update_todo_item_status(
                     id="task-id-1",
                     content="Soda",
                     description="6-pack",
-                    is_completed=False,
+                    completed_at=None,
                     # Create a mock task with a string value in the Due object and verify it
                     # gets preserved when verifying the kwargs to update below
                     due=Due(date="2024-01-01", is_recurring=True, string="every day"),
@@ -430,7 +437,7 @@ async def test_update_todo_item_status(
                     id="task-id-1",
                     content="Soda",
                     description="6-pack",
-                    is_completed=False,
+                    completed_at=None,
                     due=Due(date="2024-02-01", is_recurring=True, string="every day"),
                 )
             ],
@@ -506,8 +513,8 @@ async def test_update_todo_items(
     ("tasks"),
     [
         [
-            make_api_task(id="task-id-1", content="Soda", is_completed=False),
-            make_api_task(id="task-id-2", content="Milk", is_completed=False),
+            make_api_task(id="task-id-1", content="Soda", completed_at=None),
+            make_api_task(id="task-id-2", content="Milk", completed_at=None),
         ]
     ],
 )
@@ -545,7 +552,7 @@ async def test_remove_todo_item(
 
 
 @pytest.mark.parametrize(
-    ("tasks"), [[make_api_task(id="task-id-1", content="Cheese", is_completed=False)]]
+    ("tasks"), [[make_api_task(id="task-id-1", content="Cheese", completed_at=None)]]
 )
 async def test_subscribe(
     hass: HomeAssistant,
@@ -580,7 +587,7 @@ async def test_subscribe(
 
     # Fake API response when state is refreshed
     api.get_tasks.return_value = [
-        make_api_task(id="test-id-1", content="Wine", is_completed=False)
+        make_api_task(id="test-id-1", content="Wine", completed_at=None)
     ]
     await hass.services.async_call(
         TODO_DOMAIN,

@@ -35,16 +35,18 @@ def mock_setup_entry() -> Generator[AsyncMock]:
 
 @pytest.fixture(name="due")
 def mock_due() -> Due:
-    """Mock a todoist Task Due date/time."""
-    return Due(
-        is_recurring=False, date=dt_util.now().strftime("%Y-%m-%d"), string="today"
-    )
+    """Mock a todoist Task Due date/time.
+
+    Uses a fixed date matching the frozen test time in test_calendar.py
+    and test_todo.py (2024-05-24 12:00:00).
+    """
+    return Due(is_recurring=False, date="2024-05-24", string="today")
 
 
 def make_api_task(
     id: str | None = None,
     content: str | None = None,
-    is_completed: bool = False,
+    completed_at: str | None = None,
     due: Due | None = None,
     project_id: str | None = None,
     description: str | None = None,
@@ -54,12 +56,11 @@ def make_api_task(
     return Task(
         assignee_id="1",
         assigner_id="1",
-        comment_count=0,
-        is_completed=is_completed,
+        completed_at=completed_at,
         content=content or SUMMARY,
         created_at="2021-10-01T00:00:00",
         creator_id="1",
-        description=description,
+        description=description or "",
         due=due,
         id=id or "1",
         labels=["Label1"],
@@ -68,9 +69,10 @@ def make_api_task(
         priority=1,
         project_id=project_id or PROJECT_ID,
         section_id=None,
-        url="https://todoist.com",
-        sync_id=None,
         duration=None,
+        deadline=None,
+        is_collapsed=False,
+        updated_at="2021-10-01T00:00:00",
     )
 
 
@@ -88,17 +90,19 @@ def mock_api(tasks: list[Task]) -> AsyncMock:
         Project(
             id=PROJECT_ID,
             color="blue",
-            comment_count=0,
             is_favorite=False,
             name="Name",
             is_shared=False,
-            url="",
+            is_archived=False,
+            is_collapsed=False,
             is_inbox_project=False,
-            is_team_inbox=False,
             can_assign_tasks=False,
             order=1,
             parent_id=None,
             view_style="list",
+            description="",
+            created_at="2021-01-01",
+            updated_at="2021-01-01",
         )
     ]
     api.get_sections.return_value = [
@@ -107,6 +111,7 @@ def mock_api(tasks: list[Task]) -> AsyncMock:
             project_id=PROJECT_ID,
             name="Section Name",
             order=1,
+            is_collapsed=False,
         )
     ]
     api.get_labels.return_value = [

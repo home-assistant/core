@@ -164,6 +164,7 @@ async def test_update_entity_for_calendar_with_due_date_in_the_future(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
     api: AsyncMock,
+    due: Due,
 ) -> None:
     """Test that a task with a due date in the future has on state and correct end_time."""
     await async_update_entity(hass, "calendar.name")
@@ -335,24 +336,21 @@ async def test_create_task_service_call_with_section(
         # These are all equivalent due dates for the same time in different
         # timezone formats.
         Due(
-            date="2023-03-30",
+            date="2023-03-31T00:00:00Z",
             is_recurring=False,
             string="Mar 30 6:00 PM",
-            datetime="2023-03-31T00:00:00Z",
             timezone="America/Regina",
         ),
         Due(
-            date="2023-03-30",
+            date="2023-03-31T00:00:00Z",
             is_recurring=False,
             string="Mar 30 7:00 PM",
-            datetime="2023-03-31T00:00:00Z",
             timezone="America/Los_Angeles",
         ),
         Due(
-            date="2023-03-30",
+            date="2023-03-30T18:00:00",
             is_recurring=False,
             string="Mar 30 6:00 PM",
-            datetime="2023-03-30T18:00:00",
         ),
     ],
     ids=("in_local_timezone", "in_other_timezone", "floating"),
@@ -498,10 +496,9 @@ async def test_events_filtered_for_custom_projects(
     [
         (
             Due(
-                date="2023-03-30",
+                date="2023-03-31T00:00:00Z",
                 is_recurring=False,
                 string="Mar 30 6:00 PM",
-                datetime="2023-03-31T00:00:00Z",
                 timezone="America/Regina",
             ),
             None,
