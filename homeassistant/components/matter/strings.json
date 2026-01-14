@@ -198,6 +198,11 @@
         "name": "[%key:component::lock::title%]"
       }
     },
+    "media_player": {
+      "media_player": {
+        "name": "[%key:component::media_player::title%]"
+      }
+    },
     "number": {
       "altitude": {
         "name": "Altitude above sea level"
