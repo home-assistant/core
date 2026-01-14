@@ -27,7 +27,7 @@ SELECTS: Final[list[JvcProjectorSelectDescription]] = [
     JvcProjectorSelectDescription(
         key="input",
         translation_key="input",
-        options=[cmd.Input.HDMI_1, cmd.Input.HDMI_2],
+        options=[cmd.Input.HDMI1, cmd.Input.HDMI2],
         command=lambda device, option: device.set(cmd.Input, option),
     )
 ]

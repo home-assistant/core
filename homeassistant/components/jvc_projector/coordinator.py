@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from datetime import timedelta
 import logging
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from jvcprojector import (
     JvcProjector,
@@ -46,7 +46,10 @@ class JvcProjectorDataUpdateCoordinator(DataUpdateCoordinator[dict[str, str]]):
         )
 
         self.device: JvcProjector = device
-        self.unique_id: str = str(config_entry.unique_id)
+
+        if TYPE_CHECKING:
+            assert config_entry.unique_id is not None
+        self.unique_id = config_entry.unique_id
 
     async def _async_update_data(self) -> dict[str, Any]:
         """Get the latest state data."""
