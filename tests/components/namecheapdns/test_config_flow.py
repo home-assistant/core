@@ -7,12 +7,15 @@ import pytest
 
 from homeassistant.components.namecheapdns.const import DOMAIN
 from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_USER
+from homeassistant.const import CONF_PASSWORD
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import issue_registry as ir
 from homeassistant.setup import async_setup_component
 
 from .conftest import TEST_USER_INPUT
+
+from tests.common import MockConfigEntry
 
 
 @pytest.mark.usefixtures("mock_namecheap")
@@ -140,3 +143,68 @@ async def test_init_import_flow(
     )
     assert len(mock_setup_entry.mock_calls) == 1
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
+
+
+@pytest.mark.usefixtures("mock_namecheap")
+async def test_reconfigure(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+) -> None:
+    """Test reconfigure flow."""
+    config_entry.add_to_hass(hass)
+    result = await config_entry.start_reconfigure_flow(hass)
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_PASSWORD: "new-password"}
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert config_entry.data[CONF_PASSWORD] == "new-password"
+
+
+@pytest.mark.parametrize(
+    ("side_effect", "text_error"),
+    [
+        (ValueError, "unknown"),
+        (False, "update_failed"),
+        (ClientError, "cannot_connect"),
+    ],
+)
+async def test_reconfigure_errors(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    mock_namecheap: AsyncMock,
+    side_effect: Exception | bool,
+    text_error: str,
+) -> None:
+    """Test we handle errors."""
+
+    config_entry.add_to_hass(hass)
+    result = await config_entry.start_reconfigure_flow(hass)
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+
+    mock_namecheap.side_effect = [side_effect]
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_PASSWORD: "new-password"}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": text_error}
+
+    mock_namecheap.side_effect = None
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_PASSWORD: "new-password"}
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+
+    assert config_entry.data[CONF_PASSWORD] == "new-password"

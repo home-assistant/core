@@ -1734,7 +1734,7 @@ pyfibaro==0.8.3
 pyfido==2.1.2
 
 # homeassistant.components.firefly_iii
-pyfirefly==0.1.10
+pyfirefly==0.1.11
 
 # homeassistant.components.fireservicerota
 pyfireservicerota==0.0.46
@@ -1964,7 +1964,7 @@ pyplaato==0.0.19
 pypoint==3.0.0
 
 # homeassistant.components.portainer
-pyportainer==1.0.22
+pyportainer==1.0.23
 
 # homeassistant.components.probe_plus
 pyprobeplus==1.1.2
@@ -2496,7 +2496,7 @@ temperusb==1.6.1
 # homeassistant.components.tesla_fleet
 # homeassistant.components.teslemetry
 # homeassistant.components.tessie
-tesla-fleet-api==1.3.2
+tesla-fleet-api==1.4.2
 
 # homeassistant.components.powerwall
 tesla-powerwall==0.5.2
