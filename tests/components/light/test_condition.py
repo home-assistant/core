@@ -82,7 +82,7 @@ async def create_condition(
     target: dict,
     behavior: str,
 ) -> ConditionCheckerTypeOptional:
-    """Set up automation with light state condition."""
+    """Create a light state condition."""
     return await async_from_config(
         hass,
         {
