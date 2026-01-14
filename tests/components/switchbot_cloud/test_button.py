@@ -34,7 +34,7 @@ async def test_pressmode_bot(
     entry = await configure_integration(hass)
     assert entry.state is ConfigEntryState.LOADED
 
-    entity_id = "button.bot_1_button"
+    entity_id = "button.bot_1"
     assert hass.states.get(entity_id).state == STATE_UNKNOWN
 
     with patch.object(SwitchBotAPI, "send_command") as mock_send_command:

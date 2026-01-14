@@ -1,6 +1,5 @@
 """Support for the Switchbot Image."""
 
-from collections import deque
 import datetime
 
 from switchbot_api import Device, Remote, SwitchBotAPI
@@ -42,7 +41,7 @@ class SwitchBotCloudImage(SwitchBotCloudEntity, ImageEntity):
     ) -> None:
         """Initialize the image entity."""
         super().__init__(api, device, coordinator)
-        self.access_tokens: deque[str] = deque(["switchbot_art_frame_token"])
+        ImageEntity.__init__(self, self.coordinator.hass)
         self._image_content = b""
 
     async def async_image(self) -> bytes | None:
