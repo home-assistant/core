@@ -235,12 +235,9 @@ class LocalOAuth2Implementation(AbstractOAuth2Implementation):
             )
         except ClientResponseError as err:
             report_usage(
-                "is using the `OAuth2 config entry helper` "
-                "without handling `OAuth2RefreshTokenError`. "
-                "It can be a recoverable or non-recoverable error based on the "
-                "HTTP status code. Please update your integration to handle "
-                "`OAuth2RefreshTokenError` gracefully (see "
-                "https://developers.home-assistant.io)",
+                "is using the `OAuth2 config entry helper` without handling `OAuth2RefreshTokenError`. "
+                "Please update your integration to handle `OAuth2RefreshTokenError` gracefully "
+                "(see https://developers.home-assistant.io).",
                 breaks_in_ha_version="2026.8",
                 core_behavior=ReportBehavior.LOG,
                 integration_domain=self._domain,

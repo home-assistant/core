@@ -1024,7 +1024,8 @@ async def test_oauth_session_refresh_failure_exceptions(
 
     assert err.value.status == status_code
     assert (
-        f"Detected that integration '{TEST_DOMAIN}' is using the `OAuth2 config entry helper` and this can now throw `OAuth2RefreshTokenError` exceptions"
+        f"Detected that integration '{TEST_DOMAIN}' is using the `OAuth2 config entry "
+        f"helper` and this can now throw `OAuth2RefreshTokenError` exceptions"
         in caplog.text
     )
 
