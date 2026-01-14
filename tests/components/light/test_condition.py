@@ -16,14 +16,11 @@ from homeassistant.const import (
     STATE_ON,
 )
 from homeassistant.core import HomeAssistant, ServiceCall
-from homeassistant.helpers.condition import (
-    ConditionCheckerTypeOptional,
-    async_from_config,
-)
 from homeassistant.setup import async_setup_component
 
 from tests.components import (
     ConditionStateDescription,
+    create_target_condition,
     parametrize_condition_states,
     parametrize_target_entities,
     set_or_remove_state,
@@ -71,24 +68,6 @@ async def setup_automation_with_light_condition(
                     "service": "test.automation",
                 },
             }
-        },
-    )
-
-
-async def create_condition(
-    hass: HomeAssistant,
-    *,
-    condition: str,
-    target: dict,
-    behavior: str,
-) -> ConditionCheckerTypeOptional:
-    """Create a light state condition."""
-    return await async_from_config(
-        hass,
-        {
-            CONF_CONDITION: condition,
-            CONF_TARGET: target,
-            CONF_OPTIONS: {"behavior": behavior},
         },
     )
 
@@ -164,7 +143,7 @@ async def test_light_state_condition_behavior_any(
         set_or_remove_state(hass, eid, states[0]["included"])
         await hass.async_block_till_done()
 
-    condition = await create_condition(
+    condition = await create_target_condition(
         hass,
         condition=condition,
         target=condition_target_config,
@@ -234,7 +213,7 @@ async def test_light_state_condition_behavior_all(
         set_or_remove_state(hass, eid, states[0]["included"])
         await hass.async_block_till_done()
 
-    condition = await create_condition(
+    condition = await create_target_condition(
         hass,
         condition=condition,
         target=condition_target_config,
