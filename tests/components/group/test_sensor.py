@@ -215,14 +215,14 @@ async def test_not_enough_sensor_value(hass: HomeAssistant) -> None:
 
     state = hass.states.get("sensor.test_max")
     assert state.state not in [STATE_UNAVAILABLE, STATE_UNKNOWN]
-    assert entity_ids[1] == state.attributes.get("max_entity_id")
+    assert state.attributes.get("max_entity_id") == entity_ids[1]
 
     hass.states.async_set(entity_ids[2], STATE_UNKNOWN)
     await hass.async_block_till_done()
 
     state = hass.states.get("sensor.test_max")
     assert state.state not in [STATE_UNAVAILABLE, STATE_UNKNOWN]
-    assert entity_ids[1] == state.attributes.get("max_entity_id")
+    assert state.attributes.get("max_entity_id") == entity_ids[1]
 
     hass.states.async_set(entity_ids[1], STATE_UNAVAILABLE)
     await hass.async_block_till_done()
@@ -857,8 +857,8 @@ async def test_last_sensor(hass: HomeAssistant) -> None:
         hass.states.async_set(entity_id, str(value))
         await hass.async_block_till_done()
         state = hass.states.get("sensor.test_last")
-        assert str(float(value)) == state.state
-        assert entity_id == state.attributes.get("last_entity_id")
+        assert state.state == str(float(value))
+        assert state.attributes.get("last_entity_id") == entity_id
 
 
 async def test_sensors_attributes_added_when_entity_info_available(
