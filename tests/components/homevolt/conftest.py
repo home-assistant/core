@@ -1,14 +1,13 @@
 """Common fixtures for the Homevolt tests."""
 
 from collections.abc import Generator
-from contextlib import nullcontext
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from homevolt import Device, DeviceMetadata, Sensor, SensorType
 import pytest
 
 from homeassistant.components.homevolt.const import DOMAIN
-from homeassistant.const import CONF_HOST, CONF_PASSWORD
+from homeassistant.const import CONF_HOST, CONF_PASSWORD, Platform
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
@@ -89,20 +88,22 @@ def mock_homevolt_client() -> Generator[MagicMock]:
 
 
 @pytest.fixture
+def platforms() -> list[Platform]:
+    """Return the platforms to test."""
+    return [Platform.SENSOR]
+
+
+@pytest.fixture
 async def init_integration(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_homevolt_client: MagicMock,
-    request: pytest.FixtureRequest,
+    platforms: list[Platform],
 ) -> MockConfigEntry:
     """Set up the Homevolt integration for testing."""
     mock_config_entry.add_to_hass(hass)
 
-    context = nullcontext()
-    if platform := getattr(request, "param", None):
-        context = patch("homeassistant.components.homevolt.PLATFORMS", [platform])
-
-    with context:
+    with patch("homeassistant.components.homevolt.PLATFORMS", platforms):
         await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
 

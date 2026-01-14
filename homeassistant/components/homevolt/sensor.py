@@ -34,8 +34,7 @@ PARALLEL_UPDATES = 0  # Coordinator-based updates
 SENSORS: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key=SensorType.COUNT,
-        state_class=SensorStateClass.MEASUREMENT,
-        native_unit_of_measurement="N",
+        state_class=SensorStateClass.TOTAL_INCREASING,
     ),
     SensorEntityDescription(
         key=SensorType.ENERGY_TOTAL,
