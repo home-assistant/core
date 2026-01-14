@@ -199,12 +199,18 @@ class MatterClimate(MatterEntity, ClimateEntity):
     _attr_temperature_unit: str = UnitOfTemperature.CELSIUS
     _attr_hvac_mode: HVACMode = HVACMode.OFF
     matter_presets: list[clusters.Thermostat.Structs.PresetStruct] | None = None
-    _preset_handle_by_name: dict[str, bytes] = {}
     _attr_preset_mode: str | None = None
     _attr_preset_modes: list[str] | None = None
     _feature_map: int | None = None
 
     _platform_translation_key = "thermostat"
+
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
+        """Initialize the climate entity."""
+        # Initialize preset handle mapping as instance attribute before calling super().__init__()
+        # because MatterEntity.__init__() calls _update_from_device() which needs this attribute
+        self._preset_handle_by_name: dict[str, bytes] = {}
+        super().__init__(*args, **kwargs)
 
     async def async_get_presets(self) -> None:
         """Get presets."""
@@ -259,12 +265,6 @@ class MatterClimate(MatterEntity, ClimateEntity):
         preset_handle = self._preset_handle_by_name.get(preset_mode)
 
         if preset_handle is None:
-            _LOGGER.debug(
-                "Preset lookup failed. Requested: '%s', Available: %s, Dictionary keys: %s",
-                preset_mode,
-                self.preset_modes,
-                list(self._preset_handle_by_name.keys()),
-            )
             raise ValueError(
                 f"Preset mode '{preset_mode}' not found. "
                 f"Available presets: {self.preset_modes}"
@@ -336,6 +336,7 @@ class MatterClimate(MatterEntity, ClimateEntity):
                 name = (preset.name.strip() if preset.name else None) or f"Preset{i}"
                 presets.append(name)
                 self._preset_handle_by_name[name] = preset.presetHandle
+
         self._attr_preset_modes = presets
 
         # Update active preset mode
