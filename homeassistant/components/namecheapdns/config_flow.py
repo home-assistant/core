@@ -18,8 +18,8 @@ from homeassistant.helpers.selector import (
     TextSelectorType,
 )
 
-from . import update_namecheapdns
 from .const import DOMAIN
+from .helpers import update_namecheapdns
 from .issue import deprecate_yaml_issue
 
 _LOGGER = logging.getLogger(__name__)
