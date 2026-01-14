@@ -73,6 +73,9 @@ class ToneWinnerCommands:
     MODE_PREFIX = "MODE"
     MODES = {
         "DIRECT": Mode(command="DIRECT", label="Direct"),
+        # There's a bug in firmware V1.02.0796 where the unit reports "DITECT"
+        # instead of "DIRECT"
+        "DITECT": Mode(command="DIRECT", label="Direct"),
         "PURE": Mode(command="PURE", label="Pure"),
         "STEREO": Mode(command="STEREO", label="Stereo"),
         "ALLSTREO": Mode(command="ALLSTREO", label="All Stereo"),
@@ -240,7 +243,7 @@ class ToneWinnerProtocol:
         _LOGGER.debug("Input source raw data: '%s'", source)
 
         # Strip `V=(<video>\w+) A=(<audio>\w+)$` from the end using regex, extracting their params to log
-        match = re.search(r"(?P<name>\w+) V=(?P<video>\w+) A=(?P<audio>\w+)$", source)
+        match = re.search(r"(?P<name>.+) V=(?P<video>\w+) A=(?P<audio>\w+)$", source)
         if match:
             source_name = match.group("name")
             video_source = match.group("video")
