@@ -1,8 +1,6 @@
 """Test fan conditions."""
 
-from collections.abc import Generator
 from typing import Any
-from unittest.mock import patch
 
 import pytest
 
@@ -91,16 +89,6 @@ async def create_condition(
             CONF_OPTIONS: {"behavior": behavior},
         },
     )
-
-
-@pytest.fixture(name="enable_experimental_triggers_conditions")
-def enable_experimental_triggers_conditions() -> Generator[None]:
-    """Enable experimental triggers and conditions."""
-    with patch(
-        "homeassistant.components.labs.async_is_preview_feature_enabled",
-        return_value=True,
-    ):
-        yield
 
 
 @pytest.mark.parametrize(
