@@ -29,17 +29,24 @@ from homeassistant.const import CONF_USERNAME
 from homeassistant.core import callback
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.selector import (
+    SelectSelector,
+    SelectSelectorConfig,
+    SelectSelectorMode,
+)
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 
 from . import RoborockConfigEntry
 from .const import (
     CONF_BASE_URL,
     CONF_ENTRY_CODE,
+    CONF_REGION,
     CONF_SHOW_BACKGROUND,
     CONF_USER_DATA,
     DEFAULT_DRAWABLES,
     DOMAIN,
     DRAWABLES,
+    REGION_OPTIONS,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -64,17 +71,35 @@ class RoborockFlowHandler(ConfigFlow, domain=DOMAIN):
 
         if user_input is not None:
             username = user_input[CONF_USERNAME]
+            region = user_input[CONF_REGION]
             self._username = username
             _LOGGER.debug("Requesting code for Roborock account")
+            base_url = None
+            if region != "auto":
+                base_url = f"https://{region}iot.roborock.com"
             self._client = RoborockApiClient(
-                username, session=async_get_clientsession(self.hass)
+                username,
+                base_url=base_url,
+                session=async_get_clientsession(self.hass),
             )
             errors = await self._request_code()
             if not errors:
                 return await self.async_step_code()
+
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema({vol.Required(CONF_USERNAME): str}),
+            data_schema=vol.Schema(
+                {
+                    vol.Required(CONF_USERNAME): str,
+                    vol.Required(CONF_REGION, default="auto"): SelectSelector(
+                        SelectSelectorConfig(
+                            options=REGION_OPTIONS,
+                            mode=SelectSelectorMode.DROPDOWN,
+                            translation_key="region",
+                        )
+                    ),
+                }
+            ),
             errors=errors,
         )
 
@@ -114,6 +139,8 @@ class RoborockFlowHandler(ConfigFlow, domain=DOMAIN):
                 user_data = await self._client.code_login_v4(code)
             except RoborockInvalidCode:
                 errors["base"] = "invalid_code"
+            except RoborockAccountDoesNotExist:
+                errors["base"] = "invalid_email_or_region"
             except RoborockException:
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown_roborock"
