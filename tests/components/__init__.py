@@ -23,11 +23,14 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import (
     area_registry as ar,
-    condition,
     device_registry as dr,
     entity_registry as er,
     floor_registry as fr,
     label_registry as lr,
+)
+from homeassistant.helpers.condition import (
+    ConditionCheckerTypeOptional,
+    async_from_config as async_condition_from_config,
 )
 from homeassistant.helpers.trigger import (
     CONF_LOWER_LIMIT,
@@ -593,9 +596,9 @@ async def create_target_condition(
     condition: str,
     target: dict,
     behavior: str,
-) -> condition.ConditionCheckerTypeOptional:
+) -> ConditionCheckerTypeOptional:
     """Create a fan state condition."""
-    return await condition.async_from_config(
+    return await async_condition_from_config(
         hass,
         {
             CONF_CONDITION: condition,
