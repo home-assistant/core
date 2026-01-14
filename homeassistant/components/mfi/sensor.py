@@ -116,7 +116,7 @@ class MfiSensor(SensorEntity):
         return round(self._port.value, digits)
 
     @property
-    def device_class(self):
+    def device_class(self) -> SensorDeviceClass | None:
         """Return the device class of the sensor."""
         try:
             tag = self._port.tag
