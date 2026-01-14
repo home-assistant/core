@@ -269,7 +269,9 @@ class Elke27ZoneBypassSwitch(
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
         _LOGGER.debug(
-            "Zone bypass update %s: bypassed=%s",
+            "Zone bypass update entity_id=%s unique_id=%s zone_id=%s bypassed=%s",
+            self.entity_id,
+            self.unique_id,
             self._zone_id,
             self._diagnostic_bypassed,
         )
