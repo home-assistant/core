@@ -4,20 +4,12 @@ from typing import Any
 
 import pytest
 
-from homeassistant.components import automation
-from homeassistant.const import (
-    ATTR_LABEL_ID,
-    CONF_CONDITION,
-    CONF_OPTIONS,
-    CONF_TARGET,
-    STATE_OFF,
-    STATE_ON,
-)
+from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant, ServiceCall
-from homeassistant.setup import async_setup_component
 
 from tests.components import (
     ConditionStateDescription,
+    assert_condition_gated_by_labs_flag,
     create_target_condition,
     parametrize_condition_states,
     parametrize_target_entities,
@@ -43,33 +35,6 @@ async def target_switches(hass: HomeAssistant) -> list[str]:
     return (await target_entities(hass, "switch"))["included"]
 
 
-async def setup_automation_with_light_condition(
-    hass: HomeAssistant,
-    *,
-    condition: str,
-    target: dict,
-    behavior: str,
-) -> None:
-    """Set up automation with light state condition."""
-    await async_setup_component(
-        hass,
-        automation.DOMAIN,
-        {
-            automation.DOMAIN: {
-                "trigger": {"platform": "event", "event_type": "test_event"},
-                "condition": {
-                    CONF_CONDITION: condition,
-                    CONF_TARGET: target,
-                    CONF_OPTIONS: {"behavior": behavior},
-                },
-                "action": {
-                    "service": "test.automation",
-                },
-            }
-        },
-    )
-
-
 @pytest.mark.parametrize(
     "condition",
     [
@@ -81,15 +46,7 @@ async def test_light_conditions_gated_by_labs_flag(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture, condition: str
 ) -> None:
     """Test the light conditions are gated by the labs flag."""
-    await setup_automation_with_light_condition(
-        hass, condition=condition, target={ATTR_LABEL_ID: "test_label"}, behavior="any"
-    )
-    assert (
-        "Unnamed automation failed to setup conditions and has been disabled: "
-        f"Condition '{condition}' requires the experimental 'New triggers and "
-        "conditions' feature to be enabled in Home Assistant Labs settings "
-        "(feature flag: 'new_triggers_conditions')"
-    ) in caplog.text
+    await assert_condition_gated_by_labs_flag(hass, caplog, condition)
 
 
 @pytest.mark.usefixtures("enable_labs_preview_features")
