@@ -1,0 +1,70 @@
+# serializer version: 1
+# name: test_calendar[calendar.cookidoo_meal_plan-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'calendar',
+    'entity_category': None,
+    'entity_id': 'calendar.cookidoo_meal_plan',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Meal plan',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Meal plan',
+    'platform': 'cookidoo',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'meal_plan',
+    'unique_id': 'sub_uuid',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_calendar[calendar.cookidoo_meal_plan-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Cookidoo Meal plan',
+    }),
+    'context': <ANY>,
+    'entity_id': 'calendar.cookidoo_meal_plan',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_get_events
+  dict({
+    'calendar.cookidoo_meal_plan': dict({
+      'events': list([
+        dict({
+          'description': 'Total Time: 1500',
+          'end': '2025-03-05',
+          'start': '2025-03-04',
+          'summary': 'Waffles',
+        }),
+        dict({
+          'description': 'Total Time: 1500',
+          'end': '2025-03-06',
+          'start': '2025-03-05',
+          'summary': 'Mint Tea',
+        }),
+      ]),
+    }),
+  })
+# ---

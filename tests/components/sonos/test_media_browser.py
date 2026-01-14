@@ -202,6 +202,10 @@ async def test_browse_media_library_albums(
             "object.container.album.musicAlbum",
             "favorites_folder",
         ),
+        (
+            "object.container.podcast",
+            "favorites_folder",
+        ),
     ],
 )
 async def test_browse_media_favorites(
