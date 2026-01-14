@@ -177,8 +177,9 @@ class ConditionStateDescription(TypedDict):
 
     included: _StateDescription  # State for entities meant to be targeted
     excluded: _StateDescription  # State for entities not meant to be targeted
-    condition_true: bool  # If the condition is expected to evaluate to true
     state_valid: bool  # False if the state is missing (None), unavailable or unknown
+
+    condition_true: bool  # If the condition is expected to evaluate to true
 
 
 def parametrize_condition_states(
