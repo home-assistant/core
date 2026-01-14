@@ -48,7 +48,7 @@ async def test_media_player_triggers_gated_by_labs_flag(
     ) in caplog.text
 
 
-@pytest.mark.usefixtures("enable_experimental_triggers_conditions")
+@pytest.mark.usefixtures("enable_labs_preview_features")
 @pytest.mark.parametrize(
     ("trigger_target_config", "entity_id", "entities_in_target"),
     parametrize_target_entities("media_player"),
@@ -109,7 +109,7 @@ async def test_media_player_state_trigger_behavior_any(
         service_calls.clear()
 
 
-@pytest.mark.usefixtures("enable_experimental_triggers_conditions")
+@pytest.mark.usefixtures("enable_labs_preview_features")
 @pytest.mark.parametrize(
     ("trigger_target_config", "entity_id", "entities_in_target"),
     parametrize_target_entities("media_player"),
@@ -169,7 +169,7 @@ async def test_media_player_state_trigger_behavior_first(
         assert len(service_calls) == 0
 
 
-@pytest.mark.usefixtures("enable_experimental_triggers_conditions")
+@pytest.mark.usefixtures("enable_labs_preview_features")
 @pytest.mark.parametrize(
     ("trigger_target_config", "entity_id", "entities_in_target"),
     parametrize_target_entities("media_player"),

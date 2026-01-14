@@ -3650,7 +3650,7 @@ async def test_extract_from_target_validation_error(
     assert "error" in msg
 
 
-@pytest.mark.usefixtures("enable_experimental_triggers_conditions", "target_entities")
+@pytest.mark.usefixtures("enable_labs_preview_features", "target_entities")
 @patch("annotatedyaml.loader.load_yaml")
 @pytest.mark.parametrize("automation_component", ["trigger", "condition"])
 async def test_get_triggers_conditions_for_target(

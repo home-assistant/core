@@ -1133,9 +1133,9 @@ async def check_translations(
             pytest.fail(description)
 
 
-@pytest.fixture(name="enable_experimental_triggers_conditions")
-def enable_experimental_triggers_conditions() -> Generator[None]:
-    """Enable experimental triggers and conditions."""
+@pytest.fixture(name="enable_labs_preview_features")
+def enable_labs_preview_features() -> Generator[None]:
+    """Enable labs preview features."""
     with patch(
         "homeassistant.components.labs.async_is_preview_feature_enabled",
         return_value=True,
