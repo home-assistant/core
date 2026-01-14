@@ -235,7 +235,8 @@ class LocalOAuth2Implementation(AbstractOAuth2Implementation):
             )
         except ClientResponseError as err:
             report_usage(
-                "is using the `OAuth2 config entry helper` and this can now throw `OAuth2RefreshTokenError` exceptions. "
+                "is using the `OAuth2 config entry helper` "
+                "without handling `OAuth2RefreshTokenError`. "
                 "It can be a recoverable or non-recoverable error based on the "
                 "HTTP status code. Please update your integration to handle "
                 "`OAuth2RefreshTokenError` gracefully (see "
