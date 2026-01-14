@@ -2,52 +2,11 @@
 
 from unittest.mock import AsyncMock, patch
 
-import pytest
-
-from homeassistant.components.garmin_connect.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import UpdateFailed
 
 from tests.common import MockConfigEntry
-
-
-@pytest.fixture
-def mock_config_entry() -> MockConfigEntry:
-    """Return a mock config entry."""
-    return MockConfigEntry(
-        domain=DOMAIN,
-        title="test@example.com",
-        data={
-            "oauth1_token": "mock_oauth1_token",
-            "oauth2_token": "mock_oauth2_token",
-        },
-        unique_id="test@example.com",
-    )
-
-
-@pytest.fixture
-def mock_sensor_data() -> dict:
-    """Return mock sensor data for CORE coordinator."""
-    return {
-        "totalSteps": 10000,
-        "totalDistanceMeters": 8000.0,
-        "activeKilocalories": 500,
-        "restingHeartRate": 60,
-        "minHeartRate": 50,
-        "maxHeartRate": 150,
-        "averageStressLevel": 30,
-        "bodyBatteryMostRecentValue": 80,
-        "bodyBatteryChargedValue": 40,
-        "bodyBatteryDrainedValue": 20,
-        "floorsAscended": 10,
-        "floorsDescended": 5,
-        "dailyStepGoal": 10000,
-        "sleepingMinutes": 480,
-        "deepSleepMinutes": 120,
-        "lightSleepMinutes": 240,
-        "remSleepMinutes": 120,
-    }
 
 
 async def test_sensor_setup(
@@ -76,17 +35,17 @@ async def test_sensor_setup(
         await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
 
-    assert mock_config_entry.state is ConfigEntryState.LOADED
+        assert mock_config_entry.state is ConfigEntryState.LOADED
 
-    # Check total steps sensor
-    state = hass.states.get("sensor.garmin_connect_total_steps")
-    assert state is not None
-    assert state.state == "10000"
+        # Check total steps sensor
+        state = hass.states.get("sensor.garmin_connect_total_steps")
+        assert state is not None
+        assert state.state == "10000"
 
-    # Check resting heart rate sensor
-    state = hass.states.get("sensor.garmin_connect_resting_heart_rate")
-    assert state is not None
-    assert state.state == "60"
+        # Check resting heart rate sensor
+        state = hass.states.get("sensor.garmin_connect_resting_heart_rate")
+        assert state is not None
+        assert state.state == "60"
 
 
 async def test_sensor_values(
@@ -115,20 +74,20 @@ async def test_sensor_values(
         await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
 
-    # Test floors ascended
-    state = hass.states.get("sensor.garmin_connect_floors_ascended")
-    assert state is not None
-    assert state.state == "10"
+        # Test floors ascended
+        state = hass.states.get("sensor.garmin_connect_floors_ascended")
+        assert state is not None
+        assert state.state == "10"
 
-    # Test body battery
-    state = hass.states.get("sensor.garmin_connect_body_battery_most_recent")
-    assert state is not None
-    assert state.state == "80"
+        # Test body battery
+        state = hass.states.get("sensor.garmin_connect_body_battery")
+        assert state is not None
+        assert state.state == "80"
 
-    # Test stress level
-    state = hass.states.get("sensor.garmin_connect_avg_stress_level")
-    assert state is not None
-    assert state.state == "30"
+        # Test stress level
+        state = hass.states.get("sensor.garmin_connect_average_stress_level")
+        assert state is not None
+        assert state.state == "30"
 
 
 async def test_sensor_unavailable_when_no_data(

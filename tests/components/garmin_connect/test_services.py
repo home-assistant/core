@@ -12,43 +12,6 @@ from homeassistant.exceptions import HomeAssistantError
 from tests.common import MockConfigEntry
 
 
-@pytest.fixture
-def mock_config_entry() -> MockConfigEntry:
-    """Return a mock config entry."""
-    return MockConfigEntry(
-        domain=DOMAIN,
-        title="test@example.com",
-        data={
-            "oauth1_token": "mock_oauth1_token",
-            "oauth2_token": "mock_oauth2_token",
-        },
-        unique_id="test@example.com",
-    )
-
-
-@pytest.fixture
-def mock_sensor_data() -> dict:
-    """Return mock sensor data."""
-    return {
-        "totalSteps": 10000,
-        "restingHeartRate": 60,
-        "gear": [
-            {
-                "uuid": "gear-uuid-1",
-                "displayName": "Running Shoes",
-                "gearStatusName": "active",
-            }
-        ],
-        "gearStats": [
-            {
-                "uuid": "gear-uuid-1",
-                "totalDistance": 500000.0,
-                "totalActivities": 50,
-            }
-        ],
-    }
-
-
 async def _setup_integration(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,

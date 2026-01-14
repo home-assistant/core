@@ -83,3 +83,41 @@ def mock_setup_entry() -> Generator[AsyncMock]:
         return_value=True,
     ) as mock:
         yield mock
+
+
+@pytest.fixture
+def mock_sensor_data() -> dict:
+    """Return mock sensor data for CORE coordinator."""
+    return {
+        "totalSteps": 10000,
+        "totalDistanceMeters": 8000.0,
+        "activeKilocalories": 500,
+        "restingHeartRate": 60,
+        "minHeartRate": 50,
+        "maxHeartRate": 150,
+        "averageStressLevel": 30,
+        "bodyBatteryMostRecentValue": 80,
+        "bodyBatteryChargedValue": 40,
+        "bodyBatteryDrainedValue": 20,
+        "floorsAscended": 10,
+        "floorsDescended": 5,
+        "dailyStepGoal": 10000,
+        "sleepingMinutes": 480,
+        "deepSleepMinutes": 120,
+        "lightSleepMinutes": 240,
+        "remSleepMinutes": 120,
+        "gear": [
+            {
+                "uuid": "gear-uuid-1",
+                "displayName": "Running Shoes",
+                "gearStatusName": "active",
+            }
+        ],
+        "gearStats": [
+            {
+                "uuid": "gear-uuid-1",
+                "totalDistance": 500000.0,
+                "totalActivities": 50,
+            }
+        ],
+    }
