@@ -51,7 +51,7 @@ def mock_homevolt_client() -> Generator[MagicMock]:
         ),
     ):
         client = homevolt_mock.return_value
-        client.hostname = "http://127.0.0.1"
+        client.base_url = "http://127.0.0.1"
         client.update_info = AsyncMock()
         client.close_connection = AsyncMock()
 
@@ -63,16 +63,19 @@ def mock_homevolt_client() -> Generator[MagicMock]:
                 value=234.5,
                 type=SensorType.VOLTAGE,
                 device_identifier="ems_40580137858664",
+                slug="l1_voltage",
             ),
             "Battery State of Charge": Sensor(
                 value=80.6,
                 type=SensorType.PERCENTAGE,
                 device_identifier="ems_40580137858664",
+                slug="battery_state_of_charge",
             ),
             "Power": Sensor(
                 value=-12,
                 type=SensorType.POWER,
                 device_identifier="ems_40580137858664",
+                slug="power",
             ),
         }
         device.device_metadata = {

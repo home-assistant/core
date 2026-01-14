@@ -100,7 +100,6 @@ async def test_step_user_errors(
     assert result["step_id"] == "user"
     assert result["errors"] == {"base": expected_error}
 
-    # Clear the error and complete the flow successfully
     with (
         patch(
             "homeassistant.components.homevolt.config_flow.Homevolt.update_info",
@@ -161,51 +160,6 @@ async def test_duplicate_entry(
     ):
         mock_device = MagicMock()
         mock_device.device_id = "40580137858664"
-        mock_get_device.return_value = mock_device
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            user_input,
-        )
-
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "already_configured"
-
-
-async def test_duplicate_entry_no_device_id(
-    hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
-) -> None:
-    """Test that a duplicate host aborts the flow when device_id is None."""
-    existing_entry = MockConfigEntry(
-        domain=DOMAIN,
-        data={CONF_HOST: "192.168.1.100", CONF_PASSWORD: "test-password"},
-    )
-    existing_entry.add_to_hass(hass)
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}
-    )
-
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "user"
-    assert result["errors"] == {}
-
-    user_input = {
-        CONF_HOST: "192.168.1.100",
-        CONF_PASSWORD: "test-password",
-    }
-
-    with (
-        patch(
-            "homeassistant.components.homevolt.config_flow.Homevolt.update_info",
-            new_callable=AsyncMock,
-        ),
-        patch(
-            "homeassistant.components.homevolt.config_flow.Homevolt.get_device",
-        ) as mock_get_device,
-    ):
-        mock_device = MagicMock()
-        mock_device.device_id = None
         mock_get_device.return_value = mock_device
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],

@@ -151,6 +151,9 @@
       "l3_voltage_load": {
         "name": "Load L3 voltage"
       },
+      "power": {
+        "name": "Power"
+      },
       "power_grid": {
         "name": "Grid power"
       },
@@ -177,6 +180,9 @@
       },
       "schedule_type": {
         "name": "Schedule type"
+      },
+      "state_of_charge": {
+        "name": "State of charge"
       },
       "system_temperature": {
         "name": "System temperature"

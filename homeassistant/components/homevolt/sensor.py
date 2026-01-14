@@ -2,9 +2,7 @@
 
 from __future__ import annotations
 
-import logging
 from homevolt.models import SensorType
-
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -30,8 +28,6 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN, MANUFACTURER, HomevoltConfigEntry
 from .coordinator import HomevoltDataUpdateCoordinator
-
-_LOGGER = logging.getLogger(__name__)
 
 PARALLEL_UPDATES = 0  # Coordinator-based updates
 
@@ -115,14 +111,12 @@ async def async_setup_entry(
     sensors_by_key = {sensor.key: sensor for sensor in SENSORS}
     for sensor_key, sensor in coordinator.data.sensors.items():
         if (description := sensors_by_key.get(sensor.type)) is None:
-            _LOGGER.error("Sensor %s not found", sensor.type.name)
             continue
         entities.append(
             HomevoltSensor(
                 description,
                 coordinator,
                 sensor_key,
-
             )
         )
     async_add_entities(entities)
@@ -145,22 +139,25 @@ class HomevoltSensor(CoordinatorEntity[HomevoltDataUpdateCoordinator], SensorEnt
         device_id = coordinator.data.device_id
         self._attr_unique_id = f"{device_id}_{sensor_key}"
         sensor_data = coordinator.data.sensors[sensor_key]
+        self._attr_translation_key = sensor_data.slug
         self._sensor_key = sensor_key
         device_metadata = coordinator.data.device_metadata.get(
             sensor_data.device_identifier
         )
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, f"{device_id}_{sensor_data.device_identifier}")},
-            configuration_url=coordinator.client.hostname,
+            configuration_url=coordinator.client.base_url,
             manufacturer=MANUFACTURER,
             model=device_metadata.model if device_metadata else None,
             name=device_metadata.name if device_metadata else None,
         )
 
     @property
+    def available(self) -> bool:
+        """Return if entity is available."""
+        return super().available and self._sensor_key in self.coordinator.data.sensors
+
+    @property
     def native_value(self) -> StateType:
         """Return the native value of the sensor."""
-        sensor_data = self.coordinator.data.sensors[self._sensor_key]
-        if sensor_data is None:
-            return None
-        return sensor_data.value
+        return self.coordinator.data.sensors[self._sensor_key].value

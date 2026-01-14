@@ -1225,7 +1225,7 @@ homelink-integration-api==0.0.1
 homematicip==2.4.0
 
 # homeassistant.components.homevolt
-homevolt==0.2.3
+homevolt==0.2.4
 
 # homeassistant.components.horizon
 horimote==0.4.1
