@@ -54,5 +54,7 @@ class SatelIntegraEntity(Entity):
         self._attr_unique_id = f"{config_entry_id}_{entity_type}_{device_number}"
 
         self._attr_device_info = DeviceInfo(
-            name=subentry.data[CONF_NAME], identifiers={(DOMAIN, self._attr_unique_id)}
+            name=subentry.data[CONF_NAME],
+            identifiers={(DOMAIN, self._attr_unique_id)},
+            via_device=(DOMAIN, config_entry_id),
         )
