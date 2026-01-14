@@ -9,7 +9,6 @@ from nrgkick_api import (
     ErrorCode,
     GridPhases,
     RcdTriggerStatus,
-    RelayState,
     WarningCode,
 )
 import pytest
@@ -73,7 +72,6 @@ def mock_values_data_sensor():
             "vehicle_charging_time": 50,
             "charge_count": 5,
             "charge_permitted": True,
-            "relay_state": RelayState.N_L1_L2_L3,
             "rcd_trigger": RcdTriggerStatus.NO_FAULT,
             "warning_code": WarningCode.NO_WARNING,
             "error_code": ErrorCode.NO_ERROR,
@@ -164,9 +162,7 @@ async def test_sensor_entities(
         "rcd_trigger": "no_fault",
         "warning_code": "no_warning",
         "error_code": "no_error",
-        "relay_state": "n_l1_l2_l3",
         "connector_type": "type2",
-        "grid_phases": "l1_l2_l3",
     }
     for key, expected in mapped_sensors.items():
         state = get_state_by_key(key)
@@ -231,7 +227,7 @@ async def test_mapped_unknown_values_become_state_unknown(
         entity_id = entity_registry.async_get_entity_id("sensor", "nrgkick", unique_id)
         return hass.states.get(entity_id) if entity_id else None
 
-    for key in ("connector_type", "grid_phases", "status"):
+    for key in ("connector_type", "status"):
         state = get_state_by_key(key)
         assert state is not None
         assert state.state == STATE_UNKNOWN

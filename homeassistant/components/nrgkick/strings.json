@@ -176,19 +176,6 @@
       "grid_frequency": {
         "name": "Grid frequency"
       },
-      "grid_phases": {
-        "name": "Grid phases",
-        "state": {
-          "l1": "L1",
-          "l1_l2": "L1, L2",
-          "l1_l2_l3": "L1, L2, L3",
-          "l1_l3": "L1, L3",
-          "l2": "L2",
-          "l2_l3": "L2, L3",
-          "l3": "L3",
-          "unknown": "Unknown"
-        }
-      },
       "grid_voltage": {
         "name": "Grid voltage"
       },
@@ -276,28 +263,6 @@
           "dc_negative_6ma_fault": "DC -6mA fault",
           "dc_positive_6ma_fault": "DC +6mA fault",
           "no_fault": "No fault",
-          "unknown": "Unknown"
-        }
-      },
-      "relay_state": {
-        "name": "Relay state",
-        "state": {
-          "l1": "L1",
-          "l1_l2": "L1, L2",
-          "l1_l2_l3": "L1, L2, L3",
-          "l1_l3": "L1, L3",
-          "l2": "L2",
-          "l2_l3": "L2, L3",
-          "l3": "L3",
-          "n": "N",
-          "n_l1": "N, L1",
-          "n_l1_l2": "N, L1, L2",
-          "n_l1_l2_l3": "N, L1, L2, L3",
-          "n_l1_l3": "N, L1, L3",
-          "n_l2": "N, L2",
-          "n_l2_l3": "N, L2, L3",
-          "n_l3": "N, L3",
-          "no_relay": "No relay",
           "unknown": "Unknown"
         }
       },

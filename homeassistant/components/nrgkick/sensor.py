@@ -38,9 +38,7 @@ from .const import (
     CELLULAR_MODE_MAP,
     CONNECTOR_TYPE_MAP,
     ERROR_CODE_MAP,
-    GRID_PHASES_MAP,
     RCD_TRIGGER_MAP,
-    RELAY_STATE_MAP,
     STATUS_MAP,
     WARNING_CODE_MAP,
 )
@@ -192,14 +190,6 @@ SENSORS: tuple[NRGkickSensorEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfFrequency.HERTZ,
         suggested_display_precision=2,
         value_path=("info", "grid", "frequency"),
-    ),
-    NRGkickSensorEntityDescription(
-        key="grid_phases",
-        translation_key="grid_phases",
-        device_class=SensorDeviceClass.ENUM,
-        options=_enum_options_from_mapping(GRID_PHASES_MAP),
-        value_path=("info", "grid", "phases"),
-        value_fn=lambda value: _map_code_to_translation_key(value, GRID_PHASES_MAP),
     ),
     # INFO - Network
     NRGkickSensorEntityDescription(
@@ -575,14 +565,6 @@ SENSORS: tuple[NRGkickSensorEntityDescription, ...] = (
         key="charge_permitted",
         translation_key="charge_permitted",
         value_path=("values", "general", "charge_permitted"),
-    ),
-    NRGkickSensorEntityDescription(
-        key="relay_state",
-        translation_key="relay_state",
-        device_class=SensorDeviceClass.ENUM,
-        options=_enum_options_from_mapping(RELAY_STATE_MAP),
-        value_path=("values", "general", "relay_state"),
-        value_fn=lambda value: _map_code_to_translation_key(value, RELAY_STATE_MAP),
     ),
     NRGkickSensorEntityDescription(
         key="charge_count",

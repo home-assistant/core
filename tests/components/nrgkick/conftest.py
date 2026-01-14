@@ -148,7 +148,6 @@ def mock_values_data():
         },
         "status": {
             "charging_status": 3,
-            "relay_state": "N, L1, L2, L3",
             "charge_permitted": True,
         },
         "temperatures": {

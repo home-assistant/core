@@ -7,9 +7,7 @@ from nrgkick_api import (
     ChargingStatus,
     ConnectorType,
     ErrorCode,
-    GridPhases,
     RcdTriggerStatus,
-    RelayState,
     WarningCode,
 )
 
@@ -103,28 +101,6 @@ ERROR_CODE_MAP: Final[dict[int, str]] = {
 }
 
 
-# Human-readable relay state mapping.
-# Values are translation keys that match translations/<lang>.json
-RELAY_STATE_MAP: Final[dict[int, str]] = {
-    RelayState.NO_RELAY: "no_relay",
-    RelayState.N: "n",
-    RelayState.L1: "l1",
-    RelayState.N_L1: "n_l1",
-    RelayState.L2: "l2",
-    RelayState.N_L2: "n_l2",
-    RelayState.L1_L2: "l1_l2",
-    RelayState.N_L1_L2: "n_l1_l2",
-    RelayState.L3: "l3",
-    RelayState.N_L3: "n_l3",
-    RelayState.L1_L3: "l1_l3",
-    RelayState.N_L1_L3: "n_l1_l3",
-    RelayState.L2_L3: "l2_l3",
-    RelayState.N_L2_L3: "n_l2_l3",
-    RelayState.L1_L2_L3: "l1_l2_l3",
-    RelayState.N_L1_L2_L3: "n_l1_l2_l3",
-}
-
-
 # Human-readable connector type mapping.
 # Values are translation keys that match translations/<lang>.json
 CONNECTOR_TYPE_MAP: Final[dict[int, str | None]] = {
@@ -134,20 +110,6 @@ CONNECTOR_TYPE_MAP: Final[dict[int, str | None]] = {
     ConnectorType.TYPE2: "type2",
     ConnectorType.WALL: "wall",
     ConnectorType.AUS: "aus",
-}
-
-
-# Human-readable grid phases mapping.
-# Values are translation keys that match translations/<lang>.json
-GRID_PHASES_MAP: Final[dict[int, str | None]] = {
-    GridPhases.UNKNOWN: None,
-    GridPhases.L1: "l1",
-    GridPhases.L2: "l2",
-    GridPhases.L1_L2: "l1_l2",
-    GridPhases.L3: "l3",
-    GridPhases.L1_L3: "l1_l3",
-    GridPhases.L2_L3: "l2_l3",
-    GridPhases.L1_L2_L3: "l1_l2_l3",
 }
 
 

@@ -37,9 +37,6 @@
       "grid_frequency": {
         "default": "mdi:sine-wave"
       },
-      "grid_phases": {
-        "default": "mdi:sine-wave"
-      },
       "grid_voltage": {
         "default": "mdi:flash"
       },
@@ -60,9 +57,6 @@
       },
       "rcd_trigger": {
         "default": "mdi:flash-alert"
-      },
-      "relay_state": {
-        "default": "mdi:toggle-switch"
       },
       "status": {
         "default": "mdi:ev-station"
