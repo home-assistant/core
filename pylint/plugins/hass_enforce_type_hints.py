@@ -931,6 +931,7 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
                 TypeHintMatch(
                     function_name="device_class",
                     return_type=["BinarySensorDeviceClass", None],
+                    mandatory=True,
                 ),
                 TypeHintMatch(
                     function_name="is_on",
