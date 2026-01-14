@@ -270,7 +270,7 @@ class OAuth2RefreshTokenReauthError(OAuth2RefreshTokenError):
     """
 
     def __init__(self, *, domain: str, **kwargs: Any) -> None:
-        """Initialize OAuth2RefreshTokenTransientError."""
+        """Initialize OAuth2RefreshTokenReauthError."""
         super().__init__(domain=domain, **kwargs)
         self.translation_domain = "homeassistant"
         self.translation_key = "oauth2_helper_reauth_required"
