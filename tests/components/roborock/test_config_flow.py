@@ -19,6 +19,7 @@ from homeassistant import config_entries
 from homeassistant.components.roborock.const import (
     CONF_BASE_URL,
     CONF_ENTRY_CODE,
+    CONF_REGION,
     DOMAIN,
     DRAWABLES,
 )
@@ -433,7 +434,7 @@ async def test_config_flow_with_region(
             mock_client.base_url = future_base_url
 
             result = await hass.config_entries.flow.async_configure(
-                result["flow_id"], {CONF_USERNAME: USER_EMAIL, "region": "us"}
+                result["flow_id"], {CONF_USERNAME: USER_EMAIL, CONF_REGION: "us"}
             )
 
             # Check that the client was initialized with the correct base_url
