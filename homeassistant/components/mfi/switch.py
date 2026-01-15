@@ -3,14 +3,9 @@
 from __future__ import annotations
 
 import logging
-from typing import Any, cast
+from typing import Any
 
-from mficlient.client import (
-    Device as MFiDevice,
-    FailedToLogin,
-    MFiClient,
-    Port as MFiPort,
-)
+from mficlient.client import FailedToLogin, MFiClient, Port as MFiPort
 import requests
 import voluptuous as vol
 
@@ -56,7 +51,7 @@ def setup_platform(
     add_entities: AddEntitiesCallback,
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
-    """Set up mFi sensors."""
+    """Set up mFi switches."""
     host: str = config[CONF_HOST]
     username: str = config[CONF_USERNAME]
     password: str = config[CONF_PASSWORD]
@@ -80,8 +75,8 @@ def setup_platform(
 
     add_entities(
         MfiSwitch(port)
-        for device in cast(list[MFiDevice], client.get_devices())
-        for port in cast(dict[str, MFiPort], device.ports).values()
+        for device in client.get_devices()
+        for port in device.ports.values()
         if port.model in SWITCH_MODELS
     )
 

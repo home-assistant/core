@@ -3,14 +3,8 @@
 from __future__ import annotations
 
 import logging
-from typing import cast
 
-from mficlient.client import (
-    Device as MFiDevice,
-    FailedToLogin,
-    MFiClient,
-    Port as MFiPort,
-)
+from mficlient.client import FailedToLogin, MFiClient, Port as MFiPort
 import requests
 import voluptuous as vol
 
@@ -94,8 +88,8 @@ def setup_platform(
 
     add_entities(
         MfiSensor(port)
-        for device in cast(list[MFiDevice], client.get_devices())
-        for port in cast(dict[str, MFiPort], device.ports).values()
+        for device in client.get_devices()
+        for port in device.ports.values()
         if port.model in SENSOR_MODELS
     )
 
