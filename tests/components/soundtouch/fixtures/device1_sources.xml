@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<sources deviceID="020000000001">
+    <sourceItem source="AUX" sourceAccount="AUX" status="READY" isLocal="true" multiroomallowed="true" />
+    <sourceItem source="BLUETOOTH" sourceAccount="BLUETOOTH" status="READY" isLocal="true" multiroomallowed="true" />
+    <sourceItem source="SPOTIFY" sourceAccount="SpotifyUserName" status="READY" isLocal="false" multiroomallowed="true" />
+    <sourceItem source="INTERNET_RADIO" sourceAccount="" status="READY" isLocal="false" multiroomallowed="true" />
+    <sourceItem source="PANDORA" sourceAccount="PandoraUserName" status="UNAVAILABLE" isLocal="false" multiroomallowed="true" />
+</sources>

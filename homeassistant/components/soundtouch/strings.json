@@ -21,6 +21,17 @@
       }
     }
   },
+  "options": {
+    "step": {
+      "init": {
+        "description": "Configure friendly names for your device sources.",
+        "data": {
+          "source_aliases": "Source Aliases"
+        },
+        "title": "Configure Source Aliases"
+      }
+    }
+  },
   "services": {
     "add_zone_slave": {
       "description": "Adds media players to a SoundTouch multi-room zone.",

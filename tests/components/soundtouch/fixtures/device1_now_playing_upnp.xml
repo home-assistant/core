@@ -8,6 +8,8 @@
     <art artImageStatus="SHOW_DEFAULT_IMAGE" />
     <time total="42">7</time>
     <playStatus>PLAY_STATE</playStatus>
+    <shuffleSetting>SHUFFLE_ON</shuffleSetting>
+    <repeatSetting>REPEAT_ALL</repeatSetting>
     <skipPreviousEnabled />
     <streamType>TRACK_ONDEMAND</streamType>
 </nowPlaying>

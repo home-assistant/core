@@ -96,6 +96,12 @@ def device1_presets() -> str:
 
 
 @pytest.fixture(scope="package")
+def device1_sources() -> str:
+    """Load SoundTouch device 1 sources response and return it."""
+    return load_fixture("soundtouch/device1_sources.xml")
+
+
+@pytest.fixture(scope="package")
 def device1_volume() -> str:
     """Load SoundTouch device 1 volume response and return it."""
     return load_fixture("soundtouch/device1_volume.xml")
@@ -149,12 +155,14 @@ def device1_requests_mock(
     device1_info: str,
     device1_volume: str,
     device1_presets: str,
+    device1_sources: str,
     device1_zone_master: str,
 ) -> Mocker:
     """Mock SoundTouch device 1 API - base URLs."""
     requests_mock.get(f"{DEVICE_1_URL}/info", text=device1_info)
     requests_mock.get(f"{DEVICE_1_URL}/volume", text=device1_volume)
     requests_mock.get(f"{DEVICE_1_URL}/presets", text=device1_presets)
+    requests_mock.get(f"{DEVICE_1_URL}/sources", text=device1_sources)
     requests_mock.get(f"{DEVICE_1_URL}/getZone", text=device1_zone_master)
     return requests_mock
 
@@ -284,6 +292,7 @@ def device1_requests_mock_dlna(
 @pytest.fixture
 def device2_requests_mock_standby(
     requests_mock: Mocker,
+    device1_sources: str,
     device2_info: str,
     device2_volume: str,
     device2_now_playing_standby: str,
@@ -294,5 +303,6 @@ def device2_requests_mock_standby(
     requests_mock.get(f"{DEVICE_2_URL}/volume", text=device2_volume)
     requests_mock.get(f"{DEVICE_2_URL}/now_playing", text=device2_now_playing_standby)
     requests_mock.get(f"{DEVICE_2_URL}/getZone", text=device2_zone_slave)
+    requests_mock.get(f"{DEVICE_2_URL}/sources", text=device1_sources)
 
     return requests_mock

@@ -15,6 +15,9 @@ from homeassistant.components.media_player import (
     ATTR_MEDIA_TITLE,
     ATTR_MEDIA_TRACK,
     ATTR_MEDIA_VOLUME_MUTED,
+    ATTR_INPUT_SOURCE_LIST,
+    ATTR_MEDIA_SHUFFLE,
+    ATTR_MEDIA_REPEAT,
     DOMAIN as MEDIA_PLAYER_DOMAIN,
 )
 from homeassistant.components.soundtouch.const import (
@@ -34,7 +37,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
-from .conftest import DEVICE_1_ENTITY_ID, DEVICE_2_ENTITY_ID
+from .conftest import DEVICE_1_ENTITY_ID, DEVICE_1_URL, DEVICE_2_ENTITY_ID
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 
@@ -692,3 +695,88 @@ async def test_zone_attributes(
         DEVICE_1_ENTITY_ID,
         DEVICE_2_ENTITY_ID,
     ]
+
+
+async def test_dynamic_sources(
+    hass: HomeAssistant,
+    device1_config: MockConfigEntry,
+    device1_requests_mock_upnp,
+) -> None:
+    """Test dynamic source list."""
+    await setup_soundtouch(hass, device1_config)
+
+    entity_state = hass.states.get(DEVICE_1_ENTITY_ID)
+    assert ATTR_INPUT_SOURCE_LIST in entity_state.attributes
+    assert "AUX" in entity_state.attributes[ATTR_INPUT_SOURCE_LIST]
+    assert "BLUETOOTH" in entity_state.attributes[ATTR_INPUT_SOURCE_LIST]
+    assert "SPOTIFY" in entity_state.attributes[ATTR_INPUT_SOURCE_LIST]
+    assert "INTERNET_RADIO" in entity_state.attributes[ATTR_INPUT_SOURCE_LIST]
+    assert "PANDORA" not in entity_state.attributes[ATTR_INPUT_SOURCE_LIST]
+
+
+async def test_shuffle(
+    hass: HomeAssistant,
+    device1_config: MockConfigEntry,
+    device1_requests_mock_upnp,
+    device1_requests_mock: Mocker,
+) -> None:
+    """Test shuffle mode."""
+    await setup_soundtouch(hass, device1_config)
+
+    entity_state = hass.states.get(DEVICE_1_ENTITY_ID)
+    assert entity_state.attributes[ATTR_MEDIA_SHUFFLE] is True
+
+    # Test toggle shuffle
+    requests_mock_key = device1_requests_mock.post(f"{DEVICE_1_URL}/key")
+    await hass.services.async_call(
+        "media_player",
+        "shuffle_set",
+        {"entity_id": DEVICE_1_ENTITY_ID, "shuffle": False},
+        True,
+    )
+    assert requests_mock_key.call_count == 2
+    assert "SHUFFLE_OFF" in requests_mock_key.last_request.text
+
+
+async def test_repeat(
+    hass: HomeAssistant,
+    device1_config: MockConfigEntry,
+    device1_requests_mock_upnp,
+    device1_requests_mock: Mocker,
+) -> None:
+    """Test repeat mode."""
+    await setup_soundtouch(hass, device1_config)
+
+    entity_state = hass.states.get(DEVICE_1_ENTITY_ID)
+    assert entity_state.attributes[ATTR_MEDIA_REPEAT] == "all"
+
+    # Test set repeat
+    requests_mock_key = device1_requests_mock.post(f"{DEVICE_1_URL}/key")
+    await hass.services.async_call(
+        "media_player",
+        "repeat_set",
+        {"entity_id": DEVICE_1_ENTITY_ID, "repeat": "one"},
+        True,
+    )
+    assert requests_mock_key.call_count == 2
+    assert "REPEAT_ONE" in requests_mock_key.last_request.text
+
+
+async def test_select_source_dynamic(
+    hass: HomeAssistant,
+    device1_config: MockConfigEntry,
+    device1_requests_mock_upnp,
+    device1_requests_mock: Mocker,
+) -> None:
+    """Test selecting a dynamic source."""
+    await setup_soundtouch(hass, device1_config)
+
+    requests_mock_select = device1_requests_mock.post(f"{DEVICE_1_URL}/select")
+    await hass.services.async_call(
+        "media_player",
+        "select_source",
+        {"entity_id": DEVICE_1_ENTITY_ID, ATTR_INPUT_SOURCE: "SPOTIFY"},
+        True,
+    )
+    assert requests_mock_select.call_count == 1
+    assert 'source="SPOTIFY"' in requests_mock_select.last_request.text

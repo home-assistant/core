@@ -6,6 +6,9 @@ from functools import partial
 import logging
 from typing import Any
 
+import defusedxml.ElementTree as ET
+import requests
+
 from libsoundtouch.device import SoundTouchDevice
 from libsoundtouch.utils import Source
 
@@ -17,6 +20,7 @@ from homeassistant.components.media_player import (
     MediaPlayerEntityFeature,
     MediaPlayerState,
     MediaType,
+    RepeatMode,
     async_process_play_media_url,
 )
 from homeassistant.config_entries import ConfigEntry
@@ -29,7 +33,7 @@ from homeassistant.helpers.device_registry import (
 )
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DOMAIN
+from .const import CONF_SOURCE_ALIASES, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -43,6 +47,12 @@ MAP_STATUS = {
 ATTR_SOUNDTOUCH_GROUP = "soundtouch_group"
 ATTR_SOUNDTOUCH_ZONE = "soundtouch_zone"
 
+MAP_REPEAT = {
+    "REPEAT_OFF": RepeatMode.OFF,
+    "REPEAT_ONE": RepeatMode.ONE,
+    "REPEAT_ALL": RepeatMode.ALL,
+}
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -51,7 +61,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up the Bose SoundTouch media player based on a config entry."""
     device = hass.data[DOMAIN][entry.entry_id].device
-    media_player = SoundTouchMediaPlayer(device)
+    media_player = SoundTouchMediaPlayer(device, entry)
 
     async_add_entities([media_player], True)
 
@@ -74,6 +84,8 @@ class SoundTouchMediaPlayer(MediaPlayerEntity):
         | MediaPlayerEntityFeature.PLAY_MEDIA
         | MediaPlayerEntityFeature.SELECT_SOURCE
         | MediaPlayerEntityFeature.BROWSE_MEDIA
+        | MediaPlayerEntityFeature.REPEAT_SET
+        | MediaPlayerEntityFeature.SHUFFLE_SET
     )
     _attr_device_class = MediaPlayerDeviceClass.SPEAKER
     _attr_has_entity_name = True
@@ -83,10 +95,11 @@ class SoundTouchMediaPlayer(MediaPlayerEntity):
         Source.BLUETOOTH.value,
     ]
 
-    def __init__(self, device: SoundTouchDevice) -> None:
+    def __init__(self, device: SoundTouchDevice, entry: ConfigEntry) -> None:
         """Create SoundTouch media player entity."""
 
         self._device = device
+        self._entry = entry
 
         self._attr_unique_id = device.config.device_id
         self._attr_device_info = DeviceInfo(
@@ -102,6 +115,7 @@ class SoundTouchMediaPlayer(MediaPlayerEntity):
         self._status = None
         self._volume = None
         self._zone = None
+        self._source_mapping: dict[str, dict[str, str]] = {}
 
     @property
     def device(self):
@@ -113,6 +127,79 @@ class SoundTouchMediaPlayer(MediaPlayerEntity):
         self._status = self._device.status()
         self._volume = self._device.volume()
         self._zone = self.get_zone_info()
+
+        # Update source list using direct API call
+        self._update_sources()
+
+    def _update_sources(self) -> None:
+        """Fetch available sources from the device."""
+        try:
+            url = f"http://{self._device.config.device_ip}:8090/sources"
+            response = requests.get(url, timeout=5)
+            response.raise_for_status()
+            root = ET.fromstring(response.content)
+            _LOGGER.debug("Sources XML: %s", response.text)
+
+            sources = []
+            source_mapping = {}
+            for source_item in root.findall("sourceItem"):
+                status = source_item.get("status")
+                source_type = source_item.get("source")
+                source_account = source_item.get("sourceAccount")
+
+                _LOGGER.debug(
+                    "Parsing sourceItem: type=%s, account=%s, status=%s",
+                    source_type,
+                    source_account,
+                    status,
+                )
+
+                if status == "READY" and source_type:
+                    # For PRODUCT sources, the actual name is in sourceAccount
+                    if source_type == "PRODUCT" and source_account:
+                        original_name = source_account
+                    else:
+                        original_name = source_type
+
+                    # Apply alias if configured
+                    aliases = self._entry.options.get(CONF_SOURCE_ALIASES, {})
+                    display_name = aliases.get(original_name, original_name)
+
+                    _LOGGER.debug(
+                        "Adding source: %s (original: %s)", display_name, original_name
+                    )
+                    sources.append(display_name)
+                    source_mapping[display_name] = {
+                        "source": source_type,
+                        "sourceAccount": source_account or "",
+                        "original_name": original_name,
+                    }
+
+            if sources:
+                self._attr_source_list = sources
+                self._source_mapping = source_mapping
+        except requests.RequestException as err:
+            _LOGGER.warning(
+                "Could not fetch sources from %s: %s",
+                self._device.config.device_ip,
+                err,
+            )
+
+    def _send_key(self, key_value: str) -> None:
+        """Send a key press/release to the device."""
+        try:
+            url = f"http://{self._device.config.device_ip}:8090/key"
+            # Simulate a full button press: press then release
+            for state in ("press", "release"):
+                data = f'<key state="{state}" sender="Gabbo">{key_value}</key>'
+                requests.post(url, data=data, timeout=5).raise_for_status()
+        except requests.RequestException as err:
+            _LOGGER.error(
+                "Error sending key %s to %s: %s",
+                key_value,
+                self._device.config.device_ip,
+                err,
+            )
 
     @property
     def volume_level(self):
@@ -140,13 +227,27 @@ class SoundTouchMediaPlayer(MediaPlayerEntity):
         """Boolean if volume is currently muted."""
         return self._volume.muted
 
+    @property
+    def shuffle(self) -> bool | None:
+        """Boolean if shuffle is currently on."""
+        if self._status is None or self._status.shuffle_setting is None:
+            return None
+        return self._status.shuffle_setting == "SHUFFLE_ON"
+
+    @property
+    def repeat(self) -> RepeatMode | None:
+        """Return current repeat mode."""
+        if self._status is None or self._status.repeat_setting is None:
+            return None
+        return MAP_REPEAT.get(self._status.repeat_setting)
+
     def turn_off(self) -> None:
         """Turn off media player."""
-        self._device.power_off()
+        self._send_key("POWER")
 
     def turn_on(self) -> None:
         """Turn on media player."""
-        self._device.power_on()
+        self._send_key("POWER")
 
     def volume_up(self) -> None:
         """Volume up the media player."""
@@ -166,23 +267,36 @@ class SoundTouchMediaPlayer(MediaPlayerEntity):
 
     def media_play_pause(self) -> None:
         """Simulate play pause media player."""
-        self._device.play_pause()
+        self._send_key("PLAY_PAUSE")
 
     def media_play(self) -> None:
         """Send play command."""
-        self._device.play()
+        self._send_key("PLAY")
 
     def media_pause(self) -> None:
         """Send media pause command to media player."""
-        self._device.pause()
+        self._send_key("PAUSE")
 
     def media_next_track(self) -> None:
         """Send next track command."""
-        self._device.next_track()
+        self._send_key("NEXT_TRACK")
 
     def media_previous_track(self) -> None:
         """Send the previous track command."""
-        self._device.previous_track()
+        self._send_key("PREV_TRACK")
+
+    def set_shuffle(self, shuffle: bool) -> None:
+        """Enable/disable shuffle mode."""
+        self._send_key("SHUFFLE_ON" if shuffle else "SHUFFLE_OFF")
+
+    def set_repeat(self, repeat: RepeatMode) -> None:
+        """Set repeat mode."""
+        if repeat == RepeatMode.OFF:
+            self._send_key("REPEAT_OFF")
+        elif repeat == RepeatMode.ONE:
+            self._send_key("REPEAT_ONE")
+        elif repeat == RepeatMode.ALL:
+            self._send_key("REPEAT_ALL")
 
     @property
     def media_image_url(self):
@@ -278,7 +392,30 @@ class SoundTouchMediaPlayer(MediaPlayerEntity):
             _LOGGER.debug("Selecting source Bluetooth")
             self._device.select_source_bluetooth()
         else:
-            _LOGGER.warning("Source %s is not supported", source)
+            if source not in self._source_mapping:
+                _LOGGER.warning("Source %s is not supported", source)
+                return
+
+            source_info = self._source_mapping[source]
+            source_type = source_info["source"]
+            source_account = source_info["sourceAccount"]
+
+            _LOGGER.debug(
+                "Selecting source %s (type: %s, account: %s)",
+                source,
+                source_type,
+                source_account,
+            )
+            try:
+                url = f"http://{self._device.config.device_ip}:8090/select"
+                data = (
+                    f'<ContentItem source="{source_type}" '
+                    f'sourceAccount="{source_account}"></ContentItem>'
+                )
+                response = requests.post(url, data=data, timeout=5)
+                response.raise_for_status()
+            except requests.RequestException as err:
+                _LOGGER.error("Error selecting source %s: %s", source, err)
 
     def create_zone(self, slaves):
         """Create a zone (multi-room)  and play on selected devices.
