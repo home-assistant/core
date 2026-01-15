@@ -116,6 +116,59 @@ async def test_device_config_file_changed_confirm_step(
     assert len(msg["result"]["issues"]) == 0
 
 
+async def test_device_config_file_changed_cleared(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    device_registry: dr.DeviceRegistry,
+    client,
+    multisensor_6_state,
+    integration,
+) -> None:
+    """Test the device_config_file_changed issue is cleared when no longer true."""
+    node = await _trigger_repair_issue(hass, client, multisensor_6_state)
+
+    device = device_registry.async_get_device(
+        identifiers={get_device_id(client.driver, node)}
+    )
+    assert device
+    issue_id = f"device_config_file_changed.{device.id}"
+
+    await async_process_repairs_platforms(hass)
+    ws_client = await hass_ws_client(hass)
+
+    # Assert the issue is present
+    await ws_client.send_json({"id": 1, "type": "repairs/list_issues"})
+    msg = await ws_client.receive_json()
+    assert msg["success"]
+    assert len(msg["result"]["issues"]) == 1
+    issue = msg["result"]["issues"][0]
+    assert issue["issue_id"] == issue_id
+
+    # Simulate the node becoming ready again with device config no longer changed
+    node_state = deepcopy(multisensor_6_state)
+    event = Event(
+        type="ready",
+        data={
+            "source": "node",
+            "event": "ready",
+            "nodeId": node.node_id,
+            "nodeState": node_state,
+        },
+    )
+    with patch(
+        "zwave_js_server.model.node.Node.async_has_device_config_changed",
+        return_value=False,
+    ):
+        client.driver.receive_event(event)
+        await hass.async_block_till_done()
+
+    # Assert the issue is now cleared
+    await ws_client.send_json({"id": 2, "type": "repairs/list_issues"})
+    msg = await ws_client.receive_json()
+    assert msg["success"]
+    assert len(msg["result"]["issues"]) == 0
+
+
 async def test_device_config_file_changed_ignore_step(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
