@@ -77,11 +77,16 @@ def setup_platform(
     use_tls: bool = config[CONF_SSL]
     verify_tls: bool = config[CONF_VERIFY_SSL]
     default_port = 6443 if use_tls else 6080
-    port: int = config.get(CONF_PORT, default_port)
+    network_port: int = config.get(CONF_PORT, default_port)
 
     try:
         client = MFiClient(
-            host, username, password, port=port, use_tls=use_tls, verify=verify_tls
+            host,
+            username,
+            password,
+            port=network_port,
+            use_tls=use_tls,
+            verify=verify_tls,
         )
     except (FailedToLogin, requests.exceptions.ConnectionError) as ex:
         _LOGGER.error("Unable to connect to mFi: %s", str(ex))
