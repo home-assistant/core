@@ -4,7 +4,7 @@ from typing import Any
 from unittest.mock import AsyncMock
 
 import pytest
-from todoist_api_python.models import Due, Task
+from todoist_api_python.models import Task
 
 from homeassistant.components.todo import (
     ATTR_DESCRIPTION,
@@ -20,7 +20,7 @@ from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_component import async_update_entity
 
-from .conftest import PROJECT_ID, make_api_task
+from .conftest import PROJECT_ID, make_api_due, make_api_task
 
 from tests.typing import WebSocketGenerator
 
@@ -108,7 +108,9 @@ async def test_todo_item_state(
                     id="task-id-1",
                     content="Soda",
                     completed_at=None,
-                    due=Due(is_recurring=False, date="2023-11-18", string="today"),
+                    due=make_api_due(
+                        date="2023-11-18", is_recurring=False, string="today"
+                    ),
                 )
             ],
             {"description": "", "due_date": "2023-11-18"},
@@ -127,7 +129,7 @@ async def test_todo_item_state(
                     id="task-id-1",
                     content="Soda",
                     completed_at=None,
-                    due=Due(
+                    due=make_api_due(
                         date="2023-11-18T12:30:00.000000Z",
                         is_recurring=False,
                         string="today",
@@ -321,7 +323,9 @@ async def test_update_todo_item_status(
                     id="task-id-1",
                     content="Soda",
                     completed_at=None,
-                    due=Due(is_recurring=False, date="2023-11-18", string="today"),
+                    due=make_api_due(
+                        date="2023-11-18", is_recurring=False, string="today"
+                    ),
                 )
             ],
             {
@@ -345,7 +349,7 @@ async def test_update_todo_item_status(
                     id="task-id-1",
                     content="Soda",
                     completed_at=None,
-                    due=Due(
+                    due=make_api_due(
                         date="2023-11-18T12:30:00.000000Z",
                         is_recurring=False,
                         string="today",
@@ -426,9 +430,11 @@ async def test_update_todo_item_status(
                     content="Soda",
                     description="6-pack",
                     completed_at=None,
-                    # Create a mock task with a string value in the Due object and verify it
+                    # Create a mock task with a Due object and verify the due string
                     # gets preserved when verifying the kwargs to update below
-                    due=Due(date="2024-01-01", is_recurring=True, string="every day"),
+                    due=make_api_due(
+                        date="2024-01-01", is_recurring=True, string="every day"
+                    ),
                 )
             ],
             {ATTR_DUE_DATE: "2024-02-01"},
@@ -438,7 +444,9 @@ async def test_update_todo_item_status(
                     content="Soda",
                     description="6-pack",
                     completed_at=None,
-                    due=Due(date="2024-02-01", is_recurring=True, string="every day"),
+                    due=make_api_due(
+                        date="2024-02-01", is_recurring=True, string="every day"
+                    ),
                 )
             ],
             {

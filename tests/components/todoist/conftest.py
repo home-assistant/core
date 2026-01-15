@@ -13,7 +13,6 @@ from homeassistant.components.todoist import DOMAIN
 from homeassistant.const import CONF_TOKEN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
-from homeassistant.util import dt as dt_util
 
 from tests.common import MockConfigEntry
 
@@ -21,7 +20,27 @@ PROJECT_ID = "project-id-1"
 SECTION_ID = "section-id-1"
 SUMMARY = "A task"
 TOKEN = "some-token"
-TODAY = dt_util.now().strftime("%Y-%m-%d")
+
+
+def make_api_due(
+    date: str,
+    is_recurring: bool = False,
+    string: str = "",
+    timezone: str | None = None,
+) -> Due:
+    """Create a Due object using from_dict to match API deserialization behavior.
+
+    This ensures the date field is properly converted to date/datetime objects
+    just like the real API response deserialization does.
+    """
+    data: dict = {
+        "date": date,
+        "is_recurring": is_recurring,
+        "string": string,
+    }
+    if timezone is not None:
+        data["timezone"] = timezone
+    return Due.from_dict(data)
 
 
 @pytest.fixture
@@ -40,7 +59,7 @@ def mock_due() -> Due:
     Uses a fixed date matching the frozen test time in test_calendar.py
     and test_todo.py (2024-05-24 12:00:00).
     """
-    return Due(is_recurring=False, date="2024-05-24", string="today")
+    return make_api_due(date="2024-05-24", string="today")
 
 
 def make_api_task(

@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import datetime, time, timedelta
+from datetime import date, datetime, time, timedelta
 import logging
 from typing import Any
 
@@ -514,23 +514,17 @@ class TodoistProjectData:
         # complete the task.
         # Generally speaking, that means right now.
         if data.due is not None:
-            due_date_str = str(data.due.date)
-            # Date-only strings are exactly 10 chars (YYYY-MM-DD)
-            if len(due_date_str) == 10:
-                # Parse as date-only - convert to datetime at start of day in local timezone
-                parsed_date = dt_util.parse_date(due_date_str)
-                if parsed_date:
-                    task[END] = datetime.combine(
-                        parsed_date,
-                        time.min,
-                        tzinfo=dt_util.DEFAULT_TIME_ZONE,
-                    )
-                else:
-                    task[END] = None
-            else:
-                # Parse as datetime
-                end = dt_util.parse_datetime(due_date_str)
-                task[END] = dt_util.as_local(end) if end is not None else end
+            due_date = data.due.date
+            # The API returns date or datetime objects when deserialized via from_dict()
+            if isinstance(due_date, datetime):
+                task[END] = dt_util.as_local(due_date)
+            elif isinstance(due_date, date):
+                # Convert date to datetime at start of day in local timezone
+                task[END] = datetime.combine(
+                    due_date,
+                    time.min,
+                    tzinfo=dt_util.DEFAULT_TIME_ZONE,
+                )
 
             if task[END] is not None:
                 if self._due_date_days is not None:
