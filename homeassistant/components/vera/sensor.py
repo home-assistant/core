@@ -132,9 +132,7 @@ class VeraPowerSensor(VeraEntity[veraApi.VeraSwitch], SensorEntity):
         """Initialize the power sensor."""
         VeraEntity.__init__(self, vera_device, controller_data)
         self._attr_name = f"{self.vera_device.name} Power"
-        self._name = f"{self.vera_device.name} Power"
         self._unique_id = f"{self._unique_id}_power"
-        self.entity_id = f"sensor.{self.vera_id}_power"
 
     def update(self) -> None:
         """Update the sensor state."""
@@ -155,9 +153,7 @@ class VeraEnergySensor(VeraEntity[veraApi.VeraSwitch], SensorEntity):
         """Initialize the energy sensor."""
         VeraEntity.__init__(self, vera_device, controller_data)
         self._attr_name = f"{self.vera_device.name} Energy"
-        self._name = f"{self.vera_device.name} Energy"
         self._unique_id = f"{self._unique_id}_energy"
-        self.entity_id = f"sensor.{self.vera_id}_energy"
 
     def update(self) -> None:
         """Update the sensor state."""

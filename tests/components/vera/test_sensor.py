@@ -11,6 +11,7 @@ import pyvera as pv
 from homeassistant.components.sensor import async_rounded_state
 from homeassistant.const import ATTR_UNIT_OF_MEASUREMENT, LIGHT_LUX, PERCENTAGE
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 
 from .common import ComponentFactory, new_simple_controller_config
 
@@ -232,8 +233,15 @@ async def test_switch_power_and_energy_sensors_created(
     )
     await hass.async_block_till_done()
 
-    power_entity_id = "sensor.metered_switch_1_power"
-    energy_entity_id = "sensor.metered_switch_1_energy"
+    ent_reg = er.async_get(hass)
+
+    power_entity_id = ent_reg.async_get_entity_id("sensor", "vera", "vera_1111_1_power")
+    energy_entity_id = ent_reg.async_get_entity_id(
+        "sensor", "vera", "vera_1111_1_energy"
+    )
+
+    assert power_entity_id is not None
+    assert energy_entity_id is not None
 
     power_state = hass.states.get(power_entity_id)
     assert power_state is not None
