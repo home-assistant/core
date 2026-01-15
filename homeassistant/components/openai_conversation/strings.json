@@ -16,7 +16,7 @@
         "data_description": {
           "api_key": "Your OpenAI API key."
         },
-        "description": "Setup OpenAI Conversation integration by providing your OpenAI API key. Instructions to obtain an API key can be found [here]({instructions_url})."
+        "description": "Set up OpenAI Conversation integration by providing your OpenAI API key. Instructions to obtain an API key can be found [here]({instructions_url})."
       }
     }
   },
