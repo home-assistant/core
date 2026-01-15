@@ -20,7 +20,7 @@ from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_component import async_update_entity
 
-from .conftest import PROJECT_ID, make_api_due, make_api_task
+from .conftest import PROJECT_ID, make_api_due, make_api_response, make_api_task
 
 from tests.typing import WebSocketGenerator
 
@@ -186,7 +186,7 @@ async def test_add_todo_list_item(
 
     api.add_task = AsyncMock()
     # Fake API response when state is refreshed after create
-    api.get_tasks.return_value = tasks_after_update
+    api.get_tasks.side_effect = make_api_response(tasks_after_update)
 
     await hass.services.async_call(
         TODO_DOMAIN,
@@ -234,11 +234,13 @@ async def test_update_todo_item_status(
     api.uncomplete_task = AsyncMock()
 
     # Fake API response when state is refreshed after complete
-    api.get_tasks.return_value = [
-        make_api_task(
-            id="task-id-1", content="Soda", completed_at="2021-10-01T00:00:00"
-        )
-    ]
+    api.get_tasks.side_effect = make_api_response(
+        [
+            make_api_task(
+                id="task-id-1", content="Soda", completed_at="2021-10-01T00:00:00"
+            )
+        ]
+    )
 
     await hass.services.async_call(
         TODO_DOMAIN,
@@ -259,9 +261,9 @@ async def test_update_todo_item_status(
     assert state.state == "0"
 
     # Fake API response when state is refreshed after reopening task
-    api.get_tasks.return_value = [
-        make_api_task(id="task-id-1", content="Soda", completed_at=None)
-    ]
+    api.get_tasks.side_effect = make_api_response(
+        [make_api_task(id="task-id-1", content="Soda", completed_at=None)]
+    )
 
     await hass.services.async_call(
         TODO_DOMAIN,
@@ -492,7 +494,7 @@ async def test_update_todo_items(
     api.update_task = AsyncMock()
 
     # Fake API response when state is refreshed after close
-    api.get_tasks.return_value = tasks_after_update
+    api.get_tasks.side_effect = make_api_response(tasks_after_update)
 
     await hass.services.async_call(
         TODO_DOMAIN,
@@ -539,7 +541,7 @@ async def test_remove_todo_item(
 
     api.delete_task = AsyncMock()
     # Fake API response when state is refreshed after close
-    api.get_tasks.return_value = []
+    api.get_tasks.side_effect = make_api_response([])
 
     await hass.services.async_call(
         TODO_DOMAIN,
@@ -594,9 +596,9 @@ async def test_subscribe(
     assert items[0]["uid"]
 
     # Fake API response when state is refreshed
-    api.get_tasks.return_value = [
-        make_api_task(id="test-id-1", content="Wine", completed_at=None)
-    ]
+    api.get_tasks.side_effect = make_api_response(
+        [make_api_task(id="test-id-1", content="Wine", completed_at=None)]
+    )
     await hass.services.async_call(
         TODO_DOMAIN,
         TodoServices.UPDATE_ITEM,
