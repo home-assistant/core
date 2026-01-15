@@ -2,8 +2,9 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
+from functools import partial
 import logging
-from typing import Final, cast
+from typing import Any, Final, cast
 
 from pyatmo.modules import Module
 from pyatmo.modules.device_types import DeviceCategory as NetatmoDeviceCategory
@@ -223,7 +224,9 @@ DEVICE_CATEGORY_BINARY_URLS: Final[dict[NetatmoDeviceCategory, str]] = {
 DEVICE_CATEGORY_BINARY_SENSORS: Final[
     dict[NetatmoDeviceCategory, list[NetatmoBinarySensorEntityDescription]]
 ] = {
+    NetatmoDeviceCategory.air_care: NETATMO_WEATHER_BINARY_SENSOR_DESCRIPTIONS,
     NetatmoDeviceCategory.opening: NETATMO_OPENING_BINARY_SENSOR_DESCRIPTIONS,
+    NetatmoDeviceCategory.weather: NETATMO_WEATHER_BINARY_SENSOR_DESCRIPTIONS,
 }
 
 
@@ -235,43 +238,10 @@ async def async_setup_entry(
     """Set up Netatmo weather binary sensors based on a config entry."""
 
     @callback
-    def _create_weather_binary_sensor_entity(netatmo_device: NetatmoDevice) -> None:
-        """Create weather binary sensor entities for a Netatmo weather device."""
-
-        descriptions_to_add = NETATMO_WEATHER_BINARY_SENSOR_DESCRIPTIONS
-
-        entities: list[NetatmoWeatherBinarySensor] = []
-
-        # Create binary sensors for module
-        for description in descriptions_to_add:
-            # Actual check is simple for reachable
-            feature_check = description.key
-            if feature_check in netatmo_device.device.features:
-                _LOGGER.debug(
-                    'Adding "%s" weather binary sensor for device %s',
-                    feature_check,
-                    netatmo_device.device.name,
-                )
-                entities.append(
-                    NetatmoWeatherBinarySensor(
-                        netatmo_device,
-                        description,
-                    )
-                )
-
-        if entities:
-            async_add_entities(entities)
-
-    entry.async_on_unload(
-        async_dispatcher_connect(
-            hass,
-            NETATMO_CREATE_WEATHER_BINARY_SENSOR,
-            _create_weather_binary_sensor_entity,
-        )
-    )
-
-    @callback
-    def _create_binary_sensor_entity(netatmo_device: NetatmoDevice) -> None:
+    def _create_binary_sensor_entity(
+        binarySensorClass: type[NetatmoBinarySensor | NetatmoWeatherBinarySensor],
+        netatmo_device: NetatmoDevice,
+    ) -> None:
         """Create binary sensor entities for a Netatmo device."""
 
         if netatmo_device.device.device_category is None:
@@ -281,7 +251,7 @@ async def async_setup_entry(
             netatmo_device.device.device_category, []
         )
 
-        entities: list[NetatmoBinarySensor] = []
+        entities: list[NetatmoBinarySensor | NetatmoWeatherBinarySensor] = []
 
         # Create binary sensors for module
         for description in descriptions_to_add:
@@ -297,7 +267,7 @@ async def async_setup_entry(
                     netatmo_device.device.name,
                 )
                 entities.append(
-                    NetatmoBinarySensor(
+                    binarySensorClass(
                         netatmo_device,
                         description,
                     )
@@ -310,44 +280,23 @@ async def async_setup_entry(
         async_dispatcher_connect(
             hass,
             NETATMO_CREATE_BINARY_SENSOR,
-            _create_binary_sensor_entity,
+            partial(
+                _create_binary_sensor_entity,
+                NetatmoBinarySensor,
+            ),
         )
     )
 
-
-class NetatmoWeatherBinarySensor(NetatmoWeatherModuleEntity, BinarySensorEntity):
-    """Implementation of a Netatmo weather binary sensor."""
-
-    entity_description: NetatmoBinarySensorEntityDescription
-
-    def __init__(
-        self,
-        netatmo_device: NetatmoDevice,
-        description: NetatmoBinarySensorEntityDescription,
-    ) -> None:
-        """Initialize a Netatmo weather binary sensor."""
-
-        super().__init__(netatmo_device)
-
-        self.entity_description = description
-        self._attr_unique_id = f"{self.device.entity_id}-{description.key}"
-
-    @callback
-    def async_update_callback(self) -> None:
-        """Update the entity's state."""
-
-        value: StateType | None = None
-
-        value = getattr(self.device, self.entity_description.key, None)
-
-        if value is None:
-            self._attr_available = False
-            self._attr_is_on = False
-        else:
-            self._attr_available = True
-            self._attr_is_on = cast(bool, value)
-
-        self.async_write_ha_state()
+    entry.async_on_unload(
+        async_dispatcher_connect(
+            hass,
+            NETATMO_CREATE_WEATHER_BINARY_SENSOR,
+            partial(
+                _create_binary_sensor_entity,
+                NetatmoWeatherBinarySensor,
+            ),
+        )
+    )
 
 
 class NetatmoBinarySensor(NetatmoModuleEntity, BinarySensorEntity):
@@ -359,6 +308,7 @@ class NetatmoBinarySensor(NetatmoModuleEntity, BinarySensorEntity):
         self,
         netatmo_device: NetatmoDevice,
         description: NetatmoBinarySensorEntityDescription,
+        **kwargs: Any,  # Add this to capture extra args from super()
     ) -> None:
         """Initialize a Netatmo binary sensor."""
 
@@ -372,7 +322,7 @@ class NetatmoBinarySensor(NetatmoModuleEntity, BinarySensorEntity):
                     netatmo_device.device.device_category
                 ]
 
-        super().__init__(netatmo_device)
+        super().__init__(netatmo_device, **kwargs)
 
         self.entity_description = description
         self._attr_unique_id = f"{self.device.entity_id}-{description.key}"
@@ -392,8 +342,22 @@ class NetatmoBinarySensor(NetatmoModuleEntity, BinarySensorEntity):
         raw_value: StateType | None = None
         value: StateType | None = None
 
-        # First we check if device reachable. If not, we set available to False
-        if not self.device.reachable:
+        # First we need to know whether we set reachable or another attribute
+        if self.entity_description.key == "reachable":
+            # Setting reachable sensor, so we just get it directly (backward compatibility to weather binary sensor)
+            value = getattr(self.device, self.entity_description.key, None)
+
+            if value is None:
+                self._attr_available = False
+                self._attr_is_on = False
+            else:
+                self._attr_available = True
+                self._attr_is_on = cast(bool, value)
+            self.async_write_ha_state()
+            return
+
+        # We setting other sensor than reachable, so we reuse reachable to set availability, and clear is_on
+        if self.device.reachable is False:
             self._attr_available = False
             self._attr_is_on = None
             self.async_write_ha_state()
@@ -417,3 +381,18 @@ class NetatmoBinarySensor(NetatmoModuleEntity, BinarySensorEntity):
             self._attr_is_on = cast(bool, value)
 
         self.async_write_ha_state()
+
+
+class NetatmoWeatherBinarySensor(NetatmoWeatherModuleEntity, NetatmoBinarySensor):
+    """Implementation of a Netatmo weather binary sensor."""
+
+    entity_description: NetatmoBinarySensorEntityDescription
+
+    def __init__(
+        self,
+        netatmo_device: NetatmoDevice,
+        description: NetatmoBinarySensorEntityDescription,
+    ) -> None:
+        """Initialize a Netatmo weather binary sensor."""
+
+        super().__init__(netatmo_device, description=description)
