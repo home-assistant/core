@@ -2132,7 +2132,7 @@ pyitachip2ir==0.0.7
 pyituran==0.1.5
 
 # homeassistant.components.jvc_projector
-pyjvcprojector==2.0.0
+pyjvcprojector==2.0.1
 
 # homeassistant.components.kaleidescape
 pykaleidescape==1.0.2

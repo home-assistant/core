@@ -93,16 +93,25 @@ class JvcProjectorSelectEntity(JvcProjectorEntity, SelectEntity):
 
         self._attr_translation_key = description.key
         self._attr_unique_id = f"{self._attr_unique_id}_{description.key}"
-        self._attr_options = coordinator.get_options(self.command.name)
+
+        self._options_map = coordinator.get_options_map(self.command.name)
+
+    @property
+    def options(self) -> list[str]:
+        """Return a list of selectable options."""
+        return list(self._options_map.values())
 
     @property
     def current_option(self) -> str | None:
         """Return the selected entity option to represent the entity state."""
-        return self.coordinator.data.get(self.command.name)
+        if value := self.coordinator.data.get(self.command.name):
+            return self._options_map.get(value)
+        return None
 
     async def async_select_option(self, option: str) -> None:
         """Change the selected option."""
-        await self.coordinator.device.set(self.command, option)
+        value = next((k for k, v in self._options_map.items() if v == option))
+        await self.coordinator.device.set(self.command, value)
 
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""

@@ -38,6 +38,8 @@ CORE_COMMANDS: tuple[type[Command], ...] = (
     cmd.LightTime,
 )
 
+TRANSLATIONS = str.maketrans({"+": "p", "%": "p", ":": "x"})
+
 type JVCConfigEntry = ConfigEntry[JvcProjectorDataUpdateCoordinator]
 
 
@@ -153,21 +155,18 @@ class JvcProjectorDataUpdateCoordinator(DataUpdateCoordinator[dict[str, str]]):
 
         return value
 
-    def get_options(self, command: str) -> list[str]:
+    def get_options_map(self, command: str) -> dict[str, str]:
         """Get the available options for a command."""
-        capability = self.capabilities.get(command)
-        if not isinstance(capability, dict):
-            return []
+        capabilities = self.capabilities.get(command, {})
 
-        parameter = capability.get("parameter")
-        if not isinstance(parameter, dict):
-            return []
+        if TYPE_CHECKING:
+            assert isinstance(capabilities, dict)
+            assert isinstance(capabilities.get("parameter", {}), dict)
+            assert isinstance(capabilities.get("parameter", {}).get("read", {}), dict)
 
-        read = parameter.get("read")
-        if not isinstance(read, dict):
-            return []
+        values = list(capabilities.get("parameter", {}).get("read", {}).values())
 
-        return list(read.values())
+        return {v: v.translate(TRANSLATIONS) for v in values}
 
     def supports(self, command: type[Command]) -> bool:
         """Check if the device supports a command."""

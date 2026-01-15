@@ -115,12 +115,19 @@ class JvcProjectorSensorEntity(JvcProjectorEntity, SensorEntity):
         self._attr_unique_id = f"{self._attr_unique_id}_{description.key}"
 
         if self.device_class == SensorDeviceClass.ENUM:
-            self._attr_options = coordinator.get_options(self.command.name)
+            self._options_map = coordinator.get_options_map(self.command.name)
+
+    @property
+    def options(self) -> list[str]:
+        """Return a set of possible options."""
+        return list(self._options_map.values())
 
     @property
     def native_value(self) -> str | None:
         """Return the native value."""
-        return self.coordinator.data.get(self.command.name)
+        if value := self.coordinator.data.get(self.command.name):
+            return self._options_map.get(value)
+        return None
 
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""

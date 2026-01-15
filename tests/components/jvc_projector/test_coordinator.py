@@ -90,24 +90,3 @@ async def test_coordinator_setup_auth_error(
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
     assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
-
-
-async def test_get_options_edge_cases(
-    hass: HomeAssistant,
-    mock_device: AsyncMock,
-    mock_integration: MockConfigEntry,
-) -> None:
-    """Test edge cases for get_options."""
-    coordinator = mock_integration.runtime_data
-
-    # Capability is not a dict
-    coordinator.capabilities = {"Power": "bad"}
-    assert coordinator.get_options("Power") == []
-
-    # parameter is not a dict
-    coordinator.capabilities = {"Power": {"parameter": "bad"}}
-    assert coordinator.get_options("Power") == []
-
-    # read is not a dict
-    coordinator.capabilities = {"Power": {"parameter": {"read": "bad"}}}
-    assert coordinator.get_options("Power") == []
