@@ -12,7 +12,6 @@ prune_images:
       required: false
       selector:
         duration:
-      example: 7
     dangling:
       required: false
       selector:
