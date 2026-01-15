@@ -1,7 +1,6 @@
 """Tests for WebSocket API commands."""
 
 import asyncio
-from collections.abc import Generator
 from copy import deepcopy
 import io
 import logging
@@ -77,16 +76,6 @@ STATE_KEY_SHORT_NAMES = {
     "attributes": "a",
 }
 STATE_KEY_LONG_NAMES = {v: k for k, v in STATE_KEY_SHORT_NAMES.items()}
-
-
-@pytest.fixture(name="enable_experimental_triggers_conditions")
-def enable_experimental_triggers_conditions() -> Generator[None]:
-    """Enable experimental triggers and conditions."""
-    with patch(
-        "homeassistant.components.labs.async_is_preview_feature_enabled",
-        return_value=True,
-    ):
-        yield
 
 
 @pytest.fixture
@@ -3661,7 +3650,7 @@ async def test_extract_from_target_validation_error(
     assert "error" in msg
 
 
-@pytest.mark.usefixtures("enable_experimental_triggers_conditions", "target_entities")
+@pytest.mark.usefixtures("enable_labs_preview_features", "target_entities")
 @patch("annotatedyaml.loader.load_yaml")
 @pytest.mark.parametrize("automation_component", ["trigger", "condition"])
 async def test_get_triggers_conditions_for_target(
@@ -3822,9 +3811,7 @@ async def test_get_triggers_conditions_for_target(
             assert msg["success"]
             assert sorted(msg["result"]) == sorted(expected)
 
-            assert (
-                "Using cached automation component lookup data" in caplog.text
-            ) == expect_lookup_cache
+            assert ("has no cache yet" not in caplog.text) == expect_lookup_cache
             caplog.clear()
 
         # Test entity target - unknown entity
@@ -4077,9 +4064,7 @@ async def test_get_services_for_target(
         assert msg["success"]
         assert sorted(msg["result"]) == sorted(expected)
 
-        assert (
-            "Using cached automation component lookup data" in caplog.text
-        ) == expect_lookup_cache
+        assert ("has no cache yet" not in caplog.text) == expect_lookup_cache
         caplog.clear()
 
     # Test entity target - unknown entity

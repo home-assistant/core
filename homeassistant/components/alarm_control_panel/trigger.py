@@ -45,7 +45,7 @@ def make_entity_state_trigger_required_features(
         """Trigger for entity state changes."""
 
         _domain = domain
-        _to_state = to_state
+        _to_states = {to_state}
         _required_features = required_features
 
     return CustomTrigger

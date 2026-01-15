@@ -26,6 +26,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -89,6 +90,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Black ink',
     'options': dict({
     }),
     'original_device_class': None,
@@ -144,6 +146,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Cyan ink',
     'options': dict({
     }),
     'original_device_class': None,
@@ -199,6 +202,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Magenta ink',
     'options': dict({
     }),
     'original_device_class': None,
@@ -254,6 +258,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Photo black ink',
     'options': dict({
     }),
     'original_device_class': None,
@@ -307,6 +312,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Uptime',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -358,6 +364,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Yellow ink',
     'options': dict({
     }),
     'original_device_class': None,
