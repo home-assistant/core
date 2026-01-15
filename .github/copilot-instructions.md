@@ -1024,18 +1024,6 @@ class MyCoordinator(DataUpdateCoordinator[MyData]):
         )
 ```
 
-### Entity Performance Optimization
-```python
-# Use __slots__ for memory efficiency
-class MySensor(SensorEntity):
-    __slots__ = ("_attr_native_value", "_attr_available")
-    
-    @property 
-    def should_poll(self) -> bool:
-        """Disable polling when using coordinator."""
-        return False  # ✅ Let coordinator handle updates
-```
-
 ## Testing Patterns
 
 ### Testing Best Practices
