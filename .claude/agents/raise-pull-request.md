@@ -55,7 +55,20 @@ git diff dev..HEAD --name-only | grep "manifest.json" || echo "NO_MANIFEST_CHANG
 
 From the file paths, identify:
 - **Integration domain**: Extract from `homeassistant/components/{integration}/` or `tests/components/{integration}/`
-- **PR title format**: `{Integration}: {Brief description of change}` (capitalize integration name)
+- **PR title format**: Write a release-note-style summary of the change. The title becomes the release notes entry, so it should be a complete sentence fragment describing what changed.
+
+**PR Title Examples by Type:**
+| Type | Example titles |
+|------|----------------|
+| Bugfix | `Fix Hikvision NVR binary sensors not being detected` |
+| | `Fix JSON serialization of time objects in anthropic tool results` |
+| | `Fix config flow bug in Tesla Fleet` |
+| Dependency | `Bump eheimdigital to 1.5.0` |
+| | `Bump python-otbr-api to 2.7.1` |
+| New feature | `Add asyncio-level timeout to Backblaze B2 uploads` |
+| | `Add Nettleie optimization option` |
+| Code quality | `Revert bthome-ble back to 3.16.0 to fix missing data` |
+| | `Change device class to energy_storage for some enphase_envoy battery entities` |
 
 ## Step 3: Run Code Quality Checks
 
