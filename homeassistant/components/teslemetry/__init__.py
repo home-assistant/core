@@ -106,9 +106,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslemetryConfigEntry) -
     try:
         implementation = await async_get_config_entry_implementation(hass, entry)
     except ImplementationUnavailableError as err:
-        LOGGER.error(
-            "OAuth implementation not available, try reauthenticating: %s", err
-        )
         raise ConfigEntryAuthFailed(
             translation_domain=DOMAIN,
             translation_key="oauth_implementation_not_available",
