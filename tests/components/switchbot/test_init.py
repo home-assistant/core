@@ -5,7 +5,6 @@ from unittest.mock import AsyncMock, patch
 
 import pytest
 
-from homeassistant.components.switchbot import async_migrate_entry
 from homeassistant.components.switchbot.const import (
     CONF_CURTAIN_SPEED,
     CONF_RETRY_COUNT,
@@ -19,6 +18,8 @@ from homeassistant.core import HomeAssistant
 from . import (
     HUBMINI_MATTER_SERVICE_INFO,
     LOCK_SERVICE_INFO,
+    WOCURTAIN_SERVICE_INFO,
+    WOSENSORTH_SERVICE_INFO,
     patch_async_ble_device_from_address,
 )
 
@@ -104,10 +105,11 @@ async def test_coordinator_wait_ready_timeout(
 
 
 @pytest.mark.parametrize(
-    ("sensor_type", "expected_options"),
+    ("sensor_type", "service_info", "expected_options"),
     [
         (
             "curtain",
+            WOCURTAIN_SERVICE_INFO,
             {
                 CONF_RETRY_COUNT: DEFAULT_RETRY_COUNT,
                 CONF_CURTAIN_SPEED: DEFAULT_CURTAIN_SPEED,
@@ -115,6 +117,7 @@ async def test_coordinator_wait_ready_timeout(
         ),
         (
             "hygrometer",
+            WOSENSORTH_SERVICE_INFO,
             {
                 CONF_RETRY_COUNT: DEFAULT_RETRY_COUNT,
             },
@@ -124,9 +127,12 @@ async def test_coordinator_wait_ready_timeout(
 async def test_migrate_entry_from_v1_1_to_v1_2(
     hass: HomeAssistant,
     sensor_type: str,
+    service_info,
     expected_options: dict,
 ) -> None:
     """Test migration from version 1.1 to 1.2 adds default options."""
+    inject_bluetooth_service_info(hass, service_info)
+
     entry = MockConfigEntry(
         domain=DOMAIN,
         data={
@@ -141,9 +147,9 @@ async def test_migrate_entry_from_v1_1_to_v1_2(
     )
     entry.add_to_hass(hass)
 
-    result = await async_migrate_entry(hass, entry)
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
 
-    assert result is True
     assert entry.version == 1
     assert entry.minor_version == 2
     assert entry.options == expected_options
@@ -153,6 +159,8 @@ async def test_migrate_entry_preserves_existing_options(
     hass: HomeAssistant,
 ) -> None:
     """Test migration preserves existing options."""
+    inject_bluetooth_service_info(hass, WOCURTAIN_SERVICE_INFO)
+
     entry = MockConfigEntry(
         domain=DOMAIN,
         data={
@@ -167,9 +175,9 @@ async def test_migrate_entry_preserves_existing_options(
     )
     entry.add_to_hass(hass)
 
-    result = await async_migrate_entry(hass, entry)
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
 
-    assert result is True
     assert entry.version == 1
     assert entry.minor_version == 2
     # Existing retry_count should be preserved, curtain_speed added
@@ -181,6 +189,8 @@ async def test_migrate_entry_fails_for_future_version(
     hass: HomeAssistant,
 ) -> None:
     """Test migration fails for future versions."""
+    inject_bluetooth_service_info(hass, WOCURTAIN_SERVICE_INFO)
+
     entry = MockConfigEntry(
         domain=DOMAIN,
         data={
@@ -195,6 +205,9 @@ async def test_migrate_entry_fails_for_future_version(
     )
     entry.add_to_hass(hass)
 
-    result = await async_migrate_entry(hass, entry)
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
 
-    assert result is False
+    # Entry should not be loaded due to failed migration
+    assert entry.version == 2
+    assert entry.minor_version == 1
