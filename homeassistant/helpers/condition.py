@@ -419,6 +419,74 @@ def make_entity_state_condition(
     return CustomCondition
 
 
+class EntityStateAttributeConditionBase(EntityStateConditionBase):
+    """State attribute condition."""
+
+    _attribute: str
+    _attribute_states: set[str]
+
+    @override
+    async def async_get_checker(self) -> ConditionChecker:
+        """Get the condition checker."""
+
+        def check_any_match_attribute(attribute_values: list[str | None]) -> bool:
+            """Test if any entity attribute matches the state."""
+            return any(
+                attr_value in self._attribute_states for attr_value in attribute_values
+            )
+
+        def check_all_match_attribute(attribute_values: list[str | None]) -> bool:
+            """Test if all entity attributes match the state."""
+            return all(
+                attr_value in self._attribute_states for attr_value in attribute_values
+            )
+
+        matcher: Callable[[list[str | None]], bool]
+        if self._behavior == BEHAVIOR_ANY:
+            matcher = check_any_match_attribute
+        elif self._behavior == BEHAVIOR_ALL:
+            matcher = check_all_match_attribute
+
+        def test_attribute(**kwargs: Unpack[ConditionCheckParams]) -> bool:
+            """Test attribute condition."""
+            targeted_entities = async_extract_referenced_entity_ids(
+                self._hass, self._target_selection, expand_group=False
+            )
+            referenced_entity_ids = targeted_entities.referenced.union(
+                targeted_entities.indirectly_referenced
+            )
+            filtered_entity_ids = self.entity_filter(referenced_entity_ids)
+            attribute_values = [
+                _state.attributes.get(self._attribute)
+                for entity_id in filtered_entity_ids
+                if (_state := self._hass.states.get(entity_id))
+                and _state.state not in (STATE_UNAVAILABLE, STATE_UNKNOWN)
+            ]
+            return matcher(attribute_values)
+
+        return test_attribute
+
+
+def make_entity_state_attribute_condition(
+    domain: str, attribute: str, attribute_states: str | set[str]
+) -> type[EntityStateAttributeConditionBase]:
+    """Create a condition for entity attribute matching specific state(s)."""
+
+    if isinstance(attribute_states, str):
+        attribute_states_set = {attribute_states}
+    else:
+        attribute_states_set = attribute_states
+
+    class CustomCondition(EntityStateAttributeConditionBase):
+        """Condition for entity attribute."""
+
+        _domain = domain
+        _attribute = attribute
+        _attribute_states = attribute_states_set
+
+    return CustomCondition
+
+
 class ConditionProtocol(Protocol):
     """Define the format of condition modules."""
 
