@@ -12,7 +12,6 @@ from .coordinator import LeilSaunaCoordinator
 class LeilSaunaEntity(CoordinatorEntity[LeilSaunaCoordinator]):
     """Base entity for Saunum Leil Sauna."""
 
-    __slots__ = ("_attr_device_info", "_attr_unique_id")
     _attr_has_entity_name = True
 
     def __init__(self, coordinator: LeilSaunaCoordinator) -> None:
