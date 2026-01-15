@@ -2,10 +2,10 @@
 
 import asyncio
 from collections.abc import Callable
+from functools import partial
 from typing import Final
 
-from aiohttp import ClientResponseError
-from aiohttp.client_exceptions import ClientError
+from aiohttp import ClientError, ClientResponseError
 from tesla_fleet_api.const import Scope
 from tesla_fleet_api.exceptions import (
     Forbidden,
@@ -75,28 +75,54 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
+async def _get_access_token(oauth_session: OAuth2Session) -> str:
+    """Get a valid access token, refreshing if necessary."""
+    LOGGER.debug(
+        "Token valid: %s, expires_at: %s",
+        oauth_session.valid_token,
+        oauth_session.token.get("expires_at"),
+    )
+    try:
+        await oauth_session.async_ensure_token_valid()
+    except ClientResponseError as err:
+        LOGGER.error("Token refresh HTTP error: %s", err)
+        if err.status == 401:
+            raise ConfigEntryAuthFailed from err
+        raise ConfigEntryNotReady from err
+    except (KeyError, TypeError) as err:
+        LOGGER.error("Token data malformed, try reauthenticating: %s", err)
+        raise ConfigEntryAuthFailed(
+            translation_domain=DOMAIN,
+            translation_key="token_data_malformed",
+        ) from err
+    except ClientError as err:
+        LOGGER.error("Token refresh connection error: %s", err)
+        raise ConfigEntryNotReady from err
+    return oauth_session.token[CONF_ACCESS_TOKEN]
+
+
 async def async_setup_entry(hass: HomeAssistant, entry: TeslemetryConfigEntry) -> bool:
     """Set up Teslemetry config."""
 
     session = async_get_clientsession(hass)
 
-    implementation = await async_get_config_entry_implementation(hass, entry)
+    try:
+        implementation = await async_get_config_entry_implementation(hass, entry)
+    except ValueError as err:
+        LOGGER.error(
+            "OAuth implementation not available, try reauthenticating: %s", err
+        )
+        raise ConfigEntryAuthFailed(
+            translation_domain=DOMAIN,
+            translation_key="oauth_implementation_not_available",
+        ) from err
     oauth_session = OAuth2Session(hass, entry, implementation)
 
-    async def _get_access_token() -> str:
-        try:
-            await oauth_session.async_ensure_token_valid()
-        except ClientResponseError as e:
-            if e.status == 401:
-                raise ConfigEntryAuthFailed from e
-            raise ConfigEntryNotReady from e
-        token: str = oauth_session.token[CONF_ACCESS_TOKEN]
-        return token
-
     # Create API connection
+    access_token = partial(_get_access_token, oauth_session)
     teslemetry = Teslemetry(
         session=session,
-        access_token=_get_access_token,
+        access_token=access_token,
     )
     try:
         calls = await asyncio.gather(
@@ -154,7 +180,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslemetryConfigEntry) -
             if not stream:
                 stream = TeslemetryStream(
                     session,
-                    _get_access_token,
+                    access_token,
                     server=f"{region.lower()}.teslemetry.com",
                     parse_timestamp=True,
                     manual=True,
