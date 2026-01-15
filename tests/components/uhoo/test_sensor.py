@@ -1,16 +1,10 @@
 """Tests for sensor.py with Uhoo sensors."""
 
-import asyncio
-from unittest.mock import AsyncMock, MagicMock, Mock
+from unittest.mock import AsyncMock, MagicMock
 
-from aiohttp.client_exceptions import (
-    ClientConnectionError,
-    ClientConnectorDNSError,
-    ClientConnectorError,
-)
 from freezegun.api import FrozenDateTimeFactory
-import pytest
 from syrupy.assertion import SnapshotAssertion
+from uhooapi.errors import UhooError
 
 from homeassistant.components.uhoo.const import UPDATE_INTERVAL
 from homeassistant.const import (
@@ -95,22 +89,11 @@ async def test_async_setup_entry_multiple_devices(
     assert len(entity_registry.entities) == 22
 
 
-@pytest.mark.parametrize(
-    "connection_error",
-    [
-        ClientConnectionError("Connection lost"),
-        ClientConnectorDNSError(Mock(), OSError("DNS failure")),
-        ClientConnectorError(Mock(), OSError("Connection refused")),
-        asyncio.InvalidStateError("DNS resolution failed"),
-        TimeoutError("Request timed out"),
-    ],
-)
 async def test_sensor_availability_changes_with_connection_errors(
     hass: HomeAssistant,
     mock_uhoo_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
     freezer: FrozenDateTimeFactory,
-    connection_error: Exception,
 ) -> None:
     """Test sensor availability changes over time with different connection errors."""
 
@@ -119,7 +102,9 @@ async def test_sensor_availability_changes_with_connection_errors(
     state = hass.states.get("sensor.test_device_carbon_dioxide")
     assert state.state != STATE_UNAVAILABLE
 
-    mock_uhoo_client.get_latest_data.side_effect = connection_error
+    mock_uhoo_client.get_latest_data.side_effect = UhooError(
+        "The device is unavailable"
+    )
 
     freezer.tick(UPDATE_INTERVAL)
     async_fire_time_changed(hass)

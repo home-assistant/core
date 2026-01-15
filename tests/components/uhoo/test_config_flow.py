@@ -1,10 +1,9 @@
 """Test the Uhoo config flow."""
 
-from unittest.mock import AsyncMock, Mock
+from unittest.mock import AsyncMock
 
-from aiohttp.client_exceptions import ClientConnectorDNSError
 import pytest
-from uhooapi.errors import UnauthorizedError
+from uhooapi.errors import UhooError, UnauthorizedError
 
 from homeassistant.components.uhoo.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER
@@ -56,9 +55,9 @@ async def test_user_duplicate_entry(
 @pytest.mark.parametrize(
     ("exception", "error_type"),
     [
-        (ConnectionError("Cannot connect"), "cannot_connect"),
-        (ClientConnectorDNSError(Mock(), OSError("DNS failure")), "cannot_connect"),
+        (UhooError("asd"), "cannot_connect"),
         (UnauthorizedError("Invalid credentials"), "invalid_auth"),
+        (Exception(), "unknown"),
     ],
 )
 async def test_user_flow_exceptions(

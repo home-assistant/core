@@ -2,10 +2,8 @@
 
 from typing import Any
 
-from aiodns.error import DNSError
-from aiohttp.client_exceptions import ClientConnectorDNSError
 from uhooapi import Client
-from uhooapi.errors import UnauthorizedError
+from uhooapi.errors import UhooError, UnauthorizedError
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
@@ -49,7 +47,7 @@ class UhooConfigFlow(ConfigFlow, domain=DOMAIN):
                 await client.login()
             except UnauthorizedError:
                 errors["base"] = "invalid_auth"
-            except (ClientConnectorDNSError, DNSError, ConnectionError):
+            except UhooError:
                 errors["base"] = "cannot_connect"
             except Exception:  # noqa: BLE001
                 LOGGER.exception("Unexpected exception")

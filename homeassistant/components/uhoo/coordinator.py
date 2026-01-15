@@ -1,6 +1,5 @@
 """Custom uhoo data update coordinator."""
 
-from aiohttp.client_exceptions import ClientError
 from uhooapi import Client, Device
 from uhooapi.errors import UhooError
 
@@ -35,8 +34,6 @@ class UhooDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Device]]):
             if self.client.devices:
                 for device_id in self.client.devices:
                     await self.client.get_latest_data(device_id)
-        except (TimeoutError, ClientError) as error:
-            raise UpdateFailed from error
         except UhooError as error:
             raise UpdateFailed(f"The device is unavailable: {error}") from error
         else:
