@@ -25,6 +25,9 @@ from homeassistant.exceptions import (
     ConfigEntryError,
     ConfigEntryNotReady,
     HomeAssistantError,
+    OAuth2TokenRequestError,
+    OAuth2TokenRequestReauthError,
+    OAuth2TokenRequestTransientError,
 )
 from homeassistant.util.dt import utcnow
 
@@ -352,6 +355,18 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_DataT]):
         """Error handling for _async_setup."""
         try:
             await self._async_setup()
+
+        except (
+            OAuth2TokenRequestReauthError,
+            OAuth2TokenRequestTransientError,
+            OAuth2TokenRequestError,
+        ) as err:
+            if isinstance(err, OAuth2TokenRequestReauthError):
+                # Non-recoverable error
+                raise ConfigEntryError from err
+            # Recoverable error
+            raise ConfigEntryNotReady from err
+
         except (
             TimeoutError,
             requests.exceptions.Timeout,
@@ -421,6 +436,17 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_DataT]):
                 if log_failures:
                     self.logger.error("Timeout fetching %s data", self.name)
                 self.last_update_success = False
+
+        except (
+            OAuth2TokenRequestReauthError,
+            OAuth2TokenRequestTransientError,
+            OAuth2TokenRequestError,
+        ) as err:
+            if isinstance(err, OAuth2TokenRequestReauthError):
+                # Non-recoverable error
+                raise ConfigEntryAuthFailed from err
+            # Recoverable error
+            raise ConfigEntryNotReady from err
 
         except (aiohttp.ClientError, requests.exceptions.RequestException) as err:
             self.last_exception = err

@@ -221,7 +221,7 @@ class ConfigEntryAuthFailed(IntegrationError):
     """Error to indicate that config entry could not authenticate."""
 
 
-class OAuth2RefreshTokenError(ClientResponseError, HomeAssistantError):
+class OAuth2TokenRequestError(ClientResponseError, HomeAssistantError):
     """Error to indicate that the OAuth 2.0 flow could not refresh token."""
 
     def __init__(
@@ -251,7 +251,7 @@ class OAuth2RefreshTokenError(ClientResponseError, HomeAssistantError):
         self.generate_message = True
 
 
-class OAuth2RefreshTokenTransientError(OAuth2RefreshTokenError):
+class OAuth2TokenRequestTransientError(OAuth2TokenRequestError):
     """Recoverable error to indicate flow could not refresh token."""
 
     def __init__(self, *, domain: str, **kwargs: Any) -> None:
@@ -263,7 +263,7 @@ class OAuth2RefreshTokenTransientError(OAuth2RefreshTokenError):
         self.generate_message = True
 
 
-class OAuth2RefreshTokenReauthError(OAuth2RefreshTokenError):
+class OAuth2TokenRequestReauthError(OAuth2TokenRequestError):
     """Non recoverable error to indicate the flow could not refresh token.
 
     Re-authentication is required.

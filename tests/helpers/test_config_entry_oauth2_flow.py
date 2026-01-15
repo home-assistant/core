@@ -12,9 +12,9 @@ import pytest
 from homeassistant import config_entries, data_entry_flow, setup
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import (
-    OAuth2RefreshTokenError,
-    OAuth2RefreshTokenReauthError,
-    OAuth2RefreshTokenTransientError,
+    OAuth2TokenRequestError,
+    OAuth2TokenRequestReauthError,
+    OAuth2TokenRequestTransientError,
 )
 from homeassistant.helpers import config_entry_oauth2_flow
 from homeassistant.helpers.network import NoURLAvailableError
@@ -966,19 +966,19 @@ async def test_implementation_provider(hass: HomeAssistant, local_impl) -> None:
     [
         (
             HTTPStatus.BAD_REQUEST,
-            OAuth2RefreshTokenReauthError,
+            OAuth2TokenRequestReauthError,
         ),
         (
             HTTPStatus.TOO_MANY_REQUESTS,  # 429, odd one, but treated as transient
-            OAuth2RefreshTokenTransientError,
+            OAuth2TokenRequestTransientError,
         ),
         (
             HTTPStatus.INTERNAL_SERVER_ERROR,  # 500 range, so treated as transient
-            OAuth2RefreshTokenTransientError,
+            OAuth2TokenRequestTransientError,
         ),
         (
             600,  # Nonsense code, just to hit the generic error branch
-            OAuth2RefreshTokenError,
+            OAuth2TokenRequestError,
         ),
     ],
 )
@@ -1025,8 +1025,7 @@ async def test_oauth_session_refresh_failure_exceptions(
     assert err.value.status == status_code
     assert (
         f"Detected that integration '{TEST_DOMAIN}' is using the `OAuth2 config entry "
-        f"helper` and this can now throw `OAuth2RefreshTokenError` exceptions"
-        in caplog.text
+        f"helper` without handling `OAuth2TokenRequestError`" in caplog.text
     )
 
     assert f"Token request for {TEST_DOMAIN} failed" in caplog.text
