@@ -4,8 +4,9 @@ from copy import deepcopy
 from unittest.mock import MagicMock, patch
 
 import pytest
+from zwave_js_server.client import Client
 from zwave_js_server.event import Event
-from zwave_js_server.model.node import Node
+from zwave_js_server.model.node import Node, NodeDataType
 
 from homeassistant.components.zwave_js import DOMAIN
 from homeassistant.components.zwave_js.const import CONF_KEEP_OLD_DEVICES
@@ -23,9 +24,12 @@ from tests.typing import ClientSessionGenerator, WebSocketGenerator
 
 
 async def _trigger_repair_issue(
-    hass: HomeAssistant, client, multisensor_6_state
+    hass: HomeAssistant,
+    client: Client,
+    multisensor_6_state: NodeDataType,
+    device_config_changed: bool = True,
 ) -> Node:
-    """Trigger repair issue."""
+    """Trigger repair issue with configurable device config changed status."""
     # Create a node
     node_state = deepcopy(multisensor_6_state)
     node = Node(client, node_state)
@@ -40,7 +44,7 @@ async def _trigger_repair_issue(
     )
     with patch(
         "zwave_js_server.model.node.Node.async_has_device_config_changed",
-        return_value=True,
+        return_value=device_config_changed,
     ):
         client.driver.controller.receive_event(event)
         await hass.async_block_till_done()
@@ -55,9 +59,9 @@ async def test_device_config_file_changed_confirm_step(
     hass_client: ClientSessionGenerator,
     hass_ws_client: WebSocketGenerator,
     device_registry: dr.DeviceRegistry,
-    client,
-    multisensor_6_state,
-    integration,
+    client: Client,
+    multisensor_6_state: NodeDataType,
+    integration: MockConfigEntry,
 ) -> None:
     """Test the device_config_file_changed issue confirm step."""
     node = await _trigger_repair_issue(hass, client, multisensor_6_state)
@@ -120,9 +124,9 @@ async def test_device_config_file_changed_cleared(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
     device_registry: dr.DeviceRegistry,
-    client,
-    multisensor_6_state,
-    integration,
+    client: Client,
+    multisensor_6_state: NodeDataType,
+    integration: MockConfigEntry,
 ) -> None:
     """Test the device_config_file_changed issue is cleared when no longer true."""
     node = await _trigger_repair_issue(hass, client, multisensor_6_state)
@@ -145,22 +149,9 @@ async def test_device_config_file_changed_cleared(
     assert issue["issue_id"] == issue_id
 
     # Simulate the node becoming ready again with device config no longer changed
-    node_state = deepcopy(multisensor_6_state)
-    event = Event(
-        type="ready",
-        data={
-            "source": "node",
-            "event": "ready",
-            "nodeId": node.node_id,
-            "nodeState": node_state,
-        },
+    await _trigger_repair_issue(
+        hass, client, multisensor_6_state, device_config_changed=False
     )
-    with patch(
-        "zwave_js_server.model.node.Node.async_has_device_config_changed",
-        return_value=False,
-    ):
-        client.driver.receive_event(event)
-        await hass.async_block_till_done()
 
     # Assert the issue is now cleared
     await ws_client.send_json({"id": 2, "type": "repairs/list_issues"})
@@ -174,9 +165,9 @@ async def test_device_config_file_changed_ignore_step(
     hass_client: ClientSessionGenerator,
     hass_ws_client: WebSocketGenerator,
     device_registry: dr.DeviceRegistry,
-    client,
-    multisensor_6_state,
-    integration,
+    client: Client,
+    multisensor_6_state: NodeDataType,
+    integration: MockConfigEntry,
 ) -> None:
     """Test the device_config_file_changed issue ignore step."""
     node = await _trigger_repair_issue(hass, client, multisensor_6_state)
@@ -290,9 +281,9 @@ async def test_abort_confirm(
     hass_client: ClientSessionGenerator,
     hass_ws_client: WebSocketGenerator,
     device_registry: dr.DeviceRegistry,
-    client,
-    multisensor_6_state,
-    integration,
+    client: Client,
+    multisensor_6_state: NodeDataType,
+    integration: MockConfigEntry,
 ) -> None:
     """Test aborting device_config_file_changed issue in confirm step."""
     node = await _trigger_repair_issue(hass, client, multisensor_6_state)
