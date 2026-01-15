@@ -1,0 +1,17 @@
+# Services for Portainer
+
+prune_images:
+  fields:
+    device_id:
+      selector:
+        device:
+          integration: portainer
+      required: true
+    program_id:
+      required: true
+      selector:
+        number:
+          min: 0
+          max: 99999
+          mode: box
+      example: 24

@@ -155,6 +155,9 @@
     "invalid_auth_no_details": {
       "message": "An error occurred while trying to authenticate."
     },
+    "invalid_target": {
+      "message": "Invalid device targeted."
+    },
     "timeout_connect": {
       "message": "A timeout occurred while trying to connect to the Portainer instance: {error}"
     },

@@ -15,8 +15,10 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 
+from .const import DOMAIN
 from .coordinator import PortainerCoordinator
 from .services import async_setup_services
 
@@ -27,6 +29,7 @@ _PLATFORMS: list[Platform] = [
     Platform.BUTTON,
 ]
 
+CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 type PortainerConfigEntry = ConfigEntry[PortainerCoordinator]
 
@@ -53,7 +56,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: PortainerConfigEntry) ->
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the HEOS component."""
-    async_setup_services(hass)
+    await async_setup_services(hass)
     return True
 
 
