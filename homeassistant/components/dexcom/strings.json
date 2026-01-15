@@ -12,11 +12,14 @@
       "user": {
         "data": {
           "password": "[%key:common::config_flow::data::password%]",
-          "server": "Server",
+          "region": "Region",
           "username": "[%key:common::config_flow::data::username%]"
         },
+        "data_description": {
+          "username": "Username, email address, or phone number (+[country code][phone number])"
+        },
         "description": "Enter Dexcom Share credentials",
-        "title": "Set up Dexcom integration"
+        "title": "Set up the Dexcom integration"
       }
     }
   },
@@ -39,12 +42,12 @@
       }
     }
   },
-  "options": {
-    "step": {
-      "init": {
-        "data": {
-          "unit_of_measurement": "Unit of measurement"
-        }
+  "selector": {
+    "region": {
+      "options": {
+        "jp": "Japan",
+        "ous": "Outside of the United States",
+        "us": "United States"
       }
     }
   }

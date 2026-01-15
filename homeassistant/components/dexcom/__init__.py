@@ -1,27 +1,34 @@
 """The Dexcom integration."""
 
-from pydexcom import AccountError, Dexcom, SessionError
+import logging
 
-from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
+from pydexcom import Dexcom, Region
+from pydexcom.errors import AccountError, ServerError, SessionError
+
+from homeassistant.const import CONF_PASSWORD, CONF_REGION, CONF_USERNAME
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 
-from .const import CONF_SERVER, PLATFORMS, SERVER_OUS
+from .const import PLATFORMS
 from .coordinator import DexcomConfigEntry, DexcomCoordinator
+
+_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: DexcomConfigEntry) -> bool:
     """Set up Dexcom from a config entry."""
     try:
         dexcom = await hass.async_add_executor_job(
-            Dexcom,
-            entry.data[CONF_USERNAME],
-            entry.data[CONF_PASSWORD],
-            entry.data[CONF_SERVER] == SERVER_OUS,
+            lambda: Dexcom(
+                username=entry.data[CONF_USERNAME],
+                password=entry.data[CONF_PASSWORD],
+                region=entry.data[CONF_REGION],
+            )
         )
-    except AccountError:
-        return False
-    except SessionError as error:
+    except AccountError as error:
+        raise ConfigEntryAuthFailed from error
+    except (ServerError, SessionError) as error:
+        _LOGGER.exception("Dexcom error")
         raise ConfigEntryNotReady from error
 
     coordinator = DexcomCoordinator(hass, entry=entry, dexcom=dexcom)
