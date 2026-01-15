@@ -6,7 +6,13 @@ from hdfury import HDFuryError
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.const import Platform
+from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    SERVICE_TURN_OFF,
+    SERVICE_TURN_ON,
+    Platform,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 import homeassistant.helpers.entity_registry as er
@@ -34,15 +40,15 @@ async def test_switch_entities(
         (
             "switch.hdfury_vrroom_02_auto_switch_inputs",
             "set_auto_switch_inputs",
-            "turn_on",
+            SERVICE_TURN_ON,
         ),
         (
             "switch.hdfury_vrroom_02_auto_switch_inputs",
             "set_auto_switch_inputs",
-            "turn_off",
+            SERVICE_TURN_OFF,
         ),
-        ("switch.hdfury_vrroom_02_oled_display", "set_oled", "turn_on"),
-        ("switch.hdfury_vrroom_02_oled_display", "set_oled", "turn_off"),
+        ("switch.hdfury_vrroom_02_oled_display", "set_oled", SERVICE_TURN_ON),
+        ("switch.hdfury_vrroom_02_oled_display", "set_oled", SERVICE_TURN_OFF),
     ],
 )
 async def test_switch_turn_on_off(
@@ -58,9 +64,9 @@ async def test_switch_turn_on_off(
     await setup_integration(hass, mock_config_entry, [Platform.SWITCH])
 
     await hass.services.async_call(
-        "switch",
+        SWITCH_DOMAIN,
         service,
-        {"entity_id": entity_id},
+        {ATTR_ENTITY_ID: entity_id},
         blocking=True,
     )
 
@@ -70,8 +76,8 @@ async def test_switch_turn_on_off(
 @pytest.mark.parametrize(
     ("service", "method"),
     [
-        ("turn_on", "set_auto_switch_inputs"),
-        ("turn_off", "set_auto_switch_inputs"),
+        (SERVICE_TURN_ON, "set_auto_switch_inputs"),
+        (SERVICE_TURN_OFF, "set_auto_switch_inputs"),
     ],
 )
 async def test_switch_turn_error(
@@ -92,8 +98,8 @@ async def test_switch_turn_error(
         match="An error occurred while communicating with HDFury device",
     ):
         await hass.services.async_call(
-            "switch",
+            SWITCH_DOMAIN,
             service,
-            {"entity_id": "switch.hdfury_vrroom_02_auto_switch_inputs"},
+            {ATTR_ENTITY_ID: "switch.hdfury_vrroom_02_auto_switch_inputs"},
             blocking=True,
         )
