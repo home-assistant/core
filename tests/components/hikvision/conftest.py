@@ -1,10 +1,11 @@
 """Common fixtures for the Hikvision tests."""
 
-from collections.abc import Generator
-from unittest.mock import AsyncMock, MagicMock, patch
+from collections.abc import AsyncGenerator, Generator
+from unittest.mock import MagicMock, patch
 
 import pytest
 
+from homeassistant.components.hikvision import PLATFORMS
 from homeassistant.components.hikvision.const import DOMAIN
 from homeassistant.const import (
     CONF_HOST,
@@ -12,6 +13,7 @@ from homeassistant.const import (
     CONF_PORT,
     CONF_SSL,
     CONF_USERNAME,
+    Platform,
 )
 
 from tests.common import MockConfigEntry
@@ -25,7 +27,20 @@ TEST_DEVICE_NAME = "Front Camera"
 
 
 @pytest.fixture
-def mock_setup_entry() -> Generator[AsyncMock]:
+def platforms() -> list[Platform]:
+    """Platforms, which should be loaded during the test."""
+    return PLATFORMS
+
+
+@pytest.fixture(autouse=True)
+async def mock_patch_platforms(platforms: list[Platform]) -> AsyncGenerator[None]:
+    """Fixture to set up platforms for tests."""
+    with patch(f"homeassistant.components.{DOMAIN}.PLATFORMS", platforms):
+        yield
+
+
+@pytest.fixture
+def mock_setup_entry() -> Generator[MagicMock]:
     """Override async_setup_entry."""
     with patch(
         "homeassistant.components.hikvision.async_setup_entry", return_value=True
@@ -58,7 +73,6 @@ def mock_hikcamera() -> Generator[MagicMock]:
     with (
         patch(
             "homeassistant.components.hikvision.HikCamera",
-            autospec=True,
         ) as hikcamera_mock,
         patch(
             "homeassistant.components.hikvision.config_flow.HikCamera",
@@ -80,6 +94,15 @@ def mock_hikcamera() -> Generator[MagicMock]:
             "2024-01-01T00:00:00Z",
         )
         camera.get_event_triggers.return_value = {}
+
+        # pyHik 0.4.0 methods
+        camera.get_channels.return_value = [1]
+        camera.get_snapshot.return_value = b"fake_image_data"
+        camera.get_stream_url.return_value = (
+            f"rtsp://{TEST_USERNAME}:{TEST_PASSWORD}"
+            f"@{TEST_HOST}:554/Streaming/Channels/1"
+        )
+
         yield hikcamera_mock
 
 
