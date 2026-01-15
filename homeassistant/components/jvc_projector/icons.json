@@ -54,11 +54,11 @@
         "default": "mdi:movie-roll"
       },
       "power": {
-        "default": "mdi:power-settings",
+        "default": "mdi:power",
         "state": {
           "cooling": "mdi:snowflake",
           "error": "mdi:alert-circle",
-          "on": "mdi:power-settings",
+          "on": "mdi:power",
           "warming": "mdi:heat-wave"
         }
       },

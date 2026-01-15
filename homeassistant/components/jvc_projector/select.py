@@ -94,7 +94,9 @@ class JvcProjectorSelectEntity(JvcProjectorEntity, SelectEntity):
         self._attr_translation_key = description.key
         self._attr_unique_id = f"{self._attr_unique_id}_{description.key}"
 
-        self._options_map = coordinator.get_options_map(self.command.name)
+        self._options_map: dict[str, str] = coordinator.get_options_map(
+            self.command.name
+        )
 
     @property
     def options(self) -> list[str]:
