@@ -80,6 +80,12 @@ class SonosAlarms(SonosHouseholdCoordinator):
         """Update cache of known alarms and return if cache has changed."""
         self.alarms.update(soco)
 
+        try:
+            self.alarms.update(soco)
+        except Exception as err:
+            _LOGGER.warning("Failed to update alarms for %s, speaker will be marked unavailable", soco.player_name)
+            return False
+
         if update_id and self.alarms.last_id < update_id:
             # Skip updates if latest query result is outdated or lagging
             return False
