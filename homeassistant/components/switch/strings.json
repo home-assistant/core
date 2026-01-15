@@ -7,7 +7,7 @@
   },
   "conditions": {
     "is_off": {
-      "description": "Test if a switch is off.",
+      "description": "Test if if one or more switches are off.",
       "fields": {
         "behavior": {
           "description": "[%key:component::switch::common::condition_behavior_description%]",
@@ -17,7 +17,7 @@
       "name": "If a switch is off"
     },
     "is_on": {
-      "description": "Test if a switch is on.",
+      "description": "Test if if one or more switches are on.",
       "fields": {
         "behavior": {
           "description": "[%key:component::switch::common::condition_behavior_description%]",
