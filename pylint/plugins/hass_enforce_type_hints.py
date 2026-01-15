@@ -2524,6 +2524,7 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
                 TypeHintMatch(
                     function_name="last_reset",
                     return_type=["datetime", None],
+                    mandatory=True,
                 ),
                 TypeHintMatch(
                     function_name="native_value",
