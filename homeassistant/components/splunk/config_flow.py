@@ -20,7 +20,7 @@ from homeassistant.const import (
 )
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import DEFAULT_HOST, DEFAULT_NAME, DEFAULT_PORT, DOMAIN
+from .const import DEFAULT_HOST, DEFAULT_PORT, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -42,8 +42,10 @@ class SplunkConfigFlow(ConfigFlow, domain=DOMAIN):
             errors = await self._async_validate_input(user_input)
 
             if not errors:
+                host = user_input.get(CONF_HOST, DEFAULT_HOST)
+                port = user_input.get(CONF_PORT, DEFAULT_PORT)
                 return self.async_create_entry(
-                    title=user_input.get(CONF_NAME, DEFAULT_NAME),
+                    title=f"{host}:{port}",
                     data=user_input,
                 )
 
@@ -76,8 +78,10 @@ class SplunkConfigFlow(ConfigFlow, domain=DOMAIN):
             _LOGGER.error("Failed to import Splunk configuration from YAML: %s", errors)
             return self.async_abort(reason="invalid_config")
 
+        host = import_config.get(CONF_HOST, DEFAULT_HOST)
+        port = import_config.get(CONF_PORT, DEFAULT_PORT)
         return self.async_create_entry(
-            title=import_config.get(CONF_NAME, DEFAULT_NAME),
+            title=f"{host}:{port}",
             data=import_config,
         )
 
