@@ -1,6 +1,6 @@
 {
   "common": {
-    "condition_behavior_description": "How the state should match on the targeted fans.",
+    "condition_behavior_description": "How the state should match on the targeted alarms.",
     "condition_behavior_name": "Behavior",
     "trigger_behavior_description": "The behavior of the targeted alarms to trigger on.",
     "trigger_behavior_name": "Behavior"

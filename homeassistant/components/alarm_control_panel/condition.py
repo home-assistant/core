@@ -13,7 +13,7 @@ from .const import DOMAIN, AlarmControlPanelEntityFeature, AlarmControlPanelStat
 
 
 def supports_feature(hass: HomeAssistant, entity_id: str, features: int) -> bool:
-    """Get the device class of an entity or UNDEFINED if not found."""
+    """Test if an entity supports the specified features."""
     try:
         return bool(get_supported_features(hass, entity_id) & features)
     except HomeAssistantError:
@@ -38,7 +38,7 @@ class EntityStateConditionRequiredFeatures(EntityStateConditionBase):
 def make_entity_state_condition_required_features(
     domain: str, to_state: str, required_features: int
 ) -> type[EntityStateConditionRequiredFeatures]:
-    """Create an entity state trigger class."""
+    """Create an entity state condition class with required feature filtering."""
 
     class CustomCondition(EntityStateConditionRequiredFeatures):
         """Trigger for entity state changes."""
