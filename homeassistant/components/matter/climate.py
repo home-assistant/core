@@ -18,6 +18,10 @@ from homeassistant.components.climate import (
     ATTR_TARGET_TEMP_LOW,
     DEFAULT_MAX_TEMP,
     DEFAULT_MIN_TEMP,
+    PRESET_AWAY,
+    PRESET_ECO,
+    PRESET_HOME,
+    PRESET_SLEEP,
     ClimateEntity,
     ClimateEntityDescription,
     ClimateEntityFeature,
@@ -44,6 +48,33 @@ HVAC_SYSTEM_MODE_MAP = {
     HVACMode.HEAT: 4,
     HVACMode.DRY: 8,
     HVACMode.FAN_ONLY: 7,
+}
+
+# Map of known Matter preset names that have HA standard preset equivalents
+# Maps both Matter spec standard names and custom device-provided names to HA presets
+KNOWN_PRESETS: dict[str, str] = {
+    # PresetScenarioEnum standard names (from Matter spec)
+    "occupied": PRESET_HOME,
+    "unoccupied": PRESET_AWAY,
+    "sleep": PRESET_SLEEP,
+    # Custom preset names (device-provided, may vary by manufacturer)
+    "Home": PRESET_HOME,
+    "Away": PRESET_AWAY,
+    "Eco": PRESET_ECO,
+    "Wake": "wake",
+    "Vacation": "vacation",
+    "GoingToSleep": "going_to_sleep",
+}
+
+# Map of PresetScenarioEnum values to preset names from Matter spec
+PRESET_SCENARIO_MAP: dict[int, str] = {
+    clusters.Thermostat.Enums.PresetScenarioEnum.kOccupied: "occupied",
+    clusters.Thermostat.Enums.PresetScenarioEnum.kUnoccupied: "unoccupied",
+    clusters.Thermostat.Enums.PresetScenarioEnum.kSleep: "sleep",
+    clusters.Thermostat.Enums.PresetScenarioEnum.kWake: "wake",
+    clusters.Thermostat.Enums.PresetScenarioEnum.kVacation: "vacation",
+    clusters.Thermostat.Enums.PresetScenarioEnum.kGoingToSleep: "going_to_sleep",
+    clusters.Thermostat.Enums.PresetScenarioEnum.kUserDefined: "user_defined",
 }
 
 SINGLE_SETPOINT_DEVICES: set[tuple[int, int]] = {
@@ -333,7 +364,18 @@ class MatterClimate(MatterEntity, ClimateEntity):
         presets = []
         if self.matter_presets:
             for i, preset in enumerate(self.matter_presets, start=1):
-                name = (preset.name.strip() if preset.name else None) or f"Preset{i}"
+                # Use preset name if available, otherwise try to map from scenarioType
+                name = None
+                if preset.name and preset.name.strip():
+                    name = preset.name.strip()
+                elif hasattr(preset, "scenarioType") and preset.scenarioType:
+                    # Try to get the standard name from PresetScenarioEnum
+                    name = PRESET_SCENARIO_MAP.get(preset.scenarioType)
+
+                # Fall back to generic name if no name was determined
+                if not name:
+                    name = f"Preset{i}"
+
                 presets.append(name)
                 self._preset_handle_by_name[name] = preset.presetHandle
 
