@@ -125,6 +125,7 @@ NEW_TRIGGERS_CONDITIONS_FEATURE_FLAG = "new_triggers_conditions"
 _EXPERIMENTAL_CONDITION_PLATFORMS = {
     "alarm_control_panel",
     "fan",
+    "humidifier",
     "light",
 }
 
