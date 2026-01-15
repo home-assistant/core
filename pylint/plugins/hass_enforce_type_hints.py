@@ -700,6 +700,7 @@ _ENTITY_MATCH: list[TypeHintMatch] = [
     TypeHintMatch(
         function_name="device_class",
         return_type=["str", None],
+        mandatory=True,
     ),
     TypeHintMatch(
         function_name="unit_of_measurement",
@@ -2518,10 +2519,12 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
                 TypeHintMatch(
                     function_name="state_class",
                     return_type=["SensorStateClass", "str", None],
+                    mandatory=True,
                 ),
                 TypeHintMatch(
                     function_name="last_reset",
                     return_type=["datetime", None],
+                    mandatory=True,
                 ),
                 TypeHintMatch(
                     function_name="native_value",
