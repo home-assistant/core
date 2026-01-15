@@ -174,9 +174,6 @@
     }
   },
   "services": {
-    "set_presets": {
-      "service": "mdi:home-thermometer"
-    },
     "water_heater_boost": {
       "service": "mdi:water-boiler"
     }
