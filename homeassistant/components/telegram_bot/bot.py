@@ -72,6 +72,7 @@ from .const import (
     ATTR_INLINE_MESSAGE_ID,
     ATTR_KEYBOARD,
     ATTR_KEYBOARD_INLINE,
+    ATTR_MEDIA,
     ATTR_MESSAGE,
     ATTR_MESSAGE_TAG,
     ATTR_MESSAGE_THREAD_ID,
@@ -82,6 +83,7 @@ from .const import (
     ATTR_OPEN_PERIOD,
     ATTR_PARSER,
     ATTR_PASSWORD,
+    ATTR_PROTECT_CONTENT,
     ATTR_REPLY_TO_MSGID,
     ATTR_REPLYMARKUP,
     ATTR_RESIZE_KEYBOARD,
@@ -597,6 +599,28 @@ class TelegramNotificationService:
             reply_markup=params[ATTR_REPLYMARKUP],
             read_timeout=params[ATTR_TIMEOUT],
             message_thread_id=params[ATTR_MESSAGE_THREAD_ID],
+            context=context,
+        )
+
+    async def send_media_group(
+        self,
+        target: Any = None,
+        context: Context | None = None,
+        **kwargs: dict[str, Any],
+    ) -> dict[int, int]:
+        """Send a message to one or multiple pre-allowed chat IDs."""
+        params = self._get_msg_kwargs(kwargs)
+        return await self._send_msgs(
+            self.bot.send_media_group,
+            "Error sending media group",
+            params[ATTR_MESSAGE_TAG],
+            target=target,
+            media=kwargs[ATTR_MEDIA],
+            disable_notification=params[ATTR_DISABLE_NOTIF],
+            protect_content=kwargs.get(ATTR_PROTECT_CONTENT, False),
+            message_thread_id=params[ATTR_MESSAGE_THREAD_ID],
+            reply_to_message_id=params[ATTR_REPLY_TO_MSGID],
+            parse_mode=params[ATTR_PARSER],
             context=context,
         )
 

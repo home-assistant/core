@@ -54,6 +54,7 @@ from .const import (
     ATTR_IS_BIG,
     ATTR_KEYBOARD,
     ATTR_KEYBOARD_INLINE,
+    ATTR_MEDIA,
     ATTR_MEDIA_TYPE,
     ATTR_MESSAGE,
     ATTR_MESSAGE_TAG,
@@ -64,6 +65,7 @@ from .const import (
     ATTR_OPTIONS,
     ATTR_PARSER,
     ATTR_PASSWORD,
+    ATTR_PROTECT_CONTENT,
     ATTR_QUESTION,
     ATTR_REACTION,
     ATTR_REPLY_TO_MSGID,
@@ -189,8 +191,32 @@ SERVICE_SCHEMA_SEND_FILE = vol.All(
     cv.deprecated(ATTR_TIMEOUT), SERVICE_SCHEMA_BASE_SEND_FILE
 )
 
-SERVICE_SCHEMA_SEND_MEDIA_GROUP = SERVICE_SCHEMA_SEND_FILE = vol.All(
-    cv.deprecated(ATTR_TIMEOUT), SERVICE_SCHEMA_BASE_SEND_FILE
+SERVICE_SCHEMA_SEND_MEDIA_GROUP = vol.Schema(
+    {
+        vol.Optional(CONF_CONFIG_ENTRY_ID): cv.string,
+        vol.Optional(ATTR_CHAT_ID): vol.All(cv.ensure_list, [vol.Coerce(int)]),
+        vol.Optional(ATTR_MEDIA): vol.All(
+            cv.ensure_list,
+            [
+                vol.Schema(
+                    {
+                        vol.Required(ATTR_URL): cv.string,
+                        vol.Optional(ATTR_CAPTION): cv.string,
+                        vol.Optional(ATTR_USERNAME): cv.string,
+                        vol.Optional(ATTR_PASSWORD): cv.string,
+                        vol.Optional(ATTR_AUTHENTICATION): cv.string,
+                        vol.Optional(ATTR_VERIFY_SSL): cv.boolean,
+                    }
+                )
+            ],
+            vol.Length(min=1),
+        ),
+        vol.Optional(ATTR_PARSER): cv.string,
+        vol.Optional(ATTR_DISABLE_NOTIF): cv.boolean,
+        vol.Optional(ATTR_PROTECT_CONTENT): cv.boolean,
+        vol.Optional(ATTR_REPLY_TO_MSGID): vol.Coerce(int),
+        vol.Optional(ATTR_MESSAGE_THREAD_ID): vol.Coerce(int),
+    }
 )
 
 SERVICE_SCHEMA_SEND_STICKER = vol.All(
@@ -423,6 +449,10 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         messages = None
         if msgtype == SERVICE_SEND_MESSAGE:
             messages = await notify_service.send_message(
+                context=service.context, **kwargs
+            )
+        elif msgtype == SERVICE_SEND_MEDIA_GROUP:
+            messages = await notify_service.send_media_group(
                 context=service.context, **kwargs
             )
         elif msgtype == SERVICE_SEND_CHAT_ACTION:
