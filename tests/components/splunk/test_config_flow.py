@@ -39,7 +39,7 @@ async def test_user_flow_success(
     await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == "Test Splunk"
+    assert result["title"] == "splunk.example.com:8088"
     assert result["data"] == {
         CONF_TOKEN: "test-token-123",
         CONF_HOST: "splunk.example.com",
@@ -163,7 +163,7 @@ async def test_import_flow_success(
     await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == "Imported Splunk"
+    assert result["title"] == "splunk.example.com:8088"
     assert result["data"] == {
         CONF_TOKEN: "test-token-123",
         CONF_HOST: "splunk.example.com",

@@ -5,12 +5,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from homeassistant.components.splunk.const import (
-    DEFAULT_HOST,
-    DEFAULT_NAME,
-    DEFAULT_PORT,
-    DOMAIN,
-)
+from homeassistant.components.splunk.const import DEFAULT_HOST, DEFAULT_PORT, DOMAIN
 from homeassistant.const import CONF_HOST, CONF_PORT, CONF_SSL, CONF_TOKEN
 
 from tests.common import MockConfigEntry
@@ -29,7 +24,7 @@ def mock_setup_entry() -> Generator[AsyncMock]:
 def mock_config_entry() -> MockConfigEntry:
     """Return the default mocked config entry."""
     return MockConfigEntry(
-        title=DEFAULT_NAME,
+        title=f"{DEFAULT_HOST}:{DEFAULT_PORT}",
         domain=DOMAIN,
         data={
             CONF_TOKEN: "test-token-123",
