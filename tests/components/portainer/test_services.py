@@ -177,14 +177,9 @@ async def test_service_portainer_exceptions(
     device = device_registry.async_get_device(
         identifiers={(DOMAIN, TEST_DEVICE_IDENTIFIER)}
     )
-    assert device is not None
 
-    # Test PortainerError
     mock_portainer_client.images_prune.side_effect = exception
-    with pytest.raises(
-        HomeAssistantError,
-        match=message,
-    ):
+    with pytest.raises(HomeAssistantError, match=message):
         await hass.services.async_call(
             DOMAIN,
             SERVICE_PRUNE_IMAGES,
