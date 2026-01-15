@@ -20,6 +20,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Mock Title Wi-Fi WiFi (2.4Ghz)',
     'options': dict({
     }),
     'original_device_class': None,
@@ -69,6 +70,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Mock Title Wi-Fi WiFi (5Ghz)',
     'options': dict({
     }),
     'original_device_class': None,
@@ -118,6 +120,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Internet access',
     'options': dict({
     }),
     'original_device_class': None,
@@ -166,6 +169,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Mock Title Wi-Fi WiFi',
     'options': dict({
     }),
     'original_device_class': None,
@@ -215,6 +219,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Mock Title Wi-Fi WiFi2',
     'options': dict({
     }),
     'original_device_class': None,
@@ -264,6 +269,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Internet access',
     'options': dict({
     }),
     'original_device_class': None,
@@ -312,6 +318,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Mock Title Wi-Fi WiFi (2.4Ghz)',
     'options': dict({
     }),
     'original_device_class': None,
@@ -361,6 +368,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Mock Title Wi-Fi WiFi+ (5Ghz)',
     'options': dict({
     }),
     'original_device_class': None,
@@ -410,6 +418,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Internet access',
     'options': dict({
     }),
     'original_device_class': None,
@@ -458,6 +467,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Call deflection 0',
     'options': dict({
     }),
     'original_device_class': None,
@@ -513,6 +523,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Mock Title Wi-Fi MyWifi',
     'options': dict({
     }),
     'original_device_class': None,
@@ -562,6 +573,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Internet access',
     'options': dict({
     }),
     'original_device_class': None,

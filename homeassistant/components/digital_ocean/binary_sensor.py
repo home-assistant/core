@@ -84,7 +84,7 @@ class DigitalOceanBinarySensor(BinarySensorEntity):
         return self.data.status == "active"
 
     @property
-    def device_class(self):
+    def device_class(self) -> BinarySensorDeviceClass:
         """Return the class of this sensor."""
         return BinarySensorDeviceClass.MOVING
 
