@@ -51,7 +51,7 @@ _LOGGER = logging.getLogger(__name__)
 DEFAULT_OFFSET = timedelta(hours=0)
 
 
-def validate_cron_pattern(pattern):
+def validate_cron_pattern(pattern: str) -> str:
     """Check that the pattern is well-formed."""
     try:
         CronSim(pattern, datetime(2020, 1, 1))  # any date will do
@@ -61,7 +61,7 @@ def validate_cron_pattern(pattern):
     return pattern
 
 
-def period_or_cron(config):
+def period_or_cron(config: ConfigType) -> ConfigType:
     """Check that if cron pattern is used, then meter type and offsite must be removed."""
     if CONF_CRON_PATTERN in config and CONF_METER_TYPE in config:
         raise vol.Invalid(f"Use <{CONF_CRON_PATTERN}> or <{CONF_METER_TYPE}>")
@@ -76,7 +76,7 @@ def period_or_cron(config):
     return config
 
 
-def max_28_days(config):
+def max_28_days(config: timedelta) -> timedelta:
     """Check that time period does not include more than 28 days."""
     if config.days >= 28:
         raise vol.Invalid(
@@ -123,7 +123,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     if DOMAIN not in config:
         return True
 
-    for meter, conf in config[DOMAIN].items():
+    domain_config: ConfigType = config[DOMAIN]
+    for meter, conf in domain_config.items():
         _LOGGER.debug("Setup %s.%s", DOMAIN, meter)
 
         hass.data[DATA_UTILITY][meter] = conf

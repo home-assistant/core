@@ -1,5 +1,9 @@
 """Constants for the utility meter component."""
 
+from typing import Any
+
+from homeassistant.util.hass_dict import HassKey
+
 DOMAIN = "utility_meter"
 
 QUARTER_HOURLY = "quarter-hourly"
@@ -22,7 +26,7 @@ METER_TYPES = [
     YEARLY,
 ]
 
-DATA_UTILITY = "utility_meter_data"
+DATA_UTILITY: HassKey[dict[str, dict[str, Any]]] = HassKey(DOMAIN)
 DATA_TARIFF_SENSORS = "utility_meter_sensors"
 
 CONF_METER = "meter"
