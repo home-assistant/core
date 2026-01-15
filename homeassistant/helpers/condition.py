@@ -17,6 +17,7 @@ from typing import (
     TYPE_CHECKING,
     Any,
     Final,
+    Literal,
     Protocol,
     TypedDict,
     Unpack,
@@ -28,7 +29,10 @@ from typing import (
 import voluptuous as vol
 
 from homeassistant.const import (
+    ATTR_AREA_ID,
     ATTR_DEVICE_CLASS,
+    ATTR_FLOOR_ID,
+    ATTR_LABEL_ID,
     CONF_ABOVE,
     CONF_AFTER,
     CONF_ATTRIBUTE,
@@ -1346,13 +1350,18 @@ def async_extract_entities(config: ConfigType | Template) -> set[str]:
         if entity_ids is not None:
             referenced.update(entity_ids)
 
+        if target_entities := _get_targets_from_condition_config(
+            config, CONF_ENTITY_ID
+        ):
+            referenced.update(target_entities)
+
     return referenced
 
 
 @callback
 def async_extract_devices(config: ConfigType | Template) -> set[str]:
     """Extract devices from a condition."""
-    referenced = set()
+    referenced: set[str] = set()
     to_process = deque([config])
 
     while to_process:
@@ -1366,13 +1375,73 @@ def async_extract_devices(config: ConfigType | Template) -> set[str]:
             to_process.extend(config["conditions"])
             continue
 
-        if condition != "device":
+        if condition == "device":
+            if (device_id := config.get(CONF_DEVICE_ID)) is not None:
+                referenced.add(device_id)
             continue
 
-        if (device_id := config.get(CONF_DEVICE_ID)) is not None:
-            referenced.add(device_id)
+        if target_devices := _get_targets_from_condition_config(config, CONF_DEVICE_ID):
+            referenced.update(target_devices)
 
     return referenced
+
+
+@callback
+def async_extract_areas(config: ConfigType | Template) -> set[str]:
+    """Extract areas from a condition."""
+    return _async_extract_targets(config, ATTR_AREA_ID)
+
+
+@callback
+def async_extract_floors(config: ConfigType | Template) -> set[str]:
+    """Extract floors from a condition."""
+    return _async_extract_targets(config, ATTR_FLOOR_ID)
+
+
+@callback
+def async_extract_labels(config: ConfigType | Template) -> set[str]:
+    """Extract labels from a condition."""
+    return _async_extract_targets(config, ATTR_LABEL_ID)
+
+
+@callback
+def _async_extract_targets(
+    config: ConfigType | Template,
+    target: Literal["entity_id", "device_id", "area_id", "floor_id", "label_id"],
+) -> set[str]:
+    """Extract targets from a condition."""
+    referenced: set[str] = set()
+    to_process = deque([config])
+
+    while to_process:
+        config = to_process.popleft()
+        if isinstance(config, Template):
+            continue
+
+        condition = config[CONF_CONDITION]
+
+        if condition in ("and", "not", "or"):
+            to_process.extend(config["conditions"])
+            continue
+
+        if target_labels := _get_targets_from_condition_config(config, target):
+            referenced.update(target_labels)
+
+    return referenced
+
+
+@callback
+def _get_targets_from_condition_config(
+    config: ConfigType,
+    target: Literal["entity_id", "device_id", "area_id", "floor_id", "label_id"],
+) -> list[str]:
+    """Extract targets from a condition target config."""
+    if not (target_conf := config.get(CONF_TARGET)):
+        return []
+    if not (targets := target_conf.get(target)):
+        return []
+
+    return [targets] if isinstance(targets, str) else targets
 
 
 def _load_conditions_file(integration: Integration) -> dict[str, Any]:
