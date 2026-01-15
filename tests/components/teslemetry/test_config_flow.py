@@ -342,6 +342,14 @@ async def test_reconfigure(
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reconfigure_successful"
 
+    # Verify entry data was updated
+    assert mock_entry.data["auth_implementation"] == DOMAIN
+    assert mock_entry.data["token"]["refresh_token"] == "new_refresh_token"
+    assert mock_entry.data["token"]["access_token"] == "new_access_token"
+    assert mock_entry.data["token"]["type"] == "Bearer"
+    assert mock_entry.data["token"]["expires_in"] == 60
+    assert "expires_at" in mock_entry.data["token"]
+
 
 @pytest.mark.usefixtures("current_request_with_host")
 async def test_reconfigure_account_mismatch(
@@ -402,6 +410,135 @@ async def test_reconfigure_account_mismatch(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reconfigure_account_mismatch"
+
+
+@pytest.mark.usefixtures("current_request_with_host")
+@pytest.mark.parametrize(
+    "exception",
+    [
+        InvalidToken,
+        SubscriptionRequired,
+        ClientConnectionError,
+        TeslaFleetError("API error"),
+    ],
+)
+async def test_reconfigure_oauth_error_handling(
+    hass: HomeAssistant,
+    hass_client_no_auth: ClientSessionGenerator,
+    aioclient_mock: AiohttpClientMocker,
+    exception: Exception,
+) -> None:
+    """Test reconfigure flow with various API errors."""
+    mock_entry = await setup_platform(hass, [])
+
+    result = await mock_entry.start_reconfigure_flow(hass)
+    assert result["type"] is FlowResultType.EXTERNAL_STEP
+
+    state = config_entry_oauth2_flow._encode_jwt(
+        hass,
+        {
+            "flow_id": result["flow_id"],
+            "redirect_uri": REDIRECT,
+        },
+    )
+    client = await hass_client_no_auth()
+    await client.get(f"/auth/external/callback?code=abcd&state={state}")
+
+    aioclient_mock.post(
+        TOKEN_URL,
+        json={
+            "refresh_token": "test_refresh_token",
+            "access_token": "test_access_token",
+            "type": "Bearer",
+            "expires_in": 60,
+        },
+    )
+
+    with patch(
+        "tesla_fleet_api.teslemetry.Teslemetry.metadata",
+        side_effect=exception,
+    ):
+        result = await hass.config_entries.flow.async_configure(result["flow_id"])
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "oauth_error"
+
+
+@pytest.mark.usefixtures("current_request_with_host")
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_reconfigure_oauth_error_recovery(
+    hass: HomeAssistant,
+    hass_client_no_auth: ClientSessionGenerator,
+    aioclient_mock: AiohttpClientMocker,
+) -> None:
+    """Test reconfigure flow can recover from an OAuth error."""
+    mock_entry = await setup_platform(hass, [])
+
+    # First attempt - simulate OAuth error
+    result = await mock_entry.start_reconfigure_flow(hass)
+    assert result["type"] is FlowResultType.EXTERNAL_STEP
+
+    state = config_entry_oauth2_flow._encode_jwt(
+        hass,
+        {
+            "flow_id": result["flow_id"],
+            "redirect_uri": REDIRECT,
+        },
+    )
+    client = await hass_client_no_auth()
+    await client.get(f"/auth/external/callback?code=abcd&state={state}")
+
+    aioclient_mock.post(
+        TOKEN_URL,
+        json={
+            "refresh_token": "test_refresh_token",
+            "access_token": "test_access_token",
+            "type": "Bearer",
+            "expires_in": 60,
+        },
+    )
+
+    with patch(
+        "tesla_fleet_api.teslemetry.Teslemetry.metadata",
+        side_effect=ClientConnectionError,
+    ):
+        result = await hass.config_entries.flow.async_configure(result["flow_id"])
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "oauth_error"
+
+    # Second attempt - should succeed (recovery)
+    result = await mock_entry.start_reconfigure_flow(hass)
+    assert result["type"] is FlowResultType.EXTERNAL_STEP
+
+    state = config_entry_oauth2_flow._encode_jwt(
+        hass,
+        {
+            "flow_id": result["flow_id"],
+            "redirect_uri": REDIRECT,
+        },
+    )
+    await client.get(f"/auth/external/callback?code=abcd&state={state}")
+
+    aioclient_mock.clear_requests()
+    aioclient_mock.post(
+        TOKEN_URL,
+        json={
+            "refresh_token": "new_refresh_token",
+            "access_token": "new_access_token",
+            "type": "Bearer",
+            "expires_in": 60,
+        },
+    )
+
+    result = await hass.config_entries.flow.async_configure(result["flow_id"])
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+
+    # Verify entry data was updated after recovery
+    assert mock_entry.data["token"]["refresh_token"] == "new_refresh_token"
+    assert mock_entry.data["token"]["access_token"] == "new_access_token"
 
 
 async def test_migrate_error_from_future(
