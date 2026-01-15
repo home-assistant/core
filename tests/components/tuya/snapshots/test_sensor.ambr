@@ -22,6 +22,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Current',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -81,6 +82,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -137,6 +139,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Total energy',
     'options': dict({
     }),
     'original_device_class': None,
@@ -188,6 +191,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Voltage',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -247,6 +251,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Current',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -306,6 +311,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -362,6 +368,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Total energy',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -418,6 +425,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Voltage',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -477,6 +485,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Current',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -536,6 +545,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -592,6 +602,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Voltage',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -651,6 +662,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Current',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -710,6 +722,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -766,6 +779,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Total energy',
     'options': dict({
     }),
     'original_device_class': None,
@@ -818,6 +832,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Voltage',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -877,6 +892,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
@@ -928,6 +944,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery state',
     'options': dict({
     }),
     'original_device_class': None,
@@ -978,6 +995,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Carbon dioxide',
     'options': dict({
       'sensor.private': dict({
         'suggested_unit_of_measurement': 'ppm',
@@ -1034,6 +1052,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Formaldehyde',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1086,6 +1105,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Humidity',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.HUMIDITY: 'humidity'>,
@@ -1139,6 +1159,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'PM10',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.PM10: 'pm10'>,
@@ -1192,6 +1213,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'PM2.5',
     'options': dict({
       'sensor.private': dict({
         'suggested_unit_of_measurement': 'μg/m³',
@@ -1248,6 +1270,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -1304,6 +1327,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Volatile organic compounds',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS: 'volatile_organic_compounds'>,
@@ -1357,6 +1381,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Humidity',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.HUMIDITY: 'humidity'>,
@@ -1410,6 +1435,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -1466,6 +1492,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Current',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -1525,6 +1552,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -1581,6 +1609,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Total energy',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1632,6 +1661,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Voltage',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -1691,6 +1721,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Current',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -1750,6 +1781,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -1806,6 +1838,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Total energy',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1857,6 +1890,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Voltage',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -1916,6 +1950,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
@@ -1969,6 +2004,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
@@ -2022,6 +2058,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Humidity',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.HUMIDITY: 'humidity'>,
@@ -2075,6 +2112,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -2131,6 +2169,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
@@ -2184,6 +2223,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Current',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -2243,6 +2283,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -2299,6 +2340,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -2355,6 +2397,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Total energy',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -2411,6 +2454,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Voltage',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -2470,6 +2514,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
@@ -2523,6 +2568,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
@@ -2576,6 +2622,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
@@ -2629,6 +2676,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Air pressure',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -2683,6 +2731,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery state',
     'options': dict({
     }),
     'original_device_class': None,
@@ -2733,6 +2782,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Dew point',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -2789,6 +2839,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Feels like',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -2845,6 +2896,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Heat index',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -2901,6 +2953,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Humidity',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.HUMIDITY: 'humidity'>,
@@ -2954,6 +3007,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Illuminance',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ILLUMINANCE: 'illuminance'>,
@@ -3007,6 +3061,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Outdoor humidity',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.HUMIDITY: 'humidity'>,
@@ -3060,6 +3115,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Outdoor humidity channel 1',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.HUMIDITY: 'humidity'>,
@@ -3113,6 +3169,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Outdoor humidity channel 2',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.HUMIDITY: 'humidity'>,
@@ -3166,6 +3223,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Outdoor humidity channel 3',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.HUMIDITY: 'humidity'>,
@@ -3219,6 +3277,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Precipitation intensity',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -3275,6 +3334,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Probe temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -3331,6 +3391,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Probe temperature channel 1',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -3387,6 +3448,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Probe temperature channel 2',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -3443,6 +3505,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Probe temperature channel 3',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -3499,6 +3562,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -3555,6 +3619,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Total precipitation today',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -3611,6 +3676,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'UV index',
     'options': dict({
     }),
     'original_device_class': None,
@@ -3663,6 +3729,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Wind chill index',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -3719,6 +3786,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Wind direction',
     'options': dict({
     }),
     'original_device_class': None,
@@ -3770,6 +3838,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Wind speed',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -3829,6 +3898,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
@@ -3882,6 +3952,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Last amount',
     'options': dict({
     }),
     'original_device_class': None,
@@ -3934,6 +4005,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery power',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -3990,6 +4062,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery SOC',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
@@ -4043,6 +4116,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Inverter output power',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -4099,6 +4173,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Lifetime battery charge energy',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -4155,6 +4230,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Lifetime battery discharge energy',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -4211,6 +4287,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Lifetime inverter output energy',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -4267,6 +4344,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Lifetime off-grid port energy',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -4323,6 +4401,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Lifetime PV energy',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -4379,6 +4458,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'PV channel 1 power',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -4435,6 +4515,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'PV channel 2 power',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -4491,6 +4572,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Total PV power',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -4547,6 +4629,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Last amount',
     'options': dict({
     }),
     'original_device_class': None,
@@ -4599,6 +4682,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Current',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -4658,6 +4742,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -4714,6 +4799,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Total energy',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -4770,6 +4856,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Voltage',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -4829,6 +4916,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Humidity',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.HUMIDITY: 'humidity'>,
@@ -4882,6 +4970,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Current',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -4941,6 +5030,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Humidity',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.HUMIDITY: 'humidity'>,
@@ -4994,6 +5084,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -5050,6 +5141,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Total energy',
     'options': dict({
     }),
     'original_device_class': None,
@@ -5101,6 +5193,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Voltage',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -5160,6 +5253,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Humidity',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.HUMIDITY: 'humidity'>,
@@ -5213,6 +5307,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -5267,6 +5362,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Last operation duration',
     'options': dict({
     }),
     'original_device_class': None,
@@ -5318,6 +5414,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
@@ -5371,6 +5468,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Current',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -5430,6 +5528,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -5486,6 +5585,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Total energy',
     'options': dict({
     }),
     'original_device_class': None,
@@ -5538,6 +5638,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Voltage',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -5597,6 +5698,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Phase A current',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -5656,6 +5758,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Phase A power',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -5715,6 +5818,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Phase A voltage',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -5771,6 +5875,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Supply frequency',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -5827,6 +5932,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Total energy',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -5883,6 +5989,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Current',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -5942,6 +6049,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -5998,6 +6106,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Total energy',
     'options': dict({
     }),
     'original_device_class': None,
@@ -6050,6 +6159,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Voltage',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -6109,6 +6219,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Phase A current',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -6168,6 +6279,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Phase A power',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -6227,6 +6339,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Phase A voltage',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -6283,6 +6396,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Phase B current',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -6342,6 +6456,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Phase B power',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -6401,6 +6516,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Phase B voltage',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -6457,6 +6573,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Phase C current',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -6516,6 +6633,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Phase C power',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -6575,6 +6693,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Phase C voltage',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -6631,6 +6750,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Total energy',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -6687,6 +6807,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Current',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -6746,6 +6867,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -6802,6 +6924,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Total energy',
     'options': dict({
     }),
     'original_device_class': None,
@@ -6853,6 +6976,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Voltage',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -6912,6 +7036,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Current',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -6971,6 +7096,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -7027,6 +7153,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Total energy',
     'options': dict({
     }),
     'original_device_class': None,
@@ -7078,6 +7205,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Voltage',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -7137,6 +7265,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
@@ -7190,6 +7319,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Current',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -7249,6 +7379,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -7305,6 +7436,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Total energy',
     'options': dict({
     }),
     'original_device_class': None,
@@ -7356,6 +7488,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Voltage',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -7413,6 +7546,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery state',
     'options': dict({
     }),
     'original_device_class': None,
@@ -7463,6 +7597,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Humidity',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.HUMIDITY: 'humidity'>,
@@ -7516,6 +7651,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Probe temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -7572,6 +7708,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -7628,6 +7765,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
@@ -7681,6 +7819,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Current',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -7740,6 +7879,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -7796,6 +7936,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Total energy',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -7852,6 +7993,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Voltage',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -7911,6 +8053,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Current',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -7970,6 +8113,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -8026,6 +8170,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Voltage',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -8085,6 +8230,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
@@ -8138,6 +8284,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Total watering time',
     'options': dict({
     }),
     'original_device_class': None,
@@ -8190,6 +8337,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Gas',
     'options': dict({
     }),
     'original_device_class': None,
@@ -8240,6 +8388,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery state',
     'options': dict({
     }),
     'original_device_class': None,
@@ -8290,6 +8439,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Humidity',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.HUMIDITY: 'humidity'>,
@@ -8343,6 +8493,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -8399,6 +8550,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
@@ -8452,6 +8604,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -8508,6 +8661,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -8564,6 +8718,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Current',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -8623,6 +8778,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -8679,6 +8835,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Total energy',
     'options': dict({
     }),
     'original_device_class': None,
@@ -8730,6 +8887,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Voltage',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -8789,6 +8947,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'PM2.5',
     'options': dict({
     }),
     'original_device_class': None,
@@ -8841,6 +9000,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -8897,6 +9057,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Depth',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -8953,6 +9114,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Liquid level',
     'options': dict({
     }),
     'original_device_class': None,
@@ -9003,6 +9165,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Liquid state',
     'options': dict({
     }),
     'original_device_class': None,
@@ -9053,6 +9216,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
@@ -9104,6 +9268,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery state',
     'options': dict({
     }),
     'original_device_class': None,
@@ -9154,6 +9319,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Humidity',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.HUMIDITY: 'humidity'>,
@@ -9207,6 +9373,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -9263,6 +9430,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery',
     'options': dict({
     }),
     'original_device_class': None,
@@ -9315,6 +9483,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Humidity',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.HUMIDITY: 'humidity'>,
@@ -9368,6 +9537,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -9424,6 +9594,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
@@ -9477,6 +9648,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Humidity',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.HUMIDITY: 'humidity'>,
@@ -9530,6 +9702,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -9586,6 +9759,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Current',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -9645,6 +9819,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -9701,6 +9876,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Total energy',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -9757,6 +9933,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Voltage',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -9814,6 +9991,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery state',
     'options': dict({
     }),
     'original_device_class': None,
@@ -9864,6 +10042,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Humidity',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.HUMIDITY: 'humidity'>,
@@ -9917,6 +10096,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -9973,6 +10153,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Current',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -10032,6 +10213,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -10088,6 +10270,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Total energy',
     'options': dict({
     }),
     'original_device_class': None,
@@ -10139,6 +10322,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Voltage',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -10198,6 +10382,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
@@ -10251,6 +10436,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'PM2.5',
     'options': dict({
     }),
     'original_device_class': None,
@@ -10303,6 +10489,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Current',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -10362,6 +10549,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -10418,6 +10606,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Total energy',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -10474,6 +10663,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Total production',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -10530,6 +10720,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Voltage',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -10589,6 +10780,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
@@ -10640,6 +10832,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery state',
     'options': dict({
     }),
     'original_device_class': None,
@@ -10688,6 +10881,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Air quality',
     'options': dict({
     }),
     'original_device_class': None,
@@ -10736,6 +10930,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Filter utilization',
     'options': dict({
     }),
     'original_device_class': None,
@@ -10787,6 +10982,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'PM2.5',
     'options': dict({
       'sensor.private': dict({
         'suggested_unit_of_measurement': 'μg/m³',
@@ -10843,6 +11039,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Cat weight',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -10899,6 +11096,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Excretion duration',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -10953,6 +11151,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Excretion times (day)',
     'options': dict({
     }),
     'original_device_class': None,
@@ -11002,6 +11201,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Status',
     'options': dict({
     }),
     'original_device_class': None,
@@ -11052,6 +11252,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Current',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -11111,6 +11312,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -11167,6 +11369,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Total energy',
     'options': dict({
     }),
     'original_device_class': None,
@@ -11219,6 +11422,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Voltage',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -11276,6 +11480,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery state',
     'options': dict({
     }),
     'original_device_class': None,
@@ -11326,6 +11531,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Humidity',
     'options': dict({
     }),
     'original_device_class': None,
@@ -11378,6 +11584,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Current',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -11437,6 +11644,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -11493,6 +11701,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Total energy',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -11549,6 +11758,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Voltage',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -11608,6 +11818,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Current',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -11667,6 +11878,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -11723,6 +11935,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Total energy',
     'options': dict({
     }),
     'original_device_class': None,
@@ -11775,6 +11988,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Voltage',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -11834,6 +12048,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Humidity',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.HUMIDITY: 'humidity'>,
@@ -11887,6 +12102,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Current',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -11946,6 +12162,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -12002,6 +12219,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Voltage',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -12059,6 +12277,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Last operation duration',
     'options': dict({
     }),
     'original_device_class': None,
@@ -12110,6 +12329,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
@@ -12163,6 +12383,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Illuminance',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ILLUMINANCE: 'illuminance'>,
@@ -12216,6 +12437,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Phase A current',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -12275,6 +12497,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Phase A power',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -12334,6 +12557,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Phase A voltage',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -12390,6 +12614,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Phase B current',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -12449,6 +12674,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Phase B power',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -12508,6 +12734,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Phase B voltage',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -12564,6 +12791,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Phase C current',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -12623,6 +12851,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Phase C power',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -12682,6 +12911,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Phase C voltage',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -12738,6 +12968,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Supply frequency',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -12794,6 +13025,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Total energy',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -12850,6 +13082,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Total production',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -12906,6 +13139,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Phase A current',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -12965,6 +13199,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Phase A power',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -13024,6 +13259,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Phase A voltage',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -13080,6 +13316,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Total energy',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -13136,6 +13373,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Total production',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -13192,6 +13430,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Phase A current',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -13251,6 +13490,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Phase A power',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -13310,6 +13550,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Phase A voltage',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -13366,6 +13607,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Phase B current',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -13425,6 +13667,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Phase B power',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -13484,6 +13727,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Phase B voltage',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -13540,6 +13784,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Phase C current',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -13599,6 +13844,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Phase C power',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -13658,6 +13904,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Phase C voltage',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -13714,6 +13961,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Supply frequency',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -13770,6 +14018,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Total energy',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -13826,6 +14075,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery',
     'options': dict({
     }),
     'original_device_class': None,
@@ -13878,6 +14128,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
@@ -13931,6 +14182,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Current',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -13990,6 +14242,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -14046,6 +14299,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Total energy',
     'options': dict({
     }),
     'original_device_class': None,
@@ -14098,6 +14352,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Voltage',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -14157,6 +14412,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
@@ -14210,6 +14466,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Humidity',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.HUMIDITY: 'humidity'>,
@@ -14263,6 +14520,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -14319,6 +14577,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Current',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -14378,6 +14637,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -14434,6 +14694,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Total energy',
     'options': dict({
     }),
     'original_device_class': None,
@@ -14485,6 +14746,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Voltage',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -14544,6 +14806,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Phase A current',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -14603,6 +14866,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Phase A power',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -14662,6 +14926,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Phase A voltage',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -14718,6 +14983,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Phase B current',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -14777,6 +15043,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Phase B power',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -14836,6 +15103,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Phase B voltage',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -14892,6 +15160,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Phase C current',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -14951,6 +15220,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Phase C power',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -15010,6 +15280,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Phase C voltage',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -15066,6 +15337,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Total energy',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -15122,6 +15394,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
@@ -15173,6 +15446,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery state',
     'options': dict({
     }),
     'original_device_class': None,
@@ -15223,6 +15497,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Humidity',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.HUMIDITY: 'humidity'>,
@@ -15276,6 +15551,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -15332,6 +15608,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Humidity',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.HUMIDITY: 'humidity'>,
@@ -15385,6 +15662,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -15439,6 +15717,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery state',
     'options': dict({
     }),
     'original_device_class': None,
@@ -15489,6 +15768,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Filter duration',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -15545,6 +15825,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'UV runtime',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -15599,6 +15880,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Water level',
     'options': dict({
     }),
     'original_device_class': None,
@@ -15649,6 +15931,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Water pump duration',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -15705,6 +15988,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Water usage duration',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -15761,6 +16045,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Cat weight',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -15817,6 +16102,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Excretion duration',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -15871,6 +16157,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Excretion times (day)',
     'options': dict({
     }),
     'original_device_class': None,
@@ -15920,6 +16207,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Status',
     'options': dict({
     }),
     'original_device_class': None,
@@ -15970,6 +16258,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Total energy',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -16026,6 +16315,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Total power',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -16082,6 +16372,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Total production',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -16136,6 +16427,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Last operation duration',
     'options': dict({
     }),
     'original_device_class': None,
@@ -16187,6 +16479,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Carbon dioxide',
     'options': dict({
       'sensor.private': dict({
         'suggested_unit_of_measurement': 'ppm',
@@ -16243,6 +16536,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Humidity',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.HUMIDITY: 'humidity'>,
@@ -16296,6 +16590,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -16352,6 +16647,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Depth',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -16408,6 +16704,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Liquid level',
     'options': dict({
     }),
     'original_device_class': None,
@@ -16458,6 +16755,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Liquid state',
     'options': dict({
     }),
     'original_device_class': None,
@@ -16508,6 +16806,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Current',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -16567,6 +16866,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -16623,6 +16923,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Total energy',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -16679,6 +16980,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Voltage',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -16736,6 +17038,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery state',
     'options': dict({
     }),
     'original_device_class': None,
@@ -16784,6 +17087,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery state',
     'options': dict({
     }),
     'original_device_class': None,
@@ -16832,6 +17136,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery state',
     'options': dict({
     }),
     'original_device_class': None,
@@ -16882,6 +17187,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
@@ -16935,6 +17241,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Current',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -16994,6 +17301,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -17050,6 +17358,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Voltage',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -17109,6 +17418,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
@@ -17162,6 +17472,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Cat weight',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -17218,6 +17529,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Excretion duration',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -17272,6 +17584,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Excretion times (day)',
     'options': dict({
     }),
     'original_device_class': None,
@@ -17323,6 +17636,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
@@ -17374,6 +17688,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Status',
     'options': dict({
     }),
     'original_device_class': None,
@@ -17424,6 +17739,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
@@ -17477,6 +17793,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Total watering time',
     'options': dict({
     }),
     'original_device_class': None,
@@ -17529,6 +17846,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
@@ -17582,6 +17900,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Carbon monoxide',
     'options': dict({
       'sensor.private': dict({
         'suggested_unit_of_measurement': 'ppm',
@@ -17638,6 +17957,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
@@ -17689,6 +18009,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery state',
     'options': dict({
     }),
     'original_device_class': None,
@@ -17739,6 +18060,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Smoke amount',
     'options': dict({
     }),
     'original_device_class': None,
@@ -17790,6 +18112,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
@@ -17841,6 +18164,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery state',
     'options': dict({
     }),
     'original_device_class': None,
@@ -17891,6 +18215,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Current',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -17950,6 +18275,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -18006,6 +18332,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Total energy',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -18062,6 +18389,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Voltage',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -18121,6 +18449,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Current',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -18180,6 +18509,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -18236,6 +18566,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Total energy',
     'options': dict({
     }),
     'original_device_class': None,
@@ -18287,6 +18618,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Voltage',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -18346,6 +18678,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
@@ -18397,6 +18730,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery state',
     'options': dict({
     }),
     'original_device_class': None,
@@ -18447,6 +18781,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -18506,6 +18841,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -18562,6 +18898,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Total energy',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -18618,6 +18955,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Current temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -18672,6 +19010,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Remaining time',
     'options': dict({
     }),
     'original_device_class': None,
@@ -18721,6 +19060,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Status',
     'options': dict({
     }),
     'original_device_class': None,
@@ -18771,6 +19111,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Current',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -18830,6 +19171,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -18886,6 +19228,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Total energy',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -18942,6 +19285,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Voltage',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -18999,6 +19343,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery state',
     'options': dict({
     }),
     'original_device_class': None,
@@ -19049,6 +19394,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Air pressure',
     'options': dict({
     }),
     'original_device_class': None,
@@ -19101,6 +19447,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Dew point',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -19157,6 +19504,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Feels like',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -19213,6 +19561,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Heat index',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -19269,6 +19618,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Humidity',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.HUMIDITY: 'humidity'>,
@@ -19322,6 +19672,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Illuminance',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ILLUMINANCE: 'illuminance'>,
@@ -19375,6 +19726,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Outdoor humidity',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.HUMIDITY: 'humidity'>,
@@ -19428,6 +19780,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Outdoor humidity channel 1',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.HUMIDITY: 'humidity'>,
@@ -19481,6 +19834,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Outdoor humidity channel 2',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.HUMIDITY: 'humidity'>,
@@ -19534,6 +19888,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Outdoor humidity channel 3',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.HUMIDITY: 'humidity'>,
@@ -19587,6 +19942,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Precipitation intensity',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -19643,6 +19999,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Probe temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -19699,6 +20056,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Probe temperature channel 1',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -19755,6 +20113,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Probe temperature channel 2',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -19811,6 +20170,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Probe temperature channel 3',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -19867,6 +20227,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -19923,6 +20284,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Total precipitation today',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -19979,6 +20341,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'UV index',
     'options': dict({
     }),
     'original_device_class': None,
@@ -20031,6 +20394,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Wind chill index',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -20087,6 +20451,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Wind speed',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -20143,6 +20508,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
@@ -20196,6 +20562,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Humidity',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.HUMIDITY: 'humidity'>,
@@ -20249,6 +20616,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -20305,6 +20673,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
@@ -20358,6 +20727,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
@@ -20411,6 +20781,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Cleaning area',
     'options': dict({
     }),
     'original_device_class': None,
@@ -20463,6 +20834,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Cleaning time',
     'options': dict({
     }),
     'original_device_class': None,
@@ -20515,6 +20887,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Duster cloth lifetime',
     'options': dict({
     }),
     'original_device_class': None,
@@ -20567,6 +20940,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Filter lifetime',
     'options': dict({
     }),
     'original_device_class': None,
@@ -20619,6 +20993,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Rolling brush lifetime',
     'options': dict({
     }),
     'original_device_class': None,
@@ -20671,6 +21046,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Side brush lifetime',
     'options': dict({
     }),
     'original_device_class': None,
@@ -20723,6 +21099,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Total cleaning area',
     'options': dict({
     }),
     'original_device_class': None,
@@ -20775,6 +21152,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Total cleaning time',
     'options': dict({
     }),
     'original_device_class': None,
@@ -20827,6 +21205,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Total cleaning times',
     'options': dict({
     }),
     'original_device_class': None,
@@ -20878,6 +21257,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
@@ -20931,6 +21311,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Total watering time',
     'options': dict({
     }),
     'original_device_class': None,
@@ -20983,6 +21364,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Current',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -21042,6 +21424,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -21098,6 +21481,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Total energy',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -21154,6 +21538,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Voltage',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -21213,6 +21598,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Humidity',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.HUMIDITY: 'humidity'>,
@@ -21266,6 +21652,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -21320,6 +21707,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Last operation duration',
     'options': dict({
     }),
     'original_device_class': None,
@@ -21371,6 +21759,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Current',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -21430,6 +21819,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -21486,6 +21876,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Voltage',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -21545,6 +21936,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Filter duration',
     'options': dict({
     }),
     'original_device_class': None,
@@ -21597,6 +21989,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Water pump duration',
     'options': dict({
     }),
     'original_device_class': None,
@@ -21649,6 +22042,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Humidity',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.HUMIDITY: 'humidity'>,
@@ -21702,6 +22096,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -21758,6 +22153,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Current',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -21817,6 +22213,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -21873,6 +22270,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Total energy',
     'options': dict({
     }),
     'original_device_class': None,
@@ -21925,6 +22323,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Voltage',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -21984,6 +22383,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Current',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -22043,6 +22443,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -22099,6 +22500,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Total energy',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -22155,6 +22557,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Voltage',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -22214,6 +22617,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -22273,6 +22677,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -22329,6 +22734,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Total energy',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -22385,6 +22791,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
@@ -22438,6 +22845,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
@@ -22491,6 +22899,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
@@ -22542,6 +22951,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery state',
     'options': dict({
     }),
     'original_device_class': None,
@@ -22592,6 +23002,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Humidity',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.HUMIDITY: 'humidity'>,
@@ -22645,6 +23056,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -22701,6 +23113,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
@@ -22754,6 +23167,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Phase A current',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -22810,6 +23224,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Phase A power',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -22866,6 +23281,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Phase A voltage',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -22922,6 +23338,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Supply frequency',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -22978,6 +23395,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Total energy',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -23034,6 +23452,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Total power',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -23090,6 +23509,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Total production',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -23146,6 +23566,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Current',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -23205,6 +23626,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -23261,6 +23683,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Total energy',
     'options': dict({
     }),
     'original_device_class': None,
@@ -23312,6 +23735,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Voltage',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -23371,6 +23795,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
@@ -23424,6 +23849,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -23480,6 +23906,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Total dissolved solids',
     'options': dict({
     }),
     'original_device_class': None,
@@ -23532,6 +23959,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Current',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -23591,6 +24019,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -23647,6 +24076,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Voltage',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,

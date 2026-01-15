@@ -27,6 +27,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Dehumidifier',
     'options': dict({
     }),
     'original_device_class': <HumidifierDeviceClass.DEHUMIDIFIER: 'dehumidifier'>,
@@ -94,6 +95,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Humidifier',
     'options': dict({
     }),
     'original_device_class': <HumidifierDeviceClass.HUMIDIFIER: 'humidifier'>,
