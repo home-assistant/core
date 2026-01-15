@@ -48,7 +48,7 @@ async def test_select_unknown_device_parameters(
     )
     await setup_integration(hass, mock_config_entry)
 
-    state = hass.states.get("select.operation_mode")
+    state = hass.states.get("select.nano_color_2_installation_season")
     assert state is not None
     assert state.state == "unknown"
 
@@ -63,14 +63,14 @@ async def test_select_option(
     await hass.services.async_call(
         "select",
         "select_option",
-        {"entity_id": "select.operation_mode", "option": "Auto"},
+        {"entity_id": "select.nano_color_2_installation_season", "option": "winter"},
         blocking=False,
     )
 
     mock_connector.set_device_parameter.assert_called_once()
     assert (
-        mock_connector.get_device_parameter(1, "op_mode").value == 0
-    )  # 0 is Auto, it was Manual before
+        mock_connector.get_device_parameter(2, "__trybpracyinstalacji").value == 0
+    )  # 0 is Winter, it was Cooling before
 
 
 async def test_select_invalid_option(
@@ -83,7 +83,7 @@ async def test_select_invalid_option(
     await hass.services.async_call(
         "select",
         "select_option",
-        {"entity_id": "select.operation_mode", "option": "Invalid"},
+        {"entity_id": "sselect.nano_color_2_installation_season", "option": "invalid"},
         blocking=False,
     )
 

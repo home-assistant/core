@@ -31,5 +31,1420 @@
         "title": "Connect to Compit iNext"
       }
     }
+  },
+  "entity": {
+    "select": {
+      "biomax742_boiler_operation": {
+        "name": "Boiler operation",
+        "state": {
+          "disabled": "Disabled",
+          "with_a_clock": "With clock",
+          "with_nano_no_1": "With Nano no 1",
+          "with_nano_no_2": "With Nano no 2",
+          "with_nano_no_3": "With Nano no 3",
+          "with_nano_no_4": "With Nano no 4",
+          "with_nano_no_5": "With Nano no 5",
+          "with_thermostat": "With thermostat",
+          "without_thermostat": "Without thermostat"
+        }
+      },
+      "biomax742_ccwu_operating_mode": {
+        "name": "CCWU operating mode",
+        "state": {
+          "constant": "Constant",
+          "disabled": "Disabled",
+          "with_a_clock": "With clock"
+        }
+      },
+      "biomax742_dhw_circulation_work": {
+        "name": "DHW circulation work",
+        "state": {
+          "constant": "Constant",
+          "disabled": "Disabled",
+          "with_a_clock": "With clock"
+        }
+      },
+      "biomax742_dhw_work": {
+        "name": "DHW work",
+        "state": {
+          "comfortable": "Comfortable",
+          "disabled": "Disabled",
+          "with_a_clock": "With clock"
+        }
+      },
+      "biomax742_hot_water_operation": {
+        "name": "Hot water operation",
+        "state": {
+          "comfortable": "Comfortable",
+          "disabled": "Disabled",
+          "with_a_clock": "With clock"
+        }
+      },
+      "biomax742_installation_type": {
+        "name": "Installation type",
+        "state": {
+          "buffer": "Buffer",
+          "pumping_system": "Pumping system",
+          "remote_work": "Remote work"
+        }
+      },
+      "biomax742_mixer_1_work": {
+        "name": "Mixer 1 work",
+        "state": {
+          "disabled": "Disabled",
+          "with_a_clock": "With clock",
+          "with_nano_3": "With Nano 3",
+          "with_thermostat": "With thermostat",
+          "without": "Without",
+          "z_nano_1": "With Nano 1",
+          "z_nano_2": "With Nano 2",
+          "z_nano_4": "With Nano 4",
+          "z_nano_5": "With Nano 5"
+        }
+      },
+      "biomax742_mixer_operation": {
+        "name": "Mixer operation",
+        "state": {
+          "disabled": "Disabled",
+          "with_a_clock": "With clock",
+          "with_nano_3": "With Nano 3",
+          "with_thermostat": "With thermostat",
+          "without_thermostat": "Without thermostat",
+          "z_nano_1": "With Nano 1",
+          "z_nano_2": "With Nano 2",
+          "z_nano_4": "With Nano 4",
+          "z_nano_5": "With Nano 5"
+        }
+      },
+      "biomax742_network_mode_c14": {
+        "name": "Network mode C14",
+        "state": {
+          "master": "Master",
+          "slave": "Slave"
+        }
+      },
+      "biomax742_winter_summer": {
+        "name": "Winter summer",
+        "state": {
+          "side": "Summer",
+          "winter": "Winter"
+        }
+      },
+      "biomax772_boiler_operation": {
+        "name": "Boiler operation",
+        "state": {
+          "disabled": "Disabled",
+          "with_a_clock": "With clock",
+          "with_nano_no_1": "With Nano no 1",
+          "with_nano_no_2": "With Nano no 2",
+          "with_nano_no_3": "With Nano no 3",
+          "with_nano_no_4": "With Nano no 4",
+          "with_nano_no_5": "With Nano no 5",
+          "with_thermostat": "With thermostat",
+          "without_thermostat": "Without thermostat"
+        }
+      },
+      "biomax772_dhw_circulation_work": {
+        "name": "DHW circulation work",
+        "state": {
+          "constant": "Constant",
+          "disabled": "Disabled",
+          "with_a_clock": "With clock"
+        }
+      },
+      "biomax772_dhw_work": {
+        "name": "DHW work",
+        "state": {
+          "comfortable": "Comfortable",
+          "disabled": "Disabled",
+          "with_a_clock": "With clock"
+        }
+      },
+      "biomax772_keyboard_sensitivity": {
+        "name": "Keyboard sensitivity",
+        "state": {
+          "0": "0",
+          "1": "1",
+          "2": "2"
+        }
+      },
+      "biomax772_mixer_1_work": {
+        "name": "Mixer 1 work",
+        "state": {
+          "disabled": "Disabled",
+          "with_a_clock": "With clock",
+          "with_nano_3": "With Nano 3",
+          "with_thermostat": "With thermostat",
+          "without_thermostat": "Without thermostat",
+          "z_nano_1": "With Nano 1",
+          "z_nano_2": "With Nano 2",
+          "z_nano_4": "With Nano 4",
+          "z_nano_5": "With Nano 5"
+        }
+      },
+      "biomax772_mixer_2_work": {
+        "name": "Mixer 2 work",
+        "state": {
+          "disabled": "Disabled",
+          "with_a_clock": "With clock",
+          "with_nano_3": "With Nano 3",
+          "with_thermostat": "With thermostat",
+          "without_thermostat": "Without thermostat",
+          "z_nano_1": "With Nano 1",
+          "z_nano_2": "With Nano 2",
+          "z_nano_4": "With Nano 4",
+          "z_nano_5": "With Nano 5"
+        }
+      },
+      "biomax775_boiler_operation": {
+        "name": "Boiler operation",
+        "state": {
+          "disabled": "Disabled",
+          "with_a_clock": "With clock",
+          "with_nano_no_1": "With Nano no 1",
+          "with_nano_no_2": "With Nano no 2",
+          "with_nano_no_3_with_nano_no": "With Nano no 3",
+          "with_nano_no_4": "With Nano no 4",
+          "with_nano_no_5": "With Nano no 5",
+          "with_thermostat": "With thermostat",
+          "without_thermostat": "Without thermostat"
+        }
+      },
+      "biomax775_burner_control": {
+        "name": "Burner control",
+        "state": {
+          "damaged_triac_and_no_work": "Damaged triac and no work",
+          "defective_feeder_triac": "Defective feeder triac",
+          "disabled": "Disabled",
+          "no_feeder_operation": "No feeder operation"
+        }
+      },
+      "biomax775_dhw_circulation_work": {
+        "name": "DHW circulation work",
+        "state": {
+          "constant": "Constant",
+          "disabled": "Disabled",
+          "with_a_clock": "With clock"
+        }
+      },
+      "biomax775_dhw_work": {
+        "name": "DHW work",
+        "state": {
+          "comfortable": "Comfortable",
+          "disabled": "Disabled",
+          "with_a_clock": "With clock"
+        }
+      },
+      "biomax775_installation_type": {
+        "name": "Installation type",
+        "state": {
+          "buffer": "Buffer",
+          "pumping_system": "Pumping system",
+          "remote_work": "Remote work"
+        }
+      },
+      "biomax775_keyboard_sensitivity": {
+        "name": "Keyboard sensitivity",
+        "state": {
+          "0": "0",
+          "1": "1",
+          "2": "2"
+        }
+      },
+      "biomax775_mixer_1_work": {
+        "name": "Mixer 1 work",
+        "state": {
+          "disabled": "Disabled",
+          "with_a_clock": "With clock",
+          "with_nano_3": "With Nano 3",
+          "with_thermostat": "With thermostat",
+          "without_thermostat": "Without thermostat",
+          "z_nano_1": "With Nano 1",
+          "z_nano_2": "With Nano 2",
+          "z_nano_4": "With Nano 4",
+          "z_nano_5": "With Nano 5"
+        }
+      },
+      "biomax775_mixer_2_work": {
+        "name": "Mixer 2 work",
+        "state": {
+          "disabled": "Disabled",
+          "with_a_clock": "With clock",
+          "with_nano_3": "With Nano 3",
+          "with_thermostat": "With thermostat",
+          "without_thermostat": "Without thermostat",
+          "z_nano_1": "With Nano 1",
+          "z_nano_2": "With Nano 2",
+          "z_nano_4": "With Nano 4",
+          "z_nano_5": "With Nano 5"
+        }
+      },
+      "biomax775_network_mode_c14": {
+        "name": "Network mode C14",
+        "state": {
+          "master": "Master",
+          "slave": "Slave"
+        }
+      },
+      "el750_dhw_circulation_mode": {
+        "name": "DHW circulation mode",
+        "state": {
+          "comfort": "Comfort",
+          "disabled": "Disabled",
+          "with_a_clock": "With clock"
+        }
+      },
+      "el750_winter_summer": {
+        "name": "Winter summer",
+        "state": {
+          "side": "Summer",
+          "winter": "Winter"
+        }
+      },
+      "nano_color_2_by_pass": {
+        "name": "By pass",
+        "state": {
+          "car": "Auto",
+          "off": "Off",
+          "on": "On"
+        }
+      },
+      "nano_color_2_installation_season": {
+        "name": "Installation season",
+        "state": {
+          "cooling": "Cooling",
+          "side": "Summer",
+          "winter": "Winter"
+        }
+      },
+      "nano_color_2_language": {
+        "name": "Language",
+        "state": {
+          "english": "English",
+          "polish": "Polish"
+        }
+      },
+      "nano_color_2_out_of_home_program": {
+        "name": "Out of home program",
+        "state": {
+          "20m_work100m_stop": "20 min work / 100 min stop",
+          "20m_work40m_stop": "20 min work / 40 min stop",
+          "20m_work_100m_stop": "20 min work / 100 min stop",
+          "20m_work_40m_stop": "20 min work / 40 min stop",
+          "30m_work30m_stop": "30 min work / 30 min stop",
+          "30m_work_30m_stop": "30 min work / 30 min stop",
+          "no_exclusions": "No exclusions"
+        }
+      },
+      "nano_color_2_secondary_heater": {
+        "name": "Secondary heater",
+        "state": {
+          "disabled": "Disabled",
+          "pwm": "PWM"
+        }
+      },
+      "nano_color_2_thermostat_operating_mode": {
+        "name": "Thermostat operating mode",
+        "state": {
+          "away_from_home": "Away from home",
+          "christmas_work": "Christmas work",
+          "manual_work": "Manual work",
+          "work_according_to_clock_zones": "Work according to clock zones"
+        }
+      },
+      "nano_color_2_ventilation_flight": {
+        "name": "Ventilation flight",
+        "state": {
+          "gear_0": "Gear 0",
+          "gear_1": "Gear 1",
+          "gear_3": "Gear 3",
+          "gear_4_airing": "Gear 4 - airing",
+          "heat_2": "Gear 2"
+        }
+      },
+      "nano_color_2_ventilation_operating_mode": {
+        "name": "Ventilation operating mode",
+        "state": {
+          "christmas_work": "Christmas work",
+          "gear_0": "Gear 0",
+          "gear_1": "Gear 1",
+          "gear_3": "Gear 3",
+          "heat_2": "Gear 2",
+          "work_by_clock_zones_work_by_zones": "Work by clock zones / work by zones"
+        }
+      },
+      "nano_color_by_pass": {
+        "name": "By pass",
+        "state": {
+          "car": "Auto",
+          "off": "Off",
+          "on": "On"
+        }
+      },
+      "nano_color_installation_season": {
+        "name": "Installation season",
+        "state": {
+          "cooling": "Cooling",
+          "side": "Summer",
+          "winter": "Winter"
+        }
+      },
+      "nano_color_language": {
+        "name": "Language",
+        "state": {
+          "english": "English",
+          "polish": "Polish"
+        }
+      },
+      "nano_color_out_of_home_program": {
+        "name": "Out of home program",
+        "state": {
+          "20m_work100m_stop": "20 min work / 100 min stop",
+          "20m_work40m_stop": "20 min work / 40 min stop",
+          "20m_work_100m_stop": "20 min work / 100 min stop",
+          "20m_work_40m_stop": "20 min work / 40 min stop",
+          "30m_work30m_stop": "30 min work / 30 min stop",
+          "30m_work_30m_stop": "30 min work / 30 min stop",
+          "no_exclusions": "No exclusions"
+        }
+      },
+      "nano_color_secondary_heater": {
+        "name": "Secondary heater",
+        "state": {
+          "disabled": "Disabled",
+          "pwm": "PWM"
+        }
+      },
+      "nano_color_thermostat_operating_mode": {
+        "name": "Thermostat operating mode",
+        "state": {
+          "away_from_home": "Away from home",
+          "christmas_work": "Christmas work",
+          "manual_work": "Manual work",
+          "work_according_to_clock_zones": "Work according to clock zones"
+        }
+      },
+      "nano_color_ventilation_flight": {
+        "name": "Ventilation flight",
+        "state": {
+          "gear_0": "Gear 0",
+          "gear_1": "Gear 1",
+          "gear_3": "Gear 3",
+          "gear_4_airing": "Gear 4 - airing",
+          "heat_2": "Gear 2"
+        }
+      },
+      "nano_color_ventilation_operating_mode": {
+        "name": "Ventilation operating mode",
+        "state": {
+          "christmas_work": "Christmas work",
+          "gear_0": "Gear 0",
+          "gear_1": "Gear 1",
+          "gear_3": "Gear 3",
+          "heat_2": "Gear 2",
+          "work_by_clock_zones_work_by_zones": "Work by clock zones / work by zones"
+        }
+      },
+      "nano_one_aero_3_airing_program": {
+        "name": "Aero 3 airing program",
+        "state": {
+          "20m_work100m_stop": "20 min work / 100 min stop",
+          "20m_work40m_stop": "20 min work / 40 min stop",
+          "30m_work30m_stop": "30 min work / 30 min stop",
+          "no_exclusions": "No exclusions"
+        }
+      },
+      "nano_one_aero_3_defrost_configuration": {
+        "name": "Aero 3 defrost configuration",
+        "state": {
+          "incl_nag_initial": "Initial heater on",
+          "incl_nag_wst_50_aisle": "Initial heater on 50% efficiency",
+          "off_fan": "Off fan",
+          "opening_a_by_pass": "Opening by-pass"
+        }
+      },
+      "nano_one_aero_3_function_in_a_pressure_switch": {
+        "name": "Aero 3 function in a pressure switch",
+        "state": {
+          "dirty_air_filter": "Dirty air filter",
+          "exchanger_freezing": "Exchanger freezing",
+          "extract": "Extract air",
+          "weathering": "Supply air"
+        }
+      },
+      "nano_one_aero_3_pk3_configuration": {
+        "name": "Aero 3 PK3 configuration",
+        "state": {
+          "central_square": "Central heating",
+          "what_heating": "DHW heating"
+        }
+      },
+      "nano_one_aero_3_pre_heater_setup": {
+        "name": "Aero 3 pre heater setup",
+        "state": {
+          "attached_pwm": "PWM",
+          "disabled": "Disabled",
+          "onoff": "ON/OFF"
+        }
+      },
+      "nano_one_aero_3_secondary_heater_configuration": {
+        "name": "Aero 3 secondary heater configuration",
+        "state": {
+          "disabled": "Disabled",
+          "onoff_function": "ON/OFF function",
+          "onoff_tnaw_function": "ON/OFF Tnaw function",
+          "onoff_tpom_function": "ON/OFF Tpom function",
+          "pwm_tnaw_function": "PWM Tnaw function",
+          "pwm_tpom_function": "PWM Tpom function"
+        }
+      },
+      "nano_one_aero_4_air_temperature_control_mode": {
+        "name": "Aero 4 air temperature control mode",
+        "state": {
+          "cutting_function": "Supply air function",
+          "exhaust_function": "Exhaust air function",
+          "indoor_function": "Indoor function"
+        }
+      },
+      "nano_one_aero_4_airing_program": {
+        "name": "Aero 4 airing program",
+        "state": {
+          "20m_work100m_stop": "20 min work / 100 min stop",
+          "20m_work40m_stop": "20 min work / 40 min stop",
+          "30m_work30m_stop": "30 min work / 30 min stop",
+          "no_exclusions": "No exclusions"
+        }
+      },
+      "nano_one_aero_4_by_pass_configuration": {
+        "name": "Aero 4 by-pass configuration",
+        "state": {
+          "fun_exhaust_air": "Exhaust air function",
+          "fun_rooms": "Supply air function",
+          "lack": "None",
+          "simplified": "Simplified"
+        }
+      },
+      "nano_one_aero_4_defrosting_method": {
+        "name": "Aero 4 defrosting method",
+        "state": {
+          "opening_a_by_pass": "Opening by-pass",
+          "switching_on_the_heater_initial": "Switching on the initial heater",
+          "switching_on_the_heater_wst_50_aisle": "Switching on the initial heater 50% efficiency",
+          "turning_off_the_fan": "Turning off the fan"
+        }
+      },
+      "nano_one_aero_4_di2_input_configuration": {
+        "name": "Aero 4 DI2 input configuration",
+        "state": {
+          "extract": "Extract air",
+          "weathering": "Supply air"
+        }
+      },
+      "nano_one_aero_4_r3_function": {
+        "name": "Aero 4 R3 function",
+        "state": {
+          "no_brak_features": "None",
+          "throttle": "Throttle",
+          "what_heating": "DHW heating"
+        }
+      },
+      "nano_one_aero_5_defrosting_method": {
+        "name": "Aero 5 defrosting method",
+        "state": {
+          "incl_pre_heater": "Pre-heater on",
+          "off_fan": "Off fan",
+          "opening_a_by_pass": "Opening by-pass"
+        }
+      },
+      "nano_one_aero_5_heat_mode_initial": {
+        "name": "Aero 5 heat mode initial",
+        "state": {
+          "attached_pwm": "PWM",
+          "disabled": "Disabled",
+          "onoff": "ON/OFF"
+        }
+      },
+      "nano_one_aero_5_heat_mode_main": {
+        "name": "Aero 5 heat mode main",
+        "state": {
+          "attached_pwm": "PWM",
+          "disabled": "Disabled"
+        }
+      },
+      "nano_one_aero_5_pressure_switch_function": {
+        "name": "Aero 5 pressure switch function",
+        "state": {
+          "dirty_air_filter": "Dirty air filter",
+          "exchanger_freezing": "Exchanger freezing",
+          "extract": "Extract air",
+          "weathering": "Supply air"
+        }
+      },
+      "nano_one_aero_5_ventilation_program": {
+        "name": "Aero 5 ventilation program",
+        "state": {
+          "continuous_operation": "Continuous operation",
+          "praca_20min_co_100min": "20 min work / 100 min stop",
+          "praca_20min_co_40min": "20 min work / 40 min stop",
+          "praca_30min_co_30min": "30 min work / 30 min stop"
+        }
+      },
+      "nano_one_info_first_screen": {
+        "name": "Info first screen",
+        "state": {
+          "lack": "None",
+          "outer_t": "Outdoor temp",
+          "t_co_1": "T CO 1",
+          "t_mixer_1": "T Mixer 1"
+        }
+      },
+      "nano_one_installation_mode": {
+        "name": "Installation mode",
+        "state": {
+          "cooling": "Cooling",
+          "side": "Summer",
+          "winter": "Winter"
+        }
+      },
+      "nano_one_language": {
+        "name": "Language",
+        "state": {
+          "english": "English",
+          "polish": "Polish"
+        }
+      },
+      "nano_one_nano_work": {
+        "name": "Nano work",
+        "state": {
+          "christmas_program": "Christmas program",
+          "manual_run_0": "Manual run 0",
+          "manual_run_1": "Manual run 1",
+          "manual_run_2_reczny": "Manual run 2",
+          "manual_run_3": "Manual run 3",
+          "out_of_home_program": "Out of home program",
+          "wg_zegara_program": "Schedule program"
+        }
+      },
+      "nano_one_ventilation_in_the_away_mode": {
+        "name": "Ventilation in the away mode",
+        "state": {
+          "gear_1": "Gear 1",
+          "gear_3": "Gear 3",
+          "heat_2": "Gear 2",
+          "stop": "Stop"
+        }
+      },
+      "nano_one_ventilation_in_the_comfort_zone": {
+        "name": "Ventilation in the comfort zone",
+        "state": {
+          "gear_1": "Gear 1",
+          "gear_3": "Gear 3",
+          "heat_2": "Gear 2",
+          "stop": "Stop"
+        }
+      },
+      "nano_one_ventilation_in_the_eco_zone": {
+        "name": "Ventilation in the eco zone",
+        "state": {
+          "gear_1": "Gear 1",
+          "gear_3": "Gear 3",
+          "heat_2": "Gear 2",
+          "stop": "Stop"
+        }
+      },
+      "nano_one_visible_devices": {
+        "name": "Visible devices",
+        "state": {
+          "all": "All",
+          "boiler_2": "Boiler 2",
+          "boilerheat_pump_1": "Boiler / heat pump 1",
+          "lack": "None",
+          "mixer_1": "Mixer 1",
+          "mixer_2": "Mixer 2",
+          "mixer_3": "Mixer 3",
+          "mixer_4": "Mixer 4",
+          "r430": "R430",
+          "r450": "R450",
+          "solar_nr_1": "Solar nr 1"
+        }
+      },
+      "r350_m_alloy_from_the_boiler": {
+        "name": "Alloy from the boiler",
+        "state": {
+          "no": "No",
+          "tak": "Yes"
+        }
+      },
+      "r350_m_end_of_season_temperature": {
+        "name": "End of season temperature",
+        "state": {
+          "average": "Average",
+          "standard": "Standard"
+        }
+      },
+      "r350_m_operating_mode": {
+        "name": "Operating mode",
+        "state": {
+          "no_corrections": "No corrections",
+          "with_a_clock": "With clock",
+          "with_nano_no_1_with_nano_no": "With Nano no 1",
+          "with_nano_no_2": "With Nano no 2",
+          "with_nano_no_3": "With Nano no 3",
+          "with_nano_no_4": "With Nano no 4",
+          "with_nano_no_5": "With Nano no 5",
+          "with_thermostat": "With thermostat"
+        }
+      },
+      "r350_m_protection_mode": {
+        "name": "Protection mode",
+        "state": {
+          "buffer": "Buffer",
+          "inactive": "Inactive",
+          "max": "Max",
+          "min": "Min"
+        }
+      },
+      "r350_m_protection_sensor": {
+        "name": "Protection sensor",
+        "state": {
+          "external": "External",
+          "own": "Own"
+        }
+      },
+      "r350_m_schema": {
+        "name": "Schema",
+        "state": {
+          "mixer": "Mixer",
+          "pump": "Pump"
+        }
+      },
+      "r350_m_season_with_nano": {
+        "name": "Season with Nano",
+        "state": {
+          "no": "No",
+          "tak": "Yes"
+        }
+      },
+      "r350_m_stop_min": {
+        "name": "Stop min",
+        "state": {
+          "no": "No",
+          "tak": "Yes"
+        }
+      },
+      "r350_m_stop_obn": {
+        "name": "Stop obn",
+        "state": {
+          "no": "No",
+          "tak": "Yes"
+        }
+      },
+      "r350_m_valve_type": {
+        "name": "Valve type",
+        "state": {
+          "2_way": "2-way",
+          "3_way": "3-way",
+          "4_way": "4-way"
+        }
+      },
+      "r350_m_weather": {
+        "name": "Weather",
+        "state": {
+          "no": "No",
+          "tak": "Yes"
+        }
+      },
+      "r350_m_work_in_the_c14_network": {
+        "name": "Work in the C14 network",
+        "state": {
+          "master": "Master",
+          "subordinate": "Subordinate"
+        }
+      },
+      "r350_t3_stop_min": {
+        "name": "Stop min",
+        "state": {
+          "no": "No",
+          "tak": "Yes"
+        }
+      },
+      "r350_t3_stop_obn": {
+        "name": "Stop obn",
+        "state": {
+          "no": "No",
+          "tak": "Yes"
+        }
+      },
+      "r350_t3_stopzkot": {
+        "name": "Stop from boiler",
+        "state": {
+          "no": "No",
+          "tak": "Yes"
+        }
+      },
+      "r350_t3_summer_winter_jobs": {
+        "name": "Summer winter jobs",
+        "state": {
+          "side": "Summer",
+          "winter": "Winter"
+        }
+      },
+      "r350_t3_tseason": {
+        "name": "T season",
+        "state": {
+          "average": "Average",
+          "standard": "Standard"
+        }
+      },
+      "r350_t3_weather_weather_work": {
+        "name": "Weather work",
+        "state": {
+          "no": "No",
+          "tak": "Yes"
+        }
+      },
+      "r350_t3_weather_work": {
+        "name": "Weather work",
+        "state": {
+          "no": "No",
+          "tak": "Yes"
+        }
+      },
+      "r350_t3_work": {
+        "name": "Work",
+        "state": {
+          "no_corrections": "No corrections",
+          "with_a_clock": "With clock",
+          "with_nano_no_1": "With Nano no 1",
+          "with_nano_no_2_nano": "With Nano no 2",
+          "with_nano_no_3_nano": "With Nano no 3",
+          "with_nano_no_4": "With Nano no 4",
+          "with_nano_no_5": "With Nano no 5",
+          "with_thermostat": "With thermostat"
+        }
+      },
+      "r350_t3_work_according_to_the_schedule": {
+        "name": "Work according to the schedule",
+        "state": {
+          "no": "No",
+          "tak": "Yes"
+        }
+      },
+      "r470_dhw_circulation": {
+        "name": "DHW circulation",
+        "state": {
+          "by_the_clock": "By the clock",
+          "disabled": "Disabled",
+          "works_constantly": "Works constantly"
+        }
+      },
+      "r470_dhw_mode_of_operation": {
+        "name": "DHW mode of operation",
+        "state": {
+          "by_the_clock": "By the clock",
+          "disabled": "Disabled",
+          "works_constantly": "Works constantly"
+        }
+      },
+      "r470_installation_mode": {
+        "name": "Installation mode",
+        "state": {
+          "side": "Summer",
+          "summer_cooling": "Summer cooling",
+          "winter": "Winter"
+        }
+      },
+      "r470_mixer_operation_1": {
+        "name": "Mixer operation 1",
+        "state": {
+          "no_corrections": "No corrections",
+          "with_a_clock": "With clock",
+          "with_nano_3": "With Nano 3",
+          "with_thermostat": "With thermostat",
+          "z_nano_1": "With Nano 1",
+          "z_nano_2": "With Nano 2",
+          "z_nano_4": "With Nano 4",
+          "z_nano_5": "With Nano 5"
+        }
+      },
+      "r470_operating_mode": {
+        "name": "Operating mode",
+        "state": {
+          "car": "Auto",
+          "disable": "Disabled",
+          "echo": "Eco"
+        }
+      },
+      "r470_pump_dz": {
+        "name": "Pump DZ",
+        "state": {
+          "off": "Off",
+          "on": "On",
+          "pump_dz_valve": "Pump DZ + valve",
+          "valve": "Valve"
+        }
+      },
+      "r470_work_every": {
+        "name": "Work mode",
+        "state": {
+          "no_corrections": "No corrections",
+          "with_a_clock": "With clock",
+          "with_nano_3": "With Nano 3",
+          "with_thermostat": "With thermostat",
+          "z_nano_1": "With Nano 1",
+          "z_nano_2": "With Nano 2",
+          "z_nano_4": "With Nano 4",
+          "z_nano_5": "With Nano 5"
+        }
+      },
+      "r470_work_phase": {
+        "name": "Work phase",
+        "state": {
+          "awaria_mod_h5": "Failure module H5",
+          "block_tdz": "Block TDZ",
+          "blockade": "Blockade",
+          "initialization": "Initialization",
+          "no_communication_with_e8": "No communication with E8",
+          "press_h": "Pressure high",
+          "press_l": "Pressure low",
+          "stop": "Stop",
+          "thawing": "Thawing",
+          "uszk_freon_sensor": "Freon sensor failure",
+          "uszk_tdz_sensor": "TDZ sensor failure",
+          "uszk_tgz_sensor": "TGZ sensor failure",
+          "work": "Work"
+        }
+      },
+      "r480_buffer_operation": {
+        "name": "Buffer operation",
+        "state": {
+          "car": "Auto",
+          "manual": "Manual",
+          "stop": "Stop"
+        }
+      },
+      "r480_buffer_operation_in_summer_mode": {
+        "name": "Buffer operation in summer mode",
+        "state": {
+          "attached": "Enabled",
+          "disabled": "Disabled"
+        }
+      },
+      "r480_day_of_the_week_for_the_implementation_of_anti_legionella": {
+        "name": "Day of the week for the implementation of anti-legionella",
+        "state": {
+          "friday": "Friday",
+          "monday": "Monday",
+          "saturday": "Saturday",
+          "sunday": "Sunday",
+          "thursday": "Thursday",
+          "tuesday": "Tuesday",
+          "wednesday": "Wednesday"
+        }
+      },
+      "r480_heat_pump_operation": {
+        "name": "Heat pump operation",
+        "state": {
+          "echo": "Eco",
+          "hybrid": "Hybrid",
+          "stop": "Stop"
+        }
+      },
+      "r480_hot_water_circulation": {
+        "name": "Hot water circulation",
+        "state": {
+          "constant": "Constant",
+          "disabled": "Disabled",
+          "in_clock_zones_in_zones": "In clock zones"
+        }
+      },
+      "r480_hot_water_operation": {
+        "name": "Hot water operation",
+        "state": {
+          "car": "Auto",
+          "manual": "Manual",
+          "stop": "Stop"
+        }
+      },
+      "r480_installation_mode_season": {
+        "name": "Installation mode (season)",
+        "state": {
+          "side": "Summer",
+          "winter": "Winter"
+        }
+      },
+      "r480_network_mode_c14": {
+        "name": "Network mode C14",
+        "state": {
+          "master": "Master",
+          "master_mini": "Master mini",
+          "slave": "Slave"
+        }
+      },
+      "r480_taking_the_settings_from_nano1_forcing_dhw": {
+        "name": "Taking the settings from Nano 1 forcing DHW",
+        "state": {
+          "attached": "Enabled",
+          "disabled": "Disabled"
+        }
+      },
+      "r490_buffer_mode": {
+        "name": "Buffer mode",
+        "state": {
+          "manual_work": "Manual work",
+          "program": "Program",
+          "stop": "Stop"
+        }
+      },
+      "r490_co1_operating_mode": {
+        "name": "CO1 operating mode",
+        "state": {
+          "manual_work": "Manual work",
+          "program": "Program",
+          "stop": "Stop"
+        }
+      },
+      "r490_co1_source_of_correction": {
+        "name": "CO1 source of correction",
+        "state": {
+          "clock": "Clock",
+          "nano_nr6": "Nano nr 5",
+          "nano_nr_1": "Nano nr 1",
+          "nano_nr_2": "Nano nr 2",
+          "nano_nr_3": "Nano nr 3",
+          "nano_nr_4": "Nano nr 4",
+          "no_corrections": "No corrections",
+          "termosta": "Thermostat"
+        }
+      },
+      "r490_co2_operating_mode": {
+        "name": "CO2 operating mode",
+        "state": {
+          "manual_work": "Manual work",
+          "program": "Program",
+          "stop": "Stop"
+        }
+      },
+      "r490_co2_the_source_of_correction": {
+        "name": "CO2 source of correction",
+        "state": {
+          "clock": "Clock",
+          "nano_nr_1": "Nano nr 1",
+          "nano_nr_2": "Nano nr 2",
+          "nano_nr_3": "Nano nr 3",
+          "nano_nr_4": "Nano nr 4",
+          "nano_nr_5": "Nano nr 5",
+          "no_corrections": "No corrections",
+          "termosta": "Thermostat"
+        }
+      },
+      "r490_co3_operating_mode": {
+        "name": "CO3 operating mode",
+        "state": {
+          "manual_work": "Manual work",
+          "program": "Program",
+          "stop": "Stop"
+        }
+      },
+      "r490_co3_the_source_of_correction": {
+        "name": "CO3 source of correction",
+        "state": {
+          "clock": "Clock",
+          "nano_nr_1": "Nano nr 1",
+          "nano_nr_2": "Nano nr 2",
+          "nano_nr_3": "Nano nr 3",
+          "nano_nr_4": "Nano nr 4",
+          "nano_nr_5": "Nano nr 5",
+          "no_corrections": "No corrections",
+          "thermostat": "Thermostat"
+        }
+      },
+      "r490_co4_operating_mode": {
+        "name": "CO4 operating mode",
+        "state": {
+          "manual_work": "Manual work",
+          "program": "Program",
+          "stop": "Stop"
+        }
+      },
+      "r490_co4_the_source_of_correction": {
+        "name": "CO4 source of correction",
+        "state": {
+          "clock": "Clock",
+          "nano": "Nano nr 2",
+          "nano_nr_1": "Nano nr 1",
+          "nano_nr_3": "Nano nr 3",
+          "nano_nr_4": "Nano nr 4",
+          "nano_nr_5": "Nano nr 5",
+          "no_corrections": "No corrections",
+          "termosta": "Thermostat"
+        }
+      },
+      "r490_dhw_operating_mode": {
+        "name": "DHW operating mode",
+        "state": {
+          "manual_work": "Manual work",
+          "work_according_to_clock_zones": "Work according to clock zones"
+        }
+      },
+      "r490_graphics_model": {
+        "name": "Graphics model",
+        "state": {
+          "2d": "2D",
+          "3d": "3D"
+        }
+      },
+      "r490_installation_working_season": {
+        "name": "Installation working season",
+        "state": {
+          "echo": "Eco",
+          "hybrid": "Hybrid",
+          "stop": "Stop"
+        }
+      },
+      "r770rs_r771rs_boiler_type": {
+        "name": "Boiler type",
+        "state": {
+          "kdc_eco_15": "KDC Eco 15",
+          "kdc_eco_20": "KDC Eco 20",
+          "kdc_eco_25": "KDC Eco 25",
+          "kdc_eco_35": "KDC Eco 35",
+          "kdc_eco_50": "KDC Eco 50",
+          "other": "Other"
+        }
+      },
+      "r770rs_r771rs_dhw_circulation_operating_mode": {
+        "name": "DHW circulation operating mode",
+        "state": {
+          "circuit_off": "Circuit off",
+          "work_comfort": "Work comfort",
+          "working_with_the_clock": "Working with the clock"
+        }
+      },
+      "r770rs_r771rs_dhw_operating_mode": {
+        "name": "DHW operating mode",
+        "state": {
+          "circuit_off": "Circuit off",
+          "work_comfort": "Work comfort",
+          "working_with_the_clock": "Working with the clock"
+        }
+      },
+      "r770rs_r771rs_disable_thermostatic_co1_pump": {
+        "name": "Thermostatic CO1 pump",
+        "state": {
+          "continuous_operation": "Continuous operation",
+          "switched_off_by_thermostat": "Switched off by thermostat"
+        }
+      },
+      "r770rs_r771rs_disable_thermostatic_co2_pump": {
+        "name": "Thermostatic CO2 pump",
+        "state": {
+          "continuous_operation": "Continuous operation",
+          "switched_off_by_thermostat": "Switched off by thermostat"
+        }
+      },
+      "r770rs_r771rs_feeder_protection": {
+        "name": "Feeder protection",
+        "state": {
+          "attached": "Enabled",
+          "disabled": "Disabled"
+        }
+      },
+      "r770rs_r771rs_lowering_source_mixer1": {
+        "name": "Lowering source mixer 1",
+        "state": {
+          "lack": "None",
+          "nano_nr_1": "Nano nr 1",
+          "nano_nr_2": "Nano nr 2",
+          "nano_nr_3": "Nano nr 3",
+          "nano_nr_4": "Nano nr 4",
+          "nano_nr_5": "Nano nr 5",
+          "schedule": "Schedule",
+          "thermostat_input_no_1": "Thermostat input no 1"
+        }
+      },
+      "r770rs_r771rs_lowering_source_mixer2": {
+        "name": "Lowering source mixer 2",
+        "state": {
+          "lack": "None",
+          "nano_nr_1": "Nano nr 1",
+          "nano_nr_2": "Nano nr 2",
+          "nano_nr_3": "Nano nr 3",
+          "nano_nr_4": "Nano nr 4",
+          "nano_nr_5": "Nano nr 5",
+          "schedule": "Schedule",
+          "thermostat": "Thermostat"
+        }
+      },
+      "r770rs_r771rs_network_mode_c14": {
+        "name": "Network mode C14",
+        "state": {
+          "master": "Master",
+          "subordinate": "Subordinate"
+        }
+      },
+      "r770rs_r771rs_pump_function_p_circus": {
+        "name": "Pump function P circus",
+        "state": {
+          "attached": "Enabled",
+          "by_pass": "By-pass",
+          "disabled": "Disabled",
+          "hot_water_circulation": "Hot water circulation"
+        }
+      },
+      "r770rs_r771rs_thermostat_direction_1": {
+        "name": "Thermostat direction 1",
+        "state": {
+          "a_short_circuit_at_the_input_is_a_decrease": "Short circuit at the input is a decrease",
+          "opening_at_the_entrance_is_lowering": "Opening at the entrance is lowering"
+        }
+      },
+      "r770rs_r771rs_thermostat_direction_2": {
+        "name": "Thermostat direction 2",
+        "state": {
+          "a_short_circuit_at_the_input_is_a_drop_signal": "Short circuit at the input is a drop signal",
+          "the_opening_at_the_input_is_a_signal_of_lowering": "Opening at the input is a signal of lowering"
+        }
+      },
+      "r770rs_r771rs_winter_summer_mode": {
+        "name": "Winter summer mode",
+        "state": {
+          "side": "Summer",
+          "winter": "Winter"
+        }
+      },
+      "r810_mixer_operation": {
+        "name": "Mixer operation",
+        "state": {
+          "disabled": "Disabled",
+          "nano_1": "Nano 1",
+          "nano_2": "Nano 2",
+          "nano_3": "Nano 3",
+          "nano_4": "Nano 4",
+          "nano_5": "Nano 5",
+          "no_corrections": "No corrections",
+          "with_a_clock": "With clock",
+          "with_thermostat": "With thermostat"
+        }
+      },
+      "r810_network_operation_mode_c14": {
+        "name": "Network operation mode C14",
+        "state": {
+          "master": "Master",
+          "subordinate": "Subordinate"
+        }
+      },
+      "r_900_circuit_type_co1": {
+        "name": "Circuit type CO1",
+        "state": {
+          "mixer": "Mixer",
+          "pump": "Pump"
+        }
+      },
+      "r_900_circuit_type_co3": {
+        "name": "Circuit type CO3",
+        "state": {
+          "mixer": "Mixer",
+          "pump": "Pump"
+        }
+      },
+      "r_900_circuit_type_co4": {
+        "name": "Circuit type CO4",
+        "state": {
+          "mixer": "Mixer",
+          "pump": "Pump"
+        }
+      },
+      "r_900_co2_circuit_type": {
+        "name": "CO2 circuit type",
+        "state": {
+          "mixer": "Mixer",
+          "pump": "Pump"
+        }
+      },
+      "r_900_hot_water_circulation": {
+        "name": "Hot water circulation",
+        "state": {
+          "constant": "Constant",
+          "disabled": "Disabled",
+          "in_clock_zones": "In clock zones"
+        }
+      },
+      "r_900_operating_mode_co1_circulation": {
+        "name": "Operating mode CO1 circulation",
+        "state": {
+          "disabled": "Disabled",
+          "manual": "Manual",
+          "program": "Program"
+        }
+      },
+      "r_900_operating_mode_co2_circulation": {
+        "name": "Operating mode CO2 circulation",
+        "state": {
+          "disabled": "Disabled",
+          "manual": "Manual",
+          "program": "Program"
+        }
+      },
+      "r_900_operating_mode_co3_circulation": {
+        "name": "Operating mode CO3 circulation",
+        "state": {
+          "disabled": "Disabled",
+          "manual": "Manual",
+          "program": "Program"
+        }
+      },
+      "r_900_operating_mode_co4_circulation": {
+        "name": "Operating mode CO4 circulation",
+        "state": {
+          "disabled": "Disabled",
+          "manual": "Manual",
+          "program": "Program"
+        }
+      },
+      "r_900_pump_operating_mode": {
+        "name": "Pump operating mode",
+        "state": {
+          "eco": "Eco",
+          "hybrid": "Hybrid",
+          "off": "Off"
+        }
+      },
+      "r_900_source_of_co2_correction": {
+        "name": "Source of CO2 correction",
+        "state": {
+          "clock": "Clock",
+          "nano_nr1": "Nano nr 1",
+          "nano_nr2": "Nano nr 2",
+          "nano_nr3": "Nano nr 3",
+          "nano_nr4": "Nano nr 4",
+          "nano_nr5": "Nano nr 5",
+          "no_corrections": "No corrections",
+          "thermostat": "Thermostat"
+        }
+      },
+      "r_900_source_of_co3_correction": {
+        "name": "Source of CO3 correction",
+        "state": {
+          "clock": "Clock",
+          "nano_nr1": "Nano nr 1",
+          "nano_nr2": "Nano nr 2",
+          "nano_nr3": "Nano nr 3",
+          "nano_nr4": "Nano nr 4",
+          "nano_nr5": "Nano nr 5",
+          "no_corrections": "No corrections",
+          "thermostat": "Thermostat"
+        }
+      },
+      "r_900_source_of_co4_correction": {
+        "name": "Source of CO4 correction",
+        "state": {
+          "clock": "Clock",
+          "nano_nr1": "Nano nr 1",
+          "nano_nr2": "Nano nr 2",
+          "nano_nr3": "Nano nr 3",
+          "nano_nr4": "Nano nr 4",
+          "nano_nr5": "Nano nr 5",
+          "no_corrections": "No corrections",
+          "thermostat": "Thermostat"
+        }
+      },
+      "r_900_source_of_the_co1_correction": {
+        "name": "Source of the CO1 correction",
+        "state": {
+          "clock": "Clock",
+          "nano_nr1": "Nano nr 1",
+          "nano_nr2": "Nano nr 2",
+          "nano_nr3": "Nano nr 3",
+          "nano_nr4": "Nano nr 4",
+          "nano_nr5": "Nano nr 5",
+          "no_corrections": "No corrections",
+          "thermostat": "Thermostat"
+        }
+      },
+      "regulator_zaworu_mieszajicego_bwc310_mixer_operation": {
+        "name": "Mixer operation",
+        "state": {
+          "disabled": "Disabled",
+          "nano_1": "Nano 1",
+          "nano_2": "Nano 2",
+          "nano_3": "Nano 3",
+          "nano_4": "Nano 4",
+          "nano_5": "Nano 5",
+          "no_corrections": "No corrections",
+          "with_a_clock": "With clock",
+          "with_thermostat": "With thermostat"
+        }
+      },
+      "regulator_zaworu_mieszajicego_bwc310_restoring_factory_settings": {
+        "name": "Restoring factory settings",
+        "state": {
+          "master": "Yes",
+          "subordinate": "No"
+        }
+      },
+      "regulator_zaworu_mieszajicego_bwc310_valve_direction": {
+        "name": "Valve direction",
+        "state": {
+          "inverted": "Inverted",
+          "normal": "Normal"
+        }
+      },
+      "solarcomp971_operating_mode": {
+        "name": "Operating mode",
+        "state": {
+          "car": "Auto",
+          "de_icing": "De-icing",
+          "disable": "Disabled",
+          "holiday": "Holiday"
+        }
+      },
+      "solarcomp_951_heat_meter_type": {
+        "name": "Heat meter type",
+        "state": {
+          "1": "Type 1",
+          "2": "Type 2",
+          "3": "Type 3",
+          "4": "Type 4"
+        }
+      },
+      "solarcomp_951_operating_mode": {
+        "name": "Operating mode",
+        "state": {
+          "automatic_operation": "Automatic operation",
+          "de_icing": "De-icing",
+          "disable": "Disabled",
+          "holiday": "Holiday"
+        }
+      },
+      "solarcomp_951_solar_fluid_type": {
+        "name": "Solar fluid type",
+        "state": {
+          "ergolid_eko_15c": "Ergolid Eko -15°C",
+          "ergolid_eko_20c": "Ergolid Eko -20°C",
+          "ergolid_eko_25c": "Ergolid Eko -25°C",
+          "ergolid_eko_35c": "Ergolid Eko -35°C",
+          "esol_29c": "eSol -29°C",
+          "immericol_alu_borighicol_pg_30c_alu": "Immericol Alu / Borighicol PG -30°C Alu",
+          "immericol_borighicol_pg_35c": "Immericol / Borighicol PG -35°C",
+          "lajt_sol_29c": "Lajt Sol -29°C",
+          "terms_eco_concentrate": "Termsol Eco concentrate",
+          "termsol_eco_15c": "Termsol Eco -15°C",
+          "termsol_eco_20c": "Termsol Eco -20°C",
+          "termsol_eco_25c": "Termsol Eco -25°C",
+          "termsol_eco_35c": "Termsol Eco -35°C",
+          "termsol_eco_pro_35c": "Termsol Eco Pro -35°C",
+          "transtherm_eko_15c": "Transtherm Eko -15°C",
+          "transtherm_eko_20c": "Transtherm Eko -20°C",
+          "transtherm_eko_25c": "Transtherm Eko -25°C",
+          "transtherm_eko_35c": "Transtherm Eko -35°C",
+          "transtherm_n_15c": "Transtherm N -15°C",
+          "transtherm_n_20c": "Transtherm N -20°C",
+          "transtherm_n_25c": "Transtherm N -25°C",
+          "transtherm_n_35c": "Transtherm N -35°C",
+          "water": "Water"
+        }
+      }
+    }
   }
 }

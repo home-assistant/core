@@ -1,14 +1,14 @@
 # serializer version: 1
-# name: test_select_entities_snapshot[select.fan_speed-entry]
+# name: test_select_entities_snapshot[select.nano_color_2_installation_season-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
     'area_id': None,
     'capabilities': dict({
       'options': list([
-        'Low',
-        'Medium',
-        'High',
+        'winter',
+        'side',
+        'cooling',
       ]),
     }),
     'config_entry_id': <ANY>,
@@ -18,57 +18,62 @@
     'disabled_by': None,
     'domain': 'select',
     'entity_category': None,
-    'entity_id': 'select.fan_speed',
-    'has_entity_name': False,
+    'entity_id': 'select.nano_color_2_installation_season',
+    'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Fan Speed',
+    'object_id_base': 'Installation season',
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Fan Speed',
+    'original_name': 'Installation season',
     'platform': 'compit',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': None,
-    'unique_id': '2_fan_speed',
+    'translation_key': 'nano_color_2_installation_season',
+    'unique_id': '2___trybpracyinstalacji',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_select_entities_snapshot[select.fan_speed-state]
+# name: test_select_entities_snapshot[select.nano_color_2_installation_season-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Fan Speed',
+      'friendly_name': 'Nano Color 2 Installation season',
       'options': list([
-        'Low',
-        'Medium',
-        'High',
+        'winter',
+        'side',
+        'cooling',
       ]),
     }),
     'context': <ANY>,
-    'entity_id': 'select.fan_speed',
+    'entity_id': 'select.nano_color_2_installation_season',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'Medium',
+    'state': 'cooling',
   })
 # ---
-# name: test_select_entities_snapshot[select.operation_mode-entry]
+# name: test_select_entities_snapshot[select.r_900_source_of_the_co1_correction-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
     'area_id': None,
     'capabilities': dict({
       'options': list([
-        'Auto',
-        'Manual',
-        'Off',
+        'no_corrections',
+        'clock',
+        'thermostat',
+        'nano_nr1',
+        'nano_nr2',
+        'nano_nr3',
+        'nano_nr4',
+        'nano_nr5',
       ]),
     }),
     'config_entry_id': <ANY>,
@@ -78,44 +83,49 @@
     'disabled_by': None,
     'domain': 'select',
     'entity_category': None,
-    'entity_id': 'select.operation_mode',
-    'has_entity_name': False,
+    'entity_id': 'select.r_900_source_of_the_co1_correction',
+    'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Operation Mode',
+    'object_id_base': 'Source of the CO1 correction',
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Operation Mode',
+    'original_name': 'Source of the CO1 correction',
     'platform': 'compit',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': None,
-    'unique_id': '1_op_mode',
+    'translation_key': 'r_900_source_of_the_co1_correction',
+    'unique_id': '1___zrod_kore_co1',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_select_entities_snapshot[select.operation_mode-state]
+# name: test_select_entities_snapshot[select.r_900_source_of_the_co1_correction-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Operation Mode',
+      'friendly_name': 'R 900 Source of the CO1 correction',
       'options': list([
-        'Auto',
-        'Manual',
-        'Off',
+        'no_corrections',
+        'clock',
+        'thermostat',
+        'nano_nr1',
+        'nano_nr2',
+        'nano_nr3',
+        'nano_nr4',
+        'nano_nr5',
       ]),
     }),
     'context': <ANY>,
-    'entity_id': 'select.operation_mode',
+    'entity_id': 'select.r_900_source_of_the_co1_correction',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'Manual',
+    'state': 'clock',
   })
 # ---
