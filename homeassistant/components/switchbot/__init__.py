@@ -200,7 +200,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: SwitchbotConfigEntry) ->
                 device=ble_device,
                 key_id=entry.data.get(CONF_KEY_ID),
                 encryption_key=entry.data.get(CONF_ENCRYPTION_KEY),
-                retry_count=entry.options.get(CONF_RETRY_COUNT, DEFAULT_RETRY_COUNT),
+                retry_count=entry.options[CONF_RETRY_COUNT],
                 model=switchbot_model,
             )
         except ValueError as error:
@@ -213,7 +213,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: SwitchbotConfigEntry) ->
         device = cls(
             device=ble_device,
             password=entry.data.get(CONF_PASSWORD),
-            retry_count=entry.options.get(CONF_RETRY_COUNT, DEFAULT_RETRY_COUNT),
+            retry_count=entry.options[CONF_RETRY_COUNT],
         )
 
     coordinator = entry.runtime_data = SwitchbotDataUpdateCoordinator(
@@ -244,7 +244,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: SwitchbotConfigEntry) ->
 
 
 async def async_migrate_entry(hass: HomeAssistant, entry: SwitchbotConfigEntry) -> bool:
-    """Migrate SwitchBot config entries to the latest format."""
+    """Migrate old entry."""
     version = entry.version
     minor_version = entry.minor_version
     _LOGGER.debug("Migrating from version %s.%s", version, minor_version)
@@ -252,7 +252,7 @@ async def async_migrate_entry(hass: HomeAssistant, entry: SwitchbotConfigEntry) 
     if version > 1:
         return False
 
-    if version == 1 and minor_version == 1:
+    if version == 1 and minor_version < 2:
         new_options: dict[str, Any] = {**entry.options}
 
         if CONF_RETRY_COUNT not in new_options:
@@ -270,8 +270,7 @@ async def async_migrate_entry(hass: HomeAssistant, entry: SwitchbotConfigEntry) 
             options=new_options,
             minor_version=2,
         )
-
-        _LOGGER.debug("Migration to version %s.%s successful", version, 2)
+        _LOGGER.debug("Migration to version %s.2 successful", version)
 
     return True
 
