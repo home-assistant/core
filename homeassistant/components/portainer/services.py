@@ -10,12 +10,13 @@ from pyportainer import (
 )
 import voluptuous as vol
 
+from homeassistant.const import ATTR_DEVICE_ID
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
-from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.service import async_extract_config_entry_ids
 
-from .const import DOMAIN, ENDPOINT_ID
+from .const import DOMAIN
 from .coordinator import PortainerConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
@@ -26,9 +27,7 @@ ATTR_DANGLING = "dangling"
 SERVICE_PRUNE_IMAGES = "prune_images"
 SERVICE_PRUNE_IMAGES_SCHEMA = vol.Schema(
     {
-        vol.Required(
-            ENDPOINT_ID
-        ): cv.positive_int,  # Expand this with a list of known edpoint IDs
+        vol.Required(ATTR_DEVICE_ID): cv.string,
         vol.Optional(ATTR_DATE_UNTIL): vol.All(
             cv.time_period, vol.Range(min=timedelta(minutes=1))
         ),
@@ -55,16 +54,41 @@ async def _extract_config_entry(service_call: ServiceCall) -> PortainerConfigEnt
     return target_entries[0]
 
 
+async def _get_endpoint_id(
+    call: ServiceCall,
+    config_entry: PortainerConfigEntry,
+) -> int:
+    """Get endpoint data from device ID."""
+    device_reg = dr.async_get(call.hass)
+    device_id = call.data[ATTR_DEVICE_ID]
+    device = device_reg.async_get(device_id)
+    assert device
+    coordinator = config_entry.runtime_data
+
+    for data in coordinator.data.values():
+        if (
+            DOMAIN,
+            f"{config_entry.entry_id}_{data.endpoint.id}",
+        ) in device.identifiers:
+            endpoint_data = data
+            break
+
+    assert endpoint_data
+    return endpoint_data.id
+
+
 async def prune_images(call: ServiceCall) -> None:
     """Prune unused images in Portainer, with more controls."""
     _LOGGER.debug("Set program call: %s", call)
     config_entry = await _extract_config_entry(call)
     coordinator = config_entry.runtime_data
 
+    endpoint_id = await _get_endpoint_id(call, config_entry)
+
     dangling = call.data.get(ATTR_DANGLING, False)
     try:
         await coordinator.portainer.images_prune(
-            endpoint_id=call.data[ENDPOINT_ID],
+            endpoint_id=endpoint_id,
             until=call.data.get(ATTR_DATE_UNTIL),
             dangling=dangling,
         )

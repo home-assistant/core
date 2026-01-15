@@ -3,15 +3,17 @@
 prune_images:
   fields:
     device_id:
+      required: true
       selector:
         device:
           integration: portainer
-      required: true
-    program_id:
-      required: true
+          model: Endpoint
+    until:
+      required: false
       selector:
-        number:
-          min: 0
-          max: 99999
-          mode: box
-      example: 24
+        duration:
+      example: 7
+    dangling:
+      required: false
+      selector:
+        boolean: {}
