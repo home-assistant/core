@@ -841,12 +841,13 @@ class NodeEvents:
         # device config has changed, and if so, issue a repair registry entry for a
         # possible reinterview
         if not node.is_controller_node:
+            issue_id = f"device_config_file_changed.{device.id}"
             if await node.async_has_device_config_changed():
                 device_name = device.name_by_user or device.name or "Unnamed device"
                 async_create_issue(
                     self.hass,
                     DOMAIN,
-                    f"device_config_file_changed.{device.id}",
+                    issue_id,
                     data={"device_id": device.id, "device_name": device_name},
                     is_fixable=True,
                     is_persistent=False,
@@ -858,9 +859,7 @@ class NodeEvents:
                 # Clear any existing repair issue if the device config is not considered
                 # changed. This can happen when the original issue was created by
                 # an upstream bug, or the change has been reverted.
-                async_delete_issue(
-                    self.hass, DOMAIN, f"device_config_file_changed.{device.id}"
-                )
+                async_delete_issue(self.hass, DOMAIN, issue_id)
 
     async def async_handle_discovery_info(
         self,
