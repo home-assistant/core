@@ -43,6 +43,7 @@ from .const import (
     DATA_UTILITY,
     DOMAIN,
     METER_TYPES,
+    MeterInformation,
 )
 from .services import async_setup_services
 
@@ -127,8 +128,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     for meter, conf in domain_config.items():
         _LOGGER.debug("Setup %s.%s", DOMAIN, meter)
 
-        hass.data[DATA_UTILITY][meter] = conf
-        hass.data[DATA_UTILITY][meter][DATA_TARIFF_SENSORS] = []
+        meter_info: MeterInformation = {**conf, DATA_TARIFF_SENSORS: []}
+        hass.data[DATA_UTILITY][meter] = meter_info
 
         if not conf[CONF_TARIFFS]:
             # only one entity is required
@@ -155,9 +156,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                 eager_start=True,
             )
 
-            hass.data[DATA_UTILITY][meter][CONF_TARIFF_ENTITY] = (
-                f"{SELECT_DOMAIN}.{meter}"
-            )
+            meter_info[CONF_TARIFF_ENTITY] = f"{SELECT_DOMAIN}.{meter}"
 
             # add one meter for each tariff
             tariff_confs = {}
@@ -187,10 +186,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     )
 
     entity_registry = er.async_get(hass)
-    hass.data[DATA_UTILITY][entry.entry_id] = {
+
+    entry_meter_info: MeterInformation = {
         "source": entry.options[CONF_SOURCE_SENSOR],
+        DATA_TARIFF_SENSORS: [],
     }
-    hass.data[DATA_UTILITY][entry.entry_id][DATA_TARIFF_SENSORS] = []
+    hass.data[DATA_UTILITY][entry.entry_id] = entry_meter_info
 
     try:
         er.async_validate_entity_id(entity_registry, entry.options[CONF_SOURCE_SENSOR])
@@ -224,16 +225,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     if not entry.options.get(CONF_TARIFFS):
         # Only a single meter sensor is required
-        hass.data[DATA_UTILITY][entry.entry_id][CONF_TARIFF_ENTITY] = None
+        entry_meter_info[CONF_TARIFF_ENTITY] = None
         await hass.config_entries.async_forward_entry_setups(entry, (Platform.SENSOR,))
     else:
         # Create tariff selection + one meter sensor for each tariff
         entity_entry = entity_registry.async_get_or_create(
             Platform.SELECT, DOMAIN, entry.entry_id, object_id_base=entry.title
         )
-        hass.data[DATA_UTILITY][entry.entry_id][CONF_TARIFF_ENTITY] = (
-            entity_entry.entity_id
-        )
+        entry_meter_info[CONF_TARIFF_ENTITY] = entity_entry.entity_id
         await hass.config_entries.async_forward_entry_setups(
             entry, (Platform.SELECT, Platform.SENSOR)
         )
