@@ -24,15 +24,12 @@ from homeassistant.const import (
 )
 from homeassistant.core import Event, EventStateChangedData, HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
-from homeassistant.helpers import (
-    config_validation as cv,
-    issue_registry as ir,
-    state as state_helper,
-)
+from homeassistant.helpers import config_validation as cv, state as state_helper
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.entityfilter import FILTER_SCHEMA
+from homeassistant.helpers.entityfilter import FILTER_SCHEMA, EntityFilter
 from homeassistant.helpers.json import JSONEncoder
 from homeassistant.helpers.typing import ConfigType
+from homeassistant.util.hass_dict import HassKey
 
 from .const import (
     CONF_FILTER,
@@ -44,6 +41,8 @@ from .const import (
 )
 
 _LOGGER = logging.getLogger(__name__)
+
+DATA_FILTER: HassKey[EntityFilter] = HassKey(DOMAIN)
 
 CONFIG_SCHEMA = vol.Schema(
     {
@@ -64,131 +63,31 @@ CONFIG_SCHEMA = vol.Schema(
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
-    """Set up the Splunk component."""
+    """Set up the Splunk component from YAML.
+
+    Stores the entity filter in hass.data for use by config entry setup.
+    Triggers config entry import for connection settings.
+    """
     if DOMAIN not in config:
+        # No YAML config - store empty filter for config entry to use
+        # Use setdefault to avoid overwriting a filter set for testing
+        hass.data.setdefault(DATA_FILTER, FILTER_SCHEMA({}))
         return True
 
     conf = config[DOMAIN]
 
-    # Check if the configuration includes entity filters
-    # FILTER_SCHEMA returns an EntityFilter object - check empty_filter attribute
-    entity_filter = conf.get(CONF_FILTER)
-    has_filter = entity_filter is not None and not entity_filter.empty_filter
+    # Store the entity filter in hass.data for async_setup_entry to use
+    hass.data[DATA_FILTER] = conf.pop(CONF_FILTER)
 
-    if has_filter:
-        # Create a repair issue for configurations with filters
-        ir.async_create_issue(
-            hass,
-            DOMAIN,
-            "deprecated_yaml_with_filter",
-            is_fixable=False,
-            severity=ir.IssueSeverity.WARNING,
-            translation_key="deprecated_yaml_with_filter",
-            translation_placeholders={
-                "documentation_url": "https://www.home-assistant.io/integrations/splunk"
-            },
-        )
-        # Continue using YAML setup for configurations with filters
-        return await _async_setup_yaml(hass, conf)
-
-    # For configurations without filters, trigger import to config entry
-    ir.async_create_issue(
-        hass,
-        DOMAIN,
-        "deprecated_yaml",
-        is_fixable=False,
-        severity=ir.IssueSeverity.WARNING,
-        translation_key="deprecated_yaml",
-        translation_placeholders={
-            "documentation_url": "https://www.home-assistant.io/integrations/splunk"
-        },
-    )
-
-    # Remove filter key before import to avoid validation issues
-    import_config = {k: v for k, v in conf.items() if k != CONF_FILTER}
-
+    # Trigger import of connection settings to config entry
+    # (single_config_entry in manifest ensures only one entry exists)
     hass.async_create_task(
         hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": SOURCE_IMPORT},
-            data=import_config,
+            data=conf,
         )
     )
-
-    return True
-
-
-async def _async_setup_yaml(hass: HomeAssistant, conf: dict[str, Any]) -> bool:
-    """Set up Splunk from YAML configuration (for filter support)."""
-    host = conf.get(CONF_HOST)
-    port = conf.get(CONF_PORT)
-    token = conf.get(CONF_TOKEN)
-    use_ssl = conf[CONF_SSL]
-    verify_ssl = conf.get(CONF_VERIFY_SSL)
-    name = conf.get(CONF_NAME)
-    entity_filter = conf[CONF_FILTER]
-
-    event_collector = hass_splunk(
-        session=async_get_clientsession(hass),
-        host=host,
-        port=port,
-        token=token,
-        use_ssl=use_ssl,
-        verify_ssl=verify_ssl,
-    )
-
-    if not await event_collector.check(connectivity=False, token=True, busy=False):
-        return False
-
-    payload = {
-        "time": time.time(),
-        "host": name,
-        "event": {
-            "domain": DOMAIN,
-            "meta": "Splunk integration has started",
-        },
-    }
-
-    await event_collector.queue(json.dumps(payload, cls=JSONEncoder), send=False)
-
-    async def splunk_event_listener(event: Event[EventStateChangedData]) -> None:
-        """Listen for new messages on the bus and sends them to Splunk."""
-        state = event.data.get("new_state")
-        if state is None or not entity_filter(state.entity_id):
-            return
-
-        _state: float | str
-        try:
-            _state = state_helper.state_as_number(state)
-        except ValueError:
-            _state = state.state
-
-        payload = {
-            "time": event.time_fired.timestamp(),
-            "host": name,
-            "event": {
-                "domain": state.domain,
-                "entity_id": state.object_id,
-                "attributes": dict(state.attributes),
-                "value": _state,
-            },
-        }
-
-        try:
-            await event_collector.queue(json.dumps(payload, cls=JSONEncoder), send=True)
-        except SplunkPayloadError as err:
-            if err.status == HTTPStatus.UNAUTHORIZED:
-                _LOGGER.error(err)
-            else:
-                _LOGGER.warning(err)
-        except ClientConnectionError as err:
-            _LOGGER.warning(err)
-        except TimeoutError:
-            _LOGGER.warning("Connection to %s:%s timed out", host, port)
-        except ClientResponseError as err:
-            _LOGGER.error(err.message)
-
-    hass.bus.async_listen(EVENT_STATE_CHANGED, splunk_event_listener)
 
     return True
 
@@ -201,6 +100,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     use_ssl = entry.data.get(CONF_SSL, DEFAULT_SSL)
     verify_ssl = entry.data.get(CONF_VERIFY_SSL, True)
     name = entry.data.get(CONF_NAME, DEFAULT_NAME)
+
+    # Get the entity filter from hass.data (set by async_setup or empty if no YAML)
+    entity_filter: EntityFilter = hass.data.get(DATA_FILTER, FILTER_SCHEMA({}))
 
     event_collector = hass_splunk(
         session=async_get_clientsession(hass),
@@ -243,7 +145,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         raise ConfigEntryAuthFailed("Invalid Splunk token - please reauthenticate")
 
     # Send startup event
-    payload = {
+    payload: dict[str, Any] = {
         "time": time.time(),
         "host": name,
         "event": {
@@ -257,7 +159,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     async def splunk_event_listener(event: Event[EventStateChangedData]) -> None:
         """Listen for new messages on the bus and sends them to Splunk."""
         state = event.data.get("new_state")
-        if state is None:
+        if state is None or not entity_filter(state.entity_id):
             return
 
         _state: float | str
@@ -266,7 +168,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         except ValueError:
             _state = state.state
 
-        payload = {
+        payload: dict[str, Any] = {
             "time": event.time_fired.timestamp(),
             "host": name,
             "event": {

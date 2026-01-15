@@ -39,7 +39,7 @@ async def test_user_flow_success(
     await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == "splunk.example.com"
+    assert result["title"] == "Test Splunk"
     assert result["data"] == {
         CONF_TOKEN: "test-token-123",
         CONF_HOST: "splunk.example.com",
@@ -48,7 +48,6 @@ async def test_user_flow_success(
         "verify_ssl": True,
         CONF_NAME: "Test Splunk",
     }
-    assert result["result"].unique_id == "test-token-123"
 
     # Verify that check was called twice (connectivity and token)
     assert mock_hass_splunk.check.call_count == 2
@@ -134,25 +133,16 @@ async def test_user_flow_unexpected_error(
 async def test_user_flow_already_configured(
     hass: HomeAssistant, mock_hass_splunk: AsyncMock, mock_config_entry: MockConfigEntry
 ) -> None:
-    """Test user flow when entry is already configured."""
+    """Test user flow when entry is already configured (single instance)."""
     mock_config_entry.add_to_hass(hass)
 
+    # With single_config_entry in manifest, flow should abort immediately
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {
-            CONF_TOKEN: "test-token-123",
-            CONF_HOST: DEFAULT_HOST,
-            CONF_PORT: DEFAULT_PORT,
-            CONF_SSL: False,
-        },
-    )
-
     assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "already_configured"
+    assert result["reason"] == "single_instance_allowed"
 
 
 async def test_import_flow_success(
@@ -205,22 +195,12 @@ async def test_import_flow_invalid_config(
 
 
 async def test_import_flow_already_configured(
-    hass: HomeAssistant, mock_hass_splunk: AsyncMock
+    hass: HomeAssistant, mock_hass_splunk: AsyncMock, mock_config_entry: MockConfigEntry
 ) -> None:
-    """Test import flow when entry is already configured."""
-    # Import flow uses host:port as unique_id, so create entry with that format
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        data={
-            CONF_TOKEN: "test-token-123",
-            CONF_HOST: DEFAULT_HOST,
-            CONF_PORT: DEFAULT_PORT,
-            CONF_SSL: False,
-        },
-        unique_id=f"{DEFAULT_HOST}:{DEFAULT_PORT}",
-    )
-    entry.add_to_hass(hass)
+    """Test import flow when entry is already configured (single instance)."""
+    mock_config_entry.add_to_hass(hass)
 
+    # With single_config_entry in manifest, import should abort immediately
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_IMPORT},
@@ -233,7 +213,7 @@ async def test_import_flow_already_configured(
     )
 
     assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "already_configured"
+    assert result["reason"] == "single_instance_allowed"
 
 
 async def test_reauth_flow_success(

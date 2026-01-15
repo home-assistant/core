@@ -6403,7 +6403,8 @@
       "name": "Splunk",
       "integration_type": "hub",
       "config_flow": true,
-      "iot_class": "local_push"
+      "iot_class": "local_push",
+      "single_config_entry": true
     },
     "spotify": {
       "name": "Spotify",

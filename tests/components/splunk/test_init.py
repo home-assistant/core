@@ -6,11 +6,12 @@ from unittest.mock import AsyncMock, MagicMock, patch
 from aiohttp import ClientConnectionError, ClientResponseError
 from hass_splunk import SplunkPayloadError
 
+from homeassistant.components.splunk import DATA_FILTER
 from homeassistant.components.splunk.const import CONF_FILTER, DOMAIN
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntryState
 from homeassistant.const import CONF_HOST, CONF_PORT, CONF_SSL, CONF_TOKEN
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import issue_registry as ir
+from homeassistant.helpers.entityfilter import FILTER_SCHEMA
 from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry
@@ -144,52 +145,116 @@ async def test_yaml_import_without_filter(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-    # Verify repair issue was created for deprecated YAML
-    issue_registry = ir.async_get(hass)
-    issue = issue_registry.async_get_issue(DOMAIN, "deprecated_yaml")
-    assert issue is not None
-    assert issue.translation_key == "deprecated_yaml"
-
     # Verify import flow was triggered
     entries = hass.config_entries.async_entries(DOMAIN)
     assert len(entries) == 1
     assert entries[0].source == SOURCE_IMPORT
 
+    # Verify entity filter is stored in hass.data (empty filter for no YAML filter)
+    assert DATA_FILTER in hass.data
+    assert hass.data[DATA_FILTER].empty_filter
 
-async def test_yaml_with_filter(
-    hass: HomeAssistant, mock_hass_splunk: AsyncMock
+
+async def test_yaml_with_filter(hass: HomeAssistant) -> None:
+    """Test YAML configuration with filter stores filter and triggers import."""
+    with (
+        patch(
+            "homeassistant.components.splunk.hass_splunk", autospec=True
+        ) as mock_client_class,
+        patch(
+            "homeassistant.components.splunk.config_flow.hass_splunk", autospec=True
+        ) as mock_config_flow_client_class,
+        patch("homeassistant.components.splunk.async_setup_entry", return_value=True),
+    ):
+        mock_client = MagicMock()
+        mock_client.check = AsyncMock(return_value=True)
+        mock_client.queue = AsyncMock()
+
+        mock_client_class.return_value = mock_client
+        mock_config_flow_client_class.return_value = mock_client
+
+        assert await async_setup_component(
+            hass,
+            DOMAIN,
+            {
+                DOMAIN: {
+                    CONF_TOKEN: "test-token",
+                    CONF_HOST: "localhost",
+                    CONF_PORT: 8088,
+                    CONF_SSL: False,
+                    CONF_FILTER: {
+                        "include_domains": ["sensor"],
+                    },
+                }
+            },
+        )
+        await hass.async_block_till_done()
+
+    # Verify import flow was triggered (now imports even with filter)
+    entries = hass.config_entries.async_entries(DOMAIN)
+    assert len(entries) == 1
+    assert entries[0].source == SOURCE_IMPORT
+
+    # Verify entity filter is stored in hass.data
+    assert DATA_FILTER in hass.data
+    entity_filter = hass.data[DATA_FILTER]
+    # Filter should not be empty
+    assert not entity_filter.empty_filter
+    # Filter should include sensor entities
+    assert entity_filter("sensor.test")
+    # Filter should exclude non-sensor entities
+    assert not entity_filter("light.test")
+
+
+async def test_setup_without_yaml(hass: HomeAssistant) -> None:
+    """Test setup without YAML stores empty filter."""
+    with patch(
+        "homeassistant.components.splunk.hass_splunk", autospec=True
+    ) as mock_client_class:
+        mock_client = MagicMock()
+        mock_client.check = AsyncMock(return_value=True)
+        mock_client.queue = AsyncMock()
+        mock_client_class.return_value = mock_client
+
+        assert await async_setup_component(hass, DOMAIN, {})
+        await hass.async_block_till_done()
+
+    # Verify empty filter is stored in hass.data
+    assert DATA_FILTER in hass.data
+    assert hass.data[DATA_FILTER].empty_filter
+
+
+async def test_event_listener_with_filter(
+    hass: HomeAssistant, mock_hass_splunk: AsyncMock, mock_config_entry: MockConfigEntry
 ) -> None:
-    """Test YAML configuration with filter continues using YAML setup."""
-    assert await async_setup_component(
-        hass,
-        DOMAIN,
-        {
-            DOMAIN: {
-                CONF_TOKEN: "test-token",
-                CONF_HOST: "localhost",
-                CONF_PORT: 8088,
-                CONF_SSL: False,
-                CONF_FILTER: {
-                    "include_domains": ["sensor"],
-                },
-            }
-        },
-    )
+    """Test event listener respects entity filter from YAML."""
+    # Set up a filter that only allows sensor entities
+    hass.data[DATA_FILTER] = FILTER_SCHEMA({"include_domains": ["sensor"]})
+
+    mock_config_entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    # Verify repair issue was created for deprecated YAML with filter
-    issue_registry = ir.async_get(hass)
-    issue = issue_registry.async_get_issue(DOMAIN, "deprecated_yaml_with_filter")
-    assert issue is not None
-    assert issue.translation_key == "deprecated_yaml_with_filter"
+    # Reset queue call count after startup event
+    mock_hass_splunk.queue.reset_mock()
 
-    # Verify no config entry was created (using YAML setup instead)
-    entries = hass.config_entries.async_entries(DOMAIN)
-    assert len(entries) == 0
+    # Create a sensor state (should be sent)
+    hass.states.async_set("sensor.test", "123")
+    await hass.async_block_till_done()
 
-    # Verify event listener was set up
-    assert mock_hass_splunk.check.call_count == 1
+    # Verify event was sent for sensor
     assert mock_hass_splunk.queue.call_count == 1
+
+    # Reset
+    mock_hass_splunk.queue.reset_mock()
+
+    # Create a light state (should be filtered out)
+    hass.states.async_set("light.test", "on")
+    await hass.async_block_till_done()
+
+    # Verify no event was sent for light (filtered out)
+    assert mock_hass_splunk.queue.call_count == 0
 
 
 async def test_event_listener_unauthorized(
