@@ -331,7 +331,7 @@ class NumberDeviceClass(StrEnum):
 
     Unit of measurement:
     - `mbar`, `cbar`, `bar`
-    - `mPa`, `Pa`, `hPa`, `kPa`
+    - `mPa`, `Pa`, `hPa`, `kPa`, `MPa`
     - `inHg`
     - `psi`
     - `inH₂O`

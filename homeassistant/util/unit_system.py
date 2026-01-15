@@ -380,6 +380,7 @@ US_CUSTOMARY_SYSTEM = UnitSystem(
         ("pressure", UnitOfPressure.PA): UnitOfPressure.PSI,
         ("pressure", UnitOfPressure.HPA): UnitOfPressure.PSI,
         ("pressure", UnitOfPressure.KPA): UnitOfPressure.PSI,
+        ("pressure", UnitOfPressure.MPA): UnitOfPressure.PSI,
         ("pressure", UnitOfPressure.MMHG): UnitOfPressure.INHG,
         ("pressure", UnitOfPressure.INH2O): UnitOfPressure.PSI,
         # Convert non-USCS speeds, except knots, to mph

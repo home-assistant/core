@@ -606,6 +606,7 @@ UNCONVERTED_UNITS_METRIC_SYSTEM = {
         UnitOfPressure.CBAR,
         UnitOfPressure.HPA,
         UnitOfPressure.KPA,
+        UnitOfPressure.MPA,
         UnitOfPressure.MBAR,
         UnitOfPressure.MMHG,
         UnitOfPressure.MILLIPASCAL,
