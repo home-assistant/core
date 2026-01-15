@@ -85,9 +85,9 @@ class EnvisalinkBinarySensor(EnvisalinkEntity, BinarySensorEntity):
         )
 
     @property
-    def extra_state_attributes(self):
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes."""
-        attr = {}
+        attr: dict[str, Any] = {}
 
         # The Envisalink library returns a "last_fault" value that's the
         # number of seconds since the last fault, up to a maximum of 327680

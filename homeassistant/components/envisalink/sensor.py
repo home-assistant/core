@@ -55,6 +55,8 @@ async def async_setup_platform(
 class EnvisalinkSensor(EnvisalinkEntity, SensorEntity):
     """Representation of an Envisalink keypad."""
 
+    _attr_icon = "mdi:alarm"
+
     def __init__(
         self,
         partition_name: str,
@@ -63,7 +65,6 @@ class EnvisalinkSensor(EnvisalinkEntity, SensorEntity):
         controller: EnvisalinkAlarmPanel,
     ) -> None:
         """Initialize the sensor."""
-        self._icon = "mdi:alarm"
         self._partition_number = partition_number
 
         _LOGGER.debug("Setting up sensor for partition: %s", partition_name)
@@ -81,11 +82,6 @@ class EnvisalinkSensor(EnvisalinkEntity, SensorEntity):
                 self.hass, SIGNAL_PARTITION_UPDATE, self.async_update_callback
             )
         )
-
-    @property
-    def icon(self):
-        """Return the icon if any."""
-        return self._icon
 
     @property
     def native_value(self):
