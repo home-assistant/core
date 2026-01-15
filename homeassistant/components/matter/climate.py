@@ -229,6 +229,9 @@ class MatterClimate(MatterEntity, ClimateEntity):
 
     _attr_temperature_unit: str = UnitOfTemperature.CELSIUS
     _attr_hvac_mode: HVACMode = HVACMode.OFF
+    matter_presets_types: list[clusters.Thermostat.Structs.PresetTypeStruct] | None = (
+        None
+    )
     matter_presets: list[clusters.Thermostat.Structs.PresetStruct] | None = None
     _attr_preset_mode: str | None = None
     _attr_preset_modes: list[str] | None = None
@@ -353,6 +356,26 @@ class MatterClimate(MatterEntity, ClimateEntity):
             else None
         )
 
+        self._update_presets()
+
+        self._update_hvac_mode_and_action()
+        self._update_target_temperatures()
+        self._update_temperature_limits()
+
+    @callback
+    def _update_presets(self) -> None:
+        """Update preset modes and active preset."""
+        # Check if the device supports presets feature before attempting to load
+        feature_map = int(
+            self.get_matter_attribute_value(clusters.Thermostat.Attributes.FeatureMap)
+        )
+        if not (feature_map & ThermostatFeature.kPresets):
+            # Device doesn't support presets, skip preset update
+            self._preset_handle_by_name.clear()
+            self._attr_preset_modes = []
+            self._attr_preset_mode = None
+            return
+
         self.matter_presets_types = self.get_matter_attribute_value(
             clusters.Thermostat.Attributes.PresetTypes
         )
@@ -392,6 +415,9 @@ class MatterClimate(MatterEntity, ClimateEntity):
         else:
             self._attr_preset_mode = None
 
+    @callback
+    def _update_hvac_mode_and_action(self) -> None:
+        """Update HVAC mode and action from device."""
         if self.get_matter_attribute_value(clusters.OnOff.Attributes.OnOff) is False:
             # special case: the appliance has a dedicated Power switch on the OnOff cluster
             # if the mains power is off - treat it as if the HVAC mode is off
@@ -443,7 +469,10 @@ class MatterClimate(MatterEntity, ClimateEntity):
                     self._attr_hvac_action = HVACAction.FAN
                 else:
                     self._attr_hvac_action = HVACAction.OFF
-        # update target temperature high/low
+
+    @callback
+    def _update_target_temperatures(self) -> None:
+        """Update target temperature or temperature range."""
         supports_range = (
             self._attr_supported_features
             & ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
@@ -469,6 +498,9 @@ class MatterClimate(MatterEntity, ClimateEntity):
                     clusters.Thermostat.Attributes.OccupiedHeatingSetpoint
                 )
 
+    @callback
+    def _update_temperature_limits(self) -> None:
+        """Update min and max temperature limits."""
         # update min_temp
         if self._attr_hvac_mode == HVACMode.COOL:
             attribute = clusters.Thermostat.Attributes.AbsMinCoolSetpointLimit
