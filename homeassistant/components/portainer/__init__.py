@@ -15,8 +15,10 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
+from homeassistant.helpers.typing import ConfigType
 
 from .coordinator import PortainerCoordinator
+from .services import async_setup_services
 
 _PLATFORMS: list[Platform] = [
     Platform.BINARY_SENSOR,
@@ -46,6 +48,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: PortainerConfigEntry) ->
     entry.runtime_data = coordinator
     await hass.config_entries.async_forward_entry_setups(entry, _PLATFORMS)
 
+    return True
+
+
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Set up the HEOS component."""
+    async_setup_services(hass)
     return True
 
 
