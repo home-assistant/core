@@ -1,7 +1,6 @@
 """Services for the Portainer integration."""
 
 from datetime import timedelta
-import logging
 
 from pyportainer import (
     PortainerAuthenticationError,
@@ -18,8 +17,6 @@ from homeassistant.helpers.service import async_extract_config_entry_ids
 
 from .const import DOMAIN
 from .coordinator import PortainerConfigEntry
-
-_LOGGER = logging.getLogger(__name__)
 
 ATTR_DATE_UNTIL = "until"
 ATTR_DANGLING = "dangling"
@@ -80,7 +77,7 @@ async def _get_endpoint_id(
 
 async def prune_images(call: ServiceCall) -> None:
     """Prune unused images in Portainer, with more controls."""
-    _LOGGER.debug("Set program call: %s", call)
+
     config_entry = await _extract_config_entry(call)
     coordinator = config_entry.runtime_data
 
