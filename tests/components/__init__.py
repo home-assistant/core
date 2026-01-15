@@ -5,6 +5,8 @@ from enum import StrEnum
 import itertools
 from typing import Any, TypedDict
 
+import pytest
+
 from homeassistant.const import (
     ATTR_AREA_ID,
     ATTR_DEVICE_ID,
@@ -12,6 +14,7 @@ from homeassistant.const import (
     ATTR_LABEL_ID,
     CONF_ABOVE,
     CONF_BELOW,
+    CONF_CONDITION,
     CONF_ENTITY_ID,
     CONF_OPTIONS,
     CONF_PLATFORM,
@@ -26,6 +29,10 @@ from homeassistant.helpers import (
     entity_registry as er,
     floor_registry as fr,
     label_registry as lr,
+)
+from homeassistant.helpers.condition import (
+    ConditionCheckerTypeOptional,
+    async_from_config as async_condition_from_config,
 )
 from homeassistant.helpers.trigger import (
     CONF_LOWER_LIMIT,
@@ -585,6 +592,24 @@ async def arm_trigger(
     )
 
 
+async def create_target_condition(
+    hass: HomeAssistant,
+    *,
+    condition: str,
+    target: dict,
+    behavior: str,
+) -> ConditionCheckerTypeOptional:
+    """Create a target condition."""
+    return await async_condition_from_config(
+        hass,
+        {
+            CONF_CONDITION: condition,
+            CONF_TARGET: target,
+            CONF_OPTIONS: {"behavior": behavior},
+        },
+    )
+
+
 def set_or_remove_state(
     hass: HomeAssistant,
     entity_id: str,
@@ -611,3 +636,37 @@ def other_states(state: StrEnum | Iterable[StrEnum]) -> list[str]:
         enum_class = list(state)[0].__class__
 
     return sorted({s.value for s in enum_class} - excluded_values)
+
+
+async def assert_condition_gated_by_labs_flag(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture, condition: str
+) -> None:
+    """Helper to check that a condition is gated by the labs flag."""
+
+    # Local include to avoid importing the automation component unnecessarily
+    from homeassistant.components import automation  # noqa: PLC0415
+
+    await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: {
+                "trigger": {"platform": "event", "event_type": "test_event"},
+                "condition": {
+                    CONF_CONDITION: condition,
+                    CONF_TARGET: {ATTR_LABEL_ID: "test_label"},
+                    CONF_OPTIONS: {"behavior": "any"},
+                },
+                "action": {
+                    "service": "test.automation",
+                },
+            }
+        },
+    )
+
+    assert (
+        "Unnamed automation failed to setup conditions and has been disabled: "
+        f"Condition '{condition}' requires the experimental 'New triggers and "
+        "conditions' feature to be enabled in Home Assistant Labs settings "
+        "(feature flag: 'new_triggers_conditions')"
+    ) in caplog.text
