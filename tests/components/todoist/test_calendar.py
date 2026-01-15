@@ -29,7 +29,7 @@ from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_component import async_update_entity
 from homeassistant.util import dt as dt_util
 
-from .conftest import PROJECT_ID, SECTION_ID, SUMMARY
+from .conftest import PROJECT_ID, SECTION_ID, SUMMARY, make_api_due
 
 from tests.typing import ClientSessionGenerator
 
@@ -147,7 +147,7 @@ async def test_update_entity_for_custom_project_no_due_date_on(
 @pytest.mark.parametrize(
     "due",
     [
-        Due(
+        make_api_due(
             # Note: This runs before the test fixture that sets the timezone
             date=(
                 datetime(
@@ -217,37 +217,37 @@ async def test_calendar_custom_project_unique_id(
     ("due", "start", "end", "expected_response"),
     [
         (
-            Due(date="2023-03-30", is_recurring=False, string="Mar 30"),
+            make_api_due(date="2023-03-30", is_recurring=False, string="Mar 30"),
             "2023-03-28T00:00:00.000Z",
             "2023-04-01T00:00:00.000Z",
             [get_events_response({"date": "2023-03-30"}, {"date": "2023-03-31"})],
         ),
         (
-            Due(date="2023-03-30", is_recurring=False, string="Mar 30"),
+            make_api_due(date="2023-03-30", is_recurring=False, string="Mar 30"),
             "2023-03-30T06:00:00.000Z",
             "2023-03-31T06:00:00.000Z",
             [get_events_response({"date": "2023-03-30"}, {"date": "2023-03-31"})],
         ),
         (
-            Due(date="2023-03-30", is_recurring=False, string="Mar 30"),
+            make_api_due(date="2023-03-30", is_recurring=False, string="Mar 30"),
             "2023-03-29T08:00:00.000Z",
             "2023-03-30T08:00:00.000Z",
             [get_events_response({"date": "2023-03-30"}, {"date": "2023-03-31"})],
         ),
         (
-            Due(date="2023-03-30", is_recurring=False, string="Mar 30"),
+            make_api_due(date="2023-03-30", is_recurring=False, string="Mar 30"),
             "2023-03-30T08:00:00.000Z",
             "2023-03-31T08:00:00.000Z",
             [get_events_response({"date": "2023-03-30"}, {"date": "2023-03-31"})],
         ),
         (
-            Due(date="2023-03-30", is_recurring=False, string="Mar 30"),
+            make_api_due(date="2023-03-30", is_recurring=False, string="Mar 30"),
             "2023-03-31T08:00:00.000Z",
             "2023-04-01T08:00:00.000Z",
             [],
         ),
         (
-            Due(date="2023-03-30", is_recurring=False, string="Mar 30"),
+            make_api_due(date="2023-03-30", is_recurring=False, string="Mar 30"),
             "2023-03-29T06:00:00.000Z",
             "2023-03-30T06:00:00.000Z",
             [],
@@ -335,19 +335,19 @@ async def test_create_task_service_call_with_section(
     [
         # These are all equivalent due dates for the same time in different
         # timezone formats.
-        Due(
+        make_api_due(
             date="2023-03-31T00:00:00Z",
             is_recurring=False,
             string="Mar 30 6:00 PM",
             timezone="America/Regina",
         ),
-        Due(
+        make_api_due(
             date="2023-03-31T00:00:00Z",
             is_recurring=False,
             string="Mar 30 7:00 PM",
             timezone="America/Los_Angeles",
         ),
-        Due(
+        make_api_due(
             date="2023-03-30T18:00:00",
             is_recurring=False,
             string="Mar 30 6:00 PM",
@@ -429,35 +429,35 @@ async def test_task_due_datetime(
     [
         (
             {"custom_projects": [{"name": "Test", "labels": ["Label1"]}]},
-            Due(date="2023-03-30", is_recurring=False, string="Mar 30"),
+            make_api_due(date="2023-03-30", is_recurring=False, string="Mar 30"),
             "2023-03-28T00:00:00.000Z",
             "2023-04-01T00:00:00.000Z",
             [get_events_response({"date": "2023-03-30"}, {"date": "2023-03-31"})],
         ),
         (
             {"custom_projects": [{"name": "Test", "labels": ["custom"]}]},
-            Due(date="2023-03-30", is_recurring=False, string="Mar 30"),
+            make_api_due(date="2023-03-30", is_recurring=False, string="Mar 30"),
             "2023-03-28T00:00:00.000Z",
             "2023-04-01T00:00:00.000Z",
             [],
         ),
         (
             {"custom_projects": [{"name": "Test", "include_projects": ["Name"]}]},
-            Due(date="2023-03-30", is_recurring=False, string="Mar 30"),
+            make_api_due(date="2023-03-30", is_recurring=False, string="Mar 30"),
             "2023-03-28T00:00:00.000Z",
             "2023-04-01T00:00:00.000Z",
             [get_events_response({"date": "2023-03-30"}, {"date": "2023-03-31"})],
         ),
         (
             {"custom_projects": [{"name": "Test", "due_date_days": 1}]},
-            Due(date="2023-03-30", is_recurring=False, string="Mar 30"),
+            make_api_due(date="2023-03-30", is_recurring=False, string="Mar 30"),
             "2023-03-28T00:00:00.000Z",
             "2023-04-01T00:00:00.000Z",
             [get_events_response({"date": "2023-03-30"}, {"date": "2023-03-31"})],
         ),
         (
             {"custom_projects": [{"name": "Test", "due_date_days": 1}]},
-            Due(
+            make_api_due(
                 date=(dt_util.now() + timedelta(days=2)).strftime("%Y-%m-%d"),
                 is_recurring=False,
                 string="Mar 30",
@@ -495,7 +495,7 @@ async def test_events_filtered_for_custom_projects(
     ("due", "setup_platform"),
     [
         (
-            Due(
+            make_api_due(
                 date="2023-03-31T00:00:00Z",
                 is_recurring=False,
                 string="Mar 30 6:00 PM",
