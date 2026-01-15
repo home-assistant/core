@@ -317,7 +317,7 @@
       ]),
       'max_temp': 30.0,
       'min_temp': 10.0,
-      'preset_mode': None,
+      'preset_mode': 'Home',
       'preset_modes': list([
         'Home',
         'Away',
