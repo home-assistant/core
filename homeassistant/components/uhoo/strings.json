@@ -1,7 +1,7 @@
 {
   "config": {
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]"
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
@@ -26,8 +26,17 @@
       "mold_index": {
         "name": "Mold index"
       },
+      "nitrogen_dioxide": {
+        "name": "[%key:component::sensor::entity_component::nitrogen_dioxide::name%]"
+      },
+      "ozone": {
+        "name": "[%key:component::sensor::entity_component::ozone::name%]"
+      },
       "virus_index": {
         "name": "Virus index"
+      },
+      "volatile_organic_compounds": {
+        "name": "[%key:component::sensor::entity_component::volatile_organic_compounds::name%]"
       }
     }
   }

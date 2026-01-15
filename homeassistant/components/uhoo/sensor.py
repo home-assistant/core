@@ -98,6 +98,7 @@ SENSOR_TYPES: tuple[UhooSensorEntityDescription, ...] = (
     ),
     UhooSensorEntityDescription(
         key=API_TVOC,
+        translation_key="volatile_organic_compounds",
         device_class=SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS,
         native_unit_of_measurement=CONCENTRATION_PARTS_PER_BILLION,
         state_class=SensorStateClass.MEASUREMENT,
@@ -105,14 +106,14 @@ SENSOR_TYPES: tuple[UhooSensorEntityDescription, ...] = (
     ),
     UhooSensorEntityDescription(
         key=API_NO2,
-        device_class=SensorDeviceClass.NITROGEN_DIOXIDE,
+        translation_key="nitrogen_dioxide",
         native_unit_of_measurement=CONCENTRATION_PARTS_PER_BILLION,
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda data: data.no2,
     ),
     UhooSensorEntityDescription(
         key=API_OZONE,
-        device_class=SensorDeviceClass.OZONE,
+        translation_key="ozone",
         native_unit_of_measurement=CONCENTRATION_PARTS_PER_BILLION,
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda data: data.ozone,

@@ -5,15 +5,14 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
+from homeassistant.components.uhoo.const import DOMAIN
 from homeassistant.const import CONF_API_KEY
-
-from .const import DOMAIN
 
 from tests.common import MockConfigEntry
 
 
 @pytest.fixture
-def mock_device():
+def mock_device() -> MagicMock:
     """Mock a uHoo device."""
     device = MagicMock()
     device.humidity = 45.5
@@ -34,7 +33,7 @@ def mock_device():
 
 
 @pytest.fixture
-def mock_device2():
+def mock_device2() -> MagicMock:
     """Mock a uHoo device."""
     device = MagicMock()
     device.humidity = 50.0
@@ -54,7 +53,7 @@ def mock_device2():
     return device
 
 
-@pytest.fixture(name="mock_uhoo_client")
+@pytest.fixture
 def mock_uhoo_client(mock_device) -> Generator[AsyncMock]:
     """Mock uHoo client."""
     with (
@@ -90,8 +89,8 @@ def mock_uhoo_client(mock_device) -> Generator[AsyncMock]:
         yield client
 
 
-@pytest.fixture(name="mock_uhoo_config_entry")
-def mock_uhoo_config_entry_fixture() -> MockConfigEntry:
+@pytest.fixture
+def mock_config_entry() -> MockConfigEntry:
     """Return a mocked config entry for uHoo integration."""
     return MockConfigEntry(
         domain=DOMAIN,
@@ -102,8 +101,8 @@ def mock_uhoo_config_entry_fixture() -> MockConfigEntry:
     )
 
 
-@pytest.fixture(name="mock_setup_entry")
-def mock_setup_entry_fixture():
+@pytest.fixture
+def mock_setup_entry():
     """Mock the setup entry."""
     with patch(
         "homeassistant.components.uhoo.async_setup_entry",

@@ -1,8 +1,6 @@
 """Custom uhoo data update coordinator."""
 
-import asyncio
-
-from aiohttp.client_exceptions import ClientConnectorDNSError
+from aiohttp.client_exceptions import ClientError
 from uhooapi import Client, Device
 from uhooapi.errors import UhooError
 
@@ -12,7 +10,7 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 
 from .const import DOMAIN, LOGGER, UPDATE_INTERVAL
 
-type UhooConfigEntry = ConfigEntry["UhooDataUpdateCoordinator"]
+type UhooConfigEntry = ConfigEntry[UhooDataUpdateCoordinator]
 
 
 class UhooDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Device]]):
@@ -23,22 +21,21 @@ class UhooDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Device]]):
     ) -> None:
         """Initialize DataUpdateCoordinator."""
         self.client = client
-        self.entry = entry
-        super().__init__(hass, LOGGER, name=DOMAIN, update_interval=UPDATE_INTERVAL)
+        super().__init__(
+            hass,
+            LOGGER,
+            name=DOMAIN,
+            config_entry=entry,
+            update_interval=UPDATE_INTERVAL,
+        )
 
     async def _async_update_data(self) -> dict[str, Device]:
         try:
             await self.client.login()
             if self.client.devices:
-                await asyncio.gather(
-                    *[
-                        self.client.get_latest_data(device_id)
-                        for device_id in self.client.devices
-                    ]
-                )
-        except TimeoutError as error:
-            raise UpdateFailed from error
-        except ClientConnectorDNSError as error:
+                for device_id in self.client.devices:
+                    await self.client.get_latest_data(device_id)
+        except (TimeoutError, ClientError) as error:
             raise UpdateFailed from error
         except UhooError as error:
             raise UpdateFailed(f"The device is unavailable: {error}") from error
