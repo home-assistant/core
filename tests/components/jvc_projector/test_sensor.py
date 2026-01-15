@@ -10,7 +10,7 @@ from homeassistant.util.dt import utcnow
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 
-POWER_ID = "sensor.jvc_projector_power"
+POWER_ID = "sensor.jvc_projector_status"
 HDR_ENTITY_ID = "sensor.jvc_projector_hdr"
 HDR_PROCESSING_ENTITY_ID = "sensor.jvc_projector_hdr_processing"
 

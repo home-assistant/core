@@ -82,7 +82,7 @@ async def test_coordinator_update_connect_error(
 async def test_coordinator_setup_auth_error(
     hass: HomeAssistant,
     mock_device: AsyncMock,
-        mock_config_entry: MockConfigEntry,
+    mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test coordinator auth error."""
     mock_device.get.side_effect = JvcProjectorAuthError

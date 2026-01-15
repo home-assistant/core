@@ -19,7 +19,7 @@ FIXTURES: dict[str, dict[type[Command], str | type[Exception]]] = {
     "standby": {
         cmd.MacAddress: MOCK_MAC,
         cmd.Power: "standby",
-        cmd.Input: "hdmi-1",
+        cmd.Input: "hdmi1",
         cmd.Signal: "none",
         cmd.LightTime: "100",
         cmd.Source: JvcProjectorTimeoutError,
@@ -29,7 +29,7 @@ FIXTURES: dict[str, dict[type[Command], str | type[Exception]]] = {
     "on": {
         cmd.MacAddress: MOCK_MAC,
         cmd.Power: "on",
-        cmd.Input: "hdmi-1",
+        cmd.Input: "hdmi1",
         cmd.Signal: "signal",
         cmd.LightTime: "100",
         cmd.Source: "4k",
@@ -45,7 +45,7 @@ CAPABILITIES = {
     },
     cmd.Input.name: {
         "name": cmd.Input.name,
-        "parameter": {"read": {"6": "hdmi-1", "7": "hdmi-2"}},
+        "parameter": {"read": {"6": "hdmi1", "7": "hdmi2"}},
     },
     cmd.Signal.name: {
         "name": cmd.Signal.name,
