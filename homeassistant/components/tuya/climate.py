@@ -41,12 +41,17 @@ from .models import (
 from .type_information import EnumTypeInformation
 
 TUYA_HVAC_TO_HA = {
-    "auto": HVACMode.HEAT_COOL,
+    "auto": HVACMode.AUTO,
     "cold": HVACMode.COOL,
+    "cool": HVACMode.COOL,
+    "dehumidify": HVACMode.DRY,
     "freeze": HVACMode.COOL,
     "heat": HVACMode.HEAT,
+    "home": HVACMode.HEAT_COOL,
     "hot": HVACMode.HEAT,
     "manual": HVACMode.HEAT_COOL,
+    "smartcool": HVACMode.HEAT_COOL,
+    "temporary": HVACMode.HEAT_COOL,
     "wet": HVACMode.DRY,
     "wind": HVACMode.FAN_ONLY,
 }
