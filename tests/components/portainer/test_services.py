@@ -73,7 +73,7 @@ async def test_services(
     ],
     ids=["no optional", "with duration", "with duration and dangling"],
 )
-async def test_service_prune_images_(
+async def test_service_prune_images(
     hass: HomeAssistant,
     device_registry: DeviceRegistry,
     mock_portainer_client: AsyncMock,
