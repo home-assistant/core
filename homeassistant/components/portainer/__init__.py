@@ -55,7 +55,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: PortainerConfigEntry) ->
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
-    """Set up the Portainer component."""
+    """Set up the Portainer integration."""
     await async_setup_services(hass)
     return True
 
