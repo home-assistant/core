@@ -218,7 +218,7 @@ async def async_setup_platform(
 
     meters = []
     for conf in discovery_info.values():
-        meter = conf[CONF_METER]
+        meter: str = conf[CONF_METER]
         meter_info = hass.data[DATA_UTILITY][meter]
         conf_meter_source = meter_info[CONF_SOURCE_SENSOR]
         conf_meter_unique_id = meter_info.get(CONF_UNIQUE_ID)
@@ -228,7 +228,7 @@ async def async_setup_platform(
             if conf_meter_unique_id
             else None
         )
-        conf_meter_name = meter_info.get(CONF_NAME, meter)
+        conf_meter_name: str = meter_info.get(CONF_NAME, meter)
         conf_sensor_tariff = conf.get(CONF_TARIFF)
 
         suggested_entity_id = None
