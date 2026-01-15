@@ -68,8 +68,10 @@ class SwitchBotCurtainEntity(SwitchbotEntity, CoverEntity, RestoreEntity):
     @callback
     def _get_curtain_speed(self) -> int:
         """Return the configured curtain speed."""
-        return self.coordinator.config_entry.options.get(
-            CONF_CURTAIN_SPEED, DEFAULT_CURTAIN_SPEED
+        return int(
+            self.coordinator.config_entry.options.get(
+                CONF_CURTAIN_SPEED, DEFAULT_CURTAIN_SPEED
+            )
         )
 
     async def async_added_to_hass(self) -> None:
