@@ -22,6 +22,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Energy',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -78,6 +79,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -134,6 +136,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Voltage',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.VOLTAGE: 'voltage'>,
@@ -184,6 +187,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
@@ -236,6 +240,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Humidity',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.HUMIDITY: 'humidity'>,
@@ -289,6 +294,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Illuminance',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ILLUMINANCE: 'illuminance'>,
@@ -342,6 +348,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -398,6 +405,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'UV index',
     'options': dict({
     }),
     'original_device_class': None,
@@ -449,6 +457,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Humidity',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.HUMIDITY: 'humidity'>,
@@ -502,6 +511,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'PM2.5',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.PM25: 'pm25'>,
@@ -555,6 +565,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -611,6 +622,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Volatile organic compounds parts',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS_PARTS: 'volatile_organic_compounds_parts'>,
@@ -664,6 +676,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -720,6 +733,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Energy',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -776,6 +790,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -830,6 +845,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
@@ -882,6 +898,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -943,6 +960,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Alarm',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -998,6 +1016,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
@@ -1050,6 +1069,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -1104,6 +1124,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
@@ -1156,6 +1177,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -1212,6 +1234,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Air quality',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1264,6 +1287,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Carbon dioxide',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.CO2: 'carbon_dioxide'>,
@@ -1317,6 +1341,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Humidity',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.HUMIDITY: 'humidity'>,
@@ -1368,6 +1393,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Odor sensor',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1418,6 +1444,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'PM1',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.PM1: 'pm1'>,
@@ -1471,6 +1498,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'PM10',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.PM10: 'pm10'>,
@@ -1531,6 +1559,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'PM10 health concern',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -1597,6 +1626,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'PM1 health concern',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -1656,6 +1686,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'PM2.5',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.PM25: 'pm25'>,
@@ -1716,6 +1747,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'PM2.5 health concern',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -1775,6 +1807,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -1831,6 +1864,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Energy',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -1887,6 +1921,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Energy difference',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -1943,6 +1978,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Energy saved',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -1999,6 +2035,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Humidity',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.HUMIDITY: 'humidity'>,
@@ -2052,6 +2089,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -2110,6 +2148,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power energy',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -2166,6 +2205,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -2220,6 +2260,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Volume',
     'options': dict({
     }),
     'original_device_class': None,
@@ -2271,6 +2312,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Energy',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -2327,6 +2369,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Energy difference',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -2383,6 +2426,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Energy saved',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -2439,6 +2483,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -2497,6 +2542,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power energy',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -2553,6 +2599,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Energy',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -2609,6 +2656,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Energy difference',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -2665,6 +2713,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Energy saved',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -2721,6 +2770,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Humidity',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.HUMIDITY: 'humidity'>,
@@ -2774,6 +2824,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -2832,6 +2883,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power energy',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -2888,6 +2940,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -2942,6 +2995,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Volume',
     'options': dict({
     }),
     'original_device_class': None,
@@ -2993,6 +3047,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Energy',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -3049,6 +3104,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Energy difference',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -3105,6 +3161,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Energy saved',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -3161,6 +3218,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Humidity',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.HUMIDITY: 'humidity'>,
@@ -3214,6 +3272,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -3272,6 +3331,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power energy',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -3328,6 +3388,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -3382,6 +3443,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Volume',
     'options': dict({
     }),
     'original_device_class': None,
@@ -3433,6 +3495,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Energy',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -3489,6 +3552,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Energy difference',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -3545,6 +3609,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Energy saved',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -3601,6 +3666,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Humidity',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.HUMIDITY: 'humidity'>,
@@ -3654,6 +3720,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -3712,6 +3779,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power energy',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -3768,6 +3836,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -3822,6 +3891,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Volume',
     'options': dict({
     }),
     'original_device_class': None,
@@ -3873,6 +3943,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Air quality',
     'options': dict({
     }),
     'original_device_class': None,
@@ -3925,6 +3996,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'PM10',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.PM10: 'pm10'>,
@@ -3978,6 +4050,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'PM2.5',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.PM25: 'pm25'>,
@@ -4031,6 +4104,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -4090,6 +4164,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Operating state',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -4149,6 +4224,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Burner 1 heating mode',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -4203,6 +4279,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Burner 1 level',
     'options': dict({
     }),
     'original_device_class': None,
@@ -4257,6 +4334,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Burner 2 heating mode',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -4311,6 +4389,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Burner 2 level',
     'options': dict({
     }),
     'original_device_class': None,
@@ -4365,6 +4444,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Burner 3 heating mode',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -4419,6 +4499,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Burner 3 level',
     'options': dict({
     }),
     'original_device_class': None,
@@ -4473,6 +4554,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Burner 4 heating mode',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -4527,6 +4609,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Burner 4 level',
     'options': dict({
     }),
     'original_device_class': None,
@@ -4581,6 +4664,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Operating state',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -4637,6 +4721,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Air quality',
     'options': dict({
     }),
     'original_device_class': None,
@@ -4689,6 +4774,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Energy',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -4745,6 +4831,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Energy difference',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -4801,6 +4888,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Energy saved',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -4857,6 +4945,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Filter usage',
     'options': dict({
     }),
     'original_device_class': None,
@@ -4909,6 +4998,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'PM1',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.PM1: 'pm1'>,
@@ -4962,6 +5052,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'PM10',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.PM10: 'pm10'>,
@@ -5022,6 +5113,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'PM10 health concern',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -5088,6 +5180,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'PM1 health concern',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -5147,6 +5240,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'PM2.5',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.PM25: 'pm25'>,
@@ -5207,6 +5301,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'PM2.5 health concern',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -5266,6 +5361,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -5324,6 +5420,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power energy',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -5378,6 +5475,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Completion time',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -5447,6 +5545,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Job state',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -5521,6 +5620,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Machine state',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -5603,6 +5703,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Oven mode',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -5679,6 +5780,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Setpoint',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -5734,6 +5836,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -5788,6 +5891,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Completion time',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -5857,6 +5961,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Job state',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -5931,6 +6036,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Machine state',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -6013,6 +6119,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Oven mode',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -6089,6 +6196,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Setpoint',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -6144,6 +6252,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -6198,6 +6307,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Completion time',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -6267,6 +6377,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Job state',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -6341,6 +6452,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Machine state',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -6423,6 +6535,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Oven mode',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -6499,6 +6612,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Setpoint',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -6554,6 +6668,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -6608,6 +6723,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Completion time',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -6677,6 +6793,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Job state',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -6751,6 +6868,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Machine state',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -6810,6 +6928,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Operating state',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -6891,6 +7010,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Oven mode',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -6967,6 +7087,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Setpoint',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -7022,6 +7143,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -7076,6 +7198,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Completion time',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -7127,6 +7250,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Energy',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -7183,6 +7307,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Energy difference',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -7239,6 +7364,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Energy saved',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -7313,6 +7439,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Job state',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -7387,6 +7514,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Machine state',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -7469,6 +7597,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Oven mode',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -7547,6 +7676,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -7605,6 +7735,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power energy',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -7659,6 +7790,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Setpoint',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -7714,6 +7846,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -7770,6 +7903,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Energy',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -7826,6 +7960,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Energy difference',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -7882,6 +8017,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Energy saved',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -7938,6 +8074,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Freezer temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -7994,6 +8131,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Fridge temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -8050,6 +8188,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -8108,6 +8247,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power energy',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -8164,6 +8304,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Water filter usage',
     'options': dict({
     }),
     'original_device_class': None,
@@ -8216,6 +8357,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Energy',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -8272,6 +8414,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Energy difference',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -8328,6 +8471,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Energy saved',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -8384,6 +8528,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Freezer temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -8440,6 +8585,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Fridge temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -8496,6 +8642,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -8554,6 +8701,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power energy',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -8610,6 +8758,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Water filter usage',
     'options': dict({
     }),
     'original_device_class': None,
@@ -8662,6 +8811,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Energy',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -8718,6 +8868,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Energy difference',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -8774,6 +8925,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Energy saved',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -8830,6 +8982,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Freezer temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -8886,6 +9039,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Fridge temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -8942,6 +9096,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -9000,6 +9155,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power energy',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -9056,6 +9212,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Water filter usage',
     'options': dict({
     }),
     'original_device_class': None,
@@ -9108,6 +9265,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Energy',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -9164,6 +9322,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Energy difference',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -9220,6 +9379,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Energy saved',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -9276,6 +9436,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -9334,6 +9495,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power energy',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -9390,6 +9552,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -9444,6 +9607,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
@@ -9503,6 +9667,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Cleaning mode',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -9562,6 +9727,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Energy',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -9618,6 +9784,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Energy difference',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -9674,6 +9841,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Energy saved',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -9741,6 +9909,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Movement',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -9804,6 +9973,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -9862,6 +10032,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power energy',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -9923,6 +10094,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Turbo mode',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -9978,6 +10150,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
@@ -10037,6 +10210,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Cleaning mode',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -10107,6 +10281,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Movement',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -10175,6 +10350,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Turbo mode',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -10232,6 +10408,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Energy',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -10288,6 +10465,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Energy difference',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -10344,6 +10522,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Energy saved',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -10400,6 +10579,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -10458,6 +10638,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power energy',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -10517,6 +10698,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Valve position',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -10572,6 +10754,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Energy',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -10628,6 +10811,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Energy difference',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -10684,6 +10868,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Energy saved',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -10740,6 +10925,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -10798,6 +10984,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power energy',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -10857,6 +11044,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Valve position',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -10912,6 +11100,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Energy',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -10968,6 +11157,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Energy difference',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -11024,6 +11214,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Energy saved',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -11080,6 +11271,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -11138,6 +11330,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power energy',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -11197,6 +11390,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Valve position',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -11250,6 +11444,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Completion time',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -11301,6 +11496,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Energy',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -11357,6 +11553,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Energy difference',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -11413,6 +11610,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Energy saved',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -11480,6 +11678,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Job state',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -11547,6 +11746,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Machine state',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -11603,6 +11803,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -11661,6 +11862,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power energy',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -11715,6 +11917,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Completion time',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -11766,6 +11969,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Energy',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -11822,6 +12026,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Energy difference',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -11878,6 +12083,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Energy saved',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -11945,6 +12151,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Job state',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -12012,6 +12219,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Machine state',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -12068,6 +12276,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -12126,6 +12335,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power energy',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -12182,6 +12392,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Water consumption',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -12236,6 +12447,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Completion time',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -12287,6 +12499,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Energy',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -12343,6 +12556,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Energy difference',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -12399,6 +12613,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Energy saved',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -12471,6 +12686,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Job state',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -12543,6 +12759,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Machine state',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -12599,6 +12816,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -12657,6 +12875,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power energy',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -12711,6 +12930,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Completion time',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -12762,6 +12982,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Energy',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -12818,6 +13039,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Energy difference',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -12874,6 +13096,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Energy saved',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -12946,6 +13169,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Job state',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -13018,6 +13242,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Machine state',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -13074,6 +13299,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -13132,6 +13358,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power energy',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -13186,6 +13413,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Completion time',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -13237,6 +13465,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Energy',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -13293,6 +13522,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Energy difference',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -13349,6 +13579,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Energy saved',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -13421,6 +13652,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Job state',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -13493,6 +13725,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Machine state',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -13549,6 +13782,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -13607,6 +13841,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power energy',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -13661,6 +13896,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Completion time',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -13712,6 +13948,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Energy',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -13768,6 +14005,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Energy difference',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -13824,6 +14062,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Energy saved',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -13896,6 +14135,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Job state',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -13968,6 +14208,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Machine state',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -14024,6 +14265,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -14082,6 +14324,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power energy',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -14136,6 +14379,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Completion time',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -14187,6 +14431,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Energy',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -14243,6 +14488,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Energy difference',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -14299,6 +14545,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Energy saved',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -14372,6 +14619,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Job state',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -14445,6 +14693,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Machine state',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -14501,6 +14750,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -14559,6 +14809,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power energy',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -14613,6 +14864,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Completion time',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -14664,6 +14916,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Energy',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -14720,6 +14973,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Energy difference',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -14776,6 +15030,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Energy saved',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -14849,6 +15104,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Job state',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -14922,6 +15178,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Machine state',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -14978,6 +15235,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -15036,6 +15294,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power energy',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -15090,6 +15349,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Completion time',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -15141,6 +15401,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Energy',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -15197,6 +15458,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Energy difference',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -15253,6 +15515,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Energy saved',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -15326,6 +15589,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Job state',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -15399,6 +15663,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Machine state',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -15455,6 +15720,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -15513,6 +15779,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power energy',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -15569,6 +15836,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Water consumption',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -15623,6 +15891,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Completion time',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -15691,6 +15960,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Job state',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -15764,6 +16034,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Machine state',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -15818,6 +16089,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Completion time',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -15886,6 +16158,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Job state',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -15959,6 +16232,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Machine state',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -16013,6 +16287,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Upper washer completion time',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -16081,6 +16356,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Upper washer job state',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -16154,6 +16430,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Upper washer machine state',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -16210,6 +16487,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -16266,6 +16544,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Humidity',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.HUMIDITY: 'humidity'>,
@@ -16319,6 +16598,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -16375,6 +16655,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Humidity',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.HUMIDITY: 'humidity'>,
@@ -16428,6 +16709,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Temperature',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
@@ -16480,6 +16762,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Link quality',
     'options': dict({
     }),
     'original_device_class': None,
@@ -16531,6 +16814,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Signal strength',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.SIGNAL_STRENGTH: 'signal_strength'>,
@@ -16584,6 +16868,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Gas',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -16643,6 +16928,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Gas meter',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -16697,6 +16983,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Gas meter calorific',
     'options': dict({
     }),
     'original_device_class': None,
@@ -16745,6 +17032,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Gas meter time',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -16796,6 +17084,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Link quality',
     'options': dict({
     }),
     'original_device_class': None,
@@ -16847,6 +17136,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Signal strength',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.SIGNAL_STRENGTH: 'signal_strength'>,
@@ -16900,6 +17190,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -16954,6 +17245,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
@@ -17006,6 +17298,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Energy',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -17062,6 +17355,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -17118,6 +17412,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -17172,6 +17467,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
@@ -17224,6 +17520,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Atmospheric pressure',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -17281,6 +17578,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
@@ -17333,6 +17631,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Humidity',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.HUMIDITY: 'humidity'>,
@@ -17386,6 +17685,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -17440,6 +17740,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
@@ -17492,6 +17793,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -17546,6 +17848,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'X coordinate',
     'options': dict({
     }),
     'original_device_class': None,
@@ -17594,6 +17897,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Y coordinate',
     'options': dict({
     }),
     'original_device_class': None,
@@ -17642,6 +17946,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Z coordinate',
     'options': dict({
     }),
     'original_device_class': None,
@@ -17692,6 +17997,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Humidity',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.HUMIDITY: 'humidity'>,
@@ -17745,6 +18051,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -17799,6 +18106,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Air conditioner mode',
     'options': dict({
     }),
     'original_device_class': None,
@@ -17847,6 +18155,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Cooling setpoint',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -17900,6 +18209,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
@@ -17952,6 +18262,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Energy',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -18008,6 +18319,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Energy difference',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -18064,6 +18376,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Brightness intensity',
     'options': dict({
     }),
     'original_device_class': None,
@@ -18114,6 +18427,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'TV channel',
     'options': dict({
     }),
     'original_device_class': None,
@@ -18162,6 +18476,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'TV channel name',
     'options': dict({
     }),
     'original_device_class': None,
@@ -18210,6 +18525,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
@@ -18262,6 +18578,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -18316,6 +18633,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
@@ -18366,6 +18684,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
