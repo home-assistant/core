@@ -170,7 +170,7 @@
       "description": "Prune unused images on a Portainer endpoint.",
       "fields": {
         "dangling": {
-          "description": "If true only prune dangling images.",
+          "description": "If true, only prune dangling images.",
           "name": "Dangling"
         },
         "device_id": {
