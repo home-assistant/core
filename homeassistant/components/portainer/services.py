@@ -65,6 +65,7 @@ async def _get_endpoint_id(
     assert device
     coordinator = config_entry.runtime_data
 
+    endpoint_data = None
     for data in coordinator.data.values():
         if (
             DOMAIN,
@@ -74,7 +75,7 @@ async def _get_endpoint_id(
             break
 
     assert endpoint_data
-    return endpoint_data.id
+    return endpoint_data.endpoint.id
 
 
 async def prune_images(call: ServiceCall) -> None:
