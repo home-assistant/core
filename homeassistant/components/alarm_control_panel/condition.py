@@ -20,13 +20,13 @@ def supports_feature(hass: HomeAssistant, entity_id: str, features: int) -> bool
         return False
 
 
-class EntityStateConditionRequiredFeatures(EntityStateConditionBase):
+class EntityStateRequiredFeaturesCondition(EntityStateConditionBase):
     """State condition."""
 
     _required_features: int
 
     def entity_filter(self, entities: set[str]) -> set[str]:
-        """Filter entities of this domain."""
+        """Filter entities of this domain with the required features."""
         entities = super().entity_filter(entities)
         return {
             entity_id
@@ -35,13 +35,13 @@ class EntityStateConditionRequiredFeatures(EntityStateConditionBase):
         }
 
 
-def make_entity_state_condition_required_features(
+def make_entity_state_required_features_condition(
     domain: str, to_state: str, required_features: int
-) -> type[EntityStateConditionRequiredFeatures]:
+) -> type[EntityStateRequiredFeaturesCondition]:
     """Create an entity state condition class with required feature filtering."""
 
-    class CustomCondition(EntityStateConditionRequiredFeatures):
-        """Trigger for entity state changes."""
+    class CustomCondition(EntityStateRequiredFeaturesCondition):
+        """Condition for entity state changes."""
 
         _domain = domain
         _states = {to_state}
@@ -61,22 +61,22 @@ CONDITIONS: dict[str, type[Condition]] = {
             AlarmControlPanelState.ARMED_VACATION,
         },
     ),
-    "is_armed_away": make_entity_state_condition_required_features(
+    "is_armed_away": make_entity_state_required_features_condition(
         DOMAIN,
         AlarmControlPanelState.ARMED_AWAY,
         AlarmControlPanelEntityFeature.ARM_AWAY,
     ),
-    "is_armed_home": make_entity_state_condition_required_features(
+    "is_armed_home": make_entity_state_required_features_condition(
         DOMAIN,
         AlarmControlPanelState.ARMED_HOME,
         AlarmControlPanelEntityFeature.ARM_HOME,
     ),
-    "is_armed_night": make_entity_state_condition_required_features(
+    "is_armed_night": make_entity_state_required_features_condition(
         DOMAIN,
         AlarmControlPanelState.ARMED_NIGHT,
         AlarmControlPanelEntityFeature.ARM_NIGHT,
     ),
-    "is_armed_vacation": make_entity_state_condition_required_features(
+    "is_armed_vacation": make_entity_state_required_features_condition(
         DOMAIN,
         AlarmControlPanelState.ARMED_VACATION,
         AlarmControlPanelEntityFeature.ARM_VACATION,
