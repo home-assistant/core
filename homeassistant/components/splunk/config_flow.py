@@ -35,17 +35,15 @@ class SplunkConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle the initial step."""
+        # Single instance integration - manifest enforces only one entry
         errors: dict[str, str] = {}
 
         if user_input is not None:
             errors = await self._async_validate_input(user_input)
 
             if not errors:
-                await self.async_set_unique_id(user_input[CONF_TOKEN])
-                self._abort_if_unique_id_configured()
-
                 return self.async_create_entry(
-                    title=user_input[CONF_HOST],
+                    title=user_input.get(CONF_NAME, DEFAULT_NAME),
                     data=user_input,
                 )
 
@@ -70,12 +68,7 @@ class SplunkConfigFlow(ConfigFlow, domain=DOMAIN):
         self, import_config: dict[str, Any]
     ) -> ConfigFlowResult:
         """Handle import from YAML configuration."""
-        # Set unique ID to prevent duplicate imports
-        await self.async_set_unique_id(
-            f"{import_config.get(CONF_HOST, DEFAULT_HOST)}:{import_config.get(CONF_PORT, DEFAULT_PORT)}"
-        )
-        self._abort_if_unique_id_configured()
-
+        # Single instance integration - manifest prevents duplicates
         # Validate the imported configuration
         errors = await self._async_validate_input(import_config)
 

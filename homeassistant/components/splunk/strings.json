@@ -2,8 +2,9 @@
   "config": {
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
-      "invalid_config": "The YAML configuration is invalid and cannot be imported. Please check your configuration.yaml file and set up Splunk through the UI instead.",
-      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
+      "invalid_config": "The YAML configuration is invalid and cannot be imported. Please check your configuration.yaml file.",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
+      "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]"
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
@@ -36,19 +37,9 @@
           "token": "The HEC token configured in your Splunk instance",
           "verify_ssl": "Verify the SSL certificate when connecting (recommended)"
         },
-        "description": "Enter your Splunk HTTP Event Collector (HEC) connection details. You can find the token in your Splunk server under Settings > Data Inputs > HTTP Event Collector.",
+        "description": "Enter your Splunk HTTP Event Collector (HEC) connection details. You can find the token in your Splunk server under Settings > Data Inputs > HTTP Event Collector.\n\nEntity filtering can be configured in YAML using the `filter` option.",
         "title": "Set up Splunk HTTP Event Collector"
       }
-    }
-  },
-  "issues": {
-    "deprecated_yaml": {
-      "description": "Configuring Splunk using YAML is being removed.\n\nYour YAML configuration has been imported into the UI automatically.\n\nRemove the `splunk` configuration from your configuration.yaml file and restart Home Assistant to fix this issue.\n\nFor more information, see the [documentation]({documentation_url}).",
-      "title": "Splunk YAML configuration is being imported to the UI"
-    },
-    "deprecated_yaml_with_filter": {
-      "description": "Configuring Splunk using YAML is being removed. However, your configuration includes an entity filter, which is not supported in the UI configuration.\n\nYour current YAML configuration will continue to work, but you should plan to migrate to the UI configuration and implement filtering using automations or other Home Assistant features instead.\n\nIf you remove the entity filter from your YAML configuration, it will be automatically imported to the UI.\n\nFor more information, see the [documentation]({documentation_url}).",
-      "title": "Splunk YAML configuration with entity filter is deprecated"
     }
   }
 }
