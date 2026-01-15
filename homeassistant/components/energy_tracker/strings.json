@@ -1,0 +1,108 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Set up Energy Tracker",
+        "description": "Enter your account details to connect to Energy Tracker.",
+        "data": {
+          "name": "Account name",
+          "api_token": "Personal access token"
+        },
+        "data_description": {
+          "name": "A recognizable name for this account (e.g., 'John's Account').",
+          "api_token": "Your personal access token from the Energy Tracker app."
+        }
+      },
+      "reconfigure": {
+        "title": "Reconfigure Energy Tracker",
+        "description": "Update your Energy Tracker account settings. Leave fields blank to keep existing values.",
+        "data": {
+          "name": "Account name",
+          "api_token": "Personal access token"
+        },
+        "data_description": {
+          "name": "A recognizable name for this account.",
+          "api_token": "Enter a new token, or leave blank to keep existing."
+        }
+      }
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
+    }
+  },
+  "exceptions": {
+    "timeout": {
+      "message": "Request timed out. Please check network connection and try again."
+    },
+    "network_error": {
+      "message": "Network error during request. Please check internet connection and try again."
+    },
+    "bad_request": {
+      "message": "Invalid input. Please check input data. ({error})"
+    },
+    "auth_failed": {
+      "message": "Authentication failed. Please check your Personal access token in integration settings."
+    },
+    "device_not_found": {
+      "message": "Standard measuring device not found. Please check device ID."
+    },
+    "conflict": {
+      "message": "A reading for this timestamp already exists. ({error})"
+    },
+    "rate_limit": {
+      "message": "Too many requests. Please try again in {retry_after} seconds."
+    },
+    "rate_limit_no_time": {
+      "message": "Too many requests. Please try again later."
+    },
+    "server_error": {
+      "message": "A server error has occurred. Please try again later. ({error})"
+    },
+    "unknown_error": {
+      "message": "An unexpected error has occurred. Please try again later. ({error})"
+    },
+    "device_id_empty": {
+      "message": "Standard measuring device ID is required."
+    },
+    "entity_not_found": {
+      "message": "Entity {entity_id} not found."
+    },
+    "entity_unavailable": {
+      "message": "Entity {entity_id} is {state}."
+    },
+    "invalid_number": {
+      "message": "Entity {entity_id} value '{state}' is not a number."
+    },
+    "missing_timestamp": {
+      "message": "Entity {entity_id} has no timestamp."
+    },
+    "no_api_token": {
+      "message": "No personal access token configured. Check account settings."
+    }
+  },
+  "services": {
+    "send_meter_reading": {
+      "name": "Send meter reading",
+      "description": "Sends the current value of a sensor to Energy Tracker.",
+      "fields": {
+        "entry_id": {
+          "name": "Account",
+          "description": "Your Energy Tracker account"
+        },
+        "device_id": {
+          "name": "Standard measuring device ID",
+          "description": "ID of the standard measuring device in your Energy Tracker account"
+        },
+        "source_entity_id": {
+          "name": "Sensor",
+          "description": "Sensor that provides the meter reading"
+        },
+        "allow_rounding": {
+          "name": "Allow rounding",
+          "description": "Round value to match meter precision"
+        }
+      }
+    }
+  }
+}

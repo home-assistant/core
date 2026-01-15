@@ -888,6 +888,9 @@ emoji==2.8.0
 # homeassistant.components.emulated_roku
 emulated-roku==0.3.0
 
+# homeassistant.components.energy_tracker
+energy-tracker-api==1.0.0
+
 # homeassistant.components.huisbaasje
 energyflip-client==0.2.2
 
