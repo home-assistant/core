@@ -85,18 +85,15 @@ async def _get_access_token(oauth_session: OAuth2Session) -> str:
     try:
         await oauth_session.async_ensure_token_valid()
     except ClientResponseError as err:
-        LOGGER.error("Token refresh HTTP error: %s", err)
         if err.status == 401:
             raise ConfigEntryAuthFailed from err
         raise ConfigEntryNotReady from err
     except (KeyError, TypeError) as err:
-        LOGGER.error("Token data malformed, try reauthenticating: %s", err)
         raise ConfigEntryAuthFailed(
             translation_domain=DOMAIN,
             translation_key="token_data_malformed",
         ) from err
     except ClientError as err:
-        LOGGER.error("Token refresh connection error: %s", err)
         raise ConfigEntryNotReady from err
     return oauth_session.token[CONF_ACCESS_TOKEN]
 
