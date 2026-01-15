@@ -16,12 +16,9 @@ T = TypeVar("T")
 
 
 async def _flatten_async_pages(
-    pages: AsyncGenerator[list[T]] | list[T],
+    pages: AsyncGenerator[list[T]],
 ) -> list[T]:
-    """Flatten paginated results from an async generator or return list directly."""
-    # Handle both async generators (production) and lists (tests)
-    if isinstance(pages, list):
-        return pages
+    """Flatten paginated results from an async generator."""
     all_items: list[T] = []
     async for page in pages:
         all_items.extend(page)

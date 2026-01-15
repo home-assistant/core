@@ -1,7 +1,8 @@
 """Common fixtures for the todoist tests."""
 
-from collections.abc import Generator
+from collections.abc import AsyncGenerator, Callable, Generator
 from http import HTTPStatus
+from typing import TypeVar
 from unittest.mock import AsyncMock, patch
 
 import pytest
@@ -16,10 +17,31 @@ from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry
 
+T = TypeVar("T")
+
 PROJECT_ID = "project-id-1"
 SECTION_ID = "section-id-1"
 SUMMARY = "A task"
 TOKEN = "some-token"
+
+
+async def _async_generator(items: list[T]) -> AsyncGenerator[list[T]]:
+    """Create an async generator that yields items as a single page."""
+    yield items
+
+
+def make_api_response(items: list[T]) -> Callable[[], AsyncGenerator[list[T]]]:
+    """Create a callable that returns a fresh async generator each time.
+
+    This is needed because async generators can only be iterated once,
+    but mocks may be called multiple times.
+    """
+
+    async def _generator(*args, **kwargs) -> AsyncGenerator[list[T]]:
+        async for page in _async_generator(items):
+            yield page
+
+    return _generator
 
 
 def make_api_due(
@@ -105,41 +127,45 @@ def mock_tasks(due: Due) -> list[Task]:
 def mock_api(tasks: list[Task]) -> AsyncMock:
     """Mock the api state."""
     api = AsyncMock()
-    api.get_projects.return_value = [
-        Project(
-            id=PROJECT_ID,
-            color="blue",
-            is_favorite=False,
-            name="Name",
-            is_shared=False,
-            is_archived=False,
-            is_collapsed=False,
-            is_inbox_project=False,
-            can_assign_tasks=False,
-            order=1,
-            parent_id=None,
-            view_style="list",
-            description="",
-            created_at="2021-01-01",
-            updated_at="2021-01-01",
-        )
-    ]
-    api.get_sections.return_value = [
-        Section(
-            id=SECTION_ID,
-            project_id=PROJECT_ID,
-            name="Section Name",
-            order=1,
-            is_collapsed=False,
-        )
-    ]
-    api.get_labels.return_value = [
-        Label(id="1", name="Label1", color="1", order=1, is_favorite=False)
-    ]
-    api.get_collaborators.return_value = [
-        Collaborator(email="user@gmail.com", id="1", name="user")
-    ]
-    api.get_tasks.return_value = tasks
+    api.get_projects.side_effect = make_api_response(
+        [
+            Project(
+                id=PROJECT_ID,
+                color="blue",
+                is_favorite=False,
+                name="Name",
+                is_shared=False,
+                is_archived=False,
+                is_collapsed=False,
+                is_inbox_project=False,
+                can_assign_tasks=False,
+                order=1,
+                parent_id=None,
+                view_style="list",
+                description="",
+                created_at="2021-01-01",
+                updated_at="2021-01-01",
+            )
+        ]
+    )
+    api.get_sections.side_effect = make_api_response(
+        [
+            Section(
+                id=SECTION_ID,
+                project_id=PROJECT_ID,
+                name="Section Name",
+                order=1,
+                is_collapsed=False,
+            )
+        ]
+    )
+    api.get_labels.side_effect = make_api_response(
+        [Label(id="1", name="Label1", color="1", order=1, is_favorite=False)]
+    )
+    api.get_collaborators.side_effect = make_api_response(
+        [Collaborator(email="user@gmail.com", id="1", name="user")]
+    )
+    api.get_tasks.side_effect = make_api_response(tasks)
     return api
 
 
