@@ -126,6 +126,7 @@ _EXPERIMENTAL_CONDITION_PLATFORMS = {
     "alarm_control_panel",
     "fan",
     "light",
+    "siren",
 }
 
 _EXPERIMENTAL_TRIGGER_PLATFORMS = {
