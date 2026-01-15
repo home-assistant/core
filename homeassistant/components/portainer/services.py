@@ -77,18 +77,15 @@ async def _get_endpoint_id(
 
 async def prune_images(call: ServiceCall) -> None:
     """Prune unused images in Portainer, with more controls."""
-
     config_entry = await _extract_config_entry(call)
     coordinator = config_entry.runtime_data
-
     endpoint_id = await _get_endpoint_id(call, config_entry)
 
-    dangling = call.data.get(ATTR_DANGLING, False)
     try:
         await coordinator.portainer.images_prune(
             endpoint_id=endpoint_id,
             until=call.data.get(ATTR_DATE_UNTIL),
-            dangling=dangling,
+            dangling=call.data.get(ATTR_DANGLING, False),
         )
     except PortainerAuthenticationError as err:
         raise HomeAssistantError(
