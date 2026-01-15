@@ -2234,7 +2234,7 @@ pynetgear==0.10.10
 pynetio==0.1.9.1
 
 # homeassistant.components.nina
-pynina==1.0.1
+pynina==1.0.2
 
 # homeassistant.components.nintendo_parental_controls
 pynintendoauth==1.0.2
