@@ -340,7 +340,7 @@ async def test_chime_ring_volume_multiple_cameras(
     doorbell2 = doorbell.model_copy()
     doorbell2.id = "test-doorbell-2"
     doorbell2.name = "Test Doorbell 2"
-    doorbell2.mac = "AABBCCDDEE02"
+    doorbell2.mac = "aa:bb:cc:dd:ee:02"
 
     chime.camera_ids = [doorbell.id, doorbell2.id]
     chime.ring_settings = [
