@@ -7,7 +7,7 @@ from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
 
-from . import DOMAIN
+from .const import DATA_QUIKSWITCH
 
 
 class QSEntity(Entity):
@@ -67,8 +67,8 @@ class QSToggleEntity(QSEntity):
     async def async_turn_on(self, **kwargs):
         """Turn the device on."""
         new = kwargs.get(ATTR_BRIGHTNESS, 255)
-        self.hass.data[DOMAIN].devices.set_value(self.qsid, new)
+        self.hass.data[DATA_QUIKSWITCH].devices.set_value(self.qsid, new)
 
     async def async_turn_off(self, **_):
         """Turn the device off."""
-        self.hass.data[DOMAIN].devices.set_value(self.qsid, 0)
+        self.hass.data[DATA_QUIKSWITCH].devices.set_value(self.qsid, 0)
