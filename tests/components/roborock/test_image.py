@@ -305,3 +305,42 @@ async def test_coordinator_update_with_image_change_writes_state(
     # last_updated should be newer
     assert new_state.last_updated > initial_last_updated
     assert new_state.last_changed > initial_last_changed
+
+
+async def test_image_state_changes_not_in_logbook_when_unchanged(
+    hass: HomeAssistant,
+    setup_entry: MockConfigEntry,
+    fake_vacuum: FakeDevice,
+) -> None:
+    """Test that logbook doesn't show state changes when image hasn't changed."""
+    entity_id = "image.roborock_s7_maxv_upstairs"
+    state = hass.states.get(entity_id)
+    assert state is not None
+
+    # Get the initial last_updated timestamp
+    initial_last_updated = state.last_updated
+    initial_last_changed = state.last_changed
+
+    # Trigger coordinator update WITHOUT changing image
+    assert fake_vacuum.v1_properties is not None
+    assert fake_vacuum.v1_properties.home is not None
+    assert fake_vacuum.v1_properties.home.home_map_content is not None
+    fake_vacuum.v1_properties.status.in_cleaning = 1
+
+    now = dt_util.utcnow() + timedelta(seconds=91)
+    with (
+        patch(
+            "homeassistant.components.roborock.coordinator.dt_util.utcnow",
+            return_value=now,
+        ),
+    ):
+        async_fire_time_changed(hass, now)
+        await hass.async_block_till_done()
+
+    # State should NOT have been written since image didn't change
+    # This means no state_changed event was fired, so no logbook entry will be created
+    new_state = hass.states.get(entity_id)
+    assert new_state is not None
+    # last_updated and last_changed should remain the same
+    assert new_state.last_updated == initial_last_updated
+    assert new_state.last_changed == initial_last_changed
