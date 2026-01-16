@@ -330,12 +330,11 @@ ENTITY_STATE_CONDITION_SCHEMA_ANY_ALL = vol.Schema(
 )
 
 
-class EntityStateConditionBase(Condition):
-    """State condition."""
+class EntityConditionBase(Condition):
+    """Base class for entity conditions."""
 
     _domain: str
     _schema: vol.Schema = ENTITY_STATE_CONDITION_SCHEMA_ANY_ALL
-    _states: set[str]
 
     @override
     @classmethod
@@ -362,19 +361,23 @@ class EntityStateConditionBase(Condition):
             if split_entity_id(entity_id)[0] == self._domain
         }
 
+    @abc.abstractmethod
+    def is_valid_state(self, entity_state: State) -> bool:
+        """Check if the state matches the expected state(s)."""
+
     @override
     async def async_get_checker(self) -> ConditionChecker:
         """Get the condition checker."""
 
-        def check_any_match_state(states: list[str]) -> bool:
-            """Test if any entity match the state."""
-            return any(state in self._states for state in states)
+        def check_any_match_state(states: list[State]) -> bool:
+            """Test if any entity matches the state."""
+            return any(self.is_valid_state(state) for state in states)
 
-        def check_all_match_state(states: list[str]) -> bool:
+        def check_all_match_state(states: list[State]) -> bool:
             """Test if all entities match the state."""
-            return all(state in self._states for state in states)
+            return all(self.is_valid_state(state) for state in states)
 
-        matcher: Callable[[list[str]], bool]
+        matcher: Callable[[list[State]], bool]
         if self._behavior == BEHAVIOR_ANY:
             matcher = check_any_match_state
         elif self._behavior == BEHAVIOR_ALL:
@@ -390,7 +393,7 @@ class EntityStateConditionBase(Condition):
             )
             filtered_entity_ids = self.entity_filter(referenced_entity_ids)
             entity_states = [
-                _state.state
+                _state
                 for entity_id in filtered_entity_ids
                 if (_state := self._hass.states.get(entity_id))
                 and _state.state not in (STATE_UNAVAILABLE, STATE_UNKNOWN)
@@ -398,6 +401,16 @@ class EntityStateConditionBase(Condition):
             return matcher(entity_states)
 
         return test_state
+
+
+class EntityStateConditionBase(EntityConditionBase):
+    """State condition."""
+
+    _states: set[str]
+
+    def is_valid_state(self, entity_state: State) -> bool:
+        """Check if the state matches the expected state(s)."""
+        return entity_state.state in self._states
 
 
 def make_entity_state_condition(
@@ -425,46 +438,9 @@ class EntityStateAttributeConditionBase(EntityStateConditionBase):
     _attribute: str
     _attribute_states: set[str]
 
-    @override
-    async def async_get_checker(self) -> ConditionChecker:
-        """Get the condition checker."""
-
-        def check_any_match_attribute(attribute_values: list[str | None]) -> bool:
-            """Test if any entity attribute matches the state."""
-            return any(
-                attr_value in self._attribute_states for attr_value in attribute_values
-            )
-
-        def check_all_match_attribute(attribute_values: list[str | None]) -> bool:
-            """Test if all entity attributes match the state."""
-            return all(
-                attr_value in self._attribute_states for attr_value in attribute_values
-            )
-
-        matcher: Callable[[list[str | None]], bool]
-        if self._behavior == BEHAVIOR_ANY:
-            matcher = check_any_match_attribute
-        elif self._behavior == BEHAVIOR_ALL:
-            matcher = check_all_match_attribute
-
-        def test_attribute(**kwargs: Unpack[ConditionCheckParams]) -> bool:
-            """Test attribute condition."""
-            targeted_entities = async_extract_referenced_entity_ids(
-                self._hass, self._target_selection, expand_group=False
-            )
-            referenced_entity_ids = targeted_entities.referenced.union(
-                targeted_entities.indirectly_referenced
-            )
-            filtered_entity_ids = self.entity_filter(referenced_entity_ids)
-            attribute_values = [
-                _state.attributes.get(self._attribute)
-                for entity_id in filtered_entity_ids
-                if (_state := self._hass.states.get(entity_id))
-                and _state.state not in (STATE_UNAVAILABLE, STATE_UNKNOWN)
-            ]
-            return matcher(attribute_values)
-
-        return test_attribute
+    def is_valid_state(self, entity_state: State) -> bool:
+        """Check if the state matches the expected state(s)."""
+        return entity_state.attributes.get(self._attribute) in self._attribute_states
 
 
 def make_entity_state_attribute_condition(
