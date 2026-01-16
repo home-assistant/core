@@ -81,9 +81,11 @@ class SonosAlarms(SonosHouseholdCoordinator):
         try:
             self.alarms.update(soco)
         except SoCoException:
-            _LOGGER.warning("Failed to update alarms for %s, speaker will be marked unavailable", soco.player_name)
-            return False
-
+            if "Alarm list UID" in str(err):
+                _LOGGER.warning("Alarm list mismatch for %s, ignoring: %s", soco.player_name, str(err))
+                return False
+            raise
+            
         if update_id and self.alarms.last_id < update_id:
             # Skip updates if latest query result is outdated or lagging
             return False
