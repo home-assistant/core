@@ -19,7 +19,7 @@ class TailscaleDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Device]]):
     """The Tailscale Data Update Coordinator."""
 
     config_entry: ConfigEntry
-    
+
     # Track devices from previous update to detect removals
     previous_devices: set[str] = set()
 
@@ -51,7 +51,7 @@ class TailscaleDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Device]]):
         current_devices = set(data)
         if stale_devices := self.previous_devices - current_devices:
             device_registry = dr.async_get(self.hass)
-            
+
             # Remove each stale device from the device registry
             for device_id in stale_devices:
                 if device := device_registry.async_get_device(
@@ -65,8 +65,8 @@ class TailscaleDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Device]]):
                         "Removed device %s as it no longer exists in Tailscale",
                         device_id,
                     )
-        
+
         # Update our tracking set for the next poll
         self.previous_devices = current_devices
-        
+
         return data
