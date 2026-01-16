@@ -30,7 +30,7 @@
       "bot": { "name": "Bot" },
       "discoverable": { "name": "Discoverable" },
       "indexable": { "name": "Indexable" },
-      "limited": { "name": "Muted" },
+      "limited": { "name": "Limited" },
       "locked": { "name": "Locked" },
       "memorial": { "name": "Memorial" },
       "moved": { "name": "Moved" },
