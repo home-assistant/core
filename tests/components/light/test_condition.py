@@ -5,7 +5,7 @@ from typing import Any
 import pytest
 
 from homeassistant.const import STATE_OFF, STATE_ON
-from homeassistant.core import HomeAssistant, ServiceCall
+from homeassistant.core import HomeAssistant
 
 from tests.components import (
     ConditionStateDescription,
@@ -137,7 +137,6 @@ async def test_light_state_condition_behavior_any(
 )
 async def test_light_state_condition_behavior_all(
     hass: HomeAssistant,
-    service_calls: list[ServiceCall],
     target_lights: list[str],
     condition_target_config: dict,
     entity_id: str,

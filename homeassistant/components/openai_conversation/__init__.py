@@ -259,7 +259,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: OpenAIConfigEntry) -> bo
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: OpenAIConfigEntry) -> bool:
     """Unload OpenAI."""
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
@@ -280,7 +280,7 @@ async def async_migrate_integration(hass: HomeAssistant) -> None:
     if not any(entry.version == 1 for entry in entries):
         return
 
-    api_keys_entries: dict[str, tuple[ConfigEntry, bool]] = {}
+    api_keys_entries: dict[str, tuple[OpenAIConfigEntry, bool]] = {}
     entity_registry = er.async_get(hass)
     device_registry = dr.async_get(hass)
 

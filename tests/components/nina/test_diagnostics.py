@@ -32,7 +32,7 @@ async def test_diagnostics(
     """Test diagnostics."""
 
     with patch(
-        "pynina.baseApi.BaseAPI._makeRequest",
+        "pynina.api_client.APIClient.make_request",
         wraps=mocked_request_function,
     ):
         config_entry: MockConfigEntry = MockConfigEntry(

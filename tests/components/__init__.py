@@ -254,12 +254,20 @@ def parametrize_condition_states(
                         state_with_attributes(other_state, False, True)
                         for other_state in other_states
                     ),
-                    (
-                        state_with_attributes(target_state, True, True)
-                        for target_state in target_states
-                    ),
-                )
+                ),
             ),
+        ),
+        # Test each target state individually to isolate condition_true expectations
+        *(
+            (
+                condition,
+                condition_options,
+                [
+                    state_with_attributes(other_states[0], False, True),
+                    state_with_attributes(target_state, True, True),
+                ],
+            )
+            for target_state in target_states
         ),
     ]
 
