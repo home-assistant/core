@@ -997,7 +997,6 @@
       "total_grid_energy_exported": {
         "name": "Grid exported"
       },
-
       "total_home_usage": {
         "name": "Home usage"
       },
@@ -1097,6 +1096,9 @@
     "command_exception": {
       "message": "Command returned exception: {message}"
     },
+    "command_no_response": {
+      "message": "Command had no response"
+    },
     "command_no_result": {
       "message": "Command had no result"
     },
@@ -1123,6 +1125,21 @@
     },
     "no_vehicle_data_for_device": {
       "message": "No vehicle data for device ID: {device_id}"
+    },
+    "oauth_implementation_not_available": {
+      "message": "OAuth implementation not available, try reauthenticating"
+    },
+    "set_scheduled_charging_time": {
+      "message": "Scheduled charging time is required when enabling"
+    },
+    "set_scheduled_departure_off_peak": {
+      "message": "Off-peak charging end time is required when enabling"
+    },
+    "set_scheduled_departure_preconditioning": {
+      "message": "Preconditioning departure time is required when enabling"
+    },
+    "token_data_malformed": {
+      "message": "Token data malformed, try reauthenticating"
     },
     "wake_up_failed": {
       "message": "Failed to wake up vehicle: {message}"
