@@ -28,7 +28,7 @@ async def init_integration(hass: HomeAssistant) -> MockConfigEntry:
     """Set up the NINA integration in Home Assistant."""
 
     with patch(
-        "pynina.baseApi.BaseAPI._makeRequest",
+        "pynina.api_client.APIClient.make_request",
         wraps=mocked_request_function,
     ):
         entry: MockConfigEntry = MockConfigEntry(
@@ -54,7 +54,7 @@ async def test_config_migration_from1_1(hass: HomeAssistant) -> None:
     )
 
     with patch(
-        "pynina.baseApi.BaseAPI._makeRequest",
+        "pynina.api_client.APIClient.make_request",
         wraps=mocked_request_function,
     ):
         old_conf_entry.add_to_hass(hass)
@@ -82,7 +82,7 @@ async def test_config_migration_from1_2(hass: HomeAssistant) -> None:
     )
 
     with patch(
-        "pynina.baseApi.BaseAPI._makeRequest",
+        "pynina.api_client.APIClient.make_request",
         wraps=mocked_request_function,
     ):
         old_conf_entry.add_to_hass(hass)
@@ -104,7 +104,7 @@ async def test_config_migration_downgrade(hass: HomeAssistant) -> None:
     )
 
     with patch(
-        "pynina.baseApi.BaseAPI._makeRequest",
+        "pynina.api_client.APIClient.make_request",
         wraps=mocked_request_function,
     ):
         conf_entry.add_to_hass(hass)
@@ -126,7 +126,7 @@ async def test_config_entry_not_ready(hass: HomeAssistant) -> None:
 async def test_sensors_connection_error(hass: HomeAssistant) -> None:
     """Test the creation and values of the NINA sensors with no connected."""
     with patch(
-        "pynina.baseApi.BaseAPI._makeRequest",
+        "pynina.api_client.APIClient.make_request",
         side_effect=ApiError("Could not connect to Api"),
     ):
         conf_entry: MockConfigEntry = MockConfigEntry(

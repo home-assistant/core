@@ -25,7 +25,7 @@
           'id': 'biw.BIWAPP-69634',
           'is_valid': False,
           'recommended_actions': '',
-          'sender': '',
+          'sender': None,
           'sent': '1999-08-07T10:59:00+02:00',
           'severity': 'Minor',
           'start': '',

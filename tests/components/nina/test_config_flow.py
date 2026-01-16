@@ -49,7 +49,7 @@ def assert_dummy_entry_created(result: dict[str, Any]) -> None:
 async def test_step_user_connection_error(hass: HomeAssistant) -> None:
     """Test starting a flow by user but no connection."""
     with patch(
-        "pynina.baseApi.BaseAPI._makeRequest",
+        "pynina.api_client.APIClient.make_request",
         side_effect=ApiError("Could not connect to Api"),
     ):
         result: dict[str, Any] = await hass.config_entries.flow.async_init(
@@ -63,7 +63,7 @@ async def test_step_user_connection_error(hass: HomeAssistant) -> None:
 async def test_step_user_unexpected_exception(hass: HomeAssistant) -> None:
     """Test starting a flow by user but with an unexpected exception."""
     with patch(
-        "pynina.baseApi.BaseAPI._makeRequest",
+        "pynina.api_client.APIClient.make_request",
         side_effect=Exception("DUMMY"),
     ):
         result: dict[str, Any] = await hass.config_entries.flow.async_init(
@@ -77,7 +77,7 @@ async def test_step_user_unexpected_exception(hass: HomeAssistant) -> None:
 async def test_step_user(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
     """Test starting a flow by user with valid values."""
     with patch(
-        "pynina.baseApi.BaseAPI._makeRequest",
+        "pynina.api_client.APIClient.make_request",
         wraps=mocked_request_function,
     ):
         result: dict[str, Any] = await hass.config_entries.flow.async_init(
@@ -95,7 +95,7 @@ async def test_step_user(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> No
 async def test_step_user_no_selection(hass: HomeAssistant) -> None:
     """Test starting a flow by user with no selection."""
     with patch(
-        "pynina.baseApi.BaseAPI._makeRequest",
+        "pynina.api_client.APIClient.make_request",
         wraps=mocked_request_function,
     ):
         result: dict[str, Any] = await hass.config_entries.flow.async_init(
@@ -121,7 +121,7 @@ async def test_step_user_already_configured(
 ) -> None:
     """Test starting a flow by user, but it was already configured."""
     with patch(
-        "pynina.baseApi.BaseAPI._makeRequest",
+        "pynina.api_client.APIClient.make_request",
         wraps=mocked_request_function,
     ):
         result = await hass.config_entries.flow.async_init(
@@ -141,7 +141,7 @@ async def test_options_flow_init(
 
     with (
         patch(
-            "pynina.baseApi.BaseAPI._makeRequest",
+            "pynina.api_client.APIClient.make_request",
             wraps=mocked_request_function,
         ),
     ):
@@ -195,7 +195,7 @@ async def test_options_flow_with_no_selection(
 
     with (
         patch(
-            "pynina.baseApi.BaseAPI._makeRequest",
+            "pynina.api_client.APIClient.make_request",
             wraps=mocked_request_function,
         ),
     ):
@@ -263,7 +263,7 @@ async def test_options_flow_connection_error(
     await setup_platform(hass, mock_config_entry)
 
     with patch(
-        "pynina.baseApi.BaseAPI._makeRequest",
+        "pynina.api_client.APIClient.make_request",
         side_effect=ApiError("Could not connect to Api"),
     ):
         result = await hass.config_entries.options.async_init(
@@ -283,7 +283,7 @@ async def test_options_flow_unexpected_exception(
 
     with (
         patch(
-            "pynina.baseApi.BaseAPI._makeRequest",
+            "pynina.api_client.APIClient.make_request",
             side_effect=Exception("DUMMY"),
         ),
     ):
@@ -312,7 +312,7 @@ async def test_options_flow_entity_removal(
 
     with (
         patch(
-            "pynina.baseApi.BaseAPI._makeRequest",
+            "pynina.api_client.APIClient.make_request",
             wraps=mocked_request_function,
         ),
     ):

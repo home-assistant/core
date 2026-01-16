@@ -17,7 +17,7 @@ from tests.common import (
 async def setup_platform(hass: HomeAssistant, config_entry: MockConfigEntry) -> None:
     """Set up the NINA platform."""
     with patch(
-        "pynina.baseApi.BaseAPI._makeRequest",
+        "pynina.api_client.APIClient.make_request",
         wraps=mocked_request_function,
     ):
         await hass.config_entries.async_setup(config_entry.entry_id)
