@@ -3,7 +3,6 @@
 import asyncio
 import contextlib
 import logging
-from typing import Final
 
 import serial
 import serial_asyncio_fast
@@ -26,9 +25,6 @@ from .protocol import TonewinnerCommands, TonewinnerProtocol
 
 _LOGGER = logging.getLogger(__name__)
 _LOGGER.info("Tonewinner media_player module loaded!")
-
-# Polling interval for state refresh (30 seconds)
-REFRESH_INTERVAL: Final = 30
 
 
 class TonewinnerError(Exception):
@@ -167,7 +163,6 @@ class TonewinnerMediaPlayer(MediaPlayerEntity):
     _transport: None | serial_asyncio_fast.SerialTransport
     _protocol: None | asyncio.Protocol
     _source_check_task: None | asyncio.Task[None]
-    _refresh_task: None | asyncio.Task[None]
 
     _attr_device_class = MediaPlayerDeviceClass.RECEIVER
     _attr_supported_features = (
@@ -200,7 +195,6 @@ class TonewinnerMediaPlayer(MediaPlayerEntity):
         self._protocol = None
         self._attr_available = False
         self._source_check_task = None
-        self._refresh_task = None
 
         # State tracking
         self._attr_state = MediaPlayerState.OFF
@@ -234,17 +228,10 @@ class TonewinnerMediaPlayer(MediaPlayerEntity):
         await self.connect()
         # Query initial state
         await self._query_all_state()
-        # Start periodic refresh task
-        self._refresh_task = asyncio.create_task(self._refresh_state())
 
     async def async_will_remove_from_hass(self) -> None:
         """Clean up when entity is removed."""
         _LOGGER.debug("Cleaning up before removal")
-        # Cancel periodic refresh task
-        if self._refresh_task:
-            self._refresh_task.cancel()
-            with contextlib.suppress(asyncio.CancelledError):
-                await self._refresh_task
         # Cancel source check task
         if self._source_check_task:
             self._source_check_task.cancel()
@@ -260,24 +247,6 @@ class TonewinnerMediaPlayer(MediaPlayerEntity):
         await self.send_raw_command(TonewinnerCommands.INPUT_QUERY)
         # Wait a bit for response to be processed
         await asyncio.sleep(0.2)
-
-    async def _refresh_state(self) -> None:
-        """Periodically refresh state from device."""
-        try:
-            while True:
-                # Only refresh when device is ON
-                if self._attr_state == MediaPlayerState.ON:
-                    _LOGGER.debug("Performing periodic state refresh")
-                    await self.send_raw_command(TonewinnerCommands.INPUT_QUERY)
-                    await asyncio.sleep(0.2)
-                    await self.send_raw_command(TonewinnerCommands.MODE_QUERY)
-                    await asyncio.sleep(0.2)
-                    await self.send_raw_command(TonewinnerCommands.VOLUME_QUERY)
-                # Wait for next refresh interval
-                await asyncio.sleep(REFRESH_INTERVAL)
-        except asyncio.CancelledError:
-            _LOGGER.debug("State refresh task cancelled")
-            raise
 
     async def _query_all_state(self) -> None:
         """Query device for current state."""
@@ -445,21 +414,18 @@ class TonewinnerMediaPlayer(MediaPlayerEntity):
     async def async_turn_on(self):
         """Turn the media player on."""
         _LOGGER.debug("Turning on receiver")
-        await self.send_raw_command(ToneWinnerCommands.POWER_ON)
+        await self.send_raw_command(TonewinnerCommands.POWER_ON)
         # Set optimistic state - command sent successfully, receiver should be turning on
         self._attr_state = MediaPlayerState.ON
         self.async_write_ha_state()
-        # Wait for power on, then query input source
-        # Note: The device should respond to POWER_ON with actual power state,
-        # which will trigger to input source query in handle_response
-        # We also query here as a backup in case response is missed
-        await asyncio.sleep(2.0)
-        await self._query_input_source()
+        # Note: The device will respond to POWER_ON with the actual power state,
+        # which will trigger the input source query in handle_response
+        # when it receives "POWER ON"
 
     async def async_turn_off(self):
         """Turn the media player off."""
         _LOGGER.debug("Turning off receiver")
-        await self.send_raw_command(ToneWinnerCommands.POWER_OFF)
+        await self.send_raw_command(TonewinnerCommands.POWER_OFF)
         # Set optimistic state - command sent successfully, receiver should be turning off
         self._attr_state = MediaPlayerState.OFF
         # Clear source state when turning off
