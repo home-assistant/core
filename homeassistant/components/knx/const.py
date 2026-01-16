@@ -94,6 +94,8 @@ SERVICE_KNX_EVENT_REGISTER: Final = "event_register"
 SERVICE_KNX_EXPOSURE_REGISTER: Final = "exposure_register"
 SERVICE_KNX_READ: Final = "read"
 
+REPAIR_ISSUE_DATA_SECURE_GROUP_KEY: Final = "data_secure_group_key_issue"
+
 
 class KNXConfigEntryData(TypedDict, total=False):
     """Config entry for the KNX integration."""
@@ -163,9 +165,13 @@ SUPPORTED_PLATFORMS_UI: Final = {
     Platform.CLIMATE,
     Platform.COVER,
     Platform.DATE,
+    Platform.FAN,
     Platform.DATETIME,
     Platform.LIGHT,
+    Platform.SCENE,
+    Platform.SENSOR,
     Platform.SWITCH,
+    Platform.TEXT,
     Platform.TIME,
 }
 
@@ -217,3 +223,15 @@ class ClimateConf:
     FAN_MAX_STEP: Final = "fan_max_step"
     FAN_SPEED_MODE: Final = "fan_speed_mode"
     FAN_ZERO_MODE: Final = "fan_zero_mode"
+
+
+class FanConf:
+    """Common config keys for fan."""
+
+    MAX_STEP: Final = "max_step"
+
+
+class SceneConf:
+    """Common config keys for scene."""
+
+    SCENE_NUMBER: Final = "scene_number"

@@ -5,11 +5,11 @@
       <BeoAttribute.BEOLINK: 'beolink'>: dict({
         <BeoAttribute.BEOLINK_LISTENERS: 'listeners'>: dict({
           'Bedroom Premiere': '1111.1111111.33333333@products.bang-olufsen.com',
-          'Lounge room Balance': '1111.1111111.44444444@products.bang-olufsen.com',
+          'Lounge room A5': '1111.1111111.44444444@products.bang-olufsen.com',
         }),
         <BeoAttribute.BEOLINK_PEERS: 'peers'>: dict({
           'Bedroom Premiere': '1111.1111111.33333333@products.bang-olufsen.com',
-          'Lounge room Balance': '1111.1111111.44444444@products.bang-olufsen.com',
+          'Lounge room A5': '1111.1111111.44444444@products.bang-olufsen.com',
         }),
         <BeoAttribute.BEOLINK_SELF: 'self'>: dict({
           'Living room Balance': '1111.1111111.11111111@products.bang-olufsen.com',
@@ -53,11 +53,11 @@
       <BeoAttribute.BEOLINK: 'beolink'>: dict({
         <BeoAttribute.BEOLINK_LISTENERS: 'listeners'>: dict({
           'Bedroom Premiere': '1111.1111111.33333333@products.bang-olufsen.com',
-          'Lounge room Balance': '1111.1111111.44444444@products.bang-olufsen.com',
+          'Lounge room A5': '1111.1111111.44444444@products.bang-olufsen.com',
         }),
         <BeoAttribute.BEOLINK_PEERS: 'peers'>: dict({
           'Bedroom Premiere': '1111.1111111.33333333@products.bang-olufsen.com',
-          'Lounge room Balance': '1111.1111111.44444444@products.bang-olufsen.com',
+          'Lounge room A5': '1111.1111111.44444444@products.bang-olufsen.com',
         }),
         <BeoAttribute.BEOLINK_SELF: 'self'>: dict({
           'Living room Balance': '1111.1111111.11111111@products.bang-olufsen.com',
@@ -102,11 +102,11 @@
       <BeoAttribute.BEOLINK: 'beolink'>: dict({
         <BeoAttribute.BEOLINK_LISTENERS: 'listeners'>: dict({
           'Bedroom Premiere': '1111.1111111.33333333@products.bang-olufsen.com',
-          'Lounge room Balance': '1111.1111111.44444444@products.bang-olufsen.com',
+          'Lounge room A5': '1111.1111111.44444444@products.bang-olufsen.com',
         }),
         <BeoAttribute.BEOLINK_PEERS: 'peers'>: dict({
           'Bedroom Premiere': '1111.1111111.33333333@products.bang-olufsen.com',
-          'Lounge room Balance': '1111.1111111.44444444@products.bang-olufsen.com',
+          'Lounge room A5': '1111.1111111.44444444@products.bang-olufsen.com',
         }),
         <BeoAttribute.BEOLINK_SELF: 'self'>: dict({
           'Living room Balance': '1111.1111111.11111111@products.bang-olufsen.com',
@@ -151,11 +151,11 @@
       <BeoAttribute.BEOLINK: 'beolink'>: dict({
         <BeoAttribute.BEOLINK_LISTENERS: 'listeners'>: dict({
           'Bedroom Premiere': '1111.1111111.33333333@products.bang-olufsen.com',
-          'Lounge room Balance': '1111.1111111.44444444@products.bang-olufsen.com',
+          'Lounge room A5': '1111.1111111.44444444@products.bang-olufsen.com',
         }),
         <BeoAttribute.BEOLINK_PEERS: 'peers'>: dict({
           'Bedroom Premiere': '1111.1111111.33333333@products.bang-olufsen.com',
-          'Lounge room Balance': '1111.1111111.44444444@products.bang-olufsen.com',
+          'Lounge room A5': '1111.1111111.44444444@products.bang-olufsen.com',
         }),
         <BeoAttribute.BEOLINK_SELF: 'self'>: dict({
           'Living room Balance': '1111.1111111.11111111@products.bang-olufsen.com',
@@ -200,11 +200,11 @@
       <BeoAttribute.BEOLINK: 'beolink'>: dict({
         <BeoAttribute.BEOLINK_LISTENERS: 'listeners'>: dict({
           'Bedroom Premiere': '1111.1111111.33333333@products.bang-olufsen.com',
-          'Lounge room Balance': '1111.1111111.44444444@products.bang-olufsen.com',
+          'Lounge room A5': '1111.1111111.44444444@products.bang-olufsen.com',
         }),
         <BeoAttribute.BEOLINK_PEERS: 'peers'>: dict({
           'Bedroom Premiere': '1111.1111111.33333333@products.bang-olufsen.com',
-          'Lounge room Balance': '1111.1111111.44444444@products.bang-olufsen.com',
+          'Lounge room A5': '1111.1111111.44444444@products.bang-olufsen.com',
         }),
         <BeoAttribute.BEOLINK_SELF: 'self'>: dict({
           'Living room Balance': '1111.1111111.11111111@products.bang-olufsen.com',
@@ -249,11 +249,11 @@
       <BeoAttribute.BEOLINK: 'beolink'>: dict({
         <BeoAttribute.BEOLINK_LISTENERS: 'listeners'>: dict({
           'Bedroom Premiere': '1111.1111111.33333333@products.bang-olufsen.com',
-          'Lounge room Balance': '1111.1111111.44444444@products.bang-olufsen.com',
+          'Lounge room A5': '1111.1111111.44444444@products.bang-olufsen.com',
         }),
         <BeoAttribute.BEOLINK_PEERS: 'peers'>: dict({
           'Bedroom Premiere': '1111.1111111.33333333@products.bang-olufsen.com',
-          'Lounge room Balance': '1111.1111111.44444444@products.bang-olufsen.com',
+          'Lounge room A5': '1111.1111111.44444444@products.bang-olufsen.com',
         }),
         <BeoAttribute.BEOLINK_SELF: 'self'>: dict({
           'Living room Balance': '1111.1111111.11111111@products.bang-olufsen.com',
@@ -297,11 +297,11 @@
       <BeoAttribute.BEOLINK: 'beolink'>: dict({
         <BeoAttribute.BEOLINK_LISTENERS: 'listeners'>: dict({
           'Bedroom Premiere': '1111.1111111.33333333@products.bang-olufsen.com',
-          'Lounge room Balance': '1111.1111111.44444444@products.bang-olufsen.com',
+          'Lounge room A5': '1111.1111111.44444444@products.bang-olufsen.com',
         }),
         <BeoAttribute.BEOLINK_PEERS: 'peers'>: dict({
           'Bedroom Premiere': '1111.1111111.33333333@products.bang-olufsen.com',
-          'Lounge room Balance': '1111.1111111.44444444@products.bang-olufsen.com',
+          'Lounge room A5': '1111.1111111.44444444@products.bang-olufsen.com',
         }),
         <BeoAttribute.BEOLINK_SELF: 'self'>: dict({
           'Living room Balance': '1111.1111111.11111111@products.bang-olufsen.com',
@@ -345,11 +345,11 @@
       <BeoAttribute.BEOLINK: 'beolink'>: dict({
         <BeoAttribute.BEOLINK_LISTENERS: 'listeners'>: dict({
           'Bedroom Premiere': '1111.1111111.33333333@products.bang-olufsen.com',
-          'Lounge room Balance': '1111.1111111.44444444@products.bang-olufsen.com',
+          'Lounge room A5': '1111.1111111.44444444@products.bang-olufsen.com',
         }),
         <BeoAttribute.BEOLINK_PEERS: 'peers'>: dict({
           'Bedroom Premiere': '1111.1111111.33333333@products.bang-olufsen.com',
-          'Lounge room Balance': '1111.1111111.44444444@products.bang-olufsen.com',
+          'Lounge room A5': '1111.1111111.44444444@products.bang-olufsen.com',
         }),
         <BeoAttribute.BEOLINK_SELF: 'self'>: dict({
           'Living room Balance': '1111.1111111.11111111@products.bang-olufsen.com',
@@ -393,11 +393,11 @@
       <BeoAttribute.BEOLINK: 'beolink'>: dict({
         <BeoAttribute.BEOLINK_LISTENERS: 'listeners'>: dict({
           'Bedroom Premiere': '1111.1111111.33333333@products.bang-olufsen.com',
-          'Lounge room Balance': '1111.1111111.44444444@products.bang-olufsen.com',
+          'Lounge room A5': '1111.1111111.44444444@products.bang-olufsen.com',
         }),
         <BeoAttribute.BEOLINK_PEERS: 'peers'>: dict({
           'Bedroom Premiere': '1111.1111111.33333333@products.bang-olufsen.com',
-          'Lounge room Balance': '1111.1111111.44444444@products.bang-olufsen.com',
+          'Lounge room A5': '1111.1111111.44444444@products.bang-olufsen.com',
         }),
         <BeoAttribute.BEOLINK_SELF: 'self'>: dict({
           'Living room Balance': '1111.1111111.11111111@products.bang-olufsen.com',
@@ -441,11 +441,11 @@
       <BeoAttribute.BEOLINK: 'beolink'>: dict({
         <BeoAttribute.BEOLINK_LISTENERS: 'listeners'>: dict({
           'Bedroom Premiere': '1111.1111111.33333333@products.bang-olufsen.com',
-          'Lounge room Balance': '1111.1111111.44444444@products.bang-olufsen.com',
+          'Lounge room A5': '1111.1111111.44444444@products.bang-olufsen.com',
         }),
         <BeoAttribute.BEOLINK_PEERS: 'peers'>: dict({
           'Bedroom Premiere': '1111.1111111.33333333@products.bang-olufsen.com',
-          'Lounge room Balance': '1111.1111111.44444444@products.bang-olufsen.com',
+          'Lounge room A5': '1111.1111111.44444444@products.bang-olufsen.com',
         }),
         <BeoAttribute.BEOLINK_SELF: 'self'>: dict({
           'Living room Balance': '1111.1111111.11111111@products.bang-olufsen.com',
@@ -489,11 +489,11 @@
       <BeoAttribute.BEOLINK: 'beolink'>: dict({
         <BeoAttribute.BEOLINK_LISTENERS: 'listeners'>: dict({
           'Bedroom Premiere': '1111.1111111.33333333@products.bang-olufsen.com',
-          'Lounge room Balance': '1111.1111111.44444444@products.bang-olufsen.com',
+          'Lounge room A5': '1111.1111111.44444444@products.bang-olufsen.com',
         }),
         <BeoAttribute.BEOLINK_PEERS: 'peers'>: dict({
           'Bedroom Premiere': '1111.1111111.33333333@products.bang-olufsen.com',
-          'Lounge room Balance': '1111.1111111.44444444@products.bang-olufsen.com',
+          'Lounge room A5': '1111.1111111.44444444@products.bang-olufsen.com',
         }),
         <BeoAttribute.BEOLINK_SELF: 'self'>: dict({
           'Living room Balance': '1111.1111111.11111111@products.bang-olufsen.com',
@@ -537,11 +537,11 @@
       <BeoAttribute.BEOLINK: 'beolink'>: dict({
         <BeoAttribute.BEOLINK_LISTENERS: 'listeners'>: dict({
           'Bedroom Premiere': '1111.1111111.33333333@products.bang-olufsen.com',
-          'Lounge room Balance': '1111.1111111.44444444@products.bang-olufsen.com',
+          'Lounge room A5': '1111.1111111.44444444@products.bang-olufsen.com',
         }),
         <BeoAttribute.BEOLINK_PEERS: 'peers'>: dict({
           'Bedroom Premiere': '1111.1111111.33333333@products.bang-olufsen.com',
-          'Lounge room Balance': '1111.1111111.44444444@products.bang-olufsen.com',
+          'Lounge room A5': '1111.1111111.44444444@products.bang-olufsen.com',
         }),
         <BeoAttribute.BEOLINK_SELF: 'self'>: dict({
           'Living room Balance': '1111.1111111.11111111@products.bang-olufsen.com',
@@ -585,11 +585,11 @@
       <BeoAttribute.BEOLINK: 'beolink'>: dict({
         <BeoAttribute.BEOLINK_LISTENERS: 'listeners'>: dict({
           'Bedroom Premiere': '1111.1111111.33333333@products.bang-olufsen.com',
-          'Lounge room Balance': '1111.1111111.44444444@products.bang-olufsen.com',
+          'Lounge room A5': '1111.1111111.44444444@products.bang-olufsen.com',
         }),
         <BeoAttribute.BEOLINK_PEERS: 'peers'>: dict({
           'Bedroom Premiere': '1111.1111111.33333333@products.bang-olufsen.com',
-          'Lounge room Balance': '1111.1111111.44444444@products.bang-olufsen.com',
+          'Lounge room A5': '1111.1111111.44444444@products.bang-olufsen.com',
         }),
         <BeoAttribute.BEOLINK_SELF: 'self'>: dict({
           'Living room Balance': '1111.1111111.11111111@products.bang-olufsen.com',
@@ -634,11 +634,11 @@
       <BeoAttribute.BEOLINK: 'beolink'>: dict({
         <BeoAttribute.BEOLINK_LISTENERS: 'listeners'>: dict({
           'Bedroom Premiere': '1111.1111111.33333333@products.bang-olufsen.com',
-          'Lounge room Balance': '1111.1111111.44444444@products.bang-olufsen.com',
+          'Lounge room A5': '1111.1111111.44444444@products.bang-olufsen.com',
         }),
         <BeoAttribute.BEOLINK_PEERS: 'peers'>: dict({
           'Bedroom Premiere': '1111.1111111.33333333@products.bang-olufsen.com',
-          'Lounge room Balance': '1111.1111111.44444444@products.bang-olufsen.com',
+          'Lounge room A5': '1111.1111111.44444444@products.bang-olufsen.com',
         }),
         <BeoAttribute.BEOLINK_SELF: 'self'>: dict({
           'Living room Balance': '1111.1111111.22222222@products.bang-olufsen.com',
@@ -683,11 +683,11 @@
       <BeoAttribute.BEOLINK: 'beolink'>: dict({
         <BeoAttribute.BEOLINK_LISTENERS: 'listeners'>: dict({
           'Bedroom Premiere': '1111.1111111.33333333@products.bang-olufsen.com',
-          'Lounge room Balance': '1111.1111111.44444444@products.bang-olufsen.com',
+          'Lounge room A5': '1111.1111111.44444444@products.bang-olufsen.com',
         }),
         <BeoAttribute.BEOLINK_PEERS: 'peers'>: dict({
           'Bedroom Premiere': '1111.1111111.33333333@products.bang-olufsen.com',
-          'Lounge room Balance': '1111.1111111.44444444@products.bang-olufsen.com',
+          'Lounge room A5': '1111.1111111.44444444@products.bang-olufsen.com',
         }),
         <BeoAttribute.BEOLINK_SELF: 'self'>: dict({
           'Living room Balance': '1111.1111111.11111111@products.bang-olufsen.com',
@@ -732,11 +732,11 @@
       <BeoAttribute.BEOLINK: 'beolink'>: dict({
         <BeoAttribute.BEOLINK_LISTENERS: 'listeners'>: dict({
           'Bedroom Premiere': '1111.1111111.33333333@products.bang-olufsen.com',
-          'Lounge room Balance': '1111.1111111.44444444@products.bang-olufsen.com',
+          'Lounge room A5': '1111.1111111.44444444@products.bang-olufsen.com',
         }),
         <BeoAttribute.BEOLINK_PEERS: 'peers'>: dict({
           'Bedroom Premiere': '1111.1111111.33333333@products.bang-olufsen.com',
-          'Lounge room Balance': '1111.1111111.44444444@products.bang-olufsen.com',
+          'Lounge room A5': '1111.1111111.44444444@products.bang-olufsen.com',
         }),
         <BeoAttribute.BEOLINK_SELF: 'self'>: dict({
           'Living room Balance': '1111.1111111.22222222@products.bang-olufsen.com',
@@ -781,11 +781,11 @@
       <BeoAttribute.BEOLINK: 'beolink'>: dict({
         <BeoAttribute.BEOLINK_LISTENERS: 'listeners'>: dict({
           'Bedroom Premiere': '1111.1111111.33333333@products.bang-olufsen.com',
-          'Lounge room Balance': '1111.1111111.44444444@products.bang-olufsen.com',
+          'Lounge room A5': '1111.1111111.44444444@products.bang-olufsen.com',
         }),
         <BeoAttribute.BEOLINK_PEERS: 'peers'>: dict({
           'Bedroom Premiere': '1111.1111111.33333333@products.bang-olufsen.com',
-          'Lounge room Balance': '1111.1111111.44444444@products.bang-olufsen.com',
+          'Lounge room A5': '1111.1111111.44444444@products.bang-olufsen.com',
         }),
         <BeoAttribute.BEOLINK_SELF: 'self'>: dict({
           'Living room Balance': '1111.1111111.11111111@products.bang-olufsen.com',
@@ -831,11 +831,11 @@
       <BeoAttribute.BEOLINK: 'beolink'>: dict({
         <BeoAttribute.BEOLINK_LISTENERS: 'listeners'>: dict({
           'Bedroom Premiere': '1111.1111111.33333333@products.bang-olufsen.com',
-          'Lounge room Balance': '1111.1111111.44444444@products.bang-olufsen.com',
+          'Lounge room A5': '1111.1111111.44444444@products.bang-olufsen.com',
         }),
         <BeoAttribute.BEOLINK_PEERS: 'peers'>: dict({
           'Bedroom Premiere': '1111.1111111.33333333@products.bang-olufsen.com',
-          'Lounge room Balance': '1111.1111111.44444444@products.bang-olufsen.com',
+          'Lounge room A5': '1111.1111111.44444444@products.bang-olufsen.com',
         }),
         <BeoAttribute.BEOLINK_SELF: 'self'>: dict({
           'Living room Balance': '1111.1111111.22222222@products.bang-olufsen.com',
@@ -880,11 +880,11 @@
       <BeoAttribute.BEOLINK: 'beolink'>: dict({
         <BeoAttribute.BEOLINK_LISTENERS: 'listeners'>: dict({
           'Bedroom Premiere': '1111.1111111.33333333@products.bang-olufsen.com',
-          'Lounge room Balance': '1111.1111111.44444444@products.bang-olufsen.com',
+          'Lounge room A5': '1111.1111111.44444444@products.bang-olufsen.com',
         }),
         <BeoAttribute.BEOLINK_PEERS: 'peers'>: dict({
           'Bedroom Premiere': '1111.1111111.33333333@products.bang-olufsen.com',
-          'Lounge room Balance': '1111.1111111.44444444@products.bang-olufsen.com',
+          'Lounge room A5': '1111.1111111.44444444@products.bang-olufsen.com',
         }),
         <BeoAttribute.BEOLINK_SELF: 'self'>: dict({
           'Living room Balance': '1111.1111111.11111111@products.bang-olufsen.com',
@@ -929,11 +929,11 @@
       <BeoAttribute.BEOLINK: 'beolink'>: dict({
         <BeoAttribute.BEOLINK_LISTENERS: 'listeners'>: dict({
           'Bedroom Premiere': '1111.1111111.33333333@products.bang-olufsen.com',
-          'Lounge room Balance': '1111.1111111.44444444@products.bang-olufsen.com',
+          'Lounge room A5': '1111.1111111.44444444@products.bang-olufsen.com',
         }),
         <BeoAttribute.BEOLINK_PEERS: 'peers'>: dict({
           'Bedroom Premiere': '1111.1111111.33333333@products.bang-olufsen.com',
-          'Lounge room Balance': '1111.1111111.44444444@products.bang-olufsen.com',
+          'Lounge room A5': '1111.1111111.44444444@products.bang-olufsen.com',
         }),
         <BeoAttribute.BEOLINK_SELF: 'self'>: dict({
           'Living room Balance': '1111.1111111.22222222@products.bang-olufsen.com',
@@ -978,11 +978,11 @@
       <BeoAttribute.BEOLINK: 'beolink'>: dict({
         <BeoAttribute.BEOLINK_LISTENERS: 'listeners'>: dict({
           'Bedroom Premiere': '1111.1111111.33333333@products.bang-olufsen.com',
-          'Lounge room Balance': '1111.1111111.44444444@products.bang-olufsen.com',
+          'Lounge room A5': '1111.1111111.44444444@products.bang-olufsen.com',
         }),
         <BeoAttribute.BEOLINK_PEERS: 'peers'>: dict({
           'Bedroom Premiere': '1111.1111111.33333333@products.bang-olufsen.com',
-          'Lounge room Balance': '1111.1111111.44444444@products.bang-olufsen.com',
+          'Lounge room A5': '1111.1111111.44444444@products.bang-olufsen.com',
         }),
         <BeoAttribute.BEOLINK_SELF: 'self'>: dict({
           'Living room Balance': '1111.1111111.11111111@products.bang-olufsen.com',
@@ -1029,7 +1029,7 @@
         }),
         <BeoAttribute.BEOLINK_PEERS: 'peers'>: dict({
           'Bedroom Premiere': '1111.1111111.33333333@products.bang-olufsen.com',
-          'Lounge room Balance': '1111.1111111.44444444@products.bang-olufsen.com',
+          'Lounge room A5': '1111.1111111.44444444@products.bang-olufsen.com',
         }),
         <BeoAttribute.BEOLINK_SELF: 'self'>: dict({
           'Living room Balance': '1111.1111111.11111111@products.bang-olufsen.com',
@@ -1072,11 +1072,11 @@
       <BeoAttribute.BEOLINK: 'beolink'>: dict({
         <BeoAttribute.BEOLINK_LISTENERS: 'listeners'>: dict({
           'Bedroom Premiere': '1111.1111111.33333333@products.bang-olufsen.com',
-          'Lounge room Balance': '1111.1111111.44444444@products.bang-olufsen.com',
+          'Lounge room A5': '1111.1111111.44444444@products.bang-olufsen.com',
         }),
         <BeoAttribute.BEOLINK_PEERS: 'peers'>: dict({
           'Bedroom Premiere': '1111.1111111.33333333@products.bang-olufsen.com',
-          'Lounge room Balance': '1111.1111111.44444444@products.bang-olufsen.com',
+          'Lounge room A5': '1111.1111111.44444444@products.bang-olufsen.com',
         }),
         <BeoAttribute.BEOLINK_SELF: 'self'>: dict({
           'Living room Balance': '1111.1111111.22222222@products.bang-olufsen.com',

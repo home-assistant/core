@@ -76,6 +76,7 @@ from .const import (
     RECOMMENDED_WEB_SEARCH_CONTEXT_SIZE,
     RECOMMENDED_WEB_SEARCH_INLINE_CITATIONS,
     RECOMMENDED_WEB_SEARCH_USER_LOCATION,
+    UNSUPPORTED_CODE_INTERPRETER_MODELS,
     UNSUPPORTED_IMAGE_MODELS,
     UNSUPPORTED_MODELS,
     UNSUPPORTED_WEB_SEARCH_MODELS,
@@ -111,45 +112,49 @@ class OpenAIConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle the initial step."""
-        if user_input is None:
-            return self.async_show_form(
-                step_id="user", data_schema=STEP_USER_DATA_SCHEMA
-            )
 
         errors: dict[str, str] = {}
 
-        self._async_abort_entries_match(user_input)
-        try:
-            await validate_input(self.hass, user_input)
-        except openai.APIConnectionError:
-            errors["base"] = "cannot_connect"
-        except openai.AuthenticationError:
-            errors["base"] = "invalid_auth"
-        except Exception:
-            _LOGGER.exception("Unexpected exception")
-            errors["base"] = "unknown"
-        else:
-            return self.async_create_entry(
-                title="ChatGPT",
-                data=user_input,
-                subentries=[
-                    {
-                        "subentry_type": "conversation",
-                        "data": RECOMMENDED_CONVERSATION_OPTIONS,
-                        "title": DEFAULT_CONVERSATION_NAME,
-                        "unique_id": None,
-                    },
-                    {
-                        "subentry_type": "ai_task_data",
-                        "data": RECOMMENDED_AI_TASK_OPTIONS,
-                        "title": DEFAULT_AI_TASK_NAME,
-                        "unique_id": None,
-                    },
-                ],
-            )
+        if user_input is not None:
+            self._async_abort_entries_match(user_input)
+            try:
+                await validate_input(self.hass, user_input)
+            except openai.APIConnectionError:
+                errors["base"] = "cannot_connect"
+            except openai.AuthenticationError:
+                errors["base"] = "invalid_auth"
+            except Exception:
+                _LOGGER.exception("Unexpected exception")
+                errors["base"] = "unknown"
+            else:
+                return self.async_create_entry(
+                    title="ChatGPT",
+                    data=user_input,
+                    subentries=[
+                        {
+                            "subentry_type": "conversation",
+                            "data": RECOMMENDED_CONVERSATION_OPTIONS,
+                            "title": DEFAULT_CONVERSATION_NAME,
+                            "unique_id": None,
+                        },
+                        {
+                            "subentry_type": "ai_task_data",
+                            "data": RECOMMENDED_AI_TASK_OPTIONS,
+                            "title": DEFAULT_AI_TASK_NAME,
+                            "unique_id": None,
+                        },
+                    ],
+                )
 
         return self.async_show_form(
-            step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
+            step_id="user",
+            data_schema=self.add_suggested_values_to_schema(
+                STEP_USER_DATA_SCHEMA, user_input
+            ),
+            errors=errors,
+            description_placeholders={
+                "instructions_url": "https://www.home-assistant.io/integrations/openai_conversation/#generate-an-api-key",
+            },
         )
 
     @classmethod
@@ -325,7 +330,7 @@ class OpenAISubentryFlowHandler(ConfigSubentryFlow):
 
         model = options[CONF_CHAT_MODEL]
 
-        if not model.startswith(("gpt-5-pro", "gpt-5-codex")):
+        if not model.startswith(tuple(UNSUPPORTED_CODE_INTERPRETER_MODELS)):
             step_schema.update(
                 {
                     vol.Optional(
@@ -337,14 +342,7 @@ class OpenAISubentryFlowHandler(ConfigSubentryFlow):
         elif CONF_CODE_INTERPRETER in options:
             options.pop(CONF_CODE_INTERPRETER)
 
-        if model.startswith(("o", "gpt-5")) and not model.startswith("gpt-5-pro"):
-            if model.startswith("gpt-5.1"):
-                reasoning_options = ["none", "low", "medium", "high"]
-            elif model.startswith("gpt-5"):
-                reasoning_options = ["minimal", "low", "medium", "high"]
-            else:
-                reasoning_options = ["low", "medium", "high"]
-
+        if reasoning_options := self._get_reasoning_options(model):
             step_schema.update(
                 {
                     vol.Optional(
@@ -470,6 +468,24 @@ class OpenAISubentryFlowHandler(ConfigSubentryFlow):
             ),
             errors=errors,
         )
+
+    def _get_reasoning_options(self, model: str) -> list[str]:
+        """Get reasoning effort options based on model."""
+        if not model.startswith(("o", "gpt-5")) or model.startswith("gpt-5-pro"):
+            return []
+
+        MODELS_REASONING_MAP = {
+            "gpt-5.2-pro": ["medium", "high", "xhigh"],
+            "gpt-5.2": ["none", "low", "medium", "high", "xhigh"],
+            "gpt-5.1": ["none", "low", "medium", "high"],
+            "gpt-5": ["minimal", "low", "medium", "high"],
+            "": ["low", "medium", "high"],  # The default case
+        }
+
+        for prefix, options in MODELS_REASONING_MAP.items():
+            if model.startswith(prefix):
+                return options
+        return []  # pragma: no cover
 
     async def _get_location_data(self) -> dict[str, str]:
         """Get approximate location data of the user."""
