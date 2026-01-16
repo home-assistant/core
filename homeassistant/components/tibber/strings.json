@@ -75,9 +75,6 @@
       "energy_flow_day_battery_discharged": {
         "name": "Battery energy discharged today"
       },
-      "energy_flow_day_battery_source_battery": {
-        "name": "Battery charged from battery today"
-      },
       "energy_flow_day_battery_source_grid": {
         "name": "Battery charged from grid today"
       },
@@ -92,9 +89,6 @@
       },
       "energy_flow_day_grid_source_battery": {
         "name": "Grid export from battery today"
-      },
-      "energy_flow_day_grid_source_grid": {
-        "name": "Grid export from grid today"
       },
       "energy_flow_day_grid_source_load": {
         "name": "Grid export from load today"
@@ -147,9 +141,6 @@
       "energy_flow_month_battery_discharged": {
         "name": "Battery energy discharged this month"
       },
-      "energy_flow_month_battery_source_battery": {
-        "name": "Battery charged from battery this month"
-      },
       "energy_flow_month_battery_source_grid": {
         "name": "Battery charged from grid this month"
       },
@@ -164,9 +155,6 @@
       },
       "energy_flow_month_grid_source_battery": {
         "name": "Grid export from battery this month"
-      },
-      "energy_flow_month_grid_source_grid": {
-        "name": "Grid export from grid this month"
       },
       "energy_flow_month_grid_source_load": {
         "name": "Grid export from load this month"
@@ -189,9 +177,6 @@
       "energy_flow_week_battery_discharged": {
         "name": "Battery energy discharged this week"
       },
-      "energy_flow_week_battery_source_battery": {
-        "name": "Battery charged from battery this week"
-      },
       "energy_flow_week_battery_source_grid": {
         "name": "Battery charged from grid this week"
       },
@@ -206,9 +191,6 @@
       },
       "energy_flow_week_grid_source_battery": {
         "name": "Grid export from battery this week"
-      },
-      "energy_flow_week_grid_source_grid": {
-        "name": "Grid export from grid this week"
       },
       "energy_flow_week_grid_source_load": {
         "name": "Grid export from load this week"

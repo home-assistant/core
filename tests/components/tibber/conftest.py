@@ -31,6 +31,7 @@ def create_tibber_device(
     connector_status: str | None = None,
     charging_status: str | None = None,
     device_status: str | None = None,
+    is_online: str | None = None,
 ) -> tibber.data_api.TibberDevice:
     """Create a fake Tibber Data API device.
 
@@ -45,6 +46,7 @@ def create_tibber_device(
         connector_status: Connector status (for binary sensors).
         charging_status: Charging status (for binary sensors).
         device_status: Device on/off status (for binary sensors).
+        is_online: Device online status (for binary sensors).
     """
     capabilities = []
 
@@ -93,6 +95,16 @@ def create_tibber_device(
                 "id": "onOff",
                 "value": device_status,
                 "description": "Device status",
+                "unit": "",
+            }
+        )
+
+    if is_online is not None:
+        capabilities.append(
+            {
+                "id": "isOnline",
+                "value": is_online,
+                "description": "Device online status",
                 "unit": "",
             }
         )
