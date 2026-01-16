@@ -10,8 +10,8 @@ CONF_PARTNER_BASE_URL = "partner_base_url"
 CONF_CONTACT_INFO = "contact_info"
 
 # Default base URLs (can be overridden via YAML options or other configuration)
-DEFAULT_OAUTH2_BASE_URL = "https://oauth2-dev.level.co"
-DEFAULT_PARTNER_BASE_URL = "https://sidewalk-dev.level.co"
+DEFAULT_OAUTH2_BASE_URL = "https://oauth2.level.co"
+DEFAULT_PARTNER_BASE_URL = "https://sidewalk.level.co"
 
 DEVICE_CODE_INITIATE_PATH = "/oauth2/device-code/initiate"
 DEVICE_CODE_VERIFY_PATH = "/oauth2/device-code/verify"
