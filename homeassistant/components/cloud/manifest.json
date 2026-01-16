@@ -5,7 +5,8 @@
     "alexa",
     "assist_pipeline",
     "backup",
-    "google_assistant"
+    "google_assistant",
+    "hassio"
   ],
   "codeowners": ["@home-assistant/cloud"],
   "dependencies": ["auth", "http", "repairs", "webhook", "web_rtc"],
@@ -13,6 +14,6 @@
   "integration_type": "system",
   "iot_class": "cloud_push",
   "loggers": ["acme", "hass_nabucasa", "snitun"],
-  "requirements": ["hass-nabucasa==1.9.0"],
+  "requirements": ["hass-nabucasa==1.9.0", "psutil-home-assistant==0.0.1"],
   "single_config_entry": true
 }

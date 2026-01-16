@@ -87,6 +87,18 @@
   
   </details>
   
+  ## Host resource usage
+  
+  Resource | Value
+  --- | ---
+  CPU usage | 25.5%
+  Memory total | 16.0 GB
+  Memory used | 8.0 GB (50.0%)
+  Memory available | 8.0 GB
+  Disk total | 500.0 GB
+  Disk used | 200.0 GB (40.0%)
+  Disk free | 300.0 GB
+  
   ## Full logs
   
   <details><summary>Logs</summary>
@@ -181,6 +193,18 @@
   
   </details>
   
+  ## Host resource usage
+  
+  Resource | Value
+  --- | ---
+  CPU usage | 25.5%
+  Memory total | 16.0 GB
+  Memory used | 8.0 GB (50.0%)
+  Memory available | 8.0 GB
+  Disk total | 500.0 GB
+  Disk used | 200.0 GB (40.0%)
+  Disk free | 300.0 GB
+  
   ## Full logs
   
   <details><summary>Logs</summary>
@@ -190,6 +214,252 @@
   2025-02-10 12:00:00.000 INFO (MainThread) [hass_nabucasa.iot] Hass nabucasa log
   2025-02-10 12:00:00.000 WARNING (MainThread) [snitun.utils.aiohttp_client] Snitun log
   2025-02-10 12:00:00.000 ERROR (MainThread) [homeassistant.components.cloud.client] Cloud log
+  ```
+  
+  </details>
+  
+  '''
+# ---
+# name: test_download_support_package_hassio
+  '''
+  ## System Information
+  
+  version | core-2025.2.0
+  --- | ---
+  installation_type | Home Assistant OS
+  dev | False
+  hassio | True
+  docker | True
+  container_arch | aarch64
+  user | root
+  virtualenv | False
+  python_version | 3.13.1
+  os_name | Linux
+  os_version | 6.12.9
+  arch | aarch64
+  timezone | US/Pacific
+  config_dir | config
+  
+  ## Active Integrations
+  
+  Built-in integrations: 23
+  Custom integrations: 1
+  
+  <details><summary>Built-in integrations</summary>
+  
+  Domain | Name
+  --- | ---
+  ai_task | AI Task
+  auth | Auth
+  binary_sensor | Binary Sensor
+  cloud | Home Assistant Cloud
+  cloud.ai_task | Unknown
+  cloud.binary_sensor | Unknown
+  cloud.conversation | Unknown
+  cloud.stt | Unknown
+  cloud.tts | Unknown
+  conversation | Conversation
+  ffmpeg | FFmpeg
+  hassio | hassio
+  homeassistant | Home Assistant Core Integration
+  http | HTTP
+  intent | Intent
+  media_source | Media Source
+  mock_no_info_integration | mock_no_info_integration
+  repairs | Repairs
+  stt | Speech-to-text (STT)
+  system_health | System Health
+  tts | Text-to-speech (TTS)
+  web_rtc | WebRTC
+  webhook | Webhook
+  
+  </details>
+  
+  <details><summary>Custom integrations</summary>
+  
+  Domain | Name | Version | Documentation
+  --- | --- | --- | ---
+  test | Test Components | 1.2.3 | http://example.com
+  
+  </details>
+  
+  <details><summary>hassio</summary>
+  
+  host_os | Home Assistant OS 14.0
+  --- | ---
+  update_channel | stable
+  supervisor_version | supervisor-2025.01.0
+  agent_version | 1.6.0
+  docker_version | 27.4.1
+  disk_total | 128.5 GB
+  disk_used | 45.2 GB
+  healthy | True
+  supported | True
+  host_connectivity | True
+  supervisor_connectivity | True
+  board | green
+  supervisor_api | ok
+  version_api | ok
+  installed_addons | Mosquitto broker (6.4.1), Samba share (12.3.2), Visual Studio Code (5.21.2)
+  
+  </details>
+  
+  <details><summary>mock_no_info_integration</summary>
+  
+  No information available
+  </details>
+  
+  <details><summary>cloud</summary>
+  
+  logged_in | True
+  --- | ---
+  subscription_expiration | 2025-01-17T11:19:31+00:00
+  relayer_connected | True
+  relayer_region | xx-earth-616
+  remote_enabled | True
+  remote_connected | False
+  alexa_enabled | True
+  google_enabled | False
+  cloud_ice_servers_enabled | True
+  remote_server | us-west-1
+  certificate_status | ready
+  instance_id | 12345678901234567890
+  can_reach_cert_server | Exception: Unexpected exception
+  can_reach_cloud_auth | Failed: unreachable
+  can_reach_cloud | ok
+  
+  </details>
+  
+  ## Host resource usage
+  
+  Resource | Value
+  --- | ---
+  CPU usage | 25.5%
+  Memory total | 16.0 GB
+  Memory used | 8.0 GB (50.0%)
+  Memory available | 8.0 GB
+  Disk total | 500.0 GB
+  Disk used | 200.0 GB (40.0%)
+  Disk free | 300.0 GB
+  
+  ## Add-on resource usage
+  
+  <details><summary>Add-on resources</summary>
+  
+  Add-on | Version | State | CPU | Memory
+  --- | --- | --- | --- | ---
+  Mosquitto broker | 6.4.1 | started | 0.5% | 1.2%
+  Samba share | 12.3.2 | started | 0.1% | 0.8%
+  Visual Studio Code | 5.21.2 | stopped | N/A | N/A
+  
+  </details>
+  
+  ## Full logs
+  
+  <details><summary>Logs</summary>
+  
+  ```logs
+  2025-02-10 12:00:00.000 INFO (MainThread) [hass_nabucasa.iot] Hass nabucasa log
+  2025-02-10 12:00:00.000 WARNING (MainThread) [snitun.utils.aiohttp_client] Snitun log
+  2025-02-10 12:00:00.000 ERROR (MainThread) [homeassistant.components.cloud.client] Cloud log
+  ```
+  
+  </details>
+  
+  '''
+# ---
+# name: test_download_support_package_host_resources
+  '''
+  ## System Information
+  
+  version | core-2025.2.0
+  --- | ---
+  installation_type | Home Assistant Container
+  dev | False
+  hassio | False
+  docker | True
+  container_arch | x86_64
+  user | root
+  virtualenv | False
+  python_version | 3.13.1
+  os_name | Linux
+  os_version | 6.12.9
+  arch | x86_64
+  timezone | US/Pacific
+  config_dir | config
+  
+  ## Active Integrations
+  
+  Built-in integrations: 21
+  Custom integrations: 0
+  
+  <details><summary>Built-in integrations</summary>
+  
+  Domain | Name
+  --- | ---
+  ai_task | AI Task
+  auth | Auth
+  binary_sensor | Binary Sensor
+  cloud | Home Assistant Cloud
+  cloud.ai_task | Unknown
+  cloud.binary_sensor | Unknown
+  cloud.conversation | Unknown
+  cloud.stt | Unknown
+  cloud.tts | Unknown
+  conversation | Conversation
+  ffmpeg | FFmpeg
+  homeassistant | Home Assistant Core Integration
+  http | HTTP
+  intent | Intent
+  media_source | Media Source
+  repairs | Repairs
+  stt | Speech-to-text (STT)
+  system_health | System Health
+  tts | Text-to-speech (TTS)
+  web_rtc | WebRTC
+  webhook | Webhook
+  
+  </details>
+  
+  <details><summary>cloud</summary>
+  
+  logged_in | True
+  --- | ---
+  subscription_expiration | 2025-01-17T11:19:31+00:00
+  relayer_connected | True
+  relayer_region | xx-earth-616
+  remote_enabled | True
+  remote_connected | False
+  alexa_enabled | True
+  google_enabled | False
+  cloud_ice_servers_enabled | True
+  remote_server | us-west-1
+  certificate_status | ready
+  instance_id | 12345678901234567890
+  can_reach_cert_server | Exception: Unexpected exception
+  can_reach_cloud_auth | Failed: unreachable
+  can_reach_cloud | ok
+  
+  </details>
+  
+  ## Host resource usage
+  
+  Resource | Value
+  --- | ---
+  CPU usage | 25.5%
+  Memory total | 16.0 GB
+  Memory used | 8.0 GB (50.0%)
+  Memory available | 8.0 GB
+  Disk total | 500.0 GB
+  Disk used | 200.0 GB (40.0%)
+  Disk free | 300.0 GB
+  
+  ## Full logs
+  
+  <details><summary>Logs</summary>
+  
+  ```logs
+  2025-02-10 12:00:00.000 INFO (MainThread) [hass_nabucasa.iot] Hass nabucasa log
   ```
   
   </details>
@@ -245,6 +515,18 @@
   can_reach_cloud | ok
   
   </details>
+  
+  ## Host resource usage
+  
+  Resource | Value
+  --- | ---
+  CPU usage | 25.5%
+  Memory total | 16.0 GB
+  Memory used | 8.0 GB (50.0%)
+  Memory available | 8.0 GB
+  Disk total | 500.0 GB
+  Disk used | 200.0 GB (40.0%)
+  Disk free | 300.0 GB
   
   ## Full logs
   

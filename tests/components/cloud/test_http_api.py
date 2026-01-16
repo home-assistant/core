@@ -1,6 +1,6 @@
 """Tests for the HTTP API for the cloud component."""
 
-from collections.abc import Callable, Coroutine
+from collections.abc import Callable, Coroutine, Generator
 from copy import deepcopy
 import datetime
 from http import HTTPStatus
@@ -112,6 +112,36 @@ PIPELINE_DATA_OTHER = {
 }
 
 SUBSCRIPTION_INFO_URL = "https://api-test.hass.io/payments/subscription_info"
+
+
+@pytest.fixture
+def mock_psutil_wrapper() -> Generator[MagicMock]:
+    """Fixture to mock psutil for support package tests."""
+    mock_memory = MagicMock()
+    mock_memory.total = 16 * 1024**3  # 16 GB
+    mock_memory.used = 8 * 1024**3  # 8 GB
+    mock_memory.available = 8 * 1024**3  # 8 GB
+    mock_memory.percent = 50.0
+
+    mock_disk = MagicMock()
+    mock_disk.total = 500 * 1024**3  # 500 GB
+    mock_disk.used = 200 * 1024**3  # 200 GB
+    mock_disk.free = 300 * 1024**3  # 300 GB
+    mock_disk.percent = 40.0
+
+    mock_psutil = MagicMock()
+    mock_psutil.cpu_percent = MagicMock(return_value=25.5)
+    mock_psutil.virtual_memory = MagicMock(return_value=mock_memory)
+    mock_psutil.disk_usage = MagicMock(return_value=mock_disk)
+
+    mock_wrapper = MagicMock()
+    mock_wrapper.psutil = mock_psutil
+
+    with patch(
+        "homeassistant.components.cloud.http_api.ha_psutil.PsutilWrapper",
+        return_value=mock_wrapper,
+    ):
+        yield mock_wrapper
 
 
 @pytest.fixture(name="setup_cloud")
@@ -1846,7 +1876,7 @@ async def test_logout_view_dispatch_event(
 
 
 @patch("homeassistant.components.cloud.helpers.FixedSizeQueueLogHandler.MAX_RECORDS", 3)
-@pytest.mark.usefixtures("enable_custom_integrations")
+@pytest.mark.usefixtures("enable_custom_integrations", "mock_psutil_wrapper")
 async def test_download_support_package(
     hass: HomeAssistant,
     cloud: MagicMock,
@@ -1959,7 +1989,7 @@ async def test_download_support_package(
     assert await req.text() == snapshot
 
 
-@pytest.mark.usefixtures("enable_custom_integrations")
+@pytest.mark.usefixtures("enable_custom_integrations", "mock_psutil_wrapper")
 async def test_download_support_package_custom_components_error(
     hass: HomeAssistant,
     cloud: MagicMock,
@@ -1986,7 +2016,7 @@ async def test_download_support_package_custom_components_error(
         async def mock_empty_info(hass: HomeAssistant) -> dict[str, Any]:
             return {}
 
-        register.async_register_info(mock_empty_info, "/config/mock_integration")
+        register.async_register_info(mock_empty_info, "/mock_integration")
 
     mock_platform(
         hass,
@@ -2071,7 +2101,7 @@ async def test_download_support_package_custom_components_error(
     assert await req.text() == snapshot
 
 
-@pytest.mark.usefixtures("enable_custom_integrations")
+@pytest.mark.usefixtures("enable_custom_integrations", "mock_psutil_wrapper")
 async def test_download_support_package_integration_load_error(
     hass: HomeAssistant,
     cloud: MagicMock,
@@ -2098,7 +2128,7 @@ async def test_download_support_package_integration_load_error(
         async def mock_empty_info(hass: HomeAssistant) -> dict[str, Any]:
             return {}
 
-        register.async_register_info(mock_empty_info, "/config/mock_integration")
+        register.async_register_info(mock_empty_info, "/mock_integration")
 
     mock_platform(
         hass,
@@ -2181,6 +2211,277 @@ async def test_download_support_package_integration_load_error(
             side_effect=lambda hass, domain: Exception("Integration load error")
             if domain == "failing_integration"
             else async_get_loaded_integration(hass, domain),
+        ),
+    ):
+        req = await cloud_client.get("/api/cloud/support_package")
+    assert req.status == HTTPStatus.OK
+    assert await req.text() == snapshot
+
+
+@patch("homeassistant.components.cloud.helpers.FixedSizeQueueLogHandler.MAX_RECORDS", 3)
+@pytest.mark.usefixtures("enable_custom_integrations", "mock_psutil_wrapper")
+async def test_download_support_package_hassio(
+    hass: HomeAssistant,
+    cloud: MagicMock,
+    set_cloud_prefs: Callable[[dict[str, Any]], Coroutine[Any, Any, None]],
+    hass_client: ClientSessionGenerator,
+    aioclient_mock: AiohttpClientMocker,
+    freezer: FrozenDateTimeFactory,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test downloading a support package file with hassio resources."""
+
+    aioclient_mock.get("https://cloud.bla.com/status", text="")
+    aioclient_mock.get(
+        "https://cert-server/directory", exc=Exception("Unexpected exception")
+    )
+    aioclient_mock.get(
+        "https://cognito-idp.us-east-1.amazonaws.com/AAAA/.well-known/jwks.json",
+        exc=aiohttp.ClientError,
+    )
+
+    def async_register_hassio_platform(
+        hass: HomeAssistant,
+        register: system_health.SystemHealthRegistration,
+    ) -> None:
+        async def mock_hassio_info(hass: HomeAssistant) -> dict[str, Any]:
+            return {
+                "host_os": "Home Assistant OS 14.0",
+                "update_channel": "stable",
+                "supervisor_version": "supervisor-2025.01.0",
+                "agent_version": "1.6.0",
+                "docker_version": "27.4.1",
+                "disk_total": "128.5 GB",
+                "disk_used": "45.2 GB",
+                "healthy": True,
+                "supported": True,
+                "host_connectivity": True,
+                "supervisor_connectivity": True,
+                "board": "green",
+                "supervisor_api": "ok",
+                "version_api": "ok",
+                "installed_addons": "Mosquitto broker (6.4.1), Samba share (12.3.2), Visual Studio Code (5.21.2)",
+            }
+
+        register.async_register_info(mock_hassio_info, "/hassio/system")
+
+    mock_platform(
+        hass,
+        "hassio.system_health",
+        MagicMock(async_register=async_register_hassio_platform),
+    )
+    hass.config.components.add("hassio")
+
+    def async_register_mock_platform(
+        hass: HomeAssistant,
+        register: system_health.SystemHealthRegistration,
+    ) -> None:
+        async def mock_empty_info(hass: HomeAssistant) -> dict[str, Any]:
+            return {}
+
+        register.async_register_info(mock_empty_info, "/config/mock_integration")
+
+    mock_platform(
+        hass,
+        "mock_no_info_integration.system_health",
+        MagicMock(async_register=async_register_mock_platform),
+    )
+    hass.config.components.add("mock_no_info_integration")
+    hass.config.components.add("test")
+
+    assert await async_setup_component(hass, "system_health", {})
+
+    with patch("uuid.UUID.hex", new_callable=PropertyMock) as hexmock:
+        hexmock.return_value = "12345678901234567890"
+        assert await async_setup_component(
+            hass,
+            DOMAIN,
+            {
+                DOMAIN: {
+                    "user_pool_id": "AAAA",
+                    "region": "us-east-1",
+                    "acme_server": "cert-server",
+                    "relayer_server": "cloud.bla.com",
+                },
+            },
+        )
+        await hass.async_block_till_done()
+
+    await cloud.login("test-user", "test-pass")
+
+    cloud.remote.snitun_server = "us-west-1"
+    cloud.remote.certificate_status = CertificateStatus.READY
+    cloud.expiration_date = dt_util.parse_datetime("2025-01-17T11:19:31.0+00:00")
+
+    await cloud.client.async_system_message({"region": "xx-earth-616"})
+    await set_cloud_prefs(
+        {
+            "alexa_enabled": True,
+            "google_enabled": False,
+            "remote_enabled": True,
+            "cloud_ice_servers_enabled": True,
+        }
+    )
+
+    now = dt_util.utcnow()
+    tz = now.astimezone().tzinfo
+    freezer.move_to(datetime.datetime(2025, 2, 10, 12, 0, 0, tzinfo=tz))
+    logging.getLogger("hass_nabucasa.iot").info(
+        "This message will be dropped since this test patches MAX_RECORDS"
+    )
+    logging.getLogger("hass_nabucasa.iot").info("Hass nabucasa log")
+    logging.getLogger("snitun.utils.aiohttp_client").warning("Snitun log")
+    logging.getLogger("homeassistant.components.cloud.client").error("Cloud log")
+    freezer.move_to(now)
+
+    cloud_client = await hass_client()
+
+    with (
+        patch.object(hass.config, "config_dir", new="config"),
+        patch(
+            "homeassistant.components.homeassistant.system_health.system_info.async_get_system_info",
+            return_value={
+                "installation_type": "Home Assistant OS",
+                "version": "2025.2.0",
+                "dev": False,
+                "hassio": True,
+                "virtualenv": False,
+                "python_version": "3.13.1",
+                "docker": True,
+                "container_arch": "aarch64",
+                "arch": "aarch64",
+                "timezone": "US/Pacific",
+                "os_name": "Linux",
+                "os_version": "6.12.9",
+                "user": "root",
+            },
+        ),
+        patch(
+            "homeassistant.components.cloud.http_api.get_supervisor_info",
+            return_value={
+                "addons": [
+                    {
+                        "slug": "core_mosquitto",
+                        "name": "Mosquitto broker",
+                        "version": "6.4.1",
+                        "state": "started",
+                    },
+                    {
+                        "slug": "core_samba",
+                        "name": "Samba share",
+                        "version": "12.3.2",
+                        "state": "started",
+                    },
+                    {
+                        "slug": "a0d7b954_vscode",
+                        "name": "Visual Studio Code",
+                        "version": "5.21.2",
+                        "state": "stopped",
+                    },
+                ],
+            },
+        ),
+        patch(
+            "homeassistant.components.cloud.http_api.get_addons_stats",
+            return_value={
+                "core_mosquitto": {
+                    "cpu_percent": 0.5,
+                    "memory_percent": 1.2,
+                },
+                "core_samba": {
+                    "cpu_percent": 0.1,
+                    "memory_percent": 0.8,
+                },
+                # No stats for vscode (stopped)
+            },
+        ),
+    ):
+        req = await cloud_client.get("/api/cloud/support_package")
+    assert req.status == HTTPStatus.OK
+    assert await req.text() == snapshot
+
+
+@patch("homeassistant.components.cloud.helpers.FixedSizeQueueLogHandler.MAX_RECORDS", 3)
+@pytest.mark.usefixtures("mock_psutil_wrapper")
+async def test_download_support_package_host_resources(
+    hass: HomeAssistant,
+    cloud: MagicMock,
+    set_cloud_prefs: Callable[[dict[str, Any]], Coroutine[Any, Any, None]],
+    hass_client: ClientSessionGenerator,
+    aioclient_mock: AiohttpClientMocker,
+    freezer: FrozenDateTimeFactory,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test downloading a support package file with psutil host resources (non-hassio)."""
+    aioclient_mock.get("https://cloud.bla.com/status", text="")
+    aioclient_mock.get(
+        "https://cert-server/directory", exc=Exception("Unexpected exception")
+    )
+    aioclient_mock.get(
+        "https://cognito-idp.us-east-1.amazonaws.com/AAAA/.well-known/jwks.json",
+        exc=aiohttp.ClientError,
+    )
+
+    assert await async_setup_component(hass, "system_health", {})
+
+    with patch("uuid.UUID.hex", new_callable=PropertyMock) as hexmock:
+        hexmock.return_value = "12345678901234567890"
+        assert await async_setup_component(
+            hass,
+            DOMAIN,
+            {
+                DOMAIN: {
+                    "user_pool_id": "AAAA",
+                    "region": "us-east-1",
+                    "acme_server": "cert-server",
+                    "relayer_server": "cloud.bla.com",
+                },
+            },
+        )
+        await hass.async_block_till_done()
+
+    await cloud.login("test-user", "test-pass")
+
+    cloud.remote.snitun_server = "us-west-1"
+    cloud.remote.certificate_status = CertificateStatus.READY
+    cloud.expiration_date = dt_util.parse_datetime("2025-01-17T11:19:31.0+00:00")
+
+    await cloud.client.async_system_message({"region": "xx-earth-616"})
+    await set_cloud_prefs(
+        {
+            "alexa_enabled": True,
+            "google_enabled": False,
+            "remote_enabled": True,
+            "cloud_ice_servers_enabled": True,
+        }
+    )
+
+    now = dt_util.utcnow()
+    tz = now.astimezone().tzinfo
+    freezer.move_to(datetime.datetime(2025, 2, 10, 12, 0, 0, tzinfo=tz))
+    logging.getLogger("hass_nabucasa.iot").info("Hass nabucasa log")
+    freezer.move_to(now)
+
+    cloud_client = await hass_client()
+    with (
+        patch.object(hass.config, "config_dir", new="config"),
+        patch(
+            "homeassistant.components.homeassistant.system_health.system_info.async_get_system_info",
+            return_value={
+                "installation_type": "Home Assistant Container",
+                "version": "2025.2.0",
+                "dev": False,
+                "hassio": False,
+                "virtualenv": False,
+                "python_version": "3.13.1",
+                "docker": True,
+                "container_arch": "x86_64",
+                "arch": "x86_64",
+                "timezone": "US/Pacific",
+                "os_name": "Linux",
+                "os_version": "6.12.9",
+                "user": "root",
+            },
         ),
     ):
         req = await cloud_client.get("/api/cloud/support_package")

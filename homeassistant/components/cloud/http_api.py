@@ -19,6 +19,7 @@ import attr
 from hass_nabucasa import AlreadyConnectedError, Cloud, auth
 from hass_nabucasa.const import STATE_DISCONNECTED
 from hass_nabucasa.voice_data import TTS_VOICES
+import psutil_home_assistant as ha_psutil
 import voluptuous as vol
 
 from homeassistant.components import websocket_api
@@ -27,6 +28,7 @@ from homeassistant.components.alexa import (
     errors as alexa_errors,
 )
 from homeassistant.components.google_assistant import helpers as google_helpers
+from homeassistant.components.hassio import get_addons_stats, get_supervisor_info
 from homeassistant.components.homeassistant import exposed_entities
 from homeassistant.components.http import KEY_HASS, HomeAssistantView, require_admin
 from homeassistant.components.http.data_validator import RequestDataValidator
@@ -37,6 +39,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.dispatcher import async_dispatcher_send
+from homeassistant.helpers.hassio import is_hassio
 from homeassistant.loader import (
     async_get_custom_components,
     async_get_loaded_integration,
@@ -571,6 +574,11 @@ class DownloadSupportPackageView(HomeAssistantView):
                 "</details>\n\n"
             )
 
+        markdown += await self._get_host_resources_markdown(hass)
+
+        if is_hassio(hass):
+            markdown += await self._get_addon_resources_markdown(hass)
+
         log_handler = hass.data[DATA_CLOUD_LOG_HANDLER]
         logs = "\n".join(await log_handler.get_logs(hass))
         markdown += (
@@ -581,6 +589,103 @@ class DownloadSupportPackageView(HomeAssistantView):
             "```\n\n"
             "</details>\n"
         )
+
+        return markdown
+
+    async def _get_host_resources_markdown(self, hass: HomeAssistant) -> str:
+        """Get host resource usage markdown using psutil."""
+
+        def _collect_system_stats() -> dict[str, Any]:
+            """Collect system stats."""
+            psutil_wrapper = ha_psutil.PsutilWrapper()
+            psutil_mod = psutil_wrapper.psutil
+
+            cpu_percent = psutil_mod.cpu_percent(interval=0.1)
+            memory = psutil_mod.virtual_memory()
+            disk = psutil_mod.disk_usage("/")
+
+            return {
+                "cpu_percent": cpu_percent,
+                "memory_total": memory.total,
+                "memory_used": memory.used,
+                "memory_available": memory.available,
+                "memory_percent": memory.percent,
+                "disk_total": disk.total,
+                "disk_used": disk.used,
+                "disk_free": disk.free,
+                "disk_percent": disk.percent,
+            }
+
+        markdown = ""
+        try:
+            stats = await hass.async_add_executor_job(_collect_system_stats)
+
+            markdown += "## Host resource usage\n\n"
+            markdown += "Resource | Value\n"
+            markdown += "--- | ---\n"
+
+            markdown += f"CPU usage | {stats['cpu_percent']}%\n"
+
+            memory_total_gb = round(stats["memory_total"] / (1024**3), 2)
+            memory_used_gb = round(stats["memory_used"] / (1024**3), 2)
+            memory_available_gb = round(stats["memory_available"] / (1024**3), 2)
+            markdown += f"Memory total | {memory_total_gb} GB\n"
+            markdown += (
+                f"Memory used | {memory_used_gb} GB ({stats['memory_percent']}%)\n"
+            )
+            markdown += f"Memory available | {memory_available_gb} GB\n"
+
+            disk_total_gb = round(stats["disk_total"] / (1024**3), 2)
+            disk_used_gb = round(stats["disk_used"] / (1024**3), 2)
+            disk_free_gb = round(stats["disk_free"] / (1024**3), 2)
+            markdown += f"Disk total | {disk_total_gb} GB\n"
+            markdown += f"Disk used | {disk_used_gb} GB ({stats['disk_percent']}%)\n"
+            markdown += f"Disk free | {disk_free_gb} GB\n"
+
+            markdown += "\n"
+        except Exception:  # noqa: BLE001
+            # Broad exception catch for robustness in support package generation
+            markdown += "## Host resource usage\n\n"
+            markdown += "Unable to collect host resource information\n\n"
+
+        return markdown
+
+    async def _get_addon_resources_markdown(self, hass: HomeAssistant) -> str:
+        """Get add-on resource usage markdown for hassio."""
+        markdown = ""
+        try:
+            supervisor_info = get_supervisor_info(hass) or {}
+            addons_stats = get_addons_stats(hass)
+            addons = supervisor_info.get("addons", [])
+
+            if addons:
+                markdown += "## Add-on resource usage\n\n"
+                markdown += "<details><summary>Add-on resources</summary>\n\n"
+                markdown += "Add-on | Version | State | CPU | Memory\n"
+                markdown += "--- | --- | --- | --- | ---\n"
+
+                for addon in addons:
+                    slug = addon.get("slug", "unknown")
+                    name = addon.get("name", slug)
+                    version = addon.get("version", "unknown")
+                    state = addon.get("state", "unknown")
+
+                    addon_stats = addons_stats.get(slug, {})
+                    cpu = addon_stats.get("cpu_percent")
+                    memory = addon_stats.get("memory_percent")
+
+                    cpu_str = f"{cpu}%" if cpu is not None else "N/A"
+                    memory_str = f"{memory}%" if memory is not None else "N/A"
+
+                    markdown += (
+                        f"{name} | {version} | {state} | {cpu_str} | {memory_str}\n"
+                    )
+
+                markdown += "\n</details>\n\n"
+        except Exception:  # noqa: BLE001
+            # Broad exception catch for robustness in support package generation
+            markdown += "## Add-on resource usage\n\n"
+            markdown += "Unable to collect add-on resource information\n\n"
 
         return markdown
 
