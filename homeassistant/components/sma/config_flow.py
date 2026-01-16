@@ -150,15 +150,6 @@ class SmaConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle reconfiguration of the integration."""
         errors: dict[str, str] = {}
         reconf_entry = self._get_reconfigure_entry()
-
-        suggested_values = dict(reconf_entry.data)
-        suggested_values = {
-            CONF_HOST: reconf_entry.data[CONF_HOST],
-            CONF_SSL: reconf_entry.data[CONF_SSL],
-            CONF_VERIFY_SSL: reconf_entry.data[CONF_VERIFY_SSL],
-            CONF_GROUP: reconf_entry.data[CONF_GROUP],
-        }
-
         if user_input is not None:
             errors, device_info = await self._handle_user_input(
                 user_input={
@@ -193,7 +184,7 @@ class SmaConfigFlow(ConfigFlow, domain=DOMAIN):
                         vol.Optional(CONF_GROUP): vol.In(GROUPS),
                     }
                 ),
-                suggested_values=user_input or suggested_values,
+                suggested_values=user_input or dict(reconf_entry.data),
             ),
             errors=errors,
         )
