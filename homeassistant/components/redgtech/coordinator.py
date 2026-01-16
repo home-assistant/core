@@ -2,8 +2,11 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable, Coroutine
+from dataclasses import dataclass
 from datetime import timedelta
 import logging
+from typing import Any
 
 from redgtech_api.api import RedgtechAPI, RedgtechAuthError, RedgtechConnectionError
 
@@ -14,17 +17,28 @@ from homeassistant.exceptions import ConfigEntryError
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DOMAIN
-from .device import RedgtechDevice
 
 UPDATE_INTERVAL = timedelta(seconds=15)
 _LOGGER = logging.getLogger(__name__)
 
 
+@dataclass
+class RedgtechDevice:
+    """Representation of a Redgtech device."""
+
+    unique_id: str
+    name: str
+    state: bool
+
+
 type RedgtechConfigEntry = ConfigEntry[RedgtechDataUpdateCoordinator]
 
 
-class RedgtechDataUpdateCoordinator(DataUpdateCoordinator[list[RedgtechDevice]]):
-    """Coordinator to manage fetching data from the Redgtech API."""
+class RedgtechDataUpdateCoordinator(DataUpdateCoordinator[dict[str, RedgtechDevice]]):
+    """Coordinator to manage fetching data from the Redgtech API.
+
+    Uses a dictionary keyed by unique_id for O(1) device lookup instead of O(n) list iteration.
+    """
 
     config_entry: RedgtechConfigEntry
 
@@ -50,7 +64,7 @@ class RedgtechDataUpdateCoordinator(DataUpdateCoordinator[list[RedgtechDevice]])
         except RedgtechAuthError as e:
             raise ConfigEntryError("Authentication error during login") from e
         except RedgtechConnectionError as e:
-            raise ConfigEntryError("Connection error during login") from e
+            raise UpdateFailed("Connection error during login") from e
         else:
             _LOGGER.debug("Access token obtained successfully")
             return self.access_token
@@ -60,38 +74,44 @@ class RedgtechDataUpdateCoordinator(DataUpdateCoordinator[list[RedgtechDevice]])
         self.access_token = await self.api.login(email, password)
         _LOGGER.debug("Access token renewed successfully")
 
-    async def ensure_token(self) -> None:
-        """Ensure we have a valid access token, renewing if necessary."""
+    async def call_api_with_valid_token[_R, *_Ts](
+        self, api_call: Callable[[*_Ts], Coroutine[Any, Any, _R]], *args: *_Ts
+    ) -> _R:
+        """Make an API call with a valid token.
+
+        Ensure we have a valid access token, renewing it if necessary.
+        """
         if not self.access_token:
             _LOGGER.debug("No access token, logging in")
             self.access_token = await self.login(self.email, self.password)
         else:
             _LOGGER.debug("Using existing access token")
-
-    async def _async_update_data(self) -> list[RedgtechDevice]:
-        """Fetch data from the API on demand."""
-        _LOGGER.debug("Fetching data from Redgtech API on demand")
         try:
-            await self.ensure_token()
-
-            data = await self.api.get_data(self.access_token)
+            return await api_call(*args)
         except RedgtechAuthError:
             _LOGGER.debug("Auth failed, trying to renew token")
-            try:
-                await self.renew_token(
-                    self.config_entry.data[CONF_EMAIL],
-                    self.config_entry.data[CONF_PASSWORD],
-                )
-                data = await self.api.get_data(self.access_token)
-            except RedgtechAuthError as e:
-                raise UpdateFailed("Authentication failed") from e
-            except RedgtechConnectionError as e:
-                raise UpdateFailed("Connection error during token renewal") from e
+            await self.renew_token(
+                self.config_entry.data[CONF_EMAIL],
+                self.config_entry.data[CONF_PASSWORD],
+            )
+            return await api_call(*args)
 
+    async def _async_update_data(self) -> dict[str, RedgtechDevice]:
+        """Fetch data from the API on demand.
+
+        Returns a dictionary keyed by unique_id for efficient device lookup.
+        """
+        _LOGGER.debug("Fetching data from Redgtech API on demand")
+        try:
+            data = await self.call_api_with_valid_token(
+                self.api.get_data, self.access_token
+            )
+        except RedgtechAuthError as e:
+            raise ConfigEntryError("Authentication failed") from e
         except RedgtechConnectionError as e:
             raise UpdateFailed("Failed to connect to Redgtech API") from e
 
-        devices: list[RedgtechDevice] = []
+        devices: dict[str, RedgtechDevice] = {}
 
         for item in data["boards"]:
             display_categories = {cat.lower() for cat in item["displayCategories"]}
@@ -103,9 +123,8 @@ class RedgtechDataUpdateCoordinator(DataUpdateCoordinator[list[RedgtechDevice]])
                 unique_id=item["endpointId"],
                 name=item["friendlyName"],
                 state=item["value"],
-                type="switch",
             )
             _LOGGER.debug("Processing device: %s", device)
-            devices.append(device)
+            devices[device.unique_id] = device
 
         return devices

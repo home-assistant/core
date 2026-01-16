@@ -15,8 +15,11 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN, INTEGRATION_NAME
-from .coordinator import RedgtechConfigEntry, RedgtechDataUpdateCoordinator
-from .device import RedgtechDevice
+from .coordinator import (
+    RedgtechConfigEntry,
+    RedgtechDataUpdateCoordinator,
+    RedgtechDevice,
+)
 
 PARALLEL_UPDATES = 0
 
@@ -31,9 +34,7 @@ async def async_setup_entry(
     """Set up the switch platform."""
     coordinator = config_entry.runtime_data
     async_add_entities(
-        RedgtechSwitch(coordinator, device)
-        for device in coordinator.data
-        if device.type == "switch"
+        RedgtechSwitch(coordinator, device) for device in coordinator.data.values()
     )
 
 
@@ -60,24 +61,19 @@ class RedgtechSwitch(CoordinatorEntity[RedgtechDataUpdateCoordinator], SwitchEnt
     @property
     def is_on(self) -> bool:
         """Return true if the switch is on."""
-        if not self.coordinator.data:
-            return False
-
-        for device in self.coordinator.data:
-            if device.unique_id == self.device.unique_id:
-                return bool(device.state)
-
+        if device := self.coordinator.data.get(self.device.unique_id):
+            return bool(device.state)
         return False
 
     async def _set_state(self, new_state: bool) -> None:
         """Set state of the switch."""
         try:
-            await self.coordinator.ensure_token()
-
-            await self.coordinator.api.set_switch_state(
-                self.device.unique_id, new_state, self.coordinator.access_token
+            await self.coordinator.call_api_with_valid_token(
+                self.coordinator.api.set_switch_state,
+                self.device.unique_id,
+                new_state,
+                self.coordinator.access_token,
             )
-
             await self.coordinator.async_refresh()
         except RedgtechAuthError as err:
             _LOGGER.error(

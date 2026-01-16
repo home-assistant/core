@@ -2,8 +2,8 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable
-from unittest.mock import AsyncMock, Mock
+from collections.abc import Generator
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
@@ -16,13 +16,21 @@ TEST_PASSWORD = "test_password"
 
 
 @pytest.fixture
-def mock_redgtech_api() -> Callable[..., AsyncMock]:
-    """Mock Redgtech API."""
+def mock_redgtech_api() -> Generator[MagicMock]:
+    """Return a mocked Redgtech API client."""
+    with (
+        patch(
+            "homeassistant.components.redgtech.coordinator.RedgtechAPI", autospec=True
+        ) as api_mock,
+        patch(
+            "homeassistant.components.redgtech.config_flow.RedgtechAPI",
+            new=api_mock,
+        ),
+    ):
+        api = api_mock.return_value
 
-    def _create_mock():
-        mock = Mock()
-        mock.login = AsyncMock(return_value="mock_access_token")
-        mock.get_data = AsyncMock(
+        api.login = AsyncMock(return_value="mock_access_token")
+        api.get_data = AsyncMock(
             return_value={
                 "boards": [
                     {
@@ -37,13 +45,18 @@ def mock_redgtech_api() -> Callable[..., AsyncMock]:
                         "value": True,
                         "displayCategories": ["SWITCH"],
                     },
+                    {
+                        "endpointId": "light_switch_001",
+                        "friendlyName": "Bedroom Light Switch",
+                        "value": False,
+                        "displayCategories": ["LIGHT", "SWITCH"],
+                    },
                 ]
             }
         )
-        mock.set_switch_state = AsyncMock()
-        return mock
+        api.set_switch_state = AsyncMock()
 
-    return _create_mock
+        yield api
 
 
 @pytest.fixture
