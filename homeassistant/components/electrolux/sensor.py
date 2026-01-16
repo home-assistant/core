@@ -72,7 +72,9 @@ GENERAL_ELECTROLUX_SENSORS: tuple[ElectroluxSensorDescription, ...] = (
         key="connection_state",
         translation_key="connection_state",
         icon="mdi:wifi",
-        value_fn=lambda appliance: appliance.state.connectionState,
+        value_fn=lambda appliance: appliance.state.connectionState.lower(),
+        device_class=SensorDeviceClass.ENUM,
+        options=["connected", "disconnected"],
     ),
 )
 
@@ -125,7 +127,9 @@ OVEN_ELECTROLUX_SENSORS: tuple[ElectroluxSensorDescription, ...] = (
         key="remote_control",
         translation_key="remote_control",
         icon="mdi:remote",
-        value_fn=lambda appliance: appliance.get_current_remote_control(),
+        value_fn=lambda appliance: appliance.get_current_remote_control().lower(),
+        device_class=SensorDeviceClass.ENUM,
+        options=["enabled", "disabled", "not_safety_relevant_enabled"],
         is_supported_fn=lambda appliance: appliance.is_feature_supported(
             REMOTE_CONTROL
         ),
