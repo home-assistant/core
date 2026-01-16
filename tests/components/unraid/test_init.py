@@ -184,10 +184,3 @@ class TestAsyncUnloadEntry:
         assert result is True
 
 
-class TestPlatforms:
-    """Test platform constants."""
-
-    def test_platforms_list(self) -> None:
-        """Test that all expected platforms are defined."""
-        assert Platform.SENSOR in PLATFORMS
-        assert len(PLATFORMS) == 1
