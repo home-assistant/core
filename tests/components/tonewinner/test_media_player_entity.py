@@ -51,9 +51,12 @@ async def test_media_player_device_info(
 
     # Verify device info
     device_info = entity.device_info
-    assert device_info["identifiers"] == {(DOMAIN, mock_config_entry.entry_id)}
-    assert device_info["manufacturer"] == "Tonewinner"
-    assert device_info["model"] == "AT-500"
+    assert device_info is not None
+    assert "identifiers" in device_info and device_info["identifiers"] == {
+        (DOMAIN, mock_config_entry.entry_id)
+    }
+    assert "manufacturer" in device_info and device_info["manufacturer"] == "Tonewinner"
+    assert "model" in device_info and device_info["model"] == "AT-500"
 
 
 async def test_media_player_supported_features(
@@ -218,7 +221,9 @@ async def test_media_player_handle_power_off(
         # The `if power :=` condition is falsy for False, so the block doesn't execute
         # For now, just verify power off is processed (state change happens elsewhere)
         # This test documents the current behavior
-        assert entity.state == MediaPlayerState.OFF  # This works because _attr_state is set in __init__
+        assert (
+            entity.state == MediaPlayerState.OFF
+        )  # This works because _attr_state is set in __init__
         # Source is NOT currently cleared due to the bug mentioned above
         assert entity._attr_source == "HDMI 1"  # Current (buggy) behavior
 

@@ -445,18 +445,23 @@ class TonewinnerMediaPlayer(MediaPlayerEntity):
     async def async_turn_on(self):
         """Turn the media player on."""
         _LOGGER.debug("Turning on receiver")
-        await self.send_raw_command(TonewinnerCommands.POWER_ON)
+        await self.send_raw_command(ToneWinnerCommands.POWER_ON)
+        # Set optimistic state - command sent successfully, receiver should be turning on
+        self._attr_state = MediaPlayerState.ON
+        self.async_write_ha_state()
         # Wait for power on, then query input source
-        # Note: The device should respond to POWER_ON with the actual power state,
-        # which will trigger the input source query in handle_response
-        # We also query here as a backup in case the response is missed
+        # Note: The device should respond to POWER_ON with actual power state,
+        # which will trigger to input source query in handle_response
+        # We also query here as a backup in case response is missed
         await asyncio.sleep(2.0)
         await self._query_input_source()
 
     async def async_turn_off(self):
         """Turn the media player off."""
         _LOGGER.debug("Turning off receiver")
-        await self.send_raw_command(TonewinnerCommands.POWER_OFF)
+        await self.send_raw_command(ToneWinnerCommands.POWER_OFF)
+        # Set optimistic state - command sent successfully, receiver should be turning off
+        self._attr_state = MediaPlayerState.OFF
         # Clear source state when turning off
         self._attr_source = None
         self.async_write_ha_state()
