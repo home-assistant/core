@@ -60,7 +60,7 @@ class TestConfigFlow:
             DOMAIN, context={"source": config_entries.SOURCE_USER}
         )
 
-        assert result["type"] == FlowResultType.FORM
+        assert result["type"] is FlowResultType.FORM
         assert result["step_id"] == "user"
         assert "host" in result["data_schema"].schema
         assert "api_key" in result["data_schema"].schema
