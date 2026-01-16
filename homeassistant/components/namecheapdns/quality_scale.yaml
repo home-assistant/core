@@ -14,9 +14,9 @@ rules:
   docs-actions:
     status: exempt
     comment: the integration has no actions
-  docs-high-level-description: todo
+  docs-high-level-description: done
   docs-installation-instructions: done
-  docs-removal-instructions: todo
+  docs-removal-instructions: done
   entity-event-setup:
     status: exempt
     comment: integration has no entities
@@ -64,13 +64,11 @@ rules:
   discovery:
     status: exempt
     comment: the service cannot be discovered
-  docs-data-update: todo
+  docs-data-update: done
   docs-examples:
     status: exempt
     comment: the integration has no entities or actions
-  docs-known-limitations:
-    status: exempt
-    comment: the integration has no known limitations
+  docs-known-limitations: done
   docs-supported-devices:
     status: exempt
     comment: the integration is a service
