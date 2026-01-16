@@ -319,7 +319,7 @@ aiolookin==1.0.0
 aiolyric==2.0.2
 
 # homeassistant.components.mealie
-aiomealie==1.1.1
+aiomealie==1.2.0
 
 # homeassistant.components.modern_forms
 aiomodernforms==0.1.8
@@ -1351,7 +1351,7 @@ kiwiki-client==0.1.1
 knocki==0.4.2
 
 # homeassistant.components.knx
-knx-frontend==2025.12.30.151231
+knx-frontend==2026.1.15.112308
 
 # homeassistant.components.konnected
 konnected==1.2.0
@@ -2234,7 +2234,7 @@ pynetgear==0.10.10
 pynetio==0.1.9.1
 
 # homeassistant.components.nina
-pynina==0.3.6
+pynina==1.0.2
 
 # homeassistant.components.nintendo_parental_controls
 pynintendoauth==1.0.2
