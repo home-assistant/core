@@ -8,13 +8,14 @@ from dataclasses import dataclass, replace
 from datetime import timedelta
 import logging
 import time
-from typing import Any
+from typing import Any, Literal
+
+from level_ws_client import LevelWebsocketManager
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from ._lib.level_ha import WebsocketManager as LevelWebsocketManager
 from .const import COMMAND_STATE_TIMEOUT
 
 LOGGER = logging.getLogger(__name__)
@@ -229,22 +230,20 @@ class LevelLocksCoordinator(DataUpdateCoordinator[dict[str, LevelLockDevice]]):
                     new_state,
                 )
 
-    async def async_send_command(self, lock_id: str, command: str) -> None:
+    async def async_send_command(
+        self, lock_id: str, command: Literal["lock", "unlock"]
+    ) -> None:
         """Send a command via WebSocket."""
-        if command in ("lock", "unlock"):
-            self._last_command_time[lock_id] = time.monotonic()
-            if lock_id in self._pending_confirmations:
-                self._pending_confirmations[lock_id].cancel()
-            try:
-                await self._ws_manager.async_send_command(
-                    lock_id,
-                    command,  # type: ignore[arg-type]
-                )
-            except Exception as err:
-                raise UpdateFailed(f"Command failed: {err}") from err
-            self._pending_confirmations[lock_id] = asyncio.create_task(
-                self._async_handle_command_timeout(lock_id, command)
-            )
+        self._last_command_time[lock_id] = time.monotonic()
+        if lock_id in self._pending_confirmations:
+            self._pending_confirmations[lock_id].cancel()
+        try:
+            await self._ws_manager.async_send_command(lock_id, command)
+        except Exception as err:
+            raise UpdateFailed(f"Command failed: {err}") from err
+        self._pending_confirmations[lock_id] = asyncio.create_task(
+            self._async_handle_command_timeout(lock_id, command)
+        )
 
     async def _async_handle_command_timeout(self, lock_id: str, command: str) -> None:
         """Handle timeout waiting for state confirmation after a command."""

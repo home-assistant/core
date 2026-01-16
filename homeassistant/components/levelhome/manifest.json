@@ -8,5 +8,5 @@
   "integration_type": "hub",
   "iot_class": "cloud_push",
   "quality_scale": "bronze",
-  "requirements": []
+  "requirements": ["level-ws-client==0.1.0"]
 }

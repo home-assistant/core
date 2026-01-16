@@ -4,13 +4,14 @@ from __future__ import annotations
 
 import logging
 
+from level_ws_client import LevelWebsocketManager
+
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import aiohttp_client, config_entry_oauth2_flow
 
 from . import auth as auth_mod
-from ._lib.level_ha import WebsocketManager as LevelWebsocketManager
 from .const import (
     CONF_OAUTH2_BASE_URL,
     CONF_PARTNER_BASE_URL,
