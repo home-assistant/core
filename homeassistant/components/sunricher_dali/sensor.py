@@ -51,8 +51,7 @@ class SunricherDaliMotionSensor(DaliDeviceEntity, SensorEntity):
 
     _attr_device_class = SensorDeviceClass.ENUM
     _attr_options = ["no_motion", "motion", "vacant", "presence", "occupancy"]
-    _attr_icon = "mdi:motion-sensor"
-    _attr_name = "State"
+    _attr_name = None
 
     def __init__(self, device: Device) -> None:
         """Initialize the motion sensor."""
@@ -93,13 +92,13 @@ class SunricherDaliIlluminanceSensor(DaliDeviceEntity, SensorEntity):
     _attr_device_class = SensorDeviceClass.ILLUMINANCE
     _attr_state_class = SensorStateClass.MEASUREMENT
     _attr_native_unit_of_measurement = LIGHT_LUX
-    _attr_name = "State"
+    _attr_name = None
 
     def __init__(self, device: Device) -> None:
         """Initialize the illuminance sensor."""
         super().__init__(device)
         self._device = device
-        self._attr_native_value: float | None = None
+        self._illuminance_value: float | None = None
         self._sensor_enabled: bool = True
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, device.dev_id)},
@@ -108,6 +107,13 @@ class SunricherDaliIlluminanceSensor(DaliDeviceEntity, SensorEntity):
             model=device.model,
             via_device=(DOMAIN, device.gw_sn),
         )
+
+    @property
+    def native_value(self) -> float | None:
+        """Return the native value, or None if sensor is disabled."""
+        if not self._sensor_enabled:
+            return None
+        return self._illuminance_value
 
     async def async_added_to_hass(self) -> None:
         """Handle entity addition to Home Assistant."""
@@ -135,14 +141,13 @@ class SunricherDaliIlluminanceSensor(DaliDeviceEntity, SensorEntity):
 
         if not is_valid:
             _LOGGER.debug(
-                "%s %s value is not valid: %s lux",
-                self._attr_name,
-                self._attr_unique_id,
+                "Illuminance value is not valid for device %s: %s lux",
+                self._device.dev_id,
                 illuminance_value,
             )
             return
 
-        self._attr_native_value = illuminance_value
+        self._illuminance_value = illuminance_value
         self.schedule_update_ha_state()
 
     @callback
@@ -154,8 +159,4 @@ class SunricherDaliIlluminanceSensor(DaliDeviceEntity, SensorEntity):
             self._device.dev_id,
             on_off,
         )
-
-        if not self._sensor_enabled:
-            self._attr_native_value = None
-
         self.schedule_update_ha_state()

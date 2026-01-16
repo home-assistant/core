@@ -14,8 +14,9 @@ from . import find_device_listener, trigger_availability_callback
 
 from tests.common import MockConfigEntry
 
-TEST_MOTION_ENTITY_ID = "sensor.motion_sensor_0000_10_state"
-TEST_ILLUMINANCE_ENTITY_ID = "sensor.illuminance_sensor_0000_20_state"
+# Entity IDs without "_state" suffix because _attr_name = None
+TEST_MOTION_ENTITY_ID = "sensor.motion_sensor_0000_10"
+TEST_ILLUMINANCE_ENTITY_ID = "sensor.illuminance_sensor_0000_20"
 
 
 @pytest.fixture
@@ -149,6 +150,7 @@ async def test_illuminance_sensor_on_off_callback(
         illuminance_device, CallbackEventType.SENSOR_ON_OFF
     )
 
+    # Disable sensor -> state becomes unknown
     on_off_callback(False)
     await hass.async_block_till_done()
 
@@ -156,12 +158,13 @@ async def test_illuminance_sensor_on_off_callback(
     assert state is not None
     assert state.state == STATE_UNKNOWN
 
+    # Enable sensor -> stored value should be restored
     on_off_callback(True)
     await hass.async_block_till_done()
 
     state = hass.states.get(TEST_ILLUMINANCE_ENTITY_ID)
     assert state is not None
-    assert state.state == STATE_UNKNOWN
+    assert float(state.state) == 250.0
 
 
 @pytest.mark.usefixtures("init_integration")
