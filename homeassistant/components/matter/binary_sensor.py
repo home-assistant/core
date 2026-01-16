@@ -528,7 +528,10 @@ DISCOVERY_SCHEMAS = [
             ),
         ),
         entity_class=MatterBinarySensor,
-        required_attributes=(clusters.Thermostat.Attributes.RemoteSensing,),
+        required_attributes=(
+            clusters.Thermostat.Attributes.RemoteSensing,
+            clusters.Thermostat.Attributes.OutdoorTemperature,
+        ),
         allow_multi=True,
     ),
     MatterDiscoverySchema(
