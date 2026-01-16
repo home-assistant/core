@@ -108,7 +108,7 @@ SYSTEM_SENSORS: tuple[UnraidSensorEntityDescription, ...] = (
     UnraidSensorEntityDescription(
         key="ram_usage",
         translation_key="ram_usage",
-        native_unit_of_measurement="%",
+        native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
         suggested_display_precision=1,
         value_fn=lambda data: _to_float_or_none(data.metrics.memory_percent),
