@@ -49,7 +49,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: UnraidConfigEntry) -> bo
     try:
         server_info = await api_client.get_server_info()
     except UnraidAuthenticationError as err:
-        raise ConfigEntryAuthFailed(
+        raise ConfigEntryError(
             f"Authentication failed for Unraid server {entry.data[CONF_HOST]}"
         ) from err
     except (UnraidConnectionError, UnraidAPIError) as err:
