@@ -283,5 +283,12 @@ async def test_switch_without_metering_does_not_create_power_energy_sensors(
     )
     await hass.async_block_till_done()
 
-    assert hass.states.get("sensor.plain_switch_1_power") is None
-    assert hass.states.get("sensor.plain_switch_1_energy") is None
+    ent_reg = er.async_get(hass)
+
+    power_entity_id = ent_reg.async_get_entity_id("sensor", "vera", "vera_1111_1_power")
+    energy_entity_id = ent_reg.async_get_entity_id(
+        "sensor", "vera", "vera_1111_1_energy"
+    )
+
+    assert power_entity_id is None
+    assert energy_entity_id is None

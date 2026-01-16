@@ -123,15 +123,16 @@ class VeraPowerSensor(VeraEntity[veraApi.VeraSwitch], SensorEntity):
     """Power sensor derived from a Vera switch with metering."""
 
     _attr_device_class = SensorDeviceClass.POWER
+    _attr_has_entity_name = True
     _attr_state_class = SensorStateClass.MEASUREMENT
     _attr_native_unit_of_measurement = UnitOfPower.WATT
+    _attr_translation_key = "power"
 
     def __init__(
         self, vera_device: veraApi.VeraSwitch, controller_data: ControllerData
     ) -> None:
         """Initialize the power sensor."""
         VeraEntity.__init__(self, vera_device, controller_data)
-        self._attr_name = f"{self.vera_device.name} Power"
         self._unique_id = f"{self._unique_id}_power"
 
     def update(self) -> None:
@@ -144,15 +145,16 @@ class VeraEnergySensor(VeraEntity[veraApi.VeraSwitch], SensorEntity):
     """Energy sensor derived from a Vera switch with metering."""
 
     _attr_device_class = SensorDeviceClass.ENERGY
+    _attr_has_entity_name = True
     _attr_state_class = SensorStateClass.TOTAL_INCREASING
     _attr_native_unit_of_measurement = UnitOfEnergy.KILO_WATT_HOUR
+    _attr_translation_key = "energy"
 
     def __init__(
         self, vera_device: veraApi.VeraSwitch, controller_data: ControllerData
     ) -> None:
         """Initialize the energy sensor."""
         VeraEntity.__init__(self, vera_device, controller_data)
-        self._attr_name = f"{self.vera_device.name} Energy"
         self._unique_id = f"{self._unique_id}_energy"
 
     def update(self) -> None:
