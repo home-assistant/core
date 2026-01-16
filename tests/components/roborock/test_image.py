@@ -1,6 +1,7 @@
 """Test Roborock Image platform."""
 
 import copy
+from copy import deepcopy
 from datetime import timedelta
 from http import HTTPStatus
 import logging
@@ -276,9 +277,16 @@ async def test_coordinator_update_with_image_change_writes_state(
 
     # Trigger a coordinator update WITH changing the image
     assert fake_vacuum.v1_properties is not None
-    assert fake_vacuum.v1_properties.map_content is not None
+    assert fake_vacuum.v1_properties.home is not None
     fake_vacuum.v1_properties.status.in_cleaning = 1
-    fake_vacuum.v1_properties.map_content.image_content = b"\x89PNG-NEW"
+    # Update the image in home_map_content (which is what the image entity reads from)
+    fake_vacuum.v1_properties.home.home_map_content = {
+        map_flag: MapContent(
+            image_content=b"\x89PNG-NEW",
+            map_data=deepcopy(MAP_DATA),
+        )
+        for map_flag in fake_vacuum.v1_properties.home.home_map_content or {}
+    }
 
     # Use 91 seconds to exceed the 90-second cleaning interval
     now = dt_util.utcnow() + timedelta(seconds=91)
