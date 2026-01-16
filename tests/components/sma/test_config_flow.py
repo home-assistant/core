@@ -3,6 +3,7 @@
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from pysma import SmaAuthenticationException, SmaConnectionException, SmaReadException
+from pysma.helpers import DeviceInfo
 import pytest
 
 from homeassistant.components.sma.const import CONF_GROUP, DOMAIN
@@ -401,8 +402,15 @@ async def test_reconfigure_mismatch_id(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reconfigure"
 
-    # Different serial number to create a mismatch, on purpose
-    mock_sma_client.device_info.return_value.serial = 1234
+    # New device, on purpose to demonstrate we can't switch
+    different_device = DeviceInfo(
+        manufacturer="SMA",
+        name="Different SMA Device",
+        type="Sunny Boy 5.0",
+        serial=987654321,
+        sw_version="2.0.0",
+    )
+    mock_sma_client.device_info = AsyncMock(return_value=different_device)
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
