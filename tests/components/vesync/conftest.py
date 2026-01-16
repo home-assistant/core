@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Iterator
 from contextlib import ExitStack
-from itertools import chain, product
+from itertools import chain
 from types import MappingProxyType
 from unittest.mock import AsyncMock, MagicMock, Mock, PropertyMock, patch
 
