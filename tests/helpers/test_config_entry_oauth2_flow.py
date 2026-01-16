@@ -460,7 +460,7 @@ async def test_abort_discovered_multiple(
         (
             HTTPStatus.NOT_FOUND,
             {},
-            "oauth_failed",
+            "oauth_unauthorized",
             "Token request for oauth2_test failed (unknown): unknown",
         ),
         (
@@ -476,7 +476,7 @@ async def test_abort_discovered_multiple(
                 "error_description": "Request was missing the 'redirect_uri' parameter.",
                 "error_uri": "See the full API docs at https://authorization-server.com/docs/access_token",
             },
-            "oauth_failed",
+            "oauth_unauthorized",
             "Token request for oauth2_test failed (invalid_request): Request was missing the",
         ),
     ],

@@ -357,16 +357,15 @@ async def test_oauth_token_request_refresh_errors(
     with pytest.raises(expected_exception) as err:
         await crd.async_refresh()
 
+    # Check thoroughly the chain
+    assert isinstance(err.value, expected_exception)
+    assert isinstance(err.value.__cause__, exception)
     assert isinstance(err.value.__cause__, OAuth2TokenRequestError)
 
 
 @pytest.mark.parametrize(
     ("exception", "expected_exception"),
-    [
-        (OAuth2TokenRequestReauthError, ConfigEntryError),
-        (OAuth2TokenRequestTransientError, ConfigEntryNotReady),
-        (OAuth2TokenRequestError, ConfigEntryNotReady),
-    ],
+    [(OAuth2TokenRequestReauthError, ConfigEntryAuthFailed)],
 )
 async def test_token_request_setup_errors(
     hass: HomeAssistant,
@@ -397,6 +396,9 @@ async def test_token_request_setup_errors(
     with pytest.raises(expected_exception) as err:
         await crd.async_config_entry_first_refresh()
 
+    # Check thoroughly the chain
+    assert isinstance(err.value, expected_exception)
+    assert isinstance(err.value.__cause__, exception)
     assert isinstance(err.value.__cause__, OAuth2TokenRequestError)
 
 

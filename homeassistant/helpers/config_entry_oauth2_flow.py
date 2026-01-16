@@ -303,6 +303,10 @@ class LocalOAuth2Implementation(AbstractOAuth2Implementation):
                 headers=err.headers,
                 domain=self._domain,
             ) from err
+        except ClientError as err:
+            raise HomeAssistantError(
+                f"Error requesting OAuth token for {self._domain}. Error: {err}"
+            ) from err
 
         return cast(dict, await resp.json())
 
@@ -517,10 +521,7 @@ class AbstractOAuth2FlowHandler(config_entries.ConfigFlow, metaclass=ABCMeta):
         ) as err:
             _LOGGER.error("Error resolving OAuth token: %s", err)
             # Only the unauthorized error is non-recoverable
-            if (
-                isinstance(err, OAuth2TokenRequestReauthError)
-                and err.status == HTTPStatus.UNAUTHORIZED
-            ):
+            if isinstance(err, OAuth2TokenRequestReauthError):
                 return self.async_abort(reason="oauth_unauthorized")
             return self.async_abort(reason="oauth_failed")
 
