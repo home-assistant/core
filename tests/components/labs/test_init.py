@@ -21,6 +21,8 @@ from homeassistant.setup import async_setup_component
 
 from . import assert_stored_labs_data
 
+from tests.common import async_capture_events
+
 
 async def test_async_setup(hass: HomeAssistant) -> None:
     """Test the Labs integration setup."""
@@ -448,12 +450,7 @@ async def test_async_update_preview_feature(
     assert await async_setup_component(hass, DOMAIN, {})
     await hass.async_block_till_done()
 
-    events = []
-
-    def event_listener(event):
-        events.append(event)
-
-    hass.bus.async_listen(EVENT_LABS_UPDATED, event_listener)
+    events = async_capture_events(hass, EVENT_LABS_UPDATED)
 
     await async_update_preview_feature(
         hass, "kitchen_sink", "special_repair", enabled=True
