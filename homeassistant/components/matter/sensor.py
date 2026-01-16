@@ -442,6 +442,7 @@ DISCOVERY_SCHEMAS = [
             key="PowerSourceBatVoltage",
             translation_key="battery_voltage",
             native_unit_of_measurement=UnitOfElectricPotential.MILLIVOLT,
+            suggested_display_precision=2,
             suggested_unit_of_measurement=UnitOfElectricPotential.VOLT,
             device_class=SensorDeviceClass.VOLTAGE,
             entity_category=EntityCategory.DIAGNOSTIC,
