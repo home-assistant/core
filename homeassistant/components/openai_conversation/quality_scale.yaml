@@ -59,9 +59,9 @@ rules:
   docs-troubleshooting: done
   docs-use-cases: done
   dynamic-devices:
-    status: done
+    status: exempt
     comment: |
-      Device type integration, only possible for addon scale
+      Service integration, no devices.
   entity-category:
     status: exempt
     comment: |
