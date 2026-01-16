@@ -519,12 +519,7 @@ class TodoistProjectData:
             if isinstance(due_date, datetime):
                 task[END] = dt_util.as_local(due_date)
             elif isinstance(due_date, date):
-                # Convert date to datetime at start of day in local timezone
-                task[END] = datetime.combine(
-                    due_date,
-                    time.min,
-                    tzinfo=dt_util.DEFAULT_TIME_ZONE,
-                )
+                task[END] = dt_util.start_of_local_day(due_date)
 
             if task[END] is not None:
                 if self._due_date_days is not None:
