@@ -153,6 +153,46 @@ DATA_BATTERY_ONLY = {
     }
 }
 
+# Wi-Fi scan data with timestamps for out-of-order testing
+WIFI_SCAN_DATA_NEW = [
+    {"mac": "11:22:33:44:55:01", "rssi": -40},
+    {"mac": "11:22:33:44:55:02", "rssi": -60},
+]
+
+WIFI_SCAN_DATA_OLD = [
+    {"mac": "AA:BB:CC:DD:EE:FF", "rssi": -90},
+]
+
+# Newer timestamp (should be used)
+DATA_WIFI_NEWER = {
+    TRACKER_DEVICE_ID: {
+        "Wi-Fi_Scan_5001": TTNSensorValue(
+            {
+                "end_device_ids": {"device_id": TRACKER_DEVICE_ID},
+                "received_at": "2024-03-13T12:00:00.000000000Z",
+                "timestamp": 1710331200000,  # Newer timestamp
+            },
+            "Wi-Fi_Scan_5001",
+            WIFI_SCAN_DATA_NEW,
+        )
+    }
+}
+
+# Older timestamp (should be ignored if received after newer)
+DATA_WIFI_OLDER = {
+    TRACKER_DEVICE_ID: {
+        "Wi-Fi_Scan_5001": TTNSensorValue(
+            {
+                "end_device_ids": {"device_id": TRACKER_DEVICE_ID},
+                "received_at": "2024-03-13T13:00:00.000000000Z",  # Received later
+                "timestamp": 1710327600000,  # But measurement is older
+            },
+            "Wi-Fi_Scan_5001",
+            WIFI_SCAN_DATA_OLD,
+        )
+    }
+}
+
 
 @pytest.fixture
 def mock_config_entry() -> MockConfigEntry:

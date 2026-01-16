@@ -11,6 +11,8 @@ from .conftest import (
     DATA_BATTERY_ONLY,
     DATA_GPS,
     DATA_GPS_AND_WIFI,
+    DATA_WIFI_NEWER,
+    DATA_WIFI_OLDER,
     DATA_WIFI_SCAN,
     DEVICE_ID,
     DOMAIN,
@@ -18,6 +20,7 @@ from .conftest import (
     GPS_LONGITUDE,
     TRACKER_DEVICE_ID,
     WIFI_SCAN_DATA,
+    WIFI_SCAN_DATA_NEW,
 )
 
 
@@ -387,3 +390,40 @@ async def test_geocoded_location_without_accuracy(
     assert state.attributes["geocoded_longitude"] == geocoded_lon
     assert "geocoded_accuracy" not in state.attributes  # Should not be present
     assert state.attributes["location_source"] == "geocoded"
+
+
+async def test_out_of_order_messages_ignored(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_ttnclient,
+    mock_config_entry,
+) -> None:
+    """Test that older messages received after newer ones are ignored."""
+    # Setup with newer timestamp data first
+    mock_ttnclient.return_value.fetch_data.return_value = DATA_WIFI_NEWER
+
+    await init_integration(hass, mock_config_entry)
+
+    entity_id = f"{DEVICE_TRACKER_DOMAIN}.{TRACKER_DEVICE_ID}"
+    entity = entity_registry.async_get(entity_id)
+    assert entity
+
+    # Verify we have the newer data
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.attributes["wifi_access_points_count"] == len(WIFI_SCAN_DATA_NEW)
+    assert state.attributes["wifi_timestamp"] == 1710331200000
+
+    # Get the coordinator to simulate receiving old data
+    coordinator = hass.data[DOMAIN][mock_config_entry.entry_id]
+
+    # Now push older data (simulating device sending buffered old measurement)
+    await coordinator._push_callback(DATA_WIFI_OLDER)
+    await hass.async_block_till_done()
+
+    # Verify old data was ignored - we should still have the new data
+    state = hass.states.get(entity_id)
+    assert state
+    # Should still be the newer data with 2 APs, not the old data with 1 AP
+    assert state.attributes["wifi_access_points_count"] == len(WIFI_SCAN_DATA_NEW)
+    assert state.attributes["wifi_timestamp"] == 1710331200000  # Still newer timestamp

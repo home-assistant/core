@@ -102,6 +102,34 @@ class TtnDeviceTracker(CoordinatorEntity[TTNCoordinator], TrackerEntity):
         self._geocoded_lon: float | None = None
         self._geocoded_accuracy: float | None = None
 
+        # Track timestamps to handle out-of-order messages
+        # (devices may buffer data when offline and send old data after new)
+        self._last_wifi_timestamp: int | None = None
+        self._last_gps_timestamp: int | None = None
+
+        # Store the current location data (not just reference coordinator)
+        self._current_wifi_data: TTNSensorValue | None = None
+        self._current_gps_lat: float | None = None
+        self._current_gps_lon: float | None = None
+
+        # Populate initial data from coordinator
+        self._initialize_from_coordinator()
+
+    def _initialize_from_coordinator(self) -> None:
+        """Populate initial data from coordinator during entity creation."""
+        # Get initial Wi-Fi scan data
+        wifi_data = self._get_new_wifi_scan_data()
+        if wifi_data:
+            self._current_wifi_data = wifi_data
+            self._last_wifi_timestamp = self._get_measurement_timestamp(wifi_data)
+
+        # Get initial GPS coordinates
+        gps_data = self._get_new_gps_coordinates()
+        if gps_data:
+            self._current_gps_lat = gps_data[0]
+            self._current_gps_lon = gps_data[1]
+            self._last_gps_timestamp = gps_data[2]
+
     @property
     def entity_category(self) -> None:
         """Return None to prevent diagnostic categorization."""
@@ -147,16 +175,62 @@ class TtnDeviceTracker(CoordinatorEntity[TTNCoordinator], TrackerEntity):
     @callback
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
-        # Update if we have either Wi-Fi scan data or GPS coordinates
-        if self._get_wifi_scan_data() or self._get_gps_coordinates():
+        updated = False
+
+        # Check for new Wi-Fi scan data
+        new_wifi = self._get_new_wifi_scan_data()
+        if new_wifi:
+            new_timestamp = self._get_measurement_timestamp(new_wifi)
+            if self._is_newer_timestamp(new_timestamp, self._last_wifi_timestamp):
+                self._current_wifi_data = new_wifi
+                self._last_wifi_timestamp = new_timestamp
+                updated = True
+
+        # Check for new GPS coordinates
+        new_gps = self._get_new_gps_coordinates()
+        if new_gps:
+            new_timestamp = new_gps[2]  # (lat, lon, timestamp)
+            if self._is_newer_timestamp(new_timestamp, self._last_gps_timestamp):
+                self._current_gps_lat = new_gps[0]
+                self._current_gps_lon = new_gps[1]
+                self._last_gps_timestamp = new_timestamp
+                updated = True
+
+        if updated:
             self.async_write_ha_state()
 
+    def _get_measurement_timestamp(self, ttn_value: TTNSensorValue) -> int | None:
+        """Extract measurement timestamp from TTNSensorValue."""
+        if hasattr(ttn_value, "uplink") and isinstance(ttn_value.uplink, dict):
+            return ttn_value.uplink.get("timestamp")
+        return None
+
+    def _is_newer_timestamp(
+        self, new_timestamp: int | None, last_timestamp: int | None
+    ) -> bool:
+        """Check if new timestamp is newer than the last one."""
+        # If we have no new timestamp, allow update (backwards compatibility)
+        if new_timestamp is None:
+            return True
+        # If we have no previous timestamp, this is the first update
+        if last_timestamp is None:
+            return True
+        # Only update if new timestamp is greater
+        return new_timestamp > last_timestamp
+
     def _get_gps_coordinates(self) -> tuple[float, float] | None:
-        """Get GPS coordinates (latitude, longitude) if available."""
+        """Get stored GPS coordinates (latitude, longitude) if available."""
+        if self._current_gps_lat is not None and self._current_gps_lon is not None:
+            return (self._current_gps_lat, self._current_gps_lon)
+        return None
+
+    def _get_new_gps_coordinates(self) -> tuple[float, float, int | None] | None:
+        """Get new GPS coordinates from coordinator with timestamp."""
         device_uplinks = self.coordinator.data.get(self._device_id, {})
 
         lat = None
         lon = None
+        timestamp = None
 
         for field_id, ttn_value in device_uplinks.items():
             if not isinstance(ttn_value, TTNSensorValue):
@@ -164,15 +238,25 @@ class TtnDeviceTracker(CoordinatorEntity[TTNCoordinator], TrackerEntity):
 
             if field_id == "Latitude_4198":
                 lat = ttn_value.value
+                # Get timestamp from this measurement
+                if timestamp is None:
+                    timestamp = self._get_measurement_timestamp(ttn_value)
             elif field_id == "Longitude_4197":
                 lon = ttn_value.value
+                # Get timestamp from this measurement if not already set
+                if timestamp is None:
+                    timestamp = self._get_measurement_timestamp(ttn_value)
 
         if lat is not None and lon is not None:
-            return (float(lat), float(lon))
+            return (float(lat), float(lon), timestamp)
         return None
 
     def _get_wifi_scan_data(self) -> TTNSensorValue | None:
-        """Get the latest Wi-Fi scan data for this device."""
+        """Get stored Wi-Fi scan data for this device."""
+        return self._current_wifi_data
+
+    def _get_new_wifi_scan_data(self) -> TTNSensorValue | None:
+        """Get new Wi-Fi scan data from coordinator."""
         device_uplinks = self.coordinator.data.get(self._device_id, {})
         for ttn_value in device_uplinks.values():
             if isinstance(ttn_value, TTNSensorValue) and _is_location_data(ttn_value):
@@ -210,6 +294,14 @@ class TtnDeviceTracker(CoordinatorEntity[TTNCoordinator], TrackerEntity):
 
                     # Store in format ready for Google Geolocation API
                     attrs["wifi_access_points"] = wifi_aps
+
+            # Add Wi-Fi measurement timestamp
+            if self._last_wifi_timestamp is not None:
+                attrs["wifi_timestamp"] = self._last_wifi_timestamp
+
+        # Add GPS timestamp if available
+        if self._last_gps_timestamp is not None:
+            attrs["gps_timestamp"] = self._last_gps_timestamp
 
         # Add geocoded location info if available
         if self._geocoded_lat is not None and self._geocoded_lon is not None:
