@@ -6,7 +6,7 @@ from collections.abc import Iterator
 import logging
 from typing import TYPE_CHECKING, Any
 
-from soco import SoCo
+from soco import SoCo, SoCoException
 from soco.alarms import Alarm, Alarms
 from soco.events_base import Event as SonosEvent
 
