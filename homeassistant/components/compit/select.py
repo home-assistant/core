@@ -1858,7 +1858,7 @@ async def async_setup_entry(
         device_definition = DEVICE_DEFINITIONS.get(device.definition.code)
 
         if device_definition:
-            for code, definition in device_definition.parameters.items():
+            for code, description in device_definition.parameters.items():
                 param = next((p for p in device.state.params if p.code == code), None)
 
                 if (
@@ -1870,7 +1870,7 @@ async def async_setup_entry(
                             device_id,
                             device_definition.name,
                             code,
-                            definition,
+                            description,
                         )
                     )
 
@@ -1886,12 +1886,12 @@ class CompitSelect(CoordinatorEntity[CompitDataUpdateCoordinator], SelectEntity)
         device_id: int,
         device_name: str,
         parameter_code: str,
-        parameter_definition: CompitSelectDescription,
+        parameter_description: CompitSelectDescription,
     ) -> None:
         """Initialize the select entity."""
         super().__init__(coordinator)
         self.device_id = device_id
-        self.entity_description = parameter_definition
+        self.entity_description = parameter_description
         self._attr_unique_id = f"{device_id}_{parameter_code}"
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, str(device_id))},
@@ -1900,8 +1900,8 @@ class CompitSelect(CoordinatorEntity[CompitDataUpdateCoordinator], SelectEntity)
             model=device_name,
         )
         self.parameter_code = parameter_code
-        self.available_values = parameter_definition.options_dict
-        self._attr_options = list(parameter_definition.options_dict.values())
+        self.available_values = parameter_description.options_dict
+        self._attr_options = list(parameter_description.options_dict.values())
 
     @property
     def available(self) -> bool:
