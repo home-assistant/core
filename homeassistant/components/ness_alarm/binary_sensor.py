@@ -69,5 +69,5 @@ class NessZoneBinarySensor(BinarySensorEntity):
     def _handle_zone_change(self, data: ZoneChangedData) -> None:
         """Handle zone state update."""
         if self._zone_id == data.zone_id:
-            self._attr_is_on = data.state == 1
+            self._attr_is_on = data.state
             self.async_write_ha_state()
