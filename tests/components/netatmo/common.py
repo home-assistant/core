@@ -119,7 +119,7 @@ def selected_platforms(platforms: list[Platform]) -> Iterator[None]:
     with (
         patch("homeassistant.components.netatmo.data_handler.PLATFORMS", platforms),
         patch(
-            "homeassistant.helpers.config_entry_oauth2_flow.async_get_config_entry_implementation",
+            "homeassistant.components.netatmo.async_get_config_entry_implementation",
         ),
         patch(
             "homeassistant.components.netatmo.webhook_generate_url",

@@ -8,7 +8,8 @@
   "integration_type": "device",
   "iot_class": "local_polling",
   "loggers": ["brother", "pyasn1", "pysmi", "pysnmp"],
-  "requirements": ["brother==5.1.1"],
+  "quality_scale": "platinum",
+  "requirements": ["brother==6.0.0"],
   "zeroconf": [
     {
       "name": "brother*",

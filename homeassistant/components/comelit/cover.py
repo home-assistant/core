@@ -12,9 +12,10 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
 
+from .const import ObjectClassType
 from .coordinator import ComelitConfigEntry, ComelitSerialBridge
 from .entity import ComelitBridgeBaseEntity
-from .utils import DeviceType, bridge_api_call, new_device_listener
+from .utils import bridge_api_call, new_device_listener
 
 # Coordinator is used to centralize the data updates
 PARALLEL_UPDATES = 0
@@ -29,7 +30,7 @@ async def async_setup_entry(
 
     coordinator = cast(ComelitSerialBridge, config_entry.runtime_data)
 
-    def _add_new_entities(new_devices: list[DeviceType], dev_type: str) -> None:
+    def _add_new_entities(new_devices: list[ObjectClassType], dev_type: str) -> None:
         """Add entities for new monitors."""
         entities = [
             ComelitCoverEntity(coordinator, device, config_entry.entry_id)
@@ -71,7 +72,7 @@ class ComelitCoverEntity(ComelitBridgeBaseEntity, RestoreEntity, CoverEntity):
     @property
     def device_status(self) -> int:
         """Return current device status."""
-        return self.coordinator.data[COVER][self._device.index].status
+        return cast("int", self.coordinator.data[COVER][self._device.index].status)
 
     @property
     def is_closed(self) -> bool | None:
@@ -85,7 +86,7 @@ class ComelitCoverEntity(ComelitBridgeBaseEntity, RestoreEntity, CoverEntity):
     @property
     def is_closing(self) -> bool:
         """Return if the cover is closing."""
-        return self._current_action("closing")
+        return bool(self._current_action("closing"))
 
     @property
     def is_opening(self) -> bool:

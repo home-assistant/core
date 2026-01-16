@@ -20,6 +20,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Cover_Outputs',
     'options': dict({
     }),
     'original_device_class': None,
@@ -46,7 +47,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'open',
+    'state': 'closed',
   })
 # ---
 # name: test_setup_lcn_cover[cover.testmodule_cover_relays-entry]
@@ -70,6 +71,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Cover_Relays',
     'options': dict({
     }),
     'original_device_class': None,
@@ -96,7 +98,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'open',
+    'state': 'closed',
   })
 # ---
 # name: test_setup_lcn_cover[cover.testmodule_cover_relays_bs4-entry]
@@ -120,6 +122,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Cover_Relays_BS4',
     'options': dict({
     }),
     'original_device_class': None,
@@ -146,7 +149,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'open',
+    'state': 'closed',
   })
 # ---
 # name: test_setup_lcn_cover[cover.testmodule_cover_relays_module-entry]
@@ -170,6 +173,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Cover_Relays_Module',
     'options': dict({
     }),
     'original_device_class': None,
@@ -196,6 +200,6 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'open',
+    'state': 'closed',
   })
 # ---

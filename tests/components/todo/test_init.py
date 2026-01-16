@@ -1086,6 +1086,7 @@ async def test_subscribe(
                 "status": "needs_action",
                 "due": None,
                 "description": None,
+                "completed": None,
             },
             {
                 "summary": "Item #2",
@@ -1093,6 +1094,7 @@ async def test_subscribe(
                 "status": "completed",
                 "due": None,
                 "description": None,
+                "completed": None,
             },
         ]
     }
@@ -1112,6 +1114,7 @@ async def test_subscribe(
                 "status": "needs_action",
                 "due": None,
                 "description": None,
+                "completed": None,
             },
             {
                 "summary": "Item #2",
@@ -1119,6 +1122,7 @@ async def test_subscribe(
                 "status": "completed",
                 "due": None,
                 "description": None,
+                "completed": None,
             },
             {
                 "summary": "Item #3",
@@ -1126,6 +1130,7 @@ async def test_subscribe(
                 "status": "needs_action",
                 "due": None,
                 "description": None,
+                "completed": None,
             },
         ]
     }

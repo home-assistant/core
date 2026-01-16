@@ -2,7 +2,6 @@
 
 from datetime import timedelta
 
-from freezegun import freeze_time
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 
@@ -348,7 +347,7 @@ async def test_expose_conversion_exception(
     )
 
 
-@freeze_time("2022-1-7 9:13:14")  # UTC -> +1h = Vienna in winter (9 -> 0xA)
+@pytest.mark.freeze_time("2022-1-7 9:13:14")  # UTC -> +1h = Vienna in winter (9 -> 0xA)
 @pytest.mark.parametrize(
     ("time_type", "raw"),
     [

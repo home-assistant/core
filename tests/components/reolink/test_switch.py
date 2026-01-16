@@ -7,7 +7,7 @@ import pytest
 from reolink_aio.api import Chime
 from reolink_aio.exceptions import ReolinkError
 
-from homeassistant.components.reolink import DEVICE_UPDATE_INTERVAL
+from homeassistant.components.reolink import DEVICE_UPDATE_INTERVAL_MIN
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
@@ -45,7 +45,7 @@ async def test_switch(
     assert hass.states.get(entity_id).state == STATE_ON
 
     reolink_host.audio_record.return_value = False
-    freezer.tick(DEVICE_UPDATE_INTERVAL)
+    freezer.tick(DEVICE_UPDATE_INTERVAL_MIN)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
@@ -91,7 +91,7 @@ async def test_switch(
     reolink_host.set_audio.reset_mock(side_effect=True)
 
     reolink_host.camera_online.return_value = False
-    freezer.tick(DEVICE_UPDATE_INTERVAL)
+    freezer.tick(DEVICE_UPDATE_INTERVAL_MIN)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
@@ -118,7 +118,7 @@ async def test_host_switch(
     assert hass.states.get(entity_id).state == STATE_ON
 
     reolink_host.email_enabled.return_value = False
-    freezer.tick(DEVICE_UPDATE_INTERVAL)
+    freezer.tick(DEVICE_UPDATE_INTERVAL_MIN)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
@@ -183,7 +183,7 @@ async def test_chime_switch(
     assert hass.states.get(entity_id).state == STATE_ON
 
     reolink_chime.led_state = False
-    freezer.tick(DEVICE_UPDATE_INTERVAL)
+    freezer.tick(DEVICE_UPDATE_INTERVAL_MIN)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
@@ -248,7 +248,7 @@ async def test_rule_switch(
     assert hass.states.get(entity_id).state == STATE_ON
 
     reolink_host.baichuan.rule_enabled.return_value = False
-    freezer.tick(DEVICE_UPDATE_INTERVAL)
+    freezer.tick(DEVICE_UPDATE_INTERVAL_MIN)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 

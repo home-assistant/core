@@ -321,6 +321,12 @@ BLUETOOTH: Final[list[dict[str, bool | str | int | list[int]]]] = [
     },
     {
         "connectable": True,
+        "domain": "hue_ble",
+        "service_data_uuid": "0000fe0f-0000-1000-8000-00805f9b34fb",
+        "service_uuid": "0000fe0f-0000-1000-8000-00805f9b34fb",
+    },
+    {
+        "connectable": True,
         "domain": "husqvarna_automower_ble",
         "service_uuid": "98bd0001-0b0e-421a-84e5-ddbf75dc6de4",
     },
@@ -707,6 +713,10 @@ BLUETOOTH: Final[list[dict[str, bool | str | int | list[int]]]] = [
         "local_name": "Shelly*",
     },
     {
+        "domain": "shelly",
+        "manufacturer_id": 2985,
+    },
+    {
         "domain": "snooz",
         "local_name": "Snooz*",
     },
@@ -848,6 +858,14 @@ BLUETOOTH: Final[list[dict[str, bool | str | int | list[int]]]] = [
         "domain": "togrill",
         "manufacturer_id": 34714,
         "service_uuid": "0000cee0-0000-1000-8000-00805f9b34fb",
+    },
+    {
+        "connectable": False,
+        "domain": "victron_ble",
+        "manufacturer_data_start": [
+            16,
+        ],
+        "manufacturer_id": 737,
     },
     {
         "connectable": False,
