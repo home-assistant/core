@@ -112,45 +112,49 @@ class OpenAIConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle the initial step."""
-        if user_input is None:
-            return self.async_show_form(
-                step_id="user", data_schema=STEP_USER_DATA_SCHEMA
-            )
 
         errors: dict[str, str] = {}
 
-        self._async_abort_entries_match(user_input)
-        try:
-            await validate_input(self.hass, user_input)
-        except openai.APIConnectionError:
-            errors["base"] = "cannot_connect"
-        except openai.AuthenticationError:
-            errors["base"] = "invalid_auth"
-        except Exception:
-            _LOGGER.exception("Unexpected exception")
-            errors["base"] = "unknown"
-        else:
-            return self.async_create_entry(
-                title="ChatGPT",
-                data=user_input,
-                subentries=[
-                    {
-                        "subentry_type": "conversation",
-                        "data": RECOMMENDED_CONVERSATION_OPTIONS,
-                        "title": DEFAULT_CONVERSATION_NAME,
-                        "unique_id": None,
-                    },
-                    {
-                        "subentry_type": "ai_task_data",
-                        "data": RECOMMENDED_AI_TASK_OPTIONS,
-                        "title": DEFAULT_AI_TASK_NAME,
-                        "unique_id": None,
-                    },
-                ],
-            )
+        if user_input is not None:
+            self._async_abort_entries_match(user_input)
+            try:
+                await validate_input(self.hass, user_input)
+            except openai.APIConnectionError:
+                errors["base"] = "cannot_connect"
+            except openai.AuthenticationError:
+                errors["base"] = "invalid_auth"
+            except Exception:
+                _LOGGER.exception("Unexpected exception")
+                errors["base"] = "unknown"
+            else:
+                return self.async_create_entry(
+                    title="ChatGPT",
+                    data=user_input,
+                    subentries=[
+                        {
+                            "subentry_type": "conversation",
+                            "data": RECOMMENDED_CONVERSATION_OPTIONS,
+                            "title": DEFAULT_CONVERSATION_NAME,
+                            "unique_id": None,
+                        },
+                        {
+                            "subentry_type": "ai_task_data",
+                            "data": RECOMMENDED_AI_TASK_OPTIONS,
+                            "title": DEFAULT_AI_TASK_NAME,
+                            "unique_id": None,
+                        },
+                    ],
+                )
 
         return self.async_show_form(
-            step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
+            step_id="user",
+            data_schema=self.add_suggested_values_to_schema(
+                STEP_USER_DATA_SCHEMA, user_input
+            ),
+            errors=errors,
+            description_placeholders={
+                "instructions_url": "https://www.home-assistant.io/integrations/openai_conversation/#generate-an-api-key",
+            },
         )
 
     @classmethod
