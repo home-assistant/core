@@ -73,7 +73,7 @@ rules:
   # Service actions raise exceptions when encountering failures
   action-exceptions:
     status: exempt
-    comment: Integration does not provide custom service actions.
+    comment: Integration currently only provides read only entities
 
   # Support config entry unloading
   config-entry-unloading: done
