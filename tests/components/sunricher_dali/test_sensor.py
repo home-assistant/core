@@ -3,7 +3,6 @@
 from unittest.mock import MagicMock
 
 from PySrDaliGateway import CallbackEventType
-from PySrDaliGateway.types import MotionState
 import pytest
 
 from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN, Platform
@@ -14,8 +13,6 @@ from . import find_device_listener, trigger_availability_callback
 
 from tests.common import MockConfigEntry
 
-# Entity IDs without "_state" suffix because _attr_name = None
-TEST_MOTION_ENTITY_ID = "sensor.motion_sensor_0000_10"
 TEST_ILLUMINANCE_ENTITY_ID = "sensor.illuminance_sensor_0000_20"
 
 
@@ -42,40 +39,10 @@ async def test_async_setup_entry_creates_sensors(
         entity_registry, mock_config_entry.entry_id
     )
 
-    assert len(entity_entries) == 2
+    assert len(entity_entries) == 1
 
     entity_ids = [entry.entity_id for entry in entity_entries]
-    assert TEST_MOTION_ENTITY_ID in entity_ids
     assert TEST_ILLUMINANCE_ENTITY_ID in entity_ids
-
-
-@pytest.mark.usefixtures("init_integration")
-async def test_motion_sensor_callback(
-    hass: HomeAssistant,
-    mock_sensor_devices: list[MagicMock],
-) -> None:
-    """Test MotionSensor handles motion status callback correctly."""
-    motion_device = mock_sensor_devices[0]
-
-    state = hass.states.get(TEST_MOTION_ENTITY_ID)
-    assert state is not None
-    assert state.state == "no_motion"
-
-    callback = find_device_listener(motion_device, CallbackEventType.MOTION_STATUS)
-
-    callback({"motion_state": MotionState.MOTION})
-    await hass.async_block_till_done()
-
-    state = hass.states.get(TEST_MOTION_ENTITY_ID)
-    assert state is not None
-    assert state.state == "motion"
-
-    callback({"motion_state": MotionState.PRESENCE})
-    await hass.async_block_till_done()
-
-    state = hass.states.get(TEST_MOTION_ENTITY_ID)
-    assert state is not None
-    assert state.state == "presence"
 
 
 @pytest.mark.usefixtures("init_integration")
@@ -150,7 +117,6 @@ async def test_illuminance_sensor_on_off_callback(
         illuminance_device, CallbackEventType.SENSOR_ON_OFF
     )
 
-    # Disable sensor -> state becomes unknown
     on_off_callback(False)
     await hass.async_block_till_done()
 
@@ -158,7 +124,6 @@ async def test_illuminance_sensor_on_off_callback(
     assert state is not None
     assert state.state == STATE_UNKNOWN
 
-    # Enable sensor -> stored value should be restored
     on_off_callback(True)
     await hass.async_block_till_done()
 
@@ -168,23 +133,23 @@ async def test_illuminance_sensor_on_off_callback(
 
 
 @pytest.mark.usefixtures("init_integration")
-async def test_sensor_availability(
+async def test_illuminance_sensor_availability(
     hass: HomeAssistant,
     mock_sensor_devices: list[MagicMock],
 ) -> None:
     """Test availability changes are reflected in sensor entity state."""
-    motion_device = mock_sensor_devices[0]
+    illuminance_device = mock_sensor_devices[1]
 
-    trigger_availability_callback(motion_device, False)
+    trigger_availability_callback(illuminance_device, False)
     await hass.async_block_till_done()
 
-    state = hass.states.get(TEST_MOTION_ENTITY_ID)
+    state = hass.states.get(TEST_ILLUMINANCE_ENTITY_ID)
     assert state is not None
     assert state.state == STATE_UNAVAILABLE
 
-    trigger_availability_callback(motion_device, True)
+    trigger_availability_callback(illuminance_device, True)
     await hass.async_block_till_done()
 
-    state = hass.states.get(TEST_MOTION_ENTITY_ID)
+    state = hass.states.get(TEST_ILLUMINANCE_ENTITY_ID)
     assert state is not None
     assert state.state != STATE_UNAVAILABLE
