@@ -49,7 +49,7 @@ rules:
     status: exempt
     comment: |
       No data updates.
-  docs-examples: todo
+  docs-examples: done
   docs-known-limitations: todo
   docs-supported-devices:
     status: exempt
