@@ -30,7 +30,7 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': None,
+    'original_icon': 'mdi:home-thermometer-outline',
     'original_name': 'Installation season',
     'platform': 'compit',
     'previous_unique_id': None,
@@ -45,6 +45,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Nano Color 2 Installation season',
+      'icon': 'mdi:home-thermometer-outline',
       'options': list([
         'winter',
         'side',
@@ -95,7 +96,7 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': None,
+    'original_icon': 'mdi:tune-variant',
     'original_name': 'Source of the CO1 correction',
     'platform': 'compit',
     'previous_unique_id': None,
@@ -110,6 +111,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'R 900 Source of the CO1 correction',
+      'icon': 'mdi:tune-variant',
       'options': list([
         'no_corrections',
         'clock',

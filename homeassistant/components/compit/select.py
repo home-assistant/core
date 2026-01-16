@@ -49,6 +49,7 @@ DEVICE_DEFINITIONS: dict[int, CompitDeviceDescription] = {
             "__trybpracyinstalacji": CompitSelectDescription(
                 key="__trybpracyinstalacji",
                 translation_key="nano_color_2_installation_season",
+                icon="mdi:home-thermometer-outline",
                 options_dict={
                     0: "winter",
                     1: "side",
@@ -58,6 +59,7 @@ DEVICE_DEFINITIONS: dict[int, CompitDeviceDescription] = {
             "__język": CompitSelectDescription(
                 key="__język",
                 translation_key="nano_color_2_language",
+                icon="mdi:translate",
                 options_dict={
                     0: "polish",
                     1: "english",
@@ -66,6 +68,7 @@ DEVICE_DEFINITIONS: dict[int, CompitDeviceDescription] = {
             "__aerokonfbypass": CompitSelectDescription(
                 key="__aerokonfbypass",
                 translation_key="nano_color_2_by_pass",
+                icon="mdi:valve",
                 options_dict={
                     0: "off",
                     1: "car",
@@ -75,6 +78,7 @@ DEVICE_DEFINITIONS: dict[int, CompitDeviceDescription] = {
             "__trybaero": CompitSelectDescription(
                 key="__trybaero",
                 translation_key="nano_color_2_ventilation_operating_mode",
+                icon="mdi:fan",
                 options_dict={
                     5: "work_by_clock_zones_work_by_zones",
                     4: "christmas_work",
@@ -87,6 +91,7 @@ DEVICE_DEFINITIONS: dict[int, CompitDeviceDescription] = {
             "__trybaero2": CompitSelectDescription(
                 key="__trybaero2",
                 translation_key="nano_color_2_ventilation_flight",
+                icon="mdi:fan",
                 options_dict={
                     1: "gear_1",
                     2: "heat_2",
@@ -98,6 +103,7 @@ DEVICE_DEFINITIONS: dict[int, CompitDeviceDescription] = {
             "__trybpracytermostatu": CompitSelectDescription(
                 key="__trybpracytermostatu",
                 translation_key="nano_color_2_thermostat_operating_mode",
+                icon="mdi:thermostat",
                 options_dict={
                     0: "work_according_to_clock_zones",
                     1: "christmas_work",
@@ -108,6 +114,7 @@ DEVICE_DEFINITIONS: dict[int, CompitDeviceDescription] = {
             "__a5prpozadomem": CompitSelectDescription(
                 key="__a5prpozadomem",
                 translation_key="nano_color_2_out_of_home_program",
+                icon="mdi:calendar-clock",
                 options_dict={
                     0: "no_exclusions",
                     1: "30m_work30m_stop",
@@ -118,6 +125,7 @@ DEVICE_DEFINITIONS: dict[int, CompitDeviceDescription] = {
             "__a5nagrzwtorna": CompitSelectDescription(
                 key="__a5nagrzwtorna",
                 translation_key="nano_color_2_secondary_heater",
+                icon="mdi:radiator",
                 options_dict={
                     0: "disabled",
                     1: "pwm",
@@ -126,6 +134,7 @@ DEVICE_DEFINITIONS: dict[int, CompitDeviceDescription] = {
             "__a4prpozadomem": CompitSelectDescription(
                 key="__a4prpozadomem",
                 translation_key="nano_color_2_out_of_home_program",
+                icon="mdi:calendar-clock",
                 options_dict={
                     0: "no_exclusions",
                     1: "30m_work_30m_stop",
@@ -142,6 +151,7 @@ DEVICE_DEFINITIONS: dict[int, CompitDeviceDescription] = {
             "__trybpracyinstalacji": CompitSelectDescription(
                 key="__trybpracyinstalacji",
                 translation_key="nano_color_installation_season",
+                icon="mdi:home-thermometer-outline",
                 options_dict={
                     0: "winter",
                     1: "side",
@@ -151,6 +161,7 @@ DEVICE_DEFINITIONS: dict[int, CompitDeviceDescription] = {
             "__język": CompitSelectDescription(
                 key="__język",
                 translation_key="nano_color_language",
+                icon="mdi:translate",
                 options_dict={
                     0: "polish",
                     1: "english",
@@ -159,6 +170,7 @@ DEVICE_DEFINITIONS: dict[int, CompitDeviceDescription] = {
             "__aerokonfbypass": CompitSelectDescription(
                 key="__aerokonfbypass",
                 translation_key="nano_color_by_pass",
+                icon="mdi:valve",
                 options_dict={
                     0: "off",
                     1: "car",
@@ -168,6 +180,7 @@ DEVICE_DEFINITIONS: dict[int, CompitDeviceDescription] = {
             "__trybaero": CompitSelectDescription(
                 key="__trybaero",
                 translation_key="nano_color_ventilation_operating_mode",
+                icon="mdi:fan",
                 options_dict={
                     5: "work_by_clock_zones_work_by_zones",
                     4: "christmas_work",
@@ -180,6 +193,7 @@ DEVICE_DEFINITIONS: dict[int, CompitDeviceDescription] = {
             "__trybaero2": CompitSelectDescription(
                 key="__trybaero2",
                 translation_key="nano_color_ventilation_flight",
+                icon="mdi:fan",
                 options_dict={
                     1: "gear_1",
                     2: "heat_2",
@@ -191,6 +205,7 @@ DEVICE_DEFINITIONS: dict[int, CompitDeviceDescription] = {
             "__trybpracytermostatu": CompitSelectDescription(
                 key="__trybpracytermostatu",
                 translation_key="nano_color_thermostat_operating_mode",
+                icon="mdi:thermostat",
                 options_dict={
                     0: "work_according_to_clock_zones",
                     1: "christmas_work",
@@ -201,6 +216,7 @@ DEVICE_DEFINITIONS: dict[int, CompitDeviceDescription] = {
             "__a5prpozadomem": CompitSelectDescription(
                 key="__a5prpozadomem",
                 translation_key="nano_color_out_of_home_program",
+                icon="mdi:calendar-clock",
                 options_dict={
                     0: "no_exclusions",
                     1: "30m_work30m_stop",
@@ -211,6 +227,7 @@ DEVICE_DEFINITIONS: dict[int, CompitDeviceDescription] = {
             "__a5nagrzwtorna": CompitSelectDescription(
                 key="__a5nagrzwtorna",
                 translation_key="nano_color_secondary_heater",
+                icon="mdi:radiator",
                 options_dict={
                     0: "disabled",
                     1: "pwm",
@@ -219,6 +236,7 @@ DEVICE_DEFINITIONS: dict[int, CompitDeviceDescription] = {
             "__a4prpozadomem": CompitSelectDescription(
                 key="__a4prpozadomem",
                 translation_key="nano_color_out_of_home_program",
+                icon="mdi:calendar-clock",
                 options_dict={
                     0: "no_exclusions",
                     1: "30m_work_30m_stop",
@@ -235,6 +253,7 @@ DEVICE_DEFINITIONS: dict[int, CompitDeviceDescription] = {
             "_jezyk": CompitSelectDescription(
                 key="_jezyk",
                 translation_key="nano_one_language",
+                icon="mdi:translate",
                 options_dict={
                     0: "polish",
                     1: "english",
@@ -243,6 +262,7 @@ DEVICE_DEFINITIONS: dict[int, CompitDeviceDescription] = {
             "__visibledevices": CompitSelectDescription(
                 key="__visibledevices",
                 translation_key="nano_one_visible_devices",
+                icon="mdi:eye-outline",
                 options_dict={
                     0: "lack",
                     1: "all",
@@ -260,6 +280,7 @@ DEVICE_DEFINITIONS: dict[int, CompitDeviceDescription] = {
             "__info1screen": CompitSelectDescription(
                 key="__info1screen",
                 translation_key="nano_one_info_first_screen",
+                icon="mdi:monitor-dashboard",
                 options_dict={
                     0: "lack",
                     1: "outer_t",
@@ -270,6 +291,7 @@ DEVICE_DEFINITIONS: dict[int, CompitDeviceDescription] = {
             "__mode_intal": CompitSelectDescription(
                 key="__mode_intal",
                 translation_key="nano_one_installation_mode",
+                icon="mdi:home-thermometer-outline",
                 options_dict={
                     0: "winter",
                     1: "side",
@@ -279,6 +301,7 @@ DEVICE_DEFINITIONS: dict[int, CompitDeviceDescription] = {
             "__nano_mode": CompitSelectDescription(
                 key="__nano_mode",
                 translation_key="nano_one_nano_work",
+                icon="mdi:cog-outline",
                 options_dict={
                     0: "manual_run_3",
                     1: "manual_run_2_reczny",
@@ -292,6 +315,7 @@ DEVICE_DEFINITIONS: dict[int, CompitDeviceDescription] = {
             "__wentkomfort": CompitSelectDescription(
                 key="__wentkomfort",
                 translation_key="nano_one_ventilation_in_the_comfort_zone",
+                icon="mdi:fan",
                 options_dict={
                     0: "stop",
                     1: "gear_1",
@@ -302,6 +326,7 @@ DEVICE_DEFINITIONS: dict[int, CompitDeviceDescription] = {
             "__wenteko": CompitSelectDescription(
                 key="__wenteko",
                 translation_key="nano_one_ventilation_in_the_eco_zone",
+                icon="mdi:fan",
                 options_dict={
                     0: "stop",
                     1: "gear_1",
@@ -312,6 +337,7 @@ DEVICE_DEFINITIONS: dict[int, CompitDeviceDescription] = {
             "__wenturlop": CompitSelectDescription(
                 key="__wenturlop",
                 translation_key="nano_one_ventilation_in_the_away_mode",
+                icon="mdi:fan",
                 options_dict={
                     0: "stop",
                     1: "gear_1",
@@ -322,6 +348,7 @@ DEVICE_DEFINITIONS: dict[int, CompitDeviceDescription] = {
             "__a3programwietrzenia": CompitSelectDescription(
                 key="__a3programwietrzenia",
                 translation_key="nano_one_aero_3_airing_program",
+                icon="mdi:calendar-clock",
                 options_dict={
                     0: "no_exclusions",
                     1: "30m_work30m_stop",
@@ -332,6 +359,7 @@ DEVICE_DEFINITIONS: dict[int, CompitDeviceDescription] = {
             "__a3konfignagwst": CompitSelectDescription(
                 key="__a3konfignagwst",
                 translation_key="nano_one_aero_3_pre_heater_setup",
+                icon="mdi:radiator",
                 options_dict={
                     0: "disabled",
                     1: "onoff",
@@ -341,6 +369,7 @@ DEVICE_DEFINITIONS: dict[int, CompitDeviceDescription] = {
             "__a3konfignagwt": CompitSelectDescription(
                 key="__a3konfignagwt",
                 translation_key="nano_one_aero_3_secondary_heater_configuration",
+                icon="mdi:radiator",
                 options_dict={
                     0: "disabled",
                     1: "onoff_tpom_function",
@@ -353,6 +382,7 @@ DEVICE_DEFINITIONS: dict[int, CompitDeviceDescription] = {
             "__a3fwepress": CompitSelectDescription(
                 key="__a3fwepress",
                 translation_key="nano_one_aero_3_function_in_a_pressure_switch",
+                icon="mdi:gauge",
                 options_dict={
                     0: "exchanger_freezing",
                     1: "dirty_air_filter",
@@ -363,6 +393,7 @@ DEVICE_DEFINITIONS: dict[int, CompitDeviceDescription] = {
             "__a3konfigpk3": CompitSelectDescription(
                 key="__a3konfigpk3",
                 translation_key="nano_one_aero_3_pk3_configuration",
+                icon="mdi:cog-outline",
                 options_dict={
                     0: "central_square",
                     1: "what_heating",
@@ -371,6 +402,7 @@ DEVICE_DEFINITIONS: dict[int, CompitDeviceDescription] = {
             "__a3konfigrozmr": CompitSelectDescription(
                 key="__a3konfigrozmr",
                 translation_key="nano_one_aero_3_defrost_configuration",
+                icon="mdi:snowflake-melt",
                 options_dict={
                     0: "off_fan",
                     1: "incl_nag_initial",
@@ -381,6 +413,7 @@ DEVICE_DEFINITIONS: dict[int, CompitDeviceDescription] = {
             "__a5prwietrz": CompitSelectDescription(
                 key="__a5prwietrz",
                 translation_key="nano_one_aero_5_ventilation_program",
+                icon="mdi:fan",
                 options_dict={
                     0: "continuous_operation",
                     1: "praca_30min_co_30min",
@@ -391,6 +424,7 @@ DEVICE_DEFINITIONS: dict[int, CompitDeviceDescription] = {
             "__a5trybnagrzwst": CompitSelectDescription(
                 key="__a5trybnagrzwst",
                 translation_key="nano_one_aero_5_heat_mode_initial",
+                icon="mdi:cog-outline",
                 options_dict={
                     0: "disabled",
                     1: "onoff",
@@ -400,6 +434,7 @@ DEVICE_DEFINITIONS: dict[int, CompitDeviceDescription] = {
             "__a5trnagrzgl": CompitSelectDescription(
                 key="__a5trnagrzgl",
                 translation_key="nano_one_aero_5_heat_mode_main",
+                icon="mdi:cog-outline",
                 options_dict={
                     0: "disabled",
                     1: "attached_pwm",
@@ -408,6 +443,7 @@ DEVICE_DEFINITIONS: dict[int, CompitDeviceDescription] = {
             "__a5metrozmr": CompitSelectDescription(
                 key="__a5metrozmr",
                 translation_key="nano_one_aero_5_defrosting_method",
+                icon="mdi:snowflake-melt",
                 options_dict={
                     0: "off_fan",
                     1: "incl_pre_heater",
@@ -417,6 +453,7 @@ DEVICE_DEFINITIONS: dict[int, CompitDeviceDescription] = {
             "__a5funkcpresost": CompitSelectDescription(
                 key="__a5funkcpresost",
                 translation_key="nano_one_aero_5_pressure_switch_function",
+                icon="mdi:gauge",
                 options_dict={
                     0: "exchanger_freezing",
                     1: "dirty_air_filter",
@@ -427,6 +464,7 @@ DEVICE_DEFINITIONS: dict[int, CompitDeviceDescription] = {
             "__a4programwietrzenia": CompitSelectDescription(
                 key="__a4programwietrzenia",
                 translation_key="nano_one_aero_4_airing_program",
+                icon="mdi:fan",
                 options_dict={
                     0: "no_exclusions",
                     1: "30m_work30m_stop",
@@ -437,6 +475,7 @@ DEVICE_DEFINITIONS: dict[int, CompitDeviceDescription] = {
             "__a4konfigbypass": CompitSelectDescription(
                 key="__a4konfigbypass",
                 translation_key="nano_one_aero_4_by_pass_configuration",
+                icon="mdi:valve",
                 options_dict={
                     0: "lack",
                     1: "simplified",
@@ -447,6 +486,7 @@ DEVICE_DEFINITIONS: dict[int, CompitDeviceDescription] = {
             "__a4trregnaw": CompitSelectDescription(
                 key="__a4trregnaw",
                 translation_key="nano_one_aero_4_air_temperature_control_mode",
+                icon="mdi:thermometer",
                 options_dict={
                     0: "indoor_function",
                     1: "cutting_function",
@@ -456,6 +496,7 @@ DEVICE_DEFINITIONS: dict[int, CompitDeviceDescription] = {
             "__a4konfpk3": CompitSelectDescription(
                 key="__a4konfpk3",
                 translation_key="nano_one_aero_4_r3_function",
+                icon="mdi:cog-outline",
                 options_dict={
                     0: "what_heating",
                     1: "throttle",
@@ -465,6 +506,7 @@ DEVICE_DEFINITIONS: dict[int, CompitDeviceDescription] = {
             "__a4konfrozmr": CompitSelectDescription(
                 key="__a4konfrozmr",
                 translation_key="nano_one_aero_4_defrosting_method",
+                icon="mdi:snowflake-melt",
                 options_dict={
                     0: "turning_off_the_fan",
                     1: "switching_on_the_heater_initial",
@@ -475,6 +517,7 @@ DEVICE_DEFINITIONS: dict[int, CompitDeviceDescription] = {
             "__a4_konfig_we_di2": CompitSelectDescription(
                 key="__a4_konfig_we_di2",
                 translation_key="nano_one_aero_4_di2_input_configuration",
+                icon="mdi:cog-outline",
                 options_dict={
                     0: "weathering",
                     1: "extract",
@@ -489,6 +532,7 @@ DEVICE_DEFINITIONS: dict[int, CompitDeviceDescription] = {
             "__typ_obwo_co1": CompitSelectDescription(
                 key="__typ_obwo_co1",
                 translation_key="r_900_circuit_type_co1",
+                icon="mdi:pipe",
                 options_dict={
                     0: "pump",
                     1: "mixer",
@@ -497,6 +541,7 @@ DEVICE_DEFINITIONS: dict[int, CompitDeviceDescription] = {
             "__zrod_kore_co1": CompitSelectDescription(
                 key="__zrod_kore_co1",
                 translation_key="r_900_source_of_the_co1_correction",
+                icon="mdi:tune-variant",
                 options_dict={
                     0: "no_corrections",
                     1: "clock",
@@ -511,6 +556,7 @@ DEVICE_DEFINITIONS: dict[int, CompitDeviceDescription] = {
             "__typ_obwo_co2": CompitSelectDescription(
                 key="__typ_obwo_co2",
                 translation_key="r_900_co2_circuit_type",
+                icon="mdi:pipe",
                 options_dict={
                     0: "pump",
                     1: "mixer",
@@ -519,6 +565,7 @@ DEVICE_DEFINITIONS: dict[int, CompitDeviceDescription] = {
             "__zrod_kore_co2": CompitSelectDescription(
                 key="__zrod_kore_co2",
                 translation_key="r_900_source_of_co2_correction",
+                icon="mdi:tune-variant",
                 options_dict={
                     0: "no_corrections",
                     1: "clock",
@@ -533,6 +580,7 @@ DEVICE_DEFINITIONS: dict[int, CompitDeviceDescription] = {
             "__typ_obwo_co3": CompitSelectDescription(
                 key="__typ_obwo_co3",
                 translation_key="r_900_circuit_type_co3",
+                icon="mdi:pipe",
                 options_dict={
                     0: "pump",
                     1: "mixer",
@@ -541,6 +589,7 @@ DEVICE_DEFINITIONS: dict[int, CompitDeviceDescription] = {
             "__zrod_kore_co3": CompitSelectDescription(
                 key="__zrod_kore_co3",
                 translation_key="r_900_source_of_co3_correction",
+                icon="mdi:tune-variant",
                 options_dict={
                     0: "no_corrections",
                     1: "clock",
@@ -555,6 +604,7 @@ DEVICE_DEFINITIONS: dict[int, CompitDeviceDescription] = {
             "__typ_obwo_co4": CompitSelectDescription(
                 key="__typ_obwo_co4",
                 translation_key="r_900_circuit_type_co4",
+                icon="mdi:pipe",
                 options_dict={
                     0: "pump",
                     1: "mixer",
@@ -563,6 +613,7 @@ DEVICE_DEFINITIONS: dict[int, CompitDeviceDescription] = {
             "__zrod_kore_co4": CompitSelectDescription(
                 key="__zrod_kore_co4",
                 translation_key="r_900_source_of_co4_correction",
+                icon="mdi:tune-variant",
                 options_dict={
                     0: "no_corrections",
                     1: "clock",
@@ -577,6 +628,7 @@ DEVICE_DEFINITIONS: dict[int, CompitDeviceDescription] = {
             "__cyrk_cwu": CompitSelectDescription(
                 key="__cyrk_cwu",
                 translation_key="r_900_hot_water_circulation",
+                icon="mdi:water-pump",
                 options_dict={
                     0: "disabled",
                     1: "in_clock_zones",
@@ -586,6 +638,7 @@ DEVICE_DEFINITIONS: dict[int, CompitDeviceDescription] = {
             "__tr_pracy_pc": CompitSelectDescription(
                 key="__tr_pracy_pc",
                 translation_key="r_900_pump_operating_mode",
+                icon="mdi:cog-outline",
                 options_dict={
                     0: "off",
                     1: "eco",
@@ -595,6 +648,7 @@ DEVICE_DEFINITIONS: dict[int, CompitDeviceDescription] = {
             "__tr_pr_co1": CompitSelectDescription(
                 key="__tr_pr_co1",
                 translation_key="r_900_operating_mode_co1_circulation",
+                icon="mdi:water-pump",
                 options_dict={
                     0: "disabled",
                     1: "program",
@@ -604,6 +658,7 @@ DEVICE_DEFINITIONS: dict[int, CompitDeviceDescription] = {
             "__tr_pr_co2": CompitSelectDescription(
                 key="__tr_pr_co2",
                 translation_key="r_900_operating_mode_co2_circulation",
+                icon="mdi:water-pump",
                 options_dict={
                     0: "disabled",
                     1: "program",
@@ -613,6 +668,7 @@ DEVICE_DEFINITIONS: dict[int, CompitDeviceDescription] = {
             "__tr_pr_co3": CompitSelectDescription(
                 key="__tr_pr_co3",
                 translation_key="r_900_operating_mode_co3_circulation",
+                icon="mdi:water-pump",
                 options_dict={
                     0: "disabled",
                     1: "program",
@@ -622,6 +678,7 @@ DEVICE_DEFINITIONS: dict[int, CompitDeviceDescription] = {
             "__tr_pr_co4": CompitSelectDescription(
                 key="__tr_pr_co4",
                 translation_key="r_900_operating_mode_co4_circulation",
+                icon="mdi:water-pump",
                 options_dict={
                     0: "disabled",
                     1: "program",
@@ -637,6 +694,7 @@ DEVICE_DEFINITIONS: dict[int, CompitDeviceDescription] = {
             "__pracamieszacza": CompitSelectDescription(
                 key="__pracamieszacza",
                 translation_key="r810_mixer_operation",
+                icon="mdi:mixer",
                 options_dict={
                     0: "disabled",
                     1: "no_corrections",
@@ -652,6 +710,7 @@ DEVICE_DEFINITIONS: dict[int, CompitDeviceDescription] = {
             "__trybwc14": CompitSelectDescription(
                 key="__trybwc14",
                 translation_key="r810_network_operation_mode_c14",
+                icon="mdi:lan",
                 options_dict={
                     0: "subordinate",
                     1: "master",
@@ -666,6 +725,7 @@ DEVICE_DEFINITIONS: dict[int, CompitDeviceDescription] = {
             "__trybpracy": CompitSelectDescription(
                 key="__trybpracy",
                 translation_key="solarcomp971_operating_mode",
+                icon="mdi:cog-outline",
                 options_dict={
                     1: "car",
                     2: "de_icing",
@@ -682,6 +742,7 @@ DEVICE_DEFINITIONS: dict[int, CompitDeviceDescription] = {
             "__typcieplomierza": CompitSelectDescription(
                 key="__typcieplomierza",
                 translation_key="solarcomp_951_heat_meter_type",
+                icon="mdi:solar-power",
                 options_dict={
                     1: "1",
                     2: "2",
@@ -692,6 +753,7 @@ DEVICE_DEFINITIONS: dict[int, CompitDeviceDescription] = {
             "__typplynusolar": CompitSelectDescription(
                 key="__typplynusolar",
                 translation_key="solarcomp_951_solar_fluid_type",
+                icon="mdi:solar-power",
                 options_dict={
                     0: "water",
                     1: "ergolid_eko_15c",
@@ -721,6 +783,7 @@ DEVICE_DEFINITIONS: dict[int, CompitDeviceDescription] = {
             "__trybpracy": CompitSelectDescription(
                 key="__trybpracy",
                 translation_key="solarcomp_951_operating_mode",
+                icon="mdi:water-boiler",
                 options_dict={
                     1: "automatic_operation",
                     2: "de_icing",
@@ -737,6 +800,7 @@ DEVICE_DEFINITIONS: dict[int, CompitDeviceDescription] = {
             "__typprzycisku": CompitSelectDescription(
                 key="__typprzycisku",
                 translation_key="r490_graphics_model",
+                icon="mdi:image-outline",
                 options_dict={
                     0: "3d",
                     1: "2d",
@@ -745,6 +809,7 @@ DEVICE_DEFINITIONS: dict[int, CompitDeviceDescription] = {
             "__co1zrodlokorekty": CompitSelectDescription(
                 key="__co1zrodlokorekty",
                 translation_key="r490_co1_source_of_correction",
+                icon="mdi:tune-variant",
                 options_dict={
                     0: "no_corrections",
                     1: "clock",
@@ -759,6 +824,7 @@ DEVICE_DEFINITIONS: dict[int, CompitDeviceDescription] = {
             "_co2zrodlokorekty": CompitSelectDescription(
                 key="_co2zrodlokorekty",
                 translation_key="r490_co2_the_source_of_correction",
+                icon="mdi:tune-variant",
                 options_dict={
                     0: "no_corrections",
                     1: "clock",
@@ -773,6 +839,7 @@ DEVICE_DEFINITIONS: dict[int, CompitDeviceDescription] = {
             "__co3zrodlokorekty": CompitSelectDescription(
                 key="__co3zrodlokorekty",
                 translation_key="r490_co3_the_source_of_correction",
+                icon="mdi:tune-variant",
                 options_dict={
                     0: "no_corrections",
                     1: "clock",
@@ -787,6 +854,7 @@ DEVICE_DEFINITIONS: dict[int, CompitDeviceDescription] = {
             "__co4zrkorekty": CompitSelectDescription(
                 key="__co4zrkorekty",
                 translation_key="r490_co4_the_source_of_correction",
+                icon="mdi:tune-variant",
                 options_dict={
                     0: "no_corrections",
                     1: "clock",
@@ -801,6 +869,7 @@ DEVICE_DEFINITIONS: dict[int, CompitDeviceDescription] = {
             "__sezprinst": CompitSelectDescription(
                 key="__sezprinst",
                 translation_key="r490_installation_working_season",
+                icon="mdi:home-thermometer-outline",
                 options_dict={
                     0: "stop",
                     1: "echo",
@@ -810,6 +879,7 @@ DEVICE_DEFINITIONS: dict[int, CompitDeviceDescription] = {
             "__trybprcwu": CompitSelectDescription(
                 key="__trybprcwu",
                 translation_key="r490_dhw_operating_mode",
+                icon="mdi:water-boiler",
                 options_dict={
                     1: "work_according_to_clock_zones",
                     2: "manual_work",
@@ -818,6 +888,7 @@ DEVICE_DEFINITIONS: dict[int, CompitDeviceDescription] = {
             "__trprco1": CompitSelectDescription(
                 key="__trprco1",
                 translation_key="r490_co1_operating_mode",
+                icon="mdi:cog-outline",
                 options_dict={
                     0: "stop",
                     1: "program",
@@ -827,6 +898,7 @@ DEVICE_DEFINITIONS: dict[int, CompitDeviceDescription] = {
             "__trprco2": CompitSelectDescription(
                 key="__trprco2",
                 translation_key="r490_co2_operating_mode",
+                icon="mdi:cog-outline",
                 options_dict={
                     0: "stop",
                     1: "program",
@@ -836,6 +908,7 @@ DEVICE_DEFINITIONS: dict[int, CompitDeviceDescription] = {
             "__trprco3": CompitSelectDescription(
                 key="__trprco3",
                 translation_key="r490_co3_operating_mode",
+                icon="mdi:cog-outline",
                 options_dict={
                     0: "stop",
                     1: "program",
@@ -845,6 +918,7 @@ DEVICE_DEFINITIONS: dict[int, CompitDeviceDescription] = {
             "__trprco4": CompitSelectDescription(
                 key="__trprco4",
                 translation_key="r490_co4_operating_mode",
+                icon="mdi:cog-outline",
                 options_dict={
                     0: "stop",
                     1: "program",
@@ -854,6 +928,7 @@ DEVICE_DEFINITIONS: dict[int, CompitDeviceDescription] = {
             "__trprbufora": CompitSelectDescription(
                 key="__trprbufora",
                 translation_key="r490_buffer_mode",
+                icon="mdi:database",
                 options_dict={
                     0: "stop",
                     1: "program",
@@ -869,6 +944,7 @@ DEVICE_DEFINITIONS: dict[int, CompitDeviceDescription] = {
             "__instmode": CompitSelectDescription(
                 key="__instmode",
                 translation_key="r470_installation_mode",
+                icon="mdi:home-thermometer-outline",
                 options_dict={
                     0: "winter",
                     1: "side",
@@ -878,6 +954,7 @@ DEVICE_DEFINITIONS: dict[int, CompitDeviceDescription] = {
             "__mode": CompitSelectDescription(
                 key="__mode",
                 translation_key="r470_operating_mode",
+                icon="mdi:cog-outline",
                 options_dict={
                     1: "disable",
                     2: "car",
@@ -887,6 +964,7 @@ DEVICE_DEFINITIONS: dict[int, CompitDeviceDescription] = {
             "__comode": CompitSelectDescription(
                 key="__comode",
                 translation_key="r470_work_every",
+                icon="mdi:cog-outline",
                 options_dict={
                     1: "no_corrections",
                     2: "with_a_clock",
@@ -901,6 +979,7 @@ DEVICE_DEFINITIONS: dict[int, CompitDeviceDescription] = {
             "__mixer1mode": CompitSelectDescription(
                 key="__mixer1mode",
                 translation_key="r470_mixer_operation_1",
+                icon="mdi:mixer",
                 options_dict={
                     1: "no_corrections",
                     2: "with_a_clock",
@@ -915,6 +994,7 @@ DEVICE_DEFINITIONS: dict[int, CompitDeviceDescription] = {
             "__dhwmode": CompitSelectDescription(
                 key="__dhwmode",
                 translation_key="r470_dhw_mode_of_operation",
+                icon="mdi:water-boiler",
                 options_dict={
                     0: "disabled",
                     1: "works_constantly",
@@ -924,6 +1004,7 @@ DEVICE_DEFINITIONS: dict[int, CompitDeviceDescription] = {
             "__dhwcircmode": CompitSelectDescription(
                 key="__dhwcircmode",
                 translation_key="r470_dhw_circulation",
+                icon="mdi:water-pump",
                 options_dict={
                     0: "disabled",
                     1: "works_constantly",
@@ -933,6 +1014,7 @@ DEVICE_DEFINITIONS: dict[int, CompitDeviceDescription] = {
             "__fazapracy": CompitSelectDescription(
                 key="__fazapracy",
                 translation_key="r470_work_phase",
+                icon="mdi:sine-wave",
                 options_dict={
                     0: "initialization",
                     1: "stop",
@@ -953,6 +1035,7 @@ DEVICE_DEFINITIONS: dict[int, CompitDeviceDescription] = {
             "__pdz": CompitSelectDescription(
                 key="__pdz",
                 translation_key="r470_pump_dz",
+                icon="mdi:water-pump",
                 options_dict={
                     0: "off",
                     1: "on",
@@ -969,6 +1052,7 @@ DEVICE_DEFINITIONS: dict[int, CompitDeviceDescription] = {
             "__trybpompymiesz1": CompitSelectDescription(
                 key="__trybpompymiesz1",
                 translation_key="r770rs_r771rs_disable_thermostatic_co1_pump",
+                icon="mdi:thermostat",
                 options_dict={
                     0: "continuous_operation",
                     1: "switched_off_by_thermostat",
@@ -977,6 +1061,7 @@ DEVICE_DEFINITIONS: dict[int, CompitDeviceDescription] = {
             "__trybmieszacza": CompitSelectDescription(
                 key="__trybmieszacza",
                 translation_key="r770rs_r771rs_lowering_source_mixer1",
+                icon="mdi:mixer",
                 options_dict={
                     0: "lack",
                     1: "schedule",
@@ -991,6 +1076,7 @@ DEVICE_DEFINITIONS: dict[int, CompitDeviceDescription] = {
             "__termostatkierunek": CompitSelectDescription(
                 key="__termostatkierunek",
                 translation_key="r770rs_r771rs_thermostat_direction_1",
+                icon="mdi:arrow-left-right",
                 options_dict={
                     0: "opening_at_the_entrance_is_lowering",
                     1: "a_short_circuit_at_the_input_is_a_decrease",
@@ -999,6 +1085,7 @@ DEVICE_DEFINITIONS: dict[int, CompitDeviceDescription] = {
             "__trybpompymiesz2": CompitSelectDescription(
                 key="__trybpompymiesz2",
                 translation_key="r770rs_r771rs_disable_thermostatic_co2_pump",
+                icon="mdi:thermostat",
                 options_dict={
                     0: "continuous_operation",
                     1: "switched_off_by_thermostat",
@@ -1007,6 +1094,7 @@ DEVICE_DEFINITIONS: dict[int, CompitDeviceDescription] = {
             "__trybmie2": CompitSelectDescription(
                 key="__trybmie2",
                 translation_key="r770rs_r771rs_lowering_source_mixer2",
+                icon="mdi:mixer",
                 options_dict={
                     0: "lack",
                     1: "schedule",
@@ -1021,6 +1109,7 @@ DEVICE_DEFINITIONS: dict[int, CompitDeviceDescription] = {
             "__termostatkierunek2": CompitSelectDescription(
                 key="__termostatkierunek2",
                 translation_key="r770rs_r771rs_thermostat_direction_2",
+                icon="mdi:thermostat",
                 options_dict={
                     0: "the_opening_at_the_input_is_a_signal_of_lowering",
                     1: "a_short_circuit_at_the_input_is_a_drop_signal",
@@ -1029,6 +1118,7 @@ DEVICE_DEFINITIONS: dict[int, CompitDeviceDescription] = {
             "__trybpracycwu": CompitSelectDescription(
                 key="__trybpracycwu",
                 translation_key="r770rs_r771rs_dhw_operating_mode",
+                icon="mdi:water-boiler",
                 options_dict={
                     0: "circuit_off",
                     1: "work_comfort",
@@ -1038,6 +1128,7 @@ DEVICE_DEFINITIONS: dict[int, CompitDeviceDescription] = {
             "__trybpracycyrkcwu": CompitSelectDescription(
                 key="__trybpracycyrkcwu",
                 translation_key="r770rs_r771rs_dhw_circulation_operating_mode",
+                icon="mdi:water-pump",
                 options_dict={
                     0: "circuit_off",
                     1: "work_comfort",
@@ -1047,6 +1138,7 @@ DEVICE_DEFINITIONS: dict[int, CompitDeviceDescription] = {
             "__typkotla": CompitSelectDescription(
                 key="__typkotla",
                 translation_key="r770rs_r771rs_boiler_type",
+                icon="mdi:fire",
                 options_dict={
                     0: "other",
                     1: "kdc_eco_15",
@@ -1059,6 +1151,7 @@ DEVICE_DEFINITIONS: dict[int, CompitDeviceDescription] = {
             "__ochronapodajnika": CompitSelectDescription(
                 key="__ochronapodajnika",
                 translation_key="r770rs_r771rs_feeder_protection",
+                icon="mdi:shield-outline",
                 options_dict={
                     0: "disabled",
                     1: "attached",
@@ -1067,6 +1160,7 @@ DEVICE_DEFINITIONS: dict[int, CompitDeviceDescription] = {
             "__funkcpompypcyrk": CompitSelectDescription(
                 key="__funkcpompypcyrk",
                 translation_key="r770rs_r771rs_pump_function_p_circus",
+                icon="mdi:water-pump",
                 options_dict={
                     0: "disabled",
                     1: "attached",
@@ -1077,6 +1171,7 @@ DEVICE_DEFINITIONS: dict[int, CompitDeviceDescription] = {
             "__trybwc14": CompitSelectDescription(
                 key="__trybwc14",
                 translation_key="r770rs_r771rs_network_mode_c14",
+                icon="mdi:lan",
                 options_dict={
                     0: "subordinate",
                     1: "master",
@@ -1085,6 +1180,7 @@ DEVICE_DEFINITIONS: dict[int, CompitDeviceDescription] = {
             "__trybzimalato": CompitSelectDescription(
                 key="__trybzimalato",
                 translation_key="r770rs_r771rs_winter_summer_mode",
+                icon="mdi:home-thermometer-outline",
                 options_dict={
                     0: "winter",
                     1: "side",
@@ -1099,6 +1195,7 @@ DEVICE_DEFINITIONS: dict[int, CompitDeviceDescription] = {
             "__pracamieszacza": CompitSelectDescription(
                 key="__pracamieszacza",
                 translation_key="regulator_zaworu_mieszajicego_bwc310_mixer_operation",
+                icon="mdi:mixer",
                 options_dict={
                     0: "disabled",
                     1: "no_corrections",
@@ -1114,6 +1211,7 @@ DEVICE_DEFINITIONS: dict[int, CompitDeviceDescription] = {
             "__kierunekdzialaniazaworu": CompitSelectDescription(
                 key="__kierunekdzialaniazaworu",
                 translation_key="regulator_zaworu_mieszajicego_bwc310_valve_direction",
+                icon="mdi:valve-closed",
                 options_dict={
                     0: "normal",
                     1: "inverted",
@@ -1122,6 +1220,7 @@ DEVICE_DEFINITIONS: dict[int, CompitDeviceDescription] = {
             "__factoryreset": CompitSelectDescription(
                 key="__factoryreset",
                 translation_key="regulator_zaworu_mieszajicego_bwc310_restoring_factory_settings",
+                icon="mdi:restore",
                 options_dict={
                     0: "subordinate",
                     1: "master",
@@ -1136,6 +1235,7 @@ DEVICE_DEFINITIONS: dict[int, CompitDeviceDescription] = {
             "__pracakotla": CompitSelectDescription(
                 key="__pracakotla",
                 translation_key="biomax775_boiler_operation",
+                icon="mdi:fire",
                 options_dict={
                     0: "disabled",
                     1: "without_thermostat",
@@ -1151,6 +1251,7 @@ DEVICE_DEFINITIONS: dict[int, CompitDeviceDescription] = {
             "__m1praca": CompitSelectDescription(
                 key="__m1praca",
                 translation_key="biomax775_mixer_1_work",
+                icon="mdi:mixer",
                 options_dict={
                     0: "disabled",
                     1: "without_thermostat",
@@ -1166,6 +1267,7 @@ DEVICE_DEFINITIONS: dict[int, CompitDeviceDescription] = {
             "__m2praca": CompitSelectDescription(
                 key="__m2praca",
                 translation_key="biomax775_mixer_2_work",
+                icon="mdi:mixer",
                 options_dict={
                     0: "disabled",
                     1: "without_thermostat",
@@ -1181,6 +1283,7 @@ DEVICE_DEFINITIONS: dict[int, CompitDeviceDescription] = {
             "__cwupraca": CompitSelectDescription(
                 key="__cwupraca",
                 translation_key="biomax775_dhw_work",
+                icon="mdi:water-boiler",
                 options_dict={
                     0: "disabled",
                     1: "comfortable",
@@ -1190,6 +1293,7 @@ DEVICE_DEFINITIONS: dict[int, CompitDeviceDescription] = {
             "__cwucyrkpraca": CompitSelectDescription(
                 key="__cwucyrkpraca",
                 translation_key="biomax775_dhw_circulation_work",
+                icon="mdi:water-pump",
                 options_dict={
                     0: "disabled",
                     1: "constant",
@@ -1199,6 +1303,7 @@ DEVICE_DEFINITIONS: dict[int, CompitDeviceDescription] = {
             "__trybwsiecic14": CompitSelectDescription(
                 key="__trybwsiecic14",
                 translation_key="biomax775_network_mode_c14",
+                icon="mdi:lan",
                 options_dict={
                     0: "slave",
                     1: "master",
@@ -1207,6 +1312,7 @@ DEVICE_DEFINITIONS: dict[int, CompitDeviceDescription] = {
             "__typ instalacji": CompitSelectDescription(
                 key="__typ instalacji",
                 translation_key="biomax775_installation_type",
+                icon="mdi:home-assistant",
                 options_dict={
                     0: "pumping_system",
                     1: "buffer",
@@ -1216,6 +1322,7 @@ DEVICE_DEFINITIONS: dict[int, CompitDeviceDescription] = {
             "__czuloscklawiatury": CompitSelectDescription(
                 key="__czuloscklawiatury",
                 translation_key="biomax775_keyboard_sensitivity",
+                icon="mdi:keyboard",
                 options_dict={
                     0: "0",
                     1: "1",
@@ -1225,6 +1332,7 @@ DEVICE_DEFINITIONS: dict[int, CompitDeviceDescription] = {
             "__kontrolapalnika": CompitSelectDescription(
                 key="__kontrolapalnika",
                 translation_key="biomax775_burner_control",
+                icon="mdi:fire-circle",
                 options_dict={
                     0: "disabled",
                     1: "defective_feeder_triac",
@@ -1241,6 +1349,7 @@ DEVICE_DEFINITIONS: dict[int, CompitDeviceDescription] = {
             "__pracakotla": CompitSelectDescription(
                 key="__pracakotla",
                 translation_key="biomax742_boiler_operation",
+                icon="mdi:fire",
                 options_dict={
                     0: "disabled",
                     1: "without_thermostat",
@@ -1256,6 +1365,7 @@ DEVICE_DEFINITIONS: dict[int, CompitDeviceDescription] = {
             "__m1praca": CompitSelectDescription(
                 key="__m1praca",
                 translation_key="biomax742_mixer_1_work",
+                icon="mdi:mixer",
                 options_dict={
                     0: "disabled",
                     1: "without",
@@ -1271,6 +1381,7 @@ DEVICE_DEFINITIONS: dict[int, CompitDeviceDescription] = {
             "__cwupraca": CompitSelectDescription(
                 key="__cwupraca",
                 translation_key="biomax742_dhw_work",
+                icon="mdi:water-boiler",
                 options_dict={
                     0: "disabled",
                     1: "comfortable",
@@ -1280,6 +1391,7 @@ DEVICE_DEFINITIONS: dict[int, CompitDeviceDescription] = {
             "__cwucyrkpraca": CompitSelectDescription(
                 key="__cwucyrkpraca",
                 translation_key="biomax742_dhw_circulation_work",
+                icon="mdi:water-pump",
                 options_dict={
                     0: "disabled",
                     1: "constant",
@@ -1289,6 +1401,7 @@ DEVICE_DEFINITIONS: dict[int, CompitDeviceDescription] = {
             "__typinstalacji": CompitSelectDescription(
                 key="__typinstalacji",
                 translation_key="biomax742_installation_type",
+                icon="mdi:home-assistant",
                 options_dict={
                     0: "pumping_system",
                     1: "buffer",
@@ -1304,6 +1417,7 @@ DEVICE_DEFINITIONS: dict[int, CompitDeviceDescription] = {
             "__pracakotla": CompitSelectDescription(
                 key="__pracakotla",
                 translation_key="biomax772_boiler_operation",
+                icon="mdi:fire",
                 options_dict={
                     0: "disabled",
                     1: "without_thermostat",
@@ -1319,6 +1433,7 @@ DEVICE_DEFINITIONS: dict[int, CompitDeviceDescription] = {
             "__m1praca": CompitSelectDescription(
                 key="__m1praca",
                 translation_key="biomax772_mixer_1_work",
+                icon="mdi:mixer",
                 options_dict={
                     0: "disabled",
                     1: "without_thermostat",
@@ -1334,6 +1449,7 @@ DEVICE_DEFINITIONS: dict[int, CompitDeviceDescription] = {
             "__m2praca": CompitSelectDescription(
                 key="__m2praca",
                 translation_key="biomax772_mixer_2_work",
+                icon="mdi:mixer",
                 options_dict={
                     0: "disabled",
                     1: "without_thermostat",
@@ -1349,6 +1465,7 @@ DEVICE_DEFINITIONS: dict[int, CompitDeviceDescription] = {
             "__cwupraca": CompitSelectDescription(
                 key="__cwupraca",
                 translation_key="biomax772_dhw_work",
+                icon="mdi:water-boiler",
                 options_dict={
                     0: "disabled",
                     1: "comfortable",
@@ -1358,6 +1475,7 @@ DEVICE_DEFINITIONS: dict[int, CompitDeviceDescription] = {
             "__cwucyrkpraca": CompitSelectDescription(
                 key="__cwucyrkpraca",
                 translation_key="biomax772_dhw_circulation_work",
+                icon="mdi:water-pump",
                 options_dict={
                     0: "disabled",
                     1: "constant",
@@ -1367,6 +1485,7 @@ DEVICE_DEFINITIONS: dict[int, CompitDeviceDescription] = {
             "__czuloscklawiatury": CompitSelectDescription(
                 key="__czuloscklawiatury",
                 translation_key="biomax772_keyboard_sensitivity",
+                icon="mdi:keyboard",
                 options_dict={
                     0: "0",
                     1: "1",
@@ -1382,6 +1501,7 @@ DEVICE_DEFINITIONS: dict[int, CompitDeviceDescription] = {
             "__tryblato": CompitSelectDescription(
                 key="__tryblato",
                 translation_key="el750_winter_summer",
+                icon="mdi:home-thermometer-outline",
                 options_dict={
                     0: "winter",
                     1: "side",
@@ -1390,6 +1510,7 @@ DEVICE_DEFINITIONS: dict[int, CompitDeviceDescription] = {
             "__trybcyrkulacji": CompitSelectDescription(
                 key="__trybcyrkulacji",
                 translation_key="el750_dhw_circulation_mode",
+                icon="mdi:water-pump",
                 options_dict={
                     0: "disabled",
                     1: "comfort",
@@ -1405,6 +1526,7 @@ DEVICE_DEFINITIONS: dict[int, CompitDeviceDescription] = {
             "__tr_pr": CompitSelectDescription(
                 key="__tr_pr",
                 translation_key="r350_m_operating_mode",
+                icon="mdi:cog-outline",
                 options_dict={
                     1: "no_corrections",
                     2: "with_a_clock",
@@ -1419,6 +1541,7 @@ DEVICE_DEFINITIONS: dict[int, CompitDeviceDescription] = {
             "__stop_min": CompitSelectDescription(
                 key="__stop_min",
                 translation_key="r350_m_stop_min",
+                icon="mdi:stop-circle-outline",
                 options_dict={
                     0: "no",
                     1: "tak",
@@ -1427,6 +1550,7 @@ DEVICE_DEFINITIONS: dict[int, CompitDeviceDescription] = {
             "__stop_obn": CompitSelectDescription(
                 key="__stop_obn",
                 translation_key="r350_m_stop_obn",
+                icon="mdi:stop-circle-outline",
                 options_dict={
                     0: "no",
                     1: "tak",
@@ -1435,6 +1559,7 @@ DEVICE_DEFINITIONS: dict[int, CompitDeviceDescription] = {
             "__sez_z_nano": CompitSelectDescription(
                 key="__sez_z_nano",
                 translation_key="r350_m_season_with_nano",
+                icon="mdi:home-thermometer-outline",
                 options_dict={
                     0: "no",
                     1: "tak",
@@ -1443,6 +1568,7 @@ DEVICE_DEFINITIONS: dict[int, CompitDeviceDescription] = {
             "__stop_z_kot": CompitSelectDescription(
                 key="__stop_z_kot",
                 translation_key="r350_m_alloy_from_the_boiler",
+                icon="mdi:fire",
                 options_dict={
                     0: "no",
                     1: "tak",
@@ -1451,6 +1577,7 @@ DEVICE_DEFINITIONS: dict[int, CompitDeviceDescription] = {
             "__pog": CompitSelectDescription(
                 key="__pog",
                 translation_key="r350_m_weather",
+                icon="mdi:weather-partly-cloudy",
                 options_dict={
                     0: "no",
                     1: "tak",
@@ -1459,6 +1586,7 @@ DEVICE_DEFINITIONS: dict[int, CompitDeviceDescription] = {
             "__rodz_zaw": CompitSelectDescription(
                 key="__rodz_zaw",
                 translation_key="r350_m_valve_type",
+                icon="mdi:valve-closed",
                 options_dict={
                     0: "2_way",
                     1: "3_way",
@@ -1468,6 +1596,7 @@ DEVICE_DEFINITIONS: dict[int, CompitDeviceDescription] = {
             "__tr_ochr": CompitSelectDescription(
                 key="__tr_ochr",
                 translation_key="r350_m_protection_mode",
+                icon="mdi:shield-outline",
                 options_dict={
                     0: "min",
                     1: "max",
@@ -1478,6 +1607,7 @@ DEVICE_DEFINITIONS: dict[int, CompitDeviceDescription] = {
             "__cz_ochr": CompitSelectDescription(
                 key="__cz_ochr",
                 translation_key="r350_m_protection_sensor",
+                icon="mdi:thermometer",
                 options_dict={
                     0: "own",
                     1: "external",
@@ -1486,6 +1616,7 @@ DEVICE_DEFINITIONS: dict[int, CompitDeviceDescription] = {
             "__t_kon_sez": CompitSelectDescription(
                 key="__t_kon_sez",
                 translation_key="r350_m_end_of_season_temperature",
+                icon="mdi:home-thermometer-outline",
                 options_dict={
                     0: "standard",
                     1: "average",
@@ -1494,6 +1625,7 @@ DEVICE_DEFINITIONS: dict[int, CompitDeviceDescription] = {
             "__schemat": CompitSelectDescription(
                 key="__schemat",
                 translation_key="r350_m_schema",
+                icon="mdi:floor-plan",
                 options_dict={
                     0: "mixer",
                     1: "pump",
@@ -1502,6 +1634,7 @@ DEVICE_DEFINITIONS: dict[int, CompitDeviceDescription] = {
             "__pr_w_c14": CompitSelectDescription(
                 key="__pr_w_c14",
                 translation_key="r350_m_work_in_the_c14_network",
+                icon="mdi:lan",
                 options_dict={
                     0: "subordinate",
                     1: "master",
@@ -1516,6 +1649,7 @@ DEVICE_DEFINITIONS: dict[int, CompitDeviceDescription] = {
             "__tryblato": CompitSelectDescription(
                 key="__tryblato",
                 translation_key="r350_t3_summer_winter_jobs",
+                icon="mdi:cog-outline",
                 options_dict={
                     0: "winter",
                     1: "side",
@@ -1524,6 +1658,7 @@ DEVICE_DEFINITIONS: dict[int, CompitDeviceDescription] = {
             "__pracamieszacza": CompitSelectDescription(
                 key="__pracamieszacza",
                 translation_key="r350_t3_work",
+                icon="mdi:cog-outline",
                 options_dict={
                     0: "no_corrections",
                     1: "with_a_clock",
@@ -1538,6 +1673,7 @@ DEVICE_DEFINITIONS: dict[int, CompitDeviceDescription] = {
             "__zezwoleniezalpompyco": CompitSelectDescription(
                 key="__zezwoleniezalpompyco",
                 translation_key="r350_t3_stop_min",
+                icon="mdi:stop-circle-outline",
                 options_dict={
                     0: "no",
                     1: "tak",
@@ -1546,6 +1682,7 @@ DEVICE_DEFINITIONS: dict[int, CompitDeviceDescription] = {
             "__pompacooffodnano": CompitSelectDescription(
                 key="__pompacooffodnano",
                 translation_key="r350_t3_stop_obn",
+                icon="mdi:stop-circle-outline",
                 options_dict={
                     0: "no",
                     1: "tak",
@@ -1554,6 +1691,7 @@ DEVICE_DEFINITIONS: dict[int, CompitDeviceDescription] = {
             "__StopZkot": CompitSelectDescription(
                 key="__StopZkot",
                 translation_key="r350_t3_stopzkot",
+                icon="mdi:stop-circle-outline",
                 options_dict={
                     0: "no",
                     1: "tak",
@@ -1562,6 +1700,7 @@ DEVICE_DEFINITIONS: dict[int, CompitDeviceDescription] = {
             "__pracawgharmonogramu": CompitSelectDescription(
                 key="__pracawgharmonogramu",
                 translation_key="r350_t3_work_according_to_the_schedule",
+                icon="mdi:cog-outline",
                 options_dict={
                     0: "no",
                     1: "tak",
@@ -1570,6 +1709,7 @@ DEVICE_DEFINITIONS: dict[int, CompitDeviceDescription] = {
             "__praca_pogodowa": CompitSelectDescription(
                 key="__praca_pogodowa",
                 translation_key="r350_t3_weather_weather_work",
+                icon="mdi:weather-partly-cloudy",
                 options_dict={
                     0: "no",
                     1: "tak",
@@ -1578,6 +1718,7 @@ DEVICE_DEFINITIONS: dict[int, CompitDeviceDescription] = {
             "__rodzdetsezongrzew": CompitSelectDescription(
                 key="__rodzdetsezongrzew",
                 translation_key="r350_t3_tseason",
+                icon="mdi:home-thermometer-outline",
                 options_dict={
                     0: "standard",
                     1: "average",
@@ -1586,6 +1727,7 @@ DEVICE_DEFINITIONS: dict[int, CompitDeviceDescription] = {
             "__pracaharmonogramu": CompitSelectDescription(
                 key="__pracaharmonogramu",
                 translation_key="r350_t3_work_according_to_the_schedule",
+                icon="mdi:cog-outline",
                 options_dict={
                     0: "no",
                     1: "tak",
@@ -1594,6 +1736,7 @@ DEVICE_DEFINITIONS: dict[int, CompitDeviceDescription] = {
             "__pracapogodowa": CompitSelectDescription(
                 key="__pracapogodowa",
                 translation_key="r350_t3_weather_work",
+                icon="mdi:weather-partly-cloudy",
                 options_dict={
                     0: "no",
                     1: "tak",
@@ -1608,6 +1751,7 @@ DEVICE_DEFINITIONS: dict[int, CompitDeviceDescription] = {
             "__serw_sys_tryb_w_sieci_c14": CompitSelectDescription(
                 key="__serw_sys_tryb_w_sieci_c14",
                 translation_key="r480_network_mode_c14",
+                icon="mdi:lan",
                 options_dict={
                     0: "slave",
                     1: "master",
@@ -1617,6 +1761,7 @@ DEVICE_DEFINITIONS: dict[int, CompitDeviceDescription] = {
             "__serw_sys_przyjm_tryb_pr_inst_z_nano1_wym_cwu": CompitSelectDescription(
                 key="__serw_sys_przyjm_tryb_pr_inst_z_nano1_wym_cwu",
                 translation_key="r480_taking_the_settings_from_nano1_forcing_dhw",
+                icon="mdi:water-boiler",
                 options_dict={
                     0: "disabled",
                     1: "attached",
@@ -1625,6 +1770,7 @@ DEVICE_DEFINITIONS: dict[int, CompitDeviceDescription] = {
             "__buf_praca_w_tr_lato": CompitSelectDescription(
                 key="__buf_praca_w_tr_lato",
                 translation_key="r480_buffer_operation_in_summer_mode",
+                icon="mdi:database",
                 options_dict={
                     0: "disabled",
                     1: "attached",
@@ -1633,6 +1779,7 @@ DEVICE_DEFINITIONS: dict[int, CompitDeviceDescription] = {
             "__cwu_cyrkulacja": CompitSelectDescription(
                 key="__cwu_cyrkulacja",
                 translation_key="r480_hot_water_circulation",
+                icon="mdi:water-pump",
                 options_dict={
                     0: "disabled",
                     1: "in_clock_zones_in_zones",
@@ -1642,6 +1789,7 @@ DEVICE_DEFINITIONS: dict[int, CompitDeviceDescription] = {
             "__cwu_dzien_real_antylegion": CompitSelectDescription(
                 key="__cwu_dzien_real_antylegion",
                 translation_key="r480_day_of_the_week_for_the_implementation_of_anti_legionella",
+                icon="mdi:calendar-week",
                 options_dict={
                     0: "monday",
                     1: "tuesday",
@@ -1655,6 +1803,7 @@ DEVICE_DEFINITIONS: dict[int, CompitDeviceDescription] = {
             "__praca_pc": CompitSelectDescription(
                 key="__praca_pc",
                 translation_key="r480_heat_pump_operation",
+                icon="mdi:heat-pump",
                 options_dict={
                     0: "stop",
                     1: "echo",
@@ -1664,6 +1813,7 @@ DEVICE_DEFINITIONS: dict[int, CompitDeviceDescription] = {
             "__tryb_instal": CompitSelectDescription(
                 key="__tryb_instal",
                 translation_key="r480_installation_mode_season",
+                icon="mdi:home-thermometer-outline",
                 options_dict={
                     0: "winter",
                     1: "side",
@@ -1672,6 +1822,7 @@ DEVICE_DEFINITIONS: dict[int, CompitDeviceDescription] = {
             "__tryb_cwu": CompitSelectDescription(
                 key="__tryb_cwu",
                 translation_key="r480_hot_water_operation",
+                icon="mdi:water-boiler",
                 options_dict={
                     1: "car",
                     2: "manual",
@@ -1681,6 +1832,7 @@ DEVICE_DEFINITIONS: dict[int, CompitDeviceDescription] = {
             "__tr_buf": CompitSelectDescription(
                 key="__tr_buf",
                 translation_key="r480_buffer_operation",
+                icon="mdi:database",
                 options_dict={
                     1: "car",
                     2: "manual",
