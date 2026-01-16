@@ -126,6 +126,34 @@ def mock_devices() -> list[MagicMock]:
     return devices
 
 
+SENSOR_DEVICE_DATA: list[dict[str, Any]] = [
+    {
+        "dev_id": "0201000010" + GATEWAY_SERIAL,
+        "dev_type": "0201",
+        "name": "Motion Sensor 0000-10",
+        "model": "DALI-2 Motion Sensor",
+        "color_mode": None,
+        "address": 10,
+        "channel": 0,
+    },
+    {
+        "dev_id": "0202000020" + GATEWAY_SERIAL,
+        "dev_type": "0202",
+        "name": "Illuminance Sensor 0000-20",
+        "model": "DALI-2 Light Sensor",
+        "color_mode": None,
+        "address": 20,
+        "channel": 0,
+    },
+]
+
+
+@pytest.fixture
+def mock_sensor_devices() -> list[MagicMock]:
+    """Return mocked sensor Device objects (motion and illuminance)."""
+    return [_create_mock_device(data) for data in SENSOR_DEVICE_DATA]
+
+
 def _create_scene_device_property(
     dev_type: str, brightness: int = 128, **kwargs: Any
 ) -> dict[str, Any]:
