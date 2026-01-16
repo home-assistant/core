@@ -529,24 +529,13 @@ class TodoistProjectData:
             if task[END] is not None:
                 if self._due_date_days is not None:
                     # For comparison with now, use datetime
-                    if isinstance(task[END], datetime):
-                        end_dt = task[END]
-                    else:
-                        end_dt = datetime.combine(
-                            task[END],
-                            time(23, 59, 59),
-                            tzinfo=dt_util.DEFAULT_TIME_ZONE,
-                        )
+                    end_dt = task[END]
                     if end_dt > dt_util.now() + self._due_date_days:
                         # This task is out of range of our due date;
                         # it shouldn't be counted.
                         return None
 
-                # Check if it's a datetime to call .date() method
-                if isinstance(task[END], datetime):
-                    task[DUE_TODAY] = task[END].date() == dt_util.now().date()
-                else:
-                    task[DUE_TODAY] = task[END] == dt_util.now().date()
+                task[DUE_TODAY] = task[END].date() == dt_util.now().date()
 
                 # Special case: Task is overdue.
                 if task[END] <= task[START]:
