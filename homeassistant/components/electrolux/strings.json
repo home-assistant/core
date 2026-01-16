@@ -39,7 +39,11 @@
         "name": "Appliance state"
       },
       "connection_state": {
-        "name": "Connection state"
+        "name": "Connection state",
+        "state": {
+          "connected": "Connected",
+          "disconnected": "Disconnected"
+        }
       },
       "display_temperature": {
         "name": "Current temperature"
@@ -54,7 +58,12 @@
         "name": "Food probe temperature"
       },
       "remote_control": {
-        "name": "Remote control"
+        "name": "Remote control",
+        "state": {
+          "disabled": "Disabled",
+          "enabled": "Enabled",
+          "not_safety_relevant_enabled": "Not safety relevant enabled"
+        }
       },
       "running_time": {
         "name": "Running time"
