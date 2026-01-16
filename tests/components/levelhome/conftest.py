@@ -95,7 +95,7 @@ def mock_levelhome_api() -> None:
 @pytest.fixture(name="mock_websocket_manager")
 def mock_websocket_manager() -> Generator[AsyncMock]:
     """Mock the Level Lock WebSocket manager."""
-    with patch("level_ws_client.WebsocketManager", autospec=True) as mock_ws:
+    with patch("level_ws_client.LevelWebsocketManager", autospec=True) as mock_ws:
         ws = mock_ws.return_value
         ws.async_start = AsyncMock(return_value=None)
         ws.async_stop = AsyncMock(return_value=None)
