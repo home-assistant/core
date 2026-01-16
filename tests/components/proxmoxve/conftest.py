@@ -67,11 +67,15 @@ def mock_proxmox_client():
             "homeassistant.components.proxmoxve.ProxmoxAPI", autospec=True
         ) as mock_api,
         patch(
+            "homeassistant.components.proxmoxve.common.ProxmoxAPI", autospec=True
+        ) as mock_api_common,
+        patch(
             "homeassistant.components.proxmoxve.config_flow.ProxmoxAPI"
         ) as mock_api_cf,
     ):
         mock_instance = MagicMock()
         mock_api.return_value = mock_instance
+        mock_api_common.return_value = mock_instance
         mock_api_cf.return_value = mock_instance
 
         mock_instance.access.ticket.post.return_value = load_json_object_fixture(
@@ -80,12 +84,39 @@ def mock_proxmox_client():
 
         # Make a separate mock for the qemu and lxc endpoints
         node_mock = MagicMock()
-        node_mock.qemu.get.return_value = load_json_array_fixture(
-            "nodes/qemu.json", DOMAIN
-        )
-        node_mock.lxc.get.return_value = load_json_array_fixture(
-            "nodes/lxc.json", DOMAIN
-        )
+        qemu_list = load_json_array_fixture("nodes/qemu.json", DOMAIN)
+        lxc_list = load_json_array_fixture("nodes/lxc.json", DOMAIN)
+
+        node_mock.qemu.get.return_value = qemu_list
+        node_mock.lxc.get.return_value = lxc_list
+
+        qemu_by_vmid = {vm["vmid"]: vm for vm in qemu_list}
+        lxc_by_vmid = {vm["vmid"]: vm for vm in lxc_list}
+
+        # Note to reviewer: I will expand on these fixtures in a next PR
+        # Necessary evil to handle the binary_sensor tests properly
+        def _qemu_resource(vmid: int) -> MagicMock:
+            """Return a mock resource the QEMU."""
+            resource = MagicMock()
+            vm = qemu_by_vmid[vmid]
+            resource.status.current.get.return_value = {
+                "name": vm["name"],
+                "status": vm["status"],
+            }
+            return resource
+
+        def _lxc_resource(vmid: int) -> MagicMock:
+            """Return a mock resource the LXC."""
+            resource = MagicMock()
+            ct = lxc_by_vmid[vmid]
+            resource.status.current.get.return_value = {
+                "name": ct["name"],
+                "status": ct["status"],
+            }
+            return resource
+
+        node_mock.qemu.side_effect = _qemu_resource
+        node_mock.lxc.side_effect = _lxc_resource
 
         nodes_mock = MagicMock()
         nodes_mock.get.return_value = load_json_array_fixture(

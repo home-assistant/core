@@ -205,8 +205,8 @@ async def test_duplicate_entry(
 
 async def test_import_flow(
     hass: HomeAssistant,
-    mock_setup_entry,
-    mock_proxmox_client,
+    mock_setup_entry: MagicMock,
+    mock_proxmox_client: MagicMock,
 ) -> None:
     """Test importing from YAML creates a config entry and sets it up."""
     MOCK_IMPORT_CONFIG = {
@@ -230,3 +230,52 @@ async def test_import_flow(
         if entry.data[CONF_HOST] == "127.0.0.1"
     )
     assert entry.state is ConfigEntryState.LOADED
+
+
+@pytest.mark.parametrize(
+    ("exception", "reason"),
+    [
+        (
+            AuthenticationError("Invalid credentials"),
+            "invalid_auth",
+        ),
+        (
+            SSLError("SSL handshake failed"),
+            "ssl_error",
+        ),
+        (
+            ConnectTimeout("Connection timed out"),
+            "connect_timeout",
+        ),
+        (
+            ResourceException("404", "status_message", "content"),
+            "no_nodes_found",
+        ),
+    ],
+)
+async def test_import_flow_exceptions(
+    hass: HomeAssistant,
+    mock_setup_entry: MagicMock,
+    mock_proxmox_client: MagicMock,
+    exception: Exception,
+    reason: str,
+) -> None:
+    """Test importing from YAML creates a config entry and sets it up."""
+    MOCK_IMPORT_CONFIG = {
+        DOMAIN: {
+            **MOCK_USER_STEP,
+            **MOCK_USER_SETUP,
+        }
+    }
+    with patch(
+        "homeassistant.components.proxmoxve.config_flow.ProxmoxAPI",
+        side_effect=exception,
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_IMPORT}, data=MOCK_IMPORT_CONFIG[DOMAIN]
+        )
+
+        assert result["type"] is FlowResultType.ABORT
+        assert result["reason"] == reason
+        assert len(mock_setup_entry.mock_calls) == 0
+        assert len(hass.config_entries.async_entries(DOMAIN)) == 0

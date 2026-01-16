@@ -20,7 +20,6 @@ from homeassistant.const import (
 )
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 
 from .common import ResourceException
 from .const import (
@@ -159,21 +158,6 @@ class ProxmoxveConfigFlow(ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason="connect_timeout")
         except (ResourceException, requests.exceptions.ConnectionError):
             return self.async_abort(reason="no_nodes_found")
-
-        async_create_issue(
-            self.hass,
-            DOMAIN,
-            f"deprecated_yaml_{DOMAIN}",
-            breaks_in_ha_version="2025.11.0",
-            is_fixable=False,
-            issue_domain=DOMAIN,
-            severity=IssueSeverity.WARNING,
-            translation_key="deprecated_yaml",
-            translation_placeholders={
-                "domain": DOMAIN,
-                "integration_title": "Proxmox VE",
-            },
-        )
 
         return await self.async_step_user(import_data)
 
