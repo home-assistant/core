@@ -53,4 +53,3 @@ async def init_integration(
 ) -> MockConfigEntry:
     """Set up the integration for testing."""
     return await async_init_integration(hass)
-

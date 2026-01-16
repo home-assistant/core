@@ -101,8 +101,6 @@ async def test_user_flow_duplicate_entry(
     assert result["reason"] == "already_configured"
 
 
-
-
 async def test_options_flow(
     hass: HomeAssistant,
     mock_setup_entry: AsyncMock,

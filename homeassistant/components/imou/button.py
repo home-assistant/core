@@ -19,8 +19,13 @@ from .entity import ImouEntity
 _LOGGER: logging.Logger = logging.getLogger(__package__)
 
 
+PARALLEL_UPDATES = 1
+
+
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddConfigEntryEntitiesCallback
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Imou button entities.
 

@@ -78,4 +78,3 @@ async def async_init_integration(
         await hass.async_block_till_done()
 
     return config_entry
-

@@ -107,4 +107,3 @@ async def test_reload_entry(
         await hass.async_block_till_done()
 
         assert len(mock_setup.mock_calls) == 1
-

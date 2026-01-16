@@ -5,6 +5,7 @@ from __future__ import annotations
 import asyncio
 from datetime import timedelta
 import logging
+from typing import Any
 
 from pyimouapi.ha_device import ImouHaDevice, ImouHaDeviceManager
 
@@ -18,7 +19,7 @@ _LOGGER = logging.getLogger(__name__)
 SCAN_INTERVAL = timedelta(seconds=60)
 
 
-class ImouDataUpdateCoordinator(DataUpdateCoordinator[None]):
+class ImouDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     """Data update coordinator for Imou devices."""
 
     def __init__(
@@ -88,7 +89,7 @@ class ImouDataUpdateCoordinator(DataUpdateCoordinator[None]):
             return_exceptions=True,
         )
 
-    async def _async_update_data(self) -> None:
+    async def _async_update_data(self) -> dict[str, Any]:
         """Update coordinator data.
 
         Raises:
@@ -100,7 +101,9 @@ class ImouDataUpdateCoordinator(DataUpdateCoordinator[None]):
                 await self.async_update_all_device()
             except TimeoutError as err:
                 if not self._unavailable_logged:
-                    _LOGGER.info("Imou devices are unavailable: Timeout while fetching data")
+                    _LOGGER.info(
+                        "Imou devices are unavailable: Timeout while fetching data"
+                    )
                     self._unavailable_logged = True
                 raise UpdateFailed("Timeout while fetching data: {err}") from err
             except Exception as err:
@@ -112,3 +115,5 @@ class ImouDataUpdateCoordinator(DataUpdateCoordinator[None]):
             if self._unavailable_logged:
                 _LOGGER.info("Imou devices are back online")
                 self._unavailable_logged = False
+        # Return empty dict since we don't need to store data
+        return {}

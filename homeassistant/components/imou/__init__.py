@@ -39,9 +39,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ImouConfigEntry) -> bool
     )
     device_manager = ImouDeviceManager(imou_client)
     imou_device_manager = ImouHaDeviceManager(device_manager)
-    imou_coordinator = ImouDataUpdateCoordinator(
-        hass, imou_device_manager, entry
-    )
+    imou_coordinator = ImouDataUpdateCoordinator(hass, imou_device_manager, entry)
     await imou_coordinator.async_config_entry_first_refresh()
     entry.runtime_data = imou_coordinator
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
