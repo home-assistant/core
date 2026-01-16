@@ -22,6 +22,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Ammonia',
     'options': dict({
     }),
     'original_device_class': None,
@@ -75,6 +76,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Benzene',
     'options': dict({
     }),
     'original_device_class': None,
@@ -128,6 +130,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Carbon monoxide',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.CO: 'carbon_monoxide'>,
@@ -188,6 +191,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'LQI (DE) category',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -252,6 +256,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'LQI (DE) dominant pollutant',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -310,6 +315,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Nitrogen dioxide',
     'options': dict({
     }),
     'original_device_class': None,
@@ -363,6 +369,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Nitrogen monoxide',
     'options': dict({
     }),
     'original_device_class': None,
@@ -416,6 +423,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Non-methane hydrocarbons',
     'options': dict({
     }),
     'original_device_class': None,
@@ -469,6 +477,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Ozone',
     'options': dict({
     }),
     'original_device_class': None,
@@ -522,6 +531,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'PM10',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.PM10: 'pm10'>,
@@ -576,6 +586,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'PM2.5',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.PM25: 'pm25'>,
@@ -630,6 +641,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Sulphur dioxide',
     'options': dict({
     }),
     'original_device_class': None,
@@ -689,6 +701,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'UAQI category',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -755,6 +768,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'UAQI dominant pollutant',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -815,6 +829,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Universal Air Quality Index',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.AQI: 'aqi'>,
