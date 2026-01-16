@@ -131,9 +131,10 @@ async def test_options_flow_init(
     mock_setup_entry: AsyncMock,
     mock_config_entry: MockConfigEntry,
     mock_nina_class: AsyncMock,
+    nina_warnings: list[Warning],
 ) -> None:
     """Test config flow options."""
-    await setup_platform(hass, mock_config_entry)
+    await setup_platform(hass, mock_config_entry, mock_nina_class, nina_warnings)
 
     result = await hass.config_entries.options.async_init(mock_config_entry.entry_id)
 
@@ -177,9 +178,10 @@ async def test_options_flow_with_no_selection(
     mock_setup_entry: AsyncMock,
     mock_config_entry: MockConfigEntry,
     mock_nina_class: AsyncMock,
+    nina_warnings: list[Warning],
 ) -> None:
     """Test config flow options with no selection."""
-    await setup_platform(hass, mock_config_entry)
+    await setup_platform(hass, mock_config_entry, mock_nina_class, nina_warnings)
 
     result = await hass.config_entries.options.async_init(mock_config_entry.entry_id)
 
@@ -240,13 +242,14 @@ async def test_options_flow_connection_error(
     mock_setup_entry: AsyncMock,
     mock_config_entry: MockConfigEntry,
     mock_nina_class: AsyncMock,
+    nina_warnings: list[Warning],
 ) -> None:
     """Test config flow options but no connection."""
     mock_nina_class.get_all_regional_codes.side_effect = ApiError(
         "Could not connect to Api"
     )
 
-    await setup_platform(hass, mock_config_entry)
+    await setup_platform(hass, mock_config_entry, mock_nina_class, nina_warnings)
 
     result = await hass.config_entries.options.async_init(mock_config_entry.entry_id)
 
@@ -259,11 +262,12 @@ async def test_options_flow_unexpected_exception(
     mock_setup_entry: AsyncMock,
     mock_config_entry: MockConfigEntry,
     mock_nina_class: AsyncMock,
+    nina_warnings: list[Warning],
 ) -> None:
     """Test config flow options but with an unexpected exception."""
     mock_nina_class.get_all_regional_codes.side_effect = Exception("DUMMY")
 
-    await setup_platform(hass, mock_config_entry)
+    await setup_platform(hass, mock_config_entry, mock_nina_class, nina_warnings)
 
     result = await hass.config_entries.options.async_init(mock_config_entry.entry_id)
 
@@ -279,13 +283,7 @@ async def test_options_flow_entity_removal(
     nina_warnings: list[Warning],
 ) -> None:
     """Test if old entities are removed."""
-    warnings_dict: dict[str, list[Warning]] = {
-        "095760000000": deepcopy(nina_warnings),
-    }
-
-    mock_nina_class.warnings = warnings_dict
-
-    await setup_platform(hass, mock_config_entry)
+    await setup_platform(hass, mock_config_entry, mock_nina_class, nina_warnings)
 
     result = await hass.config_entries.options.async_init(mock_config_entry.entry_id)
 
