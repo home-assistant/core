@@ -54,5 +54,17 @@
         }
       }
     }
+  },
+  "services": {
+    "get_queue": {
+      "description": "Get all movies currently in the download queue with their progress and details.",
+      "fields": {
+        "entry_id": {
+          "description": "ID of the config entry to use.",
+          "name": "Radarr entry"
+        }
+      },
+      "name": "Get queue"
+    }
   }
 }

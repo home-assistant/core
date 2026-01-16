@@ -11,6 +11,7 @@ from homeassistant.const import CONF_API_KEY, CONF_URL, CONF_VERIFY_SSL, Platfor
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
+from .const import DOMAIN, SERVICE_GET_QUEUE
 from .coordinator import (
     CalendarUpdateCoordinator,
     DiskSpaceDataUpdateCoordinator,
@@ -22,6 +23,7 @@ from .coordinator import (
     RadarrDataUpdateCoordinator,
     StatusDataUpdateCoordinator,
 )
+from .services import async_setup_services
 
 PLATFORMS = [Platform.BINARY_SENSOR, Platform.CALENDAR, Platform.SENSOR]
 
@@ -60,6 +62,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: RadarrConfigEntry) -> bo
         await coordinator.async_config_entry_first_refresh()
     entry.runtime_data = data
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+
+    # Register services (only register once for the domain)
+    if not hass.services.has_service(DOMAIN, SERVICE_GET_QUEUE):
+        async_setup_services(hass)
 
     return True
 

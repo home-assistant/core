@@ -8,5 +8,10 @@
         "default": "mdi:download"
       }
     }
+  },
+  "services": {
+    "get_queue": {
+      "service": "mdi:download"
+    }
   }
 }
