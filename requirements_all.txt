@@ -1349,7 +1349,7 @@ kiwiki-client==0.1.1
 knocki==0.4.2
 
 # homeassistant.components.knx
-knx-frontend==2025.12.30.151231
+knx-frontend==2026.1.15.112308
 
 # homeassistant.components.konnected
 konnected==1.2.0
