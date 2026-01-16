@@ -42,6 +42,7 @@ MOCK_USER_RECONFIGURE = {
     CONF_GROUP: "user",
 }
 
+
 MOCK_DHCP_DISCOVERY_INPUT = {
     CONF_SSL: True,
     CONF_VERIFY_SSL: False,

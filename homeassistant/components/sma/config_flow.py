@@ -150,6 +150,8 @@ class SmaConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle reconfiguration of the integration."""
         errors: dict[str, str] = {}
         reconf_entry = self._get_reconfigure_entry()
+
+        suggested_values = dict(reconf_entry.data)
         suggested_values = {
             CONF_HOST: reconf_entry.data[CONF_HOST],
             CONF_SSL: reconf_entry.data[CONF_SSL],
@@ -158,10 +160,7 @@ class SmaConfigFlow(ConfigFlow, domain=DOMAIN):
         }
 
         if user_input is not None:
-            # The password is not changed during reconfiguration, that is only triggered during reauth
-            # Note to reviewer: I left out the abort if unique id configured here, since that's based on the serial
-            # number. See comments in PR for my thoughts on a potential solution.
-            errors, _ = await self._handle_user_input(
+            errors, device_info = await self._handle_user_input(
                 user_input={
                     **reconf_entry.data,
                     **user_input,
@@ -169,6 +168,10 @@ class SmaConfigFlow(ConfigFlow, domain=DOMAIN):
             )
 
             if not errors:
+                await self.async_set_unique_id(
+                    str(device_info["serial"]), raise_on_progress=False
+                )
+                self._abort_if_unique_id_mismatch()
                 return self.async_update_reload_and_abort(
                     reconf_entry,
                     data_updates={
