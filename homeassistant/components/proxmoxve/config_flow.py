@@ -48,19 +48,22 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-def _get_nodes_data(data: dict[str, Any]) -> list[dict[str, Any]]:
-    """Validate the user input and fetch data (sync, for executor)."""
-    user_id = (
+def _sanitize_userid(data: dict[str, Any]) -> str:
+    """Sanitize the user ID."""
+    return (
         data[CONF_USERNAME]
         if "@" in data[CONF_USERNAME]
         else f"{data[CONF_USERNAME]}@{data[CONF_REALM]}"
     )
 
+
+def _get_nodes_data(data: dict[str, Any]) -> list[dict[str, Any]]:
+    """Validate the user input and fetch data (sync, for executor)."""
     try:
         client = ProxmoxAPI(
             data[CONF_HOST],
             port=data[CONF_PORT],
-            user=user_id,
+            user=_sanitize_userid(data),
             password=data[CONF_PASSWORD],
             verify_ssl=data.get(CONF_VERIFY_SSL, DEFAULT_VERIFY_SSL),
         )
@@ -135,10 +138,28 @@ class ProxmoxveConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
-    async def async_step_import(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
+    async def async_step_import(self, import_data: dict[str, Any]) -> ConfigFlowResult:
         """Handle a flow initiated by configuration file."""
+        self._async_abort_entries_match({CONF_HOST: import_data[CONF_HOST]})
+
+        try:
+            client = ProxmoxAPI(
+                import_data[CONF_HOST],
+                port=import_data[CONF_PORT],
+                user=_sanitize_userid(import_data),
+                password=import_data[CONF_PASSWORD],
+                verify_ssl=import_data.get(CONF_VERIFY_SSL, DEFAULT_VERIFY_SSL),
+            )
+            client.nodes.get()
+        except AuthenticationError:
+            return self.async_abort(reason="invalid_auth")
+        except SSLError:
+            return self.async_abort(reason="ssl_error")
+        except ConnectTimeout:
+            return self.async_abort(reason="connect_timeout")
+        except (ResourceException, requests.exceptions.ConnectionError):
+            return self.async_abort(reason="no_nodes_found")
+
         async_create_issue(
             self.hass,
             DOMAIN,
@@ -154,7 +175,7 @@ class ProxmoxveConfigFlow(ConfigFlow, domain=DOMAIN):
             },
         )
 
-        return await self.async_step_user(user_input)
+        return await self.async_step_user(import_data)
 
 
 class ProxmoxNoNodesFound(HomeAssistantError):
