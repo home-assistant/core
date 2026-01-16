@@ -11,7 +11,7 @@ from homeassistant.helpers import entity_registry as er
 
 from . import find_device_listener, trigger_availability_callback
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, SnapshotAssertion, snapshot_platform
 
 ENTITY_ID = "sensor.illuminance_sensor_0000_20"
 
@@ -33,8 +33,11 @@ async def test_setup_entry(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     mock_config_entry: MockConfigEntry,
+    snapshot: SnapshotAssertion,
 ) -> None:
     """Test that async_setup_entry correctly creates sensor entities."""
+    await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
+
     entity_entries = er.async_entries_for_config_entry(
         entity_registry, mock_config_entry.entry_id
     )
