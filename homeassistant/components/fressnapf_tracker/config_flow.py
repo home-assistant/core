@@ -31,7 +31,7 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
 )
 STEP_SMS_CODE_DATA_SCHEMA = vol.Schema(
     {
-        vol.Required(CONF_SMS_CODE): int,
+        vol.Required(CONF_SMS_CODE): str,
     }
 )
 
@@ -75,7 +75,7 @@ class FressnapfTrackerConfigFlow(ConfigFlow, domain=DOMAIN):
         return errors, False
 
     async def _async_verify_sms_code(
-        self, sms_code: int
+        self, sms_code: str
     ) -> tuple[dict[str, str], str | None]:
         """Verify SMS code and return errors and access_token."""
         errors: dict[str, str] = {}
