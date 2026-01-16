@@ -21,7 +21,6 @@ from homeassistant.exceptions import (
     ConfigEntryNotReady,
     OAuth2TokenRequestError,
     OAuth2TokenRequestReauthError,
-    OAuth2TokenRequestTransientError,
 )
 from homeassistant.helpers import frame, update_coordinator
 from homeassistant.util.dt import utcnow
@@ -327,11 +326,7 @@ async def test_refresh_fail_unknown(
 
 @pytest.mark.parametrize(
     ("exception", "expected_exception"),
-    [
-        (OAuth2TokenRequestReauthError, ConfigEntryAuthFailed),
-        (OAuth2TokenRequestTransientError, ConfigEntryNotReady),
-        (OAuth2TokenRequestError, ConfigEntryNotReady),
-    ],
+    [(OAuth2TokenRequestReauthError, ConfigEntryAuthFailed)],
 )
 async def test_oauth_token_request_refresh_errors(
     crd: update_coordinator.DataUpdateCoordinator[int],
@@ -339,7 +334,6 @@ async def test_oauth_token_request_refresh_errors(
     expected_exception: type[Exception],
 ) -> None:
     """Test OAuth2 token request errors are mapped during refresh."""
-    # Patch the underlying request info to raise ClientResponseError
     request_info = Mock()
     request_info.real_url = "http://example.com/token"
     request_info.method = "POST"
@@ -355,7 +349,8 @@ async def test_oauth_token_request_refresh_errors(
     crd.update_method = AsyncMock(side_effect=oauth_exception)
 
     with pytest.raises(expected_exception) as err:
-        await crd.async_refresh()
+        # Raise on auth failed, needs to be set
+        await crd._async_refresh(raise_on_auth_failed=True)
 
     # Check thoroughly the chain
     assert isinstance(err.value, expected_exception)

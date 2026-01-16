@@ -460,14 +460,13 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_DataT]):
 
                 if self.config_entry:
                     self.config_entry.async_start_reauth(self.hass)
-                raise
+                return
 
             # Recoverable error
             if self.last_update_success:
                 if log_failures:
                     self.logger.error("Error fetching %s data: %s", self.name, err)
                 self.last_update_success = False
-            raise
 
         except (aiohttp.ClientError, requests.exceptions.RequestException) as err:
             self.last_exception = err
