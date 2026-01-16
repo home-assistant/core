@@ -78,11 +78,9 @@ class SonosAlarms(SonosHouseholdCoordinator):
     @soco_error()
     def update_cache(self, soco: SoCo, update_id: int | None = None) -> bool:
         """Update cache of known alarms and return if cache has changed."""
-        self.alarms.update(soco)
-
         try:
             self.alarms.update(soco)
-        except Exception as err:
+        except SoCoException:
             _LOGGER.warning("Failed to update alarms for %s, speaker will be marked unavailable", soco.player_name)
             return False
 
