@@ -92,11 +92,6 @@ class NINADataUpdateCoordinator(
         """Remove warnings with the same title and expires timestamp in a region."""
         all_filtered_warnings: dict[str, list[Any]] = {}
 
-        # warns_dict = [dataclasses.asdict(w) for w in warnings["095760000000"]]
-        #
-        # with open("./warnings.json", mode="w", encoding="utf-8") as f:
-        #     f.write(json.dumps(warns_dict, ensure_ascii=False))
-
         for region_id, raw_warnings in warnings.items():
             filtered_warnings: list[Any] = []
             processed_details: list[tuple[str, str]] = []
