@@ -4,6 +4,7 @@ from collections.abc import Generator
 from copy import deepcopy
 from unittest.mock import AsyncMock, patch
 
+from pynina import Warning
 import pytest
 
 from homeassistant.components.nina.const import DOMAIN
@@ -11,7 +12,11 @@ from homeassistant.core import HomeAssistant
 
 from .const import DUMMY_CONFIG_ENTRY
 
-from tests.common import MockConfigEntry, load_json_object_fixture
+from tests.common import (
+    MockConfigEntry,
+    load_json_array_fixture,
+    load_json_object_fixture,
+)
 
 
 @pytest.fixture
@@ -57,5 +62,12 @@ def mock_nina_class(nina_region_codes: dict[str, str]) -> Generator[AsyncMock]:
 @pytest.fixture
 def nina_region_codes() -> dict[str, str]:
     """Provide region codes."""
-
     return load_json_object_fixture("regions.json", DOMAIN)
+
+
+@pytest.fixture
+def nina_warnings() -> list[Warning]:
+    """Provide sample warnings."""
+    raw_data = load_json_array_fixture("warnings.json", DOMAIN)
+
+    return [Warning(**w) for w in raw_data]
