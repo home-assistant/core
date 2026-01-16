@@ -26,6 +26,16 @@
     }
   },
   "entity": {
+    "binary_sensor": {
+      "bot": { "name": "Bot" },
+      "discoverable": { "name": "Discoverable" },
+      "indexable": { "name": "Indexable" },
+      "limited": { "name": "Muted" },
+      "locked": { "name": "Locked" },
+      "memorial": { "name": "Memorial" },
+      "moved": { "name": "Moved" },
+      "suspended": { "name": "Suspended" }
+    },
     "sensor": {
       "followers": {
         "name": "Followers",
