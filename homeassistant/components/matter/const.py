@@ -16,7 +16,3 @@ ID_TYPE_DEVICE_ID = "deviceid"
 ID_TYPE_SERIAL = "serial"
 
 FEATUREMAP_ATTRIBUTE_ID = 65532
-
-ATTR_PRESETS: Final = "presets"
-
-SERVICE_SET_PRESETS = "service_set_presets"
