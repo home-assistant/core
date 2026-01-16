@@ -70,12 +70,15 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     # Load stored data
     await analytics.load()
 
+    started = False
+
     async def _async_handle_labs_update(
         event: Event[labs.EventLabsUpdatedData],
     ) -> None:
         """Handle labs feature toggle."""
         await analytics.save_preferences({ATTR_SNAPSHOTS: event.data["enabled"]})
-        await analytics.async_schedule()
+        if started:
+            await analytics.async_schedule()
 
     @callback
     def _async_labs_event_filter(event_data: labs.EventLabsUpdatedData) -> bool:
@@ -87,14 +90,15 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     async def start_schedule(_event: Event) -> None:
         """Start the send schedule after the started event."""
+        nonlocal started
+        started = True
         await analytics.async_schedule()
 
-        hass.bus.async_listen(
-            labs.EVENT_LABS_UPDATED,
-            _async_handle_labs_update,
-            event_filter=_async_labs_event_filter,
-        )
-
+    hass.bus.async_listen(
+        labs.EVENT_LABS_UPDATED,
+        _async_handle_labs_update,
+        event_filter=_async_labs_event_filter,
+    )
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STARTED, start_schedule)
 
     websocket_api.async_register_command(hass, websocket_analytics)
