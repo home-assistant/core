@@ -8,7 +8,7 @@ from datetime import datetime, timedelta
 import logging
 from typing import Any, Final, cast
 
-from pymiele import MieleDevice, MieleTemperature
+from pymiele import MieleDevice, MieleFillingLevel, MieleTemperature
 
 from homeassistant.components.sensor import (
     RestoreSensor,
@@ -44,8 +44,12 @@ from .const import (
     StateProgramType,
     StateStatus,
 )
-from .coordinator import MieleConfigEntry, MieleDataUpdateCoordinator
-from .entity import MieleEntity
+from .coordinator import (
+    MieleAuxDataUpdateCoordinator,
+    MieleConfigEntry,
+    MieleDataUpdateCoordinator,
+)
+from .entity import MieleAuxEntity, MieleEntity
 
 PARALLEL_UPDATES = 0
 
@@ -139,10 +143,13 @@ def _convert_finish_timestamp(
 
 
 @dataclass(frozen=True, kw_only=True)
-class MieleSensorDescription(SensorEntityDescription):
+class MieleSensorDescription[T: (MieleDevice, MieleFillingLevel)](
+    SensorEntityDescription
+):
     """Class describing Miele sensor entities."""
 
-    value_fn: Callable[[MieleDevice], StateType | datetime]
+    value_fn: Callable[[T], StateType | datetime]
+
     end_value_fn: Callable[[StateType | datetime], StateType | datetime] | None = None
     extra_attributes: dict[str, Callable[[MieleDevice], StateType]] | None = None
     zone: int | None = None
@@ -150,14 +157,14 @@ class MieleSensorDescription(SensorEntityDescription):
 
 
 @dataclass
-class MieleSensorDefinition:
+class MieleSensorDefinition[T: (MieleDevice, MieleFillingLevel)]:
     """Class for defining sensor entities."""
 
     types: tuple[MieleAppliance, ...]
-    description: MieleSensorDescription
+    description: MieleSensorDescription[T]
 
 
-SENSOR_TYPES: Final[tuple[MieleSensorDefinition, ...]] = (
+SENSOR_TYPES: Final[tuple[MieleSensorDefinition[MieleDevice], ...]] = (
     MieleSensorDefinition(
         types=(
             MieleAppliance.WASHING_MACHINE,
@@ -689,6 +696,59 @@ SENSOR_TYPES: Final[tuple[MieleSensorDefinition, ...]] = (
     ),
 )
 
+POLLED_SENSOR_TYPES: Final[tuple[MieleSensorDefinition[MieleFillingLevel], ...]] = (
+    MieleSensorDefinition(
+        types=(MieleAppliance.WASHING_MACHINE,),
+        description=MieleSensorDescription[MieleFillingLevel](
+            key="twin_dos_1_level",
+            translation_key="twin_dos_1_level",
+            value_fn=lambda value: value.twin_dos_container_1_filling_level,
+            native_unit_of_measurement=PERCENTAGE,
+            entity_category=EntityCategory.DIAGNOSTIC,
+        ),
+    ),
+    MieleSensorDefinition(
+        types=(MieleAppliance.WASHING_MACHINE,),
+        description=MieleSensorDescription[MieleFillingLevel](
+            key="twin_dos_2_level",
+            translation_key="twin_dos_2_level",
+            value_fn=lambda value: value.twin_dos_container_2_filling_level,
+            native_unit_of_measurement=PERCENTAGE,
+            entity_category=EntityCategory.DIAGNOSTIC,
+        ),
+    ),
+    MieleSensorDefinition(
+        types=(MieleAppliance.DISHWASHER,),
+        description=MieleSensorDescription[MieleFillingLevel](
+            key="power_disk_level",
+            translation_key="power_disk_level",
+            value_fn=lambda value: None,
+            native_unit_of_measurement=PERCENTAGE,
+            entity_category=EntityCategory.DIAGNOSTIC,
+        ),
+    ),
+    MieleSensorDefinition(
+        types=(MieleAppliance.DISHWASHER,),
+        description=MieleSensorDescription[MieleFillingLevel](
+            key="salt_level",
+            translation_key="salt_level",
+            value_fn=lambda value: value.salt_filling_level,
+            native_unit_of_measurement=PERCENTAGE,
+            entity_category=EntityCategory.DIAGNOSTIC,
+        ),
+    ),
+    MieleSensorDefinition(
+        types=(MieleAppliance.DISHWASHER,),
+        description=MieleSensorDescription[MieleFillingLevel](
+            key="rinse_aid_level",
+            translation_key="rinse_aid_level",
+            value_fn=lambda value: value.rinse_aid_filling_level,
+            native_unit_of_measurement=PERCENTAGE,
+            entity_category=EntityCategory.DIAGNOSTIC,
+        ),
+    ),
+)
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -696,11 +756,14 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the sensor platform."""
-    coordinator = config_entry.runtime_data
+    coordinator = config_entry.runtime_data.coordinator
+    aux_coordinator = config_entry.runtime_data.aux_coordinator
     added_devices: set[str] = set()  # device_id
     added_entities: set[str] = set()  # unique_id
 
-    def _get_entity_class(definition: MieleSensorDefinition) -> type[MieleSensor]:
+    def _get_entity_class(
+        definition: MieleSensorDefinition[MieleDevice],
+    ) -> type[MieleSensor]:
         """Get the entity class for the sensor."""
         return {
             "state_status": MieleStatusSensor,
@@ -725,7 +788,7 @@ async def async_setup_entry(
         )
 
     def _is_sensor_enabled(
-        definition: MieleSensorDefinition,
+        definition: MieleSensorDefinition[MieleDevice],
         device: MieleDevice,
         unique_id: str,
     ) -> bool:
@@ -747,6 +810,15 @@ async def async_setup_entry(
             # don't create plate entity if not expected by the appliance tech type
             return False
         return True
+
+    def _enabled_aux_sensor(
+        definition: MieleSensorDefinition[MieleFillingLevel], level: MieleFillingLevel
+    ) -> bool:
+        """Check if aux sensors are enabled."""
+        return not (
+            definition.description.value_fn is not None
+            and definition.description.value_fn(level) is None
+        )
 
     def _async_add_devices() -> None:
         nonlocal added_devices, added_entities
@@ -775,7 +847,11 @@ async def async_setup_entry(
                     continue
 
                 # sensors is not enabled, skip
-                if not _is_sensor_enabled(definition, device, unique_id):
+                if not _is_sensor_enabled(
+                    definition,
+                    device,
+                    unique_id,
+                ):
                     continue
 
                 added_entities.add(unique_id)
@@ -786,6 +862,15 @@ async def async_setup_entry(
 
     config_entry.async_on_unload(coordinator.async_add_listener(_async_add_devices))
     _async_add_devices()
+
+    async_add_entities(
+        MieleAuxSensor(aux_coordinator, device_id, definition.description)
+        for device_id in aux_coordinator.data.filling_levels
+        for definition in POLLED_SENSOR_TYPES
+        if _enabled_aux_sensor(
+            definition, aux_coordinator.data.filling_levels[device_id]
+        )
+    )
 
 
 APPLIANCE_ICONS = {
@@ -883,6 +968,32 @@ class MieleRestorableSensor(MieleSensor, RestoreSensor):
         """Handle updated data from the coordinator."""
         self._update_native_value()
         super()._handle_coordinator_update()
+
+
+class MieleAuxSensor(MieleAuxEntity, SensorEntity):
+    """Representation of a filling level Sensor."""
+
+    entity_description: MieleSensorDescription
+
+    def __init__(
+        self,
+        coordinator: MieleAuxDataUpdateCoordinator,
+        device_id: str,
+        description: MieleSensorDescription,
+    ) -> None:
+        """Initialize the sensor."""
+        super().__init__(coordinator, device_id, description)
+        if description.unique_id_fn is not None:
+            self._attr_unique_id = description.unique_id_fn(device_id, description)
+
+    @property
+    def native_value(self) -> StateType | datetime:
+        """Return the state of the level sensor."""
+        return (
+            self.entity_description.value_fn(self.levels)
+            if self.entity_description.value_fn is not None
+            else None
+        )
 
 
 class MielePlateSensor(MieleSensor):

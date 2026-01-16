@@ -5,13 +5,11 @@ from __future__ import annotations
 from typing import Any
 
 from homeassistant.components.diagnostics import REDACTED, async_redact_data
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ADDRESS, CONF_LATITUDE, CONF_LONGITUDE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
-from .const import DOMAIN
-from .coordinator import TraccarServerCoordinator
+from .coordinator import TraccarServerConfigEntry, TraccarServerCoordinator
 
 KEYS_TO_REDACT = {
     "area",  # This is the polygon area of a geofence
@@ -39,10 +37,10 @@ def _entity_state(
 
 async def async_get_config_entry_diagnostics(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: TraccarServerConfigEntry,
 ) -> dict[str, Any]:
     """Return diagnostics for a config entry."""
-    coordinator: TraccarServerCoordinator = hass.data[DOMAIN][config_entry.entry_id]
+    coordinator = config_entry.runtime_data
     entity_registry = er.async_get(hass)
 
     entities = er.async_entries_for_config_entry(
@@ -71,11 +69,11 @@ async def async_get_config_entry_diagnostics(
 
 async def async_get_device_diagnostics(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: TraccarServerConfigEntry,
     device: dr.DeviceEntry,
 ) -> dict[str, Any]:
     """Return device diagnostics."""
-    coordinator: TraccarServerCoordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator = entry.runtime_data
     entity_registry = er.async_get(hass)
 
     entities = er.async_entries_for_device(
@@ -85,6 +83,7 @@ async def async_get_device_diagnostics(
     )
 
     await hass.config_entries.async_reload(entry.entry_id)
+
     return async_redact_data(
         {
             "subscription_status": coordinator.client.subscription_status,

@@ -20,6 +20,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Device connection status',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.CONNECTIVITY: 'connectivity'>,
@@ -69,6 +70,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Device profile connection status',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.CONNECTIVITY: 'connectivity'>,

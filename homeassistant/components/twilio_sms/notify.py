@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import logging
+from typing import Any
 
 import voluptuous as vol
 
@@ -56,7 +57,7 @@ class TwilioSMSNotificationService(BaseNotificationService):
         self.client = twilio_client
         self.from_number = from_number
 
-    def send_message(self, message="", **kwargs):
+    def send_message(self, message: str = "", **kwargs: Any) -> None:
         """Send SMS to specified target user cell."""
         targets = kwargs.get(ATTR_TARGET)
         data = kwargs.get(ATTR_DATA) or {}

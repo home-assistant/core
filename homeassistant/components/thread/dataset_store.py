@@ -143,9 +143,9 @@ class DatasetStoreStore(Store):
                                 MeshcopTLVType.ACTIVETIMESTAMP
                             ],
                         )
-                        if old_timestamp.seconds >= new_timestamp.seconds or (
-                            old_timestamp.seconds == new_timestamp.seconds
-                            and old_timestamp.ticks >= new_timestamp.ticks
+                        if (old_timestamp.seconds, old_timestamp.ticks) >= (
+                            new_timestamp.seconds,
+                            new_timestamp.ticks,
                         ):
                             _LOGGER.warning(
                                 (
@@ -256,9 +256,9 @@ class DatasetStore:
                 tlv_parser.Timestamp,
                 entry.dataset[MeshcopTLVType.ACTIVETIMESTAMP],
             )
-            if old_timestamp.seconds >= new_timestamp.seconds or (
-                old_timestamp.seconds == new_timestamp.seconds
-                and old_timestamp.ticks >= new_timestamp.ticks
+            if (old_timestamp.seconds, old_timestamp.ticks) >= (
+                new_timestamp.seconds,
+                new_timestamp.ticks,
             ):
                 _LOGGER.warning(
                     (

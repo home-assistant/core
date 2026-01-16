@@ -1,0 +1,393 @@
+# serializer version: 1
+# name: test_binary_sensors[binary_sensor.mastodon_trwnh_mastodon_social_bot-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.mastodon_trwnh_mastodon_social_bot',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Bot',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Bot',
+    'platform': 'mastodon',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': <MastodonBinarySensor.BOT: 'bot'>,
+    'unique_id': 'trwnh_mastodon_social_bot',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_binary_sensors[binary_sensor.mastodon_trwnh_mastodon_social_bot-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Mastodon @trwnh@mastodon.social Bot',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.mastodon_trwnh_mastodon_social_bot',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_binary_sensors[binary_sensor.mastodon_trwnh_mastodon_social_discoverable-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.mastodon_trwnh_mastodon_social_discoverable',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Discoverable',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Discoverable',
+    'platform': 'mastodon',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': <MastodonBinarySensor.DISCOVERABLE: 'discoverable'>,
+    'unique_id': 'trwnh_mastodon_social_discoverable',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_binary_sensors[binary_sensor.mastodon_trwnh_mastodon_social_discoverable-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Mastodon @trwnh@mastodon.social Discoverable',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.mastodon_trwnh_mastodon_social_discoverable',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_binary_sensors[binary_sensor.mastodon_trwnh_mastodon_social_indexable-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.mastodon_trwnh_mastodon_social_indexable',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Indexable',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Indexable',
+    'platform': 'mastodon',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': <MastodonBinarySensor.INDEXABLE: 'indexable'>,
+    'unique_id': 'trwnh_mastodon_social_indexable',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_binary_sensors[binary_sensor.mastodon_trwnh_mastodon_social_indexable-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Mastodon @trwnh@mastodon.social Indexable',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.mastodon_trwnh_mastodon_social_indexable',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_binary_sensors[binary_sensor.mastodon_trwnh_mastodon_social_limited-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.mastodon_trwnh_mastodon_social_limited',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Limited',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Limited',
+    'platform': 'mastodon',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': <MastodonBinarySensor.LIMITED: 'limited'>,
+    'unique_id': 'trwnh_mastodon_social_limited',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_binary_sensors[binary_sensor.mastodon_trwnh_mastodon_social_limited-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Mastodon @trwnh@mastodon.social Limited',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.mastodon_trwnh_mastodon_social_limited',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_binary_sensors[binary_sensor.mastodon_trwnh_mastodon_social_locked-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.mastodon_trwnh_mastodon_social_locked',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Locked',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Locked',
+    'platform': 'mastodon',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': <MastodonBinarySensor.LOCKED: 'locked'>,
+    'unique_id': 'trwnh_mastodon_social_locked',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_binary_sensors[binary_sensor.mastodon_trwnh_mastodon_social_locked-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Mastodon @trwnh@mastodon.social Locked',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.mastodon_trwnh_mastodon_social_locked',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_binary_sensors[binary_sensor.mastodon_trwnh_mastodon_social_memorial-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.mastodon_trwnh_mastodon_social_memorial',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Memorial',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Memorial',
+    'platform': 'mastodon',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': <MastodonBinarySensor.MEMORIAL: 'memorial'>,
+    'unique_id': 'trwnh_mastodon_social_memorial',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_binary_sensors[binary_sensor.mastodon_trwnh_mastodon_social_memorial-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Mastodon @trwnh@mastodon.social Memorial',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.mastodon_trwnh_mastodon_social_memorial',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_binary_sensors[binary_sensor.mastodon_trwnh_mastodon_social_moved-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.mastodon_trwnh_mastodon_social_moved',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Moved',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Moved',
+    'platform': 'mastodon',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': <MastodonBinarySensor.MOVED: 'moved'>,
+    'unique_id': 'trwnh_mastodon_social_moved',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_binary_sensors[binary_sensor.mastodon_trwnh_mastodon_social_moved-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Mastodon @trwnh@mastodon.social Moved',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.mastodon_trwnh_mastodon_social_moved',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_binary_sensors[binary_sensor.mastodon_trwnh_mastodon_social_suspended-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.mastodon_trwnh_mastodon_social_suspended',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Suspended',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Suspended',
+    'platform': 'mastodon',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': <MastodonBinarySensor.SUSPENDED: 'suspended'>,
+    'unique_id': 'trwnh_mastodon_social_suspended',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_binary_sensors[binary_sensor.mastodon_trwnh_mastodon_social_suspended-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Mastodon @trwnh@mastodon.social Suspended',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.mastodon_trwnh_mastodon_social_suspended',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---

@@ -2011,6 +2011,69 @@
     'type': 'result',
   })
 # ---
+# name: test_knx_get_schema[text]
+  dict({
+    'id': 1,
+    'result': list([
+      dict({
+        'name': 'ga_text',
+        'options': dict({
+          'dptClasses': list([
+            'string',
+          ]),
+          'passive': True,
+          'state': dict({
+            'required': False,
+          }),
+          'write': dict({
+            'required': True,
+          }),
+        }),
+        'required': True,
+        'type': 'knx_group_address',
+      }),
+      dict({
+        'default': 'text',
+        'name': 'mode',
+        'required': True,
+        'selector': dict({
+          'select': dict({
+            'custom_value': False,
+            'multiple': False,
+            'options': list([
+              'password',
+              'text',
+            ]),
+            'sort': False,
+            'translation_key': 'component.knx.config_panel.entities.create.text.knx.mode',
+          }),
+        }),
+        'type': 'ha_selector',
+      }),
+      dict({
+        'default': False,
+        'name': 'respond_to_read',
+        'optional': True,
+        'required': False,
+        'selector': dict({
+          'boolean': dict({
+          }),
+        }),
+        'type': 'ha_selector',
+      }),
+      dict({
+        'allow_false': False,
+        'default': True,
+        'name': 'sync_state',
+        'optional': True,
+        'required': False,
+        'type': 'knx_sync_state',
+      }),
+    ]),
+    'success': True,
+    'type': 'result',
+  })
+# ---
 # name: test_knx_get_schema[time]
   dict({
     'id': 1,

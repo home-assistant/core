@@ -1,0 +1,27 @@
+.trigger_common: &trigger_common
+  target:
+    entity:
+      domain: calendar
+  fields:
+    offset:
+      required: true
+      default:
+        days: 0
+        hours: 0
+        minutes: 0
+        seconds: 0
+      selector:
+        duration:
+          enable_day: true
+    offset_type:
+      required: true
+      default: before
+      selector:
+        select:
+          translation_key: trigger_offset_type
+          options:
+            - before
+            - after
+
+event_started: *trigger_common
+event_ended: *trigger_common

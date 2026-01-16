@@ -1,0 +1,91 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]"
+    },
+    "error": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "cannot_connect": "Failed to connect, please check your API key and network connection.",
+      "invalid_auth": "Invalid authentication. Please check your API key. You can get your API key from [Fish Audio API Keys]({api_keys_url}).",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "step": {
+      "user": {
+        "data": {
+          "api_key": "[%key:common::config_flow::data::api_key%]"
+        },
+        "data_description": {
+          "api_key": "Your personal API key for accessing the Fish Audio service."
+        },
+        "description": "Enter your Fish Audio API key to begin.\n\nIf you don't have an account, you can sign up for a free one on [Fish Audio]({signup_url}).",
+        "title": "Connect to Fish Audio"
+      }
+    }
+  },
+  "config_subentries": {
+    "tts": {
+      "abort": {
+        "already_configured": "This TTS voice is already configured.",
+        "cannot_connect": "Failed to connect to Fish Audio",
+        "entry_not_loaded": "Cannot add TTS voice while the configuration is disabled.",
+        "no_models_found": "No voices found matching the specified filters. Please adjust your filters and try again.",
+        "reconfigure_successful": "Your TTS voice has been updated successfully. The integration will now reload with the new settings."
+      },
+      "entry_type": "TTS voice",
+      "error": {
+        "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+        "no_model_selected": "You must select a voice to continue.",
+        "no_models_found": "No voices found matching the specified filters."
+      },
+      "initiate_flow": {
+        "reconfigure": "Reconfigure TTS voice",
+        "user": "Add TTS voice"
+      },
+      "step": {
+        "init": {
+          "data": {
+            "language": "Filter by language",
+            "self_only": "Show only my private voices",
+            "sort_by": "Sort voices by",
+            "title": "Filter by name"
+          },
+          "data_description": {
+            "language": "Display only voices that support the selected language.",
+            "self_only": "When checked, this will only show the voices you have personally created or cloned.",
+            "sort_by": "Choose the order in which the voices are displayed.",
+            "title": "Filter voices by name."
+          },
+          "description": "Apply filters to narrow down the voice list, then click Submit to see the results.",
+          "title": "Voice selection filters"
+        },
+        "model": {
+          "data": {
+            "backend": "AI voice model",
+            "latency": "Latency mode",
+            "name": "[%key:common::config_flow::data::name%]",
+            "voice_id": "Voice"
+          },
+          "data_description": {
+            "backend": "Select the AI model that will generate the audio.",
+            "latency": "Choose the latency mode: 'normal' for standard processing or 'balanced' for optimized speed.",
+            "name": "Enter a unique name for this TTS voice to easily identify it in Home Assistant.",
+            "voice_id": "Choose from the list of available voices, or manually enter a specific voice ID."
+          },
+          "description": "Select your preferred voice and the AI model to use for speech synthesis.",
+          "title": "Choose your voice and model"
+        }
+      }
+    }
+  },
+  "selector": {
+    "sort_by": {
+      "options": {
+        "created_at": "Newest",
+        "score": "Highest score",
+        "task_count": "Most uses"
+      }
+    }
+  }
+}

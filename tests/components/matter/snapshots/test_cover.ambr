@@ -20,6 +20,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': <CoverDeviceClass.SHADE: 'shade'>,
@@ -71,6 +72,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': <CoverDeviceClass.AWNING: 'awning'>,
@@ -123,6 +125,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': <CoverDeviceClass.AWNING: 'awning'>,
@@ -173,6 +176,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': <CoverDeviceClass.SHADE: 'shade'>,
@@ -224,6 +228,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': <CoverDeviceClass.BLIND: 'blind'>,
@@ -275,6 +280,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': <CoverDeviceClass.BLIND: 'blind'>,
@@ -325,6 +331,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': <CoverDeviceClass.SHADE: 'shade'>,

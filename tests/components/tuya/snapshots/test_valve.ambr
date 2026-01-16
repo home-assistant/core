@@ -20,6 +20,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Valve',
     'options': dict({
     }),
     'original_device_class': <ValveDeviceClass.WATER: 'water'>,
@@ -70,6 +71,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Valve',
     'options': dict({
     }),
     'original_device_class': <ValveDeviceClass.WATER: 'water'>,
@@ -120,6 +122,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Valve 1',
     'options': dict({
     }),
     'original_device_class': <ValveDeviceClass.WATER: 'water'>,
@@ -170,6 +173,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Valve 2',
     'options': dict({
     }),
     'original_device_class': <ValveDeviceClass.WATER: 'water'>,
@@ -220,6 +224,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Valve 3',
     'options': dict({
     }),
     'original_device_class': <ValveDeviceClass.WATER: 'water'>,
@@ -270,6 +275,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Valve 4',
     'options': dict({
     }),
     'original_device_class': <ValveDeviceClass.WATER: 'water'>,
@@ -320,6 +326,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Valve 5',
     'options': dict({
     }),
     'original_device_class': <ValveDeviceClass.WATER: 'water'>,
@@ -370,6 +377,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Valve 6',
     'options': dict({
     }),
     'original_device_class': <ValveDeviceClass.WATER: 'water'>,
@@ -420,6 +428,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Valve 7',
     'options': dict({
     }),
     'original_device_class': <ValveDeviceClass.WATER: 'water'>,
@@ -470,6 +479,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Valve 8',
     'options': dict({
     }),
     'original_device_class': <ValveDeviceClass.WATER: 'water'>,
@@ -520,6 +530,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Valve',
     'options': dict({
     }),
     'original_device_class': <ValveDeviceClass.WATER: 'water'>,
@@ -570,6 +581,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Valve',
     'options': dict({
     }),
     'original_device_class': <ValveDeviceClass.WATER: 'water'>,
@@ -620,6 +632,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Valve',
     'options': dict({
     }),
     'original_device_class': <ValveDeviceClass.WATER: 'water'>,

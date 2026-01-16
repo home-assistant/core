@@ -22,6 +22,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Bill energy',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -80,6 +81,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Daily energy',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -138,6 +140,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Monthly energy',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -196,6 +199,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -254,6 +258,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Weekly energy',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -312,6 +317,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Yearly energy',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -370,6 +376,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Bill energy',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -428,6 +435,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Daily energy',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -486,6 +494,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Monthly energy',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -544,6 +553,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -602,6 +612,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Weekly energy',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -660,6 +671,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Yearly energy',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -718,6 +730,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Bill Energy',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -776,6 +789,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Bill From Grid',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -834,6 +848,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Bill Net Production',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -890,6 +905,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Bill Net Production Percentage',
     'options': dict({
     }),
     'original_device_class': None,
@@ -942,6 +958,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Bill Production',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -998,6 +1015,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Bill Solar Powered Percentage',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1050,6 +1068,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Bill To Grid',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -1108,6 +1127,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Daily Energy',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -1166,6 +1186,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Daily From Grid',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -1224,6 +1245,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Daily Net Production',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -1280,6 +1302,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Daily Net Production Percentage',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1332,6 +1355,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Daily Production',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -1388,6 +1412,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Daily Solar Powered Percentage',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1440,6 +1465,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Daily To Grid',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -1498,6 +1524,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Energy',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -1555,6 +1582,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'L1 Voltage',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -1612,6 +1640,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'L2 Voltage',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -1669,6 +1698,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Monthly Energy',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -1727,6 +1757,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Monthly From Grid',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -1785,6 +1816,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Monthly Net Production',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -1841,6 +1873,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Monthly Net Production Percentage',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1893,6 +1926,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Monthly Production',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -1949,6 +1983,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Monthly Solar Powered Percentage',
     'options': dict({
     }),
     'original_device_class': None,
@@ -2001,6 +2036,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Monthly To Grid',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -2059,6 +2095,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Production',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -2116,6 +2153,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Weekly Energy',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -2174,6 +2212,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Weekly From Grid',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -2232,6 +2271,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Weekly Net Production',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -2288,6 +2328,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Weekly Net Production Percentage',
     'options': dict({
     }),
     'original_device_class': None,
@@ -2340,6 +2381,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Weekly Production',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -2396,6 +2438,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Weekly Solar Powered Percentage',
     'options': dict({
     }),
     'original_device_class': None,
@@ -2448,6 +2491,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Weekly To Grid',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -2506,6 +2550,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Yearly Energy',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -2564,6 +2609,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Yearly From Grid',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -2622,6 +2668,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Yearly Net Production',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -2678,6 +2725,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Yearly Net Production Percentage',
     'options': dict({
     }),
     'original_device_class': None,
@@ -2730,6 +2778,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Yearly Production',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -2786,6 +2835,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Yearly Solar Powered Percentage',
     'options': dict({
     }),
     'original_device_class': None,
@@ -2838,6 +2888,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Yearly To Grid',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,

@@ -26,6 +26,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Allow export',
     'options': dict({
     }),
     'original_device_class': None,
@@ -85,6 +86,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Operation mode',
     'options': dict({
     }),
     'original_device_class': None,
@@ -145,6 +147,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Seat cooler left',
     'options': dict({
     }),
     'original_device_class': None,
@@ -206,6 +209,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Seat cooler right',
     'options': dict({
     }),
     'original_device_class': None,
@@ -267,6 +271,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Seat heater left',
     'options': dict({
     }),
     'original_device_class': None,
@@ -328,6 +333,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Seat heater rear center',
     'options': dict({
     }),
     'original_device_class': None,
@@ -389,6 +395,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Seat heater rear left',
     'options': dict({
     }),
     'original_device_class': None,
@@ -450,6 +457,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Seat heater rear right',
     'options': dict({
     }),
     'original_device_class': None,
@@ -511,6 +519,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Seat heater right',
     'options': dict({
     }),
     'original_device_class': None,

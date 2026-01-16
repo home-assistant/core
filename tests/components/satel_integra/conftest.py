@@ -2,7 +2,7 @@
 
 from collections.abc import Generator
 from copy import deepcopy
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
@@ -82,3 +82,10 @@ def mock_config_entry_with_subentries(
         }
     )
     return mock_config_entry
+
+
+@pytest.fixture
+def mock_reload_after_entry_update() -> Generator[MagicMock]:
+    """Mock out the reload after updating the entry."""
+    with patch("homeassistant.components.satel_integra.update_listener") as mock_reload:
+        yield mock_reload

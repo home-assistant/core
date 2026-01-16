@@ -18,6 +18,7 @@ from homeassistant.helpers.entity_registry import EntityRegistry
 
 from .conftest import mock_websocket_connection
 from .const import (
+    TEST_BATTERY,
     TEST_BUTTON_EVENT_ENTITY_ID,
     TEST_REMOTE_KEY_EVENT_ENTITY_ID,
     TEST_SERIAL_NUMBER_3,
@@ -130,6 +131,7 @@ async def test_button_event_creation_a5(
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test Microphone button event entity is not created when using a Beosound A5."""
+    mock_mozart_client.get_battery_state.return_value = TEST_BATTERY
 
     await _check_button_event_creation(
         hass,

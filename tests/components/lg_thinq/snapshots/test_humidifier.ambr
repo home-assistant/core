@@ -1,0 +1,77 @@
+# serializer version: 1
+# name: test_humidifier_entities[dehumidifier][humidifier.test_dehumidifier-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'available_modes': list([
+        'smart_humidity',
+        'intensive_dry',
+        'rapid_humidity',
+        'quiet_humidity',
+        'clothes_dry',
+      ]),
+      'max_humidity': 70,
+      'min_humidity': 30,
+      'target_humidity_step': 5,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'humidifier',
+    'entity_category': None,
+    'entity_id': 'humidifier.test_dehumidifier',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': None,
+    'options': dict({
+    }),
+    'original_device_class': <HumidifierDeviceClass.DEHUMIDIFIER: 'dehumidifier'>,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'lg_thinq',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': <HumidifierEntityFeature: 1>,
+    'translation_key': 'dehumidifier',
+    'unique_id': 'TQS-25A89504-EF8E-4C4E-99F3-3956ED3BD397_target_humidity',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_humidifier_entities[dehumidifier][humidifier.test_dehumidifier-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'action': <HumidifierAction.DRYING: 'drying'>,
+      'available_modes': list([
+        'smart_humidity',
+        'intensive_dry',
+        'rapid_humidity',
+        'quiet_humidity',
+        'clothes_dry',
+      ]),
+      'current_humidity': 80,
+      'device_class': 'dehumidifier',
+      'friendly_name': 'Test dehumidifier',
+      'humidity': 55,
+      'max_humidity': 70,
+      'min_humidity': 30,
+      'mode': 'smart_humidity',
+      'supported_features': <HumidifierEntityFeature: 1>,
+      'target_humidity_step': 5,
+    }),
+    'context': <ANY>,
+    'entity_id': 'humidifier.test_dehumidifier',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---

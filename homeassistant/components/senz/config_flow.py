@@ -33,7 +33,7 @@ class OAuth2FlowHandler(
     @property
     def extra_authorize_data(self) -> dict:
         """Extra data that needs to be appended to the authorize url."""
-        return {"scope": "restapi offline_access"}
+        return {"scope": "restapi offline_access openid"}
 
     async def async_step_reauth(
         self, entry_data: Mapping[str, Any]

@@ -20,6 +20,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Plant image',
     'options': dict({
     }),
     'original_device_class': None,
@@ -70,6 +71,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'User image',
     'options': dict({
     }),
     'original_device_class': None,
@@ -120,6 +122,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Plant image',
     'options': dict({
     }),
     'original_device_class': None,
@@ -170,6 +173,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'User image',
     'options': dict({
     }),
     'original_device_class': None,

@@ -4,8 +4,10 @@
   "codeowners": ["@DeerMaximum"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/nina",
+  "integration_type": "service",
   "iot_class": "cloud_polling",
   "loggers": ["pynina"],
-  "requirements": ["pynina==0.3.6"],
+  "quality_scale": "bronze",
+  "requirements": ["pynina==1.0.2"],
   "single_config_entry": true
 }

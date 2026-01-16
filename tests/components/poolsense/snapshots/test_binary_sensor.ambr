@@ -20,6 +20,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Chlorine status',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
@@ -70,6 +71,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'pH status',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,

@@ -31,7 +31,7 @@ rules:
   log-when-unavailable: done
   parallel-updates: done
   reauthentication-flow: todo
-  test-coverage: todo
+  test-coverage: done
 
   # Gold
   devices:

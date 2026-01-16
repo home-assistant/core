@@ -139,6 +139,9 @@ class PooldoseNumber(PooldoseEntity, NumberEntity):
 
     async def async_set_native_value(self, value: float) -> None:
         """Set new value."""
-        await self.coordinator.client.set_number(self.entity_description.key, value)
+        await self._async_perform_write(
+            self.coordinator.client.set_number, self.entity_description.key, value
+        )
+
         self._attr_native_value = value
         self.async_write_ha_state()

@@ -2,7 +2,6 @@
 
 from dataclasses import dataclass
 from datetime import timedelta
-from random import randint
 
 from bsblan import (
     BSBLAN,
@@ -22,6 +21,17 @@ from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DOMAIN, LOGGER, SCAN_INTERVAL_FAST, SCAN_INTERVAL_SLOW
+
+# Filter lists for optimized API calls - only fetch parameters we actually use
+# This significantly reduces response time (~0.2s per parameter saved)
+STATE_INCLUDE = ["current_temperature", "target_temperature", "hvac_mode"]
+SENSOR_INCLUDE = ["current_temperature", "outside_temperature"]
+DHW_STATE_INCLUDE = [
+    "operating_mode",
+    "nominal_setpoint",
+    "dhw_actual_value_top_temperature",
+]
+DHW_CONFIG_INCLUDE = ["reduced_setpoint", "nominal_setpoint_max"]
 
 
 @dataclass
@@ -80,26 +90,18 @@ class BSBLanFastCoordinator(BSBLanCoordinator[BSBLanFastData]):
             config_entry,
             client,
             name=f"{DOMAIN}_fast_{config_entry.data[CONF_HOST]}",
-            update_interval=self._get_update_interval(),
+            update_interval=SCAN_INTERVAL_FAST,
         )
-
-    def _get_update_interval(self) -> timedelta:
-        """Get the update interval with a random offset.
-
-        Add a random number of seconds to avoid timeouts when
-        the BSB-Lan device is already/still busy retrieving data,
-        e.g. for MQTT or internal logging.
-        """
-        return SCAN_INTERVAL_FAST + timedelta(seconds=randint(1, 8))
 
     async def _async_update_data(self) -> BSBLanFastData:
         """Fetch fast-changing data from the BSB-Lan device."""
         try:
             # Client is already initialized in async_setup_entry
-            # Fetch fast-changing data (state, sensor, DHW state)
-            state = await self.client.state()
-            sensor = await self.client.sensor()
-            dhw = await self.client.hot_water_state()
+            # Use include filtering to only fetch parameters we actually use
+            # This reduces response time significantly (~0.2s per parameter)
+            state = await self.client.state(include=STATE_INCLUDE)
+            sensor = await self.client.sensor(include=SENSOR_INCLUDE)
+            dhw = await self.client.hot_water_state(include=DHW_STATE_INCLUDE)
 
         except BSBLANAuthError as err:
             raise ConfigEntryAuthFailed(
@@ -110,9 +112,6 @@ class BSBLanFastCoordinator(BSBLanCoordinator[BSBLanFastData]):
             raise UpdateFailed(
                 f"Error while establishing connection with BSB-Lan device at {host}"
             ) from err
-
-        # Update the interval with random jitter for next update
-        self.update_interval = self._get_update_interval()
 
         return BSBLanFastData(
             state=state,
@@ -143,8 +142,8 @@ class BSBLanSlowCoordinator(BSBLanCoordinator[BSBLanSlowData]):
         """Fetch slow-changing data from the BSB-Lan device."""
         try:
             # Client is already initialized in async_setup_entry
-            # Fetch slow-changing configuration data
-            dhw_config = await self.client.hot_water_config()
+            # Use include filtering to only fetch parameters we actually use
+            dhw_config = await self.client.hot_water_config(include=DHW_CONFIG_INCLUDE)
             dhw_schedule = await self.client.hot_water_schedule()
 
         except AttributeError:

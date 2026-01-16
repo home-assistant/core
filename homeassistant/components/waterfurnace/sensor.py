@@ -7,6 +7,7 @@ from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
+    SensorStateClass,
 )
 from homeassistant.const import PERCENTAGE, UnitOfPower, UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
@@ -24,66 +25,77 @@ SENSORS = [
         key="totalunitpower",
         native_unit_of_measurement=UnitOfPower.WATT,
         device_class=SensorDeviceClass.POWER,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         name="Active Setpoint",
         key="tstatactivesetpoint",
         native_unit_of_measurement=UnitOfTemperature.FAHRENHEIT,
         device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         name="Leaving Air",
         key="leavingairtemp",
         native_unit_of_measurement=UnitOfTemperature.FAHRENHEIT,
         device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         name="Room Temp",
         key="tstatroomtemp",
         native_unit_of_measurement=UnitOfTemperature.FAHRENHEIT,
         device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         name="Loop Temp",
         key="enteringwatertemp",
         native_unit_of_measurement=UnitOfTemperature.FAHRENHEIT,
         device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         name="Humidity Set Point",
         key="tstathumidsetpoint",
         icon="mdi:water-percent",
         native_unit_of_measurement=PERCENTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         name="Humidity",
         key="tstatrelativehumidity",
         icon="mdi:water-percent",
         native_unit_of_measurement=PERCENTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         name="Compressor Power",
         key="compressorpower",
         native_unit_of_measurement=UnitOfPower.WATT,
         device_class=SensorDeviceClass.POWER,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         name="Fan Power",
         key="fanpower",
         native_unit_of_measurement=UnitOfPower.WATT,
         device_class=SensorDeviceClass.POWER,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         name="Aux Power",
         key="auxpower",
         native_unit_of_measurement=UnitOfPower.WATT,
         device_class=SensorDeviceClass.POWER,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         name="Loop Pump Power",
         key="looppumppower",
         native_unit_of_measurement=UnitOfPower.WATT,
         device_class=SensorDeviceClass.POWER,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         name="Compressor Speed", key="actualcompressorspeed", icon="mdi:speedometer"

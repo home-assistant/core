@@ -66,7 +66,13 @@ class VelbusEntity(Entity):
         self._channel.remove_on_status_update(self._on_update)
 
     async def _on_update(self) -> None:
+        """Handle status updates from the channel."""
         self.async_write_ha_state()
+
+    @property
+    def available(self) -> bool:
+        """Return if entity is available."""
+        return self._channel.is_connected()
 
 
 def api_call[_T: VelbusEntity, **_P](
@@ -80,8 +86,13 @@ def api_call[_T: VelbusEntity, **_P](
         try:
             await func(self, *args, **kwargs)
         except OSError as exc:
+            entity_name = self.name if isinstance(self.name, str) else "Unknown"
             raise HomeAssistantError(
-                f"Could not execute {func.__name__} service for {self.name}"
+                translation_domain=DOMAIN,
+                translation_key="api_call_failed",
+                translation_placeholders={
+                    "entity": entity_name,
+                },
             ) from exc
 
     return cmd_wrapper

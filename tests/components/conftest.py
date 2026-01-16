@@ -823,6 +823,9 @@ async def _check_config_flow_result_translations(
         integration = flow.handler
         issue_id = flow.issue_id
         issue = ir.async_get(flow.hass).async_get_issue(integration, issue_id)
+        if issue is None:
+            # Issue was deleted mid-flow (e.g., config entry removed), skip check
+            return
         key_prefix = f"{issue.translation_key}.fix_flow."
         description_placeholders = {
             # Both are used in issue translations, and description_placeholders
@@ -1128,3 +1131,13 @@ async def check_translations(
     for description in translation_errors.values():
         if description != "used":
             pytest.fail(description)
+
+
+@pytest.fixture(name="enable_labs_preview_features")
+def enable_labs_preview_features() -> Generator[None]:
+    """Enable labs preview features."""
+    with patch(
+        "homeassistant.components.labs.async_is_preview_feature_enabled",
+        return_value=True,
+    ):
+        yield

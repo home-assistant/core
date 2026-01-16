@@ -85,6 +85,22 @@ class AirzoneSystemEntity(AirzoneEntity):
                 value = system[key]
         return value
 
+    async def _async_update_sys_params(self, params: dict[str, Any]) -> None:
+        """Send system parameters to API."""
+        _params = {
+            API_SYSTEM_ID: self.system_id,
+            **params,
+        }
+        _LOGGER.debug("update_sys_params=%s", _params)
+        try:
+            await self.coordinator.airzone.set_sys_parameters(_params)
+        except AirzoneError as error:
+            raise HomeAssistantError(
+                f"Failed to set system {self.entity_id}: {error}"
+            ) from error
+
+        self.coordinator.async_set_updated_data(self.coordinator.airzone.data())
+
 
 class AirzoneHotWaterEntity(AirzoneEntity):
     """Define an Airzone Hot Water entity."""

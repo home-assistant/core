@@ -15,7 +15,7 @@ from homeassistant.components.remote import (
     DEFAULT_DELAY_SECS,
     RemoteEntity,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .coordinator import XboxConfigEntry
@@ -46,11 +46,30 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Xbox media_player from a config entry."""
-    coordinator = entry.runtime_data.status
+    devices_added: set[str] = set()
 
-    async_add_entities(
-        [XboxRemote(console, coordinator) for console in coordinator.consoles.result]
-    )
+    coordinator = entry.runtime_data.status
+    consoles = entry.runtime_data.consoles
+
+    @callback
+    def add_entities() -> None:
+        nonlocal devices_added
+
+        new_devices = set(consoles.data) - devices_added
+
+        if new_devices:
+            async_add_entities(
+                [
+                    XboxRemote(consoles.data[console_id], coordinator)
+                    for console_id in new_devices
+                ]
+            )
+
+            devices_added |= new_devices
+        devices_added &= set(consoles.data)
+
+    entry.async_on_unload(consoles.async_add_listener(add_entities))
+    add_entities()
 
 
 class XboxRemote(XboxConsoleBaseEntity, RemoteEntity):

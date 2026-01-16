@@ -1,18 +1,12 @@
 rules:
   # Bronze
-  action-setup:
-    status: todo
-    comment: Actions are created in async_setup_entry, and need to be moved.
+  action-setup: done
   appropriate-polling:
     status: done
     comment: Service data APIs are polled every 5 minutes
   brands: done
-  common-modules:
-    status: todo
-    comment: The coordinator for the update platform should be moved to common module.
-  config-flow-test-coverage:
-    status: todo
-    comment: "test_form_single_site is patching config flow internals, and should only patch external APIs. Must address feedback from #156697."
+  common-modules: done
+  config-flow-test-coverage: done
   config-flow: done
   dependency-transparency:
     status: done

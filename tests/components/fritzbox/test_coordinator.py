@@ -6,9 +6,11 @@ from datetime import timedelta
 from unittest.mock import Mock
 
 from pyfritzhome import LoginError
+import pytest
 from requests.exceptions import ConnectionError, HTTPError
 
 from homeassistant.components.fritzbox.const import DOMAIN
+from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_DEVICES
 from homeassistant.core import HomeAssistant
@@ -20,6 +22,8 @@ from . import (
     FritzDeviceSensorMock,
     FritzDeviceSwitchMock,
     FritzEntityBaseMock,
+    FritzTriggerMock,
+    setup_config_entry,
 )
 from .const import MOCK_CONFIG
 
@@ -184,3 +188,27 @@ async def test_coordinator_workaround_sub_units_without_main_device(
     assert len(device_entries) == 2
     assert device_entries[0].identifiers == {(DOMAIN, "good_device")}
     assert device_entries[1].identifiers == {(DOMAIN, "bad_device")}
+
+
+@pytest.mark.parametrize(
+    ("trigger", "side_effect", "switch_entity_count"),
+    [
+        (None, None, 0),
+        (None, HTTPError(), 0),
+        (FritzTriggerMock(), None, 1),
+    ],
+)
+async def test_coordinator_has_triggers(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    fritz: Mock,
+    trigger: Mock | None,
+    side_effect: Exception | None,
+    switch_entity_count: int,
+) -> None:
+    """Test coordinator has_triggers property."""
+    fritz().has_triggers.side_effect = side_effect
+    assert await setup_config_entry(
+        hass, MOCK_CONFIG[DOMAIN][CONF_DEVICES][0], fritz=fritz, trigger=trigger
+    )
+    assert len(hass.states.async_all(SWITCH_DOMAIN)) == switch_entity_count

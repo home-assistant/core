@@ -13,9 +13,7 @@ rules:
   docs-removal-instructions: done
   entity-event-setup: done
   entity-unique-id: done
-  has-entity-name:
-    status: todo
-    comment: partially done
+  has-entity-name: done
   runtime-data: done
   test-before-configure: done
   test-before-setup: done

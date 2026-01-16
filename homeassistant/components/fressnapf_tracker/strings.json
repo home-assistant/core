@@ -2,6 +2,7 @@
   "config": {
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
       "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
     },
     "error": {
@@ -11,7 +12,7 @@
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "step": {
-      "reconfigure": {
+      "reauth_confirm": {
         "data": {
           "phone_number": "[%key:component::fressnapf_tracker::config::step::user::data::phone_number%]"
         },
@@ -19,6 +20,23 @@
           "phone_number": "[%key:component::fressnapf_tracker::config::step::user::data_description::phone_number%]"
         },
         "description": "Re-authenticate with your Fressnapf Tracker account to refresh your credentials."
+      },
+      "reauth_sms_code": {
+        "data": {
+          "sms_code": "[%key:component::fressnapf_tracker::config::step::sms_code::data::sms_code%]"
+        },
+        "data_description": {
+          "sms_code": "[%key:component::fressnapf_tracker::config::step::sms_code::data_description::sms_code%]"
+        }
+      },
+      "reconfigure": {
+        "data": {
+          "phone_number": "[%key:component::fressnapf_tracker::config::step::user::data::phone_number%]"
+        },
+        "data_description": {
+          "phone_number": "[%key:component::fressnapf_tracker::config::step::user::data_description::phone_number%]"
+        },
+        "description": "Update your Fressnapf Tracker account configuration."
       },
       "reconfigure_sms_code": {
         "data": {
@@ -59,8 +77,14 @@
     }
   },
   "exceptions": {
+    "api_error": {
+      "message": "An error occurred while communicating with the Fressnapf Tracker API: {error_message}"
+    },
     "charging": {
       "message": "The flashlight cannot be activated while charging."
+    },
+    "invalid_auth": {
+      "message": "Your authentication with the Fressnapf Tracker API expired. Please re-authenticate to refresh your credentials."
     },
     "low_battery": {
       "message": "The flashlight cannot be activated due to low battery."

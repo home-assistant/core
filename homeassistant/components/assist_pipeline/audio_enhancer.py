@@ -3,9 +3,8 @@
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 import logging
-import math
 
-from pysilero_vad import SileroVoiceActivityDetector
+from pymicro_vad import MicroVad
 from pyspeex_noise import AudioProcessor
 
 from .const import BYTES_PER_CHUNK
@@ -43,8 +42,8 @@ class AudioEnhancer(ABC):
         """Enhance chunk of PCM audio @ 16Khz with 16-bit mono samples."""
 
 
-class SileroVadSpeexEnhancer(AudioEnhancer):
-    """Audio enhancer that runs Silero VAD and speex."""
+class MicroVadSpeexEnhancer(AudioEnhancer):
+    """Audio enhancer that runs microVAD and speex."""
 
     def __init__(
         self, auto_gain: int, noise_suppression: int, is_vad_enabled: bool
@@ -70,49 +69,21 @@ class SileroVadSpeexEnhancer(AudioEnhancer):
                 self.noise_suppression,
             )
 
-        self.vad: SileroVoiceActivityDetector | None = None
-
-        # We get 10ms chunks but Silero works on 32ms chunks, so we have to
-        # buffer audio. The previous speech probability is used until enough
-        # audio has been buffered.
-        self._vad_buffer: bytearray | None = None
-        self._vad_buffer_chunks = 0
-        self._vad_buffer_chunk_idx = 0
-        self._last_speech_probability: float | None = None
+        self.vad: MicroVad | None = None
 
         if self.is_vad_enabled:
-            self.vad = SileroVoiceActivityDetector()
-
-            # VAD buffer is a multiple of 10ms, but Silero VAD needs 32ms.
-            self._vad_buffer_chunks = int(
-                math.ceil(self.vad.chunk_bytes() / BYTES_PER_CHUNK)
-            )
-            self._vad_leftover_bytes = self.vad.chunk_bytes() - BYTES_PER_CHUNK
-            self._vad_buffer = bytearray(self.vad.chunk_bytes())
-            _LOGGER.debug("Initialized Silero VAD")
+            self.vad = MicroVad()
+            _LOGGER.debug("Initialized microVAD")
 
     def enhance_chunk(self, audio: bytes, timestamp_ms: int) -> EnhancedAudioChunk:
         """Enhance 10ms chunk of PCM audio @ 16Khz with 16-bit mono samples."""
+        speech_probability: float | None = None
+
         assert len(audio) == BYTES_PER_CHUNK
 
         if self.vad is not None:
             # Run VAD
-            assert self._vad_buffer is not None
-            start_idx = self._vad_buffer_chunk_idx * BYTES_PER_CHUNK
-            self._vad_buffer[start_idx : start_idx + BYTES_PER_CHUNK] = audio
-
-            self._vad_buffer_chunk_idx += 1
-            if self._vad_buffer_chunk_idx >= self._vad_buffer_chunks:
-                # We have enough data to run Silero VAD (32 ms)
-                self._last_speech_probability = self.vad.process_chunk(
-                    self._vad_buffer[: self.vad.chunk_bytes()]
-                )
-
-                # Copy leftover audio that wasn't processed to start
-                self._vad_buffer[: self._vad_leftover_bytes] = self._vad_buffer[
-                    -self._vad_leftover_bytes :
-                ]
-                self._vad_buffer_chunk_idx = 0
+            speech_probability = self.vad.Process10ms(audio)
 
         if self.audio_processor is not None:
             # Run noise suppression and auto gain
@@ -121,5 +92,5 @@ class SileroVadSpeexEnhancer(AudioEnhancer):
         return EnhancedAudioChunk(
             audio=audio,
             timestamp_ms=timestamp_ms,
-            speech_probability=self._last_speech_probability,
+            speech_probability=speech_probability,
         )

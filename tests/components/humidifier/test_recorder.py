@@ -9,6 +9,7 @@ from homeassistant.components.humidifier import (
     ATTR_AVAILABLE_MODES,
     ATTR_MAX_HUMIDITY,
     ATTR_MIN_HUMIDITY,
+    ATTR_TARGET_HUMIDITY_STEP,
 )
 from homeassistant.components.recorder import Recorder
 from homeassistant.components.recorder.history import get_significant_states
@@ -46,3 +47,4 @@ async def test_exclude_attributes(recorder_mock: Recorder, hass: HomeAssistant) 
         assert ATTR_MAX_HUMIDITY not in state.attributes
         assert ATTR_AVAILABLE_MODES not in state.attributes
         assert ATTR_FRIENDLY_NAME in state.attributes
+        assert ATTR_TARGET_HUMIDITY_STEP not in state.attributes

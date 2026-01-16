@@ -27,6 +27,12 @@ def test_has_location_with_states_with_valid_location() -> None:
     assert location.has_location(state)
 
 
+def test_has_location_with_states_with_int_location() -> None:
+    """Test that integer coordinates are valid."""
+    state = State("hello.world", "valid", {ATTR_LATITUDE: 123, ATTR_LONGITUDE: 45})
+    assert location.has_location(state)
+
+
 def test_closest_with_no_states_with_location() -> None:
     """Set up the tests."""
     state = State("light.test", "on")

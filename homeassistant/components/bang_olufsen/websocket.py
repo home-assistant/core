@@ -6,6 +6,7 @@ import logging
 from typing import TYPE_CHECKING
 
 from mozart_api.models import (
+    BatteryState,
     BeoRemoteButton,
     ButtonEvent,
     ListeningModeProps,
@@ -60,6 +61,7 @@ class BeoWebsocket(BeoBase):
         self._client.get_active_listening_mode_notifications(
             self.on_active_listening_mode
         )
+        self._client.get_battery_notifications(self.on_battery_notification)
         self._client.get_beo_remote_button_notifications(
             self.on_beo_remote_button_notification
         )
@@ -112,6 +114,14 @@ class BeoWebsocket(BeoBase):
         async_dispatcher_send(
             self.hass,
             f"{DOMAIN}_{self._unique_id}_{WebsocketNotification.ACTIVE_LISTENING_MODE}",
+            notification,
+        )
+
+    def on_battery_notification(self, notification: BatteryState) -> None:
+        """Send battery dispatch."""
+        async_dispatcher_send(
+            self.hass,
+            f"{DOMAIN}_{self._unique_id}_{WebsocketNotification.BATTERY}",
             notification,
         )
 

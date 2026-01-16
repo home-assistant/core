@@ -154,6 +154,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Breakfast',
     'options': dict({
     }),
     'original_device_class': None,
@@ -208,6 +209,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Dessert',
     'options': dict({
     }),
     'original_device_class': None,
@@ -262,6 +264,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Dinner',
     'options': dict({
     }),
     'original_device_class': None,
@@ -316,6 +319,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Drink',
     'options': dict({
     }),
     'original_device_class': None,
@@ -370,6 +374,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Lunch',
     'options': dict({
     }),
     'original_device_class': None,
@@ -424,6 +429,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Side',
     'options': dict({
     }),
     'original_device_class': None,
@@ -478,6 +484,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Snack',
     'options': dict({
     }),
     'original_device_class': None,

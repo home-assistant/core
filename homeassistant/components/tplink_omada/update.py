@@ -2,11 +2,9 @@
 
 from __future__ import annotations
 
-from datetime import timedelta
-from typing import Any, NamedTuple
+from typing import Any
 
-from tplink_omada_client import OmadaSiteClient
-from tplink_omada_client.devices import OmadaFirmwareUpdate, OmadaListDevice
+from tplink_omada_client.devices import OmadaListDevice
 from tplink_omada_client.exceptions import OmadaClientException, RequestFailed
 
 from homeassistant.components.update import (
@@ -19,75 +17,8 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import OmadaConfigEntry
-from .coordinator import POLL_DEVICES, OmadaCoordinator, OmadaDevicesCoordinator
+from .coordinator import OmadaFirmwareUpdateCoordinator
 from .entity import OmadaDeviceEntity
-
-POLL_DELAY_UPGRADE = 60
-
-
-class FirmwareUpdateStatus(NamedTuple):
-    """Firmware update information for Omada SDN devices."""
-
-    device: OmadaListDevice
-    firmware: OmadaFirmwareUpdate | None
-
-
-class OmadaFirmwareUpdateCoordinator(OmadaCoordinator[FirmwareUpdateStatus]):  # pylint: disable=hass-enforce-class-module
-    """Coordinator for getting details about available firmware updates for Omada devices."""
-
-    def __init__(
-        self,
-        hass: HomeAssistant,
-        config_entry: OmadaConfigEntry,
-        omada_client: OmadaSiteClient,
-        devices_coordinator: OmadaDevicesCoordinator,
-    ) -> None:
-        """Initialize my coordinator."""
-        super().__init__(
-            hass, config_entry, omada_client, "Firmware Updates", poll_delay=None
-        )
-
-        self._devices_coordinator = devices_coordinator
-        self._config_entry = config_entry
-
-        config_entry.async_on_unload(
-            devices_coordinator.async_add_listener(self._handle_devices_update)
-        )
-
-    async def _get_firmware_updates(self) -> list[FirmwareUpdateStatus]:
-        devices = self._devices_coordinator.data.values()
-
-        updates = [
-            FirmwareUpdateStatus(
-                device=d,
-                firmware=None
-                if not d.need_upgrade
-                else await self.omada_client.get_firmware_details(d),
-            )
-            for d in devices
-        ]
-
-        # During a firmware upgrade, poll device list more frequently
-        self._devices_coordinator.update_interval = timedelta(
-            seconds=(
-                POLL_DELAY_UPGRADE
-                if any(u.device.fw_download for u in updates)
-                else POLL_DEVICES
-            )
-        )
-        return updates
-
-    async def poll_update(self) -> dict[str, FirmwareUpdateStatus]:
-        """Poll the state of Omada Devices firmware update availability."""
-        return {d.device.mac: d for d in await self._get_firmware_updates()}
-
-    @callback
-    def _handle_devices_update(self) -> None:
-        """Handle updated data from the devices coordinator."""
-        # Trigger a refresh of our data, based on the updated device list
-        self._config_entry.async_create_background_task(
-            self.hass, self.async_request_refresh(), "Omada Firmware Update Refresh"
-        )
 
 
 async def async_setup_entry(

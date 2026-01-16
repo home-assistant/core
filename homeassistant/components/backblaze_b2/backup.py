@@ -36,6 +36,10 @@ _LOGGER = logging.getLogger(__name__)
 # Cache TTL for backup list (in seconds)
 CACHE_TTL = 300
 
+# Timeout for upload operations (in seconds)
+# This prevents uploads from hanging indefinitely
+UPLOAD_TIMEOUT = 43200  # 12 hours (matches B2 HTTP timeout)
+
 
 def suggested_filenames(backup: AgentBackup) -> tuple[str, str]:
     """Return the suggested filenames for the backup and metadata files."""
@@ -329,13 +333,28 @@ class BackblazeBackupAgent(BackupAgent):
         _LOGGER.debug("Uploading backup file %s with streaming", filename)
         try:
             content_type, _ = mimetypes.guess_type(filename)
-            file_version = await self._hass.async_add_executor_job(
-                self._upload_unbound_stream_sync,
-                reader,
-                filename,
-                content_type or "application/x-tar",
-                file_info,
+            file_version = await asyncio.wait_for(
+                self._hass.async_add_executor_job(
+                    self._upload_unbound_stream_sync,
+                    reader,
+                    filename,
+                    content_type or "application/x-tar",
+                    file_info,
+                ),
+                timeout=UPLOAD_TIMEOUT,
             )
+        except TimeoutError:
+            _LOGGER.error(
+                "Upload of %s timed out after %s seconds", filename, UPLOAD_TIMEOUT
+            )
+            reader.abort()
+            raise BackupAgentError(
+                f"Upload timed out after {UPLOAD_TIMEOUT} seconds"
+            ) from None
+        except asyncio.CancelledError:
+            _LOGGER.warning("Upload of %s was cancelled", filename)
+            reader.abort()
+            raise
         finally:
             reader.close()
 

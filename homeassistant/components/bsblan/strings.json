@@ -70,6 +70,18 @@
     }
   },
   "exceptions": {
+    "config_entry_not_loaded": {
+      "message": "The device `{device_name}` is not currently loaded or available"
+    },
+    "end_time_before_start_time": {
+      "message": "End time ({end_time}) must be after start time ({start_time})"
+    },
+    "invalid_device_id": {
+      "message": "Invalid device ID: {device_id}"
+    },
+    "no_config_entry_for_device": {
+      "message": "No configuration entry found for device: {device_id}"
+    },
     "set_data_error": {
       "message": "An error occurred while sending the data to the BSB-Lan device"
     },
@@ -78,6 +90,9 @@
     },
     "set_preset_mode_error": {
       "message": "Can't set preset mode to {preset_mode} when HVAC mode is not set to auto"
+    },
+    "set_schedule_failed": {
+      "message": "Failed to set hot water schedule: {error}"
     },
     "set_temperature_error": {
       "message": "An error occurred while setting the temperature"
@@ -90,6 +105,59 @@
     },
     "setup_general_error": {
       "message": "An unknown error occurred while retrieving static device data"
+    },
+    "sync_time_failed": {
+      "message": "Failed to sync time for {device_name}: {error}"
+    }
+  },
+  "services": {
+    "set_hot_water_schedule": {
+      "description": "Set the hot water heating schedule for a BSB-LAN device.",
+      "fields": {
+        "device_id": {
+          "description": "The BSB-LAN device to configure.",
+          "name": "Device"
+        },
+        "friday_slots": {
+          "description": "Time periods for Friday. Add multiple slots for different heating periods throughout the day.",
+          "name": "Friday time slots"
+        },
+        "monday_slots": {
+          "description": "Time periods for Monday. Add multiple slots for different heating periods throughout the day.",
+          "name": "Monday time slots"
+        },
+        "saturday_slots": {
+          "description": "Time periods for Saturday. Add multiple slots for different heating periods throughout the day.",
+          "name": "Saturday time slots"
+        },
+        "sunday_slots": {
+          "description": "Time periods for Sunday. Add multiple slots for different heating periods throughout the day.",
+          "name": "Sunday time slots"
+        },
+        "thursday_slots": {
+          "description": "Time periods for Thursday. Add multiple slots for different heating periods throughout the day.",
+          "name": "Thursday time slots"
+        },
+        "tuesday_slots": {
+          "description": "Time periods for Tuesday. Add multiple slots for different heating periods throughout the day.",
+          "name": "Tuesday time slots"
+        },
+        "wednesday_slots": {
+          "description": "Time periods for Wednesday. Add multiple slots for different heating periods throughout the day.",
+          "name": "Wednesday time slots"
+        }
+      },
+      "name": "Set hot water schedule"
+    },
+    "sync_time": {
+      "description": "Synchronize Home Assistant time to the BSB-Lan device. Only updates if device time differs from Home Assistant time.",
+      "fields": {
+        "device_id": {
+          "description": "The BSB-LAN device to sync time for.",
+          "name": "Device"
+        }
+      },
+      "name": "Sync time"
     }
   }
 }

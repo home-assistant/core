@@ -25,6 +25,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Schedule turn-off',
     'options': dict({
     }),
     'original_device_class': None,
@@ -83,6 +84,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Schedule turn-on',
     'options': dict({
     }),
     'original_device_class': None,
@@ -141,6 +143,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Delayed start',
     'options': dict({
     }),
     'original_device_class': None,

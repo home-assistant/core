@@ -20,6 +20,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Cloud',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.CONNECTIVITY: 'connectivity'>,
@@ -69,6 +70,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Restart required',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
@@ -118,6 +120,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Restart',
     'options': dict({
     }),
     'original_device_class': <ButtonDeviceClass.RESTART: 'restart'>,
@@ -172,6 +175,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Left slot intensity',
     'options': dict({
     }),
     'original_device_class': None,
@@ -230,6 +234,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Right slot intensity',
     'options': dict({
     }),
     'original_device_class': None,
@@ -293,6 +298,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Mode',
     'options': dict({
     }),
     'original_device_class': None,
@@ -350,6 +356,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Last restart',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -401,6 +408,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Left slot level',
     'options': dict({
     }),
     'original_device_class': None,
@@ -451,6 +459,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Left slot vial',
     'options': dict({
     }),
     'original_device_class': None,
@@ -501,6 +510,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Right slot level',
     'options': dict({
     }),
     'original_device_class': None,
@@ -551,6 +561,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Right slot vial',
     'options': dict({
     }),
     'original_device_class': None,
@@ -601,6 +612,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Signal strength',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.SIGNAL_STRENGTH: 'signal_strength'>,
@@ -652,6 +664,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Away mode',
     'options': dict({
     }),
     'original_device_class': None,
@@ -700,6 +713,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Left slot',
     'options': dict({
     }),
     'original_device_class': None,
@@ -748,6 +762,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Left slot boost',
     'options': dict({
     }),
     'original_device_class': None,
@@ -796,6 +811,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Right slot',
     'options': dict({
     }),
     'original_device_class': None,
@@ -844,6 +860,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Right slot boost',
     'options': dict({
     }),
     'original_device_class': None,
@@ -892,6 +909,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Beta firmware',
     'options': dict({
     }),
     'original_device_class': <UpdateDeviceClass.FIRMWARE: 'firmware'>,
@@ -953,6 +971,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Firmware',
     'options': dict({
     }),
     'original_device_class': <UpdateDeviceClass.FIRMWARE: 'firmware'>,
@@ -1014,6 +1033,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Cloud',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.CONNECTIVITY: 'connectivity'>,
@@ -1063,6 +1083,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Restart required',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
@@ -1112,6 +1133,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Restart',
     'options': dict({
     }),
     'original_device_class': <ButtonDeviceClass.RESTART: 'restart'>,
@@ -1169,6 +1191,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Living room lamp',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1232,6 +1255,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Last restart',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -1283,6 +1307,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Living room lamp energy',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -1342,6 +1367,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Living room lamp power',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -1398,6 +1424,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Signal strength',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.SIGNAL_STRENGTH: 'signal_strength'>,
@@ -1449,6 +1476,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Beta firmware',
     'options': dict({
     }),
     'original_device_class': <UpdateDeviceClass.FIRMWARE: 'firmware'>,
@@ -1510,6 +1538,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Firmware',
     'options': dict({
     }),
     'original_device_class': <UpdateDeviceClass.FIRMWARE: 'firmware'>,
@@ -1571,6 +1600,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Overcurrent',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
@@ -1620,6 +1650,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Overheating',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
@@ -1669,6 +1700,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Overpowering',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
@@ -1718,6 +1750,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Overvoltage',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
@@ -1767,6 +1800,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Overcurrent',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
@@ -1816,6 +1850,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Overheating',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
@@ -1865,6 +1900,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Overpowering',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
@@ -1914,6 +1950,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Overvoltage',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
@@ -1963,6 +2000,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Cloud',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.CONNECTIVITY: 'connectivity'>,
@@ -2012,6 +2050,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Overcurrent',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
@@ -2061,6 +2100,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Overheating',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
@@ -2110,6 +2150,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Overpowering',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
@@ -2159,6 +2200,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Overvoltage',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
@@ -2208,6 +2250,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Overcurrent',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
@@ -2257,6 +2300,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Overheating',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
@@ -2306,6 +2350,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Overpowering',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
@@ -2355,6 +2400,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Overvoltage',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
@@ -2404,6 +2450,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Restart required',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
@@ -2453,6 +2500,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Restart',
     'options': dict({
     }),
     'original_device_class': <ButtonDeviceClass.RESTART: 'restart'>,
@@ -2506,6 +2554,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,
@@ -2561,6 +2610,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Current',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -2617,6 +2667,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Energy',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -2676,6 +2727,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Energy consumed',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -2735,6 +2787,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Energy returned',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -2794,6 +2847,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Frequency',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -2850,6 +2904,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -2906,6 +2961,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Voltage',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -2962,6 +3018,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Current',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -3018,6 +3075,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Energy',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -3077,6 +3135,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Energy consumed',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -3136,6 +3195,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Energy returned',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -3195,6 +3255,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Frequency',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -3251,6 +3312,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -3307,6 +3369,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Voltage',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -3361,6 +3424,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Last restart',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -3412,6 +3476,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Current',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -3468,6 +3533,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Energy',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -3527,6 +3593,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Energy consumed',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -3586,6 +3653,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Energy returned',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -3645,6 +3713,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Frequency',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -3701,6 +3770,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -3757,6 +3827,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Voltage',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -3813,6 +3884,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Current',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -3869,6 +3941,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Energy',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -3928,6 +4001,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Energy consumed',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -3987,6 +4061,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Energy returned',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -4046,6 +4121,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Frequency',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -4102,6 +4178,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -4158,6 +4235,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Voltage',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -4214,6 +4292,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Signal strength',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.SIGNAL_STRENGTH: 'signal_strength'>,
@@ -4265,6 +4344,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,
@@ -4313,6 +4393,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,
@@ -4361,6 +4442,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,
@@ -4409,6 +4491,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Beta firmware',
     'options': dict({
     }),
     'original_device_class': <UpdateDeviceClass.FIRMWARE: 'firmware'>,
@@ -4470,6 +4553,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Firmware',
     'options': dict({
     }),
     'original_device_class': <UpdateDeviceClass.FIRMWARE: 'firmware'>,
@@ -4531,6 +4615,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Cloud',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.CONNECTIVITY: 'connectivity'>,
@@ -4580,6 +4665,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'My zone occupancy',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.OCCUPANCY: 'occupancy'>,
@@ -4629,6 +4715,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'New zone occupancy',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.OCCUPANCY: 'occupancy'>,
@@ -4678,6 +4765,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Restart required',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
@@ -4727,6 +4815,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Room occupancy',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.OCCUPANCY: 'occupancy'>,
@@ -4776,6 +4865,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Restart',
     'options': dict({
     }),
     'original_device_class': <ButtonDeviceClass.RESTART: 'restart'>,
@@ -4831,6 +4921,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Illuminance level',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -4885,6 +4976,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Last restart',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -4936,6 +5028,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'My zone detected objects',
     'options': dict({
     }),
     'original_device_class': None,
@@ -4988,6 +5081,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'New zone detected objects',
     'options': dict({
     }),
     'original_device_class': None,
@@ -5040,6 +5134,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Room detected objects',
     'options': dict({
     }),
     'original_device_class': None,
@@ -5092,6 +5187,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Signal strength',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.SIGNAL_STRENGTH: 'signal_strength'>,
@@ -5143,6 +5239,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Beta firmware',
     'options': dict({
     }),
     'original_device_class': <UpdateDeviceClass.FIRMWARE: 'firmware'>,
@@ -5204,6 +5301,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Firmware',
     'options': dict({
     }),
     'original_device_class': <UpdateDeviceClass.FIRMWARE: 'firmware'>,
@@ -5265,6 +5363,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Cloud',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.CONNECTIVITY: 'connectivity'>,
@@ -5314,6 +5413,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'External power',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.POWER: 'power'>,
@@ -5363,6 +5463,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Input 2',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.POWER: 'power'>,
@@ -5412,6 +5513,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Restart required',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
@@ -5461,6 +5563,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Restart',
     'options': dict({
     }),
     'original_device_class': <ButtonDeviceClass.RESTART: 'restart'>,
@@ -5510,6 +5613,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Turn off the screen',
     'options': dict({
     }),
     'original_device_class': None,
@@ -5558,6 +5662,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Turn on the screen',
     'options': dict({
     }),
     'original_device_class': None,
@@ -5607,6 +5712,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Input 0',
     'options': dict({
     }),
     'original_device_class': <EventDeviceClass.BUTTON: 'button'>,
@@ -5666,6 +5772,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Input 3',
     'options': dict({
     }),
     'original_device_class': <EventDeviceClass.BUTTON: 'button'>,
@@ -5725,6 +5832,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Input 4',
     'options': dict({
     }),
     'original_device_class': <EventDeviceClass.BUTTON: 'button'>,
@@ -5785,6 +5893,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Humidity',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -5841,6 +5950,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Illuminance',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ILLUMINANCE: 'illuminance'>,
@@ -5898,6 +6008,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Illuminance level',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -5952,6 +6063,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Last restart',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -6003,6 +6115,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Signal strength',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.SIGNAL_STRENGTH: 'signal_strength'>,
@@ -6056,6 +6169,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -6110,6 +6224,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,
@@ -6158,6 +6273,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Beta firmware',
     'options': dict({
     }),
     'original_device_class': <UpdateDeviceClass.FIRMWARE: 'firmware'>,
@@ -6219,6 +6335,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Firmware',
     'options': dict({
     }),
     'original_device_class': <UpdateDeviceClass.FIRMWARE: 'firmware'>,
@@ -6280,6 +6397,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Cloud',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.CONNECTIVITY: 'connectivity'>,
@@ -6329,6 +6447,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Input 0',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.POWER: 'power'>,
@@ -6378,6 +6497,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Input 1',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.POWER: 'power'>,
@@ -6427,6 +6547,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Overcurrent',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
@@ -6476,6 +6597,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Overheating',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
@@ -6525,6 +6647,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Overpowering',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
@@ -6574,6 +6697,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Overvoltage',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
@@ -6623,6 +6747,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Restart required',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
@@ -6672,6 +6797,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Restart',
     'options': dict({
     }),
     'original_device_class': <ButtonDeviceClass.RESTART: 'restart'>,
@@ -6721,6 +6847,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': <CoverDeviceClass.SHUTTER: 'shutter'>,
@@ -6773,6 +6900,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Current',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -6829,6 +6957,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Energy',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -6888,6 +7017,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Frequency',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -6942,6 +7072,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Last restart',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -6993,6 +7124,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -7049,6 +7181,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Signal strength',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.SIGNAL_STRENGTH: 'signal_strength'>,
@@ -7102,6 +7235,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -7158,6 +7292,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Voltage',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -7212,6 +7347,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Beta firmware',
     'options': dict({
     }),
     'original_device_class': <UpdateDeviceClass.FIRMWARE: 'firmware'>,
@@ -7273,6 +7409,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Firmware',
     'options': dict({
     }),
     'original_device_class': <UpdateDeviceClass.FIRMWARE: 'firmware'>,
@@ -7334,6 +7471,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Cloud',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.CONNECTIVITY: 'connectivity'>,
@@ -7383,6 +7521,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Input 0',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.POWER: 'power'>,
@@ -7432,6 +7571,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Input 1',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.POWER: 'power'>,
@@ -7481,6 +7621,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Overcurrent',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
@@ -7530,6 +7671,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Overheating',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
@@ -7579,6 +7721,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Overpowering',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
@@ -7628,6 +7771,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Overvoltage',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
@@ -7677,6 +7821,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Overcurrent',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
@@ -7726,6 +7871,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Overheating',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
@@ -7775,6 +7921,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Overpowering',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
@@ -7824,6 +7971,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Overvoltage',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
@@ -7873,6 +8021,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Restart required',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
@@ -7922,6 +8071,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Restart',
     'options': dict({
     }),
     'original_device_class': <ButtonDeviceClass.RESTART: 'restart'>,
@@ -7971,6 +8121,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Last restart',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -8022,6 +8173,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Current',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -8078,6 +8230,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Energy',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -8137,6 +8290,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Energy consumed',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -8196,6 +8350,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Energy returned',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -8255,6 +8410,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Frequency',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -8311,6 +8467,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -8367,6 +8524,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -8423,6 +8581,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Voltage',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -8479,6 +8638,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Current',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -8535,6 +8695,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Energy',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -8594,6 +8755,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Energy consumed',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -8653,6 +8815,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Energy returned',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -8712,6 +8875,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Frequency',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -8768,6 +8932,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -8824,6 +8989,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -8880,6 +9046,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Voltage',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -8936,6 +9103,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Signal strength',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.SIGNAL_STRENGTH: 'signal_strength'>,
@@ -8987,6 +9155,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,
@@ -9035,6 +9204,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,
@@ -9083,6 +9253,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Beta firmware',
     'options': dict({
     }),
     'original_device_class': <UpdateDeviceClass.FIRMWARE: 'firmware'>,
@@ -9144,6 +9315,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Firmware',
     'options': dict({
     }),
     'original_device_class': <UpdateDeviceClass.FIRMWARE: 'firmware'>,
@@ -9205,6 +9377,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Cloud',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.CONNECTIVITY: 'connectivity'>,
@@ -9254,6 +9427,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Restart required',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
@@ -9303,6 +9477,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Restart',
     'options': dict({
     }),
     'original_device_class': <ButtonDeviceClass.RESTART: 'restart'>,
@@ -9354,6 +9529,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Apparent power',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -9410,6 +9586,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Current',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -9466,6 +9643,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Energy',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -9525,6 +9703,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Energy returned',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -9582,6 +9761,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Last restart',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -9633,6 +9813,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Neutral current',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -9689,6 +9870,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Apparent power',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -9745,6 +9927,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Current',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -9801,6 +9984,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Energy',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -9860,6 +10044,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Energy returned',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -9919,6 +10104,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Frequency',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -9975,6 +10161,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -10031,6 +10218,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power factor',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.POWER_FACTOR: 'power_factor'>,
@@ -10083,6 +10271,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Voltage',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -10139,6 +10328,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Apparent power',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -10195,6 +10385,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Current',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -10251,6 +10442,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Energy',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -10310,6 +10502,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Energy returned',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -10369,6 +10562,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Frequency',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -10425,6 +10619,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -10481,6 +10676,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power factor',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.POWER_FACTOR: 'power_factor'>,
@@ -10533,6 +10729,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Voltage',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -10589,6 +10786,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Apparent power',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -10645,6 +10843,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Current',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -10701,6 +10900,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Energy',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -10760,6 +10960,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Energy returned',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -10819,6 +11020,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Frequency',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -10875,6 +11077,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -10931,6 +11134,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power factor',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.POWER_FACTOR: 'power_factor'>,
@@ -10983,6 +11187,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Voltage',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -11039,6 +11244,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -11095,6 +11301,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Signal strength',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.SIGNAL_STRENGTH: 'signal_strength'>,
@@ -11148,6 +11355,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -11202,6 +11410,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Beta firmware',
     'options': dict({
     }),
     'original_device_class': <UpdateDeviceClass.FIRMWARE: 'firmware'>,
@@ -11263,6 +11472,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Firmware',
     'options': dict({
     }),
     'original_device_class': <UpdateDeviceClass.FIRMWARE: 'firmware'>,

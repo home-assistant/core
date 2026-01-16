@@ -1,0 +1,195 @@
+# serializer version: 1
+# name: test_select_entities[select.hdfury_vrroom_02_operation_mode-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        '0',
+        '1',
+        '2',
+        '3',
+        '4',
+        '5',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': None,
+    'entity_id': 'select.hdfury_vrroom_02_operation_mode',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Operation mode',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Operation mode',
+    'platform': 'hdfury',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'opmode',
+    'unique_id': '000123456789_opmode',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_select_entities[select.hdfury_vrroom_02_operation_mode-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'HDFury VRROOM-02 Operation mode',
+      'options': list([
+        '0',
+        '1',
+        '2',
+        '3',
+        '4',
+        '5',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.hdfury_vrroom_02_operation_mode',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0',
+  })
+# ---
+# name: test_select_entities[select.hdfury_vrroom_02_port_select_tx0-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        '0',
+        '1',
+        '2',
+        '3',
+        '4',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': None,
+    'entity_id': 'select.hdfury_vrroom_02_port_select_tx0',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Port select TX0',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Port select TX0',
+    'platform': 'hdfury',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'portseltx0',
+    'unique_id': '000123456789_portseltx0',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_select_entities[select.hdfury_vrroom_02_port_select_tx0-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'HDFury VRROOM-02 Port select TX0',
+      'options': list([
+        '0',
+        '1',
+        '2',
+        '3',
+        '4',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.hdfury_vrroom_02_port_select_tx0',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0',
+  })
+# ---
+# name: test_select_entities[select.hdfury_vrroom_02_port_select_tx1-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        '0',
+        '1',
+        '2',
+        '3',
+        '4',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': None,
+    'entity_id': 'select.hdfury_vrroom_02_port_select_tx1',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Port select TX1',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Port select TX1',
+    'platform': 'hdfury',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'portseltx1',
+    'unique_id': '000123456789_portseltx1',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_select_entities[select.hdfury_vrroom_02_port_select_tx1-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'HDFury VRROOM-02 Port select TX1',
+      'options': list([
+        '0',
+        '1',
+        '2',
+        '3',
+        '4',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.hdfury_vrroom_02_port_select_tx1',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '4',
+  })
+# ---

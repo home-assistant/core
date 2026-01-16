@@ -21,7 +21,7 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.const import CONF_NAME, UnitOfInformation
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
@@ -253,12 +253,12 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Xbox Live friends."""
-    coordinator = config_entry.runtime_data.status
+    presence = config_entry.runtime_data.presence
     if TYPE_CHECKING:
         assert config_entry.unique_id
     async_add_entities(
         [
-            XboxSensorEntity(coordinator, config_entry.unique_id, description)
+            XboxSensorEntity(presence, config_entry.unique_id, description)
             for description in SENSOR_DESCRIPTIONS
             if check_deprecated_entity(
                 hass, config_entry.unique_id, description, SENSOR_DOMAIN
@@ -268,31 +268,45 @@ async def async_setup_entry(
     for subentry_id, subentry in config_entry.subentries.items():
         async_add_entities(
             [
-                XboxSensorEntity(coordinator, subentry.unique_id, description)
+                XboxSensorEntity(presence, subentry.unique_id, description)
                 for description in SENSOR_DESCRIPTIONS
                 if subentry.unique_id
                 and check_deprecated_entity(
                     hass, subentry.unique_id, description, SENSOR_DOMAIN
                 )
-                and subentry.unique_id in coordinator.data.presence
+                and subentry.unique_id in presence.data.presence
                 and subentry.subentry_type == "friend"
             ],
             config_subentry_id=subentry_id,
         )
 
-    consoles_coordinator = config_entry.runtime_data.consoles
+    consoles = config_entry.runtime_data.consoles
 
-    async_add_entities(
-        [
-            XboxStorageDeviceSensorEntity(
-                console, storage_device, consoles_coordinator, description
+    devices_added: set[str] = set()
+
+    @callback
+    def add_entities() -> None:
+        nonlocal devices_added
+
+        new_devices = set(consoles.data) - devices_added
+
+        if new_devices:
+            async_add_entities(
+                [
+                    XboxStorageDeviceSensorEntity(
+                        consoles.data[console_id], storage_device, consoles, description
+                    )
+                    for description in STORAGE_SENSOR_DESCRIPTIONS
+                    for console_id in new_devices
+                    if (storage_devices := consoles.data[console_id].storage_devices)
+                    for storage_device in storage_devices
+                ]
             )
-            for description in STORAGE_SENSOR_DESCRIPTIONS
-            for console in coordinator.consoles.result
-            if console.storage_devices
-            for storage_device in console.storage_devices
-        ]
-    )
+            devices_added |= new_devices
+        devices_added &= set(consoles.data)
+
+    config_entry.async_on_unload(consoles.async_add_listener(add_entities))
+    add_entities()
 
 
 class XboxSensorEntity(XboxBaseEntity, SensorEntity):
@@ -344,9 +358,9 @@ class XboxStorageDeviceSensorEntity(
     @property
     def data(self) -> StorageDevice | None:
         """Storage device data."""
-        consoles = self.coordinator.data.result
-        console = next((c for c in consoles if c.id == self._console.id), None)
-        if not console or not console.storage_devices:
+        console = self.coordinator.data[self._console.id]
+
+        if not console.storage_devices:
             return None
 
         return next(

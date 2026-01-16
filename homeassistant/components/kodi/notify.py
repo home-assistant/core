@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import logging
+from typing import Any
 
 import aiohttp
 import jsonrpc_async
@@ -93,7 +94,7 @@ class KodiNotificationService(BaseNotificationService):
 
         self._server = jsonrpc_async.Server(self._url, **kwargs)
 
-    async def async_send_message(self, message="", **kwargs):
+    async def async_send_message(self, message: str = "", **kwargs: Any) -> None:
         """Send a message to Kodi."""
         try:
             data = kwargs.get(ATTR_DATA) or {}

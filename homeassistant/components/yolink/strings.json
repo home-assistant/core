@@ -67,6 +67,9 @@
       "current_power": {
         "name": "Current power"
       },
+      "device_temperature": {
+        "name": "Device temperature"
+      },
       "power_consumption": {
         "name": "Power consumption"
       },

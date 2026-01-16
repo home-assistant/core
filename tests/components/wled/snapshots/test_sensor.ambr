@@ -1,0 +1,522 @@
+# serializer version: 1
+# name: test_snapshots[sensor.wled_rgb_light_estimated_current-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.wled_rgb_light_estimated_current',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Estimated current',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.CURRENT: 'current'>,
+    'original_icon': None,
+    'original_name': 'Estimated current',
+    'platform': 'wled',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'estimated_current',
+    'unique_id': 'aabbccddeeff_estimated_current',
+    'unit_of_measurement': <UnitOfElectricCurrent.MILLIAMPERE: 'mA'>,
+  })
+# ---
+# name: test_snapshots[sensor.wled_rgb_light_estimated_current-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'current',
+      'friendly_name': 'WLED RGB Light Estimated current',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfElectricCurrent.MILLIAMPERE: 'mA'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.wled_rgb_light_estimated_current',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '515',
+  })
+# ---
+# name: test_snapshots[sensor.wled_rgb_light_free_memory-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.wled_rgb_light_free_memory',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Free memory',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.DATA_SIZE: 'data_size'>,
+    'original_icon': None,
+    'original_name': 'Free memory',
+    'platform': 'wled',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'free_heap',
+    'unique_id': 'aabbccddeeff_free_heap',
+    'unit_of_measurement': <UnitOfInformation.BYTES: 'B'>,
+  })
+# ---
+# name: test_snapshots[sensor.wled_rgb_light_free_memory-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'data_size',
+      'friendly_name': 'WLED RGB Light Free memory',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfInformation.BYTES: 'B'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.wled_rgb_light_free_memory',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '198384',
+  })
+# ---
+# name: test_snapshots[sensor.wled_rgb_light_ip-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.wled_rgb_light_ip',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'IP',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'IP',
+    'platform': 'wled',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'ip',
+    'unique_id': 'aabbccddeeff_ip',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_snapshots[sensor.wled_rgb_light_ip-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'WLED RGB Light IP',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.wled_rgb_light_ip',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '127.0.0.1',
+  })
+# ---
+# name: test_snapshots[sensor.wled_rgb_light_led_count-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.wled_rgb_light_led_count',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'LED count',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'LED count',
+    'platform': 'wled',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'info_leds_count',
+    'unique_id': 'aabbccddeeff_info_leds_count',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_snapshots[sensor.wled_rgb_light_led_count-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'WLED RGB Light LED count',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.wled_rgb_light_led_count',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '30',
+  })
+# ---
+# name: test_snapshots[sensor.wled_rgb_light_max_current-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.wled_rgb_light_max_current',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Max current',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.CURRENT: 'current'>,
+    'original_icon': None,
+    'original_name': 'Max current',
+    'platform': 'wled',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'info_leds_max_power',
+    'unique_id': 'aabbccddeeff_info_leds_max_power',
+    'unit_of_measurement': <UnitOfElectricCurrent.MILLIAMPERE: 'mA'>,
+  })
+# ---
+# name: test_snapshots[sensor.wled_rgb_light_max_current-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'current',
+      'friendly_name': 'WLED RGB Light Max current',
+      'unit_of_measurement': <UnitOfElectricCurrent.MILLIAMPERE: 'mA'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.wled_rgb_light_max_current',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '850',
+  })
+# ---
+# name: test_snapshots[sensor.wled_rgb_light_uptime-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.wled_rgb_light_uptime',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Uptime',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
+    'original_icon': None,
+    'original_name': 'Uptime',
+    'platform': 'wled',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'uptime',
+    'unique_id': 'aabbccddeeff_uptime',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_snapshots[sensor.wled_rgb_light_uptime-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'timestamp',
+      'friendly_name': 'WLED RGB Light Uptime',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.wled_rgb_light_uptime',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2021-11-04T16:20:53+00:00',
+  })
+# ---
+# name: test_snapshots[sensor.wled_rgb_light_wi_fi_bssid-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.wled_rgb_light_wi_fi_bssid',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Wi-Fi BSSID',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Wi-Fi BSSID',
+    'platform': 'wled',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'wifi_bssid',
+    'unique_id': 'aabbccddeeff_wifi_bssid',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_snapshots[sensor.wled_rgb_light_wi_fi_bssid-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'WLED RGB Light Wi-Fi BSSID',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.wled_rgb_light_wi_fi_bssid',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'AA:AA:AA:AA:AA:BB',
+  })
+# ---
+# name: test_snapshots[sensor.wled_rgb_light_wi_fi_channel-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.wled_rgb_light_wi_fi_channel',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Wi-Fi channel',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Wi-Fi channel',
+    'platform': 'wled',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'wifi_channel',
+    'unique_id': 'aabbccddeeff_wifi_channel',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_snapshots[sensor.wled_rgb_light_wi_fi_channel-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'WLED RGB Light Wi-Fi channel',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.wled_rgb_light_wi_fi_channel',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '11',
+  })
+# ---
+# name: test_snapshots[sensor.wled_rgb_light_wi_fi_rssi-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.wled_rgb_light_wi_fi_rssi',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Wi-Fi RSSI',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.SIGNAL_STRENGTH: 'signal_strength'>,
+    'original_icon': None,
+    'original_name': 'Wi-Fi RSSI',
+    'platform': 'wled',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'wifi_rssi',
+    'unique_id': 'aabbccddeeff_wifi_rssi',
+    'unit_of_measurement': 'dBm',
+  })
+# ---
+# name: test_snapshots[sensor.wled_rgb_light_wi_fi_rssi-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'signal_strength',
+      'friendly_name': 'WLED RGB Light Wi-Fi RSSI',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': 'dBm',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.wled_rgb_light_wi_fi_rssi',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '-43',
+  })
+# ---
+# name: test_snapshots[sensor.wled_rgb_light_wi_fi_signal-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.wled_rgb_light_wi_fi_signal',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Wi-Fi signal',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Wi-Fi signal',
+    'platform': 'wled',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'wifi_signal',
+    'unique_id': 'aabbccddeeff_wifi_signal',
+    'unit_of_measurement': '%',
+  })
+# ---
+# name: test_snapshots[sensor.wled_rgb_light_wi_fi_signal-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'WLED RGB Light Wi-Fi signal',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.wled_rgb_light_wi_fi_signal',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '100',
+  })
+# ---

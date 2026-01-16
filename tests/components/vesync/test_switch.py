@@ -88,7 +88,7 @@ async def test_turn_on_off_display_success(
             return_value=True,
         ) as method_mock,
         patch(
-            "homeassistant.components.vesync.switch.VeSyncSwitchEntity.schedule_update_ha_state"
+            "homeassistant.components.vesync.switch.VeSyncSwitchEntity.async_write_ha_state"
         ) as update_mock,
     ):
         await hass.services.async_call(

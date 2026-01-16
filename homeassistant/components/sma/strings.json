@@ -3,7 +3,9 @@
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
       "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]",
-      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]",
+      "unique_id_mismatch": "You selected a different SMA device than the one this config entry was configured with, this is not allowed."
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
@@ -29,6 +31,16 @@
         "description": "The SMA integration needs to re-authenticate your connection details",
         "title": "[%key:common::config_flow::title::reauth%]"
       },
+      "reconfigure": {
+        "data": {
+          "group": "[%key:component::sma::config::step::user::data::group%]",
+          "host": "[%key:common::config_flow::data::host%]",
+          "ssl": "[%key:common::config_flow::data::ssl%]",
+          "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]"
+        },
+        "description": "Use the following form to reconfigure your SMA device.",
+        "title": "Reconfigure SMA Solar Integration"
+      },
       "user": {
         "data": {
           "group": "Group",
@@ -42,6 +54,14 @@
         },
         "description": "Enter your SMA device information.",
         "title": "Set up SMA Solar"
+      }
+    }
+  },
+  "selector": {
+    "group": {
+      "options": {
+        "installer": "Installer",
+        "user": "User"
       }
     }
   }

@@ -10,6 +10,7 @@ import W800rf32 as w800
 from homeassistant.components.binary_sensor import (
     DEVICE_CLASSES_SCHEMA,
     PLATFORM_SCHEMA as BINARY_SENSOR_PLATFORM_SCHEMA,
+    BinarySensorDeviceClass,
     BinarySensorEntity,
 )
 from homeassistant.const import CONF_DEVICE_CLASS, CONF_DEVICES, CONF_NAME
@@ -98,7 +99,7 @@ class W800rf32BinarySensor(BinarySensorEntity):
         return self._name
 
     @property
-    def device_class(self):
+    def device_class(self) -> BinarySensorDeviceClass | None:
         """Return the sensor class."""
         return self._device_class
 

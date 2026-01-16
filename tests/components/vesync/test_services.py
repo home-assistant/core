@@ -6,11 +6,7 @@ import pytest
 from pyvesync import VeSync
 
 from homeassistant.components.vesync import async_setup
-from homeassistant.components.vesync.const import (
-    DOMAIN,
-    SERVICE_UPDATE_DEVS,
-    VS_MANAGER,
-)
+from homeassistant.components.vesync.const import DOMAIN, SERVICE_UPDATE_DEVS
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
@@ -61,7 +57,6 @@ async def test_async_new_device_discovery(
     await hass.async_block_till_done()
 
     assert config_entry.state is ConfigEntryState.LOADED
-    assert not hass.data[DOMAIN][VS_MANAGER].devices
 
     # Simulate the manager discovering a new fan when get_devices is called
     manager.get_devices = AsyncMock(

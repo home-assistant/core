@@ -15,9 +15,10 @@
     "step": {
       "authorize": {
         "data": {
-          "use_psk": "Use PSK authentication"
+          "use_psk": "Use PSK authentication",
+          "use_ssl": "Use SSL connection"
         },
-        "description": "Make sure that «Control remotely» is enabled on your TV, go to: \nSettings -> Network -> Remote device settings -> Control remotely. \n\nThere are two authorization methods: PIN code or PSK (Pre-Shared Key). \nAuthorization via PSK is recommended as more stable.",
+        "description": "Make sure that «Control remotely» is enabled on your TV. Go to: \nSettings -> Network -> Remote device settings -> Control remotely. \n\nThere are two authorization methods: PIN code or PSK (Pre-Shared Key). \nAuthorization via PSK is recommended, as it is more stable. \n\nUse an SSL connection only if your TV supports this connection type.",
         "title": "Authorize Sony Bravia TV"
       },
       "confirm": {
@@ -53,6 +54,23 @@
       "terminate_apps": {
         "name": "Terminate apps"
       }
+    }
+  },
+  "exceptions": {
+    "command_error": {
+      "message": "Error sending command to {device}: {error}"
+    },
+    "command_error_not_found": {
+      "message": "Error sending command to {device}: the Bravia API service is reloading"
+    },
+    "command_error_offline": {
+      "message": "Error sending command to {device}: the TV is turned off"
+    },
+    "update_error": {
+      "message": "Error updating data for {device}: {error}"
+    },
+    "update_error_not_found": {
+      "message": "Error updating data for {device}: the Bravia API service is stuck"
     }
   }
 }

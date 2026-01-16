@@ -15,6 +15,7 @@ PLATFORMS: list[Platform] = [
     Platform.BINARY_SENSOR,
     Platform.CLIMATE,
     Platform.LIGHT,
+    Platform.NUMBER,
     Platform.SENSOR,
 ]
 
@@ -25,11 +26,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: LeilSaunaConfigEntry) ->
     """Set up Saunum Leil Sauna from a config entry."""
     host = entry.data[CONF_HOST]
 
-    client = SaunumClient(host=host)
-
-    # Test connection
     try:
-        await client.connect()
+        client = await SaunumClient.create(host)
     except SaunumConnectionError as exc:
         raise ConfigEntryNotReady(f"Error connecting to {host}: {exc}") from exc
 

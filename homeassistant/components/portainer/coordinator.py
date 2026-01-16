@@ -24,7 +24,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import DOMAIN, ENDPOINT_STATUS_DOWN
+from .const import CONTAINER_STATE_RUNNING, DOMAIN, ENDPOINT_STATUS_DOWN
 
 type PortainerConfigEntry = ConfigEntry[PortainerCoordinator]
 
@@ -50,7 +50,7 @@ class PortainerContainerData:
     """Container data held by the Portainer coordinator."""
 
     container: DockerContainer
-    stats: DockerContainerStats
+    stats: DockerContainerStats | None
     stats_pre: DockerContainerStats | None
 
 
@@ -147,46 +147,52 @@ class PortainerCoordinator(DataUpdateCoordinator[dict[int, PortainerCoordinatorD
                 docker_version = await self.portainer.docker_version(endpoint.id)
                 docker_info = await self.portainer.docker_info(endpoint.id)
 
+                prev_endpoint = self.data.get(endpoint.id) if self.data else None
                 container_map: dict[str, PortainerContainerData] = {}
 
-                container_stats_task = [
-                    (
-                        container,
-                        self.portainer.container_stats(
-                            endpoint_id=endpoint.id,
-                            container_id=container.id,
-                        ),
+                # Map containers, started and stopped
+                for container in containers:
+                    container_name = self._get_container_name(container.names[0])
+                    prev_container = (
+                        prev_endpoint.containers[container_name]
+                        if prev_endpoint
+                        else None
                     )
-                    for container in containers
-                ]
-
-                container_stats_gather = await asyncio.gather(
-                    *[task for _, task in container_stats_task],
-                )
-                for (container, _), container_stats in zip(
-                    container_stats_task, container_stats_gather, strict=False
-                ):
-                    container_name = container.names[0].replace("/", " ").strip()
-
-                    # Store previous stats if available. This is used to calculate deltas for CPU and network usage
-                    # In the first call it will be None, since it has nothing to compare with
-                    # Added a walrus pattern to check if not None on prev_container, to keep mypy happy. :)
                     container_map[container_name] = PortainerContainerData(
                         container=container,
-                        stats=container_stats,
-                        stats_pre=(
-                            prev_container.stats
-                            if self.data
-                            and (prev_data := self.data.get(endpoint.id)) is not None
-                            and (
-                                prev_container := prev_data.containers.get(
-                                    container_name
-                                )
-                            )
-                            is not None
-                            else None
-                        ),
+                        stats=None,
+                        stats_pre=prev_container.stats if prev_container else None,
                     )
+
+                # Separately fetch stats for running containers
+                running_containers = [
+                    container
+                    for container in containers
+                    if container.state == CONTAINER_STATE_RUNNING
+                ]
+                if running_containers:
+                    container_stats = dict(
+                        zip(
+                            (
+                                self._get_container_name(container.names[0])
+                                for container in running_containers
+                            ),
+                            await asyncio.gather(
+                                *(
+                                    self.portainer.container_stats(
+                                        endpoint_id=endpoint.id,
+                                        container_id=container.id,
+                                    )
+                                    for container in running_containers
+                                )
+                            ),
+                            strict=False,
+                        )
+                    )
+
+                    # Now assign stats to the containers
+                    for container_name, stats in container_stats.items():
+                        container_map[container_name].stats = stats
             except PortainerConnectionError as err:
                 _LOGGER.exception("Connection error")
                 raise UpdateFailed(
@@ -227,11 +233,15 @@ class PortainerCoordinator(DataUpdateCoordinator[dict[int, PortainerCoordinatorD
 
         # Surprise, we also handle containers here :)
         current_containers = {
-            (endpoint.id, container.container.id)
+            (endpoint.id, container_name)
             for endpoint in mapped_endpoints.values()
-            for container in endpoint.containers.values()
+            for container_name in endpoint.containers
         }
         new_containers = current_containers - self.known_containers
         if new_containers:
             _LOGGER.debug("New containers found: %s", new_containers)
             self.known_containers.update(new_containers)
+
+    def _get_container_name(self, container_name: str) -> str:
+        """Sanitize to get a proper container name."""
+        return container_name.replace("/", " ").strip()

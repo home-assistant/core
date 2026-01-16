@@ -65,6 +65,14 @@
         "name": "Internet key reconnect"
       }
     },
+    "image": {
+      "guest": {
+        "name": "Guest network"
+      },
+      "guest_5g": {
+        "name": "Guest 5GHz network"
+      }
+    },
     "sensor": {
       "active_connection": {
         "name": "Active connection",

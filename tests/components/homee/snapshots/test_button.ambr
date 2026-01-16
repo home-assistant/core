@@ -20,6 +20,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,
@@ -68,6 +69,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Automatic mode',
     'options': dict({
     }),
     'original_device_class': None,
@@ -116,6 +118,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Briefly open',
     'options': dict({
     }),
     'original_device_class': None,
@@ -164,6 +167,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Identification mode',
     'options': dict({
     }),
     'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
@@ -213,6 +217,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Impulse 1',
     'options': dict({
     }),
     'original_device_class': None,
@@ -261,6 +266,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Impulse 2',
     'options': dict({
     }),
     'original_device_class': None,
@@ -309,6 +315,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Light',
     'options': dict({
     }),
     'original_device_class': None,
@@ -357,6 +364,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Open partially',
     'options': dict({
     }),
     'original_device_class': None,
@@ -405,6 +413,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Open permanently',
     'options': dict({
     }),
     'original_device_class': None,
@@ -453,6 +462,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Reset meter 1',
     'options': dict({
     }),
     'original_device_class': None,
@@ -501,6 +511,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Reset meter 2',
     'options': dict({
     }),
     'original_device_class': None,
@@ -549,6 +560,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Ventilate',
     'options': dict({
     }),
     'original_device_class': None,

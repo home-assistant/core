@@ -24,6 +24,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Ding',
     'options': dict({
     }),
     'original_device_class': <EventDeviceClass.DOORBELL: 'doorbell'>,
@@ -82,6 +83,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Motion',
     'options': dict({
     }),
     'original_device_class': <EventDeviceClass.MOTION: 'motion'>,
@@ -140,6 +142,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Motion',
     'options': dict({
     }),
     'original_device_class': <EventDeviceClass.MOTION: 'motion'>,
@@ -198,6 +201,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Ding',
     'options': dict({
     }),
     'original_device_class': <EventDeviceClass.DOORBELL: 'doorbell'>,
@@ -256,6 +260,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Intercom unlock',
     'options': dict({
     }),
     'original_device_class': <EventDeviceClass.BUTTON: 'button'>,
@@ -314,6 +319,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Motion',
     'options': dict({
     }),
     'original_device_class': <EventDeviceClass.MOTION: 'motion'>,

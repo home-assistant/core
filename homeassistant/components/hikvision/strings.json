@@ -1,10 +1,12 @@
 {
   "config": {
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "error": {
-      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "step": {
       "user": {
@@ -25,6 +27,11 @@
         "description": "Enter your Hikvision device connection details.",
         "title": "Set up Hikvision device"
       }
+    }
+  },
+  "device": {
+    "nvr_channel": {
+      "name": "{device_name} channel {channel_number}"
     }
   },
   "issues": {

@@ -5,7 +5,6 @@ from __future__ import annotations
 import asyncio
 from collections.abc import Mapping
 from http import HTTPStatus
-import logging
 from typing import Any
 
 from aiohttp import ClientError, ClientResponseError
@@ -17,8 +16,6 @@ from homeassistant.const import CONF_PASSWORD, CONF_TOKEN, CONF_USERNAME
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import DOMAIN
-
-_LOGGER = logging.getLogger(__name__)
 
 
 class FlowHandler(ConfigFlow, domain=DOMAIN):
@@ -37,8 +34,7 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
     async def _create_client(
         self,
         username: str,
-        *,
-        password: str | None = None,
+        password: str,
         token: str | None = None,
     ) -> ConfigFlowResult:
         """Create client."""
@@ -46,13 +42,13 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
             async with asyncio.timeout(10):
                 if (acquired_token := token) is None:
                     acquired_token = await pymelcloud.login(
-                        username,
-                        password,
-                        async_get_clientsession(self.hass),
+                        email=username,
+                        password=password,
+                        session=async_get_clientsession(self.hass),
                     )
                 await pymelcloud.get_devices(
-                    acquired_token,
-                    async_get_clientsession(self.hass),
+                    token=acquired_token,
+                    session=async_get_clientsession(self.hass),
                 )
         except ClientResponseError as err:
             if err.status in (HTTPStatus.UNAUTHORIZED, HTTPStatus.FORBIDDEN):
@@ -60,6 +56,10 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason="cannot_connect")
         except (TimeoutError, ClientError):
             return self.async_abort(reason="cannot_connect")
+        except AttributeError:
+            # python-melcloud library bug: login() raises AttributeError on invalid
+            # credentials when API response doesn't contain expected "LoginData" key
+            return self.async_abort(reason="invalid_auth")
 
         return await self._create_entry(username, acquired_token)
 
@@ -74,8 +74,9 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
                     {vol.Required(CONF_USERNAME): str, vol.Required(CONF_PASSWORD): str}
                 ),
             )
-        username = user_input[CONF_USERNAME]
-        return await self._create_client(username, password=user_input[CONF_PASSWORD])
+        return await self._create_client(
+            username=user_input[CONF_USERNAME], password=user_input[CONF_PASSWORD]
+        )
 
     async def async_step_reauth(
         self, entry_data: Mapping[str, Any]
@@ -114,9 +115,9 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
         try:
             async with asyncio.timeout(10):
                 acquired_token = await pymelcloud.login(
-                    user_input[CONF_USERNAME],
-                    user_input[CONF_PASSWORD],
-                    async_get_clientsession(self.hass),
+                    email=user_input[CONF_USERNAME],
+                    password=user_input[CONF_PASSWORD],
+                    session=async_get_clientsession(self.hass),
                 )
         except (ClientResponseError, AttributeError) as err:
             if (
@@ -130,10 +131,7 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "invalid_auth"
             else:
                 errors["base"] = "cannot_connect"
-        except (
-            TimeoutError,
-            ClientError,
-        ):
+        except (TimeoutError, ClientError):
             errors["base"] = "cannot_connect"
 
         return acquired_token, errors
@@ -151,9 +149,9 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
             try:
                 async with asyncio.timeout(10):
                     acquired_token = await pymelcloud.login(
-                        user_input[CONF_USERNAME],
-                        user_input[CONF_PASSWORD],
-                        async_get_clientsession(self.hass),
+                        email=user_input[CONF_USERNAME],
+                        password=user_input[CONF_PASSWORD],
+                        session=async_get_clientsession(self.hass),
                     )
             except (ClientResponseError, AttributeError) as err:
                 if (
