@@ -70,7 +70,7 @@ class UnraidSystemCoordinator(DataUpdateCoordinator[UnraidSystemData]):
         try:
             metrics = await self.api_client.get_system_metrics()
         except UnraidAuthenticationError as err:
-            raise UpdateFailed(f"Authentication failed: {err}") from err
+            raise ConfigEntryError(f"Authentication failed: {err}") from err
         except UnraidConnectionError as err:
             raise UpdateFailed(f"Connection error: {err}") from err
         except UnraidAPIError as err:
