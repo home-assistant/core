@@ -17,7 +17,7 @@
         "data_description": {
           "api_key": "[%key:component::openai_conversation::config::step::user::data_description::api_key%]"
         },
-        "description": "Re-authentication required. Please enter your updated API key."
+        "description": "Reauthentication required. Please enter your updated API key."
       },
       "user": {
         "data": {
