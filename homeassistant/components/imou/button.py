@@ -10,7 +10,7 @@ from homeassistant.components.button import ButtonDeviceClass, ButtonEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import ImouConfigEntry
 from .const import PARAM_RESTART_DEVICE, PARAM_ROTATION_DURATION
@@ -18,12 +18,9 @@ from .entity import ImouEntity
 
 _LOGGER: logging.Logger = logging.getLogger(__package__)
 
-# Limit parallel updates to prevent overwhelming the API
-PARALLEL_UPDATES = 1
-
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddConfigEntryEntitiesCallback
 ) -> None:
     """Set up Imou button entities.
 
@@ -33,7 +30,7 @@ async def async_setup_entry(
         async_add_entities: Callback to add entities
     """
     _LOGGER.debug("Setting up button entities")
-    imou_entry: ImouConfigEntry = entry  # type: ignore[assignment]
+    imou_entry: ImouConfigEntry = entry
     imou_coordinator = imou_entry.runtime_data
     entities = []
     for device in imou_coordinator.devices:

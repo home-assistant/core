@@ -98,11 +98,11 @@ class ImouDataUpdateCoordinator(DataUpdateCoordinator[None]):
         async with asyncio.timeout(300):
             try:
                 await self.async_update_all_device()
-            except TimeoutError:
+            except TimeoutError as err:
                 if not self._unavailable_logged:
                     _LOGGER.info("Imou devices are unavailable: Timeout while fetching data")
                     self._unavailable_logged = True
-                raise UpdateFailed("Timeout while fetching data") from None
+                raise UpdateFailed("Timeout while fetching data: {err}") from err
             except Exception as err:
                 if not self._unavailable_logged:
                     _LOGGER.info("Imou devices are unavailable: %s", err)

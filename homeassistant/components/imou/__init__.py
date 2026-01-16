@@ -94,7 +94,7 @@ async def async_remove_devices(hass: HomeAssistant, config_entry_id: str) -> Non
 
 async def async_remove_config_entry_device(
     hass: HomeAssistant, config_entry: ImouConfigEntry, device_entry: DeviceEntry
-) -> None:
+) -> bool:
     """Remove a single device.
 
     Args:
@@ -105,3 +105,4 @@ async def async_remove_config_entry_device(
     _LOGGER.debug("Removing device %s", device_entry.name)
     device_registry_object = dr.async_get(hass)
     device_registry_object.async_remove_device(device_entry.id)
+    return True

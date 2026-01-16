@@ -1,11 +1,11 @@
-"""Test configuration and fixtures for Imou Life integration."""
+"""Test configuration and fixtures for Imou integration."""
 
 from collections.abc import Generator
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from homeassistant.components.imou_life.const import DOMAIN
+from homeassistant.components.imou.const import DOMAIN
 from homeassistant.core import HomeAssistant
 
 from .util import CONFIG_ENTRY_DATA, async_init_integration
@@ -17,7 +17,7 @@ from tests.common import MockConfigEntry
 def mock_config_entry() -> MockConfigEntry:
     """Return the default mocked config entry."""
     return MockConfigEntry(
-        title="Imou Life",
+        title="Imou",
         domain=DOMAIN,
         data=CONFIG_ENTRY_DATA,
         unique_id=CONFIG_ENTRY_DATA["app_id"],
@@ -28,7 +28,7 @@ def mock_config_entry() -> MockConfigEntry:
 def mock_api_client() -> Generator[MagicMock]:
     """Create a mock API client."""
     with patch(
-        "homeassistant.components.imou_life.config_flow.ImouOpenApiClient"
+        "homeassistant.components.imou.config_flow.ImouOpenApiClient"
     ) as mock_client:
         mock_instance = AsyncMock()
         mock_instance.async_get_token = AsyncMock()
@@ -40,7 +40,7 @@ def mock_api_client() -> Generator[MagicMock]:
 def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
-        "homeassistant.components.imou_life.async_setup_entry",
+        "homeassistant.components.imou.async_setup_entry",
         return_value=True,
     ) as mock_setup:
         yield mock_setup

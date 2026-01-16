@@ -1,8 +1,8 @@
-"""Test utilities for the Imou Life integration."""
+"""Test utilities for the Imou integration."""
 
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from homeassistant.components.imou_life.const import (
+from homeassistant.components.imou.const import (
     CONF_API_URL_SG,
     DOMAIN,
     PARAM_API_URL,
@@ -50,7 +50,7 @@ async def async_init_integration(
     hass: HomeAssistant,
     config_entry_data: dict | None = None,
 ) -> MockConfigEntry:
-    """Set up the Imou Life integration in Home Assistant."""
+    """Set up the Imou integration in Home Assistant."""
     if config_entry_data is None:
         config_entry_data = CONFIG_ENTRY_DATA
 
@@ -66,11 +66,11 @@ async def async_init_integration(
 
     with (
         patch(
-            "homeassistant.components.imou_life.ImouOpenApiClient",
+            "homeassistant.components.imou.ImouOpenApiClient",
             return_value=create_mock_api_client(),
         ),
         patch(
-            "homeassistant.components.imou_life.ImouHaDeviceManager",
+            "homeassistant.components.imou.ImouHaDeviceManager",
             return_value=mock_device_manager,
         ),
     ):

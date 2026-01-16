@@ -294,7 +294,7 @@ aioimaplib==2.0.1
 # homeassistant.components.immich
 aioimmich==0.11.1
 
-# homeassistant.components.imou_life
+# homeassistant.components.imou
 pyimouapi==1.2.2
 
 # homeassistant.components.apache_kafka

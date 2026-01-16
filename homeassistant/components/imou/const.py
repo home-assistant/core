@@ -1,7 +1,7 @@
 """Constants."""
 
 # Internal constants
-DOMAIN = "imou_life"
+DOMAIN = "imou"
 
 # Configuration definitions
 CONF_API_URL_FK = "openapi-fk.easy4ip.com"

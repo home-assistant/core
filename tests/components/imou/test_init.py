@@ -1,8 +1,8 @@
-"""Tests for the Imou Life init."""
+"""Tests for the Imou init."""
 
 from unittest.mock import AsyncMock, patch
 
-from homeassistant.components.imou_life.const import DOMAIN
+from homeassistant.components.imou.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
@@ -51,10 +51,10 @@ async def test_setup_entry_auth_failed(
 
     with (
         patch(
-            "homeassistant.components.imou_life.ImouOpenApiClient",
+            "homeassistant.components.imou.ImouOpenApiClient",
         ) as mock_client_class,
         patch(
-            "homeassistant.components.imou_life.ImouHaDeviceManager",
+            "homeassistant.components.imou.ImouHaDeviceManager",
         ),
     ):
         mock_client = AsyncMock()
@@ -67,7 +67,7 @@ async def test_setup_entry_auth_failed(
         )
 
         with patch(
-            "homeassistant.components.imou_life.ImouDataUpdateCoordinator",
+            "homeassistant.components.imou.ImouDataUpdateCoordinator",
             return_value=mock_coordinator,
         ):
             result = await hass.config_entries.async_setup(config_entry.entry_id)
@@ -91,16 +91,16 @@ async def test_reload_entry(
     # but hass.config_entries.async_reload directly calls async_setup_entry
     with (
         patch(
-            "homeassistant.components.imou_life.async_unload_entry",
+            "homeassistant.components.imou.async_unload_entry",
             return_value=True,
         ),
         patch(
-            "homeassistant.components.imou_life.async_setup_entry",
+            "homeassistant.components.imou.async_setup_entry",
             return_value=True,
         ) as mock_setup,
         # Prevent the update listener from causing issues
         patch(
-            "homeassistant.components.imou_life.async_reload_entry",
+            "homeassistant.components.imou.async_reload_entry",
         ),
     ):
         await hass.config_entries.async_reload(config_entry.entry_id)

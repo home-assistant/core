@@ -1,11 +1,11 @@
-"""Tests for the Imou Life config flow."""
+"""Tests for the Imou config flow."""
 
 from unittest.mock import AsyncMock, patch
 
 from pyimouapi.exceptions import ImouException
 import pytest
 
-from homeassistant.components.imou_life.const import (
+from homeassistant.components.imou.const import (
     CONF_API_URL_FK,
     CONF_API_URL_HZ,
     CONF_API_URL_OR,
@@ -28,7 +28,7 @@ from tests.common import MockConfigEntry
 def mock_setup_entry() -> AsyncMock:
     """Override async_setup_entry."""
     with patch(
-        "homeassistant.components.imou_life.async_setup_entry",
+        "homeassistant.components.imou.async_setup_entry",
         return_value=True,
     ) as mock_setup:
         yield mock_setup
@@ -38,7 +38,7 @@ def mock_setup_entry() -> AsyncMock:
 def mock_api_client() -> AsyncMock:
     """Create a mock API client."""
     with patch(
-        "homeassistant.components.imou_life.config_flow.ImouOpenApiClient"
+        "homeassistant.components.imou.config_flow.ImouOpenApiClient"
     ) as mock_client:
         mock_instance = AsyncMock()
         mock_instance.async_get_token = AsyncMock()
@@ -118,7 +118,7 @@ async def test_options_flow(
 
     with (
         patch(
-            "homeassistant.components.imou_life.ImouHaDeviceManager",
+            "homeassistant.components.imou.ImouHaDeviceManager",
         ),
     ):
         await hass.config_entries.async_setup(config_entry.entry_id)
@@ -153,7 +153,7 @@ async def test_options_flow_with_default_value(
 
     with (
         patch(
-            "homeassistant.components.imou_life.ImouHaDeviceManager",
+            "homeassistant.components.imou.ImouHaDeviceManager",
         ),
     ):
         await hass.config_entries.async_setup(config_entry.entry_id)
@@ -258,7 +258,7 @@ async def test_options_flow_cancel(
 
     with (
         patch(
-            "homeassistant.components.imou_life.ImouHaDeviceManager",
+            "homeassistant.components.imou.ImouHaDeviceManager",
         ),
     ):
         await hass.config_entries.async_setup(config_entry.entry_id)

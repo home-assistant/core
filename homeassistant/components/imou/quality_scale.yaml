@@ -4,9 +4,7 @@ rules:
     status: exempt
     comment: Integration does not register custom actions.
   appropriate-polling: done
-  brands:
-    status: exempt
-    comment: Only one integration exists for this brand. Brand files are for organizing multiple related integrations.
+  brands: done
   common-modules: done
   config-flow-test-coverage: done
   config-flow: done
