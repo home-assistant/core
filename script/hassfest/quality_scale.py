@@ -1713,7 +1713,6 @@ INTEGRATIONS_WITHOUT_SCALE = [
     "ondilo_ico",
     "onvif",
     "open_meteo",
-    "openai_conversation",
     "openalpr_cloud",
     "openerz",
     "openevse",

@@ -13,7 +13,7 @@ rules:
   docs-actions: done
   docs-high-level-description: done
   docs-installation-instructions: done
-  docs-removal-instructions: todo
+  docs-removal-instructions: done
   entity-event-setup: done
   entity-unique-id: done
   has-entity-name: done
@@ -26,7 +26,7 @@ rules:
   action-exceptions: done
   config-entry-unloading: done
   docs-configuration-parameters: done
-  docs-installation-parameters: todo
+  docs-installation-parameters: done
   entity-unavailable: todo
   integration-owner: todo
   log-when-unavailable: todo
@@ -50,7 +50,7 @@ rules:
     comment: |
       No data updates.
   docs-examples: done
-  docs-known-limitations: todo
+  docs-known-limitations: done
   docs-supported-devices:
     status: exempt
     comment: |
