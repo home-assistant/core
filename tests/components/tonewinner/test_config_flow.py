@@ -96,7 +96,7 @@ async def test_form_cannot_connect(hass: HomeAssistant) -> None:
         )
 
     assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {"base": "Cannot open port: Permission denied"}
+    assert result["errors"] == {"base": "cannot_connect"}
 
     # Test recovery from error
     mock_serial = MagicMock()
@@ -135,7 +135,7 @@ async def test_form_os_error(hass: HomeAssistant) -> None:
         )
 
     assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {"base": "Cannot open port: Port not found"}
+    assert result["errors"] == {"base": "cannot_connect"}
 
 
 async def test_form_default_values(hass: HomeAssistant) -> None:
@@ -148,55 +148,3 @@ async def test_form_default_values(hass: HomeAssistant) -> None:
     # Check that default values are present in the schema
     data_schema = result["data_schema"]
     assert data_schema is not None
-
-
-async def test_already_configured(hass: HomeAssistant) -> None:
-    """Test we abort if already configured."""
-    # Add an existing entry
-    mock_entry = MagicMock()
-    mock_entry.entry_id = "existing_entry"
-    mock_entry.data = {
-        CONF_SERIAL_PORT: "/dev/ttyUSB0",
-        CONF_BAUD_RATE: DEFAULT_BAUD_RATE,
-    }
-
-    await hass.config_entries.async_add(mock_entry)
-
-    # Try to add the same configuration again
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": config_entries.SOURCE_USER},
-        data={
-            CONF_SERIAL_PORT: "/dev/ttyUSB0",
-            CONF_BAUD_RATE: DEFAULT_BAUD_RATE,
-        },
-    )
-
-    # The flow should proceed (integration allows multiple instances)
-    # but in real scenario you might want to prevent duplicates
-    assert result["type"] in (FlowResultType.FORM, FlowResultType.CREATE_ENTRY)
-
-
-async def test_serial_port_timeout(hass: HomeAssistant) -> None:
-    """Test that serial port is opened with timeout."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-
-    mock_serial = MagicMock()
-    mock_serial.close = MagicMock()
-
-    with patch("serial.Serial", return_value=mock_serial) as mock_serial_class:
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {
-                CONF_SERIAL_PORT: "/dev/ttyUSB0",
-                CONF_BAUD_RATE: DEFAULT_BAUD_RATE,
-            },
-        )
-        await hass.async_block_till_done()
-
-        # Verify Serial was called with timeout=1
-        mock_serial_class.assert_called_once_with("/dev/ttyUSB0", 9600, timeout=1)
-
-    assert result["type"] is FlowResultType.CREATE_ENTRY

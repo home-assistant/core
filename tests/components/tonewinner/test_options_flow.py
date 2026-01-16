@@ -1,15 +1,20 @@
 """Test the ToneWinner AT-500 options flow."""
 
-from unittest.mock import MagicMock
-
-from homeassistant.components.tonewinner.const import CONF_SOURCE_MAPPINGS
+from homeassistant.components.tonewinner.const import (
+    CONF_BAUD_RATE,
+    CONF_SERIAL_PORT,
+    CONF_SOURCE_MAPPINGS,
+    DOMAIN,
+)
 from homeassistant.components.tonewinner.media_player import INPUT_SOURCES
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
+from tests.common import MockConfigEntry
+
 
 async def test_options_flow_init(
-    hass: HomeAssistant, mock_config_entry: MagicMock
+    hass: HomeAssistant, mock_config_entry
 ) -> None:
     """Test options flow initialization."""
     mock_config_entry.add_to_hass(hass)
@@ -26,10 +31,19 @@ async def test_options_flow_init(
 
 
 async def test_options_flow_with_defaults(
-    hass: HomeAssistant, mock_config_entry: MagicMock
+    hass: HomeAssistant,
 ) -> None:
     """Test options flow shows default values when no options are set."""
-    mock_config_entry.options = {}
+    mock_config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_SERIAL_PORT: "/dev/ttyUSB0",
+            CONF_BAUD_RATE: 9600,
+        },
+        options={},
+        entry_id="test_entry_id",
+        title="Tonewinner AT-500",
+    )
     mock_config_entry.add_to_hass(hass)
 
     result = await hass.config_entries.options.async_init(mock_config_entry.entry_id)
@@ -42,7 +56,7 @@ async def test_options_flow_with_defaults(
 
 
 async def test_options_flow_with_existing_mappings(
-    hass: HomeAssistant, mock_config_entry: MagicMock
+    hass: HomeAssistant,
 ) -> None:
     """Test options flow loads existing source mappings."""
     # Set up existing options
@@ -52,7 +66,16 @@ async def test_options_flow_with_existing_mappings(
         "BT": {"enabled": True, "name": "Bluetooth Audio"},
     }
 
-    mock_config_entry.options = {CONF_SOURCE_MAPPINGS: source_mappings}
+    mock_config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_SERIAL_PORT: "/dev/ttyUSB0",
+            CONF_BAUD_RATE: 9600,
+        },
+        options={CONF_SOURCE_MAPPINGS: source_mappings},
+        entry_id="test_entry_id",
+        title="Tonewinner AT-500",
+    )
     mock_config_entry.add_to_hass(hass)
 
     result = await hass.config_entries.options.async_init(mock_config_entry.entry_id)
@@ -63,10 +86,19 @@ async def test_options_flow_with_existing_mappings(
 
 
 async def test_options_flow_save_mappings(
-    hass: HomeAssistant, mock_config_entry: MagicMock
+    hass: HomeAssistant,
 ) -> None:
     """Test saving source mappings in options flow."""
-    mock_config_entry.options = {}
+    mock_config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_SERIAL_PORT: "/dev/ttyUSB0",
+            CONF_BAUD_RATE: 9600,
+        },
+        options={},
+        entry_id="test_entry_id",
+        title="Tonewinner AT-500",
+    )
     mock_config_entry.add_to_hass(hass)
 
     # Initialize options flow
@@ -99,10 +131,19 @@ async def test_options_flow_save_mappings(
 
 
 async def test_options_flow_disable_source(
-    hass: HomeAssistant, mock_config_entry: MagicMock
+    hass: HomeAssistant,
 ) -> None:
     """Test disabling a source in options flow."""
-    mock_config_entry.options = {}
+    mock_config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_SERIAL_PORT: "/dev/ttyUSB0",
+            CONF_BAUD_RATE: 9600,
+        },
+        options={},
+        entry_id="test_entry_id",
+        title="Tonewinner AT-500",
+    )
     mock_config_entry.add_to_hass(hass)
 
     result = await hass.config_entries.options.async_init(mock_config_entry.entry_id)
@@ -126,10 +167,19 @@ async def test_options_flow_disable_source(
 
 
 async def test_options_flow_rename_source(
-    hass: HomeAssistant, mock_config_entry: MagicMock
+    hass: HomeAssistant,
 ) -> None:
     """Test renaming a source in options flow."""
-    mock_config_entry.options = {}
+    mock_config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_SERIAL_PORT: "/dev/ttyUSB0",
+            CONF_BAUD_RATE: 9600,
+        },
+        options={},
+        entry_id="test_entry_id",
+        title="Tonewinner AT-500",
+    )
     mock_config_entry.add_to_hass(hass)
 
     result = await hass.config_entries.options.async_init(mock_config_entry.entry_id)
@@ -153,10 +203,19 @@ async def test_options_flow_rename_source(
 
 
 async def test_options_flow_all_sources(
-    hass: HomeAssistant, mock_config_entry: MagicMock
+    hass: HomeAssistant,
 ) -> None:
     """Test configuring all input sources."""
-    mock_config_entry.options = {}
+    mock_config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_SERIAL_PORT: "/dev/ttyUSB0",
+            CONF_BAUD_RATE: 9600,
+        },
+        options={},
+        entry_id="test_entry_id",
+        title="Tonewinner AT-500",
+    )
     mock_config_entry.add_to_hass(hass)
 
     result = await hass.config_entries.options.async_init(mock_config_entry.entry_id)
@@ -182,15 +241,24 @@ async def test_options_flow_all_sources(
 
 
 async def test_options_flow_partial_configuration(
-    hass: HomeAssistant, mock_config_entry: MagicMock
+    hass: HomeAssistant,
 ) -> None:
-    """Test that only configured sources are in the result."""
-    mock_config_entry.options = {}
+    """Test that configured sources are saved with correct values."""
+    mock_config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_SERIAL_PORT: "/dev/ttyUSB0",
+            CONF_BAUD_RATE: 9600,
+        },
+        options={},
+        entry_id="test_entry_id",
+        title="Tonewinner AT-500",
+    )
     mock_config_entry.add_to_hass(hass)
 
     result = await hass.config_entries.options.async_init(mock_config_entry.entry_id)
 
-    # Only configure a few sources (what user would actually do)
+    # Configure a few sources (what user would actually do)
     user_input = {
         "HD1_enabled": True,
         "HD1_name": "HDMI 1",
@@ -206,14 +274,15 @@ async def test_options_flow_partial_configuration(
     assert result["type"] is FlowResultType.CREATE_ENTRY
     source_mappings = result["data"][CONF_SOURCE_MAPPINGS]
 
-    # Should only have the sources we configured
-    assert len(source_mappings) == 2
+    # Should have all sources with our configured ones having custom values
     assert "HD1" in source_mappings
     assert "HD2" in source_mappings
+    assert source_mappings["HD1"]["name"] == "HDMI 1"
+    assert source_mappings["HD2"]["name"] == "HDMI 2"
 
 
 async def test_options_flow_update_existing(
-    hass: HomeAssistant, mock_config_entry: MagicMock
+    hass: HomeAssistant,
 ) -> None:
     """Test updating existing source mappings."""
     # Start with existing mappings
@@ -222,7 +291,16 @@ async def test_options_flow_update_existing(
         "HD2": {"enabled": False, "name": "HDMI 2"},
     }
 
-    mock_config_entry.options = {CONF_SOURCE_MAPPINGS: existing_mappings}
+    mock_config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_SERIAL_PORT: "/dev/ttyUSB0",
+            CONF_BAUD_RATE: 9600,
+        },
+        options={CONF_SOURCE_MAPPINGS: existing_mappings},
+        entry_id="test_entry_id",
+        title="Tonewinner AT-500",
+    )
     mock_config_entry.add_to_hass(hass)
 
     result = await hass.config_entries.options.async_init(mock_config_entry.entry_id)

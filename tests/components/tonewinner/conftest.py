@@ -11,20 +11,21 @@ from homeassistant.components.tonewinner.const import (
     CONF_SERIAL_PORT,
     DOMAIN,
 )
+from tests.common import MockConfigEntry
 
 
 @pytest.fixture
 def mock_config_entry():
     """Return a mock config entry."""
-    return MagicMock(
-        entry_id="test_entry_id",
+    return MockConfigEntry(
+        domain=DOMAIN,
         data={
             CONF_SERIAL_PORT: "/dev/ttyUSB0",
             CONF_BAUD_RATE: 9600,
         },
         options={},
+        entry_id="test_entry_id",
         title="Tonewinner AT-500",
-        domain=DOMAIN,
     )
 
 

@@ -50,7 +50,7 @@ class TonewinnerConfigFlow(ConfigEntryFlow, domain=DOMAIN):
                 _LOGGER.debug("Serial port test successful")
             except (serial.SerialException, OSError) as e:
                 _LOGGER.error("Serial port test failed: %s", e)
-                errors["base"] = f"Cannot open port: {e}"
+                errors["base"] = "cannot_connect"
             if not errors:
                 _LOGGER.info("Creating config entry with data: %s", user_input)
                 return self.async_create_entry(

@@ -1,0 +1,33 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Setup ToneWinner AT-500",
+        "description": "Enter the serial port connection details for your ToneWinner AT-500 AV receiver.",
+        "data": {
+          "serial_port": "Serial Port",
+          "baud_rate": "Baud Rate"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Cannot connect to the serial port. Please check the port and permissions.",
+      "unknown": "An unknown error occurred"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Configure Source Mappings",
+        "description": "Customize the names and visibility of your input sources."
+      }
+    }
+  },
+  "entity": {
+    "media_player": {
+      "tonewinner": {
+        "name": "ToneWinner AT-500"
+      }
+    }
+  }
+}
