@@ -241,10 +241,13 @@ async def test_coordinator_update_no_image_change_no_state_write(
     assert fake_vacuum.v1_properties is not None
     fake_vacuum.v1_properties.status.in_cleaning = 1
 
+    # Use 91 seconds to exceed the 90-second cleaning interval
     now = dt_util.utcnow() + timedelta(seconds=91)
-    with patch(
-        "homeassistant.components.roborock.coordinator.dt_util.utcnow",
-        return_value=now,
+    with (
+        patch(
+            "homeassistant.components.roborock.coordinator.dt_util.utcnow",
+            return_value=now,
+        ),
     ):
         async_fire_time_changed(hass, now)
         await hass.async_block_till_done()
@@ -269,6 +272,7 @@ async def test_coordinator_update_with_image_change_writes_state(
 
     # Get the initial last_updated timestamp
     initial_last_updated = state.last_updated
+    initial_last_changed = state.last_changed
 
     # Trigger a coordinator update WITH changing the image
     assert fake_vacuum.v1_properties is not None
@@ -276,10 +280,13 @@ async def test_coordinator_update_with_image_change_writes_state(
     fake_vacuum.v1_properties.status.in_cleaning = 1
     fake_vacuum.v1_properties.map_content.image_content = b"\x89PNG-NEW"
 
+    # Use 91 seconds to exceed the 90-second cleaning interval
     now = dt_util.utcnow() + timedelta(seconds=91)
-    with patch(
-        "homeassistant.components.roborock.coordinator.dt_util.utcnow",
-        return_value=now,
+    with (
+        patch(
+            "homeassistant.components.roborock.coordinator.dt_util.utcnow",
+            return_value=now,
+        ),
     ):
         async_fire_time_changed(hass, now)
         await hass.async_block_till_done()
@@ -289,3 +296,4 @@ async def test_coordinator_update_with_image_change_writes_state(
     assert new_state is not None
     # last_updated should be newer
     assert new_state.last_updated > initial_last_updated
+    assert new_state.last_changed > initial_last_changed
