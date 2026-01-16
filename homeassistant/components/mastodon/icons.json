@@ -4,7 +4,7 @@
       "bot": { "default": "mdi:robot" },
       "discoverable": { "default": "mdi:magnify-scan" },
       "indexable": { "default": "mdi:search-web" },
-      "limited": { "default": "mdi:volume-mute" },
+      "limited": { "default": "mdi:account-cancel" },
       "locked": {
         "default": "mdi:account-lock",
         "state": { "off": "mdi:account-lock-open" }
