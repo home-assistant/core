@@ -121,7 +121,7 @@ def starts_with_dot(key: str) -> str:
 _TRIGGERS_DESCRIPTION_SCHEMA = vol.Schema(
     {
         vol.Remove(vol.All(str, starts_with_dot)): object,
-        cv.underscore_slug: vol.Any(None, _TRIGGER_DESCRIPTION_SCHEMA),
+        str: vol.Any(None, _TRIGGER_DESCRIPTION_SCHEMA),
     }
 )
 
@@ -1432,6 +1432,10 @@ async def async_get_all_descriptions(
         description = {"fields": yaml_description.get("fields", {})}
         if (target := yaml_description.get("target")) is not None:
             description["target"] = target
+
+        prefix, sep, _ = missing_trigger.partition(".")
+        if sep and domain != prefix:
+            description["translation_domain"] = domain
 
         new_descriptions_cache[missing_trigger] = description
     hass.data[TRIGGER_DESCRIPTION_CACHE] = new_descriptions_cache
