@@ -679,6 +679,7 @@ class OAuth2Session:
     @property
     def valid_token(self) -> bool:
         """Return if token is still valid."""
+        _LOGGER.error("Token: %s", self.token["expires_at"])
         return (
             cast(float, self.token["expires_at"])
             > time.time() + CLOCK_OUT_OF_SYNC_MAX_SEC

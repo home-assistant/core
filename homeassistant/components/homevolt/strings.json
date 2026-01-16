@@ -1,14 +1,25 @@
 {
   "config": {
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "cannot_connect": "Failed to connect"
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
+    "flow_title": "{name}",
     "step": {
+      "discovery_confirm": {
+        "data": {
+          "password": "[%key:common::config_flow::data::password%]"
+        },
+        "data_description": {
+          "password": "The local password configured for your Homevolt battery, if required."
+        },
+        "description": "A Homevolt battery was discovered at {host}. Enter the password if required."
+      },
       "user": {
         "data": {
           "host": "[%key:common::config_flow::data::host%]",
@@ -24,6 +35,28 @@
     }
   },
   "entity": {
+    "number": {
+      "battery_max_charge_power": {
+        "name": "Battery max charge power"
+      },
+      "battery_max_discharge_power": {
+        "name": "Battery max discharge power"
+      },
+      "battery_max_soc": {
+        "name": "Battery maximum state of charge"
+      },
+      "battery_min_soc": {
+        "name": "Battery minimum state of charge"
+      },
+      "battery_power_setpoint": {
+        "name": "Battery power setpoint"
+      }
+    },
+    "select": {
+      "battery_control_mode": {
+        "name": "Battery control mode"
+      }
+    },
     "sensor": {
       "available_charging_energy": {
         "name": "Available charging energy"
@@ -192,6 +225,11 @@
       },
       "tmin": {
         "name": "Minimum temperature"
+      }
+    },
+    "switch": {
+      "local_mode": {
+        "name": "Local mode"
       }
     }
   }

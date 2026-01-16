@@ -21,13 +21,11 @@ from homeassistant.const import (
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN, MANUFACTURER
 from .coordinator import HomevoltConfigEntry, HomevoltDataUpdateCoordinator
+from .entity import HomevoltEntity
 
 PARALLEL_UPDATES = 0  # Coordinator-based updates
 
@@ -121,10 +119,8 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
-class HomevoltSensor(CoordinatorEntity[HomevoltDataUpdateCoordinator], SensorEntity):
+class HomevoltSensor(HomevoltEntity, SensorEntity):
     """Representation of a Homevolt sensor."""
-
-    _attr_has_entity_name = True
 
     def __init__(
         self,
@@ -133,23 +129,13 @@ class HomevoltSensor(CoordinatorEntity[HomevoltDataUpdateCoordinator], SensorEnt
         sensor_key: str,
     ) -> None:
         """Initialize the sensor."""
-        super().__init__(coordinator)
         self.entity_description = description
         device_id = coordinator.data.device_id
         self._attr_unique_id = f"{device_id}_{sensor_key}"
         sensor_data = coordinator.data.sensors[sensor_key]
         self._attr_translation_key = sensor_data.slug
         self._sensor_key = sensor_key
-        device_metadata = coordinator.data.device_metadata.get(
-            sensor_data.device_identifier
-        )
-        self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, f"{device_id}_{sensor_data.device_identifier}")},
-            configuration_url=coordinator.client.base_url,
-            manufacturer=MANUFACTURER,
-            model=device_metadata.model if device_metadata else None,
-            name=device_metadata.name if device_metadata else None,
-        )
+        super().__init__(coordinator, sensor_data.device_identifier)
 
     @property
     def available(self) -> bool:
