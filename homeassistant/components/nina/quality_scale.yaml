@@ -35,7 +35,7 @@ rules:
       This integration does not provide additional actions.
   config-entry-unloading: done
   docs-configuration-parameters: done
-  docs-installation-parameters: todo
+  docs-installation-parameters: done
   entity-unavailable: done
   integration-owner: done
   log-when-unavailable: done
@@ -44,12 +44,7 @@ rules:
     status: exempt
     comment: |
       This integration does not use services that need authentication.
-  test-coverage:
-    status: todo
-    comment: |
-      Create a shared fixture for the mock config entry
-      Use init_integration in tests
-
+  test-coverage: done
   # Gold
   devices: done
   diagnostics: done
