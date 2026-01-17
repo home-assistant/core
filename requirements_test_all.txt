@@ -304,7 +304,7 @@ aiolookin==1.0.0
 aiolyric==2.0.2
 
 # homeassistant.components.mealie
-aiomealie==1.1.1
+aiomealie==1.2.0
 
 # homeassistant.components.modern_forms
 aiomodernforms==0.1.8
@@ -1073,7 +1073,7 @@ hole==0.9.0
 holidays==0.84
 
 # homeassistant.components.frontend
-home-assistant-frontend==20260107.1
+home-assistant-frontend==20260107.2
 
 # homeassistant.components.conversation
 home-assistant-intents==2026.1.6
