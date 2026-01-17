@@ -349,7 +349,7 @@
     'state': 'on',
   })
 # ---
-# name: test_binary_sensors[eve_shutter][binary_sensor.eve_shutter_switch_20eci1701_problem-entry]
+# name: test_binary_sensors[eve_shutter][binary_sensor.eve_shutter_switch_20eci1701_configuration_status-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -362,7 +362,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'binary_sensor.eve_shutter_switch_20eci1701_problem',
+    'entity_id': 'binary_sensor.eve_shutter_switch_20eci1701_configuration_status',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -370,29 +370,29 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Problem',
+    'object_id_base': 'Configuration status',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
     'original_icon': None,
-    'original_name': 'Problem',
+    'original_name': 'Configuration status',
     'platform': 'matter',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'config_status_operational',
     'unique_id': '00000000000004D2-0000000000000094-MatterNodeDevice-1-WindowCoveringConfigStatusOperational-258-7',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_binary_sensors[eve_shutter][binary_sensor.eve_shutter_switch_20eci1701_problem-state]
+# name: test_binary_sensors[eve_shutter][binary_sensor.eve_shutter_switch_20eci1701_configuration_status-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'problem',
-      'friendly_name': 'Eve Shutter Switch 20ECI1701 Problem',
+      'friendly_name': 'Eve Shutter Switch 20ECI1701 Configuration status',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.eve_shutter_switch_20eci1701_problem',
+    'entity_id': 'binary_sensor.eve_shutter_switch_20eci1701_configuration_status',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -1942,7 +1942,7 @@
     'state': 'off',
   })
 # ---
-# name: test_binary_sensors[window_covering_full][binary_sensor.mock_full_window_covering_problem-entry]
+# name: test_binary_sensors[window_covering_full][binary_sensor.mock_full_window_covering_configuration_status-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1955,7 +1955,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'binary_sensor.mock_full_window_covering_problem',
+    'entity_id': 'binary_sensor.mock_full_window_covering_configuration_status',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1963,36 +1963,36 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Problem',
+    'object_id_base': 'Configuration status',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
     'original_icon': None,
-    'original_name': 'Problem',
+    'original_name': 'Configuration status',
     'platform': 'matter',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'config_status_operational',
     'unique_id': '00000000000004D2-0000000000000032-MatterNodeDevice-1-WindowCoveringConfigStatusOperational-258-7',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_binary_sensors[window_covering_full][binary_sensor.mock_full_window_covering_problem-state]
+# name: test_binary_sensors[window_covering_full][binary_sensor.mock_full_window_covering_configuration_status-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'problem',
-      'friendly_name': 'Mock Full Window Covering Problem',
+      'friendly_name': 'Mock Full Window Covering Configuration status',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.mock_full_window_covering_problem',
+    'entity_id': 'binary_sensor.mock_full_window_covering_configuration_status',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_binary_sensors[window_covering_lift][binary_sensor.mock_lift_window_covering_problem-entry]
+# name: test_binary_sensors[window_covering_lift][binary_sensor.mock_lift_window_covering_configuration_status-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -2005,7 +2005,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'binary_sensor.mock_lift_window_covering_problem',
+    'entity_id': 'binary_sensor.mock_lift_window_covering_configuration_status',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -2013,36 +2013,36 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Problem',
+    'object_id_base': 'Configuration status',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
     'original_icon': None,
-    'original_name': 'Problem',
+    'original_name': 'Configuration status',
     'platform': 'matter',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'config_status_operational',
     'unique_id': '00000000000004D2-0000000000000032-MatterNodeDevice-1-WindowCoveringConfigStatusOperational-258-7',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_binary_sensors[window_covering_lift][binary_sensor.mock_lift_window_covering_problem-state]
+# name: test_binary_sensors[window_covering_lift][binary_sensor.mock_lift_window_covering_configuration_status-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'problem',
-      'friendly_name': 'Mock Lift Window Covering Problem',
+      'friendly_name': 'Mock Lift Window Covering Configuration status',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.mock_lift_window_covering_problem',
+    'entity_id': 'binary_sensor.mock_lift_window_covering_configuration_status',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_binary_sensors[window_covering_pa_lift][binary_sensor.longan_link_wncv_da01_problem-entry]
+# name: test_binary_sensors[window_covering_pa_lift][binary_sensor.longan_link_wncv_da01_configuration_status-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -2055,7 +2055,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'binary_sensor.longan_link_wncv_da01_problem',
+    'entity_id': 'binary_sensor.longan_link_wncv_da01_configuration_status',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -2063,36 +2063,36 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Problem',
+    'object_id_base': 'Configuration status',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
     'original_icon': None,
-    'original_name': 'Problem',
+    'original_name': 'Configuration status',
     'platform': 'matter',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'config_status_operational',
     'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-WindowCoveringConfigStatusOperational-258-7',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_binary_sensors[window_covering_pa_lift][binary_sensor.longan_link_wncv_da01_problem-state]
+# name: test_binary_sensors[window_covering_pa_lift][binary_sensor.longan_link_wncv_da01_configuration_status-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'problem',
-      'friendly_name': 'Longan link WNCV DA01 Problem',
+      'friendly_name': 'Longan link WNCV DA01 Configuration status',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.longan_link_wncv_da01_problem',
+    'entity_id': 'binary_sensor.longan_link_wncv_da01_configuration_status',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_binary_sensors[window_covering_pa_tilt][binary_sensor.mock_pa_tilt_window_covering_problem-entry]
+# name: test_binary_sensors[window_covering_pa_tilt][binary_sensor.mock_pa_tilt_window_covering_configuration_status-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -2105,7 +2105,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'binary_sensor.mock_pa_tilt_window_covering_problem',
+    'entity_id': 'binary_sensor.mock_pa_tilt_window_covering_configuration_status',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -2113,36 +2113,36 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Problem',
+    'object_id_base': 'Configuration status',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
     'original_icon': None,
-    'original_name': 'Problem',
+    'original_name': 'Configuration status',
     'platform': 'matter',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'config_status_operational',
     'unique_id': '00000000000004D2-0000000000000032-MatterNodeDevice-1-WindowCoveringConfigStatusOperational-258-7',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_binary_sensors[window_covering_pa_tilt][binary_sensor.mock_pa_tilt_window_covering_problem-state]
+# name: test_binary_sensors[window_covering_pa_tilt][binary_sensor.mock_pa_tilt_window_covering_configuration_status-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'problem',
-      'friendly_name': 'Mock PA Tilt Window Covering Problem',
+      'friendly_name': 'Mock PA Tilt Window Covering Configuration status',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.mock_pa_tilt_window_covering_problem',
+    'entity_id': 'binary_sensor.mock_pa_tilt_window_covering_configuration_status',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_binary_sensors[window_covering_tilt][binary_sensor.mock_tilt_window_covering_problem-entry]
+# name: test_binary_sensors[window_covering_tilt][binary_sensor.mock_tilt_window_covering_configuration_status-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -2155,7 +2155,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'binary_sensor.mock_tilt_window_covering_problem',
+    'entity_id': 'binary_sensor.mock_tilt_window_covering_configuration_status',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -2163,36 +2163,36 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Problem',
+    'object_id_base': 'Configuration status',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
     'original_icon': None,
-    'original_name': 'Problem',
+    'original_name': 'Configuration status',
     'platform': 'matter',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'config_status_operational',
     'unique_id': '00000000000004D2-0000000000000032-MatterNodeDevice-1-WindowCoveringConfigStatusOperational-258-7',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_binary_sensors[window_covering_tilt][binary_sensor.mock_tilt_window_covering_problem-state]
+# name: test_binary_sensors[window_covering_tilt][binary_sensor.mock_tilt_window_covering_configuration_status-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'problem',
-      'friendly_name': 'Mock Tilt Window Covering Problem',
+      'friendly_name': 'Mock Tilt Window Covering Configuration status',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.mock_tilt_window_covering_problem',
+    'entity_id': 'binary_sensor.mock_tilt_window_covering_configuration_status',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_binary_sensors[zemismart_mt25b][binary_sensor.zemismart_mt25b_roller_motor_problem-entry]
+# name: test_binary_sensors[zemismart_mt25b][binary_sensor.zemismart_mt25b_roller_motor_configuration_status-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -2205,7 +2205,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'binary_sensor.zemismart_mt25b_roller_motor_problem',
+    'entity_id': 'binary_sensor.zemismart_mt25b_roller_motor_configuration_status',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -2213,29 +2213,29 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Problem',
+    'object_id_base': 'Configuration status',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
     'original_icon': None,
-    'original_name': 'Problem',
+    'original_name': 'Configuration status',
     'platform': 'matter',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'config_status_operational',
     'unique_id': '00000000000004D2-000000000000007A-MatterNodeDevice-1-WindowCoveringConfigStatusOperational-258-7',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_binary_sensors[zemismart_mt25b][binary_sensor.zemismart_mt25b_roller_motor_problem-state]
+# name: test_binary_sensors[zemismart_mt25b][binary_sensor.zemismart_mt25b_roller_motor_configuration_status-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'problem',
-      'friendly_name': 'Zemismart MT25B Roller Motor Problem',
+      'friendly_name': 'Zemismart MT25B Roller Motor Configuration status',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.zemismart_mt25b_roller_motor_problem',
+    'entity_id': 'binary_sensor.zemismart_mt25b_roller_motor_configuration_status',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
