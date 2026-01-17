@@ -69,42 +69,6 @@
       "electricity_price": {
         "name": "Electricity price"
       },
-      "energy_flow_day_battery_charged": {
-        "name": "Battery energy charged today"
-      },
-      "energy_flow_day_battery_discharged": {
-        "name": "Battery energy discharged today"
-      },
-      "energy_flow_day_battery_source_grid": {
-        "name": "Battery charged from grid today"
-      },
-      "energy_flow_day_battery_source_load": {
-        "name": "Battery charged from load today"
-      },
-      "energy_flow_day_grid_exported": {
-        "name": "Energy exported to grid today"
-      },
-      "energy_flow_day_grid_imported": {
-        "name": "Energy imported from grid today"
-      },
-      "energy_flow_day_grid_source_battery": {
-        "name": "Grid export from battery today"
-      },
-      "energy_flow_day_grid_source_load": {
-        "name": "Grid export from load today"
-      },
-      "energy_flow_day_load_consumed": {
-        "name": "Load energy consumed today"
-      },
-      "energy_flow_day_load_generated": {
-        "name": "Load energy generated today"
-      },
-      "energy_flow_day_load_source_battery": {
-        "name": "Load supplied by battery today"
-      },
-      "energy_flow_day_load_source_grid": {
-        "name": "Load supplied by grid today"
-      },
       "energy_flow_hour_battery_charged": {
         "name": "Battery energy charged this hour"
       },
@@ -170,42 +134,6 @@
       },
       "energy_flow_month_load_source_grid": {
         "name": "Load supplied by grid this month"
-      },
-      "energy_flow_week_battery_charged": {
-        "name": "Battery energy charged this week"
-      },
-      "energy_flow_week_battery_discharged": {
-        "name": "Battery energy discharged this week"
-      },
-      "energy_flow_week_battery_source_grid": {
-        "name": "Battery charged from grid this week"
-      },
-      "energy_flow_week_battery_source_load": {
-        "name": "Battery charged from load this week"
-      },
-      "energy_flow_week_grid_exported": {
-        "name": "Energy exported to grid this week"
-      },
-      "energy_flow_week_grid_imported": {
-        "name": "Energy imported from grid this week"
-      },
-      "energy_flow_week_grid_source_battery": {
-        "name": "Grid export from battery this week"
-      },
-      "energy_flow_week_grid_source_load": {
-        "name": "Grid export from load this week"
-      },
-      "energy_flow_week_load_consumed": {
-        "name": "Load energy consumed this week"
-      },
-      "energy_flow_week_load_generated": {
-        "name": "Load energy generated this week"
-      },
-      "energy_flow_week_load_source_battery": {
-        "name": "Load supplied by battery this week"
-      },
-      "energy_flow_week_load_source_grid": {
-        "name": "Load supplied by grid this week"
       },
       "estimated_hour_consumption": {
         "name": "Estimated consumption current hour"
