@@ -448,6 +448,8 @@ async def test_preset_mode_options_update(
     mock_saunum_client,
 ) -> None:
     """Test that preset names update when options are changed."""
+    entity_id = "climate.saunum_leil"
+
     mock_config_entry.add_to_hass(hass)
     assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()

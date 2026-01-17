@@ -10,7 +10,6 @@ import voluptuous as vol
 
 from homeassistant.config_entries import (
     SOURCE_USER,
-    ConfigEntry,
     ConfigFlow,
     ConfigFlowResult,
     OptionsFlow,
@@ -19,6 +18,7 @@ from homeassistant.const import CONF_HOST
 from homeassistant.core import callback
 from homeassistant.helpers import config_validation as cv
 
+from . import LeilSaunaConfigEntry
 from .const import (
     DEFAULT_PRESET_NAME_TYPE_1,
     DEFAULT_PRESET_NAME_TYPE_2,
@@ -63,7 +63,7 @@ class LeilSaunaConfigFlow(ConfigFlow, domain=DOMAIN):
     @staticmethod
     @callback
     def async_get_options_flow(
-        config_entry: ConfigEntry,
+        config_entry: LeilSaunaConfigEntry,
     ) -> LeilSaunaOptionsFlow:
         """Get the options flow for this handler."""
         return LeilSaunaOptionsFlow()

@@ -79,7 +79,7 @@
         'type_2',
         'type_3',
       ]),
-      'supported_features': <ClimateEntityFeature: 9>,
+      'supported_features': <ClimateEntityFeature: 25>,
       'target_temp_step': 1.0,
       'temperature': 80,
     }),
