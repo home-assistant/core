@@ -150,10 +150,6 @@ class MatterNumericSwitchEntityDescription(
 ):
     """Describe Matter Numeric Switch entities."""
 
-    # Some devices expose an OnOff attribute that is read-only and must be
-    # controlled via On/Off commands instead of attribute writes.
-    use_on_off_commands: bool = False
-
 
 class MatterNumericSwitch(MatterSwitch):
     """Representation of a Matter Enum Attribute as a Switch entity."""
@@ -165,16 +161,6 @@ class MatterNumericSwitch(MatterSwitch):
         send_value: Any = value
         if value_convert := self.entity_description.ha_to_device:
             send_value = value_convert(value)
-
-        if self.entity_description.use_on_off_commands:
-            command = (
-                clusters.OnOff.Commands.On()
-                if send_value
-                else clusters.OnOff.Commands.Off()
-            )
-            await self.send_device_command(command)
-            return
-
         await self.write_attribute(value=send_value)
 
     async def async_turn_on(self, **kwargs: Any) -> None:
