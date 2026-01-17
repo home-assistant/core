@@ -61,6 +61,7 @@ class LeilSaunaClimate(LeilSaunaEntity, ClimateEntity):
     """Representation of a Saunum Leil Sauna climate entity."""
 
     _attr_name = None
+    _attr_translation_key = "saunum_climate"
     _attr_hvac_modes = [HVACMode.OFF, HVACMode.HEAT]
     _attr_supported_features = (
         ClimateEntityFeature.TARGET_TEMPERATURE

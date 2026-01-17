@@ -23,7 +23,7 @@ async def async_get_config_entry_diagnostics(
     # Build diagnostics data
     diagnostics_data: dict[str, Any] = {
         "config": async_redact_data(entry.data, REDACT_CONFIG),
-        "options": entry.options,
+        "options": dict(entry.options),
         "client_info": {"connected": coordinator.client.is_connected},
         "coordinator_info": {
             "last_update_success": coordinator.last_update_success,

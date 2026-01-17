@@ -50,6 +50,19 @@
         "name": "Thermal cutoff alarm"
       }
     },
+    "climate": {
+      "saunum_climate": {
+        "state_attributes": {
+          "preset_mode": {
+            "state": {
+              "type_1": "Sauna Type 1",
+              "type_2": "Sauna Type 2",
+              "type_3": "Sauna Type 3"
+            }
+          }
+        }
+      }
+    },
     "light": {
       "light": {
         "name": "[%key:component::light::title%]"

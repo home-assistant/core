@@ -241,7 +241,7 @@ async def test_entity_unavailable_on_update_failure(
         ),
         (
             SERVICE_SET_PRESET_MODE,
-            {ATTR_PRESET_MODE: "Sauna Type 2"},
+            {ATTR_PRESET_MODE: "type_2"},
             "async_set_sauna_type",
             SaunumException("Communication error"),
             "set_preset_failed",
@@ -302,7 +302,7 @@ async def test_preset_mode_service_call(
     await hass.services.async_call(
         CLIMATE_DOMAIN,
         SERVICE_SET_PRESET_MODE,
-        {ATTR_ENTITY_ID: "climate.saunum_leil", ATTR_PRESET_MODE: "Sauna Type 2"},
+        {ATTR_ENTITY_ID: "climate.saunum_leil", ATTR_PRESET_MODE: "type_2"},
         blocking=True,
     )
 
@@ -371,7 +371,7 @@ async def test_preset_mode_validation_error(
         await hass.services.async_call(
             CLIMATE_DOMAIN,
             SERVICE_SET_PRESET_MODE,
-            {ATTR_ENTITY_ID: "climate.saunum_leil", ATTR_PRESET_MODE: "Sauna Type 2"},
+            {ATTR_ENTITY_ID: "climate.saunum_leil", ATTR_PRESET_MODE: "type_2"},
             blocking=True,
         )
 
@@ -382,10 +382,10 @@ async def test_preset_mode_validation_error(
 @pytest.mark.parametrize(
     ("sauna_type", "expected_preset"),
     [
-        (0, "Sauna Type 1"),
-        (1, "Sauna Type 2"),
-        (2, "Sauna Type 3"),
-        (None, "Sauna Type 1"),
+        (0, "type_1"),
+        (1, "type_2"),
+        (2, "type_3"),
+        (None, "type_1"),
     ],
 )
 async def test_preset_mode_attributes_default_names(
@@ -454,7 +454,7 @@ async def test_preset_mode_options_update(
 
     state = hass.states.get("climate.saunum_leil")
     assert state is not None
-    assert "Sauna Type 1" in state.attributes.get("preset_modes", [])
+    assert "type_1" in state.attributes.get("preset_modes", [])
 
     custom_options = {
         OPT_PRESET_NAME_TYPE_1: "Custom Type 1",
@@ -467,4 +467,4 @@ async def test_preset_mode_options_update(
     state = hass.states.get("climate.saunum_leil")
     assert state is not None
     assert "Custom Type 1" in state.attributes.get("preset_modes", [])
-    assert "Sauna Type 1" not in state.attributes.get("preset_modes", [])
+    assert "type_1" not in state.attributes.get("preset_modes", [])

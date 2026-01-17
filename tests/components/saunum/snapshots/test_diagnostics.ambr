@@ -34,8 +34,6 @@
       'update_interval': '0:01:00',
     }),
     'options': dict({
-      '__type': "<class 'mappingproxy'>",
-      'repr': 'mappingproxy({})',
     }),
   })
 # ---
