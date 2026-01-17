@@ -46,6 +46,9 @@ async def async_setup_entry(
 class MatterSwitchEntityDescription(SwitchEntityDescription, MatterEntityDescription):
     """Describe Matter Switch entities."""
 
+    device_to_ha: Callable[[Any], Any] | None = None
+    ha_to_device: Callable[[Any], Any] | None = None
+
 
 class MatterSwitch(MatterEntity, SwitchEntity):
     """Representation of a Matter switch."""
@@ -54,22 +57,35 @@ class MatterSwitch(MatterEntity, SwitchEntity):
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn switch on."""
-        await self.send_device_command(
-            clusters.OnOff.Commands.On(),
+        # Start with True (HA wants to turn on)
+        # Apply ha_to_device conversion if needed (e.g., for inverted logic like mute)
+        value = True
+        if value_convert := getattr(self.entity_description, "ha_to_device", None):
+            value = value_convert(value)
+        command = (
+            clusters.OnOff.Commands.On() if value else clusters.OnOff.Commands.Off()
         )
+        await self.send_device_command(command)
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn switch off."""
-        await self.send_device_command(
-            clusters.OnOff.Commands.Off(),
+        # Start with False (HA wants to turn off)
+        # Apply ha_to_device conversion if needed (e.g., for inverted logic like mute)
+        value = False
+        if value_convert := getattr(self.entity_description, "ha_to_device", None):
+            value = value_convert(value)
+        command = (
+            clusters.OnOff.Commands.On() if value else clusters.OnOff.Commands.Off()
         )
+        await self.send_device_command(command)
 
     @callback
     def _update_from_device(self) -> None:
         """Update from device."""
-        self._attr_is_on = self.get_matter_attribute_value(
-            self._entity_info.primary_attribute
-        )
+        value = self.get_matter_attribute_value(self._entity_info.primary_attribute)
+        if value_convert := getattr(self.entity_description, "device_to_ha", None):
+            value = value_convert(value)
+        self._attr_is_on = value
 
 
 class MatterGenericCommandSwitch(MatterSwitch):
@@ -138,6 +154,10 @@ class MatterNumericSwitchEntityDescription(
 ):
     """Describe Matter Numeric Switch entities."""
 
+    # Some devices expose an OnOff attribute that is read-only and must be
+    # controlled via On/Off commands instead of attribute writes.
+    use_on_off_commands: bool = False
+
 
 class MatterNumericSwitch(MatterSwitch):
     """Representation of a Matter Enum Attribute as a Switch entity."""
@@ -146,11 +166,20 @@ class MatterNumericSwitch(MatterSwitch):
 
     async def _async_set_native_value(self, value: bool) -> None:
         """Update the current value."""
+        send_value: Any = value
         if value_convert := self.entity_description.ha_to_device:
             send_value = value_convert(value)
-        await self.write_attribute(
-            value=send_value,
-        )
+
+        if self.entity_description.use_on_off_commands:
+            command = (
+                clusters.OnOff.Commands.On()
+                if send_value
+                else clusters.OnOff.Commands.Off()
+            )
+            await self.send_device_command(command)
+            return
+
+        await self.write_attribute(value=send_value)
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn switch on."""
@@ -248,7 +277,7 @@ DISCOVERY_SCHEMAS = [
     ),
     MatterDiscoverySchema(
         platform=Platform.SWITCH,
-        entity_description=MatterNumericSwitchEntityDescription(
+        entity_description=MatterSwitchEntityDescription(
             key="MatterMuteToggle",
             translation_key="speaker_mute",
             device_to_ha={
@@ -260,7 +289,7 @@ DISCOVERY_SCHEMAS = [
                 True: False,  # HA showing mute as on means volume is off (muted), so send False
             }.get,
         ),
-        entity_class=MatterNumericSwitch,
+        entity_class=MatterSwitch,
         required_attributes=(clusters.OnOff.Attributes.OnOff,),
         device_type=(device_types.Speaker,),
     ),
