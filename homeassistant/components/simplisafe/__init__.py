@@ -557,14 +557,14 @@ class SimpliSafe:
             self._async_start_websocket_loop()
         )
 
-        async def async_websocket_disconnect_listener(_: Event) -> None:
-            """Define an event handler to disconnect from the websocket."""
-            assert self._api.websocket
-            await self._async_cancel_websocket_loop()
+        @callback
+        def _async_websocket_shutdown_listener(_: Event) -> None:
+            """Handle Home Assistant stop event to disconnect websocket."""
+            self._hass.async_create_task(self._async_cancel_websocket_loop())
 
         self.entry.async_on_unload(
             self._hass.bus.async_listen_once(
-                EVENT_HOMEASSISTANT_STOP, async_websocket_disconnect_listener
+                EVENT_HOMEASSISTANT_STOP, self._async_websocket_shutdown_listener
             )
         )
 
