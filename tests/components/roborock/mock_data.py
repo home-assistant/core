@@ -1389,6 +1389,7 @@ STATUS = S7Status.from_dict(
         "home_sec_enable_password": 0,
         "adbumper_status": [0, 0, 0],
         "water_shortage_status": 0,
+        "clean_fluid_status": 0,
         "dock_type": 3,
         "dust_collection_status": 0,
         "auto_dust_collection": 1,
