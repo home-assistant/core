@@ -247,5 +247,29 @@
         }
       ]
     }
+  },
+  "Microwave": {
+    "data": {
+      "programs": [
+        {
+          "key": "Cooking.Oven.Program.Microwave.90Watt",
+          "constraints": {
+            "execution": "selectandstart"
+          }
+        },
+        {
+          "key": "Cooking.Oven.Program.Microwave.180Watt",
+          "constraints": {
+            "execution": "selectandstart"
+          }
+        },
+        {
+          "key": "Cooking.Oven.Program.Microwave.360Watt",
+          "constraints": {
+            "execution": "selectandstart"
+          }
+        }
+      ]
+    }
   }
 }

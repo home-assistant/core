@@ -337,7 +337,10 @@ def mock_client(
         for appliance_ in appliances:
             if appliance_.ha_id == ha_id:
                 return appliance_
-        raise HomeConnectApiError("error.key", "error description")
+        raise HomeConnectApiError(
+            "missing appliance at mock",
+            f"Mock didn't include appliance with id {ha_id}",
+        )
 
     mock.get_specific_appliance = AsyncMock(
         side_effect=_get_specific_appliance_side_effect
@@ -350,7 +353,10 @@ def mock_client(
             appliance for appliance in appliances if appliance.ha_id == ha_id
         ).type
         if appliance_type not in MOCK_PROGRAMS:
-            raise HomeConnectApiError("error.key", "error description")
+            raise HomeConnectApiError(
+                "missing programs at mock",
+                f"Mock didn't include programs for appliance with id {ha_id}",
+            )
 
         return ArrayOfPrograms(
             [
@@ -383,7 +389,10 @@ def mock_client(
                 for setting_dict in cast(list[dict], settings["settings"]):
                     if setting_dict["key"] == setting_key:
                         return GetSetting.from_dict(setting_dict)
-        raise HomeConnectApiError("error.key", "error description")
+        raise HomeConnectApiError(
+            "missing setting at mock",
+            f"Mock didn't include setting {setting_key} for appliance with id {ha_id}",
+        )
 
     async def _get_available_commands_side_effect(ha_id: str) -> ArrayOfCommands:
         """Get available commands."""

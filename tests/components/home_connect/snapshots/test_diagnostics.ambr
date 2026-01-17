@@ -38,6 +38,9 @@
       'ha_id': '541513213246313789',
       'name': 'Microwave',
       'programs': list([
+        'Cooking.Oven.Program.Microwave.90Watt',
+        'Cooking.Oven.Program.Microwave.180Watt',
+        'Cooking.Oven.Program.Microwave.360Watt',
       ]),
       'settings': dict({
       }),
