@@ -2,18 +2,16 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass, replace
-from unittest.mock import AsyncMock, patch
+from types import SimpleNamespace
+from unittest.mock import AsyncMock
 
 import pytest
 
 from homeassistant.components.elke27 import switch as switch_module
-from homeassistant.components.elke27.const import (
-    CONF_INTEGRATION_SERIAL,
-    CONF_LINK_KEYS_JSON,
-    DOMAIN,
-)
-from homeassistant.const import CONF_HOST, CONF_PORT
+from homeassistant.components.elke27.const import DATA_COORDINATOR, DATA_HUB, DOMAIN
+from homeassistant.components.elke27.coordinator import Elke27DataUpdateCoordinator
+from homeassistant.components.elke27.switch import async_setup_entry
+from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
@@ -21,111 +19,46 @@ from homeassistant.helpers import entity_registry as er
 from tests.common import MockConfigEntry
 
 
-@dataclass(frozen=True, slots=True)
-class PanelInfo:
-    """Panel info snapshot stub."""
-
-    mac: str
-    name: str
-    serial: str
-
-
-@dataclass(frozen=True, slots=True)
-class OutputState:
-    """Output state stub."""
-
-    output_id: int
-    name: str
-    is_on: bool
-
-
-@dataclass(frozen=True, slots=True)
-class Snapshot:
-    """Snapshot stub."""
-
-    panel_info: PanelInfo
-    outputs: list[OutputState]
-
-
-class FakeHub:
-    """Minimal hub stub for output tests."""
-
+class _Hub:
     def __init__(self) -> None:
-        self.snapshot = Snapshot(
-            panel_info=PanelInfo(
-                mac="aa:bb:cc:dd:ee:ff",
-                name="Panel A",
-                serial="1234",
-            ),
-            outputs=[
-                OutputState(output_id=1, name="Output 1", is_on=False),
-                OutputState(output_id=2, name="Output 2", is_on=True),
-            ],
-        )
         self.is_ready = True
-        self._listeners: list[callable] = []
+        self.panel_name = None
         self.async_set_output = AsyncMock(return_value=True)
-
-    async def async_start(self) -> None:
-        return None
-
-    async def async_stop(self) -> None:
-        return None
-
-    def async_add_listener(self, listener):
-        self._listeners.append(listener)
-
-        def _remove():
-            if listener in self._listeners:
-                self._listeners.remove(listener)
-
-        return _remove
-
-    def async_add_output_listener(self, listener):
-        return self.async_add_listener(listener)
-
-    def async_add_area_listener(self, listener):
-        return self.async_add_listener(listener)
-
-    def async_add_zone_listener(self, listener):
-        return self.async_add_listener(listener)
-
-    @property
-    def panel_info(self) -> PanelInfo:
-        """Return panel info from the snapshot."""
-        return self.snapshot.panel_info
-
-    def fire_update(self) -> None:
-        for listener in list(self._listeners):
-            listener()
+        self.async_set_zone_bypass = AsyncMock(return_value=True)
 
 
 async def test_output_entities_updates_and_actions(hass: HomeAssistant) -> None:
     """Test output entities are created, update, and delegate actions."""
-    hub = FakeHub()
-    hub.async_start = AsyncMock()
-    hub.async_stop = AsyncMock()
-
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        data={
-            CONF_HOST: "192.168.1.60",
-            CONF_PORT: 2101,
-            CONF_LINK_KEYS_JSON: {
-                "tempkey_hex": "tk",
-                "linkkey_hex": "lk",
-                "linkhmac_hex": "lh",
-            },
-            CONF_INTEGRATION_SERIAL: "112233445566",
-        },
-    )
+    entry = MockConfigEntry(domain=DOMAIN, data={CONF_HOST: "192.168.1.60"})
     entry.add_to_hass(hass)
 
-    with patch(
-        "homeassistant.components.elke27.Elke27Hub", return_value=hub
-    ):
-        assert await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
+    hub = _Hub()
+    coordinator = Elke27DataUpdateCoordinator(hass, hub, entry)
+    snapshot = SimpleNamespace(
+        panel_info=SimpleNamespace(
+            mac="aa:bb:cc:dd:ee:ff",
+            name="Panel A",
+            serial="1234",
+        ),
+        outputs=[
+            SimpleNamespace(output_id=1, name="Output 1", state=False),
+            SimpleNamespace(output_id=2, name="Output 2", state=True),
+        ],
+        zones=[],
+        zone_definitions={},
+    )
+    coordinator.async_set_updated_data(snapshot)
+    hass.data[DOMAIN] = {
+        entry.entry_id: {DATA_HUB: hub, DATA_COORDINATOR: coordinator}
+    }
+
+    entities: list[switch_module.Elke27OutputSwitch] = []
+
+    def _add_entities(new_entities):
+        entities.extend(new_entities)
+
+    await async_setup_entry(hass, entry, _add_entities)
+    assert len(entities) == 2
 
     states = hass.states.async_all("switch")
     assert {state.state for state in states} == {"on", "off"}
@@ -136,12 +69,12 @@ async def test_output_entities_updates_and_actions(hass: HomeAssistant) -> None:
         for entry in registry.entities.values()
         if entry.domain == "switch"
     }
-    assert unique_ids == {"aa:bb:cc:dd:ee:ff_output_1", "aa:bb:cc:dd:ee:ff_output_2"}
+    assert unique_ids == {"aa:bb:cc:dd:ee:ff:output:1", "aa:bb:cc:dd:ee:ff:output:2"}
 
     output_1 = next(
         entry
         for entry in registry.entities.values()
-        if entry.unique_id == "aa:bb:cc:dd:ee:ff_output_1"
+        if entry.unique_id == "aa:bb:cc:dd:ee:ff:output:1"
     )
 
     await hass.services.async_call(
@@ -151,13 +84,10 @@ async def test_output_entities_updates_and_actions(hass: HomeAssistant) -> None:
         blocking=True,
     )
     hub.async_set_output.assert_awaited_once_with(1, True)
-    assert hub.snapshot.outputs[0].is_on is False
+    assert snapshot.outputs[0].state is False
 
-    updated = replace(hub.snapshot.outputs[0], is_on=True)
-    hub.snapshot = replace(
-        hub.snapshot, outputs=[updated, hub.snapshot.outputs[1]]
-    )
-    hub.fire_update()
+    snapshot.outputs[0].state = True
+    coordinator.async_set_updated_data(snapshot)
     await hass.async_block_till_done()
 
     state = hass.states.get(output_1.entity_id)
@@ -167,31 +97,40 @@ async def test_output_entities_updates_and_actions(hass: HomeAssistant) -> None:
 
 async def test_output_pin_required(hass: HomeAssistant) -> None:
     """Test PIN-required error surfaces as HomeAssistantError."""
-    hub = FakeHub()
-    hub.async_start = AsyncMock()
-    hub.async_stop = AsyncMock()
-    hub.async_set_output.side_effect = switch_module.Elke27PinRequiredError
-
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        data={
-            CONF_HOST: "192.168.1.61",
-            CONF_PORT: 2101,
-            CONF_LINK_KEYS_JSON: {"tempkey_hex": "tk"},
-            CONF_INTEGRATION_SERIAL: "112233445566",
-        },
-    )
+    entry = MockConfigEntry(domain=DOMAIN, data={CONF_HOST: "192.168.1.61"})
     entry.add_to_hass(hass)
 
-    with patch("homeassistant.components.elke27.Elke27Hub", return_value=hub):
-        assert await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
+    hub = _Hub()
+    hub.async_set_output.side_effect = switch_module.Elke27PinRequiredError
+
+    coordinator = Elke27DataUpdateCoordinator(hass, hub, entry)
+    snapshot = SimpleNamespace(
+        panel_info=SimpleNamespace(
+            mac="aa:bb:cc:dd:ee:ff",
+            name="Panel A",
+            serial="1234",
+        ),
+        outputs=[SimpleNamespace(output_id=1, name="Output 1", state=False)],
+        zones=[],
+        zone_definitions={},
+    )
+    coordinator.async_set_updated_data(snapshot)
+    hass.data[DOMAIN] = {
+        entry.entry_id: {DATA_HUB: hub, DATA_COORDINATOR: coordinator}
+    }
+
+    entities: list[switch_module.Elke27OutputSwitch] = []
+
+    def _add_entities(new_entities):
+        entities.extend(new_entities)
+
+    await async_setup_entry(hass, entry, _add_entities)
 
     registry = er.async_get(hass)
     output_1 = next(
         entry
         for entry in registry.entities.values()
-        if entry.unique_id == "aa:bb:cc:dd:ee:ff_output_1"
+        if entry.unique_id == "aa:bb:cc:dd:ee:ff:output:1"
     )
 
     with pytest.raises(HomeAssistantError, match="PIN required to perform this action."):

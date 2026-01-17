@@ -2,19 +2,12 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
 from types import SimpleNamespace
 from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
 
-from elke27_lib.errors import (
-    Elke27AuthError,
-    Elke27ConnectionError,
-    Elke27DisconnectedError,
-    Elke27LinkRequiredError,
-    Elke27TimeoutError,
-)
+from elke27_lib import LinkKeys
 
 from homeassistant.components.elke27.const import READY_TIMEOUT
 from homeassistant.components.elke27.hub import Elke27Hub
@@ -31,8 +24,8 @@ def _client_factory(client: AsyncMock) -> callable:
     return _factory
 
 
-async def test_start_connects_and_subscribes(hass: HomeAssistant) -> None:
-    """Test hub start connects, waits, and subscribes."""
+async def test_connect_subscribes_and_disconnects(hass: HomeAssistant) -> None:
+    """Test hub connect subscribes and disconnects cleanly."""
     client = AsyncMock()
     client.async_connect = AsyncMock(return_value=None)
     client.async_discover = AsyncMock(
@@ -40,7 +33,6 @@ async def test_start_connects_and_subscribes(hass: HomeAssistant) -> None:
     )
     client.wait_ready = AsyncMock(return_value=True)
     client.async_disconnect = AsyncMock(return_value=None)
-    client.snapshot = object()
     unsubscribe = Mock()
     client.subscribe = Mock(return_value=unsubscribe)
 
@@ -49,22 +41,29 @@ async def test_start_connects_and_subscribes(hass: HomeAssistant) -> None:
         side_effect=_client_factory(client),
     ):
         hub = Elke27Hub(
-            hass, "192.168.1.70", 2101, "link-keys-json", "112233445566", None, None
+            hass,
+            "192.168.1.70",
+            2101,
+            LinkKeys("tk", "lk", "lh").to_json(),
+            "112233445566",
+            None,
+            None,
         )
-        await hub.async_start()
+        await hub.async_connect()
 
     client.async_connect.assert_awaited_once()
     client.wait_ready.assert_awaited_once_with(timeout_s=READY_TIMEOUT)
     client.subscribe.assert_called_once()
-    assert hub.snapshot is client.snapshot
 
-    await hub.async_stop()
+    await hub.async_disconnect()
     unsubscribe.assert_called_once()
     client.async_disconnect.assert_awaited_once()
 
 
-async def test_start_wait_ready_false_disconnects(hass: HomeAssistant) -> None:
-    """Test hub start disconnects when ready is false."""
+async def test_connect_wait_ready_false_disconnects(
+    hass: HomeAssistant,
+) -> None:
+    """Test hub connect disconnects when ready is false."""
     client = AsyncMock()
     client.async_connect = AsyncMock(return_value=None)
     client.async_discover = AsyncMock(return_value=[])
@@ -76,60 +75,15 @@ async def test_start_wait_ready_false_disconnects(hass: HomeAssistant) -> None:
         side_effect=_client_factory(client),
     ):
         hub = Elke27Hub(
-            hass, "192.168.1.71", 2101, "link-keys-json", "112233445566", None, None
+            hass,
+            "192.168.1.71",
+            2101,
+            LinkKeys("tk", "lk", "lh").to_json(),
+            "112233445566",
+            None,
+            None,
         )
         with pytest.raises(ConfigEntryNotReady):
-            await hub.async_start()
+            await hub.async_connect()
 
     client.async_disconnect.assert_awaited_once()
-
-
-async def test_event_routing_updates_snapshot(hass: HomeAssistant) -> None:
-    """Test event routing updates snapshot and notifies listeners."""
-    client = AsyncMock()
-    client.async_connect = AsyncMock(return_value=None)
-    client.async_discover = AsyncMock(return_value=[])
-    client.wait_ready = AsyncMock(return_value=True)
-    client.async_disconnect = AsyncMock(return_value=None)
-    first_snapshot = object()
-    second_snapshot = object()
-    client.snapshot = first_snapshot
-    client.subscribe = Mock(return_value=Mock())
-
-    with patch(
-        "homeassistant.components.elke27.hub.Elke27Client",
-        side_effect=_client_factory(client),
-    ):
-        hub = Elke27Hub(
-            hass, "192.168.1.72", 2101, "link-keys-json", "112233445566", None, None
-        )
-        await hub.async_start()
-
-    general_calls: list[str] = []
-    area_calls: list[str] = []
-    zone_calls: list[str] = []
-    output_calls: list[str] = []
-    system_calls: list[str] = []
-
-    hub.async_add_listener(lambda: general_calls.append("all"))
-    hub.async_add_area_listener(lambda: area_calls.append("area"))
-    hub.async_add_zone_listener(lambda: zone_calls.append("zone"))
-    hub.async_add_output_listener(lambda: output_calls.append("output"))
-    hub.async_add_system_listener(lambda: system_calls.append("system"))
-
-    client.snapshot = second_snapshot
-    hub._handle_event({"type": "AREA"})
-    await hass.async_block_till_done()
-
-    assert hub.snapshot is second_snapshot
-    assert general_calls == ["all"]
-    assert area_calls == ["area"]
-    assert zone_calls == []
-    assert output_calls == []
-    assert system_calls == []
-
-    hub._handle_event({"type": "SYSTEM"})
-    await hass.async_block_till_done()
-    assert system_calls == ["system"]
-
-    await hub.async_stop()

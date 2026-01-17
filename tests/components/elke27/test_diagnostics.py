@@ -4,9 +4,26 @@ from __future__ import annotations
 
 import json
 from dataclasses import dataclass
-from unittest.mock import Mock
+from datetime import UTC, datetime
 
 import pytest
+
+from homeassistant.components.elke27.const import (
+    CONF_INTEGRATION_SERIAL,
+    CONF_LINK_KEYS_JSON,
+    DATA_COORDINATOR,
+    DATA_HUB,
+    DOMAIN,
+    MANUFACTURER_NUMBER,
+)
+from homeassistant.components.elke27 import diagnostics as diagnostics_module
+from homeassistant.components.elke27.diagnostics import (
+    async_get_config_entry_diagnostics,
+)
+from homeassistant.const import CONF_HOST, CONF_PORT
+from homeassistant.core import HomeAssistant
+
+from tests.common import MockConfigEntry
 
 
 def redact_for_diagnostics(data: dict) -> dict:
@@ -27,21 +44,6 @@ def redact_for_diagnostics(data: dict) -> dict:
         else:
             redacted[key] = value
     return redacted
-
-from homeassistant.components.elke27.const import (
-    CONF_INTEGRATION_SERIAL,
-    CONF_LINK_KEYS_JSON,
-    DOMAIN,
-    MANUFACTURER_NUMBER,
-)
-from homeassistant.components.elke27 import diagnostics as diagnostics_module
-from homeassistant.components.elke27.diagnostics import (
-    async_get_config_entry_diagnostics,
-)
-from homeassistant.const import CONF_HOST, CONF_PORT
-from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry
 
 
 @dataclass(frozen=True, slots=True)
@@ -71,7 +73,7 @@ class Snapshot:
     panel_info: PanelInfo
     table_info: TableInfo
     version: str
-    updated_at: str
+    updated_at: datetime
     access_code: str
     passphrase: str
     pin: str
@@ -90,14 +92,13 @@ async def test_diagnostics_redacts_sensitive_data(
         data={
             CONF_HOST: "192.168.1.50",
             CONF_PORT: 2101,
-            CONF_LINK_KEYS_JSON: "secret",
+            CONF_LINK_KEYS_JSON: {"tempkey_hex": "tk"},
             CONF_INTEGRATION_SERIAL: "112233445566",
         },
     )
     entry.add_to_hass(hass)
 
-    hub = Mock()
-    hub.snapshot = Snapshot(
+    snapshot = Snapshot(
         panel_info=PanelInfo(
             mac="aa:bb:cc:dd:ee:ff",
             name="Panel A",
@@ -107,14 +108,19 @@ async def test_diagnostics_redacts_sensitive_data(
         ),
         table_info=TableInfo(areas=2, zones=4, outputs=2),
         version="2.0",
-        updated_at="2024-01-01T00:00:00Z",
+        updated_at=datetime(2024, 1, 1, tzinfo=UTC),
         access_code="1234",
         passphrase="secret",
         pin="9999",
         link_keys_json="raw",
     )
 
-    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = hub
+    coordinator = type("Coordinator", (), {"data": snapshot})()
+    hub = object()
+    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = {
+        DATA_HUB: hub,
+        DATA_COORDINATOR: coordinator,
+    }
 
     diagnostics = await async_get_config_entry_diagnostics(hass, entry)
 
@@ -123,7 +129,7 @@ async def test_diagnostics_redacts_sensitive_data(
     assert diagnostics["integration_serial"] == "112233445566"
     assert diagnostics["link_keys_present"] is True
     assert diagnostics["snapshot_meta"]["version"] == "2.0"
-    assert diagnostics["snapshot_meta"]["updated_at"] == "2024-01-01T00:00:00Z"
+    assert diagnostics["snapshot_meta"]["updated_at"] == "2024-01-01T00:00:00+00:00"
     assert diagnostics["snapshot"]["panel_info"]["name"] == "Panel A"
     assert "access_code" not in json.dumps(diagnostics)
     assert "passphrase" not in json.dumps(diagnostics)
