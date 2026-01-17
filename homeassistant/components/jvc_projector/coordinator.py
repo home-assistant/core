@@ -6,17 +6,10 @@ from datetime import timedelta
 import logging
 from typing import TYPE_CHECKING, Any
 
-from jvcprojector import (
-    JvcProjector,
-    JvcProjectorAuthError,
-    JvcProjectorTimeoutError,
-    command as cmd,
-)
+from jvcprojector import JvcProjector, JvcProjectorTimeoutError, command as cmd
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
-from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import NAME
@@ -66,23 +59,12 @@ class JvcProjectorDataUpdateCoordinator(DataUpdateCoordinator[dict[str, str]]):
             assert config_entry.unique_id is not None
         self.unique_id = config_entry.unique_id
 
-        self.capabilities: dict[str, Any] = {}
-        self.state: dict[type[Command], str] = {}
+        self.capabilities: dict[str, Any] = self.device.capabilities()
         self.registered_commands: set[type[Command]] = set()
 
-    async def _async_setup(self) -> None:
-        """Set up the coordinator."""
-        try:
-            self.unique_id = format_mac(await self.device.get(cmd.MacAddress))
-            self.capabilities = self.device.capabilities()
-        except JvcProjectorTimeoutError as err:
-            raise ConfigEntryNotReady(
-                f"Unable to connect to {self.device.host}"
-            ) from err
-        except JvcProjectorAuthError as err:
-            raise ConfigEntryAuthFailed("Password authentication failed") from err
-
-        self.state[cmd.ModelName] = f"{self.device.model} ({self.device.spec})"
+        self.state: dict[type[Command], str] = {
+            cmd.ModelName: f"{self.device.model} ({self.device.spec})"
+        }
 
     async def _async_update_data(self) -> dict[str, Any]:
         """Update state with the current value of a command."""

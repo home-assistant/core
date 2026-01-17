@@ -3,7 +3,7 @@
 from datetime import timedelta
 from unittest.mock import AsyncMock
 
-from jvcprojector import JvcProjectorAuthError, JvcProjectorTimeoutError, command as cmd
+from jvcprojector import JvcProjectorTimeoutError, command as cmd
 import pytest
 
 from homeassistant.components.jvc_projector.coordinator import (
@@ -48,7 +48,7 @@ async def test_coordinator_device_on(
 
 @pytest.mark.parametrize(
     "mock_device",
-    [{"fixture_override": {cmd.MacAddress: JvcProjectorTimeoutError}}],
+    [{"fixture_override": {cmd.Power: JvcProjectorTimeoutError}}],
     indirect=True,
 )
 async def test_coordinator_setup_connect_error(
@@ -58,35 +58,3 @@ async def test_coordinator_setup_connect_error(
 ) -> None:
     """Test coordinator connect error."""
     assert mock_integration.state is ConfigEntryState.SETUP_RETRY
-
-
-@pytest.mark.parametrize(
-    "mock_device",
-    [{"fixture_override": {cmd.Power: JvcProjectorTimeoutError}}],
-    indirect=True,
-)
-async def test_coordinator_update_connect_error(
-    hass: HomeAssistant,
-    mock_device: AsyncMock,
-    mock_integration: MockConfigEntry,
-) -> None:
-    """Test coordinator connect error."""
-    assert mock_integration.state is ConfigEntryState.SETUP_RETRY
-
-
-@pytest.mark.parametrize(
-    "mock_device",
-    [{"fixture_override": {cmd.MacAddress: JvcProjectorAuthError}}],
-    indirect=True,
-)
-async def test_coordinator_setup_auth_error(
-    hass: HomeAssistant,
-    mock_device: AsyncMock,
-    mock_config_entry: MockConfigEntry,
-) -> None:
-    """Test coordinator auth error."""
-    mock_device.get.side_effect = JvcProjectorAuthError
-    mock_config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-    assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
