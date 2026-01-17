@@ -53,14 +53,16 @@ async def test_enable_hdr_sensor(
     state = hass.states.get(HDR_ENTITY_ID)
     assert state is not None
 
-    # Allow deferred updates to run (for code coverage)
+    # Allow deferred updates to run
     async_fire_time_changed(
         hass, utcnow() + timedelta(seconds=INTERVAL_FAST.seconds + 1)
     )
     await hass.async_block_till_done()
 
-    # Allow deferred updates to run again (for code coverage)
+    # Allow deferred updates to run again
     async_fire_time_changed(
         hass, utcnow() + timedelta(seconds=INTERVAL_FAST.seconds + 1)
     )
     await hass.async_block_till_done()
+
+    assert hass.states.get(HDR_PROCESSING_ENTITY_ID) is not None

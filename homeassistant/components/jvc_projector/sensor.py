@@ -21,7 +21,7 @@ from .entity import JvcProjectorEntity
 
 @dataclass(frozen=True, kw_only=True)
 class JvcProjectorSensorDescription(SensorEntityDescription):
-    """Describes JVC Projector select entities."""
+    """Describes JVC Projector sensor entities."""
 
     command: type[Command]
 

@@ -112,7 +112,7 @@ class JvcProjectorSelectEntity(JvcProjectorEntity, SelectEntity):
 
     async def async_select_option(self, option: str) -> None:
         """Change the selected option."""
-        value = next((k for k, v in self._options_map.items() if v == option))
+        value = next((k for k, v in self._options_map.items() if v == option), None)
         await self.coordinator.device.set(self.command, value)
 
     async def async_added_to_hass(self) -> None:
