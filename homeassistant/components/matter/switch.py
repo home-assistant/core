@@ -46,10 +46,6 @@ async def async_setup_entry(
 class MatterSwitchEntityDescription(SwitchEntityDescription, MatterEntityDescription):
     """Describe Matter Switch entities."""
 
-    device_to_ha: Callable[[Any], Any] | None = None
-    ha_to_device: Callable[[Any], Any] | None = None
-
-
 class MatterSwitch(MatterEntity, SwitchEntity):
     """Representation of a Matter switch."""
 
