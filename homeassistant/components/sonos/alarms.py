@@ -80,7 +80,7 @@ class SonosAlarms(SonosHouseholdCoordinator):
         """Update cache of known alarms and return if cache has changed."""
         try:
             self.alarms.update(soco)
-        except SoCoException:
+        except SoCoException as err:
             if "Alarm list UID" in str(err):
                 _LOGGER.warning("Alarm list mismatch for %s, ignoring: %s", soco.player_name, str(err))
                 return False
