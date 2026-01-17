@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from types import SimpleNamespace
 from unittest.mock import AsyncMock, patch
 
 from elke27_lib import LinkKeys
@@ -23,16 +24,18 @@ async def test_setup_unload_calls_connect_disconnect_and_subscribe(
     hass: HomeAssistant,
 ) -> None:
     """Test setup/unload uses hub and coordinator lifecycle."""
-    hub = AsyncMock()
-    hub.panel_name = None
-    hub.async_connect = AsyncMock(return_value=None)
-    hub.async_disconnect = AsyncMock(return_value=None)
+    hub = SimpleNamespace(
+        panel_name=None,
+        async_connect=AsyncMock(return_value=None),
+        async_disconnect=AsyncMock(return_value=None),
+    )
 
-    coordinator = AsyncMock()
-    coordinator.async_start = AsyncMock(return_value=None)
-    coordinator.async_refresh_now = AsyncMock(return_value=None)
-    coordinator.async_stop = AsyncMock(return_value=None)
-    coordinator.data = None
+    coordinator = SimpleNamespace(
+        async_start=AsyncMock(return_value=None),
+        async_refresh_now=AsyncMock(return_value=None),
+        async_stop=AsyncMock(return_value=None),
+        data=None,
+    )
 
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -77,10 +80,11 @@ async def test_setup_transient_error_returns_not_ready(
     hass: HomeAssistant,
 ) -> None:
     """Test transient setup errors return not ready."""
-    hub = AsyncMock()
-    hub.panel_name = None
-    hub.async_connect = AsyncMock(side_effect=Elke27TimeoutError())
-    hub.async_disconnect = AsyncMock(return_value=None)
+    hub = SimpleNamespace(
+        panel_name=None,
+        async_connect=AsyncMock(side_effect=Elke27TimeoutError()),
+        async_disconnect=AsyncMock(return_value=None),
+    )
 
     entry = MockConfigEntry(
         domain=DOMAIN,
