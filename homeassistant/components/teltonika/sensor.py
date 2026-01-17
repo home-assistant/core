@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable
+from dataclasses import dataclass
 import logging
 
 from teltasync.modems import ModemStatus
@@ -20,6 +22,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import TeltonikaConfigEntry, TeltonikaData, TeltonikaDataUpdateCoordinator
@@ -28,57 +31,73 @@ _LOGGER = logging.getLogger(__name__)
 
 PARALLEL_UPDATES = 0
 
-SENSOR_DESCRIPTIONS: tuple[SensorEntityDescription, ...] = (
-    SensorEntityDescription(
+
+@dataclass(frozen=True, kw_only=True)
+class TeltonikaSensorEntityDescription(SensorEntityDescription):
+    """Describes Teltonika sensor entity."""
+
+    value_fn: Callable[[ModemStatus], StateType]
+
+
+SENSOR_DESCRIPTIONS: tuple[TeltonikaSensorEntityDescription, ...] = (
+    TeltonikaSensorEntityDescription(
         key="rssi",
         translation_key="rssi",
         device_class=SensorDeviceClass.SIGNAL_STRENGTH,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
         suggested_display_precision=0,
+        value_fn=lambda modem: modem.rssi,
     ),
-    SensorEntityDescription(
+    TeltonikaSensorEntityDescription(
         key="rsrp",
         translation_key="rsrp",
         device_class=SensorDeviceClass.SIGNAL_STRENGTH,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
         suggested_display_precision=0,
+        value_fn=lambda modem: modem.rsrp,
     ),
-    SensorEntityDescription(
+    TeltonikaSensorEntityDescription(
         key="rsrq",
         translation_key="rsrq",
         device_class=SensorDeviceClass.SIGNAL_STRENGTH,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS,
         suggested_display_precision=0,
+        value_fn=lambda modem: modem.rsrq,
     ),
-    SensorEntityDescription(
+    TeltonikaSensorEntityDescription(
         key="sinr",
         translation_key="sinr",
         device_class=SensorDeviceClass.SIGNAL_STRENGTH,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS,
         suggested_display_precision=0,
+        value_fn=lambda modem: modem.sinr,
     ),
-    SensorEntityDescription(
+    TeltonikaSensorEntityDescription(
         key="temperature",
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         suggested_display_precision=0,
+        value_fn=lambda modem: modem.temperature,
     ),
-    SensorEntityDescription(
+    TeltonikaSensorEntityDescription(
         key="operator",
         translation_key="operator",
+        value_fn=lambda modem: modem.operator,
     ),
-    SensorEntityDescription(
+    TeltonikaSensorEntityDescription(
         key="connection_type",
         translation_key="connection_type",
+        value_fn=lambda modem: modem.conntype,
     ),
-    SensorEntityDescription(
+    TeltonikaSensorEntityDescription(
         key="band",
         translation_key="band",
+        value_fn=lambda modem: modem.band,
     ),
 )
 
@@ -134,13 +153,13 @@ class TeltonikaSensorEntity(
         self,
         coordinator: TeltonikaDataUpdateCoordinator,
         device_info: DeviceInfo,
-        description: SensorEntityDescription,
+        description: TeltonikaSensorEntityDescription,
         modem_id: str,
         modem: ModemStatus,
     ) -> None:
         """Initialize the sensor."""
         super().__init__(coordinator)
-        self.entity_description = description
+        self.entity_description: TeltonikaSensorEntityDescription = description
         self._modem_id = modem_id
         self._attr_device_info = device_info
 
@@ -171,11 +190,7 @@ class TeltonikaSensorEntity(
 
         modem = self.coordinator.data[self._modem_id]
 
-        # Update native value
-        if self.entity_description.key == "connection_type":
-            value = modem.conntype
-        else:
-            value = getattr(modem, self.entity_description.key)
+        value = self.entity_description.value_fn(modem)
 
         # Ensure value is a valid state type
         if isinstance(value, (str, int, float)):
