@@ -20,9 +20,6 @@ class TailscaleDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Device]]):
 
     config_entry: ConfigEntry
 
-    # Track devices from previous update to detect removals
-    previous_devices: set[str] = set()
-
     def __init__(self, hass: HomeAssistant, config_entry: ConfigEntry) -> None:
         """Initialize the Tailscale coordinator."""
         session = async_get_clientsession(hass)
@@ -31,6 +28,7 @@ class TailscaleDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Device]]):
             api_key=config_entry.data[CONF_API_KEY],
             tailnet=config_entry.data[CONF_TAILNET],
         )
+        self.previous_devices: set[str] = set()
 
         super().__init__(
             hass,
@@ -43,30 +41,30 @@ class TailscaleDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Device]]):
     async def _async_update_data(self) -> dict[str, Device]:
         """Fetch devices from Tailscale and remove stale devices from HA."""
         try:
-            data = await self.tailscale.devices()
+            devices = await self.tailscale.devices()
         except TailscaleAuthenticationError as err:
             raise ConfigEntryAuthFailed from err
 
-        # Identify devices that exist in HA but no longer exist in Tailscale
-        current_devices = set(data)
-        if stale_devices := self.previous_devices - current_devices:
-            device_registry = dr.async_get(self.hass)
+        # Get current device IDs
+        current_device_ids = set(devices.keys())
 
-            # Remove each stale device from the device registry
-            for device_id in stale_devices:
-                if device := device_registry.async_get_device(
-                    identifiers={(DOMAIN, device_id)}
-                ):
-                    device_registry.async_update_device(
-                        device_id=device.id,
-                        remove_config_entry_id=self.config_entry.entry_id,
-                    )
-                    LOGGER.debug(
-                        "Removed device %s as it no longer exists in Tailscale",
-                        device_id,
-                    )
+        # Find devices that were removed from Tailscale
+        if self.previous_devices:
+            stale_device_ids = self.previous_devices - current_device_ids
+            if stale_device_ids:
+                await self._remove_stale_devices(stale_device_ids)
 
-        # Update our tracking set for the next poll
-        self.previous_devices = current_devices
+        # Update previous devices set for next comparison
+        self.previous_devices = current_device_ids
 
-        return data
+        return devices
+
+    async def _remove_stale_devices(self, stale_device_ids: set[str]) -> None:
+        """Remove devices that no longer exist in Tailscale."""
+        device_registry = dr.async_get(self.hass)
+
+        for device_id in stale_device_ids:
+            device = device_registry.async_get_device(identifiers={(DOMAIN, device_id)})
+            if device:
+                LOGGER.debug("Removing stale device: %s", device_id)
+                device_registry.async_remove_device(device.id)
