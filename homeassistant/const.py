@@ -604,6 +604,7 @@ class UnitOfPressure(StrEnum):
     PA = "Pa"
     HPA = "hPa"
     KPA = "kPa"
+    MPA = "MPa"
     BAR = "bar"
     CBAR = "cbar"
     MBAR = "mbar"
