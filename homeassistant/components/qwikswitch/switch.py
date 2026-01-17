@@ -7,7 +7,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from . import DOMAIN
+from .const import DATA_QUIKSWITCH, DOMAIN
 from .entity import QSToggleEntity
 
 
@@ -21,7 +21,7 @@ async def async_setup_platform(
     if discovery_info is None:
         return
 
-    qsusb = hass.data[DOMAIN]
+    qsusb = hass.data[DATA_QUIKSWITCH]
     devs = [QSSwitch(qsid, qsusb) for qsid in discovery_info[DOMAIN]]
     add_entities(devs)
 
