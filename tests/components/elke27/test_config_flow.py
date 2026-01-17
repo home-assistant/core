@@ -5,86 +5,8 @@ from __future__ import annotations
 import builtins
 import importlib
 import json
-import sys
 from dataclasses import dataclass
-from types import ModuleType
 from unittest.mock import AsyncMock, patch
-
-_elke27_lib = ModuleType("elke27_lib")
-_elke27_lib_errors = ModuleType("elke27_lib.errors")
-_elke27_lib_client = ModuleType("elke27_lib.client")
-
-
-class Elke27Error(Exception):
-    """Base Elke27 error."""
-
-
-class Elke27AuthError(Elke27Error):
-    """Auth error stub."""
-
-
-class Elke27LinkRequiredError(Elke27Error):
-    """Link required stub."""
-
-
-class Elke27TimeoutError(Elke27Error):
-    """Timeout stub."""
-
-
-class Elke27ConnectionError(Elke27Error):
-    """Connection stub."""
-
-
-class Elke27DisconnectedError(Elke27Error):
-    """Disconnected stub."""
-
-
-class AuthorizationRequired(Elke27Error):
-    """Authorization required stub."""
-
-
-class Elke27PermissionError(Elke27Error):
-    """Permission error stub."""
-
-
-class Elke27PinRequiredError(Elke27Error):
-    """PIN required stub."""
-
-
-class InvalidCredentials(Elke27AuthError):
-    """Invalid credentials stub."""
-
-
-class InvalidPin(Elke27AuthError):
-    """Invalid PIN stub."""
-
-
-class InvalidPinError(Elke27AuthError):
-    """Invalid PIN error stub."""
-
-
-class MissingPinError(Elke27AuthError):
-    """Missing PIN error stub."""
-
-
-_elke27_lib_errors.Elke27Error = Elke27Error
-_elke27_lib_errors.Elke27AuthError = Elke27AuthError
-_elke27_lib_errors.Elke27LinkRequiredError = Elke27LinkRequiredError
-_elke27_lib_errors.Elke27TimeoutError = Elke27TimeoutError
-_elke27_lib_errors.Elke27ConnectionError = Elke27ConnectionError
-_elke27_lib_errors.Elke27DisconnectedError = Elke27DisconnectedError
-_elke27_lib_errors.AuthorizationRequired = AuthorizationRequired
-_elke27_lib_errors.Elke27PermissionError = Elke27PermissionError
-_elke27_lib_errors.Elke27PinRequiredError = Elke27PinRequiredError
-_elke27_lib_errors.InvalidCredentials = InvalidCredentials
-_elke27_lib_errors.InvalidPin = InvalidPin
-_elke27_lib_errors.InvalidPinError = InvalidPinError
-_elke27_lib_errors.MissingPinError = MissingPinError
-
-
-@dataclass(frozen=True, slots=True)
-class FakeClientConfig:
-    """Minimal config stub."""
 
 
 @dataclass(frozen=True, slots=True)
@@ -115,37 +37,6 @@ class FakeDiscoveredPanel:
     name: str
     model: str
     mac: str
-
-
-_elke27_lib.ClientConfig = FakeClientConfig
-_elke27_lib.DiscoveredPanel = FakeDiscoveredPanel
-_elke27_lib.Elke27Client = object
-_elke27_lib.LinkKeys = FakeLinkKeys
-
-sys.modules["elke27_lib"] = _elke27_lib
-sys.modules["elke27_lib.errors"] = _elke27_lib_errors
-sys.modules["elke27_lib.client"] = _elke27_lib_client
-
-
-class FakeE27Identity:
-    """Minimal identity stub."""
-
-
-class FakeE27LinkKeys:
-    """Minimal link keys stub."""
-
-
-class FakeResult:
-    """Minimal result stub."""
-
-    ok = True
-    error = None
-
-
-_elke27_lib_client.E27Identity = FakeE27Identity
-_elke27_lib_client.E27LinkKeys = FakeE27LinkKeys
-_elke27_lib_client.Elke27Client = object
-_elke27_lib_client.Result = FakeResult
 
 from homeassistant import config_entries
 from homeassistant.components.elke27.const import (
