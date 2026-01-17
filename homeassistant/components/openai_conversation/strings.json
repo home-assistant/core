@@ -7,6 +7,7 @@
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "invalid_url": "Invalid URL format. Please enter a valid URL.",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "step": {

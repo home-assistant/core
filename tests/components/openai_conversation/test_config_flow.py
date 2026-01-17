@@ -181,6 +181,53 @@ async def test_form_with_custom_endpoint_only(hass: HomeAssistant) -> None:
     }
 
 
+async def test_form_invalid_url(hass: HomeAssistant) -> None:
+    """Test config flow with invalid URL format shows error."""
+    hass.config.components.add("openai_conversation")
+    MockConfigEntry(
+        domain=DOMAIN,
+        state=config_entries.ConfigEntryState.LOADED,
+    ).add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    assert result["type"] is FlowResultType.FORM
+
+    # Test with invalid URL (missing protocol)
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_API_KEY: "test-key",
+            CONF_API_BASE: "not-a-valid-url",
+        },
+    )
+
+    assert result2["type"] is FlowResultType.FORM
+    assert result2["errors"] == {CONF_API_BASE: "invalid_url"}
+
+    # Now provide a valid URL and it should work
+    with (
+        patch(
+            "homeassistant.components.openai_conversation.config_flow.openai.resources.models.AsyncModels.list",
+        ),
+        patch(
+            "homeassistant.components.openai_conversation.async_setup_entry",
+            return_value=True,
+        ),
+    ):
+        result3 = await hass.config_entries.flow.async_configure(
+            result2["flow_id"],
+            {
+                CONF_API_KEY: "test-key",
+                CONF_API_BASE: "https://valid-url.example.com",
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
+
+
 async def test_duplicate_entry(hass: HomeAssistant) -> None:
     """Test we abort on duplicate config entry."""
     MockConfigEntry(

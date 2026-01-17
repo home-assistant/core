@@ -29,7 +29,7 @@ from homeassistant.const import (
     CONF_NAME,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import llm
+from homeassistant.helpers import config_validation as cv, llm
 from homeassistant.helpers.selector import (
     NumberSelector,
     NumberSelectorConfig,
@@ -120,39 +120,47 @@ class OpenAIConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
 
         if user_input is not None:
-            self._async_abort_entries_match(user_input)
-            try:
-                await validate_input(self.hass, user_input)
-            except openai.APIConnectionError:
-                errors["base"] = "cannot_connect"
-            except openai.AuthenticationError:
-                errors["base"] = "invalid_auth"
-            except Exception:
-                _LOGGER.exception("Unexpected exception")
-                errors["base"] = "unknown"
-            else:
-                if self.source == SOURCE_REAUTH:
-                    return self.async_update_reload_and_abort(
-                        self._get_reauth_entry(), data_updates=user_input
+            # Validate URL format if provided
+            if api_base := user_input.get(CONF_API_BASE):
+                try:
+                    cv.url(api_base)
+                except vol.Invalid:
+                    errors[CONF_API_BASE] = "invalid_url"
+
+            if not errors:
+                self._async_abort_entries_match(user_input)
+                try:
+                    await validate_input(self.hass, user_input)
+                except openai.APIConnectionError:
+                    errors["base"] = "cannot_connect"
+                except openai.AuthenticationError:
+                    errors["base"] = "invalid_auth"
+                except Exception:
+                    _LOGGER.exception("Unexpected exception")
+                    errors["base"] = "unknown"
+                else:
+                    if self.source == SOURCE_REAUTH:
+                        return self.async_update_reload_and_abort(
+                            self._get_reauth_entry(), data_updates=user_input
+                        )
+                    return self.async_create_entry(
+                        title="ChatGPT",
+                        data=user_input,
+                        subentries=[
+                            {
+                                "subentry_type": "conversation",
+                                "data": RECOMMENDED_CONVERSATION_OPTIONS,
+                                "title": DEFAULT_CONVERSATION_NAME,
+                                "unique_id": None,
+                            },
+                            {
+                                "subentry_type": "ai_task_data",
+                                "data": RECOMMENDED_AI_TASK_OPTIONS,
+                                "title": DEFAULT_AI_TASK_NAME,
+                                "unique_id": None,
+                            },
+                        ],
                     )
-                return self.async_create_entry(
-                    title="ChatGPT",
-                    data=user_input,
-                    subentries=[
-                        {
-                            "subentry_type": "conversation",
-                            "data": RECOMMENDED_CONVERSATION_OPTIONS,
-                            "title": DEFAULT_CONVERSATION_NAME,
-                            "unique_id": None,
-                        },
-                        {
-                            "subentry_type": "ai_task_data",
-                            "data": RECOMMENDED_AI_TASK_OPTIONS,
-                            "title": DEFAULT_AI_TASK_NAME,
-                            "unique_id": None,
-                        },
-                    ],
-                )
 
         return self.async_show_form(
             step_id="user",
