@@ -89,10 +89,10 @@ UNSUPPORTED_EXTENDED_CACHE_RETENTION_MODELS: list[str] = [
     "gpt-3.5",
     "gpt-4-turbo",
     "gpt-4o",
-    "gpt-5-mini",
-    "gpt-5-nano",
     "gpt-4.1-mini",
     "gpt-4.1-nano",
+    "gpt-5-mini",
+    "gpt-5-nano",
 ]
 
 RECOMMENDED_CONVERSATION_OPTIONS = {
