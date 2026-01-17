@@ -112,15 +112,18 @@ async def test_select_operation_mode_error(
 
 async def test_select_ports_missing_state(
     hass: HomeAssistant,
+    mock_hdfury_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test TX port selection fails when TX state is incomplete."""
 
-    await setup_integration(hass, mock_config_entry, [Platform.SELECT])
+    mock_hdfury_client.get_info.return_value = {
+        "portseltx0": "0",
+        "portseltx1": None,
+        "opmode": "0",
+    }
 
-    # Simulate missing TX1 value
-    coordinator = mock_config_entry.runtime_data
-    coordinator.data.info["portseltx1"] = None
+    await setup_integration(hass, mock_config_entry, [Platform.SELECT])
 
     with pytest.raises(
         HomeAssistantError,
