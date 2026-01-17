@@ -98,5 +98,18 @@
         "name": "Highest peak time - Yesterday"
       }
     }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "mqtt_update_frequency": "MQTT update frequency (seconds)"
+        },
+        "data_description": {
+          "mqtt_update_frequency": "Minimum seconds between metric updates. Set to 0 to update on every MQTT message."
+        },
+        "description": "Configure MQTT update throttling."
+      }
+    }
   }
 }

@@ -2624,7 +2624,7 @@ venstarcolortouch==0.21
 victron-ble-ha-parser==0.4.9
 
 # homeassistant.components.victron_remote_monitoring
-victron-vrm==0.1.8
+victron-vrm==0.1.11
 
 # homeassistant.components.vilfo
 vilfo-api-client==0.5.0

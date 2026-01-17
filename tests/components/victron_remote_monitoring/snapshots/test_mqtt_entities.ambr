@@ -1,0 +1,106 @@
+# serializer version: 1
+# name: test_mqtt_entities_snapshot
+  list([
+    dict({
+      'domain': 'binary_sensor',
+      'entity_id': 'binary_sensor.cerbo_gx_id_1_system_relay',
+      'original_name': 'System relay',
+      'platform': 'victron_remote_monitoring',
+      'unique_id': '123456_system_0_relay',
+    }),
+    dict({
+      'domain': 'button',
+      'entity_id': 'button.cerbo_gx_id_1_system_reboot',
+      'original_name': 'System reboot',
+      'platform': 'victron_remote_monitoring',
+      'unique_id': '123456_system_0_reboot',
+    }),
+    dict({
+      'domain': 'number',
+      'entity_id': 'number.cerbo_gx_id_1_charge_limit',
+      'original_name': 'Charge limit',
+      'platform': 'victron_remote_monitoring',
+      'unique_id': '123456_charger_0_limit',
+    }),
+    dict({
+      'domain': 'select',
+      'entity_id': 'select.cerbo_gx_id_1_system_mode',
+      'original_name': 'System mode',
+      'platform': 'victron_remote_monitoring',
+      'unique_id': '123456_system_0_mode',
+    }),
+    dict({
+      'domain': 'sensor',
+      'entity_id': 'sensor.cerbo_gx_id_1_system_voltage',
+      'original_name': 'System voltage',
+      'platform': 'victron_remote_monitoring',
+      'unique_id': '123456_system_0_voltage',
+    }),
+    dict({
+      'domain': 'switch',
+      'entity_id': 'switch.cerbo_gx_id_1_system_switch',
+      'original_name': 'System switch',
+      'platform': 'victron_remote_monitoring',
+      'unique_id': '123456_system_0_switch',
+    }),
+    dict({
+      'domain': 'time',
+      'entity_id': 'time.cerbo_gx_id_1_quiet_hours_start',
+      'original_name': 'Quiet hours start',
+      'platform': 'victron_remote_monitoring',
+      'unique_id': '123456_system_0_quiet_hours_start',
+    }),
+  ])
+# ---
+# name: test_mqtt_entities_snapshot.1
+  dict({
+    'binary_sensor.cerbo_gx_id_1_system_relay': dict({
+      'attributes': dict({
+        'friendly_name': 'Cerbo GX (ID: 1) System relay',
+      }),
+      'state': 'on',
+    }),
+    'button.cerbo_gx_id_1_system_reboot': dict({
+      'attributes': dict({
+        'friendly_name': 'Cerbo GX (ID: 1) System reboot',
+      }),
+      'state': 'unknown',
+    }),
+    'number.cerbo_gx_id_1_charge_limit': dict({
+      'attributes': dict({
+        'friendly_name': 'Cerbo GX (ID: 1) Charge limit',
+        'unit_of_measurement': 'A',
+      }),
+      'state': '10.5',
+    }),
+    'select.cerbo_gx_id_1_system_mode': dict({
+      'attributes': dict({
+        'friendly_name': 'Cerbo GX (ID: 1) System mode',
+        'options': list([
+          'On',
+          'Off',
+        ]),
+      }),
+      'state': 'On',
+    }),
+    'sensor.cerbo_gx_id_1_system_voltage': dict({
+      'attributes': dict({
+        'friendly_name': 'Cerbo GX (ID: 1) System voltage',
+        'unit_of_measurement': 'V',
+      }),
+      'state': '12.3',
+    }),
+    'switch.cerbo_gx_id_1_system_switch': dict({
+      'attributes': dict({
+        'friendly_name': 'Cerbo GX (ID: 1) System switch',
+      }),
+      'state': 'on',
+    }),
+    'time.cerbo_gx_id_1_quiet_hours_start': dict({
+      'attributes': dict({
+        'friendly_name': 'Cerbo GX (ID: 1) Quiet hours start',
+      }),
+      'state': '08:00:00',
+    }),
+  })
+# ---
