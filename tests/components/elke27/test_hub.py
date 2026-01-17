@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import sys
 from dataclasses import dataclass
+from enum import Enum
 from types import ModuleType, SimpleNamespace
 from unittest.mock import AsyncMock, Mock, patch
 
