@@ -35,11 +35,11 @@ rules:
   entity-unavailable: done
   integration-owner: done
   log-when-unavailable: done
-  parallel-updates: todo
+  parallel-updates: done
   reauthentication-flow:
     status: exempt
     comment: Integration has no authentication flow.
-  test-coverage: todo
+  test-coverage: done
 
   # Gold
   devices: done

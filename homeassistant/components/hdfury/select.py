@@ -20,6 +20,8 @@ from .const import DOMAIN
 from .coordinator import HDFuryConfigEntry, HDFuryCoordinator
 from .entity import HDFuryEntity
 
+PARALLEL_UPDATES = 1
+
 
 @dataclass(kw_only=True, frozen=True)
 class HDFurySelectEntityDescription(SelectEntityDescription):
@@ -77,13 +79,11 @@ async def async_setup_entry(
 
     coordinator = entry.runtime_data
 
-    entities: list[HDFuryEntity] = []
-
-    for description in SELECT_PORTS:
-        if description.key not in coordinator.data.info:
-            continue
-
-        entities.append(HDFurySelect(coordinator, description))
+    entities: list[HDFuryEntity] = [
+        HDFurySelect(coordinator, description)
+        for description in SELECT_PORTS
+        if description.key in coordinator.data.info
+    ]
 
     # Add OPMODE select if present
     if "opmode" in coordinator.data.info:
