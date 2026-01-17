@@ -31,6 +31,7 @@ async def test_connect_subscribes_and_disconnects(hass: HomeAssistant) -> None:
     client.async_discover = AsyncMock(
         return_value=[SimpleNamespace(panel_name="Panel A")]
     )
+    client._coerce_identity = lambda identity: identity
     client.wait_ready = AsyncMock(return_value=True)
     client.async_disconnect = AsyncMock(return_value=None)
     unsubscribe = Mock()
@@ -67,6 +68,7 @@ async def test_connect_wait_ready_false_disconnects(
     client = AsyncMock()
     client.async_connect = AsyncMock(return_value=None)
     client.async_discover = AsyncMock(return_value=[])
+    client._coerce_identity = lambda identity: identity
     client.wait_ready = AsyncMock(return_value=False)
     client.async_disconnect = AsyncMock(return_value=None)
 
