@@ -33,7 +33,7 @@ from .const import (
 from .coordinator import TibberDataAPICoordinator
 from .services import async_setup_services
 
-PLATFORMS = [Platform.NOTIFY, Platform.SENSOR]
+PLATFORMS = [Platform.BINARY_SENSOR, Platform.NOTIFY, Platform.SENSOR]
 
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
