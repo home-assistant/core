@@ -5,7 +5,15 @@ from unittest.mock import AsyncMock
 
 from pynina import ApiError
 
-from homeassistant.components.nina.const import DOMAIN
+from homeassistant.components.nina.const import (
+    CONF_AREA_FILTER,
+    CONF_FILTER_CORONA,
+    CONF_FILTERS,
+    CONF_HEADLINE_FILTER,
+    CONF_MESSAGE_SLOTS,
+    CONF_REGIONS,
+    DOMAIN,
+)
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 
@@ -14,11 +22,11 @@ from . import setup_platform
 from tests.common import MockConfigEntry
 
 ENTRY_DATA: dict[str, Any] = {
-    "slots": 5,
-    "regions": {"083350000000": "Aach, Stadt"},
-    "filters": {
-        "headline_filter": ".*corona.*",
-        "area_filter": ".*",
+    CONF_MESSAGE_SLOTS: 5,
+    CONF_REGIONS: {"083350000000": "Aach, Stadt"},
+    CONF_FILTERS: {
+        CONF_HEADLINE_FILTER: ".*corona.*",
+        CONF_AREA_FILTER: ".*",
     },
 }
 
@@ -30,9 +38,9 @@ async def test_config_migration_from1_1(
 ) -> None:
     """Test the migration to a new configuration layout."""
     old_entry_data: dict[str, Any] = {
-        "slots": 5,
-        "corona_filter": True,
-        "regions": {"083350000000": "Aach, Stadt"},
+        CONF_MESSAGE_SLOTS: 5,
+        CONF_FILTER_CORONA: True,
+        CONF_REGIONS: {"083350000000": "Aach, Stadt"},
     }
 
     old_conf_entry: MockConfigEntry = MockConfigEntry(
@@ -56,10 +64,10 @@ async def test_config_migration_from1_2(
 ) -> None:
     """Test the migration to a new configuration layout with sections."""
     old_entry_data: dict[str, Any] = {
-        "slots": 5,
-        "headline_filter": ".*corona.*",
-        "area_filter": ".*",
-        "regions": {"083350000000": "Aach, Stadt"},
+        CONF_MESSAGE_SLOTS: 5,
+        CONF_HEADLINE_FILTER: ".*corona.*",
+        CONF_AREA_FILTER: ".*",
+        CONF_REGIONS: {"083350000000": "Aach, Stadt"},
     }
 
     old_conf_entry: MockConfigEntry = MockConfigEntry(
