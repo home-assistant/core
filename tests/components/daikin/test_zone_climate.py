@@ -287,9 +287,10 @@ async def test_zone_climate_zone_missing(hass: HomeAssistant) -> None:
     coordinator = DaikinCoordinator(
         hass,
         entry,
-        FakeZoneDevice(zones=[["Living", "1", 22]]),
+        FakeZoneDevice(zones=[["Living", "1", 22], ["Office", "1", 22]]),
     )
-    zone = DaikinZoneClimate(coordinator, 5)
+    zone = DaikinZoneClimate(coordinator, 1)
+    coordinator.device.zones = [["Living", "1", 22]]
 
     with pytest.raises(HomeAssistantError) as err:
         await zone.async_set_temperature(**{ATTR_TEMPERATURE: 21})
@@ -349,19 +350,6 @@ async def test_zone_climate_hvac_modes_read_only(hass: HomeAssistant) -> None:
     assert err.value.translation_key == "zone_hvac_read_only"
 
 
-def test_zone_climate_name_fallback(hass: HomeAssistant) -> None:
-    """Fallback to a numbered zone name when the index is missing."""
-    entry = MockConfigEntry(domain="daikin", data={})
-    coordinator = DaikinCoordinator(
-        hass,
-        entry,
-        FakeZoneDevice(zones=[["Living", "1", 22]]),
-    )
-    zone = DaikinZoneClimate(coordinator, 3)
-
-    assert zone.name == "Zone 3 temperature"
-
-
 def test_zone_climate_properties(hass: HomeAssistant) -> None:
     """Expose zone climate properties for current mode and limits."""
     entry = MockConfigEntry(domain="daikin", data={})
@@ -382,8 +370,8 @@ def test_zone_climate_properties(hass: HomeAssistant) -> None:
     assert zone.extra_state_attributes == {"zone_id": 0}
 
 
-def test_zone_climate_target_temperature_fallback(hass: HomeAssistant) -> None:
-    """Fallback to cooling temps when heating values are invalid."""
+def test_zone_climate_target_temperature_inactive_mode(hass: HomeAssistant) -> None:
+    """Return no target temperature when not heating or cooling."""
     entry = MockConfigEntry(domain="daikin", data={})
     device = FakeZoneDevice(
         zones=[["Living", "1", 22]],
@@ -394,7 +382,7 @@ def test_zone_climate_target_temperature_fallback(hass: HomeAssistant) -> None:
     coordinator = DaikinCoordinator(hass, entry, device)
     zone = DaikinZoneClimate(coordinator, 0)
 
-    assert zone.target_temperature == 19.0
+    assert zone.target_temperature is None
 
 
 @pytest.mark.asyncio
