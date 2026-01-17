@@ -1,7 +1,9 @@
 """Tests for the HDFury switch platform."""
 
+from datetime import timedelta
 from unittest.mock import AsyncMock
 
+from freezegun.api import FrozenDateTimeFactory
 from hdfury import HDFuryError
 import pytest
 from syrupy.assertion import SnapshotAssertion
@@ -11,6 +13,7 @@ from homeassistant.const import (
     ATTR_ENTITY_ID,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
+    STATE_UNAVAILABLE,
     Platform,
 )
 from homeassistant.core import HomeAssistant
@@ -19,7 +22,7 @@ import homeassistant.helpers.entity_registry as er
 
 from . import setup_integration
 
-from tests.common import MockConfigEntry, snapshot_platform
+from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 
 async def test_switch_entities(
@@ -103,3 +106,25 @@ async def test_switch_turn_error(
             {ATTR_ENTITY_ID: "switch.hdfury_vrroom_02_auto_switch_inputs"},
             blocking=True,
         )
+
+
+async def test_switch_entities_unavailable_on_error(
+    hass: HomeAssistant,
+    mock_hdfury_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test API error causes entities to become unavailable."""
+
+    await setup_integration(hass, mock_config_entry, [Platform.SWITCH])
+
+    mock_hdfury_client.get_info.side_effect = HDFuryError()
+
+    freezer.tick(timedelta(seconds=61))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert (
+        hass.states.get("switch.hdfury_vrroom_02_auto_switch_inputs").state
+        == STATE_UNAVAILABLE
+    )
