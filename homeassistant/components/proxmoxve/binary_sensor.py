@@ -2,23 +2,25 @@
 
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
     BinarySensorEntity,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
+from . import ProxmoxConfigEntry
 from .const import CONF_CONTAINERS, CONF_NODE, CONF_NODES, CONF_VMS
 from .entity import ProxmoxEntity
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: ProxmoxConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up binary sensors."""
@@ -33,6 +35,8 @@ async def async_setup_entry(
         for dev_id in node_config[CONF_VMS] + node_config[CONF_CONTAINERS]:
             coordinator = host_name_coordinators[node_name][dev_id]
 
+            if TYPE_CHECKING:
+                assert coordinator.data is not None
             name = coordinator.data["name"]
             sensor = create_binary_sensor(
                 coordinator, host_name, node_name, dev_id, name

@@ -50,6 +50,10 @@ from .const import (
 
 PLATFORMS = [Platform.BINARY_SENSOR]
 
+type ProxmoxConfigEntry = ConfigEntry[
+    dict[str, dict[str, dict[int, DataUpdateCoordinator[dict[str, Any] | None]]]]
+]
+
 CONFIG_SCHEMA = vol.Schema(
     {
         DOMAIN: vol.All(
@@ -145,7 +149,7 @@ async def _async_setup(hass: HomeAssistant, config: ConfigType) -> None:
         )
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: ProxmoxConfigEntry) -> bool:
     """Set up a ProxmoxVE instance from a config entry."""
 
     def build_client() -> ProxmoxClient:
@@ -236,7 +240,7 @@ def _get_vms_containers(
 
 def _create_coordinator_container_vm(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: ProxmoxConfigEntry,
     proxmox: ProxmoxAPI,
     host_name: str,
     node_name: str,
@@ -272,6 +276,6 @@ def _create_coordinator_container_vm(
     )
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: ProxmoxConfigEntry) -> bool:
     """Unload a config entry."""
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
