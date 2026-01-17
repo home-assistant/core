@@ -12,19 +12,27 @@
     "step": {
       "reauth_confirm": {
         "data": {
-          "api_key": "[%key:common::config_flow::data::api_key%]"
+          "api_base": "[%key:component::openai_conversation::config::step::user::data::api_base%]",
+          "api_key": "[%key:common::config_flow::data::api_key%]",
+          "default_query": "[%key:component::openai_conversation::config::step::user::data::default_query%]"
         },
         "data_description": {
-          "api_key": "[%key:component::openai_conversation::config::step::user::data_description::api_key%]"
+          "api_base": "[%key:component::openai_conversation::config::step::user::data_description::api_base%]",
+          "api_key": "[%key:component::openai_conversation::config::step::user::data_description::api_key%]",
+          "default_query": "[%key:component::openai_conversation::config::step::user::data_description::default_query%]"
         },
         "description": "Reauthentication required. Please enter your updated API key."
       },
       "user": {
         "data": {
-          "api_key": "[%key:common::config_flow::data::api_key%]"
+          "api_base": "Custom API endpoint",
+          "api_key": "[%key:common::config_flow::data::api_key%]",
+          "default_query": "Default query parameters"
         },
         "data_description": {
-          "api_key": "Your OpenAI API key."
+          "api_base": "Leave empty for standard OpenAI, or set your own API endpoint (e.g. your own Azure OpenAI endpoint).",
+          "api_key": "Your OpenAI API key.",
+          "default_query": "Optional query parameters (e.g. for Azure OpenAI you must add `api-version=preview`). Separate multiple parameters with `&`."
         },
         "description": "Set up OpenAI Conversation integration by providing your OpenAI API key. Instructions to obtain an API key can be found [here]({instructions_url})."
       }

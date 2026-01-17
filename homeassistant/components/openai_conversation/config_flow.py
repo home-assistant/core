@@ -30,7 +30,6 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import llm
-from homeassistant.helpers.httpx_client import get_async_client
 from homeassistant.helpers.selector import (
     NumberSelector,
     NumberSelectorConfig,
@@ -43,8 +42,10 @@ from homeassistant.helpers.selector import (
 from homeassistant.helpers.typing import VolDictType
 
 from .const import (
+    CONF_API_BASE,
     CONF_CHAT_MODEL,
     CONF_CODE_INTERPRETER,
+    CONF_DEFAULT_QUERY,
     CONF_IMAGE_MODEL,
     CONF_MAX_TOKENS,
     CONF_PROMPT,
@@ -83,12 +84,15 @@ from .const import (
     UNSUPPORTED_MODELS,
     UNSUPPORTED_WEB_SEARCH_MODELS,
 )
+from .helpers import create_client
 
 _LOGGER = logging.getLogger(__name__)
 
 STEP_USER_DATA_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_API_KEY): str,
+        vol.Optional(CONF_API_BASE): str,
+        vol.Optional(CONF_DEFAULT_QUERY): str,
     }
 )
 
@@ -98,9 +102,7 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> None:
 
     Data has the keys from STEP_USER_DATA_SCHEMA with values provided by the user.
     """
-    client = openai.AsyncOpenAI(
-        api_key=data[CONF_API_KEY], http_client=get_async_client(hass)
-    )
+    client = create_client(hass, data)
     await hass.async_add_executor_job(client.with_options(timeout=10.0).models.list)
 
 
@@ -515,10 +517,7 @@ class OpenAISubentryFlowHandler(ConfigSubentryFlow):
         location_data: dict[str, str] = {}
         zone_home = self.hass.states.get(ENTITY_ID_HOME)
         if zone_home is not None:
-            client = openai.AsyncOpenAI(
-                api_key=self._get_entry().data[CONF_API_KEY],
-                http_client=get_async_client(self.hass),
-            )
+            client = create_client(self.hass, self._get_entry().data)
             location_schema = vol.Schema(
                 {
                     vol.Optional(
