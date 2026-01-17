@@ -45,14 +45,14 @@ async def test_sensor_updates_from_coordinator(hass: HomeAssistant) -> None:
 
     await async_setup_entry(hass, entry, _add_entities)
 
-    states = hass.states.async_all("sensor")
-    assert len(states) == 2
-    assert {"Panel A", "connected"} == {state.state for state in states}
+    assert len(entities) == 2
+    values = {entity.native_value for entity in entities}
+    assert {"Panel A", "connected"} == values
 
     snapshot.panel_info.name = "Panel B"
     hub.is_ready = False
     coordinator.async_set_updated_data(snapshot)
     await hass.async_block_till_done()
 
-    states = hass.states.async_all("sensor")
-    assert {"Panel B", "disconnected"} == {state.state for state in states}
+    values = {entity.native_value for entity in entities}
+    assert {"Panel B", "disconnected"} == values

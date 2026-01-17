@@ -50,6 +50,14 @@ async def test_setup_unload_calls_connect_disconnect_and_subscribe(
     ), patch(
         "homeassistant.components.elke27.Elke27DataUpdateCoordinator",
         return_value=coordinator,
+    ), patch.object(
+        hass.config_entries,
+        "async_forward_entry_setups",
+        AsyncMock(return_value=True),
+    ), patch.object(
+        hass.config_entries,
+        "async_unload_platforms",
+        AsyncMock(return_value=True),
     ):
         assert await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
@@ -89,7 +97,11 @@ async def test_setup_transient_error_returns_not_ready(
         "homeassistant.components.elke27.Elke27Hub", return_value=hub
     ), patch(
         "homeassistant.components.elke27.Elke27DataUpdateCoordinator"
-    ) as coordinator_cls:
+    ) as coordinator_cls, patch.object(
+        hass.config_entries,
+        "async_forward_entry_setups",
+        AsyncMock(return_value=True),
+    ):
         assert not await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 

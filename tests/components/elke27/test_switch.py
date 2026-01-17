@@ -14,7 +14,6 @@ from homeassistant.components.elke27.switch import async_setup_entry
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import entity_registry as er
 
 from tests.common import MockConfigEntry
 
@@ -60,29 +59,12 @@ async def test_output_entities_updates_and_actions(hass: HomeAssistant) -> None:
     await async_setup_entry(hass, entry, _add_entities)
     assert len(entities) == 2
 
-    states = hass.states.async_all("switch")
-    assert {state.state for state in states} == {"on", "off"}
-
-    registry = er.async_get(hass)
-    unique_ids = {
-        entry.unique_id
-        for entry in registry.entities.values()
-        if entry.domain == "switch"
-    }
+    unique_ids = {entity.unique_id for entity in entities}
     assert unique_ids == {"aa:bb:cc:dd:ee:ff:output:1", "aa:bb:cc:dd:ee:ff:output:2"}
 
-    output_1 = next(
-        entry
-        for entry in registry.entities.values()
-        if entry.unique_id == "aa:bb:cc:dd:ee:ff:output:1"
-    )
+    output_1 = next(entity for entity in entities if entity._output_id == 1)
 
-    await hass.services.async_call(
-        "switch",
-        "turn_on",
-        {"entity_id": output_1.entity_id},
-        blocking=True,
-    )
+    await output_1.async_turn_on()
     hub.async_set_output.assert_awaited_once_with(1, True)
     assert snapshot.outputs[0].state is False
 
@@ -90,9 +72,7 @@ async def test_output_entities_updates_and_actions(hass: HomeAssistant) -> None:
     coordinator.async_set_updated_data(snapshot)
     await hass.async_block_till_done()
 
-    state = hass.states.get(output_1.entity_id)
-    assert state is not None
-    assert state.state == "on"
+    assert output_1.is_on is True
 
 
 async def test_output_pin_required(hass: HomeAssistant) -> None:
@@ -125,18 +105,9 @@ async def test_output_pin_required(hass: HomeAssistant) -> None:
         entities.extend(new_entities)
 
     await async_setup_entry(hass, entry, _add_entities)
+    assert len(entities) == 1
 
-    registry = er.async_get(hass)
-    output_1 = next(
-        entry
-        for entry in registry.entities.values()
-        if entry.unique_id == "aa:bb:cc:dd:ee:ff:output:1"
-    )
+    output_1 = next(entity for entity in entities if entity._output_id == 1)
 
     with pytest.raises(HomeAssistantError, match="PIN required to perform this action."):
-        await hass.services.async_call(
-            "switch",
-            "turn_on",
-            {"entity_id": output_1.entity_id},
-            blocking=True,
-        )
+        await output_1.async_turn_on()

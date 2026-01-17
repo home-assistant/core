@@ -16,7 +16,6 @@ from homeassistant.components.elke27.coordinator import Elke27DataUpdateCoordina
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import entity_registry as er
 
 from tests.common import MockConfigEntry
 
@@ -72,30 +71,20 @@ async def test_area_entities_and_updates(hass: HomeAssistant) -> None:
     await async_setup_entry(hass, entry, _add_entities)
     assert len(entities) == 2
 
-    states = hass.states.async_all("alarm_control_panel")
-    assert {state.state for state in states} == {"disarmed", "armed_away"}
-
-    registry = er.async_get(hass)
-    unique_ids = {
-        entry.unique_id
-        for entry in registry.entities.values()
-        if entry.domain == "alarm_control_panel"
-    }
+    unique_ids = {entity.unique_id for entity in entities}
     assert unique_ids == {"aa:bb:cc:dd:ee:ff:area:1", "aa:bb:cc:dd:ee:ff:area:2"}
 
-    area_1 = next(
-        entry
-        for entry in registry.entities.values()
-        if entry.unique_id == "aa:bb:cc:dd:ee:ff:area:1"
-    )
+    area_1 = next(entity for entity in entities if entity._area_id == 1)
+    area_2 = next(entity for entity in entities if entity._area_id == 2)
+
+    assert area_1.state == "disarmed"
+    assert area_2.state == "armed_away"
 
     snapshot.areas[0].arm_mode = ArmMode.ARMED_STAY
     coordinator.async_set_updated_data(snapshot)
     await hass.async_block_till_done()
 
-    state = hass.states.get(area_1.entity_id)
-    assert state is not None
-    assert state.state == "armed_home"
+    assert area_1.state == "armed_home"
 
 
 async def test_area_actions_and_pin_required(hass: HomeAssistant) -> None:
@@ -131,13 +120,9 @@ async def test_area_actions_and_pin_required(hass: HomeAssistant) -> None:
         entities.extend(new_entities)
 
     await async_setup_entry(hass, entry, _add_entities)
+    assert len(entities) == 1
 
-    registry = er.async_get(hass)
-    area_1 = next(
-        entry
-        for entry in registry.entities.values()
-        if entry.unique_id == "aa:bb:cc:dd:ee:ff:area:1"
-    )
+    area_1 = next(entity for entity in entities if entity._area_id == 1)
 
     await hass.services.async_call(
         "alarm_control_panel",

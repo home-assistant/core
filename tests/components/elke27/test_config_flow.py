@@ -20,6 +20,7 @@ from homeassistant.components.elke27.const import (
     CONF_INTEGRATION_SERIAL,
     CONF_LINK_KEYS_JSON,
     CONF_PIN,
+    DEFAULT_PORT,
     DOMAIN,
 )
 from homeassistant.const import CONF_HOST
@@ -207,6 +208,7 @@ async def test_relink_updates_entry(hass: HomeAssistant) -> None:
         title="Panel",
         data={
             CONF_HOST: "192.168.1.40",
+            CONF_PORT: DEFAULT_PORT,
             CONF_INTEGRATION_SERIAL: "112233445566",
         },
     )
@@ -283,6 +285,7 @@ async def test_relink_missing_link_keys_updates_entry(hass: HomeAssistant) -> No
         title="Panel",
         data={
             CONF_HOST: "192.168.1.41",
+            CONF_PORT: DEFAULT_PORT,
             CONF_INTEGRATION_SERIAL: "112233445566",
         },
     )
