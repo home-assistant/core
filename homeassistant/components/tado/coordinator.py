@@ -192,17 +192,18 @@ class TadoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, dict]]):
         self, zones: dict[int, dict]
     ) -> dict[int, Timetable]:
         """Update the timetable data from Tado."""
-        timetables: dict[int, Timetable] = {}
         try:
-            for zone_id in zones:
-                timetable = await self.hass.async_add_executor_job(
-                    self._tado.get_timetable, zone_id
-                )
-                timetables[zone_id] = timetable
+            return await self.hass.async_add_executor_job(
+                self._load_timetables, list(zones.keys())
+            )
         except RequestException as err:
             _LOGGER.error("Error updating Tado timetables: %s", err)
             raise UpdateFailed(f"Error updating Tado timetables: {err}") from err
 
+    def _load_timetables(self, zone_ids: list[int]) -> dict[int, Timetable]:
+        timetables: dict[int, Timetable] = {}
+        for zone_id in zone_ids:
+            timetables[zone_id] = self._tado.get_timetable(zone_id)
         return timetables
 
     async def _update_zone(self, zone_id: int) -> dict[str, str]:
