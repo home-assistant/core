@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable
 from dataclasses import dataclass
 
 from homeassistant.helpers.device_registry import DeviceInfo
@@ -16,9 +15,6 @@ from .coordinator import UnraidSystemCoordinator
 @dataclass(frozen=True, kw_only=True)
 class UnraidEntityDescription(EntityDescription):
     """Base description for all Unraid entities."""
-
-    available_fn: Callable[[UnraidSystemCoordinator], bool] = lambda _: True
-    supported_fn: Callable[[UnraidSystemCoordinator], bool] = lambda _: True
 
 
 class UnraidSystemEntity(CoordinatorEntity[UnraidSystemCoordinator]):
@@ -47,13 +43,4 @@ class UnraidSystemEntity(CoordinatorEntity[UnraidSystemCoordinator]):
             sw_version=server_info.sw_version,
             hw_version=server_info.hw_version,
             configuration_url=server_info.local_url,
-        )
-
-    @property
-    def available(self) -> bool:
-        """Return if entity is available."""
-        return (
-            super().available
-            and self.coordinator.data is not None
-            and self.entity_description.available_fn(self.coordinator)
         )

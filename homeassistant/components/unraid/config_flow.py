@@ -15,15 +15,9 @@ from unraid_api.exceptions import (
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
-from homeassistant.const import CONF_API_KEY, CONF_HOST, CONF_VERIFY_SSL
+from homeassistant.const import CONF_API_KEY, CONF_HOST, CONF_PORT, CONF_SSL
 
-from .const import (
-    CONF_HTTP_PORT,
-    CONF_HTTPS_PORT,
-    DEFAULT_HTTP_PORT,
-    DEFAULT_HTTPS_PORT,
-    DOMAIN,
-)
+from .const import DEFAULT_PORT, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -37,7 +31,7 @@ class UnraidConfigFlow(ConfigFlow, domain=DOMAIN):
         """Initialize the config flow."""
         self._server_uuid: str | None = None
         self._server_hostname: str | None = None
-        self._verify_ssl: bool = True
+        self._use_ssl: bool = True
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -62,8 +56,10 @@ class UnraidConfigFlow(ConfigFlow, domain=DOMAIN):
                 return self.async_create_entry(
                     title=self._server_hostname or user_input[CONF_HOST],
                     data={
-                        **user_input,
-                        CONF_VERIFY_SSL: self._verify_ssl,
+                        CONF_HOST: user_input[CONF_HOST],
+                        CONF_PORT: user_input.get(CONF_PORT, DEFAULT_PORT),
+                        CONF_API_KEY: user_input[CONF_API_KEY],
+                        CONF_SSL: self._use_ssl,
                     },
                 )
 
@@ -72,10 +68,7 @@ class UnraidConfigFlow(ConfigFlow, domain=DOMAIN):
             data_schema=vol.Schema(
                 {
                     vol.Required(CONF_HOST): str,
-                    vol.Optional(CONF_HTTP_PORT, default=DEFAULT_HTTP_PORT): vol.All(
-                        vol.Coerce(int), vol.Range(min=1, max=65535)
-                    ),
-                    vol.Optional(CONF_HTTPS_PORT, default=DEFAULT_HTTPS_PORT): vol.All(
+                    vol.Optional(CONF_PORT, default=DEFAULT_PORT): vol.All(
                         vol.Coerce(int), vol.Range(min=1, max=65535)
                     ),
                     vol.Required(CONF_API_KEY): str,
@@ -91,41 +84,58 @@ class UnraidConfigFlow(ConfigFlow, domain=DOMAIN):
 
         Returns abort reason if flow should be aborted, otherwise None.
         Populates errors dict with any validation errors.
+
+        Automatically detects SSL: tries HTTPS first, falls back to HTTP on SSL errors.
         """
         host = user_input[CONF_HOST].strip()
         api_key = user_input[CONF_API_KEY].strip()
-        http_port = user_input.get(CONF_HTTP_PORT, DEFAULT_HTTP_PORT)
-        https_port = user_input.get(CONF_HTTPS_PORT, DEFAULT_HTTPS_PORT)
+        port = user_input.get(CONF_PORT, DEFAULT_PORT)
 
-        self._verify_ssl = True
+        # Try HTTPS first
+        result = await self._try_connection(host, api_key, port, True, errors)
+        if result != "try_http":
+            return result
 
+        # SSL failed, try HTTP
+        _LOGGER.debug("HTTPS connection failed, trying HTTP")
+        errors.clear()
+        return await self._try_connection(host, api_key, port, False, errors)
+
+    async def _try_connection(
+        self,
+        host: str,
+        api_key: str,
+        port: int,
+        use_ssl: bool,
+        errors: dict[str, str],
+    ) -> str | None:
+        """Try connecting with specified SSL setting.
+
+        Returns:
+            - None on success
+            - "try_http" if SSL error occurred and should retry with HTTP
+            - abort reason string if flow should be aborted
+        """
+        # Set both ports to user's port to prevent library fallback behavior
         api_client = UnraidClient(
             host=host,
             api_key=api_key,
-            http_port=http_port,
-            https_port=https_port,
-            verify_ssl=True,
+            https_port=port,
+            http_port=port,
+            verify_ssl=use_ssl,
         )
 
         try:
-            return await self._validate_connection(api_client, errors)
+            result = await self._validate_connection(api_client, errors)
         except UnraidSSLError:
-            # SSL failed, try without SSL verification
-            await api_client.close()
-            api_client = UnraidClient(
-                host=host,
-                api_key=api_key,
-                http_port=http_port,
-                https_port=https_port,
-                verify_ssl=False,
-            )
-            try:
-                result = await self._validate_connection(api_client, errors)
-                if not errors:
-                    self._verify_ssl = False
-                return result
-            finally:
-                await api_client.close()
+            if use_ssl:
+                return "try_http"
+            errors["base"] = "cannot_connect"
+            return None
+        else:
+            if result is None and not errors:
+                self._use_ssl = use_ssl
+            return result
         finally:
             await api_client.close()
 
@@ -136,7 +146,7 @@ class UnraidConfigFlow(ConfigFlow, domain=DOMAIN):
 
         Returns abort reason if flow should be aborted, otherwise None.
         Populates errors dict with any validation errors.
-        Raises UnraidSSLError to trigger SSL fallback.
+        Raises UnraidSSLError to trigger SSL error handling.
         """
         try:
             await api_client.test_connection()
@@ -146,8 +156,7 @@ class UnraidConfigFlow(ConfigFlow, domain=DOMAIN):
         except UnraidSSLError:
             raise
         except UnraidConnectionError:
-            errors[CONF_HOST] = "cannot_connect"
-            errors[CONF_HTTPS_PORT] = "check_port"
+            errors["base"] = "cannot_connect"
             return None
         except Exception:
             _LOGGER.exception("Unexpected error during connection test")
@@ -158,8 +167,7 @@ class UnraidConfigFlow(ConfigFlow, domain=DOMAIN):
             version_info = await api_client.get_version()
         except Exception:
             _LOGGER.exception("Failed to get version info")
-            errors["base"] = "unknown"
-            return None
+            return "cannot_get_version"
 
         api_version = version_info.get("api", "0.0.0")
         if not self._is_supported_version(api_version):

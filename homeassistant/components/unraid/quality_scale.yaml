@@ -132,9 +132,7 @@ rules:
   docs-known-limitations: todo
 
   # The documentation describes known supported / unsupported devices
-  docs-supported-devices:
-    status: exempt
-    comment: Integration supports all Unraid 7.2+ servers uniformly.
+  docs-supported-devices: done
 
   # The documentation describes the supported functionality
   docs-supported-functions: todo

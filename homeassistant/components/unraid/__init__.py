@@ -13,17 +13,12 @@ from unraid_api.exceptions import (
     UnraidConnectionError,
 )
 
-from homeassistant.const import CONF_API_KEY, CONF_HOST, CONF_VERIFY_SSL, Platform
+from homeassistant.const import CONF_API_KEY, CONF_HOST, CONF_PORT, CONF_SSL, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import (
-    CONF_HTTP_PORT,
-    CONF_HTTPS_PORT,
-    DEFAULT_HTTP_PORT,
-    DEFAULT_HTTPS_PORT,
-)
+from .const import DEFAULT_PORT
 from .coordinator import UnraidConfigEntry, UnraidRuntimeData, UnraidSystemCoordinator
 
 PLATFORMS: list[Platform] = [
@@ -33,16 +28,18 @@ PLATFORMS: list[Platform] = [
 
 async def async_setup_entry(hass: HomeAssistant, entry: UnraidConfigEntry) -> bool:
     """Set up Unraid from a config entry."""
+    use_ssl = entry.data.get(CONF_SSL, True)
+    port = entry.data.get(CONF_PORT, DEFAULT_PORT)
+
     # Create API client with HA's shared session
+    # Set both ports to user's configured port to prevent library fallback
     api_client = UnraidClient(
         host=entry.data[CONF_HOST],
-        http_port=entry.data.get(CONF_HTTP_PORT, DEFAULT_HTTP_PORT),
-        https_port=entry.data.get(CONF_HTTPS_PORT, DEFAULT_HTTPS_PORT),
         api_key=entry.data[CONF_API_KEY],
-        verify_ssl=entry.data.get(CONF_VERIFY_SSL, True),
-        session=async_get_clientsession(
-            hass, verify_ssl=entry.data.get(CONF_VERIFY_SSL, True)
-        ),
+        https_port=port,
+        http_port=port,
+        verify_ssl=use_ssl,
+        session=async_get_clientsession(hass, verify_ssl=use_ssl),
     )
 
     # Get server info (validates connection)

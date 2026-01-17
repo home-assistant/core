@@ -16,11 +16,13 @@ from unraid_api.models import ServerInfo, SystemMetrics
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryError
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import DEFAULT_SYSTEM_POLL_INTERVAL
-
 _LOGGER = logging.getLogger(__name__)
+
+# Polling interval for system metrics (30 seconds)
+_UPDATE_INTERVAL = timedelta(seconds=30)
 
 
 @dataclass
@@ -59,7 +61,7 @@ class UnraidSystemCoordinator(DataUpdateCoordinator[UnraidSystemData]):
             hass,
             logger=_LOGGER,
             name=f"{server_info.hostname or 'Unraid'} System",
-            update_interval=timedelta(seconds=DEFAULT_SYSTEM_POLL_INTERVAL),
+            update_interval=_UPDATE_INTERVAL,
             config_entry=config_entry,
         )
         self.api_client = api_client

@@ -13,63 +13,32 @@ from unraid_api.exceptions import (
 )
 from unraid_api.models import ServerInfo, SystemMetrics
 
-from homeassistant.components.unraid.const import DOMAIN
 from homeassistant.components.unraid.coordinator import (
     UnraidSystemCoordinator,
     UnraidSystemData,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryError
 from homeassistant.helpers.update_coordinator import UpdateFailed
 
 from tests.common import MockConfigEntry
 
 
 @pytest.fixture
-def mock_api_client():
-    """Create a mock API client with typed methods."""
+def mock_api_client() -> MagicMock:
+    """Create a mock API client."""
     client = MagicMock()
     client.get_system_metrics = AsyncMock()
     return client
 
 
-@pytest.fixture
-def mock_server_info() -> ServerInfo:
-    """Create a mock ServerInfo object."""
-    return ServerInfo(
-        uuid="test-uuid-1234",
-        hostname="tower",
-        manufacturer="Unraid",
-        model="Server Pro",
-        serial_number="ABC123",
-        sw_version="7.2.0",
-        hw_version="1.0",
-        local_url="http://192.168.1.100",
-    )
-
-
-@pytest.fixture
-def mock_config_entry() -> MockConfigEntry:
-    """Provide a mock config entry for coordinator tests."""
-    return MockConfigEntry(
-        domain=DOMAIN,
-        unique_id="test-uuid-1234",
-        data={
-            "host": "192.168.1.100",
-            "port": 80,
-            "username": "root",
-            "password": "test",
-        },
-        title="Test Server",
-    )
-
-
-async def test_system_coordinator_initialization(
+async def test_coordinator_initialization(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_api_client: MagicMock,
     mock_server_info: ServerInfo,
 ) -> None:
-    """Test UnraidSystemCoordinator initializes with 30s interval."""
+    """Test coordinator initializes with correct settings."""
     coordinator = UnraidSystemCoordinator(
         hass=hass,
         config_entry=mock_config_entry,
@@ -81,13 +50,13 @@ async def test_system_coordinator_initialization(
     assert coordinator.update_interval == timedelta(seconds=30)
 
 
-async def test_system_coordinator_fetch_success(
+async def test_coordinator_fetch_success(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_api_client: MagicMock,
     mock_server_info: ServerInfo,
 ) -> None:
-    """Test system coordinator successfully fetches data."""
+    """Test coordinator successfully fetches data."""
     mock_api_client.get_system_metrics.return_value = SystemMetrics(
         cpu_percent=25.5,
         cpu_temperature=45.0,
@@ -109,62 +78,35 @@ async def test_system_coordinator_fetch_success(
     assert data.metrics.memory_percent == 50.0
 
 
-async def test_system_coordinator_handles_connection_error(
+@pytest.mark.parametrize(
+    ("exception", "expected_exception", "expected_message"),
+    [
+        (UnraidConnectionError("Connection refused"), UpdateFailed, "Connection error"),
+        (
+            UnraidAuthenticationError("Invalid credentials"),
+            ConfigEntryError,
+            "Authentication failed",
+        ),
+        (UnraidAPIError("API error"), UpdateFailed, "API error"),
+    ],
+)
+async def test_coordinator_error_handling(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_api_client: MagicMock,
     mock_server_info: ServerInfo,
+    exception: Exception,
+    expected_exception: type[Exception],
+    expected_message: str,
 ) -> None:
-    """Test system coordinator raises UpdateFailed on connection error."""
-    mock_api_client.get_system_metrics.side_effect = UnraidConnectionError(
-        "Connection refused"
-    )
+    """Test coordinator error handling."""
+    mock_api_client.get_system_metrics.side_effect = exception
 
     coordinator = UnraidSystemCoordinator(
         hass, mock_config_entry, mock_api_client, mock_server_info
     )
 
-    with pytest.raises(UpdateFailed) as exc_info:
+    with pytest.raises(expected_exception) as exc_info:
         await coordinator._async_update_data()
 
-    assert "Connection error" in str(exc_info.value)
-
-
-async def test_system_coordinator_handles_auth_error(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_api_client: MagicMock,
-    mock_server_info: ServerInfo,
-) -> None:
-    """Test system coordinator raises UpdateFailed on auth error."""
-    mock_api_client.get_system_metrics.side_effect = UnraidAuthenticationError(
-        "Invalid credentials"
-    )
-
-    coordinator = UnraidSystemCoordinator(
-        hass, mock_config_entry, mock_api_client, mock_server_info
-    )
-
-    with pytest.raises(UpdateFailed) as exc_info:
-        await coordinator._async_update_data()
-
-    assert "Authentication failed" in str(exc_info.value)
-
-
-async def test_system_coordinator_handles_api_error(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_api_client: MagicMock,
-    mock_server_info: ServerInfo,
-) -> None:
-    """Test system coordinator raises UpdateFailed on API error."""
-    mock_api_client.get_system_metrics.side_effect = UnraidAPIError("API error")
-
-    coordinator = UnraidSystemCoordinator(
-        hass, mock_config_entry, mock_api_client, mock_server_info
-    )
-
-    with pytest.raises(UpdateFailed) as exc_info:
-        await coordinator._async_update_data()
-
-    assert "API error" in str(exc_info.value)
+    assert expected_message in str(exc_info.value)
