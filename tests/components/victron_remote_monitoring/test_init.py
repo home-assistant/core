@@ -75,3 +75,24 @@ async def test_setup_entry_mqtt_failure_unloads(
         await hass.async_block_till_done()
 
     assert mock_unload.called
+
+
+async def test_options_update_triggers_reload(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Verify options update reloads the entry."""
+    mock_config_entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    with patch.object(
+        hass.config_entries, "async_reload", new=AsyncMock()
+    ) as mock_reload:
+        hass.config_entries.async_update_entry(
+            mock_config_entry, options={"mqtt_update_frequency": 10}
+        )
+        await hass.async_block_till_done()
+
+        assert mock_reload.called
