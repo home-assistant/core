@@ -59,7 +59,7 @@ class JvcProjectorDataUpdateCoordinator(DataUpdateCoordinator[dict[str, str]]):
             assert config_entry.unique_id is not None
         self.unique_id = config_entry.unique_id
 
-        self.capabilities: dict[str, Any] = self.device.capabilities()
+        self.capabilities = self.device.capabilities()
         self.registered_commands: set[type[Command]] = set()
 
         self.state: dict[type[Command], str] = {
@@ -105,7 +105,7 @@ class JvcProjectorDataUpdateCoordinator(DataUpdateCoordinator[dict[str, str]]):
 
         except JvcProjectorTimeoutError as err:
             # Timeouts are expected when the projector loses signal and ignores commands for a brief time.
-            self.last_update_success = False  # avoid log noise
+            self.last_update_success = False
             raise UpdateFailed(retry_after=1.0) from err
 
         # Clear state on signal loss

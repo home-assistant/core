@@ -121,9 +121,9 @@
       "color_depth": {
         "name": "Color Depth",
         "state": {
-          "8-bit": "8 Bit",
-          "10-bit": "10 Bit",
-          "12-bit": "12 Bit"
+          "8-bit": "8-bit",
+          "10-bit": "10-bit",
+          "12-bit": "12-bit"
         }
       },
       "color_space": {
