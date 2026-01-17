@@ -34,7 +34,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.exceptions import PlatformNotReady
-from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
@@ -351,7 +351,6 @@ async def _async_setup_graphql_sensors(
     tibber_connection = entry.runtime_data.tibber_connection
 
     entity_registry = er.async_get(hass)
-    device_registry = dr.async_get(hass)
 
     coordinator: TibberDataCoordinator | None = None
     entities: list[TibberSensor] = []
@@ -391,25 +390,6 @@ async def _async_setup_graphql_sensors(
                 ).async_set_updated_data
             )
 
-        # migrate
-        old_id = home.info["viewer"]["home"]["meteringPointData"]["consumptionEan"]
-        if old_id is None:
-            continue
-
-        # migrate to new device ids
-        old_entity_id = entity_registry.async_get_entity_id("sensor", DOMAIN, old_id)
-        if old_entity_id is not None:
-            entity_registry.async_update_entity(
-                old_entity_id, new_unique_id=home.home_id
-            )
-
-        # migrate to new device ids
-        device_entry = device_registry.async_get_device(identifiers={(DOMAIN, old_id)})
-        if device_entry and entry.entry_id in device_entry.config_entries:
-            device_registry.async_update_device(
-                device_entry.id, new_identifiers={(DOMAIN, home.home_id)}
-            )
-
     async_add_entities(entities)
 
 
@@ -430,9 +410,6 @@ def _setup_data_api_sensors(
         for sensor in device.sensors:
             description: SensorEntityDescription | None = api_sensors.get(sensor.id)
             if description is None:
-                _LOGGER.debug(
-                    "Sensor %s not found in DATA_API_SENSORS, skipping", sensor
-                )
                 continue
             entities.append(TibberDataAPISensor(coordinator, device, description))
     async_add_entities(entities)
