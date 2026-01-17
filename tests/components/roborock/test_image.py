@@ -1,6 +1,5 @@
 """Test Roborock Image platform."""
 
-import copy
 from copy import deepcopy
 from datetime import timedelta
 from http import HTTPStatus
@@ -151,7 +150,7 @@ async def test_map_status_change(
     fake_vacuum.v1_properties.home.home_map_content = {
         0: MapContent(
             image_content=b"\x89PNG-003",
-            map_data=copy.deepcopy(MAP_DATA),
+            map_data=deepcopy(MAP_DATA),
         )
     }
 
