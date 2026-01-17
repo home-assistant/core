@@ -70,14 +70,14 @@ class TuyaEntity(Entity):
             self.device_manager.send_commands, self.device.id, commands
         )
 
-    def _read_wrapper(self, wrapper: DeviceWrapper | None) -> Any | None:
+    def _read_wrapper[T](self, wrapper: DeviceWrapper[T] | None) -> T | None:
         """Read the wrapper device status."""
         if wrapper is None:
             return None
         return wrapper.read_device_status(self.device)
 
-    async def _async_send_wrapper_updates(
-        self, wrapper: DeviceWrapper | None, value: Any
+    async def _async_send_wrapper_updates[T](
+        self, wrapper: DeviceWrapper[T] | None, value: T
     ) -> None:
         """Send command to the device."""
         if wrapper is None:

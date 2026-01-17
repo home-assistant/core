@@ -103,7 +103,6 @@ RUN --mount=from=ghcr.io/astral-sh/uv:{uv},source=/uv,target=/bin/uv \
         --no-cache \
         -c /usr/src/homeassistant/homeassistant/package_constraints.txt \
         -r /usr/src/homeassistant/requirements.txt \
-        stdlib-list==0.10.0 \
         pipdeptree=={pipdeptree} \
         tqdm=={tqdm} \
         ruff=={ruff}
