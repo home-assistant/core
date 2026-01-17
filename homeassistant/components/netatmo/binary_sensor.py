@@ -6,7 +6,6 @@ from functools import partial
 import logging
 from typing import Any, Final, cast
 
-from pyatmo.modules import Module
 from pyatmo.modules.device_types import DeviceCategory as NetatmoDeviceCategory
 
 from homeassistant.components.binary_sensor import (
@@ -62,15 +61,7 @@ def process_opening_status_string(status: StateType) -> StateType | None:
     return OPENING_STATUS_TRANSLATIONS.get(status, None)
 
 
-def process_opening_status(
-    netatmo_device: Module, netatmo_name: str
-) -> StateType | None:
-    """Process opening Module status and return bool."""
-    status = getattr(netatmo_device, netatmo_name)
-    return process_opening_status_string(status)
-
-
-OPENING_CATEGORY_TRANSLATIONS: Final[dict[StateType, BinarySensorDeviceClass]] = {
+OPENING_CATEGORY_TRANSLATIONS: Final[dict[str, BinarySensorDeviceClass]] = {
     DOORTAG_CATEGORY_DOOR: BinarySensorDeviceClass.DOOR,
     DOORTAG_CATEGORY_FURNITURE: BinarySensorDeviceClass.OPENING,
     DOORTAG_CATEGORY_GARAGE: BinarySensorDeviceClass.GARAGE_DOOR,
@@ -81,15 +72,20 @@ OPENING_CATEGORY_TRANSLATIONS: Final[dict[StateType, BinarySensorDeviceClass]] =
 
 
 def process_opening_category_string(
-    category: StateType,
-) -> BinarySensorDeviceClass | None:
+    category: str | None,
+) -> BinarySensorDeviceClass:
     """Helper function to map Netatmo opening category to Home Assistant device class."""
 
-    # Use a specific device class if we have a match
-    return OPENING_CATEGORY_TRANSLATIONS.get(category, None)
+    if category is None:
+        return BinarySensorDeviceClass.OPENING
+
+    # Use a specific device class if we have a match, otherwise default to OPENING
+    return (
+        OPENING_CATEGORY_TRANSLATIONS.get(category) or BinarySensorDeviceClass.OPENING
+    )
 
 
-def get_opening_category(netatmo_device: NetatmoDevice) -> StateType | None:
+def get_opening_category(netatmo_device: NetatmoDevice) -> str | None:
     """Helper function to get opening category from Netatmo API raw data."""
 
     # First, get the unique ID of the device we are processing.
@@ -99,7 +95,7 @@ def get_opening_category(netatmo_device: NetatmoDevice) -> StateType | None:
     raw_data = netatmo_device.data_handler.account.raw_data
 
     # Initialize category as None
-    category: StateType = None
+    category: str | None = None
 
     # Iterate through each home in the raw data.
     for home in raw_data["homes"]:
@@ -117,36 +113,29 @@ def get_opening_category(netatmo_device: NetatmoDevice) -> StateType | None:
 
 def process_opening_category(netatmo_device: NetatmoDevice) -> BinarySensorDeviceClass:
     """Helper function to map Netatmo device opening category to Home Assistant device class."""
-    category: StateType = get_opening_category(netatmo_device)
-    module_binary_sensor_class: BinarySensorDeviceClass | None = (
+    category = get_opening_category(netatmo_device)
+    module_binary_sensor_class: BinarySensorDeviceClass = (
         process_opening_category_string(category)
     )
-
-    if module_binary_sensor_class is None:
-        module_binary_sensor_class = BinarySensorDeviceClass.OPENING
-
     return module_binary_sensor_class
 
 
-DEVICE_CLASS_TRANSLATIONS: Final[dict[BinarySensorDeviceClass, str]] = {
-    BinarySensorDeviceClass.OPENING: "Opening",
-    BinarySensorDeviceClass.DOOR: "Door",
-    BinarySensorDeviceClass.WINDOW: "Window",
-    BinarySensorDeviceClass.GARAGE_DOOR: "Garage Door",
-}
+def process_opening_name_class(
+    binary_sensor_class: BinarySensorDeviceClass,
+) -> str:
+    """Helper function to map Netatmo opening class to Home Assistant device name."""
+
+    # Manipulate class name to create a more user-friendly name
+    return binary_sensor_class.name.replace("_", " ").title()
 
 
 def process_opening_name(netatmo_device: NetatmoDevice) -> str:
     """Helper function to map Netatmo device opening category to Home Assistant device name."""
-    category: StateType = get_opening_category(netatmo_device)
-    module_binary_sensor_class: BinarySensorDeviceClass | None = (
-        process_opening_category_string(category)
+    module_binary_sensor_class: BinarySensorDeviceClass = process_opening_category(
+        netatmo_device
     )
 
-    if module_binary_sensor_class is None:
-        module_binary_sensor_class = BinarySensorDeviceClass.OPENING
-
-    return DEVICE_CLASS_TRANSLATIONS.get(module_binary_sensor_class, "Opening")
+    return process_opening_name_class(module_binary_sensor_class)
 
 
 @dataclass(frozen=True, kw_only=True)
