@@ -16,6 +16,7 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
+    ATTR_DEVICE_CLASS,
     ATTR_ENTITY_ID,
     ATTR_UNIT_OF_MEASUREMENT,
     CONF_NAME,
@@ -24,7 +25,13 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
 )
-from homeassistant.core import Event, EventStateChangedData, HomeAssistant, callback
+from homeassistant.core import (
+    Event,
+    EventStateChangedData,
+    HomeAssistant,
+    State,
+    callback,
+)
 from homeassistant.helpers import config_validation as cv, entity_registry as er
 from homeassistant.helpers.entity_platform import (
     AddConfigEntryEntitiesCallback,
@@ -228,6 +235,7 @@ class MinMaxSensor(SensorEntity):
         else:
             self._attr_name = f"{sensor_type} sensor".capitalize()
         self._sensor_attr = SENSOR_TYPE_TO_ATTR[self._sensor_type]
+        self._attr_device_class = None
         self._unit_of_measurement = None
         self._unit_of_measurement_mismatch = False
         self.min_value: float | None = None
@@ -242,6 +250,7 @@ class MinMaxSensor(SensorEntity):
         self.last_entity_id: str | None = None
         self.count_sensors = len(self._entity_ids)
         self.states: dict[str, Any] = {}
+        self.device_classes: dict[str, Any | None] = {}
 
     async def async_added_to_hass(self) -> None:
         """Handle added to Hass."""
@@ -330,6 +339,8 @@ class MinMaxSensor(SensorEntity):
             )
             self._unit_of_measurement_mismatch = True
 
+        self._update_device_class(new_state, entity)
+
         try:
             self.states[entity] = float(new_state.state)
             self.last = float(new_state.state)
@@ -359,3 +370,26 @@ class MinMaxSensor(SensorEntity):
         self.median = calc_median(sensor_values, self._round_digits)
         self.range = calc_range(sensor_values, self._round_digits)
         self.sum = calc_sum(sensor_values, self._round_digits)
+
+    def _update_device_class(self, new_state: State, entity: str) -> None:
+        new_device_class = new_state.attributes.get(ATTR_DEVICE_CLASS)
+
+        if (
+            entity in self.device_classes
+            and self.device_classes[entity] == new_device_class
+        ):
+            return
+
+        self.device_classes[entity] = new_device_class
+
+        if self.device_class == new_device_class:
+            return
+
+        if all(
+            device_class == new_device_class
+            for device_class in self.device_classes.values()
+        ):
+            self._attr_device_class = new_device_class
+        else:
+            _LOGGER.warning("Device classes do not match for entity %s", self.entity_id)
+            self._attr_device_class = None
