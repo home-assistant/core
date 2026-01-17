@@ -300,7 +300,7 @@ class SensorDeviceClass(StrEnum):
     OZONE = "ozone"
     """Amount of O3.
 
-    Unit of measurement: `μg/m³`
+    Unit of measurement: `μg/m³`, `ppb`
     """
 
     PH = "ph"
@@ -631,7 +631,10 @@ DEVICE_CLASS_UNITS: dict[SensorDeviceClass, set[type[StrEnum] | str | None]] = {
     SensorDeviceClass.NITROGEN_DIOXIDE: {CONCENTRATION_MICROGRAMS_PER_CUBIC_METER},
     SensorDeviceClass.NITROGEN_MONOXIDE: {CONCENTRATION_MICROGRAMS_PER_CUBIC_METER},
     SensorDeviceClass.NITROUS_OXIDE: {CONCENTRATION_MICROGRAMS_PER_CUBIC_METER},
-    SensorDeviceClass.OZONE: {CONCENTRATION_MICROGRAMS_PER_CUBIC_METER},
+    SensorDeviceClass.OZONE: {
+        CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        CONCENTRATION_PARTS_PER_BILLION,
+    },
     SensorDeviceClass.PH: {None},
     SensorDeviceClass.PM1: {CONCENTRATION_MICROGRAMS_PER_CUBIC_METER},
     SensorDeviceClass.PM10: {CONCENTRATION_MICROGRAMS_PER_CUBIC_METER},
