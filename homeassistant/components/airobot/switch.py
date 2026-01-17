@@ -9,6 +9,7 @@ from typing import Any
 from pyairobotrest.exceptions import AirobotError
 
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -34,6 +35,7 @@ SWITCH_TYPES: tuple[AirobotSwitchEntityDescription, ...] = (
     AirobotSwitchEntityDescription(
         key="child_lock",
         translation_key="child_lock",
+        entity_category=EntityCategory.CONFIG,
         is_on_fn=lambda coordinator: (
             coordinator.data.settings.setting_flags.childlock_enabled
         ),
@@ -43,6 +45,7 @@ SWITCH_TYPES: tuple[AirobotSwitchEntityDescription, ...] = (
     AirobotSwitchEntityDescription(
         key="actuator_exercise_disabled",
         translation_key="actuator_exercise_disabled",
+        entity_category=EntityCategory.CONFIG,
         entity_registry_enabled_default=False,
         is_on_fn=lambda coordinator: (
             coordinator.data.settings.setting_flags.actuator_exercise_disabled

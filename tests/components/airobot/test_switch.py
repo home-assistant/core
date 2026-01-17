@@ -125,19 +125,31 @@ async def test_switch_state_updates(
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default", "init_integration")
 @pytest.mark.parametrize(
-    ("entity_id", "method_name", "service"),
+    ("entity_id", "method_name", "service", "expected_key"),
     [
-        ("switch.test_thermostat_child_lock", "set_child_lock", SERVICE_TURN_ON),
-        ("switch.test_thermostat_child_lock", "set_child_lock", SERVICE_TURN_OFF),
+        (
+            "switch.test_thermostat_child_lock",
+            "set_child_lock",
+            SERVICE_TURN_ON,
+            "child_lock",
+        ),
+        (
+            "switch.test_thermostat_child_lock",
+            "set_child_lock",
+            SERVICE_TURN_OFF,
+            "child_lock",
+        ),
         (
             "switch.test_thermostat_actuator_exercise_disabled",
             "toggle_actuator_exercise",
             SERVICE_TURN_ON,
+            "actuator_exercise_disabled",
         ),
         (
             "switch.test_thermostat_actuator_exercise_disabled",
             "toggle_actuator_exercise",
             SERVICE_TURN_OFF,
+            "actuator_exercise_disabled",
         ),
     ],
 )
@@ -147,12 +159,13 @@ async def test_switch_error_handling(
     entity_id: str,
     method_name: str,
     service: str,
+    expected_key: str,
 ) -> None:
     """Test switch error handling for turn on/off operations."""
     mock_method = getattr(mock_airobot_client, method_name)
     mock_method.side_effect = AirobotError("Test error")
 
-    with pytest.raises(HomeAssistantError):
+    with pytest.raises(HomeAssistantError, match=expected_key):
         await hass.services.async_call(
             SWITCH_DOMAIN,
             service,
