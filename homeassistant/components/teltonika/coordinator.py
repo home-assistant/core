@@ -41,9 +41,9 @@ class TeltonikaDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
     async def _async_update_data(self) -> dict[str, Any]:
         """Fetch data from Teltonika device."""
+        modems = Modems(self.client.auth)
         try:
             # Get modems data using the teltasync library
-            modems = Modems(self.client.auth)
             modems_response = await modems.get_status()
         except TeltonikaConnectionError as err:
             raise UpdateFailed(f"Error communicating with device: {err}") from err
