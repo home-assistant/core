@@ -141,6 +141,20 @@ async def test_form_with_azure_openai(hass: HomeAssistant) -> None:
         CONF_DEFAULT_QUERY: "api-version=2024-06-01",
     }
     assert result2["options"] == {}
+    assert result2["subentries"] == [
+        {
+            "subentry_type": "conversation",
+            "data": RECOMMENDED_CONVERSATION_OPTIONS,
+            "title": DEFAULT_CONVERSATION_NAME,
+            "unique_id": None,
+        },
+        {
+            "subentry_type": "ai_task_data",
+            "data": RECOMMENDED_AI_TASK_OPTIONS,
+            "title": DEFAULT_AI_TASK_NAME,
+            "unique_id": None,
+        },
+    ]
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -179,6 +193,21 @@ async def test_form_with_custom_endpoint_only(hass: HomeAssistant) -> None:
         CONF_API_KEY: "custom-key",
         CONF_API_BASE: "https://custom-api.example.com/v1",
     }
+    assert result2["options"] == {}
+    assert result2["subentries"] == [
+        {
+            "subentry_type": "conversation",
+            "data": RECOMMENDED_CONVERSATION_OPTIONS,
+            "title": DEFAULT_CONVERSATION_NAME,
+            "unique_id": None,
+        },
+        {
+            "subentry_type": "ai_task_data",
+            "data": RECOMMENDED_AI_TASK_OPTIONS,
+            "title": DEFAULT_AI_TASK_NAME,
+            "unique_id": None,
+        },
+    ]
 
 
 async def test_form_invalid_url(hass: HomeAssistant) -> None:
