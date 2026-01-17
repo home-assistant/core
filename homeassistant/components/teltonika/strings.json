@@ -23,20 +23,6 @@
         "description": "A Teltonika device ({name}) was discovered at {host}. Enter the credentials to add it to Home Assistant.",
         "title": "Discovered Teltonika device"
       },
-      "reauth_confirm": {
-        "data": {
-          "host": "Host",
-          "password": "Password",
-          "username": "Username"
-        },
-        "data_description": {
-          "host": "The hostname or IP address of your Teltonika device.",
-          "password": "The password to authenticate with the device.",
-          "username": "The username to authenticate with the device."
-        },
-        "description": "The connection details for {name} ({host}) need to be updated.",
-        "title": "Re-authenticate Teltonika device"
-      },
       "user": {
         "data": {
           "host": "Host",
