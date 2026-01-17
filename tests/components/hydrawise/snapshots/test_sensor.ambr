@@ -20,6 +20,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Daily active water use',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -77,6 +78,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Daily active watering time',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -131,6 +133,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Daily inactive water use',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -188,6 +191,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Daily total water use',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -245,6 +249,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Daily active water use',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -302,6 +307,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Daily active watering time',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -356,6 +362,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Next cycle',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -406,6 +413,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Remaining watering time',
     'options': dict({
     }),
     'original_device_class': None,
@@ -456,6 +464,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Daily active water use',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -514,6 +523,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Daily active watering time',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -568,6 +578,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Next cycle',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -618,6 +629,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Remaining watering time',
     'options': dict({
     }),
     'original_device_class': None,
