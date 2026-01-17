@@ -23,7 +23,7 @@ from homeassistant.components.elke27.const import (
     DEFAULT_PORT,
     DOMAIN,
 )
-from homeassistant.const import CONF_HOST
+from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 

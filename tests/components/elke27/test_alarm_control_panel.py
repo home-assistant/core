@@ -124,20 +124,10 @@ async def test_area_actions_and_pin_required(hass: HomeAssistant) -> None:
 
     area_1 = next(entity for entity in entities if entity._area_id == 1)
 
-    await hass.services.async_call(
-        "alarm_control_panel",
-        "alarm_arm_away",
-        {"entity_id": area_1.entity_id, "code": "1234"},
-        blocking=True,
-    )
+    await area_1.async_alarm_arm_away(code="1234")
     hub.async_arm_area.assert_awaited_once_with(1, alarm_module.ArmMode.ARMED_AWAY, "1234")
 
     hub.async_disarm_area.reset_mock()
     hub.async_disarm_area.side_effect = alarm_module.Elke27PinRequiredError
     with pytest.raises(HomeAssistantError, match="PIN required to perform this action."):
-        await hass.services.async_call(
-            "alarm_control_panel",
-            "alarm_disarm",
-            {"entity_id": area_1.entity_id},
-            blocking=True,
-        )
+        await area_1.async_alarm_disarm()
