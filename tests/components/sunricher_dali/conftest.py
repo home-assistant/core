@@ -63,6 +63,16 @@ DEVICE_DATA: list[dict[str, Any]] = [
     },
 ]
 
+ILLUMINANCE_SENSOR_DATA: dict[str, Any] = {
+    "dev_id": "02020000206A242121110E",
+    "dev_type": "0202",
+    "name": "Illuminance Sensor 0000-20",
+    "model": "DALI Illuminance Sensor",
+    "color_mode": None,
+    "address": 20,
+    "channel": 0,
+}
+
 
 @pytest.fixture
 async def init_integration(
@@ -124,6 +134,12 @@ def mock_devices() -> list[MagicMock]:
     devices = [_create_mock_device(data) for data in DEVICE_DATA]
     devices.append(_create_mock_device(DEVICE_DATA[0]))
     return devices
+
+
+@pytest.fixture
+def mock_illuminance_device() -> MagicMock:
+    """Return a mocked illuminance sensor device."""
+    return _create_mock_device(ILLUMINANCE_SENSOR_DATA)
 
 
 def _create_scene_device_property(
