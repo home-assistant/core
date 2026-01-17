@@ -39,9 +39,7 @@ from .const import (
     ATTR_BLUESOUND_GROUP,
     ATTR_MASTER,
     DOMAIN,
-    SERVICE_CLEAR_TIMER,
     SERVICE_JOIN,
-    SERVICE_SET_TIMER,
     SERVICE_UNJOIN,
 )
 from .coordinator import BluesoundCoordinator
@@ -602,42 +600,6 @@ class BluesoundPlayer(CoordinatorEntity[BluesoundCoordinator], MediaPlayerEntity
     async def async_remove_follower(self, host: str, port: int) -> None:
         """Remove follower to leader."""
         await self._player.remove_follower(host, port)
-
-    async def async_increase_timer(self) -> int:
-        """Increase sleep time on player."""
-        ir.async_create_issue(
-            self.hass,
-            DOMAIN,
-            f"deprecated_service_{SERVICE_SET_TIMER}",
-            is_fixable=False,
-            breaks_in_ha_version="2025.12.0",
-            issue_domain=DOMAIN,
-            severity=ir.IssueSeverity.WARNING,
-            translation_key="deprecated_service_set_sleep_timer",
-            translation_placeholders={
-                "name": slugify(self.sync_status.name),
-            },
-        )
-        return await self._player.sleep_timer()
-
-    async def async_clear_timer(self) -> None:
-        """Clear sleep timer on player."""
-        ir.async_create_issue(
-            self.hass,
-            DOMAIN,
-            f"deprecated_service_{SERVICE_CLEAR_TIMER}",
-            is_fixable=False,
-            breaks_in_ha_version="2025.12.0",
-            issue_domain=DOMAIN,
-            severity=ir.IssueSeverity.WARNING,
-            translation_key="deprecated_service_clear_sleep_timer",
-            translation_placeholders={
-                "name": slugify(self.sync_status.name),
-            },
-        )
-        sleep = 1
-        while sleep > 0:
-            sleep = await self._player.sleep_timer()
 
     async def async_set_shuffle(self, shuffle: bool) -> None:
         """Enable or disable shuffle mode."""
