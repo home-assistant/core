@@ -110,6 +110,7 @@ class ProxmoxveConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
         proxmox_nodes: list[dict[str, Any]] = []
         if user_input is not None:
+            self._async_abort_entries_match({CONF_HOST: user_input[CONF_HOST]})
             try:
                 proxmox_nodes = await self.hass.async_add_executor_job(
                     _get_nodes_data, user_input
@@ -124,8 +125,6 @@ class ProxmoxveConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "no_nodes_found"
 
             if not errors:
-                await self.async_set_unique_id(user_input[CONF_HOST])
-                self._abort_if_unique_id_configured()
                 return self.async_create_entry(
                     title=user_input[CONF_HOST],
                     data={**user_input, CONF_NODES: proxmox_nodes},
@@ -142,24 +141,22 @@ class ProxmoxveConfigFlow(ConfigFlow, domain=DOMAIN):
         self._async_abort_entries_match({CONF_HOST: import_data[CONF_HOST]})
 
         try:
-            client = ProxmoxAPI(
-                import_data[CONF_HOST],
-                port=import_data[CONF_PORT],
-                user=_sanitize_userid(import_data),
-                password=import_data[CONF_PASSWORD],
-                verify_ssl=import_data.get(CONF_VERIFY_SSL, DEFAULT_VERIFY_SSL),
+            proxmox_nodes = await self.hass.async_add_executor_job(
+                _get_nodes_data, import_data
             )
-            client.nodes.get()
-        except AuthenticationError:
-            return self.async_abort(reason="invalid_auth")
-        except SSLError:
-            return self.async_abort(reason="ssl_error")
-        except ConnectTimeout:
+        except ProxmoxConnectTimeout:
             return self.async_abort(reason="connect_timeout")
-        except (ResourceException, requests.exceptions.ConnectionError):
+        except ProxmoxAuthenticationError:
+            return self.async_abort(reason="invalid_auth")
+        except ProxmoxSSLError:
+            return self.async_abort(reason="ssl_error")
+        except ProxmoxNoNodesFound:
             return self.async_abort(reason="no_nodes_found")
 
-        return await self.async_step_user(import_data)
+        return self.async_create_entry(
+            title=import_data[CONF_HOST],
+            data={**import_data, CONF_NODES: proxmox_nodes},
+        )
 
 
 class ProxmoxNoNodesFound(HomeAssistantError):

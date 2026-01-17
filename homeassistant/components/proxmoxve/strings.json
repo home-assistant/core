@@ -26,9 +26,21 @@
     }
   },
   "issues": {
-    "deprecated_yaml": {
-      "description": "Configuring {integration_title} using YAML is being removed.\n\nYour existing YAML configuration has been imported into the UI automatically and can be safely removed from your configuration.yaml file.\n\nRemove the {domain} configuration from your configuration.yaml file and restart Home Assistant to fix this issue.",
+    "deprecated_yaml_import_issue_connect_timeout": {
+      "description": "Configuring {integration_title} via YAML is deprecated and will be removed in a future release. While importing your configuration, a connection timeout occurred. Please correct your YAML configuration and restart Home Assistant, or remove the {domain} key from your configuration and configure the integration via the UI.",
       "title": "The {integration_title} YAML configuration is being removed"
+    },
+    "deprecated_yaml_import_issue_invalid_auth": {
+      "description": "Configuring {integration_title} via YAML is deprecated and will be removed in a future release. While importing your configuration, invalid authentication details were found. Please correct your YAML configuration and restart Home Assistant, or remove the {domain} key from your configuration and configure the integration via the UI.",
+      "title": "[%key:component::proxmoxve::issues::deprecated_yaml_import_issue_connect_timeout::title%]"
+    },
+    "deprecated_yaml_import_issue_no_nodes_found": {
+      "description": "Configuring {integration_title} via YAML is deprecated and will be removed in a future release. While importing your configuration, no active nodes were found on the Proxmox VE server. Please correct your YAML configuration and restart Home Assistant, or remove the {domain} key from your configuration and configure the integration via the UI.",
+      "title": "[%key:component::proxmoxve::issues::deprecated_yaml_import_issue_connect_timeout::title%]"
+    },
+    "deprecated_yaml_import_issue_ssl_error": {
+      "description": "Configuring {integration_title} via YAML is deprecated and will be removed in a future release. While importing your configuration, an SSL error occurred. Please correct your YAML configuration and restart Home Assistant, or remove the {domain} key from your configuration and configure the integration via the UI.",
+      "title": "[%key:component::proxmoxve::issues::deprecated_yaml_import_issue_connect_timeout::title%]"
     }
   }
 }

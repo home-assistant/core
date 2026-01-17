@@ -6,69 +6,14 @@ from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
     BinarySensorEntity,
 )
-from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST
-from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
-from homeassistant.data_entry_flow import FlowResultType
-from homeassistant.helpers import issue_registry as ir
-from homeassistant.helpers.entity_platform import (
-    AddConfigEntryEntitiesCallback,
-    AddEntitiesCallback,
-)
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from .const import CONF_CONTAINERS, CONF_NODE, CONF_NODES, CONF_VMS, DOMAIN
+from .const import CONF_CONTAINERS, CONF_NODE, CONF_NODES, CONF_VMS
 from .entity import ProxmoxEntity
-
-
-async def async_setup_platform(
-    hass: HomeAssistant,
-    config: ConfigType,
-    async_add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
-) -> None:
-    """Set up the departure sensor."""
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_IMPORT},
-        data=config,
-    )
-    if (
-        result.get("type") is FlowResultType.ABORT
-        and result.get("reason") != "already_configured"
-    ):
-        ir.async_create_issue(
-            hass,
-            DOMAIN,
-            f"deprecated_yaml_import_issue_{result.get('reason')}",
-            breaks_in_ha_version="2026.8.0",
-            is_fixable=False,
-            issue_domain=DOMAIN,
-            severity=ir.IssueSeverity.WARNING,
-            translation_key=f"deprecated_yaml_import_issue_{result.get('reason')}",
-            translation_placeholders={
-                "domain": DOMAIN,
-                "integration_title": "Proxmox VE",
-            },
-        )
-        return
-
-    ir.async_create_issue(
-        hass,
-        HOMEASSISTANT_DOMAIN,
-        "deprecated_yaml",
-        breaks_in_ha_version="2026.8.0",
-        is_fixable=False,
-        issue_domain=DOMAIN,
-        severity=ir.IssueSeverity.WARNING,
-        translation_key="deprecated_yaml",
-        translation_placeholders={
-            "domain": DOMAIN,
-            "integration_title": "Proxmox VE",
-        },
-    )
 
 
 async def async_setup_entry(
