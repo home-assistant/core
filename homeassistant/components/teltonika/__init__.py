@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from dataclasses import dataclass
 import logging
 
 from teltasync import Teltasync, TeltonikaAuthenticationError, TeltonikaConnectionError
@@ -24,17 +25,12 @@ PLATFORMS = [Platform.SENSOR]
 type TeltonikaConfigEntry = ConfigEntry[TeltonikaData]
 
 
+@dataclass
 class TeltonikaData:
     """Runtime data for Teltonika integration."""
 
-    def __init__(
-        self,
-        coordinator: TeltonikaDataUpdateCoordinator,
-        device_info: DeviceInfo,
-    ) -> None:
-        """Initialize the runtime data."""
-        self.coordinator = coordinator
-        self.device_info = device_info
+    coordinator: TeltonikaDataUpdateCoordinator
+    device_info: DeviceInfo
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: TeltonikaConfigEntry) -> bool:
