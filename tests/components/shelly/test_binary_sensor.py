@@ -3,7 +3,12 @@
 from copy import deepcopy
 from unittest.mock import Mock
 
-from aioshelly.const import MODEL_BLU_GATEWAY_G3, MODEL_MOTION, MODEL_PLUS_SMOKE
+from aioshelly.const import (
+    MODEL_BLU_GATEWAY_G3,
+    MODEL_FLOOD_G4,
+    MODEL_MOTION,
+    MODEL_PLUS_SMOKE,
+)
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy.assertion import SnapshotAssertion
@@ -612,7 +617,7 @@ async def test_rpc_flood_entities(
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test RPC flood sensor entities."""
-    await init_integration(hass, 4)
+    await init_integration(hass, 4, model=MODEL_FLOOD_G4)
 
     for entity in ("flood", "mute", "cable_unplugged"):
         entity_id = f"{BINARY_SENSOR_DOMAIN}.test_name_kitchen_{entity}"
@@ -630,7 +635,7 @@ async def test_rpc_flood_cable_unplugged(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Test RPC flood cable unplugged entity."""
-    await init_integration(hass, 4)
+    await init_integration(hass, 4, model=MODEL_FLOOD_G4)
 
     entity_id = f"{BINARY_SENSOR_DOMAIN}.test_name_kitchen_cable_unplugged"
 

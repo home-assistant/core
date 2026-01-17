@@ -105,6 +105,12 @@
     "session_not_active": {
       "message": "Cannot change fan mode when sauna session is not active"
     },
+    "set_fan_duration_failed": {
+      "message": "Failed to set fan duration"
+    },
+    "set_fan_mode_failed": {
+      "message": "Failed to set fan mode"
+    },
     "set_hvac_mode_failed": {
       "message": "Failed to set HVAC mode to {hvac_mode}"
     },
@@ -116,12 +122,12 @@
     },
     "set_preset_failed": {
       "message": "Failed to set preset to {preset_mode}"
+    }.
+    "set_sauna_duration_failed": {
+      "message": "Failed to set sauna duration"
     },
     "set_temperature_failed": {
       "message": "Failed to set temperature to {temperature}"
-    },
-    "set_value_failed": {
-      "message": "Failed to set {entity} to {value}"
     }
   },
   "options": {

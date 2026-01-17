@@ -468,3 +468,44 @@ async def test_preset_mode_options_update(
     assert state is not None
     assert "Custom Type 1" in state.attributes.get("preset_modes", [])
     assert "type_1" not in state.attributes.get("preset_modes", [])
+    # Try to set fan mode and expect error
+    with pytest.raises(
+        ServiceValidationError,
+        match="Cannot change fan mode when sauna session is not active",
+    ):
+        await hass.services.async_call(
+            CLIMATE_DOMAIN,
+            SERVICE_SET_FAN_MODE,
+            {ATTR_ENTITY_ID: entity_id, ATTR_FAN_MODE: FAN_LOW},
+            blocking=True,
+        )
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_fan_mode_error_handling(
+    hass: HomeAssistant,
+    mock_saunum_client,
+) -> None:
+    """Test error handling when setting fan mode fails."""
+    entity_id = "climate.saunum_leil"
+
+    # Ensure session is active
+    mock_saunum_client.async_get_data.return_value.session_active = True
+
+    # Make the client method raise an exception
+    mock_saunum_client.async_set_fan_speed.side_effect = SaunumException(
+        "Communication error"
+    )
+
+    # Try to call the service and expect HomeAssistantError
+    with pytest.raises(HomeAssistantError) as exc_info:
+        await hass.services.async_call(
+            CLIMATE_DOMAIN,
+            SERVICE_SET_FAN_MODE,
+            {ATTR_ENTITY_ID: entity_id, ATTR_FAN_MODE: FAN_LOW},
+            blocking=True,
+        )
+
+    # Verify the exception has the correct translation key
+    assert exc_info.value.translation_key == "set_fan_mode_failed"
+    assert exc_info.value.translation_domain == "saunum"
