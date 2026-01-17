@@ -115,6 +115,7 @@ AIR_QUALITY_SENSOR_TYPES: tuple[AirQualitySensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.CO,
         native_unit_of_measurement_fn=lambda x: x.pollutants.co.concentration.units,
+        exists_fn=lambda x: "co" in {p.code for p in x.pollutants},
         value_fn=lambda x: x.pollutants.co.concentration.value,
     ),
     AirQualitySensorEntityDescription(
@@ -146,6 +147,7 @@ AIR_QUALITY_SENSOR_TYPES: tuple[AirQualitySensorEntityDescription, ...] = (
         translation_key="nitrogen_dioxide",
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement_fn=lambda x: x.pollutants.no2.concentration.units,
+        exists_fn=lambda x: "no2" in {p.code for p in x.pollutants},
         value_fn=lambda x: x.pollutants.no2.concentration.value,
     ),
     AirQualitySensorEntityDescription(
@@ -153,6 +155,7 @@ AIR_QUALITY_SENSOR_TYPES: tuple[AirQualitySensorEntityDescription, ...] = (
         translation_key="ozone",
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement_fn=lambda x: x.pollutants.o3.concentration.units,
+        exists_fn=lambda x: "o3" in {p.code for p in x.pollutants},
         value_fn=lambda x: x.pollutants.o3.concentration.value,
     ),
     AirQualitySensorEntityDescription(
@@ -160,6 +163,7 @@ AIR_QUALITY_SENSOR_TYPES: tuple[AirQualitySensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.PM10,
         native_unit_of_measurement_fn=lambda x: x.pollutants.pm10.concentration.units,
+        exists_fn=lambda x: "pm10" in {p.code for p in x.pollutants},
         value_fn=lambda x: x.pollutants.pm10.concentration.value,
     ),
     AirQualitySensorEntityDescription(
@@ -167,6 +171,7 @@ AIR_QUALITY_SENSOR_TYPES: tuple[AirQualitySensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.PM25,
         native_unit_of_measurement_fn=lambda x: x.pollutants.pm25.concentration.units,
+        exists_fn=lambda x: "pm25" in {p.code for p in x.pollutants},
         value_fn=lambda x: x.pollutants.pm25.concentration.value,
     ),
     AirQualitySensorEntityDescription(
@@ -174,6 +179,7 @@ AIR_QUALITY_SENSOR_TYPES: tuple[AirQualitySensorEntityDescription, ...] = (
         translation_key="sulphur_dioxide",
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement_fn=lambda x: x.pollutants.so2.concentration.units,
+        exists_fn=lambda x: "so2" in {p.code for p in x.pollutants},
         value_fn=lambda x: x.pollutants.so2.concentration.value,
     ),
 )
