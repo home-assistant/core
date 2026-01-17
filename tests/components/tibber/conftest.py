@@ -2,6 +2,7 @@
 
 from collections.abc import AsyncGenerator
 import time
+from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
@@ -32,6 +33,7 @@ def create_tibber_device(
     charging_status: str | None = None,
     device_status: str | None = None,
     is_online: str | None = None,
+    sensor_values: dict[str, Any] | None = None,
 ) -> tibber.data_api.TibberDevice:
     """Create a fake Tibber Data API device.
 
@@ -47,6 +49,7 @@ def create_tibber_device(
         charging_status: Charging status (for binary sensors).
         device_status: Device on/off status (for binary sensors).
         is_online: Device online status (for binary sensors).
+        sensor_values: Dictionary mapping sensor IDs to their values for additional sensors.
     """
     capabilities = []
 
@@ -108,6 +111,17 @@ def create_tibber_device(
                 "unit": "",
             }
         )
+
+    if sensor_values:
+        for sensor_id, value in sensor_values.items():
+            capabilities.append(
+                {
+                    "id": sensor_id,
+                    "value": value,
+                    "description": sensor_id.replace(".", " ").title(),
+                    "unit": "",
+                }
+            )
 
     device_data = {
         "id": device_id,
