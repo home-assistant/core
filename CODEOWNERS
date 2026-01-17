@@ -1017,8 +1017,8 @@ build.json @home-assistant/supervisor
 /tests/components/mill/ @danielhiversen
 /homeassistant/components/min_max/ @gjohansson-ST
 /tests/components/min_max/ @gjohansson-ST
-/homeassistant/components/minecraft_server/ @elmurato
-/tests/components/minecraft_server/ @elmurato
+/homeassistant/components/minecraft_server/ @elmurato @zachdeibert
+/tests/components/minecraft_server/ @elmurato @zachdeibert
 /homeassistant/components/minio/ @tkislan
 /tests/components/minio/ @tkislan
 /homeassistant/components/moat/ @bdraco
