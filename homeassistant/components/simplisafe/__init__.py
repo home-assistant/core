@@ -566,7 +566,7 @@ class SimpliSafe:
 
         self.entry.async_on_unload(
             self._hass.bus.async_listen_once(
-                EVENT_HOMEASSISTANT_STOP, self._async_websocket_shutdown_listener
+                EVENT_HOMEASSISTANT_STOP, _async_websocket_shutdown_listener
             )
         )
 
