@@ -6,6 +6,7 @@
   "config_flow": true,
   "dependencies": ["webhook"],
   "documentation": "https://www.home-assistant.io/integrations/loqed",
+  "integration_type": "device",
   "iot_class": "local_push",
   "requirements": ["loqedAPI==2.1.10"],
   "zeroconf": [

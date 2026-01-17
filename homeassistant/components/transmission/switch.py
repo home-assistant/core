@@ -1,5 +1,6 @@
 """Support for setting the Transmission BitTorrent client Turtle Mode."""
 
+import asyncio
 from collections.abc import Callable
 from dataclasses import dataclass
 from typing import Any
@@ -12,6 +13,7 @@ from .coordinator import TransmissionConfigEntry, TransmissionDataUpdateCoordina
 from .entity import TransmissionEntity
 
 PARALLEL_UPDATES = 0
+AFTER_WRITE_SLEEP = 2
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -70,6 +72,7 @@ class TransmissionSwitch(TransmissionEntity, SwitchEntity):
         await self.hass.async_add_executor_job(
             self.entity_description.on_func, self.coordinator
         )
+        await asyncio.sleep(AFTER_WRITE_SLEEP)
         await self.coordinator.async_request_refresh()
 
     async def async_turn_off(self, **kwargs: Any) -> None:
@@ -77,4 +80,5 @@ class TransmissionSwitch(TransmissionEntity, SwitchEntity):
         await self.hass.async_add_executor_job(
             self.entity_description.off_func, self.coordinator
         )
+        await asyncio.sleep(AFTER_WRITE_SLEEP)
         await self.coordinator.async_request_refresh()

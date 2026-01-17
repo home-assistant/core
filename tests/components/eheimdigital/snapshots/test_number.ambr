@@ -25,6 +25,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'System LED brightness',
     'options': dict({
     }),
     'original_device_class': None,
@@ -83,6 +84,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Day speed',
     'options': dict({
     }),
     'original_device_class': None,
@@ -141,6 +143,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Manual speed',
     'options': dict({
     }),
     'original_device_class': None,
@@ -199,6 +202,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Night speed',
     'options': dict({
     }),
     'original_device_class': None,
@@ -257,6 +261,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'System LED brightness',
     'options': dict({
     }),
     'original_device_class': None,
@@ -289,6 +294,185 @@
     'state': 'unknown',
   })
 # ---
+# name: test_setup[number.mock_filter_high_pulse_duration-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'max': 200000,
+      'min': 5,
+      'mode': <NumberMode.AUTO: 'auto'>,
+      'step': 1,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'number',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'number.mock_filter_high_pulse_duration',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'High pulse duration',
+    'options': dict({
+    }),
+    'original_device_class': <NumberDeviceClass.DURATION: 'duration'>,
+    'original_icon': None,
+    'original_name': 'High pulse duration',
+    'platform': 'eheimdigital',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'high_pulse_time',
+    'unique_id': '00:00:00:00:00:04_high_pulse_time',
+    'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
+  })
+# ---
+# name: test_setup[number.mock_filter_high_pulse_duration-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'duration',
+      'friendly_name': 'Mock filter High pulse duration',
+      'max': 200000,
+      'min': 5,
+      'mode': <NumberMode.AUTO: 'auto'>,
+      'step': 1,
+      'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.mock_filter_high_pulse_duration',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_setup[number.mock_filter_low_pulse_duration-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'max': 200000,
+      'min': 5,
+      'mode': <NumberMode.AUTO: 'auto'>,
+      'step': 1,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'number',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'number.mock_filter_low_pulse_duration',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Low pulse duration',
+    'options': dict({
+    }),
+    'original_device_class': <NumberDeviceClass.DURATION: 'duration'>,
+    'original_icon': None,
+    'original_name': 'Low pulse duration',
+    'platform': 'eheimdigital',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'low_pulse_time',
+    'unique_id': '00:00:00:00:00:04_low_pulse_time',
+    'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
+  })
+# ---
+# name: test_setup[number.mock_filter_low_pulse_duration-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'duration',
+      'friendly_name': 'Mock filter Low pulse duration',
+      'max': 200000,
+      'min': 5,
+      'mode': <NumberMode.AUTO: 'auto'>,
+      'step': 1,
+      'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.mock_filter_low_pulse_duration',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_setup[number.mock_filter_system_led_brightness-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'max': 100,
+      'min': 0,
+      'mode': <NumberMode.AUTO: 'auto'>,
+      'step': 1,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'number',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'number.mock_filter_system_led_brightness',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'System LED brightness',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'System LED brightness',
+    'platform': 'eheimdigital',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'system_led',
+    'unique_id': '00:00:00:00:00:04_system_led',
+    'unit_of_measurement': '%',
+  })
+# ---
+# name: test_setup[number.mock_filter_system_led_brightness-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Mock filter System LED brightness',
+      'max': 100,
+      'min': 0,
+      'mode': <NumberMode.AUTO: 'auto'>,
+      'step': 1,
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.mock_filter_system_led_brightness',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
 # name: test_setup[number.mock_heater_night_temperature_offset-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -315,6 +499,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Night temperature offset',
     'options': dict({
     }),
     'original_device_class': <NumberDeviceClass.TEMPERATURE: 'temperature'>,
@@ -373,6 +558,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'System LED brightness',
     'options': dict({
     }),
     'original_device_class': None,
@@ -431,6 +617,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Temperature offset',
     'options': dict({
     }),
     'original_device_class': <NumberDeviceClass.TEMPERATURE: 'temperature'>,

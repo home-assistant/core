@@ -43,6 +43,11 @@ class FressnapfTrackerDeviceTracker(FressnapfTrackerBaseEntity, TrackerEntity):
         return super().available and self.coordinator.data.position is not None
 
     @property
+    def entity_picture(self) -> str | None:
+        """Return the entity picture url."""
+        return self.coordinator.data.icon
+
+    @property
     def latitude(self) -> float | None:
         """Return latitude value of the device."""
         if self.coordinator.data.position is not None:
