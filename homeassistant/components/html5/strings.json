@@ -40,6 +40,28 @@
         }
       },
       "name": "Dismiss"
+    },
+    "notify": {
+      "description": "Sends a notification message using the HTML5 service.",
+      "fields": {
+        "data": {
+          "description": "Extended information of notification. Supports tag, actions, URL, priority and TTL.",
+          "name": "Data"
+        },
+        "message": {
+          "description": "Message body of the notification.",
+          "name": "Message"
+        },
+        "target": {
+          "description": "Target registration ID of the notification. Targets can be individual devices or groups.",
+          "name": "Target"
+        },
+        "title": {
+          "description": "Title for your notification.",
+          "name": "Title"
+        }
+      },
+      "name": "Send a notification"
     }
   }
 }
