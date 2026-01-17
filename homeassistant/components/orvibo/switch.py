@@ -1,120 +1,58 @@
-"""Support for Orvibo S20 Wifi Smart Switches."""
+"""Support for Orvibo S20 smart switch."""
 
-from __future__ import annotations
-
-import logging
 from typing import Any
 
-from orvibo.s20 import S20, S20Exception, discover
-import voluptuous as vol
-
-from homeassistant.components.switch import (
-    PLATFORM_SCHEMA as SWITCH_PLATFORM_SCHEMA,
-    SwitchEntity,
-)
-from homeassistant.const import (
-    CONF_DISCOVERY,
-    CONF_HOST,
-    CONF_MAC,
-    CONF_NAME,
-    CONF_SWITCHES,
-)
+from homeassistant.components.switch import SwitchEntity, timedelta
+from homeassistant.const import CONF_MAC
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-_LOGGER = logging.getLogger(__name__)
+from . import OrviboConfigEntry
+from .const import DOMAIN, MANUFACTURER, MODEL
 
-DEFAULT_NAME = "Orvibo S20 Switch"
-DEFAULT_DISCOVERY = True
-
-PLATFORM_SCHEMA = SWITCH_PLATFORM_SCHEMA.extend(
-    {
-        vol.Required(CONF_SWITCHES, default=[]): vol.All(
-            cv.ensure_list,
-            [
-                {
-                    vol.Required(CONF_HOST): cv.string,
-                    vol.Optional(CONF_MAC): cv.string,
-                    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-                }
-            ],
-        ),
-        vol.Optional(CONF_DISCOVERY, default=DEFAULT_DISCOVERY): cv.boolean,
-    }
-)
+SCAN_INTERVAL = timedelta(seconds=30)
 
 
-def setup_platform(
+async def async_setup_entry(
     hass: HomeAssistant,
-    config: ConfigType,
-    add_entities_callback: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
+    entry: OrviboConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Set up S20 switches."""
-
-    switch_data = {}
-    switches = []
-    switch_conf = config.get(CONF_SWITCHES, [config])
-
-    if config.get(CONF_DISCOVERY):
-        _LOGGER.debug("Discovering S20 switches")
-        switch_data.update(discover())
-
-    for switch in switch_conf:
-        switch_data[switch.get(CONF_HOST)] = switch
-
-    for host, data in switch_data.items():
-        try:
-            switches.append(
-                S20Switch(data.get(CONF_NAME), S20(host, mac=data.get(CONF_MAC)))
-            )
-            _LOGGER.debug("Initialized S20 at %s", host)
-        except S20Exception:
-            _LOGGER.error("S20 at %s couldn't be initialized", host)
-
-    add_entities_callback(switches)
+    """Set up the S20 switch entry."""
+    async_add_entities([S20Switch(entry)], True)
 
 
 class S20Switch(SwitchEntity):
     """Representation of an S20 switch."""
 
-    def __init__(self, name, s20):
+    _attr_name = None
+    _attr_has_entity_name = True
+
+    def __init__(self, entry: OrviboConfigEntry) -> None:
         """Initialize the S20 device."""
-
-        self._name = name
-        self._s20 = s20
-        self._state = False
-        self._exc = S20Exception
-
-    @property
-    def name(self):
-        """Return the name of the switch."""
-        return self._name
+        self.data = entry.runtime_data
+        self._state = self.data.switch.on
+        self._attr_unique_id = entry.data[CONF_MAC]
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, entry.data[CONF_MAC])},
+            manufacturer=MANUFACTURER,
+            model=MODEL,
+        )
 
     @property
-    def is_on(self):
+    def is_on(self) -> bool:
         """Return true if device is on."""
         return self._state
 
     def update(self) -> None:
         """Update device state."""
-        try:
-            self._state = self._s20.on
-        except self._exc:
-            _LOGGER.exception("Error while fetching S20 state")
+        self._state = self.data.switch.on
 
     def turn_on(self, **kwargs: Any) -> None:
         """Turn the device on."""
-        try:
-            self._s20.on = True
-        except self._exc:
-            _LOGGER.exception("Error while turning on S20")
+        self.data.switch.on = True
 
     def turn_off(self, **kwargs: Any) -> None:
         """Turn the device off."""
-        try:
-            self._s20.on = False
-        except self._exc:
-            _LOGGER.exception("Error while turning off S20")
+        self.data.switch.on = False

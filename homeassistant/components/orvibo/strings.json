@@ -1,0 +1,24 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_host": "[%key:common::config_flow::error::invalid_host%]",
+      "invalid_mac": "Invalid MAC address"
+    },
+    "step": {
+      "user": {
+        "data": {
+          "host": "Host",
+          "mac": "MAC address"
+        },
+        "data_description": {
+          "host": "The hostname or IP address of your Orvibo S20 device",
+          "mac": "The MAC address of your Orvibo S20 device"
+        }
+      }
+    }
+  }
+}
