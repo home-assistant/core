@@ -7,7 +7,15 @@ from unittest.mock import AsyncMock
 
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.nina.const import ATTR_HEADLINE, DOMAIN
+from homeassistant.components.nina.const import (
+    ATTR_HEADLINE,
+    CONF_AREA_FILTER,
+    CONF_FILTERS,
+    CONF_HEADLINE_FILTER,
+    CONF_MESSAGE_SLOTS,
+    CONF_REGIONS,
+    DOMAIN,
+)
 from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
@@ -17,20 +25,20 @@ from . import setup_platform
 from tests.common import MockConfigEntry, snapshot_platform
 
 ENTRY_DATA_NO_CORONA: dict[str, Any] = {
-    "slots": 5,
-    "regions": {"083350000000": "Aach, Stadt"},
-    "filters": {
-        "headline_filter": "/(?!)/",
-        "area_filter": ".*",
+    CONF_MESSAGE_SLOTS: 5,
+    CONF_REGIONS: {"083350000000": "Aach, Stadt"},
+    CONF_FILTERS: {
+        CONF_HEADLINE_FILTER: "/(?!)/",
+        CONF_AREA_FILTER: ".*",
     },
 }
 
 ENTRY_DATA_SPECIFIC_AREA: dict[str, Any] = {
-    "slots": 5,
-    "regions": {"083350000000": "Aach, Stadt"},
-    "filters": {
-        "headline_filter": "/(?!)/",
-        "area_filter": ".*nagold.*",
+    CONF_MESSAGE_SLOTS: 5,
+    CONF_REGIONS: {"083350000000": "Aach, Stadt"},
+    CONF_FILTERS: {
+        CONF_HEADLINE_FILTER: "/(?!)/",
+        CONF_AREA_FILTER: ".*nagold.*",
     },
 }
 
