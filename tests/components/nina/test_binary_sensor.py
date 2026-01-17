@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from typing import Any
+from unittest.mock import AsyncMock
 
 from syrupy.assertion import SnapshotAssertion
 
@@ -39,15 +40,20 @@ async def test_sensors(
     entity_registry: er.EntityRegistry,
     mock_config_entry: MockConfigEntry,
     snapshot: SnapshotAssertion,
+    mock_nina_class: AsyncMock,
+    nina_warnings: list[Warning],
 ) -> None:
     """Test the creation and values of the NINA sensors."""
-
-    await setup_platform(hass, mock_config_entry)
+    await setup_platform(hass, mock_config_entry, mock_nina_class, nina_warnings)
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
 
 async def test_sensors_without_corona_filter(
-    hass: HomeAssistant, entity_registry: er.EntityRegistry, snapshot: SnapshotAssertion
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    snapshot: SnapshotAssertion,
+    mock_nina_class: AsyncMock,
+    nina_warnings: list[Warning],
 ) -> None:
     """Test the creation and values of the NINA sensors without the corona filter."""
 
@@ -60,7 +66,7 @@ async def test_sensors_without_corona_filter(
     )
     conf_entry.add_to_hass(hass)
 
-    await setup_platform(hass, conf_entry)
+    await setup_platform(hass, conf_entry, mock_nina_class, nina_warnings)
 
     state_w1 = hass.states.get("binary_sensor.nina_warning_aach_stadt_1")
 
@@ -89,7 +95,11 @@ async def test_sensors_without_corona_filter(
 
 
 async def test_sensors_with_area_filter(
-    hass: HomeAssistant, entity_registry: er.EntityRegistry, snapshot: SnapshotAssertion
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    snapshot: SnapshotAssertion,
+    mock_nina_class: AsyncMock,
+    nina_warnings: list[Warning],
 ) -> None:
     """Test the creation and values of the NINA sensors with a restrictive area filter."""
 
@@ -102,7 +112,7 @@ async def test_sensors_with_area_filter(
     )
     conf_entry.add_to_hass(hass)
 
-    await setup_platform(hass, conf_entry)
+    await setup_platform(hass, conf_entry, mock_nina_class, nina_warnings)
 
     state_w1 = hass.states.get("binary_sensor.nina_warning_aach_stadt_1")
 
