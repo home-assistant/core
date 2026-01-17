@@ -31,11 +31,11 @@
           "default_query": "Default query parameters"
         },
         "data_description": {
-          "api_base": "Leave empty for standard OpenAI, or set your own API endpoint (e.g. your own Azure OpenAI endpoint).",
+          "api_base": "Optional. Leave empty to use the standard OpenAI endpoint. To use a custom or OpenAI-compatible endpoint (for example Azure OpenAI or a proxy), enter the full base URL.",
           "api_key": "Your OpenAI API key.",
-          "default_query": "Optional query parameters (e.g. for Azure OpenAI you must add `api-version=preview`). Separate multiple parameters with `&`."
+          "default_query": "Optional query string that is appended to every request, in the form `key=value&other_key=other_value` (without a leading `?`). For Azure OpenAI you typically must include `api-version`, for example `api-version=preview`. Separate multiple parameters with `&`."
         },
-        "description": "Set up OpenAI Conversation integration by providing your OpenAI API key. Instructions to obtain an API key can be found [here]({instructions_url})."
+        "description": "Set up the OpenAI Conversation integration by providing your OpenAI API key and, optionally, a custom API endpoint and default query parameters. Instructions to obtain an API key can be found [here]({instructions_url})."
       }
     }
   },

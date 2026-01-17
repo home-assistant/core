@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 from typing import Any
+from urllib.parse import parse_qsl
 
 import openai
 
@@ -18,15 +19,10 @@ def parse_default_query(query_string: str) -> dict[str, str]:
     """Parse a query string like 'api-version=preview&foo=bar' into a dict."""
     if not query_string:
         return {}
-    result: dict[str, str] = {}
-    for pair in query_string.split("&"):
-        if "=" in pair:
-            key, value = pair.split("=", 1)
-            result[key.strip()] = value.strip()
-    return result
+    return dict(parse_qsl(query_string.strip(), keep_blank_values=True))
 
 
-def create_client(hass: HomeAssistant, data: Mapping[str, Any]) -> openai.AsyncClient:
+def create_client(hass: HomeAssistant, data: Mapping[str, Any]) -> openai.AsyncOpenAI:
     """Create an OpenAI client from config entry data."""
     client_kwargs: dict[str, Any] = {
         "api_key": data[CONF_API_KEY],
@@ -34,23 +30,9 @@ def create_client(hass: HomeAssistant, data: Mapping[str, Any]) -> openai.AsyncC
     }
 
     if api_base := data.get(CONF_API_BASE):
-        client_kwargs["base_url"] = normalize_openai_endpoint(api_base)
+        client_kwargs["base_url"] = api_base
 
     if default_query := data.get(CONF_DEFAULT_QUERY):
         client_kwargs["default_query"] = parse_default_query(default_query)
 
     return openai.AsyncOpenAI(**client_kwargs)
-
-
-def normalize_openai_endpoint(uri: str) -> str:
-    """Normalize OpenAI endpoint URI by ensuring it ends with /openai/v1/."""
-
-    normalized = uri.rstrip("/")
-
-    if not normalized.endswith("/openai/v1"):
-        normalized += "/openai/v1"
-
-    if not normalized.endswith("/"):
-        normalized += "/"
-
-    return normalized

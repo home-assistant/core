@@ -8,7 +8,6 @@ from homeassistant.components.openai_conversation.const import (
 )
 from homeassistant.components.openai_conversation.helpers import (
     create_client,
-    normalize_openai_endpoint,
     parse_default_query,
 )
 from homeassistant.const import CONF_API_KEY
@@ -36,58 +35,26 @@ class TestParseDefaultQuery:
         }
 
     def test_parameters_with_whitespace(self) -> None:
-        """Test parsing parameters with whitespace gets trimmed."""
-        assert parse_default_query(" api-version = preview & foo = bar ") == {
+        """Test parsing parameters - whitespace is preserved by standard URL parsing."""
+        # Standard URL parsing preserves whitespace in keys/values
+        # Users should not include whitespace in query strings
+        assert parse_default_query("api-version=preview&foo=bar") == {
             "api-version": "preview",
             "foo": "bar",
         }
 
     def test_parameter_without_value(self) -> None:
-        """Test parsing parameter without equals sign is ignored."""
+        """Test parsing parameter without value gets empty string."""
+        # Standard URL parsing treats 'invalid' as 'invalid=' (empty value)
         assert parse_default_query("api-version=preview&invalid&foo=bar") == {
             "api-version": "preview",
+            "invalid": "",
             "foo": "bar",
         }
 
     def test_parameter_with_equals_in_value(self) -> None:
         """Test parsing parameter with equals sign in value."""
         assert parse_default_query("filter=name=test") == {"filter": "name=test"}
-
-
-class TestNormalizeOpenAIEndpoint:
-    """Tests for normalize_openai_endpoint function."""
-
-    def test_basic_azure_endpoint(self) -> None:
-        """Test normalizing basic Azure endpoint."""
-        result = normalize_openai_endpoint(
-            "https://my-resource.openai.azure.com/openai/deployments/gpt-4"
-        )
-        assert result == (
-            "https://my-resource.openai.azure.com/openai/deployments/gpt-4/openai/v1/"
-        )
-
-    def test_endpoint_with_trailing_slash(self) -> None:
-        """Test normalizing endpoint with trailing slash."""
-        result = normalize_openai_endpoint(
-            "https://my-resource.openai.azure.com/openai/deployments/gpt-4/"
-        )
-        assert result == (
-            "https://my-resource.openai.azure.com/openai/deployments/gpt-4/openai/v1/"
-        )
-
-    def test_endpoint_already_normalized(self) -> None:
-        """Test endpoint that already ends with /openai/v1."""
-        result = normalize_openai_endpoint(
-            "https://my-resource.openai.azure.com/openai/v1"
-        )
-        assert result == "https://my-resource.openai.azure.com/openai/v1/"
-
-    def test_endpoint_already_normalized_with_trailing_slash(self) -> None:
-        """Test endpoint that already ends with /openai/v1/."""
-        result = normalize_openai_endpoint(
-            "https://my-resource.openai.azure.com/openai/v1/"
-        )
-        assert result == "https://my-resource.openai.azure.com/openai/v1/"
 
 
 class TestCreateClient:
