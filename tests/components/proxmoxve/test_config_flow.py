@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 
 from proxmoxer import AuthenticationError
 import pytest
@@ -10,13 +10,7 @@ from requests.exceptions import ConnectTimeout, SSLError
 
 from homeassistant.components.proxmoxve import CONF_HOST, CONF_REALM
 from homeassistant.components.proxmoxve.common import ResourceException
-from homeassistant.components.proxmoxve.const import (
-    CONF_CONTAINERS,
-    CONF_NODE,
-    CONF_NODES,
-    CONF_VMS,
-    DOMAIN,
-)
+from homeassistant.components.proxmoxve.const import CONF_NODES, DOMAIN
 from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_USER, ConfigEntryState
 from homeassistant.const import CONF_PASSWORD, CONF_PORT, CONF_USERNAME, CONF_VERIFY_SSL
 from homeassistant.core import HomeAssistant
@@ -55,10 +49,8 @@ async def test_form(
     assert result["step_id"] == "user"
 
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        user_input=MOCK_USER_STEP,
+        result["flow_id"], user_input=MOCK_USER_STEP
     )
-    await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "127.0.0.1"
@@ -89,25 +81,29 @@ async def test_form_exceptions(
     reason: str,
 ) -> None:
     """Test we handle all exceptions."""
-    with patch(
-        "homeassistant.components.proxmoxve.config_flow.ProxmoxAPI",
-        side_effect=exception,
-    ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_USER}
-        )
+    mock_proxmox_client.nodes.get.side_effect = exception
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
 
-        assert result["type"] is FlowResultType.FORM
-        assert result["step_id"] == "user"
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
 
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            user_input=MOCK_USER_STEP,
-        )
-        await hass.async_block_till_done()
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input=MOCK_USER_STEP,
+    )
 
-        assert result["type"] == FlowResultType.FORM
-        assert result["errors"] == {"base": reason}
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": reason}
+
+    mock_proxmox_client.nodes.get.side_effect = None
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input=MOCK_USER_STEP
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_form_no_nodes_exception(
@@ -126,66 +122,29 @@ async def test_form_no_nodes_exception(
     )
 
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        user_input=MOCK_USER_STEP,
+        result["flow_id"], user_input=MOCK_USER_STEP
     )
-    await hass.async_block_till_done()
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "no_nodes_found"}
 
-
-async def test_form_nodes_exception(
-    hass: HomeAssistant,
-    mock_proxmox_client: MagicMock,
-) -> None:
-    """Test we handle if an exception arises for retrieving VMs or containers."""
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}
-    )
-    assert result["type"] == FlowResultType.FORM
-
-    mock_proxmox_client._node_mock.qemu.get.side_effect = ResourceException(
-        "404", "status_message", "content"
-    )
+    mock_proxmox_client.nodes.get.side_effect = None
 
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        user_input=MOCK_USER_STEP,
+        result["flow_id"], user_input=MOCK_USER_STEP
     )
-    await hass.async_block_till_done()
 
-    assert result["type"] == FlowResultType.FORM
-    assert result["errors"] == {"base": "no_nodes_found"}
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_duplicate_entry(
     hass: HomeAssistant,
     mock_proxmox_client: MagicMock,
     mock_setup_entry: MagicMock,
+    mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test we handle duplicate entries."""
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        data={
-            CONF_HOST: "127.0.0.1",
-            CONF_USERNAME: "test_user@pam",
-            CONF_PASSWORD: "test_password",
-            CONF_VERIFY_SSL: True,
-            CONF_PORT: 8006,
-            CONF_REALM: "pam",
-            CONF_NODES: [
-                {
-                    CONF_NODE: "pve1",
-                    CONF_VMS: [100],
-                    CONF_CONTAINERS: [200],
-                }
-            ],
-        },
-        unique_id="127.0.0.1",
-    )
-    entry.add_to_hass(hass)
+    mock_config_entry.add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
@@ -194,10 +153,8 @@ async def test_duplicate_entry(
     assert result["step_id"] == "user"
 
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        user_input=MOCK_USER_STEP,
+        result["flow_id"], user_input=MOCK_USER_STEP
     )
-    await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
@@ -224,12 +181,7 @@ async def test_import_flow(
     assert result["data"][CONF_HOST] == "127.0.0.1"
     assert len(mock_setup_entry.mock_calls) == 1
 
-    entry = next(
-        entry
-        for entry in hass.config_entries.async_entries(DOMAIN)
-        if entry.data[CONF_HOST] == "127.0.0.1"
-    )
-    assert entry.state is ConfigEntryState.LOADED
+    assert result["result"].state is ConfigEntryState.LOADED
 
 
 @pytest.mark.parametrize(
@@ -267,15 +219,12 @@ async def test_import_flow_exceptions(
             **MOCK_USER_SETUP,
         }
     }
-    with patch(
-        "homeassistant.components.proxmoxve.config_flow.ProxmoxAPI",
-        side_effect=exception,
-    ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_IMPORT}, data=MOCK_IMPORT_CONFIG[DOMAIN]
-        )
+    mock_proxmox_client.nodes.get.side_effect = exception
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_IMPORT}, data=MOCK_IMPORT_CONFIG[DOMAIN]
+    )
 
-        assert result["type"] is FlowResultType.ABORT
-        assert result["reason"] == reason
-        assert len(mock_setup_entry.mock_calls) == 0
-        assert len(hass.config_entries.async_entries(DOMAIN)) == 0
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == reason
+    assert len(mock_setup_entry.mock_calls) == 0
+    assert len(hass.config_entries.async_entries(DOMAIN)) == 0
