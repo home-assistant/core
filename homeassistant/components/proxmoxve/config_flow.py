@@ -76,8 +76,6 @@ def _get_nodes_data(data: dict[str, Any]) -> list[dict[str, Any]]:
     except (ResourceException, requests.exceptions.ConnectionError) as err:
         raise ProxmoxNoNodesFound from err
 
-    _LOGGER.debug("Proxmox nodes: %s", nodes)
-
     nodes_data: list[dict[str, Any]] = []
     for node in nodes:
         try:

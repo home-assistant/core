@@ -1,17 +1,21 @@
 """Proxmox parent entity class."""
 
-from homeassistant.helpers.update_coordinator import (
-    CoordinatorEntity,
-    DataUpdateCoordinator,
-)
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
+
+if TYPE_CHECKING:
+    from .coordinator import ProxmoxCoordinator
 
 
-class ProxmoxEntity(CoordinatorEntity):
+class ProxmoxEntity(CoordinatorEntity["ProxmoxCoordinator"]):
     """Represents any entity created for the Proxmox VE platform."""
 
     def __init__(
         self,
-        coordinator: DataUpdateCoordinator,
+        coordinator: ProxmoxCoordinator,
         unique_id: str,
         name: str,
         icon: str,
@@ -22,7 +26,6 @@ class ProxmoxEntity(CoordinatorEntity):
         """Initialize the Proxmox entity."""
         super().__init__(coordinator)
 
-        self.coordinator = coordinator
         self._attr_unique_id = unique_id
         self._attr_name = name
         self._host_name = host_name
