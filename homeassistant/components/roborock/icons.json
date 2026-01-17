@@ -15,6 +15,9 @@
       },
       "water_shortage": {
         "default": "mdi:water"
+      },
+      "clean_fluid_empty": {
+        "default": "mdi:spray-bottle"
       }
     },
     "button": {
