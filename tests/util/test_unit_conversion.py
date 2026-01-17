@@ -56,6 +56,7 @@ from homeassistant.util.unit_conversion import (
     InformationConverter,
     MassConverter,
     MassVolumeConcentrationConverter,
+    OzoneConcentrationConverter,
     PowerConverter,
     PressureConverter,
     ReactiveEnergyConverter,
@@ -81,6 +82,7 @@ _ALL_CONVERTERS: dict[type[BaseUnitConverter], list[str | None]] = {
         BloodGlucoseConcentrationConverter,
         MassVolumeConcentrationConverter,
         CarbonMonoxideConcentrationConverter,
+        OzoneConcentrationConverter,
         ConductivityConverter,
         DataRateConverter,
         DistanceConverter,
@@ -122,6 +124,11 @@ _GET_UNIT_RATIO: dict[type[BaseUnitConverter], tuple[str | None, str | None, flo
         CONCENTRATION_MILLIGRAMS_PER_CUBIC_METER,
         CONCENTRATION_PARTS_PER_MILLION,
         1.16441,
+    ),
+    OzoneConcentrationConverter: (
+        CONCENTRATION_MILLIGRAMS_PER_CUBIC_METER,
+        CONCENTRATION_PARTS_PER_BILLION,
+        1.99542,
     ),
     ConductivityConverter: (
         UnitOfConductivity.MICROSIEMENS_PER_CM,
@@ -332,6 +339,47 @@ _CONVERTED_VALUE: dict[
             120000,
             CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
             120,
+            CONCENTRATION_MILLIGRAMS_PER_CUBIC_METER,
+        ),
+    ],
+    OzoneConcentrationConverter: [
+        # PPB to other units (ozone molar mass: 48.00 g/mol)
+        (
+            1,
+            CONCENTRATION_PARTS_PER_BILLION,
+            1.99542,
+            CONCENTRATION_MILLIGRAMS_PER_CUBIC_METER,
+        ),
+        (
+            1,
+            CONCENTRATION_PARTS_PER_BILLION,
+            1995.42,
+            CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        ),
+        # MILLIGRAMS_PER_CUBIC_METER to other units
+        (
+            100,
+            CONCENTRATION_MILLIGRAMS_PER_CUBIC_METER,
+            50.11531,
+            CONCENTRATION_PARTS_PER_BILLION,
+        ),
+        (
+            100,
+            CONCENTRATION_MILLIGRAMS_PER_CUBIC_METER,
+            100000,
+            CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        ),
+        # MICROGRAMS_PER_CUBIC_METER to other units
+        (
+            100000,
+            CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+            50.11531,
+            CONCENTRATION_PARTS_PER_BILLION,
+        ),
+        (
+            100000,
+            CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+            100,
             CONCENTRATION_MILLIGRAMS_PER_CUBIC_METER,
         ),
     ],
