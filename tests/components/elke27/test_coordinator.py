@@ -5,11 +5,13 @@ from __future__ import annotations
 import asyncio
 from dataclasses import dataclass
 from datetime import UTC, datetime
+from enum import Enum
 import sys
 from types import ModuleType, SimpleNamespace
 from typing import Any, Mapping
 
 _elke27_lib = ModuleType("elke27_lib")
+_elke27_lib_errors = ModuleType("elke27_lib.errors")
 _elke27_lib_events = ModuleType("elke27_lib.events")
 _elke27_lib_types = ModuleType("elke27_lib.types")
 
@@ -71,6 +73,44 @@ class TableCsmChanged:
     new: int = 0
 
 
+class Elke27Error(Exception):
+    """Base Elke27 error."""
+
+
+class Elke27LinkRequiredError(Elke27Error):
+    """Link required stub."""
+
+
+class Elke27PinRequiredError(Elke27Error):
+    """PIN required stub."""
+
+
+@dataclass(frozen=True, slots=True)
+class ClientConfig:
+    """Minimal config stub."""
+
+
+@dataclass(frozen=True, slots=True)
+class LinkKeys:
+    """Minimal link keys stub."""
+
+    payload: str
+
+    @classmethod
+    def from_json(cls, payload: str) -> "LinkKeys":
+        """Return stub link keys from JSON."""
+        return cls(payload)
+
+
+class ArmMode(Enum):
+    """Stub arm modes."""
+
+    DISARMED = "disarmed"
+    ARMED_STAY = "armed_stay"
+    ARMED_AWAY = "armed_away"
+    ARMED_NIGHT = "armed_night"
+
+
 _elke27_lib_events.CsmSnapshotUpdated = CsmSnapshotUpdated
 _elke27_lib_events.DomainCsmChanged = DomainCsmChanged
 _elke27_lib_events.TableCsmChanged = TableCsmChanged
@@ -80,10 +120,18 @@ _elke27_lib_events.UNSET_SEQ = UNSET_SEQ
 _elke27_lib_events.UNSET_CLASSIFICATION = UNSET_CLASSIFICATION
 _elke27_lib_events.UNSET_SESSION_ID = UNSET_SESSION_ID
 _elke27_lib_types.CsmSnapshot = CsmSnapshot
+_elke27_lib_errors.Elke27Error = Elke27Error
+_elke27_lib_errors.Elke27LinkRequiredError = Elke27LinkRequiredError
+_elke27_lib_errors.Elke27PinRequiredError = Elke27PinRequiredError
+_elke27_lib.ClientConfig = ClientConfig
+_elke27_lib.Elke27Client = object
+_elke27_lib.LinkKeys = LinkKeys
+_elke27_lib.ArmMode = ArmMode
 _elke27_lib.events = _elke27_lib_events
 _elke27_lib.types = _elke27_lib_types
 
 sys.modules.setdefault("elke27_lib", _elke27_lib)
+sys.modules["elke27_lib.errors"] = _elke27_lib_errors
 sys.modules["elke27_lib.events"] = _elke27_lib_events
 sys.modules["elke27_lib.types"] = _elke27_lib_types
 

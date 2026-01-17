@@ -38,6 +38,10 @@ class Elke27LinkRequiredError(Elke27Error):
     """Link required stub."""
 
 
+class Elke27PinRequiredError(Elke27Error):
+    """PIN required stub."""
+
+
 class AuthorizationRequired(Elke27Error):
     """Authorization required stub."""
 
@@ -77,6 +81,7 @@ _elke27_lib_errors.Elke27AuthError = Elke27AuthError
 _elke27_lib_errors.Elke27TimeoutError = Elke27TimeoutError
 _elke27_lib_errors.Elke27DisconnectedError = Elke27DisconnectedError
 _elke27_lib_errors.Elke27LinkRequiredError = Elke27LinkRequiredError
+_elke27_lib_errors.Elke27PinRequiredError = Elke27PinRequiredError
 _elke27_lib_errors.AuthorizationRequired = AuthorizationRequired
 _elke27_lib_errors.Elke27PermissionError = Elke27PermissionError
 _elke27_lib_errors.InvalidCredentials = InvalidCredentials
