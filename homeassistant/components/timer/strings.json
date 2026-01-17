@@ -39,7 +39,7 @@
       "description": "Changes a timer by adding or subtracting a given duration.",
       "fields": {
         "duration": {
-          "description": "Duration to add to or subtract from the running timer.",
+          "description": "Duration to add to or subtract from the running timer, in seconds (HH:MM:SS or seconds).",
           "name": "Duration"
         }
       },
@@ -61,7 +61,7 @@
       "description": "Starts a timer or restarts it with a provided duration.",
       "fields": {
         "duration": {
-          "description": "Custom duration to restart the timer with.",
+          "description": "Custom duration to restart the timer with, in seconds (HH:MM:SS or seconds).",
           "name": "Duration"
         }
       },
