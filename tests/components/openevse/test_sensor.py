@@ -44,7 +44,7 @@ async def test_disabled_by_default_entities(
     assert entry.disabled
     assert entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION
 
-    state = hass.states.get("sensor.openevse_mock_config_temperature")
+    state = hass.states.get("sensor.openevse_mock_config_rtc_temperature")
     assert state is None
 
     entry = entity_registry.async_get("sensor.openevse_mock_config_rtc_temperature")
