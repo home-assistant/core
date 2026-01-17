@@ -39,12 +39,47 @@ class Elke27DisconnectedError(Elke27Error):
     """Disconnected stub."""
 
 
+class AuthorizationRequired(Elke27Error):
+    """Authorization required stub."""
+
+
+class Elke27PermissionError(Elke27Error):
+    """Permission error stub."""
+
+
+class Elke27PinRequiredError(Elke27Error):
+    """PIN required stub."""
+
+
+class InvalidCredentials(Elke27AuthError):
+    """Invalid credentials stub."""
+
+
+class InvalidPin(Elke27AuthError):
+    """Invalid PIN stub."""
+
+
+class InvalidPinError(Elke27AuthError):
+    """Invalid PIN error stub."""
+
+
+class MissingPinError(Elke27AuthError):
+    """Missing PIN error stub."""
+
+
 _elke27_lib_errors.Elke27Error = Elke27Error
 _elke27_lib_errors.Elke27AuthError = Elke27AuthError
 _elke27_lib_errors.Elke27LinkRequiredError = Elke27LinkRequiredError
 _elke27_lib_errors.Elke27TimeoutError = Elke27TimeoutError
 _elke27_lib_errors.Elke27ConnectionError = Elke27ConnectionError
 _elke27_lib_errors.Elke27DisconnectedError = Elke27DisconnectedError
+_elke27_lib_errors.AuthorizationRequired = AuthorizationRequired
+_elke27_lib_errors.Elke27PermissionError = Elke27PermissionError
+_elke27_lib_errors.Elke27PinRequiredError = Elke27PinRequiredError
+_elke27_lib_errors.InvalidCredentials = InvalidCredentials
+_elke27_lib_errors.InvalidPin = InvalidPin
+_elke27_lib_errors.InvalidPinError = InvalidPinError
+_elke27_lib_errors.MissingPinError = MissingPinError
 
 
 @dataclass(frozen=True, slots=True)

@@ -40,10 +40,12 @@ async def async_get_config_entry_diagnostics(
     snapshot_dict = _to_jsonable(snapshot)
     redacted_snapshot = redact_for_diagnostics(snapshot_dict)
 
-    snapshot_meta = {
-        "version": getattr(snapshot, "version", None),
-        "updated_at": getattr(snapshot, "updated_at", None),
-    }
+    snapshot_meta = _to_jsonable(
+        {
+            "version": getattr(snapshot, "version", None),
+            "updated_at": getattr(snapshot, "updated_at", None),
+        }
+    )
 
     return {
         "entry_id": entry.entry_id,

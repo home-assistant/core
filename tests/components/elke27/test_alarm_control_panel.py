@@ -42,6 +42,30 @@ class Elke27PinRequiredError(Elke27Error):
     """PIN required stub."""
 
 
+class AuthorizationRequired(Elke27Error):
+    """Authorization required stub."""
+
+
+class Elke27PermissionError(Elke27Error):
+    """Permission error stub."""
+
+
+class InvalidCredentials(Elke27AuthError):
+    """Invalid credentials stub."""
+
+
+class InvalidPin(Elke27AuthError):
+    """Invalid PIN stub."""
+
+
+class InvalidPinError(Elke27AuthError):
+    """Invalid PIN error stub."""
+
+
+class MissingPinError(Elke27AuthError):
+    """Missing PIN error stub."""
+
+
 _elke27_lib_errors.Elke27Error = Elke27Error
 _elke27_lib_errors.Elke27ConnectionError = Elke27ConnectionError
 _elke27_lib_errors.Elke27AuthError = Elke27AuthError
@@ -49,16 +73,21 @@ _elke27_lib_errors.Elke27TimeoutError = Elke27TimeoutError
 _elke27_lib_errors.Elke27DisconnectedError = Elke27DisconnectedError
 _elke27_lib_errors.Elke27LinkRequiredError = Elke27LinkRequiredError
 _elke27_lib_errors.Elke27PinRequiredError = Elke27PinRequiredError
+_elke27_lib_errors.AuthorizationRequired = AuthorizationRequired
+_elke27_lib_errors.Elke27PermissionError = Elke27PermissionError
+_elke27_lib_errors.InvalidCredentials = InvalidCredentials
+_elke27_lib_errors.InvalidPin = InvalidPin
+_elke27_lib_errors.InvalidPinError = InvalidPinError
+_elke27_lib_errors.MissingPinError = MissingPinError
 
 
 class ArmMode(Enum):
     """Stub arm modes."""
 
-    AWAY = "away"
-    STAY = "stay"
-    NIGHT = "night"
-    VACATION = "vacation"
-    INSTANT = "instant"
+    DISARMED = "disarmed"
+    ARMED_STAY = "armed_stay"
+    ARMED_AWAY = "armed_away"
+    ARMED_NIGHT = "armed_night"
 
 
 @dataclass(frozen=True, slots=True)
@@ -155,7 +184,7 @@ class FakeHub:
                     area_id=2,
                     name="Area 2",
                     armed=True,
-                    arm_mode=alarm_module.ArmMode.AWAY,
+                    arm_mode=alarm_module.ArmMode.ARMED_AWAY,
                     alarm_active=False,
                 ),
             ],
@@ -246,7 +275,7 @@ async def test_area_entities_and_updates(hass: HomeAssistant) -> None:
     updated = replace(
         hub.snapshot.areas[0],
         armed=True,
-        arm_mode=alarm_module.ArmMode.STAY,
+        arm_mode=alarm_module.ArmMode.ARMED_STAY,
     )
     hub.snapshot = replace(
         hub.snapshot, areas=[updated, hub.snapshot.areas[1]]
@@ -294,7 +323,7 @@ async def test_area_actions_and_pin_required(hass: HomeAssistant) -> None:
         blocking=True,
     )
     hub.async_arm_area.assert_awaited_once_with(
-        1, alarm_module.ArmMode.AWAY, "1234"
+        1, alarm_module.ArmMode.ARMED_AWAY, "1234"
     )
 
     hub.async_disarm_area.reset_mock()
