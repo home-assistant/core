@@ -708,7 +708,7 @@ async def test_empty_content_in_chat_history(
     actual_history = kwargs.get("contents")
 
     assert actual_history[0].parts[0].text == first_input
-    assert actual_history[1].parts[0].text == " "
+    assert actual_history[1].parts[0].text == ""
 
 
 @pytest.mark.usefixtures("mock_init_component")
