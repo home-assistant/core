@@ -19,7 +19,7 @@ rules:
     comment: |
       No explicit event subscriptions.
   entity-unique-id: done
-  has-entity-name: done
+  has-entity-name: todo
   runtime-data: done
   test-before-configure: done
   test-before-setup: done
