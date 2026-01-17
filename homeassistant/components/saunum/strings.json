@@ -30,9 +30,37 @@
     }
   },
   "entity": {
+    "binary_sensor": {
+      "alarm_door_open": {
+        "name": "Door open during heating alarm"
+      },
+      "alarm_door_sensor": {
+        "name": "Door open too long alarm"
+      },
+      "alarm_internal_temp": {
+        "name": "Internal temperature alarm"
+      },
+      "alarm_temp_sensor_open": {
+        "name": "Temperature sensor disconnected alarm"
+      },
+      "alarm_temp_sensor_short": {
+        "name": "Temperature sensor shorted alarm"
+      },
+      "alarm_thermal_cutoff": {
+        "name": "Thermal cutoff alarm"
+      }
+    },
     "light": {
       "light": {
         "name": "[%key:component::light::title%]"
+      }
+    },
+    "number": {
+      "fan_duration": {
+        "name": "Fan duration"
+      },
+      "sauna_duration": {
+        "name": "Sauna duration"
       }
     },
     "sensor": {
@@ -49,8 +77,23 @@
     "communication_error": {
       "message": "Communication error: {error}"
     },
+    "door_open": {
+      "message": "Cannot start sauna session when sauna door is open"
+    },
+    "session_active_cannot_change_fan_duration": {
+      "message": "Cannot change fan duration while session is active"
+    },
+    "session_active_cannot_change_sauna_duration": {
+      "message": "Cannot change sauna duration while session is active"
+    },
     "session_not_active": {
       "message": "Cannot change fan mode when sauna session is not active"
+    },
+    "set_fan_duration_failed": {
+      "message": "Failed to set fan duration"
+    },
+    "set_fan_mode_failed": {
+      "message": "Failed to set fan mode"
     },
     "set_hvac_mode_failed": {
       "message": "Failed to set HVAC mode to {hvac_mode}"
@@ -60,6 +103,9 @@
     },
     "set_light_on_failed": {
       "message": "Failed to turn on light"
+    },
+    "set_sauna_duration_failed": {
+      "message": "Failed to set sauna duration"
     },
     "set_temperature_failed": {
       "message": "Failed to set temperature to {temperature}"

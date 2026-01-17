@@ -281,7 +281,7 @@
       'attribution': 'Data provided by Fitbit.com',
       'device_class': 'duration',
       'friendly_name': 'First L. Sleep time in bed',
-      'icon': 'mdi:hotel',
+      'icon': 'mdi:bed',
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
     }),
