@@ -74,7 +74,7 @@ async def test_form_multiple_meters(hass: HomeAssistant) -> None:
     # Create mock meter objects
     mock_meter_1 = MagicMock()
     mock_meter_1.hardware_address = "meter-1"
-    mock_meter_1.connection_status = "Connected"
+    mock_meter_1.connection_status = "Not Joined"
 
     mock_meter_2 = MagicMock()
     mock_meter_2.hardware_address = "meter-2"
@@ -116,7 +116,7 @@ async def test_form_multiple_meters(hass: HomeAssistant) -> None:
     ):
         result3 = await hass.config_entries.flow.async_configure(
             result2["flow_id"],
-            {CONF_HARDWARE_ADDRESS: "meter-1"},
+            {CONF_HARDWARE_ADDRESS: "meter-2"},
         )
         await hass.async_block_till_done()
 
@@ -127,7 +127,7 @@ async def test_form_multiple_meters(hass: HomeAssistant) -> None:
         CONF_HOST: "192.168.1.55",
         CONF_CLOUD_ID: "abcdef",
         CONF_INSTALL_CODE: "123456",
-        CONF_HARDWARE_ADDRESS: "meter-1",
+        CONF_HARDWARE_ADDRESS: "meter-2",
     }
 
 
