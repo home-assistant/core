@@ -1,5 +1,6 @@
 """Test Hikvision binary sensors."""
 
+import logging
 from unittest.mock import MagicMock
 
 import pytest
@@ -171,17 +172,22 @@ async def test_binary_sensor_device_class_unknown(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_hikcamera: MagicMock,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test binary sensor with unknown device class."""
     mock_hikcamera.return_value.current_event_states = {
         "Unknown Event": [(False, 1)],
     }
 
-    await setup_integration(hass, mock_config_entry)
+    with caplog.at_level(logging.WARNING):
+        await setup_integration(hass, mock_config_entry)
 
     state = hass.states.get("binary_sensor.front_camera_unknown_event")
     assert state is not None
     assert state.attributes.get(ATTR_DEVICE_CLASS) is None
+
+    # Verify warning was logged for unknown sensor type
+    assert "Unknown Hikvision sensor type 'Unknown Event'" in caplog.text
 
 
 async def test_yaml_import_creates_deprecation_issue(
