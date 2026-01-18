@@ -29,6 +29,8 @@ CONF_ENABLE_WEB_SEARCH = "enable_web_search"
 CONF_GOOGLE_API_KEY = "google_api_key"
 CONF_GOOGLE_CSE_ID = "google_cse_id"
 
+LLM_API_WEB_SEARCH = "aws_bedrock_web_search"
+
 DEFAULT = {
     CONF_CHAT_MODEL: "us.amazon.nova-pro-v1:0",
     CONF_MAX_TOKENS: 3000,

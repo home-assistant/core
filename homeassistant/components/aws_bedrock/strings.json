@@ -46,16 +46,19 @@
         },
         "init": {
           "data": {
+            "chat_model": "[%key:common::generic::model%]",
             "enable_web_search": "Enable web search",
             "google_api_key": "Google API Key (optional)",
             "google_cse_id": "Google Custom Search Engine ID (optional)",
+            "max_tokens": "Maximum tokens to return in response",
             "name": "[%key:common::config_flow::data::name%]",
-            "recommended": "Use recommended settings"
+            "temperature": "Temperature"
           },
           "data_description": {
-            "enable_web_search": "Allow the AI to search websites and fetch web content to provide current information. When enabled, you must configure the conversation agent to use the 'AWS Bedrock Web Search' API in your assistant settings under 'Control Home Assistant'.",
-            "google_api_key": "Google API key for Custom Search API (get from Google Cloud Console at console.cloud.google.com). If not provided, web search will only fetch specific URLs.",
-            "google_cse_id": "Custom Search Engine ID from programmablesearchengine.google.com (e.g., 017576662512468239146:omuauf_lfve). Required for Google Search functionality. Create a new search engine and copy the 'Search engine ID' from the Overview page."
+            "chat_model": "Select from available AWS Bedrock foundation models (includes Anthropic, Amazon, Meta, and other providers)",
+            "enable_web_search": "Enable web search to allow the AI to search websites and fetch web content for current information. When enabled, the AI can search the web, fetch URLs, and access up-to-date information beyond its training data.",
+            "google_api_key": "Optional: Google API key for Custom Search API (get from Google Cloud Console at console.cloud.google.com). Provides Google Search functionality. If not provided, web search can still fetch content from specific URLs you provide to the AI.",
+            "google_cse_id": "Optional: Custom Search Engine ID from programmablesearchengine.google.com (e.g., 017576662512468239146:omuauf_lfve). Required only if you provide a Google API key above. Create a new search engine and copy the 'Search engine ID' from the Overview page."
           },
           "title": "Configure AI task"
         }
@@ -72,26 +75,22 @@
         "user": "Add conversation agent"
       },
       "step": {
-        "advanced": {
-          "data": {
-            "chat_model": "[%key:common::generic::model%]",
-            "max_tokens": "[%key:component::aws_bedrock::config_subentries::ai_task_data::step::advanced::data::max_tokens%]",
-            "temperature": "[%key:component::aws_bedrock::config_subentries::ai_task_data::step::advanced::data::temperature%]"
-          },
-          "data_description": {
-            "chat_model": "[%key:component::aws_bedrock::config_subentries::ai_task_data::step::advanced::data_description::chat_model%]"
-          },
-          "title": "[%key:component::aws_bedrock::config_subentries::ai_task_data::step::advanced::title%]"
-        },
         "init": {
           "data": {
+            "chat_model": "[%key:common::generic::model%]",
             "enable_web_search": "[%key:component::aws_bedrock::config_subentries::ai_task_data::step::init::data::enable_web_search%]",
             "google_api_key": "[%key:component::aws_bedrock::config_subentries::ai_task_data::step::init::data::google_api_key%]",
             "google_cse_id": "[%key:component::aws_bedrock::config_subentries::ai_task_data::step::init::data::google_cse_id%]",
-            "llm_hass_api": "Control Home Assistant",
+            "max_tokens": "[%key:component::aws_bedrock::config_subentries::ai_task_data::step::init::data::max_tokens%]",
             "name": "[%key:common::config_flow::data::name%]",
             "prompt": "Prompt template",
-            "recommended": "[%key:component::aws_bedrock::config_subentries::ai_task_data::step::init::data::recommended%]"
+            "temperature": "[%key:component::aws_bedrock::config_subentries::ai_task_data::step::init::data::temperature%]"
+          },
+          "data_description": {
+            "chat_model": "[%key:component::aws_bedrock::config_subentries::ai_task_data::step::init::data_description::chat_model%]",
+            "enable_web_search": "[%key:component::aws_bedrock::config_subentries::ai_task_data::step::init::data_description::enable_web_search%]",
+            "google_api_key": "[%key:component::aws_bedrock::config_subentries::ai_task_data::step::init::data_description::google_api_key%]",
+            "google_cse_id": "[%key:component::aws_bedrock::config_subentries::ai_task_data::step::init::data_description::google_cse_id%]"
           },
           "title": "Configure conversation agent"
         }
