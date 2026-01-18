@@ -134,6 +134,13 @@ SENSOR_TYPES: dict[str, dict[str, SensorSpecs]] = {
             0,
             SensorDeviceClass.TEMPERATURE,
         ),
+        "OutsideTemperature": (
+            "DisplayedOutsideTemp",
+            UnitOfTemperature.CELSIUS,
+            None,
+            0,
+            SensorDeviceClass.TEMPERATURE,
+        ),
         "Zone1TimerMonday": ("z1Timer.Monday", None, "mdi:timer-outline", 1, None),
         "Zone1TimerTuesday": ("z1Timer.Tuesday", None, "mdi:timer-outline", 1, None),
         "Zone1TimerWednesday": (
@@ -164,6 +171,13 @@ SENSOR_TYPES: dict[str, dict[str, SensorSpecs]] = {
         ),
         "PowerEnergyConsumptionThisMonth": (
             "PrEnergySumHcThisMonth",
+            UnitOfEnergy.KILO_WATT_HOUR,
+            "mdi:flash",
+            0,
+            SensorDeviceClass.ENERGY,
+        ),
+        "TotalEnergyConsumption": (
+            "PrEnergySum",
             UnitOfEnergy.KILO_WATT_HOUR,
             "mdi:flash",
             0,
