@@ -62,17 +62,25 @@ _LOGGER.debug("Processing %d items", len(items))
 ## Development Commands
 
 ```bash
-# Run linters
-pre-commit run --all-files
+# Run all linters
+prek run --all-files
 
-# Run integration tests
-pytest ./tests/components/<domain> \
-  --cov=homeassistant.components.<domain> \
+# Run linters on staged files only
+prek run
+
+# Run integration tests (recommended)
+pytest ./tests/components/<integration_domain> \
+  --cov=homeassistant.components.<integration_domain> \
   --cov-report term-missing \
+  --durations-min=1 \
+  --durations=0 \
   --numprocesses=auto
 
+# Quick test of changed files
+pytest --timeout=10 --picked
+
 # Type checking
-mypy homeassistant/components/<domain>
+mypy homeassistant/components/<integration_domain>
 
 # Update generated files
 python -m script.hassfest

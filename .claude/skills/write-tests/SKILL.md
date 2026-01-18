@@ -30,7 +30,8 @@ pytest --timeout=10 --picked
 
 # Update test snapshots
 pytest ./tests/components/<domain> --snapshot-update
-# Then run again without --snapshot-update to verify
+# ⚠️ Omit test results after using --snapshot-update
+# Always run tests again without the flag to verify snapshots
 ```
 
 ## Test Structure
