@@ -86,7 +86,7 @@ async def test_auth_error_during_first_refresh(
     """Test the correct exceptions are thrown for auth error during first refresh."""
 
     mock_solarlog_connector.password.return_value = ""
-    mock_solarlog_connector.update_data.side_effect = SolarLogAuthenticationError
+    mock_solarlog_connector.update_basic_data.side_effect = SolarLogAuthenticationError
 
     mock_solarlog_connector.login.return_value = login_return_value
     mock_solarlog_connector.login.side_effect = login_side_effect
@@ -112,7 +112,7 @@ async def test_other_exceptions_during_first_refresh(
 ) -> None:
     """Test the correct exceptions are thrown during first refresh."""
 
-    mock_solarlog_connector.update_data.side_effect = exception
+    mock_solarlog_connector.update_basic_data.side_effect = exception
 
     await setup_platform(hass, mock_config_entry, [Platform.SENSOR])
     await hass.async_block_till_done()
