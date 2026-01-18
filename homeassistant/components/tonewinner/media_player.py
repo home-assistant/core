@@ -131,7 +131,10 @@ class TonewinnerSerialProtocol(asyncio.Protocol):
             start_idx = self.buffer.find(b"#")
             if start_idx == -1:
                 # No start marker in buffer, clear it
-                _LOGGER.debug("No start marker found, clearing buffer")
+                _LOGGER.debug(
+                    "No start marker found, clearing buffer (existing buffer: %s)",
+                    self.buffer.hex(),
+                )
                 self.buffer = b""
                 break
 
@@ -334,6 +337,11 @@ class TonewinnerMediaPlayer(MediaPlayerEntity):
         if source_code := TonewinnerProtocol.parse_input_source(response):
             _LOGGER.debug("Source code received from device: '%s'", source_code)
             _LOGGER.debug("Available mappings: %s", self._source_code_to_custom_name)
+
+            # On startup, "eARC/ARC" is sent rather than eARC/ARC source name
+            if source_code == "eARC/ARC":
+                self._attr_source = "ARC"
+
             # Map source code to custom name
             custom_name = self._source_code_to_custom_name.get(source_code)
             if custom_name:
