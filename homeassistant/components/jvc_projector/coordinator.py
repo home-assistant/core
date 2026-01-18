@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 from datetime import timedelta
 import logging
 from typing import TYPE_CHECKING, Any
@@ -32,6 +33,9 @@ CORE_COMMANDS: tuple[type[Command], ...] = (
 )
 
 TRANSLATIONS = str.maketrans({"+": "p", "%": "p", ":": "x"})
+
+TIMEOUT_RETRIES = 12
+TIMEOUT_SLEEP = 1
 
 type JVCConfigEntry = ConfigEntry[JvcProjectorDataUpdateCoordinator]
 
@@ -70,45 +74,18 @@ class JvcProjectorDataUpdateCoordinator(DataUpdateCoordinator[dict[str, str]]):
         commands: set[type[Command]] = set(self.async_contexts())
         commands = commands.difference(CORE_COMMANDS)
 
-        new_state: dict[type[Command], str] = {}
-        deferred_commands: list[type[Command]] = []
+        last_timeout: JvcProjectorTimeoutError | None = None
 
-        try:
-            power = await self._update(cmd.Power, new_state)
-
-            if power == cmd.Power.ON:
-                signal = await self._update(cmd.Signal, new_state)
-                await self._update(cmd.Input, new_state)
-                await self._update(cmd.LightTime, new_state)
-
-                if signal == cmd.Signal.SIGNAL:
-                    for command in commands:
-                        if command.depends:
-                            # Command has dependencies so defer until below
-                            deferred_commands.append(command)
-                        else:
-                            await self._update(command, new_state)
-
-                    # Deferred commands should have had dependencies met above
-                    for command in deferred_commands:
-                        depend_command, depend_values = next(
-                            iter(command.depends.items())
-                        )
-                        value: str | None = None
-                        if depend_command in new_state:
-                            value = new_state[depend_command]
-                        elif depend_command in self.state:
-                            value = self.state[depend_command]
-                        if value and value in depend_values:
-                            await self._update(command, new_state)
-
-            elif self.state.get(cmd.Signal) != cmd.Signal.NONE:
-                new_state[cmd.Signal] = cmd.Signal.NONE
-
-        except JvcProjectorTimeoutError as err:
-            # Timeouts are expected when the projector loses signal and ignores commands for a brief time.
-            self.last_update_success = False
-            raise UpdateFailed(retry_after=1.0) from err
+        for _ in range(TIMEOUT_RETRIES):
+            try:
+                new_state = await self._get_device_state(commands)
+                break
+            except JvcProjectorTimeoutError as err:
+                # Timeouts are expected when the projector loses signal and ignores commands for a brief time.
+                last_timeout = err
+                await asyncio.sleep(TIMEOUT_SLEEP)
+        else:
+            raise UpdateFailed(str(last_timeout)) from last_timeout
 
         # Clear state on signal loss
         if (
@@ -128,7 +105,45 @@ class JvcProjectorDataUpdateCoordinator(DataUpdateCoordinator[dict[str, str]]):
 
         return {k.name: v for k, v in self.state.items()}
 
-    async def _update(
+    async def _get_device_state(
+        self, commands: set[type[Command]]
+    ) -> dict[type[Command], str]:
+        """Get the current state of the device."""
+        new_state: dict[type[Command], str] = {}
+        deferred_commands: list[type[Command]] = []
+
+        power = await self._update_command_state(cmd.Power, new_state)
+
+        if power == cmd.Power.ON:
+            signal = await self._update_command_state(cmd.Signal, new_state)
+            await self._update_command_state(cmd.Input, new_state)
+            await self._update_command_state(cmd.LightTime, new_state)
+
+            if signal == cmd.Signal.SIGNAL:
+                for command in commands:
+                    if command.depends:
+                        # Command has dependencies so defer until below
+                        deferred_commands.append(command)
+                    else:
+                        await self._update_command_state(command, new_state)
+
+                # Deferred commands should have had dependencies met above
+                for command in deferred_commands:
+                    depend_command, depend_values = next(iter(command.depends.items()))
+                    value: str | None = None
+                    if depend_command in new_state:
+                        value = new_state[depend_command]
+                    elif depend_command in self.state:
+                        value = self.state[depend_command]
+                    if value and value in depend_values:
+                        await self._update_command_state(command, new_state)
+
+        elif self.state.get(cmd.Signal) != cmd.Signal.NONE:
+            new_state[cmd.Signal] = cmd.Signal.NONE
+
+        return new_state
+
+    async def _update_command_state(
         self, command: type[Command], new_state: dict[type[Command], str]
     ) -> str | None:
         """Update state with the current value of a command."""
