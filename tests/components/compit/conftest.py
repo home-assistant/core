@@ -3,6 +3,7 @@
 from collections.abc import Generator
 from unittest.mock import AsyncMock, MagicMock, patch
 
+from compit_inext_api import CompitParameter
 import pytest
 
 from homeassistant.components.compit.const import DOMAIN
@@ -48,18 +49,18 @@ def mock_connector():
     mock_device_1 = MagicMock()
     mock_device_1.definition.name = "Test Device 1"
     mock_device_1.state.params = [
-        MagicMock(code="__wyg_ekr", value=1, hidden=False),  # Screen saver on
+        MagicMock(code=CompitParameter.CIRCUIT_MODE_HEATING_ZONE_1.value, value="pump"),
         MagicMock(
-            code="__zrod_kore_co1", value=1, hidden=False
-        ),  # Correction mode clock
+            code=CompitParameter.CIRCUIT_MODE_HEATING_ZONE_2.value, value="mixer"
+        ),
+        MagicMock(code=CompitParameter.OPERATING_MODE.value, value="hybrid"),
     ]
     mock_device_1.definition.code = 224  # R 900
 
     mock_device_2 = MagicMock()
     mock_device_2.state.params = [
-        MagicMock(code="__trybpracyinstalacji", value=2, hidden=False),  # Cooling
-        MagicMock(code="__tpokojowa", value=24, hidden=False),  # Room Temp
-        MagicMock(code="__rd_hig", value=50, hidden=False),  # Humidity
+        MagicMock(code=CompitParameter.LANGUAGE.value, value="english"),
+        MagicMock(code=CompitParameter.AEROKONFBYPASS.value, value="off"),
     ]
     mock_device_2.definition.code = 223  # Nano Color 2
 
@@ -72,22 +73,31 @@ def mock_connector():
     def mock_get_device(device_id: int):
         return all_devices.get(device_id)
 
-    def get_device_parameter(device_id: int, parameter_code: str):
+    def get_current_option(device_id: int, parameter_code: CompitParameter):
         return next(
-            p for p in all_devices[device_id].state.params if p.code == parameter_code
-        )
+            (
+                p
+                for p in all_devices[device_id].state.params
+                if p.code == parameter_code.value
+            ),
+            None,
+        ).value
 
-    def set_device_parameter(device_id: int, parameter_code: str, value: int):
+    def select_device_option(
+        device_id: int, parameter_code: CompitParameter, value: int
+    ):
         next(
-            p for p in all_devices[device_id].state.params if p.code == parameter_code
+            p
+            for p in all_devices[device_id].state.params
+            if p.code == parameter_code.value
         ).value = value
         return True
 
     mock_instance = MagicMock()
     mock_instance.init = AsyncMock(return_value=True)
     mock_instance.all_devices = all_devices
-    mock_instance.get_device_parameter = MagicMock(side_effect=get_device_parameter)
-    mock_instance.set_device_parameter = AsyncMock(side_effect=set_device_parameter)
+    mock_instance.get_current_option = MagicMock(side_effect=get_current_option)
+    mock_instance.select_device_option = AsyncMock(side_effect=select_device_option)
     mock_instance.update_state = AsyncMock()
     mock_instance.get_device = MagicMock(side_effect=mock_get_device)
 

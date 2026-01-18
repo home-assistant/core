@@ -2,6 +2,7 @@
 
 from unittest.mock import MagicMock
 
+from compit_inext_api.consts import CompitParameter
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
@@ -32,7 +33,7 @@ async def test_select_entities_snapshot(
     [
         (None, "parameter is None"),
         (MagicMock(value=None), "parameter value is None"),
-        (MagicMock(value=999), "parameter value not in options"),
+        (MagicMock(value="invalid"), "parameter value not in options"),
     ],
 )
 async def test_select_unknown_device_parameters(
@@ -42,13 +43,13 @@ async def test_select_unknown_device_parameters(
     mock_return_value: MagicMock | None,
     test_description: str,
 ) -> None:
-    """Test that select entity shows unknown when get_device_parameter returns various invalid values."""
-    mock_connector.get_device_parameter.side_effect = (
+    """Test that select entity shows unknown when get_current_option returns various invalid values."""
+    mock_connector.get_current_option.side_effect = (
         lambda device_id, parameter_code: mock_return_value
     )
     await setup_integration(hass, mock_config_entry)
 
-    state = hass.states.get("select.nano_color_2_installation_season")
+    state = hass.states.get("select.nano_color_2_language")
     assert state is not None
     assert state.state == "unknown"
 
@@ -63,14 +64,12 @@ async def test_select_option(
     await hass.services.async_call(
         "select",
         "select_option",
-        {"entity_id": "select.nano_color_2_installation_season", "option": "winter"},
+        {"entity_id": "select.nano_color_2_language", "option": "polish"},
         blocking=False,
     )
 
-    mock_connector.set_device_parameter.assert_called_once()
-    assert (
-        mock_connector.get_device_parameter(2, "__trybpracyinstalacji").value == 0
-    )  # 0 is Winter, it was Cooling before
+    mock_connector.select_device_option.assert_called_once()
+    assert mock_connector.get_current_option(2, CompitParameter.LANGUAGE) == "polish"
 
 
 async def test_select_invalid_option(
@@ -83,8 +82,8 @@ async def test_select_invalid_option(
     await hass.services.async_call(
         "select",
         "select_option",
-        {"entity_id": "sselect.nano_color_2_installation_season", "option": "invalid"},
-        blocking=False,
+        {"entity_id": "select.nano_color_2_installation_season", "option": "invalid"},
+        blocking=True,
     )
 
-    mock_connector.set_device_parameter.assert_not_called()
+    mock_connector.select_device_option.assert_not_called()

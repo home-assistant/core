@@ -34,11 +34,14 @@
   },
   "entity": {
     "select": {
-      "language": {
-        "name": "Language",
+      "additional_ventilation_circuit": {
+        "name": "Additional ventilation circuit",
         "state": {
-          "english": "English",
-          "polish": "Polish"
+          "gear_0": "Gear 0",
+          "gear_1": "Gear 1",
+          "gear_2": "Gear 2",
+          "gear_3": "Gear 3",
+          "gear_4": "Boost"
         }
       },
       "aero_by_pass": {
@@ -49,27 +52,183 @@
           "on": "On"
         }
       },
-      "additional_ventilation_circuit":
-      {
-        "name": "Additional ventilation circuit",
+      "airing_program_zone": {
+        "name": "Airing program zone {zone}",
         "state": {
-          "gear_0": "Gear 0",
-          "gear_1": "Gear 1",
-          "gear_2": "Gear 2",
-          "gear_3": "Gear 3",
-          "gear_4": "Boost"
+          "20m_work100m_stop": "20 min work / 100 min stop",
+          "20m_work40m_stop": "20 min work / 40 min stop",
+          "30m_work30m_stop": "30 min work / 30 min stop",
+          "no_exclusions": "No exclusions"
+        }
+      },
+      "buffer_mode": {
+        "name": "Buffer mode",
+        "state": {
+          "disabled": "Disabled",
+          "manual": "Manual",
+          "schedule": "Schedule"
+        }
+      },
+      "circuit_type_heating_zone": {
+        "name": "Circuit type heating zone {zone}",
+        "state": {
+          "mixer": "Mixer",
+          "pump": "Pump"
+        }
+      },
+      "dhw_circulation": {
+        "name": "Domestic hot water circulation",
+        "state": {
+          "constant": "Constant",
+          "disabled": "Disabled",
+          "schedule": "Schedule"
+        }
+      },
+      "dhw_operating_mode": {
+        "name": "Domestic hot water operating mode",
+        "state": {
+          "constant": "Constant",
+          "disabled": "Disabled",
+          "manual": "Manual",
+          "schedule": "Schedule"
+        }
+      },
+      "heating_operating_mode_zone": {
+        "name": "Heating operating mode zone {zone}",
+        "state": {
+          "disabled": "Disabled",
+          "manual": "Manual",
+          "schedule": "Schedule"
+        }
+      },
+      "heating_source_of_correction": {
+        "name": "Heating source of correction",
+        "state": {
+          "nano_nr_1": "Nano 1",
+          "nano_nr_2": "Nano 2",
+          "nano_nr_3": "Nano 3",
+          "nano_nr_4": "Nano 4",
+          "nano_nr_5": "Nano 5",
+          "no_corrections": "No corrections",
+          "schedule": "Schedule",
+          "thermostat": "Thermostat"
+        }
+      },
+      "heating_source_of_correction_zone": {
+        "name": "Heating source of correction zone {zone}",
+        "state": {
+          "disabled": "Disabled",
+          "nano_nr_1": "Nano 1",
+          "nano_nr_2": "Nano 2",
+          "nano_nr_3": "Nano 3",
+          "nano_nr_4": "Nano 4",
+          "nano_nr_5": "Nano 5",
+          "no_corrections": "No corrections",
+          "schedule": "Schedule",
+          "thermostat": "Thermostat"
+        }
+      },
+      "hot_water_circulation": {
+        "name": "Hot water circulation",
+        "state": {
+          "constant": "Constant",
+          "disabled": "Disabled",
+          "schedule": "Schedule"
+        }
+      },
+      "language": {
+        "name": "Language",
+        "state": {
+          "english": "English",
+          "polish": "Polish"
+        }
+      },
+      "mixer_mode": {
+        "name": "Mixer mode",
+        "state": {
+          "disabled": "Disabled",
+          "nano_nr_1": "Nano 1",
+          "nano_nr_2": "Nano 2",
+          "nano_nr_3": "Nano 3",
+          "nano_nr_4": "Nano 4",
+          "nano_nr_5": "Nano 5",
+          "no_corrections": "No corrections",
+          "schedule": "Schedule",
+          "thermostat": "Thermostat"
+        }
+      },
+      "mixer_mode_zone": {
+        "name": "Mixer mode zone {zone}",
+        "state": {
+          "disabled": "Disabled",
+          "nano_nr_1": "Nano 1",
+          "nano_nr_2": "Nano 2",
+          "nano_nr_3": "Nano 3",
+          "nano_nr_4": "Nano 4",
+          "nano_nr_5": "Nano 5",
+          "no_corrections": "No corrections",
+          "schedule": "Schedule",
+          "thermostat": "Thermostat"
         }
       },
       "nano_work_mode": {
         "name": "Nano work mode",
         "state": {
           "christmas": "Christmas",
-          "manual_run_0": "Manual run 0",
-          "manual_run_1": "Manual run 1",
-          "manual_run_2": "Manual run 2",
-          "manual_run_3": "Manual run 3",
+          "manual_0": "Manual 0",
+          "manual_1": "Manual 1",
+          "manual_2": "Manual 2",
+          "manual_3": "Manual 3",
           "out_of_home": "Out of home",
           "schedule": "Schedule"
+        }
+      },
+      "operating_mode": {
+        "name": "Operating mode",
+        "state": {
+          "auto": "Auto",
+          "disabled": "Disabled",
+          "eco": "Eco",
+          "hybrid": "Hybrid"
+        }
+      },
+      "pre_heater_configuration_zone": {
+        "name": "Pre heater configuration zone {zone}",
+        "state": {
+          "disabled": "Disabled",
+          "onoff": "ON/OFF",
+          "pwm": "PWM"
+        }
+      },
+      "secondary_heater_configuration_zone": {
+        "name": "Secondary heater configuration zone {zone}",
+        "state": {
+          "disabled": "Disabled",
+          "onoff": "ON/OFF",
+          "onoff_outside_temp": "ON/OFF outside temperature",
+          "onoff_room_temp": "ON/OFF room temperature",
+          "onoff_tpom_function": "ON/OFF Tpom function",
+          "pwm": "PWM",
+          "pwm_outside_temp": "PWM outside temperature",
+          "pwm_room_temp": "PWM room temperature"
+        }
+      },
+      "solarcomp_operating_mode": {
+        "name": "Operating mode",
+        "state": {
+          "auto": "Auto",
+          "de_icing": "De-icing",
+          "disabled": "Disabled",
+          "holiday": "Holiday"
+        }
+      },
+      "ventilation_in_the_away_mode": {
+        "name": "Ventilation in the away mode",
+        "state": {
+          "gear_0": "Gear 0",
+          "gear_1": "Gear 1",
+          "gear_2": "Gear 2",
+          "gear_3": "Gear 3"
         }
       },
       "ventilation_in_the_comfort_zone": {
@@ -89,178 +248,7 @@
           "gear_2": "Gear 2",
           "gear_3": "Gear 3"
         }
-      },
-      "ventilation_in_the_away_mode": {
-        "name": "Ventilation in the away mode",
-        "state": {
-          "gear_0": "Gear 0",
-          "gear_1": "Gear 1",
-          "gear_2": "Gear 2",
-          "gear_3": "Gear 3"
-        }
-      },
-      "airing_program_zone": {
-        "name": "Airing program zone {zone}",
-        "state": {
-          "20m_work100m_stop": "20 min work / 100 min stop",
-          "20m_work40m_stop": "20 min work / 40 min stop",
-          "30m_work30m_stop": "30 min work / 30 min stop",
-          "no_exclusions": "No exclusions"
-        }
-      },
-      "pre_heater_configuration_zone": {
-        "name": "Pre heater configuration zone {zone}",
-        "state": {
-          "disabled": "Disabled",
-          "onoff": "ON/OFF",
-          "pwm": "PWM"
-        }
-      },
-      "secondary_heater_configuration_zone": {
-        "name": "Secondary heater configuration zone {zone}",
-        "state": {
-          "disabled": "Disabled",
-          "onoff_room_temp": "ON/OFF room temperature",
-          "onoff_outside_temp": "ON/OFF outside temperature",
-          "onoff_tpom_function": "ON/OFF Tpom function",
-          "onoff": "ON/OFF",
-          "pwm_room_temp": "PWM room temperature",
-          "pwm_outside_temp": "PWM outside temperature",
-          "pwm": "PWM"
-        }
-      },
-      "circuit_type_heating_zone": {
-        "name": "Circuit type heating zone {zone}",
-        "state": {
-          "mixer": "Mixer",
-          "pump": "Pump"
-        }
-      },
-      "hot_water_circulation": {
-        "name": "Hot water circulation",
-        "state": {
-          "constant": "Constant",
-          "disabled": "Disabled",
-          "schedule": "Schedule"
-        }
-      },
-      "operating_mode": {
-        "name": "Operating mode",
-        "state": {
-          "disabled": "Disabled",
-          "eco": "Eco",
-          "hybrid": "Hybrid",
-          "auto": "Auto"
-        }
-      },
-      "dhw_operating_mode": {
-        "name": "Domestic hot water operating mode",
-        "state": {
-          "schedule": "Schedule",
-          "manual": "Manual",
-          "constant": "Constant",
-          "disabled": "Disabled"
-        }
-      },
-      "dhw_circulation": {
-        "name": "Domestic hot water circulation",
-        "state": {
-          "schedule": "Schedule",
-          "constant": "Constant",
-          "disabled": "Disabled"
-        }
-      },
-      "buffer_mode": {
-        "name": "Buffer mode",
-        "state": {
-          "disabled": "Disabled",
-          "schedule": "With schedule",
-          "manual": "Manual"
-        }
-      },
-      "heating_operating_mode_zone": {
-        "name": "Heating operating mode zone {zone}",
-        "state": {
-          "disabled": "Disabled",
-          "schedule": "With schedule",
-          "manual": "Manual"
-        }
-      },
-      "mixer_mode": {
-        "name": "Mixer mode",
-        "state": {
-          "disabled": "Disabled",
-          "no_corrections": "No corrections",
-          "schedule": "With schedule",
-          "thermostat": "With thermostat",
-          "nano_nr_1": "Nano 1",
-          "nano_nr_2": "Nano 2",
-          "nano_nr_3": "Nano 3",
-          "nano_nr_4": "Nano 4",
-          "nano_nr_5": "Nano 5"
-          }
-      },
-      "mixer_mode_zone": {
-        "name": "Mixer mode zone {zone}",
-        "state": {
-          "disabled": "Disabled",
-          "no_corrections": "No corrections",
-          "schedule": "With schedule",
-          "thermostat": "With thermostat",
-          "nano_nr_1": "Nano 1",
-          "nano_nr_2": "Nano 2",
-          "nano_nr_3": "Nano 3",
-          "nano_nr_4": "Nano 4",
-          "nano_nr_5": "Nano 5"
-          }
-      },
-      "solarcomp_operating_mode": {
-        "name": "Operating mode",
-        "state": {
-          "auto": "Auto",
-          "de_icing": "De-icing",
-          "holiday": "Holiday",
-          "disabled": "Disabled"
-      },
-      "heating_source_of_correction_zone":
-        {
-        "name": "Heating source of correction zone {zone}",
-        "state": {
-          "disabled": "Disabled",
-          "no_corrections": "No corrections",
-          "schedule": "Schedule",
-          "thermostat": "Thermostat",
-          "nano_nr_1": "Nano 1",
-          "nano_nr_2": "Nano 2",
-          "nano_nr_3": "Nano 3",
-          "nano_nr_4": "Nano 4",
-          "nano_nr_5": "Nano 5"
-        }
-      },
-      "heating_source_of_correction":
-        {
-        "name": "Heating source of correction zone",
-        "state": {
-          "no_corrections": "No corrections",
-          "schedule": "Schedule",
-          "thermostat": "Thermostat",
-          "nano_nr_1": "Nano 1",
-          "nano_nr_2": "Nano 2",
-          "nano_nr_3": "Nano 3",
-          "nano_nr_4": "Nano 4",
-          "nano_nr_5": "Nano 5"
-        }
-      },
-      "accesory_function": {
-        "name": "Accessory function",
-        "state": {
-          "disabled": "Disabled",
-          "attached": "Attached",
-          "cooling": "Cooling",
-          "heating_and_cooling": "Heating and cooling"
-        }
-      }      
+      }
     }
   }
-}
 }

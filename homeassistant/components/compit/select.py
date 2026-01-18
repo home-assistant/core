@@ -2,30 +2,19 @@
 
 from dataclasses import dataclass
 
+from compit_inext_api.consts import CompitParameter
+
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN, MANUFACTURER_NAME
 from .coordinator import CompitConfigEntry, CompitDataUpdateCoordinator
-from .entity import CompitEntityDescription
 
 SELECT_PARAM_TYPE = "Select"
 PARALLEL_UPDATES = 0
-
-
-@dataclass(frozen=True, kw_only=True)
-class CompitSelectDescription(CompitEntityDescription, SelectEntityDescription):
-    """Class to describe a Compit select entity."""
-
-    has_entity_name: bool = True
-    """Whether to include the entity name in the select entity name."""
-
-    options_dict: dict[int, str]
-    """The available options for the select entity."""
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -35,225 +24,204 @@ class CompitDeviceDescription:
     name: str
     """Name of the device."""
 
-    parameters: dict[str, CompitSelectDescription]
+    parameters: dict[CompitParameter, SelectEntityDescription]
     """Parameters of the device."""
-
-    _class: int
-    """Class of the device."""
 
 
 DEVICE_DEFINITIONS: dict[int, CompitDeviceDescription] = {
     223: CompitDeviceDescription(
         name="Nano Color 2",
         parameters={
-            "__język": CompitSelectDescription(
-                key="__język",
+            CompitParameter.LANGUAGE: SelectEntityDescription(
+                key=CompitParameter.LANGUAGE.value,
                 translation_key="language",
-                icon="mdi:translate",
-                options_dict={
-                    0: "polish",
-                    1: "english",
-                },
+                options=[
+                    "polish",
+                    "english",
+                ],
             ),
-            "__aerokonfbypass": CompitSelectDescription(
-                key="__aerokonfbypass",
+            CompitParameter.AEROKONFBYPASS: SelectEntityDescription(
+                key=CompitParameter.AEROKONFBYPASS.value,
                 translation_key="aero_by_pass",
-                icon="mdi:valve",
-                options_dict={
-                    0: "off",
-                    1: "auto",
-                    2: "on",
-                },
+                options=[
+                    "off",
+                    "auto",
+                    "on",
+                ],
             ),
-            "__trybaero2": CompitSelectDescription(
-                key="__trybaero2",
+            CompitParameter.ADDITIONAL_VENTILATION_ZONE: SelectEntityDescription(
+                key=CompitParameter.ADDITIONAL_VENTILATION_ZONE.value,
                 translation_key="additional_ventilation_circuit",
-                icon="mdi:fan",
-                options_dict={
-                    0: "gear_0",
-                    1: "gear_1",
-                    2: "gear_2",
-                    3: "gear_3",
-                    4: "gear_4",
-                },
+                options=[
+                    "gear_0",
+                    "gear_1",
+                    "gear_2",
+                    "gear_3",
+                    "gear_4",
+                ],
             ),
         },
     ),
     12: CompitDeviceDescription(
         name="Nano Color",
         parameters={
-            "__język": CompitSelectDescription(
-                key="__język",
+            CompitParameter.LANGUAGE: SelectEntityDescription(
+                key=CompitParameter.LANGUAGE.value,
                 translation_key="language",
-                icon="mdi:translate",
-                options_dict={
-                    0: "polish",
-                    1: "english",
-                },
+                options=[
+                    "polish",
+                    "english",
+                ],
             ),
-            "__aerokonfbypass": CompitSelectDescription(
-                key="__aerokonfbypass",
+            CompitParameter.AEROKONFBYPASS: SelectEntityDescription(
+                key=CompitParameter.AEROKONFBYPASS.value,
                 translation_key="aero_by_pass",
-                icon="mdi:valve",
-                options_dict={
-                    0: "off",
-                    1: "auto",
-                    2: "on",
-                },
+                options=[
+                    "off",
+                    "auto",
+                    "on",
+                ],
             ),
-            "__trybaero2": CompitSelectDescription(
-                key="__trybaero2",
+            CompitParameter.ADDITIONAL_VENTILATION_ZONE: SelectEntityDescription(
+                key=CompitParameter.ADDITIONAL_VENTILATION_ZONE.value,
                 translation_key="additional_ventilation_circuit",
-                icon="mdi:fan",
-                options_dict={
-                    0: "gear_0",
-                    1: "gear_1",
-                    2: "gear_2",
-                    3: "gear_3",
-                    4: "gear_4",
-                },
+                options=[
+                    "gear_0",
+                    "gear_1",
+                    "gear_2",
+                    "gear_3",
+                    "gear_4",
+                ],
             ),
         },
     ),
     7: CompitDeviceDescription(
         name="Nano One",
         parameters={
-            "_jezyk": CompitSelectDescription(
-                key="_jezyk",
+            CompitParameter.LANGUAGE: SelectEntityDescription(
+                key=CompitParameter.LANGUAGE.value,
                 translation_key="language",
-                icon="mdi:translate",
-                options_dict={
-                    0: "polish",
-                    1: "english",
-                },
+                options=[
+                    "polish",
+                    "english",
+                ],
             ),
-            "__nano_mode": CompitSelectDescription(
-                key="__nano_mode",
+            CompitParameter.NANO_MODE: SelectEntityDescription(
+                key=CompitParameter.NANO_MODE.value,
                 translation_key="nano_work_mode",
-                icon="mdi:cog-outline",
-                options_dict={
-                    0: "manual_run_3",
-                    1: "manual_run_2",
-                    2: "manual_run_1",
-                    3: "manual_run_0",
-                    4: "schedule",
-                    5: "christmas",
-                    6: "out_of_home",
-                },
+                options=[
+                    "manual_3",
+                    "manual_2",
+                    "manual_1",
+                    "manual_0",
+                    "schedule",
+                    "christmas",
+                    "out_of_home",
+                ],
             ),
-            "__wentkomfort": CompitSelectDescription(
-                key="__wentkomfort",
+            CompitParameter.VENTILATION_COMFORT_ZONE: SelectEntityDescription(
+                key=CompitParameter.VENTILATION_COMFORT_ZONE.value,
                 translation_key="ventilation_in_the_comfort_zone",
-                icon="mdi:fan",
-                options_dict={
-                    0: "gear_0",
-                    1: "gear_1",
-                    2: "gear_2",
-                    3: "gear_3",
-                },
+                options=[
+                    "gear_0",
+                    "gear_1",
+                    "gear_2",
+                    "gear_3",
+                ],
             ),
-            "__wenteko": CompitSelectDescription(
-                key="__wenteko",
+            CompitParameter.VENTILATION_ECO_ZONE: SelectEntityDescription(
+                key=CompitParameter.VENTILATION_ECO_ZONE.value,
                 translation_key="ventilation_in_the_eco_zone",
-                icon="mdi:fan",
-                options_dict={
-                    0: "gear_0",
-                    1: "gear_1",
-                    2: "gear_2",
-                    3: "gear_3",
-                },
+                options=[
+                    "gear_0",
+                    "gear_1",
+                    "gear_2",
+                    "gear_3",
+                ],
             ),
-            "__wenturlop": CompitSelectDescription(
-                key="__wenturlop",
+            CompitParameter.VENTILATION_HOLIDAY_MODE: SelectEntityDescription(
+                key=CompitParameter.VENTILATION_HOLIDAY_MODE.value,
                 translation_key="ventilation_in_the_away_mode",
-                icon="mdi:fan",
-                options_dict={
-                    0: "gear_0",
-                    1: "gear_1",
-                    2: "gear_2",
-                    3: "gear_3",
-                },
+                options=[
+                    "gear_0",
+                    "gear_1",
+                    "gear_2",
+                    "gear_3",
+                ],
             ),
-            "__a3programwietrzenia": CompitSelectDescription(
-                key="__a3programwietrzenia",
+            CompitParameter.AIRING_PROGRAM_ZONE_3: SelectEntityDescription(
+                key=CompitParameter.AIRING_PROGRAM_ZONE_3.value,
                 translation_key="airing_program_zone",
-                icon="mdi:calendar-clock",
-                options_dict={
-                    0: "no_exclusions",
-                    1: "30m_work30m_stop",
-                    2: "20m_work40m_stop",
-                    3: "20m_work100m_stop",
-                },
+                options=[
+                    "no_exclusions",
+                    "30m_work30m_stop",
+                    "20m_work40m_stop",
+                    "20m_work100m_stop",
+                ],
                 translation_placeholders={"zone": "3"},
             ),
-            "__a3konfignagwst": CompitSelectDescription(
-                key="__a3konfignagwst",
+            CompitParameter.PRE_HEATER_ZONE_3: SelectEntityDescription(
+                key=CompitParameter.PRE_HEATER_ZONE_3.value,
                 translation_key="pre_heater_configuration_zone",
-                icon="mdi:radiator",
-                options_dict={
-                    0: "disabled",
-                    1: "onoff",
-                    2: "pwm",
-                },
+                options=[
+                    "disabled",
+                    "onoff",
+                    "pwm",
+                ],
                 translation_placeholders={"zone": "3"},
             ),
-            "__a3konfignagwt": CompitSelectDescription(
-                key="__a3konfignagwt",
+            CompitParameter.SECONDARY_HEATER_ZONE_3: SelectEntityDescription(
+                key=CompitParameter.SECONDARY_HEATER_ZONE_3.value,
                 translation_key="secondary_heater_configuration_zone",
-                icon="mdi:radiator",
-                options_dict={
-                    0: "disabled",
-                    1: "onoff_room_temp",
-                    2: "onoff_outside_temp",
-                    3: "onoff",
-                    4: "pwm_room_temp",
-                    5: "pwm_outside_temp",
-                },
+                options=[
+                    "disabled",
+                    "onoff_room_temp",
+                    "onoff_outside_temp",
+                    "onoff",
+                    "pwm_room_temp",
+                    "pwm_outside_temp",
+                ],
                 translation_placeholders={"zone": "3"},
             ),
-            "__a4programwietrzenia": CompitSelectDescription(
-                key="__a4programwietrzenia",
+            CompitParameter.AIRING_PROGRAM_ZONE_4: SelectEntityDescription(
+                key=CompitParameter.AIRING_PROGRAM_ZONE_4.value,
                 translation_key="airing_program_zone",
-                icon="mdi:calendar-clock",
-                options_dict={
-                    0: "no_exclusions",
-                    1: "30m_work30m_stop",
-                    2: "20m_work40m_stop",
-                    3: "20m_work100m_stop",
-                },
+                options=[
+                    "no_exclusions",
+                    "30m_work30m_stop",
+                    "20m_work40m_stop",
+                    "20m_work100m_stop",
+                ],
                 translation_placeholders={"zone": "4"},
             ),
-            "__a5prwietrz": CompitSelectDescription(
-                key="__a5prwietrz",
+            CompitParameter.AIRING_PROGRAM_ZONE_5: SelectEntityDescription(
+                key=CompitParameter.AIRING_PROGRAM_ZONE_5.value,
                 translation_key="airing_program_zone",
-                icon="mdi:fan",
-                options_dict={
-                    0: "no_exclusions",
-                    1: "30m_work30m_stop",
-                    2: "20m_work40m_stop",
-                    3: "20m_work100m_stop",
-                },
+                options=[
+                    "no_exclusions",
+                    "30m_work30m_stop",
+                    "20m_work40m_stop",
+                    "20m_work100m_stop",
+                ],
                 translation_placeholders={"zone": "5"},
             ),
-            "__a5trybnagrzwst": CompitSelectDescription(
-                key="__a5trybnagrzwst",
+            CompitParameter.PRE_HEATER_ZONE_5: SelectEntityDescription(
+                key=CompitParameter.PRE_HEATER_ZONE_5.value,
                 translation_key="pre_heater_configuration_zone",
-                icon="mdi:cog-outline",
-                options_dict={
-                    0: "disabled",
-                    1: "onoff",
-                    2: "pwm",
-                },
+                options=[
+                    "disabled",
+                    "onoff",
+                    "pwm",
+                ],
                 translation_placeholders={"zone": "5"},
             ),
-            "__a5trnagrzgl": CompitSelectDescription(
-                key="__a5trnagrzgl",
+            CompitParameter.SECONDARY_HEATER_ZONE_5: SelectEntityDescription(
+                key=CompitParameter.SECONDARY_HEATER_ZONE_5.value,
                 translation_key="secondary_heater_configuration_zone",
-                icon="mdi:cog-outline",
-                options_dict={
-                    0: "disabled",
-                    1: "pwm",
-                },
+                options=[
+                    "disabled",
+                    "pwm",
+                ],
                 translation_placeholders={"zone": "5"},
             ),
         },
@@ -261,108 +229,98 @@ DEVICE_DEFINITIONS: dict[int, CompitDeviceDescription] = {
     224: CompitDeviceDescription(
         name="R 900",
         parameters={
-            "__typ_obwo_co1": CompitSelectDescription(
-                key="__typ_obwo_co1",
+            CompitParameter.CIRCUIT_MODE_HEATING_ZONE_1: SelectEntityDescription(
+                key=CompitParameter.CIRCUIT_MODE_HEATING_ZONE_1.value,
                 translation_key="circuit_type_heating_zone",
-                icon="mdi:pipe",
-                options_dict={
-                    0: "pump",
-                    1: "mixer",
-                },
+                options=[
+                    "pump",
+                    "mixer",
+                ],
                 translation_placeholders={"zone": "1"},
             ),
-            "__typ_obwo_co2": CompitSelectDescription(
-                key="__typ_obwo_co2",
+            CompitParameter.CIRCUIT_MODE_HEATING_ZONE_2: SelectEntityDescription(
+                key=CompitParameter.CIRCUIT_MODE_HEATING_ZONE_2.value,
                 translation_key="circuit_type_heating_zone",
-                icon="mdi:pipe",
-                options_dict={
-                    0: "pump",
-                    1: "mixer",
-                },
+                options=[
+                    "pump",
+                    "mixer",
+                ],
                 translation_placeholders={"zone": "2"},
             ),
-            "__typ_obwo_co3": CompitSelectDescription(
-                key="__typ_obwo_co3",
+            CompitParameter.CIRCUIT_MODE_HEATING_ZONE_3: SelectEntityDescription(
+                key=CompitParameter.CIRCUIT_MODE_HEATING_ZONE_3.value,
                 translation_key="circuit_type_heating_zone",
-                icon="mdi:pipe",
-                options_dict={
-                    0: "pump",
-                    1: "mixer",
-                },
+                options=[
+                    "pump",
+                    "mixer",
+                ],
                 translation_placeholders={"zone": "3"},
             ),
-            "__typ_obwo_co4": CompitSelectDescription(
-                key="__typ_obwo_co4",
+            CompitParameter.CIRCUIT_MODE_HEATING_ZONE_4: SelectEntityDescription(
+                key=CompitParameter.CIRCUIT_MODE_HEATING_ZONE_4.value,
                 translation_key="circuit_type_heating_zone",
-                icon="mdi:pipe",
-                options_dict={
-                    0: "pump",
-                    1: "mixer",
-                },
+                options=[
+                    "pump",
+                    "mixer",
+                ],
                 translation_placeholders={"zone": "4"},
             ),
-            "__cyrk_cwu": CompitSelectDescription(
-                key="__cyrk_cwu",
+            CompitParameter.DHWC_CIRCULATION: SelectEntityDescription(
+                key=CompitParameter.DHWC_CIRCULATION.value,
                 translation_key="hot_water_circulation",
-                icon="mdi:water-pump",
-                options_dict={
-                    0: "disabled",
-                    1: "schedule",
-                    2: "constant",
-                },
+                options=[
+                    "disabled",
+                    "schedule",
+                    "constant",
+                ],
             ),
-            "__tr_pracy_pc": CompitSelectDescription(
-                key="__tr_pracy_pc",
+            CompitParameter.OPERATING_MODE: SelectEntityDescription(
+                key=CompitParameter.OPERATING_MODE.value,
                 translation_key="operating_mode",
-                icon="mdi:cog-outline",
-                options_dict={
-                    0: "disabled",
-                    1: "eco",
-                    2: "hybrid",
-                },
+                options=[
+                    "disabled",
+                    "eco",
+                    "hybrid",
+                ],
             ),
-            "__tr_pr_co1": CompitSelectDescription(
-                key="__tr_pr_co1",
+            CompitParameter.HEATING_MODE_ZONE_1: SelectEntityDescription(
+                key=CompitParameter.HEATING_MODE_ZONE_1.value,
                 translation_key="heating_operating_mode_zone",
-                icon="mdi:water-pump",
-                options_dict={
-                    0: "disabled",
-                    1: "schedule",
-                    2: "manual",
-                },
+                options=[
+                    "disabled",
+                    "schedule",
+                    "manual",
+                ],
                 translation_placeholders={"zone": "1"},
             ),
-            "__tr_pr_co2": CompitSelectDescription(
-                key="__tr_pr_co2",
+            CompitParameter.HEATING_MODE_ZONE_2: SelectEntityDescription(
+                key=CompitParameter.HEATING_MODE_ZONE_2.value,
                 translation_key="heating_operating_mode_zone",
-                icon="mdi:water-pump",
-                options_dict={
-                    0: "disabled",
-                    1: "schedule",
-                    2: "manual",
-                },
+                options=[
+                    "disabled",
+                    "schedule",
+                    "manual",
+                ],
                 translation_placeholders={"zone": "2"},
             ),
-            "__tr_pr_co3": CompitSelectDescription(
-                key="__tr_pr_co3",
+            CompitParameter.HEATING_MODE_ZONE_3: SelectEntityDescription(
+                key=CompitParameter.HEATING_MODE_ZONE_3.value,
                 translation_key="heating_operating_mode_zone",
-                icon="mdi:water-pump",
-                options_dict={
-                    0: "disabled",
-                    1: "schedule",
-                    2: "manual",
-                },
+                options=[
+                    "disabled",
+                    "schedule",
+                    "manual",
+                ],
                 translation_placeholders={"zone": "3"},
             ),
-            "__tr_pr_co4": CompitSelectDescription(
-                key="__tr_pr_co4",
+            CompitParameter.HEATING_MODE_ZONE_4: SelectEntityDescription(
+                key=CompitParameter.HEATING_MODE_ZONE_4.value,
                 translation_key="heating_operating_mode_zone",
-                icon="mdi:water-pump",
-                options_dict={
-                    0: "disabled",
-                    1: "schedule",
-                    2: "manual",
-                },
+                options=[
+                    "disabled",
+                    "schedule",
+                    "manual",
+                ],
                 translation_placeholders={"zone": "4"},
             ),
         },
@@ -370,643 +328,581 @@ DEVICE_DEFINITIONS: dict[int, CompitDeviceDescription] = {
     3: CompitDeviceDescription(
         name="R810",
         parameters={
-            "__pracamieszacza": CompitSelectDescription(
-                key="__pracamieszacza",
+            CompitParameter.MIXER_MODE: SelectEntityDescription(
+                key=CompitParameter.MIXER_MODE.value,
                 translation_key="mixer_mode",
-                icon="mdi:mixer",
-                options_dict={
-                    0: "disabled",
-                    1: "no_corrections",
-                    2: "with_a_schedule",
-                    3: "with_thermostat",
-                    4: "nano_nr_1",
-                    5: "nano_nr_2",
-                    6: "nano_nr_3",
-                    7: "nano_nr_4",
-                    8: "nano_nr_5",
-                },
+                options=[
+                    "disabled",
+                    "no_corrections",
+                    "with_a_schedule",
+                    "with_thermostat",
+                    "nano_nr_1",
+                    "nano_nr_2",
+                    "nano_nr_3",
+                    "nano_nr_4",
+                    "nano_nr_5",
+                ],
             ),
         },
     ),
     45: CompitDeviceDescription(
         name="SolarComp971",
         parameters={
-            "__trybpracy": CompitSelectDescription(
-                key="__trybpracy",
+            CompitParameter.SOLAR_COMP_OPERATING_MODE: SelectEntityDescription(
+                key=CompitParameter.SOLAR_COMP_OPERATING_MODE.value,
                 translation_key="solarcomp_operating_mode",
-                icon="mdi:cog-outline",
-                options_dict={
-                    1: "auto",
-                    2: "de_icing",
-                    3: "holiday",
-                    4: "disabled",
-                },
+                options=[
+                    "auto",
+                    "de_icing",
+                    "holiday",
+                    "disabled",
+                ],
             ),
         },
     ),
     44: CompitDeviceDescription(
         name="SolarComp 951",
         parameters={
-            "__trybpracy": CompitSelectDescription(
-                key="__trybpracy",
+            CompitParameter.SOLAR_COMP_OPERATING_MODE: SelectEntityDescription(
+                key=CompitParameter.SOLAR_COMP_OPERATING_MODE.value,
                 translation_key="solarcomp_operating_mode",
-                icon="mdi:water-boiler",
-                options_dict={
-                    1: "auto",
-                    2: "de_icing",
-                    3: "holiday",
-                    4: "disabled",
-                },
+                options=[
+                    "auto",
+                    "de_icing",
+                    "holiday",
+                    "disabled",
+                ],
             ),
         },
     ),
     92: CompitDeviceDescription(
         name="r490",
         parameters={
-            "__co1zrodlokorekty": CompitSelectDescription(
-                key="__co1zrodlokorekty",
+            CompitParameter.HEATING_SOURCE_OF_CORRECTION_ZONE_1: SelectEntityDescription(
+                key=CompitParameter.HEATING_SOURCE_OF_CORRECTION_ZONE_1.value,
                 translation_key="heating_source_of_correction_zone",
-                icon="mdi:tune-variant",
-                options_dict={
-                    0: "no_corrections",
-                    1: "schedule",
-                    2: "thermostat",
-                    3: "nano_nr_1",
-                    4: "nano_nr_2",
-                    5: "nano_nr_3",
-                    6: "nano_nr_4",
-                    7: "nano_nr_5",
-                },
+                options=[
+                    "no_corrections",
+                    "schedule",
+                    "thermostat",
+                    "nano_nr_1",
+                    "nano_nr_2",
+                    "nano_nr_3",
+                    "nano_nr_4",
+                    "nano_nr_5",
+                ],
                 translation_placeholders={"zone": "1"},
             ),
-            "_co2zrodlokorekty": CompitSelectDescription(
-                key="_co2zrodlokorekty",
+            CompitParameter.HEATING_SOURCE_OF_CORRECTION_ZONE_2: SelectEntityDescription(
+                key=CompitParameter.HEATING_SOURCE_OF_CORRECTION_ZONE_2.value,
                 translation_key="heating_source_of_correction_zone",
-                icon="mdi:tune-variant",
-                options_dict={
-                    0: "no_corrections",
-                    1: "schedule",
-                    2: "thermostat",
-                    3: "nano_nr_1",
-                    4: "nano_nr_2",
-                    5: "nano_nr_3",
-                    6: "nano_nr_4",
-                    7: "nano_nr_5",
-                },
+                options=[
+                    "no_corrections",
+                    "schedule",
+                    "thermostat",
+                    "nano_nr_1",
+                    "nano_nr_2",
+                    "nano_nr_3",
+                    "nano_nr_4",
+                    "nano_nr_5",
+                ],
                 translation_placeholders={"zone": "2"},
             ),
-            "__co3zrodlokorekty": CompitSelectDescription(
-                key="__co3zrodlokorekty",
+            CompitParameter.HEATING_SOURCE_OF_CORRECTION_ZONE_3: SelectEntityDescription(
+                key=CompitParameter.HEATING_SOURCE_OF_CORRECTION_ZONE_3.value,
                 translation_key="heating_source_of_correction_zone",
-                icon="mdi:tune-variant",
-                options_dict={
-                    0: "no_corrections",
-                    1: "schedule",
-                    2: "thermostat",
-                    3: "nano_nr_1",
-                    4: "nano_nr_2",
-                    5: "nano_nr_3",
-                    6: "nano_nr_4",
-                    7: "nano_nr_5",
-                },
+                options=[
+                    "no_corrections",
+                    "schedule",
+                    "thermostat",
+                    "nano_nr_1",
+                    "nano_nr_2",
+                    "nano_nr_3",
+                    "nano_nr_4",
+                    "nano_nr_5",
+                ],
                 translation_placeholders={"zone": "3"},
             ),
-            "__co4zrkorekty": CompitSelectDescription(
-                key="__co4zrkorekty",
+            CompitParameter.HEATING_SOURCE_OF_CORRECTION_ZONE_4: SelectEntityDescription(
+                key=CompitParameter.HEATING_SOURCE_OF_CORRECTION_ZONE_4.value,
                 translation_key="heating_source_of_correction_zone",
-                icon="mdi:tune-variant",
-                options_dict={
-                    0: "no_corrections",
-                    1: "schedule",
-                    2: "thermostat",
-                    3: "nano_nr_1",
-                    4: "nano_nr_2",
-                    5: "nano_nr_3",
-                    6: "nano_nr_4",
-                    7: "nano_nr_5",
-                },
+                options=[
+                    "no_corrections",
+                    "schedule",
+                    "thermostat",
+                    "nano_nr_1",
+                    "nano_nr_2",
+                    "nano_nr_3",
+                    "nano_nr_4",
+                    "nano_nr_5",
+                ],
                 translation_placeholders={"zone": "4"},
             ),
-            "__sezprinst": CompitSelectDescription(
-                key="__sezprinst",
+            CompitParameter.R490_OPERATING_MODE: SelectEntityDescription(
+                key=CompitParameter.R490_OPERATING_MODE.value,
                 translation_key="operating_mode",
-                icon="mdi:home-thermometer-outline",
-                options_dict={
-                    0: "disabled",
-                    1: "eco",
-                    2: "hybrid",
-                },
+                options=[
+                    "disabled",
+                    "eco",
+                    "hybrid",
+                ],
             ),
-            "__trybprcwu": CompitSelectDescription(
-                key="__trybprcwu",
+            CompitParameter.DHW_OPERATING_MODE: SelectEntityDescription(
+                key=CompitParameter.DHW_OPERATING_MODE.value,
                 translation_key="dhw_operating_mode",
-                icon="mdi:water-boiler",
-                options_dict={
-                    1: "schedule",
-                    2: "manual",
-                },
+                options=[
+                    "schedule",
+                    "manual",
+                ],
             ),
-            "__trprco1": CompitSelectDescription(
-                key="__trprco1",
+            CompitParameter.HEATING_OPERATING_MODE_ZONE_1: SelectEntityDescription(
+                key=CompitParameter.HEATING_OPERATING_MODE_ZONE_1.value,
                 translation_key="heating_operating_mode_zone",
-                icon="mdi:cog-outline",
-                options_dict={
-                    0: "disabled",
-                    1: "schedule",
-                    2: "manual",
-                },
+                options=[
+                    "disabled",
+                    "schedule",
+                    "manual",
+                ],
                 translation_placeholders={"zone": "1"},
             ),
-            "__trprco2": CompitSelectDescription(
-                key="__trprco2",
+            CompitParameter.HEATING_OPERATING_MODE_ZONE_2: SelectEntityDescription(
+                key=CompitParameter.HEATING_OPERATING_MODE_ZONE_2.value,
                 translation_key="heating_operating_mode_zone",
-                icon="mdi:cog-outline",
-                options_dict={
-                    0: "disabled",
-                    1: "schedule",
-                    2: "manual",
-                },
+                options=[
+                    "disabled",
+                    "schedule",
+                    "manual",
+                ],
                 translation_placeholders={"zone": "2"},
             ),
-            "__trprco3": CompitSelectDescription(
-                key="__trprco3",
+            CompitParameter.HEATING_OPERATING_MODE_ZONE_3: SelectEntityDescription(
+                key=CompitParameter.HEATING_OPERATING_MODE_ZONE_3.value,
                 translation_key="heating_operating_mode_zone",
-                icon="mdi:cog-outline",
-                options_dict={
-                    0: "disabled",
-                    1: "schedule",
-                    2: "manual",
-                },
+                options=[
+                    "disabled",
+                    "schedule",
+                    "manual",
+                ],
                 translation_placeholders={"zone": "3"},
             ),
-            "__trprco4": CompitSelectDescription(
-                key="__trprco4",
+            CompitParameter.HEATING_OPERATING_MODE_ZONE_4: SelectEntityDescription(
+                key=CompitParameter.HEATING_OPERATING_MODE_ZONE_4.value,
                 translation_key="heating_operating_mode_zone",
-                icon="mdi:cog-outline",
-                options_dict={
-                    0: "disabled",
-                    1: "schedule",
-                    2: "manual",
-                },
+                options=[
+                    "disabled",
+                    "schedule",
+                    "manual",
+                ],
                 translation_placeholders={"zone": "4"},
             ),
-            "__trprbufora": CompitSelectDescription(
-                key="__trprbufora",
+            CompitParameter.BUFFER_MODE: SelectEntityDescription(
+                key=CompitParameter.BUFFER_MODE.value,
                 translation_key="buffer_mode",
-                icon="mdi:database",
-                options_dict={
-                    0: "disabled",
-                    1: "schedule",
-                    2: "manual",
-                },
+                options=[
+                    "disabled",
+                    "schedule",
+                    "manual",
+                ],
             ),
         },
     ),
     34: CompitDeviceDescription(
         name="r470",
         parameters={
-            "__mode": CompitSelectDescription(
-                key="__mode",
+            CompitParameter.R470_OPERATING_MODE: SelectEntityDescription(
+                key=CompitParameter.R470_OPERATING_MODE.value,
                 translation_key="operating_mode",
-                icon="mdi:cog-outline",
-                options_dict={
-                    1: "disabled",
-                    2: "auto",
-                    3: "eco",
-                },
+                options=[
+                    "disabled",
+                    "auto",
+                    "eco",
+                ],
             ),
-            "__comode": CompitSelectDescription(
-                key="__comode",
+            CompitParameter.HEATING_SOURCE_OF_CORRECTION: SelectEntityDescription(
+                key=CompitParameter.HEATING_SOURCE_OF_CORRECTION.value,
                 translation_key="heating_source_of_correction",
-                icon="mdi:cog-outline",
-                options_dict={
-                    1: "no_corrections",
-                    2: "schedule",
-                    3: "thermostat",
-                    4: "nano_nr_1",
-                    5: "nano_nr_2",
-                    6: "nano_nr_3",
-                    7: "nano_nr_4",
-                    8: "nano_nr_5",
-                },
+                options=[
+                    "no_corrections",
+                    "schedule",
+                    "thermostat",
+                    "nano_nr_1",
+                    "nano_nr_2",
+                    "nano_nr_3",
+                    "nano_nr_4",
+                    "nano_nr_5",
+                ],
             ),
-            "__mixer1mode": CompitSelectDescription(
-                key="__mixer1mode",
+            CompitParameter.MIXERMODE_ZONE_1: SelectEntityDescription(
+                key=CompitParameter.MIXERMODE_ZONE_1.value,
                 translation_key="mixer_mode",
-                icon="mdi:mixer",
-                options_dict={
-                    1: "no_corrections",
-                    2: "clock",
-                    3: "thermostat",
-                    4: "nano_nr_1",
-                    5: "nano_nr_2",
-                    6: "nano_nr_3",
-                    7: "nano_nr_4",
-                    8: "nano_nr_5",
-                },
+                options=[
+                    "no_corrections",
+                    "clock",
+                    "thermostat",
+                    "nano_nr_1",
+                    "nano_nr_2",
+                    "nano_nr_3",
+                    "nano_nr_4",
+                    "nano_nr_5",
+                ],
             ),
-            "__dhwmode": CompitSelectDescription(
-                key="__dhwmode",
+            CompitParameter.DHW_MODE: SelectEntityDescription(
+                key=CompitParameter.DHW_MODE.value,
                 translation_key="dhw_operating_mode",
-                icon="mdi:water-boiler",
-                options_dict={
-                    0: "disabled",
-                    1: "constant",
-                    2: "schedule",
-                },
+                options=[
+                    "disabled",
+                    "constant",
+                    "schedule",
+                ],
             ),
-            "__dhwcircmode": CompitSelectDescription(
-                key="__dhwcircmode",
+            CompitParameter.DHW_CIRCULATION_MODE: SelectEntityDescription(
+                key=CompitParameter.DHW_CIRCULATION_MODE.value,
                 translation_key="dhw_circulation",
-                icon="mdi:water-pump",
-                options_dict={
-                    0: "disabled",
-                    1: "constant",
-                    2: "schedule",
-                },
+                options=[
+                    "disabled",
+                    "constant",
+                    "schedule",
+                ],
             ),
         },
     ),
     91: CompitDeviceDescription(
         name="R770RS / R771RS",
         parameters={
-            "__trybmieszacza": CompitSelectDescription(
-                key="__trybmieszacza",
-                translation_key="mixer_mode",
-                icon="mdi:mixer",
-                options_dict={
-                    0: "disabled",
-                    1: "schedule",
-                    2: "thermostat",
-                    3: "nano_nr_1",
-                    4: "nano_nr_2",
-                    5: "nano_nr_3",
-                    6: "nano_nr_4",
-                    7: "nano_nr_5",
-                },
+            CompitParameter.R770_MIXER_MODE_ZONE_1: SelectEntityDescription(
+                key=CompitParameter.R770_MIXER_MODE_ZONE_1.value,
+                translation_key="mixer_mode_zone",
+                options=[
+                    "disabled",
+                    "schedule",
+                    "thermostat",
+                    "nano_nr_1",
+                    "nano_nr_2",
+                    "nano_nr_3",
+                    "nano_nr_4",
+                    "nano_nr_5",
+                ],
+                translation_placeholders={"zone": "1"},
             ),
-            "__trybmie2": CompitSelectDescription(
-                key="__trybmie2",
+            CompitParameter.R770_MIXER_MODE_ZONE_2: SelectEntityDescription(
+                key=CompitParameter.R770_MIXER_MODE_ZONE_2.value,
                 translation_key="mixer_mode",
-                icon="mdi:mixer",
-                options_dict={
-                    0: "disabled",
-                    1: "schedule",
-                    2: "thermostat",
-                    3: "nano_nr_1",
-                    4: "nano_nr_2",
-                    5: "nano_nr_3",
-                    6: "nano_nr_4",
-                    7: "nano_nr_5",
-                },
+                options=[
+                    "disabled",
+                    "schedule",
+                    "thermostat",
+                    "nano_nr_1",
+                    "nano_nr_2",
+                    "nano_nr_3",
+                    "nano_nr_4",
+                    "nano_nr_5",
+                ],
+                translation_placeholders={"zone": "2"},
             ),
-            "__trybpracycwu": CompitSelectDescription(
-                key="__trybpracycwu",
+            CompitParameter.R770_DHW_OPERATING_MODE: SelectEntityDescription(
+                key=CompitParameter.R770_DHW_OPERATING_MODE.value,
                 translation_key="dhw_operating_mode",
-                icon="mdi:water-boiler",
-                options_dict={
-                    0: "disabled",
-                    1: "constant",
-                    2: "schedule",
-                },
+                options=[
+                    "disabled",
+                    "constant",
+                    "schedule",
+                ],
             ),
-            "__trybpracycyrkcwu": CompitSelectDescription(
-                key="__trybpracycyrkcwu",
+            CompitParameter.R770_DHW_CIRCULATION_MODE: SelectEntityDescription(
+                key=CompitParameter.R770_DHW_CIRCULATION_MODE.value,
                 translation_key="hot_water_circulation",
-                icon="mdi:water-pump",
-                options_dict={
-                    0: "disabled",
-                    1: "constant",
-                    2: "schedule",
-                },
+                options=[
+                    "disabled",
+                    "constant",
+                    "schedule",
+                ],
             ),
         },
     ),
     14: CompitDeviceDescription(
         name="BWC310",
         parameters={
-            "__pracamieszacza": CompitSelectDescription(
-                key="__pracamieszacza",
+            CompitParameter.MIXER_MODE: SelectEntityDescription(
+                key=CompitParameter.MIXER_MODE.value,
                 translation_key="mixer_mode",
-                icon="mdi:mixer",
-                options_dict={
-                    0: "disabled",
-                    1: "no_corrections",
-                    2: "schedule",
-                    3: "thermostat",
-                    4: "nano_nr_1",
-                    5: "nano_nr_2",
-                    6: "nano_nr_3",
-                    7: "nano_nr_4",
-                    8: "nano_nr_5",
-                },
+                options=[
+                    "disabled",
+                    "no_corrections",
+                    "schedule",
+                    "thermostat",
+                    "nano_nr_1",
+                    "nano_nr_2",
+                    "nano_nr_3",
+                    "nano_nr_4",
+                    "nano_nr_5",
+                ],
             )
         },
     ),
     201: CompitDeviceDescription(
         name="BioMax775",
         parameters={
-            "__pracakotla": CompitSelectDescription(
-                key="__pracakotla",
-                translation_key="heating_source_of_correction_zone",
-                icon="mdi:fire",
-                options_dict={
-                    0: "disabled",
-                    1: "no_corrections",
-                    2: "schedule",
-                    3: "thermostat",
-                    4: "nano_nr_1",
-                    5: "nano_nr_2",
-                    6: "nano_nr_3",
-                    7: "nano_nr_4",
-                    8: "nano_nr_5",
-                },
+            CompitParameter.BIOMAX_HEATING_SOURCE_OF_CORRECTION: SelectEntityDescription(
+                key=CompitParameter.BIOMAX_HEATING_SOURCE_OF_CORRECTION.value,
+                translation_key="heating_source_of_correction",
+                options=[
+                    "disabled",
+                    "no_corrections",
+                    "schedule",
+                    "thermostat",
+                    "nano_nr_1",
+                    "nano_nr_2",
+                    "nano_nr_3",
+                    "nano_nr_4",
+                    "nano_nr_5",
+                ],
             ),
-            "__m1praca": CompitSelectDescription(
-                key="__m1praca",
+            CompitParameter.BIOMAX_MIXER_MODE_ZONE_1: SelectEntityDescription(
+                key=CompitParameter.BIOMAX_MIXER_MODE_ZONE_1.value,
                 translation_key="mixer_mode_zone",
-                icon="mdi:mixer",
-                options_dict={
-                    0: "disabled",
-                    1: "without_thermostat",
-                    2: "schedule",
-                    3: "thermostat",
-                    4: "nano_nr_1",
-                    5: "nano_nr_2",
-                    6: "nano_nr_3",
-                    7: "nano_nr_4",
-                    8: "nano_nr_5",
-                },
+                options=[
+                    "disabled",
+                    "without_thermostat",
+                    "schedule",
+                    "thermostat",
+                    "nano_nr_1",
+                    "nano_nr_2",
+                    "nano_nr_3",
+                    "nano_nr_4",
+                    "nano_nr_5",
+                ],
                 translation_placeholders={"zone": "1"},
             ),
-            "__m2praca": CompitSelectDescription(
-                key="__m2praca",
+            CompitParameter.BIOMAX_MIXER_MODE_ZONE_2: SelectEntityDescription(
+                key=CompitParameter.BIOMAX_MIXER_MODE_ZONE_2.value,
                 translation_key="mixer_mode_zone",
-                icon="mdi:mixer",
-                options_dict={
-                    0: "disabled",
-                    1: "without_thermostat",
-                    2: "schedule",
-                    3: "thermostat",
-                    4: "nano_nr_1",
-                    5: "nano_nr_2",
-                    6: "nano_nr_3",
-                    7: "nano_nr_4",
-                    8: "nano_nr_5",
-                },
+                options=[
+                    "disabled",
+                    "without_thermostat",
+                    "schedule",
+                    "thermostat",
+                    "nano_nr_1",
+                    "nano_nr_2",
+                    "nano_nr_3",
+                    "nano_nr_4",
+                    "nano_nr_5",
+                ],
                 translation_placeholders={"zone": "2"},
             ),
-            "__cwupraca": CompitSelectDescription(
-                key="__cwupraca",
+            CompitParameter.BIOMAX_DHW_MODE: SelectEntityDescription(
+                key=CompitParameter.BIOMAX_DHW_MODE.value,
                 translation_key="dhw_operating_mode",
-                icon="mdi:water-boiler",
-                options_dict={
-                    0: "disabled",
-                    1: "constant",
-                    2: "schedule",
-                },
+                options=[
+                    "disabled",
+                    "constant",
+                    "schedule",
+                ],
             ),
-            "__cwucyrkpraca": CompitSelectDescription(
-                key="__cwucyrkpraca",
+            CompitParameter.BIOMAX_DHW_CIRCULATION_MODE: SelectEntityDescription(
+                key=CompitParameter.BIOMAX_DHW_CIRCULATION_MODE.value,
                 translation_key="dhw_circulation",
-                icon="mdi:water-pump",
-                options_dict={
-                    0: "disabled",
-                    1: "constant",
-                    2: "schedule",
-                },
+                options=[
+                    "disabled",
+                    "constant",
+                    "schedule",
+                ],
             ),
         },
     ),
     36: CompitDeviceDescription(
         name="BioMax742",
         parameters={
-            "__pracakotla": CompitSelectDescription(
-                key="__pracakotla",
-                translation_key="heating_source_of_correction_zone",
-                icon="mdi:fire",
-                options_dict={
-                    0: "disabled",
-                    1: "no_corrections",
-                    2: "schedule",
-                    3: "thermostat",
-                    4: "nano_nr_1",
-                    5: "nano_nr_2",
-                    6: "nano_nr_3",
-                    7: "nano_nr_4",
-                    8: "nano_nr_5",
-                },
+            CompitParameter.BIOMAX_HEATING_SOURCE_OF_CORRECTION: SelectEntityDescription(
+                key=CompitParameter.BIOMAX_HEATING_SOURCE_OF_CORRECTION.value,
+                translation_key="heating_source_of_correction",
+                options=[
+                    "disabled",
+                    "no_corrections",
+                    "schedule",
+                    "thermostat",
+                    "nano_nr_1",
+                    "nano_nr_2",
+                    "nano_nr_3",
+                    "nano_nr_4",
+                    "nano_nr_5",
+                ],
             ),
-            "__m1praca": CompitSelectDescription(
-                key="__m1praca",
+            CompitParameter.BIOMAX_MIXER_MODE_ZONE_1: SelectEntityDescription(
+                key=CompitParameter.BIOMAX_MIXER_MODE_ZONE_1.value,
                 translation_key="mixer_mode",
-                icon="mdi:mixer",
-                options_dict={
-                    0: "disabled",
-                    1: "no_corrections",
-                    2: "schedule",
-                    3: "thermostat",
-                    4: "nano_nr_1",
-                    5: "nano_nr_2",
-                    6: "nano_nr_3",
-                    7: "nano_nr_4",
-                    8: "nano_nr_5",
-                },
+                options=[
+                    "disabled",
+                    "no_corrections",
+                    "schedule",
+                    "thermostat",
+                    "nano_nr_1",
+                    "nano_nr_2",
+                    "nano_nr_3",
+                    "nano_nr_4",
+                    "nano_nr_5",
+                ],
             ),
-            "__cwupraca": CompitSelectDescription(
-                key="__cwupraca",
+            CompitParameter.BIOMAX_DHW_MODE: SelectEntityDescription(
+                key=CompitParameter.BIOMAX_DHW_MODE.value,
                 translation_key="dhw_operating_mode",
-                icon="mdi:water-boiler",
-                options_dict={
-                    0: "disabled",
-                    1: "constant",
-                    2: "schedule",
-                },
+                options=[
+                    "disabled",
+                    "constant",
+                    "schedule",
+                ],
             ),
-            "__cwucyrkpraca": CompitSelectDescription(
-                key="__cwucyrkpraca",
+            CompitParameter.BIOMAX_DHW_CIRCULATION_MODE: SelectEntityDescription(
+                key=CompitParameter.BIOMAX_DHW_CIRCULATION_MODE.value,
                 translation_key="dhw_circulation_work",
-                icon="mdi:water-pump",
-                options_dict={
-                    0: "disabled",
-                    1: "constant",
-                    2: "schedule",
-                },
+                options=[
+                    "disabled",
+                    "constant",
+                    "schedule",
+                ],
             ),
         },
     ),
     75: CompitDeviceDescription(
         name="BioMax772",
         parameters={
-            "__pracakotla": CompitSelectDescription(
-                key="__pracakotla",
-                translation_key="heating_source_of_correction_zone",
-                icon="mdi:fire",
-                options_dict={
-                    0: "disabled",
-                    1: "no_corrections",
-                    2: "schedule",
-                    3: "thermostat",
-                    4: "nano_nr_1",
-                    5: "nano_nr_2",
-                    6: "nano_nr_3",
-                    7: "nano_nr_4",
-                    8: "nano_nr_5",
-                },
+            CompitParameter.BIOMAX_HEATING_SOURCE_OF_CORRECTION: SelectEntityDescription(
+                key=CompitParameter.BIOMAX_HEATING_SOURCE_OF_CORRECTION.value,
+                translation_key="heating_source_of_correction",
+                options=[
+                    "disabled",
+                    "no_corrections",
+                    "schedule",
+                    "thermostat",
+                    "nano_nr_1",
+                    "nano_nr_2",
+                    "nano_nr_3",
+                    "nano_nr_4",
+                    "nano_nr_5",
+                ],
             ),
-            "__m1praca": CompitSelectDescription(
-                key="__m1praca",
+            CompitParameter.BIOMAX_MIXER_MODE_ZONE_1: SelectEntityDescription(
+                key=CompitParameter.BIOMAX_MIXER_MODE_ZONE_1.value,
                 translation_key="mixer_mode_zone",
-                icon="mdi:mixer",
-                options_dict={
-                    0: "disabled",
-                    1: "no_corrections",
-                    2: "schedule",
-                    3: "thermostat",
-                    4: "nano_nr_1",
-                    5: "nano_nr_2",
-                    6: "nano_nr_3",
-                    7: "nano_nr_4",
-                    8: "nano_nr_5",
-                },
+                options=[
+                    "disabled",
+                    "no_corrections",
+                    "schedule",
+                    "thermostat",
+                    "nano_nr_1",
+                    "nano_nr_2",
+                    "nano_nr_3",
+                    "nano_nr_4",
+                    "nano_nr_5",
+                ],
+                translation_placeholders={"zone": "1"},
             ),
-            "__m2praca": CompitSelectDescription(
-                key="__m2praca",
+            CompitParameter.BIOMAX_MIXER_MODE_ZONE_2: SelectEntityDescription(
+                key=CompitParameter.BIOMAX_MIXER_MODE_ZONE_2.value,
                 translation_key="mixer_mode_zone",
-                icon="mdi:mixer",
-                options_dict={
-                    0: "disabled",
-                    1: "no_corrections",
-                    2: "schedule",
-                    3: "thermostat",
-                    4: "nano_nr_1",
-                    5: "nano_nr_2",
-                    6: "nano_nr_3",
-                    7: "nano_nr_4",
-                    8: "nano_nr_5",
-                },
+                options=[
+                    "disabled",
+                    "no_corrections",
+                    "schedule",
+                    "thermostat",
+                    "nano_nr_1",
+                    "nano_nr_2",
+                    "nano_nr_3",
+                    "nano_nr_4",
+                    "nano_nr_5",
+                ],
+                translation_placeholders={"zone": "2"},
             ),
-            "__cwupraca": CompitSelectDescription(
-                key="__cwupraca",
+            CompitParameter.BIOMAX_DHW_MODE: SelectEntityDescription(
+                key=CompitParameter.BIOMAX_DHW_MODE.value,
                 translation_key="dhw_operating_mode",
-                icon="mdi:water-boiler",
-                options_dict={
-                    0: "disabled",
-                    1: "constant",
-                    2: "schedule",
-                },
+                options=[
+                    "disabled",
+                    "constant",
+                    "schedule",
+                ],
             ),
-            "__cwucyrkpraca": CompitSelectDescription(
-                key="__cwucyrkpraca",
+            CompitParameter.BIOMAX_DHW_CIRCULATION_MODE: SelectEntityDescription(
+                key=CompitParameter.BIOMAX_DHW_CIRCULATION_MODE.value,
                 translation_key="dhw_circulation_work",
-                icon="mdi:water-pump",
-                options_dict={
-                    0: "disabled",
-                    1: "constant",
-                    2: "schedule",
-                },
+                options=[
+                    "disabled",
+                    "constant",
+                    "schedule",
+                ],
             ),
         },
     ),
     210: CompitDeviceDescription(
         name="EL750",
         parameters={
-            "__trybcyrkulacji": CompitSelectDescription(
-                key="__trybcyrkulacji",
+            CompitParameter.BIOMAX_CIRCULATION_MODE: SelectEntityDescription(
+                key=CompitParameter.BIOMAX_CIRCULATION_MODE.value,
                 translation_key="dhw_circulation_work",
-                icon="mdi:water-pump",
-                options_dict={
-                    0: "disabled",
-                    1: "constant",
-                    2: "schedule",
-                },
-            ),
-        },
-        _class=29,
-    ),
-    221: CompitDeviceDescription(
-        name="R350.M",
-        parameters={
-            "__tr_pr": CompitSelectDescription(
-                key="__tr_pr",
-                translation_key="heating_source_of_correction_zone",
-                icon="mdi:cog-outline",
-                options_dict={
-                    1: "no_corrections",
-                    2: "schedule",
-                    3: "thermostat",
-                    4: "nano_nr_1",
-                    5: "nano_nr_2",
-                    6: "nano_nr_3",
-                    7: "nano_nr_4",
-                    8: "nano_nr_5",
-                },
+                options=[
+                    "disabled",
+                    "constant",
+                    "schedule",
+                ],
             ),
         },
     ),
     5: CompitDeviceDescription(
         name="R350 T3",
         parameters={
-            "__pracamieszacza": CompitSelectDescription(
-                key="__pracamieszacza",
+            CompitParameter.MIXER_MODE: SelectEntityDescription(
+                key=CompitParameter.MIXER_MODE.value,
                 translation_key="mixer_mode",
-                icon="mdi:cog-outline",
-                options_dict={
-                    0: "no_corrections",
-                    1: "schedule",
-                    2: "thermostat",
-                    3: "nano_nr_1",
-                    4: "nano_nr_2",
-                    5: "nano_nr_3",
-                    6: "nano_nr_4",
-                    7: "nano_nr_5",
-                },
+                options=[
+                    "no_corrections",
+                    "schedule",
+                    "thermostat",
+                    "nano_nr_1",
+                    "nano_nr_2",
+                    "nano_nr_3",
+                    "nano_nr_4",
+                    "nano_nr_5",
+                ],
             )
         },
-        _class=14,
     ),
     215: CompitDeviceDescription(
         name="R480",
         parameters={
-            "__cwu_cyrkulacja": CompitSelectDescription(
-                key="__cwu_cyrkulacja",
+            CompitParameter.R480_DHW_CIRCULATION: SelectEntityDescription(
+                key=CompitParameter.R480_DHW_CIRCULATION.value,
                 translation_key="dhw_circulation",
-                icon="mdi:water-pump",
-                options_dict={
-                    0: "disabled",
-                    1: "schedule",
-                    2: "constant",
-                },
+                options=[
+                    "disabled",
+                    "schedule",
+                    "constant",
+                ],
             ),
-            "__praca_pc": CompitSelectDescription(
-                key="__praca_pc",
+            CompitParameter.R480_OPERATING_MODE: SelectEntityDescription(
+                key=CompitParameter.R480_OPERATING_MODE.value,
                 translation_key="operating_mode",
-                icon="mdi:heat-pump",
-                options_dict={
-                    0: "disabled",
-                    1: "eco",
-                    2: "hybrid",
-                },
+                options=[
+                    "disabled",
+                    "eco",
+                    "hybrid",
+                ],
             ),
-            "__tryb_cwu": CompitSelectDescription(
-                key="__tryb_cwu",
+            CompitParameter.R480_DHW_MODE: SelectEntityDescription(
+                key=CompitParameter.R480_DHW_MODE.value,
                 translation_key="dhw_operating_mode",
-                icon="mdi:water-boiler",
-                options_dict={
-                    1: "schedule",
-                    2: "manual",
-                    0: "disabled",
-                },
+                options=[
+                    "schedule",
+                    "manual",
+                    "disabled",
+                ],
             ),
-            "__tr_buf": CompitSelectDescription(
-                key="__tr_buf",
+            CompitParameter.R480_BUFFER_MODE: SelectEntityDescription(
+                key=CompitParameter.R480_BUFFER_MODE.value,
                 translation_key="buffer_mode",
-                icon="mdi:database",
-                options_dict={
-                    1: "schedule",
-                    2: "manual",
-                    0: "disabled",
-                },
+                options=[
+                    "schedule",
+                    "manual",
+                    "disabled",
+                ],
             ),
         },
     ),
@@ -1025,22 +921,24 @@ async def async_setup_entry(
     for device_id, device in coordinator.connector.all_devices.items():
         device_definition = DEVICE_DEFINITIONS.get(device.definition.code)
 
-        if device_definition:
-            for code, description in device_definition.parameters.items():
-                param = next((p for p in device.state.params if p.code == code), None)
+        if not device_definition:
+            continue
 
-                if (
-                    param is not None and not param.hidden
-                ):  # Only add if parameter is not hidden
-                    select_entities.append(
-                        CompitSelect(
-                            coordinator,
-                            device_id,
-                            device_definition.name,
-                            code,
-                            description,
-                        )
-                    )
+        for code, entity_description in device_definition.parameters.items():
+            param = next((p for p in device.state.params if p.code == code.value), None)
+
+            if param is None:
+                continue
+
+            select_entities.append(
+                CompitSelect(
+                    coordinator,
+                    device_id,
+                    device_definition.name,
+                    code,
+                    entity_description,
+                )
+            )
 
     async_add_devices(select_entities)
 
@@ -1053,14 +951,15 @@ class CompitSelect(CoordinatorEntity[CompitDataUpdateCoordinator], SelectEntity)
         coordinator: CompitDataUpdateCoordinator,
         device_id: int,
         device_name: str,
-        parameter_code: str,
-        parameter_description: CompitSelectDescription,
+        parameter_code: CompitParameter,
+        entity_description: SelectEntityDescription,
     ) -> None:
         """Initialize the select entity."""
         super().__init__(coordinator)
         self.device_id = device_id
-        self.entity_description = parameter_description
-        self._attr_unique_id = f"{device_id}_{parameter_code}"
+        self.entity_description = entity_description
+        self._attr_has_entity_name = True
+        self._attr_unique_id = f"{device_id}_{parameter_code.value}"
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, str(device_id))},
             name=device_name,
@@ -1068,8 +967,6 @@ class CompitSelect(CoordinatorEntity[CompitDataUpdateCoordinator], SelectEntity)
             model=device_name,
         )
         self.parameter_code = parameter_code
-        self.available_values = parameter_description.options_dict
-        self._attr_options = list(parameter_description.options_dict.values())
 
     @property
     def available(self) -> bool:
@@ -1082,24 +979,13 @@ class CompitSelect(CoordinatorEntity[CompitDataUpdateCoordinator], SelectEntity)
     @property
     def current_option(self) -> str | None:
         """Return the current option."""
-        param = self.coordinator.connector.get_device_parameter(
+        return self.coordinator.connector.get_current_option(
             self.device_id, self.parameter_code
         )
-        if param is None or param.value is None:
-            return None
-
-        return self.available_values.get(param.value)
 
     async def async_select_option(self, option: str) -> None:
         """Change the selected option."""
-
-        if option not in self.available_values.values():
-            raise HomeAssistantError(f"Invalid option '{option}' for {self._attr_name}")
-
-        for state_value, state_option in self.available_values.items():
-            if state_option == option:
-                await self.coordinator.connector.set_device_parameter(
-                    self.device_id, self.parameter_code, state_value
-                )
-                self.async_write_ha_state()
-                break
+        await self.coordinator.connector.select_device_option(
+            self.device_id, self.parameter_code, option
+        )
+        self.async_write_ha_state()
