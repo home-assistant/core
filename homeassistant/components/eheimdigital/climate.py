@@ -4,7 +4,7 @@ from typing import Any
 
 from eheimdigital.device import EheimDigitalDevice
 from eheimdigital.heater import EheimDigitalHeater
-from eheimdigital.types import HeaterMode, HeaterUnit
+from eheimdigital.types import EheimDigitalDataMissingError, HeaterMode, HeaterUnit
 
 from homeassistant.components.climate import (
     PRESET_NONE,
@@ -39,19 +39,25 @@ async def async_setup_entry(
     coordinator = entry.runtime_data
 
     def async_setup_device_entities(
-        device_address: dict[str, EheimDigitalDevice],
-    ) -> None:
+        devices: dict[str, EheimDigitalDevice],
+    ) -> dict[str, bool]:
         """Set up the climate entities for one or multiple devices."""
+        return_value: dict[str, bool] = {}
         entities: list[EheimDigitalHeaterClimate] = []
-        for device in device_address.values():
-            if isinstance(device, EheimDigitalHeater):
-                entities.append(EheimDigitalHeaterClimate(coordinator, device))
-                coordinator.known_devices.add(device.mac_address)
+        for device in devices.values():
+            try:
+                if isinstance(device, EheimDigitalHeater):
+                    entities.append(EheimDigitalHeaterClimate(coordinator, device))
+            except EheimDigitalDataMissingError:
+                return_value[device.mac_address] = False
+            else:
+                if device.mac_address not in return_value:
+                    return_value[device.mac_address] = True
 
-        async_add_entities(entities)
+        async_add_entities(entities, update_before_add=True)
+        return return_value
 
     coordinator.add_platform_callback(async_setup_device_entities)
-
     async_setup_device_entities(coordinator.hub.devices)
 
 

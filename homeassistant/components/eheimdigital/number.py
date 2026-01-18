@@ -8,7 +8,7 @@ from eheimdigital.classic_vario import EheimDigitalClassicVario
 from eheimdigital.device import EheimDigitalDevice
 from eheimdigital.filter import EheimDigitalFilter
 from eheimdigital.heater import EheimDigitalHeater
-from eheimdigital.types import HeaterUnit
+from eheimdigital.types import EheimDigitalDataMissingError, HeaterUnit
 
 from homeassistant.components.number import (
     NumberDeviceClass,
@@ -164,37 +164,47 @@ async def async_setup_entry(
 
     def async_setup_device_entities(
         device_address: dict[str, EheimDigitalDevice],
-    ) -> None:
+    ) -> dict[str, bool]:
         """Set up the number entities for one or multiple devices."""
+        return_value: dict[str, bool] = {}
         entities: list[EheimDigitalNumber[Any]] = []
         for device in device_address.values():
-            if isinstance(device, EheimDigitalClassicVario):
+            try:
+                if isinstance(device, EheimDigitalClassicVario):
+                    entities.extend(
+                        EheimDigitalNumber[EheimDigitalClassicVario](
+                            coordinator, device, description
+                        )
+                        for description in CLASSICVARIO_DESCRIPTIONS
+                    )
+                if isinstance(device, EheimDigitalFilter):
+                    entities.extend(
+                        EheimDigitalNumber[EheimDigitalFilter](
+                            coordinator, device, description
+                        )
+                        for description in FILTER_DESCRIPTIONS
+                    )
+                if isinstance(device, EheimDigitalHeater):
+                    entities.extend(
+                        EheimDigitalNumber[EheimDigitalHeater](
+                            coordinator, device, description
+                        )
+                        for description in HEATER_DESCRIPTIONS
+                    )
                 entities.extend(
-                    EheimDigitalNumber[EheimDigitalClassicVario](
+                    EheimDigitalNumber[EheimDigitalDevice](
                         coordinator, device, description
                     )
-                    for description in CLASSICVARIO_DESCRIPTIONS
+                    for description in GENERAL_DESCRIPTIONS
                 )
-            if isinstance(device, EheimDigitalFilter):
-                entities.extend(
-                    EheimDigitalNumber[EheimDigitalFilter](
-                        coordinator, device, description
-                    )
-                    for description in FILTER_DESCRIPTIONS
-                )
-            if isinstance(device, EheimDigitalHeater):
-                entities.extend(
-                    EheimDigitalNumber[EheimDigitalHeater](
-                        coordinator, device, description
-                    )
-                    for description in HEATER_DESCRIPTIONS
-                )
-            entities.extend(
-                EheimDigitalNumber[EheimDigitalDevice](coordinator, device, description)
-                for description in GENERAL_DESCRIPTIONS
-            )
+            except EheimDigitalDataMissingError:
+                return_value[device.mac_address] = False
+            else:
+                if device.mac_address not in return_value:
+                    return_value[device.mac_address] = True
 
-        async_add_entities(entities)
+        async_add_entities(entities, update_before_add=True)
+        return return_value
 
     coordinator.add_platform_callback(async_setup_device_entities)
     async_setup_device_entities(coordinator.hub.devices)
