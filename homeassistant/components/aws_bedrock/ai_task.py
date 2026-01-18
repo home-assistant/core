@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from json import JSONDecodeError
-import logging
 
 from homeassistant.components import ai_task, conversation
 from homeassistant.config_entries import ConfigEntry
@@ -12,9 +11,8 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util.json import json_loads
 
+from .const import LOGGER
 from .entity import AWSBedrockBaseLLMEntity
-
-_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(
@@ -72,7 +70,7 @@ class AWSBedrockTaskEntity(
         try:
             data = json_loads(text)
         except JSONDecodeError as err:
-            _LOGGER.error(
+            LOGGER.error(
                 "Failed to parse JSON response: %s. Response: %s",
                 err,
                 text,
