@@ -20,5 +20,13 @@
         "default": "mdi:television"
       }
     }
+  },
+  "services": {
+    "get_queue": {
+      "service": "mdi:download"
+    },
+    "get_series": {
+      "service": "mdi:television"
+    }
   }
 }

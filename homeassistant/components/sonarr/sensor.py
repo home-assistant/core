@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Callable
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Any, Generic
 
 from aiopyarr import (
@@ -20,15 +20,13 @@ from homeassistant.components.sensor import (
     SensorEntity,
     SensorEntityDescription,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import UnitOfInformation
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.util import dt as dt_util
 
-from .const import DOMAIN
-from .coordinator import SonarrDataT, SonarrDataUpdateCoordinator
+from .coordinator import SonarrConfigEntry, SonarrDataT, SonarrDataUpdateCoordinator
 from .entity import SonarrEntity
 
 
@@ -36,15 +34,18 @@ from .entity import SonarrEntity
 class SonarrSensorEntityDescriptionMixIn(Generic[SonarrDataT]):
     """Mixin for Sonarr sensor."""
 
-    attributes_fn: Callable[[SonarrDataT], dict[str, str]]
     value_fn: Callable[[SonarrDataT], StateType]
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, kw_only=True)
 class SonarrSensorEntityDescription(
     SensorEntityDescription, SonarrSensorEntityDescriptionMixIn[SonarrDataT]
 ):
     """Class to describe a Sonarr sensor."""
+
+    attributes_fn: Callable[[SonarrDataT], dict[str, str]] = field(
+        default_factory=lambda: lambda data: {}
+    )
 
 
 def get_disk_space_attr(disks: list[Diskspace]) -> dict[str, str]:
@@ -108,20 +109,12 @@ SENSOR_TYPES: dict[str, SonarrSensorEntityDescription[Any]] = {
         translation_key="queue",
         entity_registry_enabled_default=False,
         value_fn=lambda data: data.totalRecords,
-        attributes_fn=get_queue_attr,
     ),
     "series": SonarrSensorEntityDescription[list[SonarrSeries]](
         key="series",
         translation_key="series",
         entity_registry_enabled_default=False,
         value_fn=len,
-        attributes_fn=lambda data: {
-            i.title: (
-                f"{getattr(i.statistics, 'episodeFileCount', 0)}/"
-                f"{getattr(i.statistics, 'episodeCount', 0)} Episodes"
-            )
-            for i in data
-        },
     ),
     "upcoming": SonarrSensorEntityDescription[list[SonarrCalendar]](
         key="upcoming",
@@ -143,15 +136,12 @@ SENSOR_TYPES: dict[str, SonarrSensorEntityDescription[Any]] = {
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: SonarrConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Sonarr sensors based on a config entry."""
-    coordinators: dict[str, SonarrDataUpdateCoordinator[Any]] = hass.data[DOMAIN][
-        entry.entry_id
-    ]
     async_add_entities(
-        SonarrSensor(coordinators[coordinator_type], description)
+        SonarrSensor(getattr(entry.runtime_data, coordinator_type), description)
         for coordinator_type, description in SENSOR_TYPES.items()
     )
 

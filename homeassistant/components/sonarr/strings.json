@@ -51,6 +51,14 @@
       }
     }
   },
+  "exceptions": {
+    "integration_not_found": {
+      "message": "Config entry for integration \"{target}\" not found."
+    },
+    "not_loaded": {
+      "message": "Config entry \"{target}\" is not loaded."
+    }
+  },
   "options": {
     "step": {
       "init": {
@@ -59,6 +67,28 @@
           "wanted_max_items": "Max number of wanted items to display"
         }
       }
+    }
+  },
+  "services": {
+    "get_queue": {
+      "description": "Get all episodes currently in the download queue with their progress and details.",
+      "fields": {
+        "entry_id": {
+          "description": "ID of the config entry to use.",
+          "name": "Sonarr entry"
+        }
+      },
+      "name": "Get queue"
+    },
+    "get_series": {
+      "description": "Get all series in Sonarr with their details and statistics.",
+      "fields": {
+        "entry_id": {
+          "description": "ID of the config entry to use.",
+          "name": "Sonarr entry"
+        }
+      },
+      "name": "Get series"
     }
   }
 }

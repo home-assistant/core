@@ -1,0 +1,15 @@
+get_series:
+  fields:
+    entry_id:
+      required: true
+      selector:
+        config_entry:
+          integration: sonarr
+
+get_queue:
+  fields:
+    entry_id:
+      required: true
+      selector:
+        config_entry:
+          integration: sonarr
