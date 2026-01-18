@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import base64
 from collections.abc import Callable, Sequence
 from functools import partial
 from pathlib import Path
@@ -630,14 +629,14 @@ async def async_prepare_files_for_prompt(
                     f"Only images and PDF are supported, `{file_path}` is not supported"
                 )
 
-            base64_file = base64.b64encode(file_path.read_bytes()).decode("utf-8")
+            file_bytes = file_path.read_bytes()
 
             if mime_type.startswith("image/"):
                 content.append(
                     {
                         "image": {
                             "format": mime_type.split("/")[1],
-                            "source": {"bytes": base64.b64decode(base64_file)},
+                            "source": {"bytes": file_bytes},
                         }
                     }
                 )
@@ -647,7 +646,7 @@ async def async_prepare_files_for_prompt(
                         "document": {
                             "format": "pdf",
                             "name": file_path.name,
-                            "source": {"bytes": base64.b64decode(base64_file)},
+                            "source": {"bytes": file_bytes},
                         }
                     }
                 )

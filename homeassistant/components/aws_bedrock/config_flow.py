@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import logging
 from typing import Any
 
 import boto3
@@ -49,11 +48,10 @@ from .const import (
     DOMAIN,
     FALLBACK_MODELS,
     LLM_API_WEB_SEARCH,
+    LOGGER,
     async_get_available_models,
     get_model_name,
 )
-
-_LOGGER = logging.getLogger(__name__)
 
 STEP_USER_DATA_SCHEMA = vol.Schema(
     {
@@ -133,13 +131,13 @@ class AWSBedrockConfigFlow(ConfigFlow, domain=DOMAIN):
                 ):
                     errors["base"] = "invalid_auth"
                 else:
-                    _LOGGER.exception("Unexpected AWS error")
+                    LOGGER.exception("Unexpected AWS error")
                     errors["base"] = "cannot_connect"
             except BotoCoreError:
-                _LOGGER.exception("Cannot connect to AWS Bedrock")
+                LOGGER.exception("Cannot connect to AWS Bedrock")
                 errors["base"] = "cannot_connect"
-            except Exception:
-                _LOGGER.exception("Unexpected exception")
+            except Exception:  # noqa: BLE001
+                LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:
                 return self.async_create_entry(
@@ -245,8 +243,8 @@ class ConversationSubentryFlowHandler(ConfigSubentryFlow):
             available_models = await async_get_available_models(
                 self.hass, access_key, secret_key, region
             )
-        except Exception:
-            _LOGGER.exception("Failed to fetch available models")
+        except Exception:  # noqa: BLE001
+            LOGGER.exception("Failed to fetch available models")
             # Use fallback models
             available_models = [
                 {
