@@ -82,7 +82,11 @@ class SonosAlarms(SonosHouseholdCoordinator):
             self.alarms.update(soco)
         except SoCoException as err:
             if "Alarm list UID" in str(err):
-                _LOGGER.warning("Alarm list mismatch for %s, ignoring: %s", soco.player_name, str(err))
+                _LOGGER.warning(
+                    "Alarm list mismatch for %s, ignoring: %s",
+                    soco.player_name,
+                    str(err),
+                )
                 return False
             raise
             
