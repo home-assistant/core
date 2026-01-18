@@ -47,6 +47,13 @@ SENSOR_TYPES: dict[str, dict[str, SensorSpecs]] = {
             0,
             SensorDeviceClass.TEMPERATURE,
         ),
+        "FlowTemperature": (
+            "Hc1FlowTemp",
+            UnitOfTemperature.CELSIUS,
+            None,
+            0,
+            SensorDeviceClass.TEMPERATURE,
+        ),
         "PumpStatus": ("Hc1PumpStatus", None, "mdi:toggle-switch", 2, None),
         "HCSummerTemperatureLimit": (
             "Hc1SummerTempLimit",
