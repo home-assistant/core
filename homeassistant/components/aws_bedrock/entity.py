@@ -301,6 +301,7 @@ class AWSBedrockBaseLLMEntity(Entity):
     """Base entity for AWS Bedrock LLM."""
 
     _attr_has_entity_name = True
+    _attr_name = None
     _attr_should_poll = False
 
     def __init__(self, entry: AWSBedrockConfigEntry, subentry: ConfigSubentry) -> None:
