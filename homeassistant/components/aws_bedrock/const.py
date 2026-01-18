@@ -39,12 +39,13 @@ DEFAULT = {
     CONF_ENABLE_WEB_SEARCH: False,
 }
 
-# Fallback models if API call fails - Nova models first
+# Fallback models if API call fails
+# Models that only support INFERENCE_PROFILE need the us./eu. prefix
 FALLBACK_MODELS = [
-    "amazon.nova-pro-v1:0",
-    "amazon.nova-lite-v1:0",
-    "amazon.nova-micro-v1:0",
-    "anthropic.claude-3-5-sonnet-20241022-v2:0",
+    "amazon.nova-pro-v1:0",  # Supports ON_DEMAND
+    "amazon.nova-lite-v1:0",  # Supports ON_DEMAND
+    "amazon.nova-micro-v1:0",  # Supports ON_DEMAND
+    "us.anthropic.claude-3-5-sonnet-20241022-v2:0",  # INFERENCE_PROFILE only
 ]
 
 
@@ -86,25 +87,40 @@ async def async_get_available_models(
             models = []
             seen_ids = set()
 
+            # Determine inference profile prefix based on region
+            if region.startswith("eu-"):
+                profile_prefix = "eu."
+            else:
+                profile_prefix = "us."
+
             for model in response.get("modelSummaries", []):
                 model_id = model.get("modelId")
                 if not model_id or model_id in seen_ids:
                     continue
 
-                # Only include models that support the Converse API
-                # Check if model supports CONVERSE inference type
+                # Include models that support either ON_DEMAND or INFERENCE_PROFILE
                 inference_types = model.get("inferenceTypesSupported", [])
-                if "ON_DEMAND" not in inference_types:
+                supports_on_demand = "ON_DEMAND" in inference_types
+                supports_inference_profile = "INFERENCE_PROFILE" in inference_types
+
+                if not supports_on_demand and not supports_inference_profile:
                     continue
 
                 seen_ids.add(model_id)
 
-                # Use the actual model ID from the API response
-                # Cross-region inference profiles (us.*, eu.*) are only available
-                # for specific models and should not be auto-generated
+                # Determine the correct model ID to use for the Converse API
+                # Models that ONLY support INFERENCE_PROFILE must use an inference
+                # profile ID (e.g., us.anthropic.claude-3-5-sonnet-20241022-v2:0)
+                if supports_on_demand:
+                    # Use the direct model ID for on-demand models
+                    use_model_id = model_id
+                else:
+                    # Use inference profile ID for models that only support profiles
+                    use_model_id = f"{profile_prefix}{model_id}"
+
                 models.append(
                     {
-                        "id": model_id,
+                        "id": use_model_id,
                         "name": get_model_name(model_id),
                         "provider": model.get("providerName", "Unknown"),
                     }
