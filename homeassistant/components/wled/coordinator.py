@@ -99,6 +99,9 @@ class WLEDDataUpdateCoordinator(DataUpdateCoordinator[WLEDDevice]):
                 return
 
             try:
+                # Stop polling as long as we have a websocket. WS will push
+                # updates to us
+                self.update_interval = None
                 await self.wled.listen(callback=self.async_set_updated_data)
             except WLEDConnectionClosedError as err:
                 self.last_update_success = False
@@ -107,6 +110,10 @@ class WLEDDataUpdateCoordinator(DataUpdateCoordinator[WLEDDevice]):
                 self.last_update_success = False
                 self.async_update_listeners()
                 self.logger.error(err)
+            finally:
+                # Pull data immediately and restart polling
+                self.update_interval = SCAN_INTERVAL
+                self.hass.async_create_task(self.async_request_refresh())
 
             # Ensure we are disconnected
             await self.wled.disconnect()

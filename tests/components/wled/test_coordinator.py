@@ -125,8 +125,10 @@ async def test_websocket(
     assert mock_bus.async_listen_once.return_value.call_count == 0
 
     # Send update from WebSocket
+    # Note we may still update() during websocket setup
+    # so update it too.
+    mock_wled.update.return_value.state.on = False
     updated_device = deepcopy(mock_wled.update.return_value)
-    updated_device.state.on = False
     callback(updated_device)
     await hass.async_block_till_done()
 
@@ -134,6 +136,14 @@ async def test_websocket(
     state = hass.states.get("light.wled_websocket")
     assert state
     assert state.state == STATE_OFF
+
+    # Listening for changes on websocket, polling is suspended
+    num_updates_before_websocket = mock_wled.update.call_count
+    for _scans in range(4):
+        freezer.tick(SCAN_INTERVAL)
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+    assert mock_wled.update.call_count == num_updates_before_websocket
 
     # Resolve Future with a connection losed.
     connection_finished.set_exception(WLEDConnectionClosedError)
@@ -173,14 +183,28 @@ async def test_websocket_error(
     async_fire_time_changed(hass)
     await connection_connected
 
-    # Resolve Future with an error.
+    # Resolve listen() with an error. This causes polling
+    # to take over so fail polling update() too
+    mock_wled.update.side_effect = WLEDError
+    mock_wled.listen.side_effect = WLEDError
     connection_finished.set_exception(WLEDError)
     await hass.async_block_till_done()
 
     # Light no longer available as an error occurred
+    # and polling couldn't take over.
     state = hass.states.get("light.wled_websocket")
     assert state
     assert state.state == STATE_UNAVAILABLE
+
+    # Light becomes available after polling takes over
+    mock_wled.update.side_effect = None
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("light.wled_websocket")
+    assert state
+    assert state.state == STATE_ON
 
 
 @pytest.mark.parametrize("device_fixture", ["rgb_websocket"])
