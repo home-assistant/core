@@ -20,7 +20,7 @@ if TYPE_CHECKING:
 class WebSearchTool(llm.Tool):
     """Tool for web search and URL fetching."""
 
-    name = "web_search"
+    name = "search"
     description = (
         "Search the web for current information or fetch content from specific URLs. "
         "Use this tool when you need: "
