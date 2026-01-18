@@ -32,7 +32,7 @@ CONF_GOOGLE_CSE_ID = "google_cse_id"
 LLM_API_WEB_SEARCH = "aws_bedrock_web_search"
 
 DEFAULT = {
-    CONF_CHAT_MODEL: "us.amazon.nova-pro-v1:0",
+    CONF_CHAT_MODEL: "amazon.nova-pro-v1:0",
     CONF_MAX_TOKENS: 3000,
     CONF_TEMPERATURE: 1.0,
     CONF_REGION: "us-east-1",
@@ -41,10 +41,10 @@ DEFAULT = {
 
 # Fallback models if API call fails - Nova models first
 FALLBACK_MODELS = [
-    "us.amazon.nova-pro-v1:0",
-    "us.amazon.nova-lite-v1:0",
-    "us.amazon.nova-premier-v1:0",
-    "us.meta.llama3-3-70b-instruct-v1:0",
+    "amazon.nova-pro-v1:0",
+    "amazon.nova-lite-v1:0",
+    "amazon.nova-micro-v1:0",
+    "anthropic.claude-3-5-sonnet-20241022-v2:0",
 ]
 
 
@@ -99,21 +99,13 @@ async def async_get_available_models(
 
                 seen_ids.add(model_id)
 
-                # Try to get cross-region inference profile ID if available
-                # Inference profiles are preferred for on-demand access
-                display_id = model_id
-                if model.get("modelArn"):
-                    # Check if this is available via inference profile
-                    provider_name = model.get("providerName", "").lower()
-                    if provider_name and not model_id.startswith(("us.", "eu.")):
-                        # Try inference profile format
-                        inference_id = f"us.{model_id}"
-                        display_id = inference_id
-
+                # Use the actual model ID from the API response
+                # Cross-region inference profiles (us.*, eu.*) are only available
+                # for specific models and should not be auto-generated
                 models.append(
                     {
-                        "id": display_id,
-                        "name": get_model_name(display_id),
+                        "id": model_id,
+                        "name": get_model_name(model_id),
                         "provider": model.get("providerName", "Unknown"),
                     }
                 )
