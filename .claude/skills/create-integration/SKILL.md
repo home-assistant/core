@@ -24,6 +24,36 @@ homeassistant/components/my_integration/
 └── quality_scale.yaml  # Quality scale rule status
 ```
 
+## Code Organization
+
+### Core Locations
+- Shared constants: `homeassistant/const.py` (use these instead of hardcoding)
+- Integration structure:
+  - `homeassistant/components/{domain}/const.py` - Constants
+  - `homeassistant/components/{domain}/models.py` - Data models
+  - `homeassistant/components/{domain}/coordinator.py` - Update coordinator
+  - `homeassistant/components/{domain}/config_flow.py` - Configuration flow
+  - `homeassistant/components/{domain}/{platform}.py` - Platform implementations
+
+### Common Modules
+- **coordinator.py**: Centralize data fetching logic
+  ```python
+  class MyCoordinator(DataUpdateCoordinator[MyData]):
+      def __init__(self, hass: HomeAssistant, client: MyClient, config_entry: ConfigEntry) -> None:
+          super().__init__(
+              hass,
+              logger=LOGGER,
+              name=DOMAIN,
+              update_interval=timedelta(minutes=1),
+              config_entry=config_entry,  # ✅ Pass config_entry - it's accepted and recommended
+          )
+  ```
+- **entity.py**: Base entity definitions to reduce duplication
+  ```python
+  class MyEntity(CoordinatorEntity[MyCoordinator]):
+      _attr_has_entity_name = True
+  ```
+
 ## Manifest Requirements
 
 - **Required Fields**: `domain`, `name`, `codeowners`, `integration_type`, `documentation`, `requirements`

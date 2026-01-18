@@ -31,12 +31,12 @@ This repository uses a skills-based approach for AI assistance. Skills are locat
 
 ## Code Review Guidelines
 
-**Do NOT comment on:**
-- Missing imports (static analysis catches these)
-- Code formatting (Ruff handles this)
+**When reviewing code, do NOT comment on:**
+- **Missing imports** - We use static analysis tooling to catch that
+- **Code formatting** - We have ruff as a formatting tool that will catch those if needed (unless specifically instructed otherwise in these instructions)
 
-**Git practices:**
-- Do NOT amend, squash, or rebase commits after review has started
+**Git commit practices during review:**
+- **Do NOT amend, squash, or rebase commits after review has started** - Reviewers need to see what changed since their last review
 
 ## File Locations
 

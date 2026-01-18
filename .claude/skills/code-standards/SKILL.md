@@ -18,6 +18,14 @@ This skill covers coding standards that apply to all Home Assistant integration 
   - Dataclasses
   - Walrus operator
 
+### Strict Typing (Platinum)
+- **Comprehensive Type Hints**: Add type hints to all functions, methods, and variables
+- **Custom Config Entry Types**: When using runtime_data:
+  ```python
+  type MyIntegrationConfigEntry = ConfigEntry[MyClient]
+  ```
+- **Library Requirements**: Include `py.typed` file for PEP-561 compliance
+
 ## Code Quality Standards
 
 - **Formatting**: Ruff
@@ -111,10 +119,106 @@ This skill covers coding standards that apply to all Home Assistant integration 
   ```
 
 ### Project Validation
-- **Run hassfest** (checks project structure and updates generated files): 
+- **Run hassfest** (checks project structure and updates generated files):
   ```bash
   python -m script.hassfest
   ```
+
+## Common Anti-Patterns & Best Practices
+
+### ❌ **Avoid These Patterns**
+```python
+# Blocking operations in event loop
+data = requests.get(url)  # ❌ Blocks event loop
+time.sleep(5)  # ❌ Blocks event loop
+
+# Reusing BleakClient instances
+self.client = BleakClient(address)
+await self.client.connect()
+# Later...
+await self.client.connect()  # ❌ Don't reuse
+
+# Hardcoded strings in code
+self._attr_name = "Temperature Sensor"  # ❌ Not translatable
+
+# Missing error handling
+data = await self.api.get_data()  # ❌ No exception handling
+
+# Storing sensitive data in diagnostics
+return {"api_key": entry.data[CONF_API_KEY]}  # ❌ Exposes secrets
+
+# Accessing hass.data directly in tests
+coordinator = hass.data[DOMAIN][entry.entry_id]  # ❌ Don't access hass.data
+
+# User-configurable polling intervals
+# In config flow
+vol.Optional("scan_interval", default=60): cv.positive_int  # ❌ Not allowed
+# In coordinator
+update_interval = timedelta(minutes=entry.data.get("scan_interval", 1))  # ❌ Not allowed
+
+# User-configurable config entry names (non-helper integrations)
+vol.Optional("name", default="My Device"): cv.string  # ❌ Not allowed in regular integrations
+
+# Too much code in try block
+try:
+    response = await client.get_data()  # Can throw
+    # ❌ Data processing should be outside try block
+    temperature = response["temperature"] / 10
+    humidity = response["humidity"]
+    self._attr_native_value = temperature
+except ClientError:
+    _LOGGER.error("Failed to fetch data")
+
+# Bare exceptions in regular code
+try:
+    value = await sensor.read_value()
+except Exception:  # ❌ Too broad - catch specific exceptions
+    _LOGGER.error("Failed to read sensor")
+```
+
+### ✅ **Use These Patterns Instead**
+```python
+# Async operations with executor
+data = await hass.async_add_executor_job(requests.get, url)
+await asyncio.sleep(5)  # ✅ Non-blocking
+
+# Fresh BleakClient instances
+client = BleakClient(address)  # ✅ New instance each time
+await client.connect()
+
+# Translatable entity names
+_attr_translation_key = "temperature_sensor"  # ✅ Translatable
+
+# Proper error handling
+try:
+    data = await self.api.get_data()
+except ApiException as err:
+    raise UpdateFailed(f"API error: {err}") from err
+
+# Redacted diagnostics data
+return async_redact_data(data, {"api_key", "password"})  # ✅ Safe
+
+# Test through proper integration setup and fixtures
+@pytest.fixture
+async def init_integration(hass, mock_config_entry, mock_api):
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)  # ✅ Proper setup
+
+# Integration-determined polling intervals (not user-configurable)
+SCAN_INTERVAL = timedelta(minutes=5)  # ✅ Common pattern: constant in const.py
+
+class MyCoordinator(DataUpdateCoordinator[MyData]):
+    def __init__(self, hass: HomeAssistant, client: MyClient, config_entry: ConfigEntry) -> None:
+        # ✅ Integration determines interval based on device capabilities, connection type, etc.
+        interval = timedelta(minutes=1) if client.is_local else SCAN_INTERVAL
+        super().__init__(
+            hass,
+            logger=LOGGER,
+            name=DOMAIN,
+            update_interval=interval,
+            config_entry=config_entry,  # ✅ Pass config_entry - it's accepted and recommended
+        )
+```
 
 ## File Locations
 
