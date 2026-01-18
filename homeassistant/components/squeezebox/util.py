@@ -3,11 +3,14 @@
 from __future__ import annotations
 
 from collections.abc import Awaitable, Callable
+import logging
 from typing import Any
 
 from homeassistant.exceptions import HomeAssistantError
 
 from .const import DOMAIN
+
+_LOGGER = logging.getLogger(__name__)
 
 
 async def safe_library_call(
@@ -20,6 +23,7 @@ async def safe_library_call(
     """Call a player method safely and raise HomeAssistantError on failure."""
     try:
         result = await method(*args, **kwargs)
+
     except ValueError:
         result = None
 
