@@ -40,6 +40,11 @@ SELECTS: Final[tuple[JvcProjectorSelectDescription, ...]] = (
         entity_registry_enabled_default=False,
     ),
     JvcProjectorSelectDescription(
+        key="low_latency_mode",
+        command=cmd.LowLatencyMode,
+        entity_registry_enabled_default=False,
+    ),
+    JvcProjectorSelectDescription(
         key="clear_motion_drive",
         command=cmd.ClearMotionDrive,
         entity_registry_enabled_default=False,
@@ -47,6 +52,11 @@ SELECTS: Final[tuple[JvcProjectorSelectDescription, ...]] = (
     JvcProjectorSelectDescription(
         key="anamorphic",
         command=cmd.Anamorphic,
+        entity_registry_enabled_default=False,
+    ),
+    JvcProjectorSelectDescription(
+        key="eshift",
+        command=cmd.EShift,
         entity_registry_enabled_default=False,
     ),
 )

@@ -18,6 +18,9 @@
       "dynamic_control": {
         "default": "mdi:lightbulb-on-outline"
       },
+      "eshift": {
+        "default": "mdi:blur-linear"
+      },
       "input": {
         "default": "mdi:hdmi-port"
       },
@@ -26,6 +29,9 @@
       },
       "light_power": {
         "default": "mdi:lightbulb-on-outline"
+      },
+      "low_latency_mode": {
+        "default": "mdi:gamepad-round-outline"
       }
     },
     "sensor": {
