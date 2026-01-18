@@ -206,15 +206,6 @@ async def test_binary_sensor_device_class_unknown(
     assert "Unknown Hikvision sensor type 'Unknown Event'" in caplog.text
 
 
-@pytest.mark.parametrize(
-    "ignore_missing_translations",
-    [
-        [
-            "component.homeassistant.issues.deprecated_yaml.title",
-            "component.homeassistant.issues.deprecated_yaml.description",
-        ]
-    ],
-)
 async def test_yaml_import_creates_deprecation_issue(
     hass: HomeAssistant,
     mock_hikcamera: MagicMock,
@@ -245,15 +236,6 @@ async def test_yaml_import_creates_deprecation_issue(
     assert issue.severity == ir.IssueSeverity.WARNING
 
 
-@pytest.mark.parametrize(
-    "ignore_missing_translations",
-    [
-        [
-            "component.homeassistant.issues.deprecated_yaml.title",
-            "component.homeassistant.issues.deprecated_yaml.description",
-        ]
-    ],
-)
 async def test_yaml_import_with_name(
     hass: HomeAssistant,
     mock_hikcamera: MagicMock,
