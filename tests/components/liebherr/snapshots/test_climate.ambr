@@ -1,0 +1,321 @@
+# serializer version: 1
+# name: test_default_min_max_temp[climate.test_device-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'hvac_modes': list([
+        <HVACMode.COOL: 'cool'>,
+      ]),
+      'max_temp': 15,
+      'min_temp': -30,
+      'target_temp_step': 1.0,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'climate',
+    'entity_category': None,
+    'entity_id': 'climate.test_device',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'liebherr',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': <ClimateEntityFeature: 1>,
+    'translation_key': None,
+    'unique_id': 'test_device_id-climate-0',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_default_min_max_temp[climate.test_device-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'current_temperature': 4,
+      'friendly_name': 'Test Device',
+      'hvac_modes': list([
+        <HVACMode.COOL: 'cool'>,
+      ]),
+      'max_temp': 15,
+      'min_temp': -30,
+      'supported_features': <ClimateEntityFeature: 1>,
+      'target_temp_step': 1.0,
+      'temperature': 5,
+    }),
+    'context': <ANY>,
+    'entity_id': 'climate.test_device',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'cool',
+  })
+# ---
+# name: test_fahrenheit_temperature_unit[climate.test_device-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'hvac_modes': list([
+        <HVACMode.COOL: 'cool'>,
+      ]),
+      'max_temp': 9,
+      'min_temp': -2,
+      'target_temp_step': 1.0,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'climate',
+    'entity_category': None,
+    'entity_id': 'climate.test_device',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'liebherr',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': <ClimateEntityFeature: 1>,
+    'translation_key': None,
+    'unique_id': 'test_device_id-climate-0',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_fahrenheit_temperature_unit[climate.test_device-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'current_temperature': 4,
+      'friendly_name': 'Test Device',
+      'hvac_modes': list([
+        <HVACMode.COOL: 'cool'>,
+      ]),
+      'max_temp': 9,
+      'min_temp': -2,
+      'supported_features': <ClimateEntityFeature: 1>,
+      'target_temp_step': 1.0,
+      'temperature': 5,
+    }),
+    'context': <ANY>,
+    'entity_id': 'climate.test_device',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'cool',
+  })
+# ---
+# name: test_multi_zone_climate_entities[climate.test_device_bottom_zone-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'hvac_modes': list([
+        <HVACMode.COOL: 'cool'>,
+      ]),
+      'max_temp': -10,
+      'min_temp': -18,
+      'target_temp_step': 1.0,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'climate',
+    'entity_category': None,
+    'entity_id': 'climate.test_device_bottom_zone',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Bottom zone',
+    'platform': 'liebherr',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': <ClimateEntityFeature: 1>,
+    'translation_key': 'bottom_zone',
+    'unique_id': 'test_device_id-climate-1',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_multi_zone_climate_entities[climate.test_device_bottom_zone-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'current_temperature': 2,
+      'friendly_name': 'Test Device Bottom zone',
+      'hvac_modes': list([
+        <HVACMode.COOL: 'cool'>,
+      ]),
+      'max_temp': -10,
+      'min_temp': -18,
+      'supported_features': <ClimateEntityFeature: 1>,
+      'target_temp_step': 1.0,
+      'temperature': 3,
+    }),
+    'context': <ANY>,
+    'entity_id': 'climate.test_device_bottom_zone',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'cool',
+  })
+# ---
+# name: test_multi_zone_climate_entities[climate.test_device_top_zone-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'hvac_modes': list([
+        <HVACMode.COOL: 'cool'>,
+      ]),
+      'max_temp': 9,
+      'min_temp': -2,
+      'target_temp_step': 1.0,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'climate',
+    'entity_category': None,
+    'entity_id': 'climate.test_device_top_zone',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Top zone',
+    'platform': 'liebherr',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': <ClimateEntityFeature: 1>,
+    'translation_key': 'top_zone',
+    'unique_id': 'test_device_id-climate-0',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_multi_zone_climate_entities[climate.test_device_top_zone-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'current_temperature': 4,
+      'friendly_name': 'Test Device Top zone',
+      'hvac_modes': list([
+        <HVACMode.COOL: 'cool'>,
+      ]),
+      'max_temp': 9,
+      'min_temp': -2,
+      'supported_features': <ClimateEntityFeature: 1>,
+      'target_temp_step': 1.0,
+      'temperature': 5,
+    }),
+    'context': <ANY>,
+    'entity_id': 'climate.test_device_top_zone',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'cool',
+  })
+# ---
+# name: test_single_zone_climate_entity[climate.test_device-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'hvac_modes': list([
+        <HVACMode.COOL: 'cool'>,
+      ]),
+      'max_temp': 9,
+      'min_temp': -2,
+      'target_temp_step': 1.0,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'climate',
+    'entity_category': None,
+    'entity_id': 'climate.test_device',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'liebherr',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': <ClimateEntityFeature: 1>,
+    'translation_key': None,
+    'unique_id': 'test_device_id-climate-0',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_single_zone_climate_entity[climate.test_device-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'current_temperature': 4,
+      'friendly_name': 'Test Device',
+      'hvac_modes': list([
+        <HVACMode.COOL: 'cool'>,
+      ]),
+      'max_temp': 9,
+      'min_temp': -2,
+      'supported_features': <ClimateEntityFeature: 1>,
+      'target_temp_step': 1.0,
+      'temperature': 5,
+    }),
+    'context': <ANY>,
+    'entity_id': 'climate.test_device',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'cool',
+  })
+# ---

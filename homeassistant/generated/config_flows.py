@@ -377,6 +377,7 @@ FLOWS = {
         "lg_thinq",
         "libre_hardware_monitor",
         "lidarr",
+        "liebherr",
         "lifx",
         "linkplay",
         "litejet",
