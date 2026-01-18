@@ -1,0 +1,409 @@
+# serializer version: 1
+# name: test_all_entities[binary_sensor.pve1_ct_backup-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.pve1_ct_backup',
+    'has_entity_name': False,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'pve1_ct-backup',
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.RUNNING: 'running'>,
+    'original_icon': '',
+    'original_name': 'pve1_ct-backup',
+    'platform': 'proxmoxve',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'proxmox_pve1_201_running',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[binary_sensor.pve1_ct_backup-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'running',
+      'friendly_name': 'pve1_ct-backup',
+      'icon': '',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.pve1_ct_backup',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_all_entities[binary_sensor.pve1_ct_nginx-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.pve1_ct_nginx',
+    'has_entity_name': False,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'pve1_ct-nginx',
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.RUNNING: 'running'>,
+    'original_icon': '',
+    'original_name': 'pve1_ct-nginx',
+    'platform': 'proxmoxve',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'proxmox_pve1_200_running',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[binary_sensor.pve1_ct_nginx-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'running',
+      'friendly_name': 'pve1_ct-nginx',
+      'icon': '',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.pve1_ct_nginx',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_all_entities[binary_sensor.pve1_vm_db-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.pve1_vm_db',
+    'has_entity_name': False,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'pve1_vm-db',
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.RUNNING: 'running'>,
+    'original_icon': '',
+    'original_name': 'pve1_vm-db',
+    'platform': 'proxmoxve',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'proxmox_pve1_101_running',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[binary_sensor.pve1_vm_db-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'running',
+      'friendly_name': 'pve1_vm-db',
+      'icon': '',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.pve1_vm_db',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_all_entities[binary_sensor.pve1_vm_web-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.pve1_vm_web',
+    'has_entity_name': False,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'pve1_vm-web',
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.RUNNING: 'running'>,
+    'original_icon': '',
+    'original_name': 'pve1_vm-web',
+    'platform': 'proxmoxve',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'proxmox_pve1_100_running',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[binary_sensor.pve1_vm_web-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'running',
+      'friendly_name': 'pve1_vm-web',
+      'icon': '',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.pve1_vm_web',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_all_entities[binary_sensor.pve2_ct_backup-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.pve2_ct_backup',
+    'has_entity_name': False,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'pve2_ct-backup',
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.RUNNING: 'running'>,
+    'original_icon': '',
+    'original_name': 'pve2_ct-backup',
+    'platform': 'proxmoxve',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'proxmox_pve2_201_running',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[binary_sensor.pve2_ct_backup-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'running',
+      'friendly_name': 'pve2_ct-backup',
+      'icon': '',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.pve2_ct_backup',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_all_entities[binary_sensor.pve2_ct_nginx-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.pve2_ct_nginx',
+    'has_entity_name': False,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'pve2_ct-nginx',
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.RUNNING: 'running'>,
+    'original_icon': '',
+    'original_name': 'pve2_ct-nginx',
+    'platform': 'proxmoxve',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'proxmox_pve2_200_running',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[binary_sensor.pve2_ct_nginx-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'running',
+      'friendly_name': 'pve2_ct-nginx',
+      'icon': '',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.pve2_ct_nginx',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_all_entities[binary_sensor.pve2_vm_db-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.pve2_vm_db',
+    'has_entity_name': False,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'pve2_vm-db',
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.RUNNING: 'running'>,
+    'original_icon': '',
+    'original_name': 'pve2_vm-db',
+    'platform': 'proxmoxve',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'proxmox_pve2_101_running',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[binary_sensor.pve2_vm_db-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'running',
+      'friendly_name': 'pve2_vm-db',
+      'icon': '',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.pve2_vm_db',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_all_entities[binary_sensor.pve2_vm_web-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.pve2_vm_web',
+    'has_entity_name': False,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'pve2_vm-web',
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.RUNNING: 'running'>,
+    'original_icon': '',
+    'original_name': 'pve2_vm-web',
+    'platform': 'proxmoxve',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'proxmox_pve2_100_running',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[binary_sensor.pve2_vm_web-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'running',
+      'friendly_name': 'pve2_vm-web',
+      'icon': '',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.pve2_vm_web',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
