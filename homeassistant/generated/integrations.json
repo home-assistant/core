@@ -642,6 +642,12 @@
       "config_flow": true,
       "iot_class": "local_polling"
     },
+    "aws_bedrock": {
+      "name": "AWS Bedrock",
+      "integration_type": "service",
+      "config_flow": true,
+      "iot_class": "cloud_polling"
+    },
     "axis": {
       "name": "Axis",
       "integration_type": "device",

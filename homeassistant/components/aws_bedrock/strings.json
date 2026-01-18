@@ -1,0 +1,101 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]",
+      "entry_not_loaded": "The entry must be loaded before you can configure it"
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "invalid_model": "Invalid model selection",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "step": {
+      "user": {
+        "data": {
+          "access_key_id": "AWS Access Key ID",
+          "region": "AWS Region",
+          "secret_access_key": "AWS Secret Access Key"
+        },
+        "description": "Set up AWS Bedrock to integrate with Home Assistant. You need AWS credentials with access to Bedrock."
+      }
+    }
+  },
+  "config_subentries": {
+    "ai_task_data": {
+      "abort": {
+        "entry_not_loaded": "Cannot add things while the configuration is disabled.",
+        "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
+      },
+      "entry_type": "AI task",
+      "initiate_flow": {
+        "reconfigure": "Reconfigure AI task",
+        "user": "Add AI task"
+      },
+      "step": {
+        "advanced": {
+          "data": {
+            "chat_model": "[%key:common::generic::model%]",
+            "max_tokens": "Maximum tokens to return in response",
+            "temperature": "Temperature"
+          },
+          "data_description": {
+            "chat_model": "Select from available AWS Bedrock foundation models (includes Anthropic, Amazon, Meta, and other providers)"
+          },
+          "title": "Advanced options"
+        },
+        "init": {
+          "data": {
+            "enable_web_search": "Enable web search",
+            "google_api_key": "Google API Key (optional)",
+            "google_cse_id": "Google Custom Search Engine ID (optional)",
+            "name": "[%key:common::config_flow::data::name%]",
+            "recommended": "Use recommended settings"
+          },
+          "data_description": {
+            "enable_web_search": "Allow the AI to search websites and fetch web content to provide current information. When enabled, you must configure the conversation agent to use the 'AWS Bedrock Web Search' API in your assistant settings under 'Control Home Assistant'.",
+            "google_api_key": "Google API key for Custom Search API (get from Google Cloud Console at console.cloud.google.com). If not provided, web search will only fetch specific URLs.",
+            "google_cse_id": "Custom Search Engine ID from programmablesearchengine.google.com (e.g., 017576662512468239146:omuauf_lfve). Required for Google Search functionality. Create a new search engine and copy the 'Search engine ID' from the Overview page."
+          },
+          "title": "Configure AI task"
+        }
+      }
+    },
+    "conversation": {
+      "abort": {
+        "entry_not_loaded": "[%key:component::aws_bedrock::config::abort::entry_not_loaded%]",
+        "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
+      },
+      "entry_type": "Conversation agent",
+      "initiate_flow": {
+        "reconfigure": "Reconfigure conversation agent",
+        "user": "Add conversation agent"
+      },
+      "step": {
+        "advanced": {
+          "data": {
+            "chat_model": "[%key:common::generic::model%]",
+            "max_tokens": "[%key:component::aws_bedrock::config_subentries::ai_task_data::step::advanced::data::max_tokens%]",
+            "temperature": "[%key:component::aws_bedrock::config_subentries::ai_task_data::step::advanced::data::temperature%]"
+          },
+          "data_description": {
+            "chat_model": "[%key:component::aws_bedrock::config_subentries::ai_task_data::step::advanced::data_description::chat_model%]"
+          },
+          "title": "[%key:component::aws_bedrock::config_subentries::ai_task_data::step::advanced::title%]"
+        },
+        "init": {
+          "data": {
+            "enable_web_search": "[%key:component::aws_bedrock::config_subentries::ai_task_data::step::init::data::enable_web_search%]",
+            "google_api_key": "[%key:component::aws_bedrock::config_subentries::ai_task_data::step::init::data::google_api_key%]",
+            "google_cse_id": "[%key:component::aws_bedrock::config_subentries::ai_task_data::step::init::data::google_cse_id%]",
+            "llm_hass_api": "Control Home Assistant",
+            "name": "[%key:common::config_flow::data::name%]",
+            "prompt": "Prompt template",
+            "recommended": "[%key:component::aws_bedrock::config_subentries::ai_task_data::step::init::data::recommended%]"
+          },
+          "title": "Configure conversation agent"
+        }
+      }
+    }
+  }
+}
