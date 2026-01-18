@@ -897,9 +897,6 @@ energyid-webhooks==0.0.14
 # homeassistant.components.energyzero
 energyzero==4.0.1
 
-# homeassistant.components.enocean
-enocean4ha==0.71.0
-
 # homeassistant.components.entur_public_transport
 enturclient==0.2.4
 
@@ -1219,6 +1216,9 @@ home-assistant-frontend==20260107.2
 
 # homeassistant.components.conversation
 home-assistant-intents==2026.1.6
+
+# homeassistant.components.enocean
+homeassistant_enocean==0.0.8
 
 # homeassistant.components.gentex_homelink
 homelink-integration-api==0.0.1
