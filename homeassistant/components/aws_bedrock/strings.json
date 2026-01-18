@@ -17,6 +17,11 @@
           "region": "AWS Region",
           "secret_access_key": "AWS Secret Access Key"
         },
+        "data_description": {
+          "access_key_id": "Your AWS Access Key ID from the IAM console",
+          "region": "AWS Region where you want to use Bedrock",
+          "secret_access_key": "Your AWS Secret Access Key from the IAM console"
+        },
         "description": "Set up AWS Bedrock to integrate with Home Assistant. You need AWS credentials with access to Bedrock."
       }
     }
