@@ -40,7 +40,6 @@ from .const import (
     CONF_GOOGLE_CSE_ID,
     CONF_MAX_TOKENS,
     CONF_PROMPT,
-    CONF_RECOMMENDED,
     CONF_REGION,
     CONF_SECRET_ACCESS_KEY,
     CONF_TEMPERATURE,
@@ -49,6 +48,7 @@ from .const import (
     DEFAULT_CONVERSATION_NAME,
     DOMAIN,
     FALLBACK_MODELS,
+    LLM_API_WEB_SEARCH,
     async_get_available_models,
     get_model_name,
 )
@@ -66,13 +66,17 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
 )
 
 DEFAULT_CONVERSATION_OPTIONS = {
-    CONF_RECOMMENDED: True,
     CONF_LLM_HASS_API: [llm.LLM_API_ASSIST],
     CONF_PROMPT: llm.DEFAULT_INSTRUCTIONS_PROMPT,
+    CONF_CHAT_MODEL: DEFAULT[CONF_CHAT_MODEL],
+    CONF_MAX_TOKENS: DEFAULT[CONF_MAX_TOKENS],
+    CONF_TEMPERATURE: DEFAULT[CONF_TEMPERATURE],
 }
 
 DEFAULT_AI_TASK_OPTIONS = {
-    CONF_RECOMMENDED: True,
+    CONF_CHAT_MODEL: DEFAULT[CONF_CHAT_MODEL],
+    CONF_MAX_TOKENS: DEFAULT[CONF_MAX_TOKENS],
+    CONF_TEMPERATURE: DEFAULT[CONF_TEMPERATURE],
 }
 
 
@@ -208,13 +212,6 @@ class ConversationSubentryFlowHandler(ConfigSubentryFlow):
         if self._get_entry().state != ConfigEntryState.LOADED:
             return self.async_abort(reason="entry_not_loaded")
 
-        hass_apis: list[SelectOptionDict] = [
-            SelectOptionDict(
-                label=api.name,
-                value=api.id,
-            )
-            for api in llm.async_get_apis(self.hass)
-        ]
         if (suggested_llm_apis := self.options.get(CONF_LLM_HASS_API)) and isinstance(
             suggested_llm_apis, str
         ):
@@ -234,80 +231,8 @@ class ConversationSubentryFlowHandler(ConfigSubentryFlow):
             step_schema.update(
                 {
                     vol.Optional(CONF_PROMPT): TemplateSelector(),
-                    vol.Optional(
-                        CONF_LLM_HASS_API,
-                    ): SelectSelector(
-                        SelectSelectorConfig(options=hass_apis, multiple=True)
-                    ),
                 }
             )
-
-        step_schema[
-            vol.Required(
-                CONF_RECOMMENDED, default=self.options.get(CONF_RECOMMENDED, False)
-            )
-        ] = bool
-        # Web search configuration
-        step_schema[
-            vol.Optional(
-                CONF_ENABLE_WEB_SEARCH,
-                default=self.options.get(CONF_ENABLE_WEB_SEARCH, False),
-            )
-        ] = bool
-
-        # Google Search API configuration (optional, only shown if web search is enabled)
-        step_schema[
-            vol.Optional(
-                CONF_GOOGLE_API_KEY,
-                default=self.options.get(CONF_GOOGLE_API_KEY, ""),
-            )
-        ] = str
-        step_schema[
-            vol.Optional(
-                CONF_GOOGLE_CSE_ID,
-                default=self.options.get(CONF_GOOGLE_CSE_ID, ""),
-            )
-        ] = str
-
-        if user_input is not None:
-            if not user_input.get(CONF_LLM_HASS_API):
-                user_input.pop(CONF_LLM_HASS_API, None)
-
-            if user_input[CONF_RECOMMENDED]:
-                if not errors:
-                    if self._is_new:
-                        return self.async_create_entry(
-                            title=user_input.pop(CONF_NAME),
-                            data=user_input,
-                        )
-                    return self.async_update_and_abort(
-                        self._get_entry(),
-                        self._get_reconfigure_subentry(),
-                        data=user_input,
-                    )
-            else:
-                self.options.update(user_input)
-                if (
-                    CONF_LLM_HASS_API in self.options
-                    and CONF_LLM_HASS_API not in user_input
-                ):
-                    self.options.pop(CONF_LLM_HASS_API)
-                if not errors:
-                    return await self.async_step_advanced()
-
-        return self.async_show_form(
-            step_id="init",
-            data_schema=self.add_suggested_values_to_schema(
-                vol.Schema(step_schema), self.options
-            ),
-            errors=errors or None,
-        )
-
-    async def async_step_advanced(
-        self, user_input: dict[str, Any] | None = None
-    ) -> SubentryFlowResult:
-        """Manage advanced options."""
-        errors: dict[str, str] = {}
 
         # Get AWS credentials from parent config entry
         parent_entry = self._get_entry()
@@ -354,52 +279,87 @@ class ConversationSubentryFlowHandler(ConfigSubentryFlow):
                 )
             )
 
-        step_schema: VolDictType = {
+        # Model configuration
+        step_schema[
             vol.Optional(
                 CONF_CHAT_MODEL,
                 default=self.options.get(CONF_CHAT_MODEL, DEFAULT[CONF_CHAT_MODEL]),
-            ): SelectSelector(
-                SelectSelectorConfig(
-                    options=model_options,
-                    mode=SelectSelectorMode.DROPDOWN,
-                )
-            ),
+            )
+        ] = SelectSelector(
+            SelectSelectorConfig(
+                options=model_options,
+                mode=SelectSelectorMode.DROPDOWN,
+            )
+        )
+        step_schema[
             vol.Optional(
                 CONF_MAX_TOKENS,
-                default=DEFAULT[CONF_MAX_TOKENS],
-            ): int,
+                default=self.options.get(CONF_MAX_TOKENS, DEFAULT[CONF_MAX_TOKENS]),
+            )
+        ] = int
+        step_schema[
             vol.Optional(
                 CONF_TEMPERATURE,
-                default=DEFAULT[CONF_TEMPERATURE],
-            ): NumberSelector(NumberSelectorConfig(min=0, max=1, step=0.05)),
-        }
+                default=self.options.get(CONF_TEMPERATURE, DEFAULT[CONF_TEMPERATURE]),
+            )
+        ] = NumberSelector(NumberSelectorConfig(min=0, max=1, step=0.05))
+
+        # Web search configuration
+        step_schema[
+            vol.Optional(
+                CONF_ENABLE_WEB_SEARCH,
+                default=self.options.get(CONF_ENABLE_WEB_SEARCH, False),
+            )
+        ] = bool
+
+        # Google Search API configuration (optional)
+        step_schema[
+            vol.Optional(
+                CONF_GOOGLE_API_KEY,
+                default=self.options.get(CONF_GOOGLE_API_KEY, ""),
+            )
+        ] = str
+        step_schema[
+            vol.Optional(
+                CONF_GOOGLE_CSE_ID,
+                default=self.options.get(CONF_GOOGLE_CSE_ID, ""),
+            )
+        ] = str
 
         if user_input is not None:
             # Validate model selection (reject separators)
             selected_model = user_input.get(CONF_CHAT_MODEL, "")
             if selected_model.startswith("separator_"):
                 errors[CONF_CHAT_MODEL] = "invalid_model"
-            else:
-                self.options.update(user_input)
+
+            # Auto-manage llm_hass_api for conversation agents based on enable_web_search
+            if self._subentry_type == "conversation":
+                # Start with Assist API (always included for conversation agents)
+                llm_apis = [llm.LLM_API_ASSIST]
+
+                # Add web search API if enabled
+                if user_input.get(CONF_ENABLE_WEB_SEARCH, False):
+                    llm_apis.append(LLM_API_WEB_SEARCH)
+
+                user_input[CONF_LLM_HASS_API] = llm_apis
 
             if not errors:
                 if self._is_new:
                     return self.async_create_entry(
-                        title=self.options.pop(CONF_NAME),
-                        data=self.options,
+                        title=user_input.pop(CONF_NAME),
+                        data=user_input,
                     )
-
                 return self.async_update_and_abort(
                     self._get_entry(),
                     self._get_reconfigure_subentry(),
-                    data=self.options,
+                    data=user_input,
                 )
 
         return self.async_show_form(
-            step_id="advanced",
+            step_id="init",
             data_schema=self.add_suggested_values_to_schema(
                 vol.Schema(step_schema), self.options
             ),
-            errors=errors,
+            errors=errors or None,
             last_step=True,
         )
