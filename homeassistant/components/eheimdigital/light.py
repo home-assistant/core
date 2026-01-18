@@ -4,7 +4,7 @@ from typing import Any
 
 from eheimdigital.classic_led_ctrl import EheimDigitalClassicLEDControl
 from eheimdigital.device import EheimDigitalDevice
-from eheimdigital.types import LightMode
+from eheimdigital.types import EheimDigitalDataMissingError, LightMode
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
@@ -37,22 +37,29 @@ async def async_setup_entry(
     coordinator = entry.runtime_data
 
     def async_setup_device_entities(
-        device_address: dict[str, EheimDigitalDevice],
-    ) -> None:
+        devices: dict[str, EheimDigitalDevice],
+    ) -> dict[str, bool]:
         """Set up the light entities for one or multiple devices."""
+        return_value: dict[str, bool] = {}
         entities: list[EheimDigitalClassicLEDControlLight] = []
-        for device in device_address.values():
-            if isinstance(device, EheimDigitalClassicLEDControl):
-                for channel in range(2):
-                    if len(device.tankconfig[channel]) > 0:
-                        entities.append(
-                            EheimDigitalClassicLEDControlLight(
-                                coordinator, device, channel
+        for device in devices.values():
+            try:
+                if isinstance(device, EheimDigitalClassicLEDControl):
+                    for channel in range(2):
+                        if len(device.tankconfig[channel]) > 0:
+                            entities.append(  # noqa: PERF401
+                                EheimDigitalClassicLEDControlLight(
+                                    coordinator, device, channel
+                                )
                             )
-                        )
-                        coordinator.known_devices.add(device.mac_address)
+            except EheimDigitalDataMissingError:
+                return_value[device.mac_address] = False
+            else:
+                if device.mac_address not in return_value:
+                    return_value[device.mac_address] = True
 
-        async_add_entities(entities)
+        async_add_entities(entities, update_before_add=True)
+        return return_value
 
     coordinator.add_platform_callback(async_setup_device_entities)
     async_setup_device_entities(coordinator.hub.devices)

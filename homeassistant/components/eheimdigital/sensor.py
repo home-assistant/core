@@ -7,7 +7,7 @@ from typing import Any, override
 from eheimdigital.classic_vario import EheimDigitalClassicVario
 from eheimdigital.device import EheimDigitalDevice
 from eheimdigital.filter import EheimDigitalFilter
-from eheimdigital.types import FilterErrorCode
+from eheimdigital.types import EheimDigitalDataMissingError, FilterErrorCode
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -93,27 +93,35 @@ async def async_setup_entry(
     coordinator = entry.runtime_data
 
     def async_setup_device_entities(
-        device_address: dict[str, EheimDigitalDevice],
-    ) -> None:
+        devices: dict[str, EheimDigitalDevice],
+    ) -> dict[str, bool]:
         """Set up the light entities for one or multiple devices."""
+        return_value: dict[str, bool] = {}
         entities: list[EheimDigitalSensor[Any]] = []
-        for device in device_address.values():
-            if isinstance(device, EheimDigitalFilter):
-                entities += [
-                    EheimDigitalSensor[EheimDigitalFilter](
-                        coordinator, device, description
-                    )
-                    for description in FILTER_DESCRIPTIONS
-                ]
-            if isinstance(device, EheimDigitalClassicVario):
-                entities += [
-                    EheimDigitalSensor[EheimDigitalClassicVario](
-                        coordinator, device, description
-                    )
-                    for description in CLASSICVARIO_DESCRIPTIONS
-                ]
+        for device in devices.values():
+            try:
+                if isinstance(device, EheimDigitalFilter):
+                    entities += [
+                        EheimDigitalSensor[EheimDigitalFilter](
+                            coordinator, device, description
+                        )
+                        for description in FILTER_DESCRIPTIONS
+                    ]
+                if isinstance(device, EheimDigitalClassicVario):
+                    entities += [
+                        EheimDigitalSensor[EheimDigitalClassicVario](
+                            coordinator, device, description
+                        )
+                        for description in CLASSICVARIO_DESCRIPTIONS
+                    ]
+            except EheimDigitalDataMissingError:
+                return_value[device.mac_address] = False
+            else:
+                if device.mac_address not in return_value:
+                    return_value[device.mac_address] = True
 
-        async_add_entities(entities)
+        async_add_entities(entities, update_before_add=True)
+        return return_value
 
     coordinator.add_platform_callback(async_setup_device_entities)
     async_setup_device_entities(coordinator.hub.devices)
