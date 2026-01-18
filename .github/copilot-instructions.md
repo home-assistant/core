@@ -10,6 +10,7 @@ This repository uses a skills-based approach for AI assistance. Skills are locat
 
 | Skill | Description |
 |-------|-------------|
+| `code-standards` | Python requirements, code style, logging, writing style |
 | `create-integration` | Create a new integration from scratch |
 | `write-tests` | Write and run tests for integrations |
 | `config-flow` | Implement configuration flows |

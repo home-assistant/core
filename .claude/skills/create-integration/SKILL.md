@@ -158,54 +158,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: MyConfigEntry) -> bool:
 - `ConfigEntryAuthFailed`: Authentication issues - triggers reauth flow
 - `ConfigEntryError`: Permanent issues - won't retry
 
-## Python Requirements
-
-- **Compatibility**: Python 3.13+
-- Use modern features: pattern matching, type hints, f-strings, dataclasses, walrus operator
-
-## Code Style
-
-- **Formatting**: Ruff
-- **Linting**: PyLint and Ruff
-- **Type Checking**: MyPy
-- **Docstrings**: Required for all functions/methods
-- **File headers**: Short and concise
-  ```python
-  """Integration for My Device."""
-  ```
-
-## Logging Guidelines
-
-```python
-import logging
-
-_LOGGER = logging.getLogger(__name__)
-
-# Use lazy logging (pass arguments, not formatted strings)
-_LOGGER.debug("Fetching data from %s", host)
-
-# No periods at end of messages
-_LOGGER.info("Device connected successfully")  # Good
-_LOGGER.info("Device connected successfully.")  # Bad
-
-# No integration names (added automatically)
-_LOGGER.error("Connection failed")  # Good
-_LOGGER.error("my_integration: Connection failed")  # Bad
-
-# Never log sensitive data
-_LOGGER.debug("Authenticating user")  # Good
-_LOGGER.debug("Using API key: %s", api_key)  # Bad
-```
-
-## Writing Style
-
-- Friendly and informative tone
-- Use second-person ("you" and "your") for user-facing messages
-- Use backticks for: file paths, filenames, variable names
-- Use sentence case for titles and messages (capitalize only first word and proper nouns)
-- Avoid abbreviations
-- Write for non-native English speakers
-
 ## Next Steps
 
 After creating the basic structure:
@@ -217,6 +169,7 @@ After creating the basic structure:
 
 ## Related Skills
 
+- `code-standards` - Python requirements, code style, logging, writing style
 - `config-flow` - Implement configuration flows
 - `coordinator` - Data update coordinator patterns
 - `entity` - Entity development
