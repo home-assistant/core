@@ -364,10 +364,39 @@ class XboxTitleHistoryCoordinator(DataUpdateCoordinator[TitleHubResponse]):
             _LOGGER,
             config_entry=config_entry,
             name=f"{DOMAIN}_title_history",
-            update_interval=timedelta(minutes=5),
+            # Update every 30 minutes as fallback. Primary updates are triggered
+            # by game changes detected in real-time status (every 10 seconds).
+            update_interval=timedelta(minutes=30),
         )
         self.client = coordinator.client
         self.xuid = coordinator.client.xuid
+        self._status_coordinator = coordinator
+        self._last_title_id: str | None = None
+
+        # Listen to status coordinator updates to detect game changes
+        coordinator.async_add_listener(self._handle_status_update)
+
+    def _handle_status_update(self) -> None:
+        """Handle updates from status coordinator to detect game changes."""
+        # Check if user is playing a different game (title_info only contains games,
+        # not system apps like Home/Settings/Store - those are filtered by is_game)
+        current_title = self._status_coordinator.data.title_info.get(self.xuid)
+        current_title_id = current_title.title_id if current_title else None
+
+        # Only trigger update when actual game changes (including game -> no game transition)
+        if current_title_id != self._last_title_id:
+            # Skip update if both are None (no game playing before and after)
+            if current_title_id is None and self._last_title_id is None:
+                return
+
+            _LOGGER.debug(
+                "Game change detected: %s -> %s, triggering title history update",
+                self._last_title_id,
+                current_title_id,
+            )
+            self._last_title_id = current_title_id
+            # Schedule immediate refresh
+            self.hass.async_create_task(self.async_request_refresh())
 
     async def _async_update_data(self) -> TitleHubResponse:
         """Fetch title history with achievement data."""

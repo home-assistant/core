@@ -52,7 +52,21 @@ def _async_get_entry(hass: HomeAssistant, config_entry_id: str) -> XboxConfigEnt
 async def _async_get_recently_played_games(
     call: ServiceCall,
 ) -> ServiceResponse:
-    """Get recently played games from Xbox."""
+    """Get recently played games from Xbox.
+
+    Returns a dictionary containing:
+    - xuid: The Xbox User ID of the account
+    - account_name: The display name of the Xbox account
+    - games: List of recently played games with details
+
+    Example template sensor using this service data:
+
+    Create sensors that track your Xbox gaming activity using the service
+    response data. Each sensor can access account info (xuid, account_name)
+    and game details (title, last_played, achievements, gamerscore, images).
+    Configure template sensors with trigger-based updates to call the service
+    periodically and extract specific metrics from the returned game list.
+    """
     entry = _async_get_entry(call.hass, call.data[ATTR_CONFIG_ENTRY_ID])
     coordinator = entry.runtime_data.title_history
 
@@ -102,7 +116,11 @@ async def _async_get_recently_played_games(
 
             games_list.append(game_data)
 
-    return {"games": cast(list[JsonValueType], games_list)}
+    return {
+        "xuid": coordinator.xuid,
+        "account_name": entry.title,
+        "games": cast(list[JsonValueType], games_list),
+    }
 
 
 @callback

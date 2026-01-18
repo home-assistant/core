@@ -125,14 +125,19 @@
   },
   "services": {
     "get_recently_played_games": {
-      "description": "Get recently played games from Xbox.",
+      "description": "Get recently played games from Xbox. Returns account information and a list of up to 10 recently played games with details including title, last played timestamp, achievement progress, gamerscore, and image URLs. Use this data to create custom template sensors for tracking gaming activity.",
       "fields": {
         "config_entry_id": {
           "description": "The Xbox config entry to get recently played games for.",
           "name": "Config entry"
         }
       },
-      "name": "Get recently played games"
+      "name": "Get recently played games",
+      "response": {
+        "account_name": "The display name of the Xbox account",
+        "games": "List of recently played games. Each game includes: title (game name), title_id (unique game ID), last_played (ISO timestamp), achievements_earned, achievements_total, gamerscore_earned, gamerscore_total, achievement_progress (percentage), and image_url (poster or logo)",
+        "xuid": "The Xbox User ID of the account"
+      }
     }
   }
 }
