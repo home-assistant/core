@@ -90,7 +90,6 @@ class XboxTitleHistorySensorEntityDescription(SensorEntityDescription):
     """Xbox title history sensor description."""
 
     value_fn: Callable[[TitleHubResponse | None], StateType]
-    attributes_fn: Callable[[TitleHubResponse | None], dict[str, Any]] | None = None
 
 
 def now_playing_attributes(_: Person, title: Title | None) -> dict[str, Any]:
@@ -162,51 +161,6 @@ def title_logo(_: Person, title: Title | None) -> str | None:
         if title and title.images
         else None
     )
-
-
-def recently_played_games_attributes(
-    title_history: TitleHubResponse | None,
-) -> dict[str, Any]:
-    """Build attributes for recently played games."""
-    games_list = []
-    if title_history and title_history.titles:
-        for game in title_history.titles:
-            game_data: dict[str, Any] = {
-                "title": game.name or "Unknown",
-                "title_id": game.title_id or "",
-            }
-
-            if game.title_history:
-                game_data["last_played"] = (
-                    game.title_history.last_time_played.replace(tzinfo=UTC)
-                    if game.title_history.last_time_played
-                    else None
-                )
-
-            if game.achievement:
-                game_data.update(
-                    {
-                        "achievements_earned": game.achievement.current_achievements,
-                        "achievements_total": game.achievement.total_achievements,
-                        "gamerscore_earned": game.achievement.current_gamerscore,
-                        "gamerscore_total": game.achievement.total_gamerscore,
-                        "achievement_progress": int(
-                            game.achievement.progress_percentage
-                        ),
-                    }
-                )
-
-            # Add image URL if available
-            if game.images:
-                image_url = next(
-                    (i.url for i in game.images if i.type == "Poster"), None
-                ) or next((i.url for i in game.images if i.type == "Logo"), None)
-                if image_url:
-                    game_data["image_url"] = image_url
-
-            games_list.append(game_data)
-
-    return {"games": games_list}
 
 
 SENSOR_DESCRIPTIONS: tuple[XboxSensorEntityDescription, ...] = (
@@ -313,7 +267,6 @@ TITLE_HISTORY_SENSOR_DESCRIPTIONS: tuple[
         translation_key=XboxSensor.RECENTLY_PLAYED_GAMES,
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda x: len(x.titles) if x and x.titles else 0,
-        attributes_fn=recently_played_games_attributes,
     ),
 )
 
@@ -451,7 +404,6 @@ class XboxTitleHistorySensorEntity(
     _attr_has_entity_name = True
     entity_description: XboxTitleHistorySensorEntityDescription
     _restored_state: StateType = None
-    _restored_attributes: dict[str, Any] | None = None
 
     def __init__(
         self,
@@ -476,7 +428,6 @@ class XboxTitleHistorySensorEntity(
                 self._restored_state = int(last_state.state)
             except (ValueError, TypeError):
                 self._restored_state = None
-            self._restored_attributes = dict(last_state.attributes)
 
     @property
     def native_value(self) -> StateType:
@@ -485,14 +436,3 @@ class XboxTitleHistorySensorEntity(
             return self.entity_description.value_fn(self.coordinator.data)
         # Use restored state if coordinator hasn't updated yet
         return self._restored_state
-
-    @property
-    def extra_state_attributes(self) -> dict[str, Any] | None:
-        """Return additional attributes."""
-        if self.entity_description.attributes_fn:
-            # Prefer live coordinator data
-            if self.coordinator.data is not None:
-                return self.entity_description.attributes_fn(self.coordinator.data)
-            # Fall back to restored attributes until first update
-            return self._restored_attributes
-        return None

@@ -36,12 +36,8 @@
   },
   "entity": {
     "binary_sensor": {
-      "has_game_pass": {
-        "name": "Subscribed to Xbox Game Pass"
-      },
-      "in_game": {
-        "name": "In game"
-      },
+      "has_game_pass": { "name": "Subscribed to Xbox Game Pass" },
+      "in_game": { "name": "In game" },
       "online": {
         "state_attributes": {
           "bio": { "name": "Bio" },
@@ -52,12 +48,8 @@
       }
     },
     "image": {
-      "avatar": {
-        "name": "Avatar"
-      },
-      "gamerpic": {
-        "name": "Gamerpic"
-      },
+      "avatar": { "name": "Avatar" },
+      "gamerpic": { "name": "Gamerpic" },
       "now_playing": {
         "name": "[%key:component::xbox::entity::sensor::now_playing::name%]"
       }
@@ -67,35 +59,22 @@
         "name": "Follower",
         "unit_of_measurement": "[%key:component::xbox::entity::sensor::following::unit_of_measurement%]"
       },
-      "following": {
-        "name": "Following",
-        "unit_of_measurement": "people"
-      },
-      "free_storage": {
-        "name": "Free space - {name}"
-      },
+      "following": { "name": "Following", "unit_of_measurement": "people" },
+      "free_storage": { "name": "Free space - {name}" },
       "friends": {
         "name": "Friends",
         "unit_of_measurement": "[%key:component::xbox::entity::sensor::following::unit_of_measurement%]"
       },
-      "gamer_score": {
-        "name": "Gamerscore",
-        "unit_of_measurement": "points"
-      },
+      "gamer_score": { "name": "Gamerscore", "unit_of_measurement": "points" },
       "in_party": {
         "name": "In party",
         "unit_of_measurement": "[%key:component::xbox::entity::sensor::following::unit_of_measurement%]"
       },
       "join_restrictions": {
         "name": "Party join restrictions",
-        "state": {
-          "invite_only": "Invite-only",
-          "joinable": "Joinable"
-        }
+        "state": { "invite_only": "Invite-only", "joinable": "Joinable" }
       },
-      "last_online": {
-        "name": "Last online"
-      },
+      "last_online": { "name": "Last online" },
       "now_playing": {
         "name": "Now playing",
         "state_attributes": {
@@ -114,17 +93,10 @@
       },
       "recently_played_games": {
         "name": "Recently played games",
-        "state_attributes": {
-          "games": { "name": "Games" }
-        },
         "unit_of_measurement": "games"
       },
-      "status": {
-        "name": "Status"
-      },
-      "total_storage": {
-        "name": "Total space - {name}"
-      }
+      "status": { "name": "Status" },
+      "total_storage": { "name": "Total space - {name}" }
     }
   },
   "exceptions": {
@@ -134,20 +106,33 @@
     "auth_exception": {
       "message": "Xbox Network authentication failed, re-authentication required"
     },
-    "media_not_found": {
-      "message": "The requested media could not be found."
+    "integration_not_found": {
+      "message": "The {target} integration is not found."
     },
+    "media_not_found": { "message": "The requested media could not be found." },
+    "no_data_available": { "message": "No data available from Xbox Network." },
+    "not_loaded": { "message": "The {target} config entry is not loaded." },
     "oauth2_implementation_unavailable": {
       "message": "[%key:common::exceptions::oauth2_implementation_unavailable::message%]"
     },
-    "request_exception": {
-      "message": "Failed to connect to Xbox Network"
-    },
+    "request_exception": { "message": "Failed to connect to Xbox Network" },
     "timeout_exception": {
       "message": "Failed to connect to Xbox Network due to a connection timeout"
     },
     "xbox_not_configured": {
       "message": "The Xbox integration is not configured."
+    }
+  },
+  "services": {
+    "get_recently_played_games": {
+      "description": "Get recently played games from Xbox.",
+      "fields": {
+        "config_entry_id": {
+          "description": "The Xbox config entry to get recently played games for.",
+          "name": "Config entry"
+        }
+      },
+      "name": "Get recently played games"
     }
   }
 }

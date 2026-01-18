@@ -1,0 +1,7 @@
+get_recently_played_games:
+  fields:
+    config_entry_id:
+      required: true
+      selector:
+        config_entry:
+          integration: xbox

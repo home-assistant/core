@@ -7,6 +7,7 @@ import logging
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.typing import ConfigType
 
 from .const import DOMAIN
 from .coordinator import (
@@ -16,6 +17,7 @@ from .coordinator import (
     XboxTitleHistoryCoordinator,
     XboxUpdateCoordinator,
 )
+from .services import async_setup_services
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -28,6 +30,12 @@ PLATFORMS = [
     Platform.REMOTE,
     Platform.SENSOR,
 ]
+
+
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Set up the Xbox component."""
+    async_setup_services(hass)
+    return True
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: XboxConfigEntry) -> bool:
