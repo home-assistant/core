@@ -11,21 +11,21 @@ This skill explains the Integration Quality Scale and requirements for each tier
 ## Quality Scale Levels
 
 - **Bronze**: Basic requirements (ALL Bronze rules are mandatory)
-- **Silver**: Enhanced functionality
+- **Silver**: Enhanced functionality 
 - **Gold**: Advanced features
 - **Platinum**: Highest quality standards
 
 ## How Rules Apply
 
-1. Check `manifest.json` for `"quality_scale"` key to determine integration level
-2. Bronze rules are always required for any integration with quality scale
-3. Higher tier rules only apply if integration targets that tier or higher
-4. Check `quality_scale.yaml` in integration folder for rule status:
+1. **Check `manifest.json`**: Look for `"quality_scale"` key to determine integration level
+2. **Bronze Rules**: Always required for any integration with quality scale
+3. **Higher Tier Rules**: Only apply if integration targets that tier or higher
+4. **Rule Status**: Check `quality_scale.yaml` in integration folder for:
    - `done`: Rule implemented
    - `exempt`: Rule doesn't apply (with reason in comment)
    - `todo`: Rule needs implementation
 
-## quality_scale.yaml Structure
+## Example `quality_scale.yaml` Structure
 
 ```yaml
 rules:
@@ -35,15 +35,15 @@ rules:
   action-setup:
     status: exempt
     comment: Integration does not register custom actions.
-
+  
   # Silver (if targeting Silver+)
   entity-unavailable: done
   parallel-updates: done
-
+  
   # Gold (if targeting Gold+)
   devices: done
   diagnostics: done
-
+  
   # Platinum (if targeting Platinum)
   strict-typing: done
 ```
@@ -53,7 +53,7 @@ rules:
 ## Quality Scale Progression
 
 - **Bronze → Silver**: Add entity unavailability, parallel updates, auth flows
-- **Silver → Gold**: Add device management, diagnostics, translations
+- **Silver → Gold**: Add device management, diagnostics, translations  
 - **Gold → Platinum**: Add strict typing, async dependencies, websession injection
 
 ## Related Skills

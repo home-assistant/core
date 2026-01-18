@@ -11,7 +11,12 @@ This skill covers coding standards that apply to all Home Assistant integration 
 ## Python Requirements
 
 - **Compatibility**: Python 3.13+
-- Use modern features: pattern matching, type hints, f-strings, dataclasses, walrus operator
+- **Language Features**: Use the newest features when possible:
+  - Pattern matching
+  - Type hints
+  - f-strings (preferred over `%` or `.format()`)
+  - Dataclasses
+  - Walrus operator
 
 ## Code Quality Standards
 
@@ -22,33 +27,7 @@ This skill covers coding standards that apply to all Home Assistant integration 
 - **Testing**: pytest with plain functions and fixtures
 - **Language**: American English for all code, comments, and documentation (use sentence case, including titles)
 
-## Logging Guidelines
-
-```python
-import logging
-
-_LOGGER = logging.getLogger(__name__)
-
-# Use lazy logging (pass arguments, not formatted strings)
-_LOGGER.debug("Fetching data from %s", host)
-
-# No periods at end of messages
-_LOGGER.info("Device connected successfully")  # Good
-_LOGGER.info("Device connected successfully.")  # Bad
-
-# No integration names (added automatically)
-_LOGGER.error("Connection failed")  # Good
-_LOGGER.error("my_integration: Connection failed")  # Bad
-
-# Never log sensitive data
-_LOGGER.debug("Authenticating user")  # Good
-_LOGGER.debug("Using API key: %s", api_key)  # Bad
-
-# Use debug for non-user-facing messages
-_LOGGER.debug("Processing %d items", len(items))
-```
-
-## Writing Style
+## Writing Style Guidelines
 
 - **Tone**: Friendly and informative
 - **Perspective**: Use second-person ("you" and "your") for user-facing messages
@@ -56,43 +35,92 @@ _LOGGER.debug("Processing %d items", len(items))
 - **Clarity**: Write for non-native English speakers
 - **Formatting in Messages**:
   - Use backticks for: file paths, filenames, variable names, field entries
-  - Use sentence case for titles and messages (capitalize only first word and proper nouns)
+  - Use sentence case for titles and messages (capitalize only the first word and proper nouns)
   - Avoid abbreviations when possible
+
+## Logging
+
+- **Format Guidelines**:
+  - No periods at end of messages
+  - No integration names/domains (added automatically)
+  - No sensitive data (keys, tokens, passwords)
+- Use debug level for non-user-facing messages
+- **Use Lazy Logging**:
+  ```python
+  _LOGGER.debug("This is a log message with %s", variable)
+  ```
+
+## Documentation Standards
+
+- **File Headers**: Short and concise
+  ```python
+  """Integration for Peblar EV chargers."""
+  ```
+- **Method/Function Docstrings**: Required for all
+  ```python
+  async def async_setup_entry(hass: HomeAssistant, entry: PeblarConfigEntry) -> bool:
+      """Set up Peblar from a config entry."""
+  ```
+- **Comment Style**:
+  - Use clear, descriptive comments
+  - Explain the "why" not just the "what"
+  - Keep code block lines under 80 characters when possible
+  - Use progressive disclosure (simple explanation first, complex details later)
 
 ## Development Commands
 
-```bash
-# Run all linters
-prek run --all-files
+### Code Quality & Linting
+- **Run all linters on all files**: `prek run --all-files`
+- **Run linters on staged files only**: `prek run`
+- **PyLint on everything** (slow): `pylint homeassistant`
+- **PyLint on specific folder**: `pylint homeassistant/components/my_integration`
+- **MyPy type checking (whole project)**: `mypy homeassistant/`
+- **MyPy on specific integration**: `mypy homeassistant/components/my_integration`
 
-# Run linters on staged files only
-prek run
+### Testing
+- **Integration-specific tests** (recommended):
+  ```bash
+  pytest ./tests/components/<integration_domain> \
+    --cov=homeassistant.components.<integration_domain> \
+    --cov-report term-missing \
+    --durations-min=1 \
+    --durations=0 \
+    --numprocesses=auto
+  ```
+- **Quick test of changed files**: `pytest --timeout=10 --picked`
+- **Update test snapshots**: Add `--snapshot-update` to pytest command
+  - ⚠️ Omit test results after using `--snapshot-update`
+  - Always run tests again without the flag to verify snapshots
+- **Full test suite** (AVOID - very slow): `pytest ./tests`
 
-# Run integration tests (recommended)
-pytest ./tests/components/<integration_domain> \
-  --cov=homeassistant.components.<integration_domain> \
-  --cov-report term-missing \
-  --durations-min=1 \
-  --durations=0 \
-  --numprocesses=auto
+### Dependencies & Requirements
+- **Update generated files after dependency changes**: `python -m script.gen_requirements_all`
+- **Install all Python requirements**: 
+  ```bash
+  uv pip install -r requirements_all.txt -r requirements.txt -r requirements_test.txt
+  ```
+- **Install test requirements only**: 
+  ```bash
+  uv pip install -r requirements_test_all.txt -r requirements.txt
+  ```
 
-# Quick test of changed files
-pytest --timeout=10 --picked
+### Translations
+- **Update translations after strings.json changes**: 
+  ```bash
+  python -m script.translations develop --all
+  ```
 
-# Type checking
-mypy homeassistant/components/<integration_domain>
-
-# Update generated files
-python -m script.hassfest
-python -m script.gen_requirements_all
-python -m script.translations develop --all
-```
+### Project Validation
+- **Run hassfest** (checks project structure and updates generated files): 
+  ```bash
+  python -m script.hassfest
+  ```
 
 ## File Locations
 
-- Integration code: `homeassistant/components/<domain>/`
-- Integration tests: `tests/components/<domain>/`
-- Shared constants: `homeassistant/const.py`
+- **Integration code**: `./homeassistant/components/<integration_domain>/`
+- **Integration tests**: `./tests/components/<integration_domain>/`
+- Shared constants: `homeassistant/const.py` (use these instead of hardcoding)
 
 ## Related Skills
 

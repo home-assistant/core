@@ -1,40 +1,36 @@
-# Write Tests
+# Testing
 
-This skill covers testing patterns and requirements for Home Assistant integrations.
+This skill covers writing and running tests for Home Assistant integrations.
 
 ## When to Use
 
-- Writing tests for a new integration
-- Adding test coverage for existing code
-- Understanding testing patterns and fixtures
+- Writing tests for a new or existing integration
+- Running tests during development
+- Debugging test failures
 
-## Core Requirements
+## Testing Requirements
 
 - **Location**: `tests/components/{domain}/`
 - **Coverage Requirement**: Above 95% test coverage for all modules
-- **Config flow coverage**: 100% required for all config flow paths
+- **Best Practices**:
+  - Use pytest fixtures from `tests.common`
+  - Mock all external dependencies
+  - Use snapshots for complex data structures
+  - Follow existing test patterns
 
-## Running Tests
+## Config Flow Testing
 
-```bash
-# Integration-specific tests (recommended)
-pytest ./tests/components/<integration_domain> \
-  --cov=homeassistant.components.<integration_domain> \
-  --cov-report term-missing \
-  --durations-min=1 \
-  --durations=0 \
-  --numprocesses=auto
+- **100% Coverage Required**: All config flow paths must be tested
+- **Test Scenarios**:
+  - All flow initiation methods (user, discovery, import)
+  - Successful configuration paths
+  - Error recovery scenarios
+  - Prevention of duplicate entries
+  - Flow completion after errors
 
-# Quick test of changed files
-pytest --timeout=10 --picked
+## Testing Patterns
 
-# Update test snapshots
-pytest ./tests/components/<integration_domain> --snapshot-update
-# ⚠️ Omit test results after using --snapshot-update
-# Always run tests again without the flag to verify snapshots
-```
-
-## Testing Best Practices
+### Testing Best Practices
 
 - **Never access `hass.data` directly** - Use fixtures and proper integration setup instead
 - **Use snapshot testing** - For verifying entity states and attributes
@@ -42,7 +38,7 @@ pytest ./tests/components/<integration_domain> --snapshot-update
 - **Mock external APIs** - Use fixtures with realistic JSON data
 - **Verify registries** - Ensure entities are properly registered with devices
 
-## Config Flow Testing Template
+### Config Flow Testing Template
 
 ```python
 async def test_user_flow_success(hass, mock_api):
@@ -73,7 +69,7 @@ async def test_flow_connection_error(hass, mock_api_error):
     assert result["errors"] == {"base": "cannot_connect"}
 ```
 
-## Entity Testing Patterns
+### Entity Testing Patterns
 
 ```python
 @pytest.fixture
@@ -104,7 +100,7 @@ async def test_entities(
         assert entity_entry.device_id == device_entry.id
 ```
 
-## Mock Patterns
+### Mock Patterns
 
 ```python
 # Modern integration fixture setup
@@ -150,33 +146,44 @@ async def init_integration(
     return mock_config_entry
 ```
 
-## Debugging Tests
+## Debugging & Troubleshooting
 
-### Enable Debug Logging
+### Common Issues & Solutions
+
+- **Integration won't load**: Check `manifest.json` syntax and required fields
+- **Entities not appearing**: Verify `unique_id` and `has_entity_name` implementation
+- **Config flow errors**: Check `strings.json` entries and error handling
+- **Discovery not working**: Verify manifest discovery configuration and callbacks
+- **Tests failing**: Check mock setup and async context
+
+### Debug Logging Setup
 
 ```python
+# Enable debug logging in tests
 caplog.set_level(logging.DEBUG, logger="my_integration")
+
+# In integration code - use proper logging
+_LOGGER = logging.getLogger(__name__)
+_LOGGER.debug("Processing data: %s", data)  # Use lazy logging
 ```
-
-### Common Issues
-
-| Problem | Solution |
-|---------|----------|
-| Integration won't load | Check `manifest.json` syntax and required fields |
-| Entities not appearing | Verify `unique_id` and `has_entity_name` implementation |
-| Config flow errors | Check `strings.json` entries and error handling |
-| Discovery not working | Verify manifest discovery configuration and callbacks |
-| Tests failing | Check mock setup and async context |
 
 ### Validation Commands
 
 ```bash
 # Check specific integration
 python -m script.hassfest --integration-path homeassistant/components/my_integration
+
+# Validate quality scale
+# Check quality_scale.yaml against current rules
+
+# Run integration tests with coverage
+pytest ./tests/components/my_integration \
+  --cov=homeassistant.components.my_integration \
+  --cov-report term-missing
 ```
 
 ## Related Skills
 
-- `config-flow` - Config flow implementation (100% test coverage required)
-- `entity` - Entity testing patterns
-- `coordinator` - Testing coordinator behavior
+- `config-flow` - Config flow implementation to test
+- `entity` - Entity implementation to test
+- `code-standards` - Development commands
