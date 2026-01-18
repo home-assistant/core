@@ -253,10 +253,41 @@ async def test_entities(
 
 ## Debugging Tests
 
+### Enable Debug Logging
+
 ```python
-# Enable debug logging
-import logging
-caplog.set_level(logging.DEBUG, logger="homeassistant.components.my_integration")
+async def test_with_debug_logging(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test with debug logging enabled."""
+    import logging
+    caplog.set_level(logging.DEBUG, logger="homeassistant.components.my_integration")
+    # ... test code
+    assert "Expected message" in caplog.text
+```
+
+### Common Test Issues
+
+| Problem | Solution |
+|---------|----------|
+| Integration won't load | Check `manifest.json` syntax and required fields |
+| Entities not appearing | Verify `unique_id` and `has_entity_name` implementation |
+| Config flow errors | Check `strings.json` entries match error keys |
+| Mock not working | Verify patch location (where used, not defined) |
+| Async issues | Ensure `await hass.async_block_till_done()` after setup |
+
+### Validation Commands
+
+```bash
+# Check integration structure
+python -m script.hassfest --integration-path homeassistant/components/my_integration
+
+# Run with verbose output
+pytest ./tests/components/my_integration -v --tb=short
+
+# Run single test with debugging
+pytest ./tests/components/my_integration/test_sensor.py::test_sensor_state -v -s
 ```
 
 ## Related Skills

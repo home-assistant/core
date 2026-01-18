@@ -286,6 +286,97 @@ Range-based icons:
 }
 ```
 
+## Device Registry
+
+### Full DeviceInfo Example
+
+```python
+from homeassistant.helpers.device_registry import (
+    CONNECTION_NETWORK_MAC,
+    DeviceEntryType,
+    DeviceInfo,
+)
+
+_attr_device_info = DeviceInfo(
+    # At least one identifier required
+    identifiers={(DOMAIN, device.serial)},
+    # Optional: network connections for device matching
+    connections={(CONNECTION_NETWORK_MAC, device.mac)},
+    name=device.name,
+    manufacturer="My Company",
+    model="Model X",
+    model_id="MX-1000",
+    sw_version=device.firmware,
+    hw_version=device.hardware,
+    serial_number=device.serial,
+    configuration_url=f"http://{device.host}",
+    # For service integrations (not physical devices)
+    entry_type=DeviceEntryType.SERVICE,
+)
+```
+
+### Service vs Device
+
+```python
+# Physical device (default)
+DeviceInfo(identifiers={(DOMAIN, serial)}, ...)
+
+# Cloud service or API (not a physical device)
+DeviceInfo(
+    identifiers={(DOMAIN, account_id)},
+    entry_type=DeviceEntryType.SERVICE,
+    ...
+)
+```
+
+## Extra State Attributes
+
+```python
+@property
+def extra_state_attributes(self) -> dict[str, Any]:
+    """Return extra state attributes."""
+    return {
+        "last_updated": self.coordinator.data.timestamp,
+        "firmware_version": self.coordinator.data.firmware,
+    }
+```
+
+**Rules:**
+- All attribute keys must always be present
+- Use `None` for unknown values
+- Keep attributes minimal and useful
+
+## Dynamic Device Management
+
+### Adding New Devices
+
+```python
+def _check_devices() -> None:
+    """Check for new devices."""
+    current = set(coordinator.data.devices)
+    new_devices = current - known_devices
+    if new_devices:
+        known_devices.update(new_devices)
+        async_add_entities([
+            MySensor(coordinator, device_id)
+            for device_id in new_devices
+        ])
+
+entry.async_on_unload(coordinator.async_add_listener(_check_devices))
+```
+
+### Removing Stale Devices
+
+```python
+from homeassistant.helpers import device_registry as dr
+
+device_registry = dr.async_get(hass)
+device_registry.async_update_device(
+    device_id=device_entry.id,
+    remove_config_entry_id=entry.entry_id,
+)
+```
+
 ## Related Skills
 
 - `coordinator` - Data fetching for entities

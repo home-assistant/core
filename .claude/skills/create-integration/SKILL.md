@@ -124,6 +124,40 @@ See the `config-flow` skill for detailed guidance.
 }
 ```
 
+## Setup Validation
+
+Test connection and handle errors appropriately:
+
+```python
+from homeassistant.exceptions import (
+    ConfigEntryAuthFailed,
+    ConfigEntryError,
+    ConfigEntryNotReady,
+)
+
+async def async_setup_entry(hass: HomeAssistant, entry: MyConfigEntry) -> bool:
+    """Set up from a config entry."""
+    client = MyClient(entry.data[CONF_HOST])
+
+    try:
+        await client.async_connect()
+    except AuthenticationError as err:
+        raise ConfigEntryAuthFailed("Invalid credentials") from err
+    except ConnectionError as err:
+        raise ConfigEntryNotReady(f"Cannot connect: {err}") from err
+    except UnsupportedVersionError as err:
+        raise ConfigEntryError(f"Unsupported firmware: {err}") from err
+
+    entry.runtime_data = client
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+    return True
+```
+
+**Exception types:**
+- `ConfigEntryNotReady`: Temporary failure (device offline) - will retry
+- `ConfigEntryAuthFailed`: Authentication issues - triggers reauth flow
+- `ConfigEntryError`: Permanent issues - won't retry
+
 ## Python Requirements
 
 - **Compatibility**: Python 3.13+
@@ -132,19 +166,45 @@ See the `config-flow` skill for detailed guidance.
 ## Code Style
 
 - **Formatting**: Ruff
+- **Linting**: PyLint and Ruff
+- **Type Checking**: MyPy
 - **Docstrings**: Required for all functions/methods
 - **File headers**: Short and concise
   ```python
   """Integration for My Device."""
   ```
 
+## Logging Guidelines
+
+```python
+import logging
+
+_LOGGER = logging.getLogger(__name__)
+
+# Use lazy logging (pass arguments, not formatted strings)
+_LOGGER.debug("Fetching data from %s", host)
+
+# No periods at end of messages
+_LOGGER.info("Device connected successfully")  # Good
+_LOGGER.info("Device connected successfully.")  # Bad
+
+# No integration names (added automatically)
+_LOGGER.error("Connection failed")  # Good
+_LOGGER.error("my_integration: Connection failed")  # Bad
+
+# Never log sensitive data
+_LOGGER.debug("Authenticating user")  # Good
+_LOGGER.debug("Using API key: %s", api_key)  # Bad
+```
+
 ## Writing Style
 
 - Friendly and informative tone
 - Use second-person ("you" and "your") for user-facing messages
 - Use backticks for: file paths, filenames, variable names
-- Use sentence case for titles and messages
+- Use sentence case for titles and messages (capitalize only first word and proper nouns)
 - Avoid abbreviations
+- Write for non-native English speakers
 
 ## Next Steps
 

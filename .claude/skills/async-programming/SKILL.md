@@ -227,6 +227,89 @@ Use async instances:
 aiozc = await zeroconf.async_get_async_instance(hass)
 ```
 
+## Common Anti-Patterns
+
+### Don't Do This
+
+```python
+# Blocking HTTP calls
+data = requests.get(url)  # Blocks event loop
+
+# Blocking sleep
+time.sleep(5)  # Blocks event loop
+
+# Await in loop (inefficient)
+results = []
+for item in items:
+    result = await process(item)  # Sequential, slow
+    results.append(result)
+
+# Too much in try block
+try:
+    data = await client.get_data()
+    # Processing should be outside try
+    processed = data["value"] * 100
+    self._attr_native_value = processed
+except ClientError:
+    _LOGGER.error("Failed")
+
+# Bare exceptions (usually not allowed)
+try:
+    value = await sensor.read()
+except Exception:  # Too broad
+    pass
+```
+
+### Do This Instead
+
+```python
+# Use executor for blocking calls
+data = await hass.async_add_executor_job(requests.get, url)
+
+# Async sleep
+await asyncio.sleep(5)
+
+# Use gather for concurrent operations
+results = await asyncio.gather(
+    *(process(item) for item in items)
+)
+
+# Minimal try blocks
+try:
+    data = await client.get_data()
+except ClientError:
+    _LOGGER.error("Failed")
+    return
+
+# Process outside try block
+processed = data["value"] * 100
+self._attr_native_value = processed
+
+# Catch specific exceptions
+try:
+    value = await sensor.read()
+except (ConnectionError, TimeoutError) as err:
+    _LOGGER.warning("Read failed: %s", err)
+```
+
+### When Bare Exceptions Are Allowed
+
+```python
+# In config flows (for robustness)
+async def async_step_user(self, user_input=None):
+    try:
+        await self._test_connection(user_input)
+    except Exception:  # Allowed here
+        errors["base"] = "unknown"
+
+# In background tasks
+async def _background_refresh():
+    try:
+        await coordinator.async_refresh()
+    except Exception:  # Allowed in tasks
+        _LOGGER.exception("Unexpected error")
+```
+
 ## Related Skills
 
 - `coordinator` - Async data fetching patterns
