@@ -518,18 +518,6 @@ INTENSITY_SENSORS: tuple[GarminConnectSensorEntityDescription, ...] = (
         state_class=SensorStateClass.TOTAL,
         native_unit_of_measurement=UnitOfTime.MINUTES,
         icon="mdi:fire",
-        value_fn=lambda data: (
-            (data.get("moderateIntensityMinutes") or 0)
-            + ((data.get("vigorousIntensityMinutes") or 0) * 2)
-        )
-        if data.get("moderateIntensityMinutes") is not None
-        or data.get("vigorousIntensityMinutes") is not None
-        else None,
-        attributes_fn=lambda data: {
-            "moderate_minutes": data.get("moderateIntensityMinutes"),
-            "vigorous_minutes": data.get("vigorousIntensityMinutes"),
-            "goal": data.get("intensityMinutesGoal"),
-        },
     ),
 )
 
@@ -863,21 +851,6 @@ class GarminConnectSensor(CoordinatorEntity[CoreCoordinator], RestoreSensor):
             if self.entity_description.preserve_value:
                 return self._last_known_value
             return None
-
-        # Handle timestamp device class
-        if self.entity_description.device_class == SensorDeviceClass.TIMESTAMP:
-            if value:
-                try:
-                    # Parse ISO format timestamp and set to UTC (GMT)
-                    parsed = datetime.datetime.fromisoformat(value)
-                    # If naive, assume UTC since Garmin returns GMT timestamps
-                    if parsed.tzinfo is None:
-                        value = parsed.replace(tzinfo=datetime.UTC)
-                    else:
-                        value = parsed
-                except (ValueError, TypeError):
-                    _LOGGER.debug("Could not parse timestamp: %s", value)
-                    value = None
 
         # Preserve int types, only round floats
         if isinstance(value, int):
