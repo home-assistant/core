@@ -116,6 +116,7 @@ class ReolinkUpdateBaseEntity(
         self._cancel_progress: CALLBACK_TYPE | None = None
         self._installing: bool = False
         self._reolink_data = reolink_data
+        self._last_installed_version: str | None = None
 
     @property
     def installed_version(self) -> str | None:
@@ -245,10 +246,35 @@ class ReolinkUpdateBaseEntity(
         finally:
             self._cancel_update = None
 
+    def _handle_device_coordinator_update(self) -> None:
+        """Handle updated data from the device coordinator.
+
+        Detect when firmware version changes (e.g., after external update via Reolink app)
+        and trigger a firmware check to update the available update status.
+        """
+        current_version = self._host.api.camera_sw_version(self._channel)
+        if (
+            self._last_installed_version is not None
+            and current_version != self._last_installed_version
+        ):
+            # Firmware version changed, refresh firmware status
+            self.hass.async_create_task(
+                self._reolink_data.firmware_coordinator.async_request_refresh()
+            )
+        self._last_installed_version = current_version
+
     async def async_added_to_hass(self) -> None:
         """Entity created."""
         await super().async_added_to_hass()
         self._host.firmware_ch_list.append(self._channel)
+        # Track initial version
+        self._last_installed_version = self._host.api.camera_sw_version(self._channel)
+        # Listen to device coordinator to detect version changes from external updates
+        self.async_on_remove(
+            self._reolink_data.device_coordinator.async_add_listener(
+                self._handle_device_coordinator_update
+            )
+        )
 
     async def async_will_remove_from_hass(self) -> None:
         """Entity removed."""
