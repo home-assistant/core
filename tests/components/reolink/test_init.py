@@ -154,7 +154,7 @@ async def test_firmware_error_twice(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    entity_id = f"{Platform.UPDATE}.{TEST_NVR_NAME}_firmware"
+    entity_id = f"{Platform.UPDATE}.{TEST_NVR_NAME}"
     assert hass.states.get(entity_id).state == STATE_OFF
 
     freezer.tick(2 * FIRMWARE_UPDATE_INTERVAL)

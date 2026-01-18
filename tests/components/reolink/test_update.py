@@ -39,7 +39,7 @@ async def test_no_update(
     await hass.async_block_till_done()
     assert config_entry.state is ConfigEntryState.LOADED
 
-    entity_id = f"{Platform.UPDATE}.{entity_name}_firmware"
+    entity_id = f"{Platform.UPDATE}.{entity_name}"
     assert hass.states.get(entity_id).state == STATE_OFF
 
 
@@ -58,7 +58,7 @@ async def test_update_str(
     await hass.async_block_till_done()
     assert config_entry.state is ConfigEntryState.LOADED
 
-    entity_id = f"{Platform.UPDATE}.{entity_name}_firmware"
+    entity_id = f"{Platform.UPDATE}.{entity_name}"
     assert hass.states.get(entity_id).state == STATE_ON
 
 
@@ -86,7 +86,7 @@ async def test_update_firm(
     await hass.async_block_till_done()
     assert config_entry.state is ConfigEntryState.LOADED
 
-    entity_id = f"{Platform.UPDATE}.{entity_name}_firmware"
+    entity_id = f"{Platform.UPDATE}.{entity_name}"
     assert hass.states.get(entity_id).state == STATE_ON
     assert not hass.states.get(entity_id).attributes["in_progress"]
     assert hass.states.get(entity_id).attributes["update_percentage"] is None
@@ -183,7 +183,7 @@ async def test_update_firm_keeps_available(
     await hass.async_block_till_done()
     assert config_entry.state is ConfigEntryState.LOADED
 
-    entity_id = f"{Platform.UPDATE}.{entity_name}_firmware"
+    entity_id = f"{Platform.UPDATE}.{entity_name}"
     assert hass.states.get(entity_id).state == STATE_ON
 
     async def mock_update_firmware(*args, **kwargs) -> None:
@@ -229,7 +229,7 @@ async def test_external_firmware_update_detected(
     await hass.async_block_till_done()
     assert config_entry.state is ConfigEntryState.LOADED
 
-    entity_id = f"{Platform.UPDATE}.{entity_name}_firmware"
+    entity_id = f"{Platform.UPDATE}.{entity_name}"
     assert hass.states.get(entity_id).state == STATE_ON
 
     # Simulate external firmware update via Reolink app
