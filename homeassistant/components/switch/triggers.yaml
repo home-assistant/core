@@ -1,0 +1,18 @@
+.trigger_common: &trigger_common
+  target:
+    entity:
+      domain: switch
+  fields:
+    behavior:
+      required: true
+      default: any
+      selector:
+        select:
+          options:
+            - first
+            - last
+            - any
+          translation_key: trigger_behavior
+
+turned_off: *trigger_common
+turned_on: *trigger_common

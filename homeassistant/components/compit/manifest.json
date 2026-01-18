@@ -9,4 +9,5 @@
   "loggers": ["compit"],
   "quality_scale": "bronze",
   "requirements": ["compit-inext-api==0.4.1"]
+
 }
