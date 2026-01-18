@@ -268,15 +268,15 @@ class XboxUpdateCoordinator(DataUpdateCoordinator[XboxData]):
         # The Xbox API constantly fluctuates the "last seen" timestamp between two close values,
         # causing unnecessary updates. We only accept the most recent one as valild to prevent this.
         if not (prev_data := self.data.presence.get(person.xuid)):
-            return person.last_seen_date_time_utc
+            return person.last_seen_date_time_utc  # type: ignore[no-any-return]
 
         prev_dt = prev_data.last_seen_date_time_utc
         cur_dt = person.last_seen_date_time_utc
 
         if prev_dt and cur_dt:
-            return max(prev_dt, cur_dt)
+            return max(prev_dt, cur_dt)  # type: ignore[no-any-return]
 
-        return cur_dt
+        return cur_dt  # type: ignore[no-any-return]
 
     def remove_stale_devices(self, xuids: set[str]) -> None:
         """Remove stale devices from registry."""
@@ -347,7 +347,7 @@ class XboxConsolesCoordinator(DataUpdateCoordinator[SmartglassConsoleList]):
             ) from e
 
 
-class XboxTitleHistoryCoordinator(DataUpdateCoordinator[TitleHubResponse | None]):
+class XboxTitleHistoryCoordinator(DataUpdateCoordinator[TitleHubResponse]):
     """Update title history and achievement data."""
 
     config_entry: XboxConfigEntry
@@ -369,7 +369,7 @@ class XboxTitleHistoryCoordinator(DataUpdateCoordinator[TitleHubResponse | None]
         self.client = coordinator.client
         self.xuid = coordinator.client.xuid
 
-    async def _async_update_data(self) -> TitleHubResponse | None:
+    async def _async_update_data(self) -> TitleHubResponse:
         """Fetch title history with achievement data."""
         fields = [
             TitleFields.ACHIEVEMENT,

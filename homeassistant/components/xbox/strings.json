@@ -114,10 +114,10 @@
       },
       "recently_played_games": {
         "name": "Recently played games",
-        "unit_of_measurement": "games",
         "state_attributes": {
           "games": { "name": "Games" }
-        }
+        },
+        "unit_of_measurement": "games"
       },
       "status": {
         "name": "Status"

@@ -14,7 +14,7 @@ from homeassistant.util.dt import utc_from_timestamp
 from .const import DOMAIN
 
 
-class AsyncConfigEntryAuth(AuthenticationManager):
+class AsyncConfigEntryAuth(AuthenticationManager):  # type: ignore[misc]
     """Provide xbox authentication tied to an OAuth2 based config entry."""
 
     def __init__(self, session: AsyncClient, oauth_session: OAuth2Session) -> None:
