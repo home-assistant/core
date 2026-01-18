@@ -1,0 +1,50 @@
+rules:
+  # Bronze
+  action-setup:
+    status: exempt
+    comment: |
+      This integration does not provide additional actions.
+  appropriate-polling:
+    status: exempt
+    comment: |
+      This is a service integration that does not poll.
+  brands: done
+  common-modules: done
+  config-flow-test-coverage:
+    status: exempt
+    comment: |
+      Test coverage pending for development integration.
+  config-flow: done
+  dependency-transparency: done
+  docs-actions:
+    status: exempt
+    comment: |
+      This integration does not provide additional actions.
+  docs-high-level-description:
+    status: exempt
+    comment: |
+      Documentation pending for development integration.
+  docs-installation-instructions:
+    status: exempt
+    comment: |
+      Documentation pending for development integration.
+  docs-removal-instructions:
+    status: exempt
+    comment: |
+      Documentation pending for development integration.
+  entity-event-setup:
+    status: exempt
+    comment: |
+      Entities do not subscribe to events.
+  entity-unique-id: done
+  has-entity-name: done
+  runtime-data: done
+  test-before-configure:
+    status: exempt
+    comment: |
+      Test coverage pending for development integration.
+  test-before-setup:
+    status: exempt
+    comment: |
+      Test coverage pending for development integration.
+  unique-config-entry: done
