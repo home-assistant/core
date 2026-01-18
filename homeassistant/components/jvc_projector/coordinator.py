@@ -60,7 +60,6 @@ class JvcProjectorDataUpdateCoordinator(DataUpdateCoordinator[dict[str, str]]):
         self.unique_id = config_entry.unique_id
 
         self.capabilities = self.device.capabilities()
-        self.registered_commands: set[type[Command]] = set()
 
         self.state: dict[type[Command], str] = {
             cmd.ModelName: f"{self.device.model} ({self.device.spec})"
@@ -68,6 +67,9 @@ class JvcProjectorDataUpdateCoordinator(DataUpdateCoordinator[dict[str, str]]):
 
     async def _async_update_data(self) -> dict[str, Any]:
         """Update state with the current value of a command."""
+        commands: set[type[Command]] = set(self.async_contexts())
+        commands = commands.difference(CORE_COMMANDS)
+
         new_state: dict[type[Command], str] = {}
         deferred_commands: list[type[Command]] = []
 
@@ -80,7 +82,7 @@ class JvcProjectorDataUpdateCoordinator(DataUpdateCoordinator[dict[str, str]]):
                 await self._update(cmd.LightTime, new_state)
 
                 if signal == cmd.Signal.SIGNAL:
-                    for command in self.registered_commands:
+                    for command in commands:
                         if command.depends:
                             # Command has dependencies so defer until below
                             deferred_commands.append(command)
@@ -153,13 +155,3 @@ class JvcProjectorDataUpdateCoordinator(DataUpdateCoordinator[dict[str, str]]):
     def supports(self, command: type[Command]) -> bool:
         """Check if the device supports a command."""
         return self.device.supports(command)
-
-    def register(self, command: type[Command]) -> None:
-        """Register a command to get scheduled updates."""
-        if command not in CORE_COMMANDS:
-            self.registered_commands.add(command)
-
-    def unregister(self, command: type[Command]) -> None:
-        """Unregister a command from getting scheduled updates."""
-        if command in self.registered_commands:
-            self.registered_commands.remove(command)

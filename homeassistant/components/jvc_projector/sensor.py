@@ -112,11 +112,10 @@ class JvcProjectorSensorEntity(JvcProjectorEntity, SensorEntity):
         description: JvcProjectorSensorDescription,
     ) -> None:
         """Initialize the JVC Projector sensor."""
-        super().__init__(coordinator)
-
-        self.entity_description = description
+        super().__init__(coordinator, description.command)
         self.command: type[Command] = description.command
 
+        self.entity_description = description
         self._attr_translation_key = description.key
         self._attr_unique_id = f"{self._attr_unique_id}_{description.key}"
 
@@ -143,13 +142,3 @@ class JvcProjectorSensorEntity(JvcProjectorEntity, SensorEntity):
             return self._options_map.get(value)
 
         return value
-
-    async def async_added_to_hass(self) -> None:
-        """Register callbacks."""
-        await super().async_added_to_hass()
-        self.coordinator.register(self.command)
-
-    async def async_will_remove_from_hass(self) -> None:
-        """Unregister callbacks."""
-        self.coordinator.unregister(self.command)
-        await super().async_will_remove_from_hass()

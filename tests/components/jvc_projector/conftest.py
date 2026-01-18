@@ -18,6 +18,7 @@ from tests.common import MockConfigEntry
 FIXTURES: dict[str, dict[type[Command], str | type[Exception]]] = {
     "standby": {
         cmd.MacAddress: MOCK_MAC,
+        cmd.ModelName: MOCK_MODEL,
         cmd.Power: "standby",
         cmd.Input: "hdmi1",
         cmd.Signal: "none",
@@ -28,6 +29,7 @@ FIXTURES: dict[str, dict[type[Command], str | type[Exception]]] = {
     },
     "on": {
         cmd.MacAddress: MOCK_MAC,
+        cmd.ModelName: MOCK_MODEL,
         cmd.Power: "on",
         cmd.Input: "hdmi1",
         cmd.Signal: "signal",
