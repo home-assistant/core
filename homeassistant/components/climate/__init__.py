@@ -381,9 +381,6 @@ class ClimateEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         if ClimateEntityFeature.TARGET_HUMIDITY in supported_features:
             data[ATTR_HUMIDITY] = self.target_humidity
 
-            if self.target_humidity_step is not None:
-                data[ATTR_TARGET_HUMIDITY_STEP] = self.target_humidity_step
-
         if ClimateEntityFeature.FAN_MODE in supported_features:
             data[ATTR_FAN_MODE] = self.fan_mode
 
