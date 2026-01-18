@@ -11,13 +11,13 @@ def format_queue_item(item: Any, base_url: str | None = None) -> dict[str, Any]:
     remaining = 1 if item.size == 0 else item.sizeleft / item.size
     remaining_pct = 100 * (1 - remaining)
 
-    # Get movie title with fallback to download title
-    movie_title = getattr(item, "movie", {}).get("title", item.title)
+    # Note: item.movie is a dict in queue items, not an object
+    movie = item.movie
 
     result: dict[str, Any] = {
         "id": item.id,
         "movie_id": item.movieId,
-        "title": movie_title,
+        "title": movie["title"],
         "download_title": item.title,
         "progress": f"{remaining_pct:.2f}%",
         "size": item.size,
@@ -26,24 +26,26 @@ def format_queue_item(item: Any, base_url: str | None = None) -> dict[str, Any]:
         "tracked_download_status": getattr(item, "trackedDownloadStatus", None),
         "tracked_download_state": getattr(item, "trackedDownloadState", None),
         "download_client": getattr(item, "downloadClient", None),
+        "download_id": getattr(item, "downloadId", None),
         "indexer": getattr(item, "indexer", None),
         "protocol": str(getattr(item, "protocol", None)),
+        "estimated_completion_time": str(
+            getattr(item, "estimatedCompletionTime", None)
+        ),
+        "time_left": str(getattr(item, "timeleft", None)),
     }
 
-    # Add movie images if available
-    if movie := getattr(item, "movie", None):
-        if images := movie.get("images"):
-            result["images"] = {}
-            for image in images:
-                cover_type = image.get("coverType")
-                if not cover_type:
-                    continue
+    # Add quality information if available
+    if quality := getattr(item, "quality", None):
+        result["quality"] = quality.quality.name
 
-                # Prefer remoteUrl (public TMDB URL) over local path
-                if remote_url := image.get("remoteUrl"):
-                    result["images"][cover_type] = remote_url
-                elif base_url and (url := image.get("url")):
-                    result["images"][cover_type] = f"{base_url.rstrip('/')}{url}"
+    # Add language information if available
+    if languages := getattr(item, "languages", None):
+        result["languages"] = [lang.name for lang in languages]
+
+    # Add custom format score if available
+    if custom_format_score := getattr(item, "customFormatScore", None):
+        result["custom_format_score"] = custom_format_score
 
     return result
 
@@ -55,9 +57,7 @@ def format_queue(
     movies = {}
 
     for item in queue.records:
-        # Get movie title with fallback
-        movie_title = getattr(item, "movie", {}).get("title", item.title)
-        movies[movie_title] = format_queue_item(item, base_url)
+        movies[item.title] = format_queue_item(item, base_url)
 
     return movies
 
@@ -89,26 +89,15 @@ def format_movie_item(
 
     # Add movie images if available
     if images := getattr(movie, "images", None):
-        result["images"] = {}
+        images_dict: dict[str, str] = {}
         for image in images:
-            # Handle both dict and object types
-            if isinstance(image, dict):
-                cover_type = image.get("coverType")
-                remote_url = image.get("remoteUrl")
-                url = image.get("url")
-            else:
-                cover_type = getattr(image, "coverType", None)
-                remote_url = getattr(image, "remoteUrl", None)
-                url = getattr(image, "url", None)
-
-            if not cover_type:
-                continue
-
+            cover_type = image.coverType
             # Prefer remoteUrl (public TMDB URL) over local path
-            if remote_url:
-                result["images"][cover_type] = remote_url
-            elif base_url and url:
-                result["images"][cover_type] = f"{base_url.rstrip('/')}{url}"
+            if remote_url := getattr(image, "remoteUrl", None):
+                images_dict[cover_type] = remote_url
+            elif base_url and (url := getattr(image, "url", None)):
+                images_dict[cover_type] = f"{base_url.rstrip('/')}{url}"
+        result["images"] = images_dict
 
     return result
 
