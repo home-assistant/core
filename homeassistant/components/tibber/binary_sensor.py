@@ -14,6 +14,7 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -47,6 +48,12 @@ DATA_API_BINARY_SENSORS: tuple[TibberBinarySensorEntityDescription, ...] = (
         key="onOff",
         device_class=BinarySensorDeviceClass.POWER,
         is_on_fn={"on": True, "off": False}.get,
+    ),
+    TibberBinarySensorEntityDescription(
+        key="isOnline",
+        device_class=BinarySensorDeviceClass.CONNECTIVITY,
+        is_on_fn=lambda v: v.lower() == "true",
+        entity_category=EntityCategory.DIAGNOSTIC,
     ),
 )
 
