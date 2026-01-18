@@ -4,7 +4,7 @@ import asyncio
 from collections.abc import Callable
 from dataclasses import dataclass
 
-from roborock.data import RoborockDockDustCollectionModeCode
+from roborock.data import RoborockDockDustCollectionModeCode, WaterLevelMapping
 from roborock.devices.traits.v1 import PropertiesApi
 from roborock.devices.traits.v1.home import HomeTrait
 from roborock.devices.traits.v1.maps import MapsTrait
@@ -18,8 +18,12 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import DOMAIN, MAP_SLEEP
-from .coordinator import RoborockConfigEntry, RoborockDataUpdateCoordinator
-from .entity import RoborockCoordinatedEntityV1
+from .coordinator import (
+    RoborockB01Q7UpdateCoordinator,
+    RoborockConfigEntry,
+    RoborockDataUpdateCoordinator,
+)
+from .entity import RoborockCoordinatedEntityB01, RoborockCoordinatedEntityV1
 
 PARALLEL_UPDATES = 0
 
@@ -114,6 +118,45 @@ async def async_setup_entry(
         if (home_trait := coordinator.properties_api.home) is not None
         if (map_trait := coordinator.properties_api.maps) is not None
     )
+    async_add_entities(
+        RoborockB01SelectEntity(coordinator)
+        for coordinator in config_entry.runtime_data.b01
+        if isinstance(coordinator, RoborockB01Q7UpdateCoordinator)
+    )
+
+
+class RoborockB01SelectEntity(RoborockCoordinatedEntityB01, SelectEntity):
+    """Select entity for Roborock B01 devices."""
+
+    _attr_translation_key = "mop_intensity"
+    _attr_entity_category = EntityCategory.CONFIG
+    coordinator: RoborockB01Q7UpdateCoordinator
+
+    def __init__(self, coordinator: RoborockB01Q7UpdateCoordinator) -> None:
+        """Initialize the entity."""
+        super().__init__(f"water_level_{coordinator.duid_slug}", coordinator)
+        self._attr_options = [option.value for option in WaterLevelMapping]
+
+    async def async_select_option(self, option: str) -> None:
+        """Set the option."""
+        try:
+            await self.coordinator.api.set_water_level(WaterLevelMapping(option))
+        except RoborockException as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="command_failed",
+                translation_placeholders={
+                    "command": "set_water_level",
+                },
+            ) from err
+        await self.coordinator.async_refresh()
+
+    @property
+    def current_option(self) -> str | None:
+        """Return the current option."""
+        if self.coordinator.data.water is not None:
+            return self.coordinator.data.water.value
+        return None
 
 
 class RoborockSelectEntity(RoborockCoordinatedEntityV1, SelectEntity):

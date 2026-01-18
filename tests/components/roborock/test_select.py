@@ -5,7 +5,7 @@ from unittest.mock import AsyncMock, call
 
 import pytest
 from roborock import RoborockCommand
-from roborock.data.v1 import RoborockDockDustCollectionModeCode
+from roborock.data import RoborockDockDustCollectionModeCode, WaterLevelMapping
 from roborock.exceptions import RoborockException
 
 from homeassistant.components.roborock import DOMAIN
@@ -182,3 +182,54 @@ async def test_dust_collection_mode_none(
     select_entity = hass.states.get("select.roborock_s7_maxv_dock_empty_mode")
     assert select_entity
     assert select_entity.state == expected_state
+
+
+@pytest.fixture
+def q7_device(fake_devices: list[FakeDevice]) -> FakeDevice:
+    """Get the fake Q7 vacuum device."""
+    # The Q7 is the fourth device in the list (index 3) based on HOME_DATA
+    return fake_devices[3]
+
+
+async def test_update_success_q7_water_level(
+    hass: HomeAssistant,
+    setup_entry: MockConfigEntry,
+    q7_device: FakeDevice,
+) -> None:
+    """Test allowed changing values for Q7 water level select entity."""
+    entity_id = "select.roborock_q7_mop_intensity"
+    assert hass.states.get(entity_id) is not None
+
+    # Test setting value
+    await hass.services.async_call(
+        "select",
+        SERVICE_SELECT_OPTION,
+        service_data={"option": "high"},
+        blocking=True,
+        target={"entity_id": entity_id},
+    )
+
+    assert q7_device.b01_q7_properties
+    assert q7_device.b01_q7_properties.set_water_level.call_count == 1
+    q7_device.b01_q7_properties.set_water_level.assert_called_with(
+        WaterLevelMapping.HIGH
+    )
+
+
+async def test_update_failure_q7_water_level(
+    hass: HomeAssistant,
+    setup_entry: MockConfigEntry,
+    q7_device: FakeDevice,
+) -> None:
+    """Test failure when setting Q7 water level."""
+    assert q7_device.b01_q7_properties
+    q7_device.b01_q7_properties.set_water_level.side_effect = RoborockException
+
+    with pytest.raises(HomeAssistantError, match="Error while calling set_water_level"):
+        await hass.services.async_call(
+            "select",
+            SERVICE_SELECT_OPTION,
+            service_data={"option": "high"},
+            blocking=True,
+            target={"entity_id": "select.roborock_q7_mop_intensity"},
+        )
