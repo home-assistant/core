@@ -24,30 +24,17 @@ from homeassistant.const import CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE
 
 from . import MyIntegrationConfigEntry
 
-TO_REDACT = {
-    CONF_API_KEY,
-    CONF_LATITUDE,
-    CONF_LONGITUDE,
-    "password",
-    "token",
-    "access_token",
-    "refresh_token",
-}
+TO_REDACT = [CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE]
 
 
 async def async_get_config_entry_diagnostics(
     hass: HomeAssistant,
-    entry: MyIntegrationConfigEntry,
+    entry: MyConfigEntry,
 ) -> dict[str, Any]:
     """Return diagnostics for a config entry."""
-    coordinator = entry.runtime_data.coordinator
-
     return {
-        "entry_data": async_redact_data(dict(entry.data), TO_REDACT),
-        "entry_options": async_redact_data(dict(entry.options), TO_REDACT),
-        "coordinator_data": async_redact_data(
-            coordinator.data.to_dict(), TO_REDACT
-        ),
+        "entry_data": async_redact_data(entry.data, TO_REDACT),
+        "data": entry.runtime_data.data,
     }
 ```
 

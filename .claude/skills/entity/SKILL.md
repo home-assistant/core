@@ -108,7 +108,9 @@ class MyEntity(CoordinatorEntity[MyCoordinator]):
 
 ## Unique IDs
 
-**Every entity must have a unique ID.**
+- **Required**: Every entity must have a unique ID for registry tracking
+- Must be unique per platform (not per integration)
+- Don't include integration domain or platform in ID
 
 ### Acceptable Sources
 

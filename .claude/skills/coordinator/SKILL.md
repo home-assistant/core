@@ -48,7 +48,7 @@ class MyCoordinator(DataUpdateCoordinator[MyData]):
             logger=_LOGGER,
             name=DOMAIN,
             update_interval=timedelta(minutes=5),
-            config_entry=config_entry,
+            config_entry=config_entry,  # ✅ Pass config_entry - it's accepted and recommended
         )
         self.client = client
         self.device_id = config_entry.unique_id

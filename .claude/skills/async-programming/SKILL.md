@@ -292,22 +292,39 @@ except (ConnectionError, TimeoutError) as err:
     _LOGGER.warning("Read failed: %s", err)
 ```
 
-### When Bare Exceptions Are Allowed
+### Bare Exception Rules
 
 ```python
-# In config flows (for robustness)
+# ❌ Not allowed in regular code
+try:
+    data = await device.get_data()
+except Exception:  # Too broad
+    _LOGGER.error("Failed")
+
+# ✅ Allowed in config flow for robustness
 async def async_step_user(self, user_input=None):
     try:
         await self._test_connection(user_input)
     except Exception:  # Allowed here
         errors["base"] = "unknown"
 
-# In background tasks
+# ✅ Allowed in background tasks
 async def _background_refresh():
     try:
         await coordinator.async_refresh()
-    except Exception:  # Allowed in tasks
-        _LOGGER.exception("Unexpected error")
+    except Exception:  # Allowed in task
+        _LOGGER.exception("Unexpected error in background task")
+```
+
+### Setup Failure Patterns
+
+```python
+try:
+    await device.async_setup()
+except (asyncio.TimeoutError, TimeoutException) as ex:
+    raise ConfigEntryNotReady(f"Timeout connecting to {device.host}") from ex
+except AuthFailed as ex:
+    raise ConfigEntryAuthFailed(f"Credentials expired for {device.name}") from ex
 ```
 
 ## Related Skills

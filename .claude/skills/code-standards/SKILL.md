@@ -13,16 +13,14 @@ This skill covers coding standards that apply to all Home Assistant integration 
 - **Compatibility**: Python 3.13+
 - Use modern features: pattern matching, type hints, f-strings, dataclasses, walrus operator
 
-## Code Style
+## Code Quality Standards
 
 - **Formatting**: Ruff
 - **Linting**: PyLint and Ruff
 - **Type Checking**: MyPy
-- **Docstrings**: Required for all functions/methods
-- **File headers**: Short and concise
-  ```python
-  """Integration for My Device."""
-  ```
+- **Lint/Type/Format Fixes**: Always prefer addressing the underlying issue (e.g., import the typed source, update shared stubs, align with Ruff expectations, or correct formatting at the source) before disabling a rule, adding `# type: ignore`, or skipping a formatter. Treat suppressions and `noqa` comments as a last resort once no compliant fix exists
+- **Testing**: pytest with plain functions and fixtures
+- **Language**: American English for all code, comments, and documentation (use sentence case, including titles)
 
 ## Logging Guidelines
 
@@ -52,12 +50,14 @@ _LOGGER.debug("Processing %d items", len(items))
 
 ## Writing Style
 
-- Friendly and informative tone
-- Use second-person ("you" and "your") for user-facing messages
-- Use backticks for: file paths, filenames, variable names
-- Use sentence case for titles and messages (capitalize only first word and proper nouns)
-- Avoid abbreviations
-- Write for non-native English speakers
+- **Tone**: Friendly and informative
+- **Perspective**: Use second-person ("you" and "your") for user-facing messages
+- **Inclusivity**: Use objective, non-discriminatory language
+- **Clarity**: Write for non-native English speakers
+- **Formatting in Messages**:
+  - Use backticks for: file paths, filenames, variable names, field entries
+  - Use sentence case for titles and messages (capitalize only first word and proper nouns)
+  - Avoid abbreviations when possible
 
 ## Development Commands
 
