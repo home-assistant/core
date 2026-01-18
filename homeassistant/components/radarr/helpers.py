@@ -2,7 +2,7 @@
 
 from typing import Any
 
-from aiopyarr import RadarrQueue
+from aiopyarr import RadarrMovie, RadarrQueue
 
 
 def format_queue_item(item: Any, base_url: str | None = None) -> dict[str, Any]:
@@ -60,3 +60,66 @@ def format_queue(
         movies[movie_title] = format_queue_item(item, base_url)
 
     return movies
+
+
+def format_movie_item(
+    movie: RadarrMovie, base_url: str | None = None
+) -> dict[str, Any]:
+    """Format a single movie item."""
+    result: dict[str, Any] = {
+        "id": movie.id,
+        "title": movie.title,
+        "year": movie.year,
+        "tmdb_id": movie.tmdbId,
+        "imdb_id": getattr(movie, "imdbId", None),
+        "status": movie.status,
+        "monitored": movie.monitored,
+        "has_file": movie.hasFile,
+        "size_on_disk": getattr(movie, "sizeOnDisk", 0),
+    }
+
+    # Add path if available
+    if path := getattr(movie, "path", None):
+        result["path"] = path
+
+    # Add movie statistics if available
+    if statistics := getattr(movie, "statistics", None):
+        result["movie_file_count"] = getattr(statistics, "movieFileCount", 0)
+        result["size_on_disk"] = getattr(statistics, "sizeOnDisk", 0)
+
+    # Add movie images if available
+    if images := getattr(movie, "images", None):
+        result["images"] = {}
+        for image in images:
+            # Handle both dict and object types
+            if isinstance(image, dict):
+                cover_type = image.get("coverType")
+                remote_url = image.get("remoteUrl")
+                url = image.get("url")
+            else:
+                cover_type = getattr(image, "coverType", None)
+                remote_url = getattr(image, "remoteUrl", None)
+                url = getattr(image, "url", None)
+
+            if not cover_type:
+                continue
+
+            # Prefer remoteUrl (public TMDB URL) over local path
+            if remote_url:
+                result["images"][cover_type] = remote_url
+            elif base_url and url:
+                result["images"][cover_type] = f"{base_url.rstrip('/')}{url}"
+
+    return result
+
+
+def format_movies(
+    movies: list[RadarrMovie], base_url: str | None = None
+) -> dict[str, dict[str, Any]]:
+    """Format movies list for service response."""
+    formatted_movies = {}
+
+    for movie in movies:
+        formatted_movies[movie.title] = format_movie_item(movie, base_url)
+
+    return formatted_movies

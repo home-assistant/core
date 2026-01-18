@@ -20,6 +20,7 @@ HEALTH_ISSUES = (
 LOGGER = logging.getLogger(__package__)
 
 # Service names
+SERVICE_GET_MOVIES: Final = "get_movies"
 SERVICE_GET_QUEUE: Final = "get_queue"
 
 # Service attributes

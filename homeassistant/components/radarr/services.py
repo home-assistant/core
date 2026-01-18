@@ -10,9 +10,16 @@ from homeassistant.core import HomeAssistant, ServiceCall, SupportsResponse, cal
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import selector
 
-from .const import ATTR_MOVIES, CONF_ENTRY_ID, DOMAIN, SERVICE_GET_QUEUE
-from .coordinator import QueueDataUpdateCoordinator
-from .helpers import format_queue
+from .const import (
+    ATTR_MOVIES,
+    CONF_ENTRY_ID,
+    DEFAULT_MAX_RECORDS,
+    DOMAIN,
+    SERVICE_GET_MOVIES,
+    SERVICE_GET_QUEUE,
+)
+from .coordinator import RadarrConfigEntry
+from .helpers import format_movies, format_queue
 
 SERVICE_BASE_SCHEMA = vol.Schema(
     {
@@ -22,13 +29,12 @@ SERVICE_BASE_SCHEMA = vol.Schema(
     }
 )
 
+SERVICE_GET_MOVIES_SCHEMA = SERVICE_BASE_SCHEMA
 SERVICE_GET_QUEUE_SCHEMA = SERVICE_BASE_SCHEMA
 
 
-def _get_queue_coordinator_from_service_data(
-    call: ServiceCall,
-) -> QueueDataUpdateCoordinator:
-    """Return queue coordinator for entry id."""
+def _get_config_entry_from_service_data(call: ServiceCall) -> RadarrConfigEntry:
+    """Return config entry for entry id."""
     config_entry_id: str = call.data[CONF_ENTRY_ID]
     if not (entry := call.hass.config_entries.async_get_entry(config_entry_id)):
         raise ServiceValidationError(
@@ -42,21 +48,44 @@ def _get_queue_coordinator_from_service_data(
             translation_key="not_loaded",
             translation_placeholders={"target": entry.title},
         )
-    # Get the queue coordinator from runtime_data
-    return cast(QueueDataUpdateCoordinator, entry.runtime_data.queue)
+    return cast(RadarrConfigEntry, entry)
+
+
+async def _async_get_movies(service: ServiceCall) -> dict[str, Any]:
+    """Get all Radarr movies."""
+    entry = _get_config_entry_from_service_data(service)
+
+    # Get the API client from runtime_data
+    api_client = entry.runtime_data.status.api_client
+
+    # Fetch movies from the API
+    movies_list = await api_client.async_get_movies()
+
+    # Get base URL from config entry for image URLs
+    base_url = entry.data[CONF_URL]
+
+    # Format the data for return
+    movies = format_movies(cast(list, movies_list), base_url)
+
+    return {
+        ATTR_MOVIES: movies,
+    }
 
 
 async def _async_get_queue(service: ServiceCall) -> dict[str, Any]:
     """Get Radarr queue."""
-    config_entry_id: str = service.data[CONF_ENTRY_ID]
-    entry = service.hass.config_entries.async_get_entry(config_entry_id)
-    coordinator = _get_queue_coordinator_from_service_data(service)
+    entry = _get_config_entry_from_service_data(service)
 
-    # Get queue data from coordinator (already cached!)
-    queue = coordinator.data
+    # Get the API client from runtime_data
+    api_client = entry.runtime_data.status.api_client
 
-    # Get base URL from config entry for poster URLs
-    base_url = entry.data[CONF_URL] if entry else None
+    # Fetch queue data from the API
+    queue = await api_client.async_get_queue(
+        page_size=DEFAULT_MAX_RECORDS, include_movie=True
+    )
+
+    # Get base URL from config entry for image URLs
+    base_url = entry.data[CONF_URL]
 
     # Format the data for return
     movies = format_queue(queue, base_url)
@@ -69,6 +98,14 @@ async def _async_get_queue(service: ServiceCall) -> dict[str, Any]:
 @callback
 def async_setup_services(hass: HomeAssistant) -> None:
     """Register services for the Radarr integration."""
+
+    hass.services.async_register(
+        DOMAIN,
+        SERVICE_GET_MOVIES,
+        _async_get_movies,
+        schema=SERVICE_GET_MOVIES_SCHEMA,
+        supports_response=SupportsResponse.ONLY,
+    )
 
     hass.services.async_register(
         DOMAIN,
