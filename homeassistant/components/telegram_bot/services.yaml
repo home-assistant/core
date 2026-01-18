@@ -194,6 +194,15 @@ send_media_group:
           label_field: url
           description_field: caption
           fields:
+            media_type:
+              selector:
+                select:
+                  options:
+                    - "audio"
+                    - "document"
+                    - "photo"
+                    - "video"
+                  translation_key: "media_type"
             caption:
               label: Caption
               selector:

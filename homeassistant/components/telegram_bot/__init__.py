@@ -200,6 +200,14 @@ SERVICE_SCHEMA_SEND_MEDIA_GROUP = vol.Schema(
             [
                 vol.Schema(
                     {
+                        vol.Required(ATTR_MEDIA_TYPE): vol.In(
+                            (
+                                str(InputMediaType.AUDIO),
+                                str(InputMediaType.VIDEO),
+                                str(InputMediaType.DOCUMENT),
+                                str(InputMediaType.PHOTO),
+                            )
+                        ),
                         vol.Required(ATTR_URL): cv.string,
                         vol.Optional(ATTR_CAPTION): cv.string,
                         vol.Optional(ATTR_USERNAME): cv.string,
@@ -531,6 +539,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             SERVICE_SEND_MESSAGE,
             SERVICE_SEND_CHAT_ACTION,
             SERVICE_SEND_PHOTO,
+            SERVICE_SEND_MEDIA_GROUP,
             SERVICE_SEND_ANIMATION,
             SERVICE_SEND_VIDEO,
             SERVICE_SEND_VOICE,

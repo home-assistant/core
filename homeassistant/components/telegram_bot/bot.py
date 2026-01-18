@@ -73,6 +73,7 @@ from .const import (
     ATTR_KEYBOARD,
     ATTR_KEYBOARD_INLINE,
     ATTR_MEDIA,
+    ATTR_MEDIA_TYPE,
     ATTR_MESSAGE,
     ATTR_MESSAGE_TAG,
     ATTR_MESSAGE_THREAD_ID,
@@ -604,25 +605,54 @@ class TelegramNotificationService:
 
     async def send_media_group(
         self,
-        target: Any = None,
+        chat_id: Any = None,
         context: Context | None = None,
-        **kwargs: dict[str, Any],
+        **kwargs: Any,
     ) -> dict[int, int]:
         """Send a message to one or multiple pre-allowed chat IDs."""
+        chat_id = self.get_target_chat_ids(chat_id)[0]
         params = self._get_msg_kwargs(kwargs)
-        return await self._send_msgs(
-            self.bot.send_media_group,
-            "Error sending media group",
-            params[ATTR_MESSAGE_TAG],
-            target=target,
-            media=kwargs[ATTR_MEDIA],
-            disable_notification=params[ATTR_DISABLE_NOTIF],
-            protect_content=kwargs.get(ATTR_PROTECT_CONTENT, False),
-            message_thread_id=params[ATTR_MESSAGE_THREAD_ID],
+
+        media: list[
+            InputMediaAudio | InputMediaDocument | InputMediaPhoto | InputMediaVideo
+        ] = []
+        input_media: list[dict[str, Any]] = kwargs[ATTR_MEDIA]
+        for entry in input_media:
+            file_content = await load_data(
+                self.hass,
+                url=entry[ATTR_URL],
+                filepath=None,
+                username=entry.get(ATTR_USERNAME, ""),
+                password=entry.get(ATTR_PASSWORD, ""),
+                authentication=entry.get(ATTR_AUTHENTICATION),
+                verify_ssl=(
+                    get_default_context()
+                    if entry.get(ATTR_VERIFY_SSL, False)
+                    else get_default_no_verify_context()
+                ),
+            )
+            _LOGGER.debug("downloaded: %s", entry[ATTR_URL])
+
+            caption: str | None = entry.get(ATTR_CAPTION)
+            if entry[ATTR_MEDIA_TYPE] == InputMediaType.AUDIO:
+                media.append(InputMediaAudio(file_content, caption=caption))
+            elif entry[ATTR_MEDIA_TYPE] == InputMediaType.DOCUMENT:
+                media.append(InputMediaDocument(file_content, caption=caption))
+            elif entry[ATTR_MEDIA_TYPE] == InputMediaType.PHOTO:
+                media.append(InputMediaPhoto(file_content, caption=caption))
+            else:
+                media.append(InputMediaVideo(file_content, caption=caption))
+
+        response = await self.bot.send_media_group(
+            chat_id,
+            media,
+            params[ATTR_DISABLE_NOTIF],
+            kwargs.get(ATTR_PROTECT_CONTENT, False),
+            params[ATTR_MESSAGE_THREAD_ID],
             reply_to_message_id=params[ATTR_REPLY_TO_MSGID],
             parse_mode=params[ATTR_PARSER],
-            context=context,
         )
+        return {chat_id: response[-1].id}
 
     async def delete_message(
         self,
