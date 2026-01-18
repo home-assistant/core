@@ -22,8 +22,17 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import LeilSaunaConfigEntry
-from .const import DELAYED_REFRESH_SECONDS, DOMAIN
+from . import LeilSaunaConfigEntry, LeilSaunaCoordinator
+from .const import (
+    DEFAULT_PRESET_NAME_TYPE_1,
+    DEFAULT_PRESET_NAME_TYPE_2,
+    DEFAULT_PRESET_NAME_TYPE_3,
+    DELAYED_REFRESH_SECONDS,
+    DOMAIN,
+    OPT_PRESET_NAME_TYPE_1,
+    OPT_PRESET_NAME_TYPE_2,
+    OPT_PRESET_NAME_TYPE_3,
+)
 from .entity import LeilSaunaEntity
 
 PARALLEL_UPDATES = 1
@@ -52,9 +61,12 @@ class LeilSaunaClimate(LeilSaunaEntity, ClimateEntity):
     """Representation of a Saunum Leil Sauna climate entity."""
 
     _attr_name = None
+    _attr_translation_key = "saunum_climate"
     _attr_hvac_modes = [HVACMode.OFF, HVACMode.HEAT]
     _attr_supported_features = (
-        ClimateEntityFeature.TARGET_TEMPERATURE | ClimateEntityFeature.FAN_MODE
+        ClimateEntityFeature.TARGET_TEMPERATURE
+        | ClimateEntityFeature.FAN_MODE
+        | ClimateEntityFeature.PRESET_MODE
     )
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_precision = PRECISION_WHOLE
@@ -62,6 +74,38 @@ class LeilSaunaClimate(LeilSaunaEntity, ClimateEntity):
     _attr_min_temp = MIN_TEMPERATURE
     _attr_max_temp = MAX_TEMPERATURE
     _attr_fan_modes = [FAN_OFF, FAN_LOW, FAN_MEDIUM, FAN_HIGH]
+    _preset_name_map: dict[int, str]
+
+    def __init__(self, coordinator: LeilSaunaCoordinator) -> None:
+        """Initialize the climate entity."""
+        super().__init__(coordinator)
+        self._update_preset_names()
+
+    def _update_preset_names(self) -> None:
+        """Update preset names from config entry options."""
+        options = self.coordinator.config_entry.options
+        self._preset_name_map = {
+            0: options.get(OPT_PRESET_NAME_TYPE_1, DEFAULT_PRESET_NAME_TYPE_1),
+            1: options.get(OPT_PRESET_NAME_TYPE_2, DEFAULT_PRESET_NAME_TYPE_2),
+            2: options.get(OPT_PRESET_NAME_TYPE_3, DEFAULT_PRESET_NAME_TYPE_3),
+        }
+        self._attr_preset_modes = list(self._preset_name_map.values())
+
+    async def async_added_to_hass(self) -> None:
+        """Run when entity about to be added to hass."""
+        await super().async_added_to_hass()
+        self.async_on_remove(
+            self.coordinator.config_entry.add_update_listener(
+                self._async_update_listener
+            )
+        )
+
+    async def _async_update_listener(
+        self, hass: HomeAssistant, entry: LeilSaunaConfigEntry
+    ) -> None:
+        """Handle options update."""
+        self._update_preset_names()
+        self.async_write_ha_state()
 
     @property
     def current_temperature(self) -> float | None:
@@ -99,6 +143,14 @@ class LeilSaunaClimate(LeilSaunaEntity, ClimateEntity):
             if heater_elements_active and heater_elements_active > 0
             else HVACAction.IDLE
         )
+
+    @property
+    def preset_mode(self) -> str | None:
+        """Return the current preset mode."""
+        sauna_type = self.coordinator.data.sauna_type
+        if sauna_type is not None and sauna_type in self._preset_name_map:
+            return self._preset_name_map[sauna_type]
+        return self._preset_name_map[0]
 
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new HVAC mode."""
@@ -157,6 +209,32 @@ class LeilSaunaClimate(LeilSaunaEntity, ClimateEntity):
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="set_fan_mode_failed",
+            ) from err
+
+        await self.coordinator.async_request_refresh()
+
+    async def async_set_preset_mode(self, preset_mode: str) -> None:
+        """Set new preset mode (sauna type)."""
+        if self.coordinator.data.session_active:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="preset_session_active",
+            )
+
+        # Find the sauna type value from the preset name
+        sauna_type_value = 0  # Default to type 1
+        for type_value, type_name in self._preset_name_map.items():
+            if type_name == preset_mode:
+                sauna_type_value = type_value
+                break
+
+        try:
+            await self.coordinator.client.async_set_sauna_type(sauna_type_value)
+        except SaunumException as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="set_preset_failed",
+                translation_placeholders={"preset_mode": preset_mode},
             ) from err
 
         await self.coordinator.async_request_refresh()
