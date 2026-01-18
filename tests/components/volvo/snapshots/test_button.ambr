@@ -20,6 +20,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Flash',
     'options': dict({
     }),
     'original_device_class': None,
@@ -68,6 +69,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Honk',
     'options': dict({
     }),
     'original_device_class': None,
@@ -116,6 +118,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Honk & flash',
     'options': dict({
     }),
     'original_device_class': None,
@@ -164,6 +167,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Lock reduced guard',
     'options': dict({
     }),
     'original_device_class': None,
@@ -212,6 +216,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Start climatization',
     'options': dict({
     }),
     'original_device_class': None,
@@ -260,6 +265,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Stop climatization',
     'options': dict({
     }),
     'original_device_class': None,
@@ -308,6 +314,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Flash',
     'options': dict({
     }),
     'original_device_class': None,
@@ -356,6 +363,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Honk',
     'options': dict({
     }),
     'original_device_class': None,
@@ -404,6 +412,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Honk & flash',
     'options': dict({
     }),
     'original_device_class': None,
@@ -452,6 +461,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Lock reduced guard',
     'options': dict({
     }),
     'original_device_class': None,
@@ -500,6 +510,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Start climatization',
     'options': dict({
     }),
     'original_device_class': None,
@@ -548,6 +559,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Stop climatization',
     'options': dict({
     }),
     'original_device_class': None,
@@ -596,6 +608,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Flash',
     'options': dict({
     }),
     'original_device_class': None,
@@ -644,6 +657,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Honk',
     'options': dict({
     }),
     'original_device_class': None,
@@ -692,6 +706,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Honk & flash',
     'options': dict({
     }),
     'original_device_class': None,
@@ -740,6 +755,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Lock reduced guard',
     'options': dict({
     }),
     'original_device_class': None,
@@ -788,6 +804,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Start climatization',
     'options': dict({
     }),
     'original_device_class': None,
@@ -836,6 +853,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Stop climatization',
     'options': dict({
     }),
     'original_device_class': None,
@@ -884,6 +902,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Flash',
     'options': dict({
     }),
     'original_device_class': None,
@@ -932,6 +951,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Honk',
     'options': dict({
     }),
     'original_device_class': None,
@@ -980,6 +1000,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Honk & flash',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1028,6 +1049,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Lock reduced guard',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1076,6 +1098,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Start climatization',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1124,6 +1147,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Start engine',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1172,6 +1196,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Stop climatization',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1220,6 +1245,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Stop engine',
     'options': dict({
     }),
     'original_device_class': None,

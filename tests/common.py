@@ -697,6 +697,7 @@ class RegistryEntryWithDefaults(er.RegistryEntry):
         converter=attr.converters.default_if_none(factory=uuid_util.random_uuid_hex),  # type: ignore[misc]
     )
     has_entity_name: bool = attr.ib(default=False)
+    object_id_base: str | None = attr.ib(default=None)
     options: er.ReadOnlyEntityOptionsType = attr.ib(
         default=None, converter=er._protect_entity_options
     )
