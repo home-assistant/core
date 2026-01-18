@@ -1,0 +1,3 @@
+[submodule "homeassistant/components/elke27/vendor/elkm1"]
+	path = homeassistant/components/elke27/vendor/elkm1
+	url = https://github.com/mitchmitchell/elkm1.git
