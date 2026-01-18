@@ -411,14 +411,14 @@ async def async_wait_for_tag_scan(
 
     unsub = hass.bus.async_listen(EVENT_TAG_SCANNED, _async_handle_tag_scanned)
 
-    async def _wait_for_future() -> TagScannedEventData:
-        """Wrap the future in a coroutine for asyncio.shield."""
+    async def _wait_for_scan() -> TagScannedEventData:
+        """Wait for the tag scan future."""
         return await future
 
     try:
         if cancel_event is not None:
             cancel_task = hass.async_create_task(cancel_event.wait())
-            scan_task = hass.async_create_task(asyncio.shield(_wait_for_future()))
+            scan_task = hass.async_create_task(_wait_for_scan())
             done, pending = await asyncio.wait(
                 {cancel_task, scan_task},
                 return_when=asyncio.FIRST_COMPLETED,
@@ -429,7 +429,7 @@ async def async_wait_for_tag_scan(
                     await task
             if cancel_task in done:
                 return None
-            return future.result()
+            return scan_task.result()
         return await future
     finally:
         unsub()
