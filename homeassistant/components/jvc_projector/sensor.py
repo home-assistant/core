@@ -33,11 +33,6 @@ SENSORS: tuple[JvcProjectorSensorDescription, ...] = (
         device_class=SensorDeviceClass.ENUM,
     ),
     JvcProjectorSensorDescription(
-        key="model",
-        command=cmd.ModelName,
-        entity_category=EntityCategory.DIAGNOSTIC,
-    ),
-    JvcProjectorSensorDescription(
         key="source",
         command=cmd.Source,
         device_class=SensorDeviceClass.ENUM,

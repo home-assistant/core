@@ -41,9 +41,6 @@
       "hdr_processing": {
         "default": "mdi:image-filter-hdr-outline"
       },
-      "model": {
-        "default": "mdi:card-text-outline"
-      },
       "picture_mode": {
         "default": "mdi:movie-roll"
       },

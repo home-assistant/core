@@ -146,9 +146,6 @@
       "light_time": {
         "name": "Light Time"
       },
-      "model": {
-        "name": "Model"
-      },
       "picture_mode": {
         "name": "Picture Mode",
         "state": {
