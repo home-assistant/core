@@ -124,7 +124,7 @@ class VictronRemoteMonitoringDataUpdateCoordinator(
             self.mqtt_hub.attach(mqtt_client)
             await mqtt_client.connect()
             LOGGER.debug("MQTT client connected")
-        except Exception as ex:
+        except (TimeoutError, OSError, RuntimeError, VictronVRMError) as ex:
             self.mqtt_hub.detach()
             self.mqtt_client = None
             LOGGER.error("Failed to connect MQTT client: %s", ex)
@@ -138,7 +138,7 @@ class VictronRemoteMonitoringDataUpdateCoordinator(
         try:
             await self.mqtt_client.disconnect()
             LOGGER.debug("MQTT client disconnected")
-        except Exception as ex:
+        except (TimeoutError, OSError, RuntimeError, VictronVRMError) as ex:
             LOGGER.error("Failed to disconnect MQTT client: %s", ex)
             raise
         finally:

@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from victron_vrm.exceptions import VictronVRMError
+
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 
@@ -37,7 +39,7 @@ async def async_setup_entry(
 
     try:
         await coordinator.start_mqtt()
-    except Exception as ex:
+    except (TimeoutError, OSError, RuntimeError, VictronVRMError) as ex:
         LOGGER.error("Failed to start MQTT client: %s", ex)
         await async_unload_entry(hass, entry)
         raise

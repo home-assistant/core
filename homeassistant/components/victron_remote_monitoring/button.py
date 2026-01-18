@@ -58,7 +58,6 @@ class VRMMqttButton(VRMMqttBaseEntity, ButtonEntity):
     @callback
     def _on_update_task(self, value: Any) -> None:
         """Handle updates from the metric."""
-        return
 
     def press(self) -> None:
         """Press the button."""
