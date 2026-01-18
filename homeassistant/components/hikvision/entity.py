@@ -20,6 +20,7 @@ class HikvisionEntity(Entity):
         channel: int,
     ) -> None:
         """Initialize the entity."""
+        super().__init__()
         self._data: HikvisionData = entry.runtime_data
         self._camera = self._data.camera
         self._channel = channel
