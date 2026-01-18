@@ -28,18 +28,7 @@ This repository uses a skills-based approach for AI assistance. Skills are locat
 - **Writing tests**: Use `write-tests` for testing patterns and commands
 - **Improving quality**: Use `quality-scale` to understand requirements for each tier
 
-## Quick Reference
-
-### Code Quality Standards
-
-- **Python**: 3.13+
-- **Formatting**: Ruff
-- **Linting**: PyLint and Ruff
-- **Type Checking**: MyPy
-- **Testing**: pytest
-- **Language**: American English (sentence case)
-
-### Code Review Guidelines
+## Code Review Guidelines
 
 **Do NOT comment on:**
 - Missing imports (static analysis catches these)
@@ -48,28 +37,7 @@ This repository uses a skills-based approach for AI assistance. Skills are locat
 **Git practices:**
 - Do NOT amend, squash, or rebase commits after review has started
 
-### Development Commands
-
-```bash
-# Run linters
-prek run --all-files
-
-# Run integration tests
-pytest ./tests/components/<domain> \
-  --cov=homeassistant.components.<domain> \
-  --cov-report term-missing \
-  --numprocesses=auto
-
-# Type checking
-mypy homeassistant/components/<domain>
-
-# Update generated files
-python -m script.hassfest
-python -m script.gen_requirements_all
-python -m script.translations develop --all
-```
-
-### File Locations
+## File Locations
 
 - Integration code: `homeassistant/components/<domain>/`
 - Integration tests: `tests/components/<domain>/`
