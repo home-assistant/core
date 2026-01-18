@@ -25,7 +25,6 @@ INTERVAL_SLOW = timedelta(seconds=10)
 INTERVAL_FAST = timedelta(seconds=5)
 
 CORE_COMMANDS: tuple[type[Command], ...] = (
-    cmd.ModelName,
     cmd.Power,
     cmd.Signal,
     cmd.Input,
@@ -65,9 +64,7 @@ class JvcProjectorDataUpdateCoordinator(DataUpdateCoordinator[dict[str, str]]):
 
         self.capabilities = self.device.capabilities()
 
-        self.state: dict[type[Command], str] = {
-            cmd.ModelName: f"{self.device.model} ({self.device.spec})"
-        }
+        self.state: dict[type[Command], str] = {}
 
     async def _async_update_data(self) -> dict[str, Any]:
         """Update state with the current value of a command."""
