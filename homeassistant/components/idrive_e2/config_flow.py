@@ -3,9 +3,9 @@
 from __future__ import annotations
 
 import logging
-from typing import Any
+from typing import Any, cast
 
-import boto3
+from aiobotocore.session import AioSession
 from botocore.exceptions import ClientError, ConnectionError
 from idrive_e2 import CannotConnect, IDriveE2Client, InvalidAuth
 import voluptuous as vol
@@ -38,16 +38,19 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
 )
 
 
-def _list_buckets(endpoint_url: str, access_key: str, secret_key: str) -> list[str]:
+async def _list_buckets(
+    endpoint_url: str, access_key: str, secret_key: str
+) -> list[str]:
     """List S3 buckets."""
-    session = boto3.session.Session()
-    client = session.client(
+    session = AioSession()
+    async with session.create_client(
         "s3",
         endpoint_url=endpoint_url,
         aws_access_key_id=access_key,
         aws_secret_access_key=secret_key,
-    )
-    result = client.list_buckets()
+    ) as client:
+        result = await cast(Any, client).list_buckets()
+
     return [b["Name"] for b in result.get("Buckets", []) if "Name" in b]
 
 
@@ -132,8 +135,7 @@ class IDriveE2ConfigFlow(ConfigFlow, domain=DOMAIN):
         assert self._secret_key is not None
         try:
             # List buckets using the provided credentials
-            buckets = await self.hass.async_add_executor_job(
-                _list_buckets,
+            buckets = await _list_buckets(
                 self._endpoint_url,
                 self._access_key,
                 self._secret_key,

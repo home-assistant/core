@@ -5,8 +5,9 @@ import functools
 import json
 import logging
 from time import time
-from typing import Any
+from typing import Any, cast
 
+from aiobotocore.client import AioBaseClient as S3Client
 from botocore.exceptions import BotoCoreError
 
 from homeassistant.components.backup import (
@@ -95,8 +96,7 @@ class IDriveE2BackupAgent(BackupAgent):
     def __init__(self, hass: HomeAssistant, entry: IDriveE2ConfigEntry) -> None:
         """Initialize the IDrive e2 agent."""
         super().__init__()
-        self._hass = hass
-        self._client = entry.runtime_data
+        self._client: S3Client = entry.runtime_data
         self._bucket: str = entry.data[CONF_BUCKET]
         self.name = entry.title
         self.unique_id = entry.entry_id
@@ -117,17 +117,10 @@ class IDriveE2BackupAgent(BackupAgent):
         backup = await self._find_backup_by_id(backup_id)
         tar_filename, _ = suggested_filenames(backup)
 
-        response = await self._hass.async_add_executor_job(
-            functools.partial(
-                self._client.get_object, Bucket=self._bucket, Key=tar_filename
-            )
+        response = await cast(Any, self._client).get_object(
+            Bucket=self._bucket, Key=tar_filename
         )
-
-        async def stream_chunks() -> AsyncIterator[bytes]:
-            for chunk in response["Body"].iter_chunks():
-                yield chunk
-
-        return stream_chunks()
+        return response["Body"].iter_chunks()
 
     async def async_upload_backup(
         self,
@@ -151,13 +144,10 @@ class IDriveE2BackupAgent(BackupAgent):
 
             # Upload the metadata file
             metadata_content = json.dumps(backup.as_dict())
-            await self._hass.async_add_executor_job(
-                functools.partial(
-                    self._client.put_object,
-                    Bucket=self._bucket,
-                    Key=metadata_filename,
-                    Body=metadata_content,
-                )
+            await cast(Any, self._client).put_object(
+                Bucket=self._bucket,
+                Key=metadata_filename,
+                Body=metadata_content,
             )
         except BotoCoreError as err:
             raise BackupAgentError("Failed to upload backup") from err
@@ -181,13 +171,10 @@ class IDriveE2BackupAgent(BackupAgent):
         async for chunk in stream:
             file_data.extend(chunk)
 
-        await self._hass.async_add_executor_job(
-            functools.partial(
-                self._client.put_object,
-                Bucket=self._bucket,
-                Key=tar_filename,
-                Body=bytes(file_data),
-            )
+        await cast(Any, self._client).put_object(
+            Bucket=self._bucket,
+            Key=tar_filename,
+            Body=bytes(file_data),
         )
 
     async def _upload_multipart(
@@ -201,12 +188,9 @@ class IDriveE2BackupAgent(BackupAgent):
         :param open_stream: A function returning an async iterator that yields bytes.
         """
         _LOGGER.debug("Starting multipart upload for %s", tar_filename)
-        multipart_upload = await self._hass.async_add_executor_job(
-            functools.partial(
-                self._client.create_multipart_upload,
-                Bucket=self._bucket,
-                Key=tar_filename,
-            )
+        multipart_upload = await cast(Any, self._client).create_multipart_upload(
+            Bucket=self._bucket,
+            Key=tar_filename,
         )
         upload_id = multipart_upload["UploadId"]
         try:
@@ -225,15 +209,12 @@ class IDriveE2BackupAgent(BackupAgent):
                     _LOGGER.debug(
                         "Uploading part number %d, size %d", part_number, buffer_size
                     )
-                    part = await self._hass.async_add_executor_job(
-                        functools.partial(
-                            self._client.upload_part,
-                            Bucket=self._bucket,
-                            Key=tar_filename,
-                            PartNumber=part_number,
-                            UploadId=upload_id,
-                            Body=b"".join(buffer),
-                        )
+                    part = await cast(Any, self._client).upload_part(
+                        Bucket=self._bucket,
+                        Key=tar_filename,
+                        PartNumber=part_number,
+                        UploadId=upload_id,
+                        Body=b"".join(buffer),
                     )
                     parts.append({"PartNumber": part_number, "ETag": part["ETag"]})
                     part_number += 1
@@ -245,37 +226,28 @@ class IDriveE2BackupAgent(BackupAgent):
                 _LOGGER.debug(
                     "Uploading final part number %d, size %d", part_number, buffer_size
                 )
-                part = await self._hass.async_add_executor_job(
-                    functools.partial(
-                        self._client.upload_part,
-                        Bucket=self._bucket,
-                        Key=tar_filename,
-                        PartNumber=part_number,
-                        UploadId=upload_id,
-                        Body=b"".join(buffer),
-                    )
+                part = await cast(Any, self._client).upload_part(
+                    Bucket=self._bucket,
+                    Key=tar_filename,
+                    PartNumber=part_number,
+                    UploadId=upload_id,
+                    Body=b"".join(buffer),
                 )
                 parts.append({"PartNumber": part_number, "ETag": part["ETag"]})
 
-            await self._hass.async_add_executor_job(
-                functools.partial(
-                    self._client.complete_multipart_upload,
-                    Bucket=self._bucket,
-                    Key=tar_filename,
-                    UploadId=upload_id,
-                    MultipartUpload={"Parts": parts},
-                )
+            await cast(Any, self._client).complete_multipart_upload(
+                Bucket=self._bucket,
+                Key=tar_filename,
+                UploadId=upload_id,
+                MultipartUpload={"Parts": parts},
             )
 
         except BotoCoreError:
             try:
-                await self._hass.async_add_executor_job(
-                    functools.partial(
-                        self._client.abort_multipart_upload,
-                        Bucket=self._bucket,
-                        Key=tar_filename,
-                        UploadId=upload_id,
-                    )
+                await cast(Any, self._client).abort_multipart_upload(
+                    Bucket=self._bucket,
+                    Key=tar_filename,
+                    UploadId=upload_id,
                 )
             except BotoCoreError:
                 _LOGGER.exception("Failed to abort multipart upload")
@@ -295,17 +267,14 @@ class IDriveE2BackupAgent(BackupAgent):
         tar_filename, metadata_filename = suggested_filenames(backup)
 
         # Delete both the backup file and its metadata file
-        await self._hass.async_add_executor_job(
-            functools.partial(
-                self._client.delete_objects,
-                Bucket=self._bucket,
-                Delete={
-                    "Objects": [
-                        {"Key": tar_filename},
-                        {"Key": metadata_filename},
-                    ]
-                },
-            )
+        await cast(Any, self._client).delete_objects(
+            Bucket=self._bucket,
+            Delete={
+                "Objects": [
+                    {"Key": tar_filename},
+                    {"Key": metadata_filename},
+                ]
+            },
         )
 
         # Reset cache after successful deletion
@@ -340,12 +309,7 @@ class IDriveE2BackupAgent(BackupAgent):
             return self._backup_cache
 
         backups = {}
-        response = await self._hass.async_add_executor_job(
-            functools.partial(
-                self._client.list_objects_v2,
-                Bucket=self._bucket,
-            )
-        )
+        response = await cast(Any, self._client).list_objects_v2(Bucket=self._bucket)
 
         # Filter for metadata files only
         metadata_files = [
@@ -357,16 +321,10 @@ class IDriveE2BackupAgent(BackupAgent):
         for metadata_file in metadata_files:
             try:
                 # Download and parse metadata file
-                metadata_response = await self._hass.async_add_executor_job(
-                    functools.partial(
-                        self._client.get_object,
-                        Bucket=self._bucket,
-                        Key=metadata_file["Key"],
-                    )
+                metadata_response = await cast(Any, self._client).get_object(
+                    Bucket=self._bucket, Key=metadata_file["Key"]
                 )
-                metadata_content = await self._hass.async_add_executor_job(
-                    metadata_response["Body"].read
-                )
+                metadata_content = await metadata_response["Body"].read()
                 metadata_json = json.loads(metadata_content)
             except (BotoCoreError, json.JSONDecodeError) as err:
                 _LOGGER.warning(

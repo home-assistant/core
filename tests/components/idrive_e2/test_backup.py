@@ -4,7 +4,7 @@ from collections.abc import AsyncGenerator
 from io import StringIO
 import json
 from time import time
-from unittest.mock import MagicMock, Mock, patch
+from unittest.mock import AsyncMock, Mock, patch
 
 from botocore.exceptions import ConnectTimeoutError
 import pytest
@@ -29,7 +29,7 @@ from . import setup_integration
 from .const import USER_INPUT
 
 from tests.common import MockConfigEntry
-from tests.typing import ClientSessionGenerator, WebSocketGenerator
+from tests.typing import ClientSessionGenerator, MagicMock, WebSocketGenerator
 
 
 @pytest.fixture(autouse=True)
@@ -99,7 +99,7 @@ async def test_agents_list_backups(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
     mock_config_entry: MockConfigEntry,
-    test_backup: AgentBackup,
+    agent_backup: AgentBackup,
 ) -> None:
     """Test agent list backups."""
 
@@ -111,24 +111,24 @@ async def test_agents_list_backups(
     assert response["result"]["agent_errors"] == {}
     assert response["result"]["backups"] == [
         {
-            "addons": test_backup.addons,
+            "addons": agent_backup.addons,
             "agents": {
                 f"{DOMAIN}.{mock_config_entry.entry_id}": {
-                    "protected": test_backup.protected,
-                    "size": test_backup.size,
+                    "protected": agent_backup.protected,
+                    "size": agent_backup.size,
                 }
             },
-            "backup_id": test_backup.backup_id,
-            "database_included": test_backup.database_included,
-            "date": test_backup.date,
-            "extra_metadata": test_backup.extra_metadata,
+            "backup_id": agent_backup.backup_id,
+            "database_included": agent_backup.database_included,
+            "date": agent_backup.date,
+            "extra_metadata": agent_backup.extra_metadata,
             "failed_addons": [],
             "failed_agent_ids": [],
             "failed_folders": [],
-            "folders": test_backup.folders,
-            "homeassistant_included": test_backup.homeassistant_included,
-            "homeassistant_version": test_backup.homeassistant_version,
-            "name": test_backup.name,
+            "folders": agent_backup.folders,
+            "homeassistant_included": agent_backup.homeassistant_included,
+            "homeassistant_version": agent_backup.homeassistant_version,
+            "name": agent_backup.name,
             "with_automatic_settings": None,
         }
     ]
@@ -138,37 +138,37 @@ async def test_agents_get_backup(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
     mock_config_entry: MockConfigEntry,
-    test_backup: AgentBackup,
+    agent_backup: AgentBackup,
 ) -> None:
     """Test agent get backup."""
 
     client = await hass_ws_client(hass)
     await client.send_json_auto_id(
-        {"type": "backup/details", "backup_id": test_backup.backup_id}
+        {"type": "backup/details", "backup_id": agent_backup.backup_id}
     )
     response = await client.receive_json()
 
     assert response["success"]
     assert response["result"]["agent_errors"] == {}
     assert response["result"]["backup"] == {
-        "addons": test_backup.addons,
+        "addons": agent_backup.addons,
         "agents": {
             f"{DOMAIN}.{mock_config_entry.entry_id}": {
-                "protected": test_backup.protected,
-                "size": test_backup.size,
+                "protected": agent_backup.protected,
+                "size": agent_backup.size,
             }
         },
-        "backup_id": test_backup.backup_id,
-        "database_included": test_backup.database_included,
-        "date": test_backup.date,
-        "extra_metadata": test_backup.extra_metadata,
+        "backup_id": agent_backup.backup_id,
+        "database_included": agent_backup.database_included,
+        "date": agent_backup.date,
+        "extra_metadata": agent_backup.extra_metadata,
         "failed_addons": [],
         "failed_agent_ids": [],
         "failed_folders": [],
-        "folders": test_backup.folders,
-        "homeassistant_included": test_backup.homeassistant_included,
-        "homeassistant_version": test_backup.homeassistant_version,
-        "name": test_backup.name,
+        "folders": agent_backup.folders,
+        "homeassistant_included": agent_backup.homeassistant_included,
+        "homeassistant_version": agent_backup.homeassistant_version,
+        "name": agent_backup.name,
         "with_automatic_settings": None,
     }
 
@@ -195,7 +195,7 @@ async def test_agents_list_backups_with_corrupted_metadata(
     mock_client: MagicMock,
     mock_config_entry: MockConfigEntry,
     caplog: pytest.LogCaptureFixture,
-    test_backup: AgentBackup,
+    agent_backup: AgentBackup,
 ) -> None:
     """Test listing backups when one metadata file is corrupted."""
     # Create agent
@@ -216,18 +216,18 @@ async def test_agents_list_backups_with_corrupted_metadata(
     }
 
     # Mock responses for get_object calls
-    valid_metadata = json.dumps(test_backup.as_dict())
+    valid_metadata = json.dumps(agent_backup.as_dict())
     corrupted_metadata = "{invalid json content"
 
-    def mock_get_object(**kwargs):
+    async def mock_get_object(**kwargs):
         """Mock get_object with different responses based on the key."""
         key = kwargs.get("Key", "")
         if "valid_backup" in key:
-            mock_body = MagicMock()
+            mock_body = AsyncMock()
             mock_body.read.return_value = valid_metadata.encode()
             return {"Body": mock_body}
         # Corrupted metadata
-        mock_body = MagicMock()
+        mock_body = AsyncMock()
         mock_body.read.return_value = corrupted_metadata.encode()
         return {"Body": mock_body}
 
@@ -235,7 +235,7 @@ async def test_agents_list_backups_with_corrupted_metadata(
 
     backups = await agent.async_list_backups()
     assert len(backups) == 1
-    assert backups[0].backup_id == test_backup.backup_id
+    assert backups[0].backup_id == agent_backup.backup_id
     assert "Failed to process metadata file" in caplog.text
 
 
@@ -292,18 +292,18 @@ async def test_agents_upload(
     caplog: pytest.LogCaptureFixture,
     mock_client: MagicMock,
     mock_config_entry: MockConfigEntry,
-    test_backup: AgentBackup,
+    agent_backup: AgentBackup,
 ) -> None:
     """Test agent upload backup."""
     client = await hass_client()
     with (
         patch(
             "homeassistant.components.backup.manager.BackupManager.async_get_backup",
-            return_value=test_backup,
+            return_value=agent_backup,
         ),
         patch(
             "homeassistant.components.backup.manager.read_backup",
-            return_value=test_backup,
+            return_value=agent_backup,
         ),
         patch("pathlib.Path.open") as mocked_open,
     ):
@@ -311,7 +311,7 @@ async def test_agents_upload(
         # the "appendix" chunk triggers the upload of the final buffer part
         mocked_open.return_value.read = Mock(
             side_effect=[
-                b"a" * test_backup.size,
+                b"a" * agent_backup.size,
                 b"appendix",
                 b"",
             ]
@@ -322,18 +322,18 @@ async def test_agents_upload(
         )
 
         assert resp.status == 201
-        assert f"Uploading backup {test_backup.backup_id}" in caplog.text
-        if test_backup.size < MULTIPART_MIN_PART_SIZE_BYTES:
+        assert f"Uploading backup {agent_backup.backup_id}" in caplog.text
+        if agent_backup.size < MULTIPART_MIN_PART_SIZE_BYTES:
             # single part + metadata both as regular upload (no multiparts)
-            assert mock_client.create_multipart_upload.call_count == 0
-            assert mock_client.put_object.call_count == 2
+            assert mock_client.create_multipart_upload.await_count == 0
+            assert mock_client.put_object.await_count == 2
         else:
             assert "Uploading final part" in caplog.text
             # 2 parts as multipart + metadata as regular upload
-            assert mock_client.create_multipart_upload.call_count == 1
-            assert mock_client.upload_part.call_count == 2
-            assert mock_client.complete_multipart_upload.call_count == 1
-            assert mock_client.put_object.call_count == 1
+            assert mock_client.create_multipart_upload.await_count == 1
+            assert mock_client.upload_part.await_count == 2
+            assert mock_client.complete_multipart_upload.await_count == 1
+            assert mock_client.put_object.await_count == 1
 
 
 async def test_agents_upload_network_failure(
@@ -341,18 +341,18 @@ async def test_agents_upload_network_failure(
     caplog: pytest.LogCaptureFixture,
     mock_client: MagicMock,
     mock_config_entry: MockConfigEntry,
-    test_backup: AgentBackup,
+    agent_backup: AgentBackup,
 ) -> None:
     """Test agent upload backup with network failure."""
     client = await hass_client()
     with (
         patch(
             "homeassistant.components.backup.manager.BackupManager.async_get_backup",
-            return_value=test_backup,
+            return_value=agent_backup,
         ),
         patch(
             "homeassistant.components.backup.manager.read_backup",
-            return_value=test_backup,
+            return_value=agent_backup,
         ),
         patch("pathlib.Path.open") as mocked_open,
     ):
@@ -392,7 +392,7 @@ async def test_error_during_delete(
     hass_ws_client: WebSocketGenerator,
     mock_client: MagicMock,
     mock_config_entry: MockConfigEntry,
-    test_backup: AgentBackup,
+    agent_backup: AgentBackup,
 ) -> None:
     """Test the error wrapper."""
     mock_client.delete_objects.side_effect = BotoCoreError
@@ -402,7 +402,7 @@ async def test_error_during_delete(
     await client.send_json_auto_id(
         {
             "type": "backup/delete",
-            "backup_id": test_backup.backup_id,
+            "backup_id": agent_backup.backup_id,
         }
     )
     response = await client.receive_json()
@@ -418,7 +418,7 @@ async def test_error_during_delete(
 async def test_cache_expiration(
     hass: HomeAssistant,
     mock_client: MagicMock,
-    test_backup: AgentBackup,
+    agent_backup: AgentBackup,
 ) -> None:
     """Test that the cache expires correctly."""
     # Mock the entry
@@ -434,8 +434,8 @@ async def test_cache_expiration(
     agent = IDriveE2BackupAgent(hass, mock_entry)
 
     # Mock metadata response
-    metadata_content = json.dumps(test_backup.as_dict())
-    mock_body = MagicMock()
+    metadata_content = json.dumps(agent_backup.as_dict())
+    mock_body = AsyncMock()
     mock_body.read.return_value = metadata_content.encode()
     mock_client.list_objects_v2.return_value = {
         "Contents": [

@@ -1,8 +1,10 @@
 """Common fixtures for the IDrive e2 tests."""
 
-from collections.abc import Generator
+from __future__ import annotations
+
+from collections.abc import AsyncIterator, Generator
 import json
-from unittest.mock import MagicMock, patch
+from unittest.mock import AsyncMock, patch
 
 import pytest
 
@@ -22,7 +24,7 @@ from tests.common import MockConfigEntry
     params=[2**20, MULTIPART_MIN_PART_SIZE_BYTES],
     ids=["small", "large"],
 )
-def test_backup(request: pytest.FixtureRequest) -> None:
+def agent_backup(request: pytest.FixtureRequest) -> AgentBackup:
     """Test backup fixture."""
     return AgentBackup(
         addons=[],
@@ -40,16 +42,16 @@ def test_backup(request: pytest.FixtureRequest) -> None:
 
 
 @pytest.fixture(autouse=True)
-def mock_client(test_backup: AgentBackup) -> Generator[MagicMock]:
+def mock_client(agent_backup: AgentBackup) -> Generator[AsyncMock]:
     """Mock the IDrive e2 client."""
     with patch(
-        "boto3.session.Session.client",
+        "aiobotocore.session.AioSession.create_client",
         autospec=True,
-        return_value=MagicMock(),
+        return_value=AsyncMock(),
     ) as create_client:
         client = create_client.return_value
 
-        tar_file, metadata_file = suggested_filenames(test_backup)
+        tar_file, metadata_file = suggested_filenames(agent_backup)
         client.list_objects_v2.return_value = {
             "Contents": [{"Key": tar_file}, {"Key": metadata_file}]
         }
@@ -58,16 +60,16 @@ def mock_client(test_backup: AgentBackup) -> Generator[MagicMock]:
 
         # To simplify this mock, we assume that backup is always "iterated" over, while metadata is always "read" as a whole
         class MockStream:
-            def iter_chunks(self):
+            async def iter_chunks(self) -> AsyncIterator[bytes]:
                 yield b"backup data"
 
-            def read(self) -> bytes:
-                return json.dumps(test_backup.as_dict()).encode()
+            async def read(self) -> bytes:
+                return json.dumps(agent_backup.as_dict()).encode()
 
         client.get_object.return_value = {"Body": MockStream()}
         client.head_bucket.return_value = {}
 
-        # create_client.return_value = client
+        create_client.return_value.__aenter__.return_value = client
         yield client
 
 

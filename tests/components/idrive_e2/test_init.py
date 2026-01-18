@@ -1,6 +1,6 @@
 """Test the IDrive e2 storage integration."""
 
-from unittest.mock import MagicMock, patch
+from unittest.mock import AsyncMock, patch
 
 from botocore.exceptions import (
     ClientError,
@@ -54,7 +54,7 @@ async def test_setup_entry_create_client_errors(
 ) -> None:
     """Test various setup errors."""
     with patch(
-        "boto3.session.Session.client",
+        "aiobotocore.session.AioSession.create_client",
         side_effect=exception,
     ):
         await setup_integration(hass, mock_config_entry)
@@ -64,7 +64,7 @@ async def test_setup_entry_create_client_errors(
 async def test_setup_entry_head_bucket_error(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_client: MagicMock,
+    mock_client: AsyncMock,
 ) -> None:
     """Test setup_entry error when calling head_bucket."""
     mock_client.head_bucket.side_effect = ClientError(
@@ -78,7 +78,7 @@ async def test_setup_entry_head_bucket_error(
 async def test_setup_entry_head_bucket_not_found_error(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_client: MagicMock,
+    mock_client: AsyncMock,
 ) -> None:
     """Test setup_entry error when head_bucket returns: Not Found."""
     mock_client.head_bucket.side_effect = ClientError(

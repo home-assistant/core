@@ -3,8 +3,10 @@
 from __future__ import annotations
 
 import logging
+from typing import Any, cast
 
-import boto3
+from aiobotocore.client import AioBaseClient as S3Client
+from aiobotocore.session import AioSession
 from botocore.exceptions import ClientError, ConnectionError
 
 from homeassistant.config_entries import ConfigEntry
@@ -20,51 +22,30 @@ from .const import (
     DOMAIN,
 )
 
-type IDriveE2ConfigEntry = ConfigEntry[boto3.client]
+type IDriveE2ConfigEntry = ConfigEntry[S3Client]
 
 
 _LOGGER = logging.getLogger(__name__)
 
 
-def _initialize_client(
-    endpoint: str,
-    access_key: str,
-    secret_key: str,
-    bucket: str,
-) -> boto3.client:
-    """Fully initialize boto3 S3 client."""
-
-    # NOTE: We use boto3 instead of aiobotocore.AioSession because AioSession
-    # causes blocking operations inside the event loop.
-    # Two examples include:
-    # - os.listdir
-    # - ssl.SSLContext.load_verify_locations
-    # These lead to 'Detected blocking call` warnings. Using boto3 inside
-    # async_add_executor_job avoids these issues by running blocking code off the event loop.
-    session = boto3.session.Session()
-    client = session.client(
-        "s3",
-        endpoint_url=endpoint,
-        aws_access_key_id=access_key,
-        aws_secret_access_key=secret_key,
-    )
-    client.head_bucket(Bucket=bucket)
-
-    return client
-
-
 async def async_setup_entry(hass: HomeAssistant, entry: IDriveE2ConfigEntry) -> bool:
     """Set up IDrive e2 from a config entry."""
 
+    session = AioSession()
+    client: S3Client | None = None
     try:
-        client = await hass.async_add_executor_job(
-            _initialize_client,
-            entry.data[CONF_ENDPOINT_URL],
-            entry.data[CONF_ACCESS_KEY_ID],
-            entry.data[CONF_SECRET_ACCESS_KEY],
-            entry.data[CONF_BUCKET],
+        cm = session.create_client(
+            "s3",
+            endpoint_url=entry.data[CONF_ENDPOINT_URL],
+            aws_secret_access_key=entry.data[CONF_SECRET_ACCESS_KEY],
+            aws_access_key_id=entry.data[CONF_ACCESS_KEY_ID],
         )
+        # pylint: disable-next=unnecessary-dunder-call
+        client = await cm.__aenter__()
+        await cast(Any, client).head_bucket(Bucket=entry.data[CONF_BUCKET])
     except ClientError as err:
+        if client is not None:
+            await client.close()
         if "Not Found" in str(err):
             raise ConfigEntryError(
                 translation_domain=DOMAIN,
@@ -77,11 +58,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: IDriveE2ConfigEntry) -> 
             translation_key="invalid_credentials",
         ) from err
     except ValueError as err:
+        if client is not None:
+            await client.close()
         raise ConfigEntryError(
             translation_domain=DOMAIN,
             translation_key="invalid_endpoint_url",
         ) from err
     except ConnectionError as err:
+        if client is not None:
+            await client.close()
         raise ConfigEntryNotReady(
             translation_domain=DOMAIN,
             translation_key="cannot_connect",
@@ -101,5 +86,5 @@ async def async_setup_entry(hass: HomeAssistant, entry: IDriveE2ConfigEntry) -> 
 async def async_unload_entry(hass: HomeAssistant, entry: IDriveE2ConfigEntry) -> bool:
     """Unload a config entry."""
     client = entry.runtime_data
-    await hass.async_add_executor_job(client.close)
+    await client.close()
     return True

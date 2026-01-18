@@ -1,8 +1,10 @@
 """Test the IDrive e2 config flow."""
 
+from __future__ import annotations
+
+from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
-import boto3
 from botocore.exceptions import EndpointConnectionError
 from idrive_e2 import CannotConnect, InvalidAuth
 import pytest
@@ -18,6 +20,7 @@ from homeassistant.components.idrive_e2.const import (
     CONF_ENDPOINT_URL,
     CONF_SECRET_ACCESS_KEY,
 )
+from homeassistant.config_entries import ConfigFlowResult
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import AbortFlow, FlowResultType
 
@@ -26,14 +29,25 @@ from .const import USER_INPUT
 from tests.common import MockConfigEntry
 
 
-def test_list_buckets_success() -> None:
+def _mock_aiobotocore_cm(client: Any) -> MagicMock:
+    """Return an async context manager yielding the provided client."""
+    cm = MagicMock()
+    cm.__aenter__ = AsyncMock(return_value=client)
+    cm.__aexit__ = AsyncMock(return_value=None)
+    return cm
+
+
+async def test_list_buckets_success() -> None:
     """Test _list_buckets returns bucket names."""
-    mock_client = MagicMock()
+    mock_client = AsyncMock()
     mock_client.list_buckets.return_value = {
         "Buckets": [{"Name": "bucket1"}, {"Name": "bucket2"}]
     }
-    with patch.object(boto3.session.Session, "client", return_value=mock_client):
-        buckets = _list_buckets(
+    with patch(
+        "homeassistant.components.idrive_e2.config_flow.AioSession.create_client",
+        return_value=_mock_aiobotocore_cm(mock_client),
+    ):
+        buckets = await _list_buckets(
             USER_INPUT[CONF_ENDPOINT_URL],
             USER_INPUT[CONF_ACCESS_KEY_ID],
             USER_INPUT[CONF_SECRET_ACCESS_KEY],
@@ -41,12 +55,15 @@ def test_list_buckets_success() -> None:
         assert buckets == ["bucket1", "bucket2"]
 
 
-def test_list_buckets_empty() -> None:
+async def test_list_buckets_empty() -> None:
     """Test _list_buckets returns empty list if no buckets."""
-    mock_client = MagicMock()
+    mock_client = AsyncMock()
     mock_client.list_buckets.return_value = {"Buckets": []}
-    with patch.object(boto3.session.Session, "client", return_value=mock_client):
-        buckets = _list_buckets(
+    with patch(
+        "homeassistant.components.idrive_e2.config_flow.AioSession.create_client",
+        return_value=_mock_aiobotocore_cm(mock_client),
+    ):
+        buckets = await _list_buckets(
             USER_INPUT[CONF_ENDPOINT_URL],
             USER_INPUT[CONF_ACCESS_KEY_ID],
             USER_INPUT[CONF_SECRET_ACCESS_KEY],
@@ -54,12 +71,15 @@ def test_list_buckets_empty() -> None:
         assert buckets == []
 
 
-def test_list_buckets_missing_name() -> None:
+async def test_list_buckets_missing_name() -> None:
     """Test _list_buckets skips buckets without Name."""
-    mock_client = MagicMock()
+    mock_client = AsyncMock()
     mock_client.list_buckets.return_value = {"Buckets": [{}]}
-    with patch.object(boto3.session.Session, "client", return_value=mock_client):
-        buckets = _list_buckets(
+    with patch(
+        "homeassistant.components.idrive_e2.config_flow.AioSession.create_client",
+        return_value=_mock_aiobotocore_cm(mock_client),
+    ):
+        buckets = await _list_buckets(
             USER_INPUT[CONF_ENDPOINT_URL],
             USER_INPUT[CONF_ACCESS_KEY_ID],
             USER_INPUT[CONF_SECRET_ACCESS_KEY],
@@ -72,7 +92,7 @@ async def _async_start_flow(
     user_input: dict[str, str] | None = None,
     bucket: str | None = None,
     exception: Exception | None = None,
-) -> FlowResultType:
+) -> ConfigFlowResult:
     """Initialize the config flow with both user and bucket steps."""
     # If user_input is None, test the initial form
     if user_input is None and exception is None:
@@ -110,14 +130,15 @@ async def _async_start_flow(
             "homeassistant.components.idrive_e2.config_flow.IDriveE2Client",
             return_value=mock_client,
         ):
-            patch_kwargs = (
-                {"side_effect": exception}
-                if is_bucket_exception
-                else {"return_value": [selected]}
-            )
+            mock_list_buckets = AsyncMock()
+            if is_bucket_exception and exception is not None:
+                mock_list_buckets.side_effect = exception
+            else:
+                mock_list_buckets.return_value = [selected]
+
             with patch(
                 "homeassistant.components.idrive_e2.config_flow._list_buckets",
-                **patch_kwargs,
+                new=mock_list_buckets,
             ):
                 result = await flow.async_step_user(
                     {
@@ -132,16 +153,17 @@ async def _async_start_flow(
 
     # No exception: proceed into the bucket step
     if not exception:
-        assert result["step_id"] == "bucket"
+        assert result.get("type") is FlowResultType.FORM
+        assert result.get("step_id") == "bucket"
         with patch(
             "homeassistant.components.idrive_e2.config_flow._list_buckets",
-            return_value=[selected],
+            new=AsyncMock(return_value=[selected]),
         ):
             try:
                 return await flow.async_step_bucket({CONF_BUCKET: selected})
             except Exception as err:
                 if isinstance(err, AbortFlow):
-                    return {"type": FlowResultType.ABORT, "reason": err.reason}
+                    return flow.async_abort(reason=err.reason)
                 raise
 
     return result
@@ -150,9 +172,9 @@ async def _async_start_flow(
 async def test_flow(hass: HomeAssistant) -> None:
     """Test config flow."""
     result = await _async_start_flow(hass, user_input=USER_INPUT)
-    assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == "test"
-    assert result["data"] == USER_INPUT
+    assert result.get("type") is FlowResultType.CREATE_ENTRY
+    assert result.get("title") == "test"
+    assert result.get("data") == USER_INPUT
 
 
 @pytest.mark.parametrize(
@@ -179,16 +201,16 @@ async def test_flow_bucket_step_errors(
     """Test config flow errors."""
     result = await _async_start_flow(hass, exception=exception)
 
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "user"
-    assert result["errors"] == errors
+    assert result.get("type") is FlowResultType.FORM
+    assert result.get("step_id") == "user"
+    assert result.get("errors") == errors
 
     # Fix and finish the test
     result = await _async_start_flow(hass, user_input=USER_INPUT)
 
-    assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == "test"
-    assert result["data"] == USER_INPUT
+    assert result.get("type") is FlowResultType.CREATE_ENTRY
+    assert result.get("title") == "test"
+    assert result.get("data") == USER_INPUT
 
 
 @pytest.mark.parametrize(
@@ -205,15 +227,15 @@ async def test_flow_get_region_endpoint_error(
 ) -> None:
     """Test user step error mapping when resolving region endpoint via client."""
     result = await _async_start_flow(hass, exception=exception)
-    assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {"base": expected_error}
+    assert result.get("type") is FlowResultType.FORM
+    assert result.get("errors") == {"base": expected_error}
 
     # Fix and finish the test
     result = await _async_start_flow(hass, user_input=USER_INPUT)
 
-    assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == "test"
-    assert result["data"] == USER_INPUT
+    assert result.get("type") is FlowResultType.CREATE_ENTRY
+    assert result.get("title") == "test"
+    assert result.get("data") == USER_INPUT
 
 
 async def test_abort_if_already_configured(
@@ -223,14 +245,14 @@ async def test_abort_if_already_configured(
     """Test we abort if the account is already configured."""
     mock_config_entry.add_to_hass(hass)
     result = await _async_start_flow(hass, user_input=USER_INPUT)
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "already_configured"
+    assert result.get("type") is FlowResultType.ABORT
+    assert result.get("reason") == "already_configured"
 
 
 async def test_async_step_user_initial_form(hass: HomeAssistant) -> None:
     """Test that the initial user step shows the form with no errors and correct schema."""
     result = await _async_start_flow(hass, user_input=None)
-    assert result["type"] == FlowResultType.FORM
-    assert result["step_id"] == "user"
-    assert result["errors"] == {}
+    assert result.get("type") == FlowResultType.FORM
+    assert result.get("step_id") == "user"
+    assert result.get("errors") == {}
     assert "data_schema" in result
