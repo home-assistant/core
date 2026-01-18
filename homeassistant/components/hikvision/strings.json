@@ -72,9 +72,6 @@
       "line_crossing": {
         "name": "Line crossing"
       },
-      "motion": {
-        "name": "Motion"
-      },
       "net_interface_broken": {
         "name": "Network interface broken"
       },
