@@ -104,10 +104,10 @@ def mock_client() -> Generator[MagicMock]:
 def mock_dependencies() -> Generator[tuple[MagicMock, MagicMock]]:
     """Mock multiple dependencies."""
     with (
-        patch("homeassistant.components.my_integration.ClientA") as mock_a,
-        patch("homeassistant.components.my_integration.ClientB") as mock_b,
+        patch("homeassistant.components.my_integration.FirstClient") as mock_first,
+        patch("homeassistant.components.my_integration.SecondClient") as mock_second,
     ):
-        yield mock_a.return_value, mock_b.return_value
+        yield mock_first.return_value, mock_second.return_value
 ```
 
 ## Coordinator Refresh
