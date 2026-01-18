@@ -73,8 +73,10 @@ class WLEDDataUpdateCoordinator(DataUpdateCoordinator[WLEDDevice]):
             LOGGER,
             config_entry=entry,
             name=DOMAIN,
-            update_interval=SCAN_INTERVAL,
         )
+        # Init manually to work around pylint warnings.
+        self.last_update_success = True
+        self.update_interval = SCAN_INTERVAL
 
     @property
     def has_main_light(self) -> bool:
@@ -90,29 +92,35 @@ class WLEDDataUpdateCoordinator(DataUpdateCoordinator[WLEDDevice]):
         async def listen() -> None:
             """Listen for state changes via WebSocket."""
             try:
-                await self.wled.connect()
-            except WLEDError as err:
-                self.logger.info(err)
+                try:
+                    await self.wled.connect()
+                except WLEDError as err:
+                    self.logger.info(err)
+                    return
+
+                try:
+                    # Stop polling as long as we have a websocket. WS will push
+                    # updates to us
+                    self.update_interval = None
+                    await self.wled.listen(callback=self.async_set_updated_data)
+                except WLEDConnectionClosedError as err:
+                    self.last_update_success = False
+                    self.logger.info(err)
+                except WLEDError as err:
+                    self.last_update_success = False
+                    self.async_update_listeners()
+                    self.logger.error(err)
+                finally:
+                    # Pull data immediately and restart polling
+                    self.update_interval = SCAN_INTERVAL
+                    self.hass.async_create_task(self.async_request_refresh())
+
+                # Ensure we are disconnected
+                await self.wled.disconnect()
+            finally:
                 if self.unsub:
                     self.unsub()
                     self.unsub = None
-                return
-
-            try:
-                await self.wled.listen(callback=self.async_set_updated_data)
-            except WLEDConnectionClosedError as err:
-                self.last_update_success = False
-                self.logger.info(err)
-            except WLEDError as err:
-                self.last_update_success = False
-                self.async_update_listeners()
-                self.logger.error(err)
-
-            # Ensure we are disconnected
-            await self.wled.disconnect()
-            if self.unsub:
-                self.unsub()
-                self.unsub = None
 
         async def close_websocket(_: Event) -> None:
             """Close WebSocket connection."""
