@@ -1089,7 +1089,7 @@ google-cloud-speech==2.31.1
 google-cloud-texttospeech==2.25.1
 
 # homeassistant.components.google_generative_ai_conversation
-google-genai==1.56.0
+google-genai==1.59.0
 
 # homeassistant.components.google_travel_time
 google-maps-routing==0.6.15
@@ -1454,7 +1454,7 @@ mbddns==0.1.2
 mcp==1.14.1
 
 # homeassistant.components.minecraft_server
-mcstatus==12.0.6
+mcstatus==12.1.0
 
 # homeassistant.components.meater
 meater-python==0.0.8
@@ -1866,7 +1866,7 @@ pyRFXtrx==0.31.1
 pySDCP==1
 
 # homeassistant.components.tibber
-pyTibber==0.34.4
+pyTibber==0.35.0
 
 # homeassistant.components.dlink
 pyW215==0.8.0
@@ -2132,7 +2132,7 @@ pyitachip2ir==0.0.7
 pyituran==0.1.5
 
 # homeassistant.components.jvc_projector
-pyjvcprojector==1.1.3
+pyjvcprojector==2.0.0
 
 # homeassistant.components.kaleidescape
 pykaleidescape==1.0.2
@@ -3215,7 +3215,7 @@ wsdot==0.0.1
 wyoming==1.7.2
 
 # homeassistant.components.xiaomi_ble
-xiaomi-ble==1.4.1
+xiaomi-ble==1.4.3
 
 # homeassistant.components.knx
 xknx==3.14.0
