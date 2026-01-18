@@ -116,15 +116,20 @@ async def test_binary_sensor_no_sensors(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_hikcamera: MagicMock,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test setup when device has no sensors."""
     mock_hikcamera.return_value.current_event_states = None
 
-    await setup_integration(hass, mock_config_entry)
+    with caplog.at_level(logging.WARNING):
+        await setup_integration(hass, mock_config_entry)
 
     # No binary sensors should be created
     states = hass.states.async_entity_ids("binary_sensor")
     assert len(states) == 0
+
+    # Verify warning was logged
+    assert "Hikvision device has no sensors available" in caplog.text
 
 
 async def test_binary_sensor_nvr_device(
