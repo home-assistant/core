@@ -588,22 +588,6 @@ class Entity(
         return self._attr_unique_id
 
     @cached_property
-    def use_device_name(self) -> bool:
-        """Return if this entity does not have its own name.
-
-        Should be True if the entity represents the single main feature of a device.
-        """
-        if hasattr(self, "_attr_name"):
-            return not self._attr_name
-        if (
-            name_translation_key := self._name_translation_key
-        ) and name_translation_key in self.platform_data.platform_translations:
-            return False
-        if hasattr(self, "entity_description"):
-            return not self.entity_description.name
-        return not self.name
-
-    @cached_property
     def has_entity_name(self) -> bool:
         """Return if the name of the entity is describing only the entity itself."""
         if hasattr(self, "_attr_has_entity_name"):
@@ -1044,38 +1028,28 @@ class Entity(
             return f"{state:.{FLOAT_PRECISION}}"
         return str(state)
 
-    def _friendly_name_internal(self) -> str | None:
-        """Return the friendly name.
-
-        If has_entity_name is False, this returns self.name
-        If has_entity_name is True, this returns device.name + self.name
-        """
-        name = self.name
-        if name is UNDEFINED:
-            name = None
-
-        if not self.has_entity_name or not (device_entry := self.device_entry):
-            return name
-
-        device_name = device_entry.name_by_user or device_entry.name
-        if name is None and self.use_device_name:
-            return device_name
-        return f"{device_name} {name}" if device_name else name
-
     @callback
     def _async_calculate_state(self) -> CalculatedState:
         """Calculate state string and attribute mapping."""
-        state, attr, _, _, _ = self.__async_calculate_state()
+        state, attr, _, _, _, _ = self.__async_calculate_state()
         return CalculatedState(state, attr)
 
     def __async_calculate_state(
         self,
-    ) -> tuple[str, dict[str, Any], Mapping[str, Any] | None, str | None, int | None]:
+    ) -> tuple[
+        str,
+        dict[str, Any],
+        str | None,
+        Mapping[str, Any] | None,
+        str | None,
+        int | None,
+    ]:
         """Calculate state string and attribute mapping.
 
         Returns a tuple:
         state - the stringified state
         attr - the attribute dictionary
+        original_name - the original name which may be overridden
         capability_attr - a mapping with capability attributes
         original_device_class - the device class which may be overridden
         supported_features - the supported features
@@ -1117,15 +1091,31 @@ class Entity(
         if (icon := (entry and entry.icon) or self.icon) is not None:
             attr[ATTR_ICON] = icon
 
-        if (
-            name := (entry and entry.name) or self._friendly_name_internal()
-        ) is not None:
+        original_name = self.name
+        if original_name is UNDEFINED:
+            original_name = None
+
+        if entry is None:
+            name = original_name
+        else:
+            name = er.async_get(self.hass).async_generate_full_name(
+                entry, original_name=original_name
+            )
+
+        if name:
             attr[ATTR_FRIENDLY_NAME] = name
 
         if (supported_features := self.supported_features) is not None:
             attr[ATTR_SUPPORTED_FEATURES] = supported_features
 
-        return (state, attr, capability_attr, original_device_class, supported_features)
+        return (
+            state,
+            attr,
+            original_name,
+            capability_attr,
+            original_device_class,
+            supported_features,
+        )
 
     @callback
     def _async_write_ha_state(self) -> None:
@@ -1151,19 +1141,25 @@ class Entity(
             return
 
         state_calculate_start = timer()
-        state, attr, capabilities, original_device_class, supported_features = (
-            self.__async_calculate_state()
-        )
+        (
+            state,
+            attr,
+            original_name,
+            capabilities,
+            original_device_class,
+            supported_features,
+        ) = self.__async_calculate_state()
         time_now = timer()
 
         if entry := self.registry_entry:
-            # Make sure capabilities in the entity registry are up to date. Capabilities
-            # include capability attributes, device class and supported features
+            # Make sure capabilities and other data in the entity registry are up to date.
+            # Capabilities include capability attributes, device class and supported features.
             supported_features = supported_features or 0
             if (
                 capabilities != entry.capabilities
                 or original_device_class != entry.original_device_class
                 or supported_features != entry.supported_features
+                or original_name != entry.original_name
             ):
                 if not self.__capabilities_updated_at_reported:
                     # _Entity__capabilities_updated_at is because of name mangling
@@ -1196,6 +1192,7 @@ class Entity(
                     self.entity_id,
                     capabilities=capabilities,
                     original_device_class=original_device_class,
+                    original_name=original_name,
                     supported_features=supported_features,
                 )
 
