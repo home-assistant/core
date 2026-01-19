@@ -71,13 +71,6 @@
           "off": "[%key:common::state::off%]"
         }
       },
-      "eshift": {
-        "name": "E-Shift",
-        "state": {
-          "off": "[%key:common::state::off%]",
-          "on": "[%key:common::state::on%]"
-        }
-      },
       "input": {
         "name": "Input",
         "state": {
@@ -107,13 +100,6 @@
           "low": "[%key:common::state::low%]",
           "mid": "[%key:common::state::medium%]",
           "normal": "[%key:common::state::normal%]"
-        }
-      },
-      "low_latency_mode": {
-        "name": "Low Latency Mode",
-        "state": {
-          "off": "[%key:common::state::off%]",
-          "on": "[%key:common::state::on%]"
         }
       }
     },
