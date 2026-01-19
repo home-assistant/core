@@ -316,16 +316,16 @@ class ConversationSubentryFlowHandler(ConfigSubentryFlow):
         # Google Search API configuration (optional)
         step_schema[
             vol.Optional(
-                CONF_GOOGLE_API_KEY,
-                default=self.options.get(CONF_GOOGLE_API_KEY, ""),
-            )
-        ] = TextSelector(TextSelectorConfig(type=TextSelectorType.PASSWORD))
-        step_schema[
-            vol.Optional(
                 CONF_GOOGLE_CSE_ID,
                 default=self.options.get(CONF_GOOGLE_CSE_ID, ""),
             )
         ] = str
+        step_schema[
+            vol.Optional(
+                CONF_GOOGLE_API_KEY,
+                default=self.options.get(CONF_GOOGLE_API_KEY, ""),
+            )
+        ] = TextSelector(TextSelectorConfig(type=TextSelectorType.PASSWORD))
 
         if user_input is not None:
             # Validate model selection (reject separators)
