@@ -1936,6 +1936,7 @@ INTEGRATIONS_WITHOUT_SCALE = [
     "telnet",
     "temper",
     "template",
+    "tesla_fleet",
     "tesla_wall_connector",
     "thermobeacon",
     "thermopro",
