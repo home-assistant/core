@@ -121,7 +121,7 @@ def starts_with_dot(key: str) -> str:
 _TRIGGERS_DESCRIPTION_SCHEMA = vol.Schema(
     {
         vol.Remove(vol.All(str, starts_with_dot)): object,
-        str: vol.Any(None, _TRIGGER_DESCRIPTION_SCHEMA),
+        cv.underscore_slug: vol.Any(None, _TRIGGER_DESCRIPTION_SCHEMA),
     }
 )
 

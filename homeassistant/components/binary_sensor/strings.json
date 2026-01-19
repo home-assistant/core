@@ -332,7 +332,7 @@
   },
   "title": "Binary sensor",
   "triggers": {
-    "door.opened": {
+    "_door.opened": {
       "description": "Triggers after one or more occupancy doors open.",
       "fields": {
         "behavior": {

@@ -655,10 +655,15 @@ def slug(value: Any) -> str:
     raise vol.Invalid(f"invalid slug {value} (try {slg})")
 
 
+def slugs(value: Any) -> list[str]:
+    """Validate slugs separated by period."""
+    return [slug(item) for item in value.split(".")]
+
+
 def underscore_slug(value: Any) -> str:
     """Validate value is a valid slug, possibly starting with an underscore."""
     if value.startswith("_"):
-        return f"_{slug(value[1:])}"
+        return f"_{'.'.join(slugs(value[1:]))}"
     return slug(value)
 
 
