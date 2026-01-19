@@ -119,6 +119,7 @@ class AirthingsBLEDataUpdateCoordinator(DataUpdateCoordinator[AirthingsDevice]):
             AirthingsConnectivityMode.SMARTLINK.value,
             AirthingsConnectivityMode.NOT_CONFIGURED.value,
         }:
+            serial_number = f"{data.model.value}{data.identifier}"
             ir.async_create_issue(
                 hass=self.hass,
                 domain=DOMAIN,
@@ -128,7 +129,7 @@ class AirthingsBLEDataUpdateCoordinator(DataUpdateCoordinator[AirthingsDevice]):
                 translation_key="smartlink_detected",
                 translation_placeholders={
                     "device_name": data.friendly_name(),
-                    "serial_number": data.identifier or "unknown",
+                    "serial_number": serial_number,
                 },
             )
         elif connectivity_mode == AirthingsConnectivityMode.BLE.value:
