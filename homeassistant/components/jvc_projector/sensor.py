@@ -33,12 +33,6 @@ SENSORS: tuple[JvcProjectorSensorDescription, ...] = (
         device_class=SensorDeviceClass.ENUM,
     ),
     JvcProjectorSensorDescription(
-        key="source",
-        command=cmd.Source,
-        device_class=SensorDeviceClass.ENUM,
-        entity_category=EntityCategory.DIAGNOSTIC,
-    ),
-    JvcProjectorSensorDescription(
         key="light_time",
         command=cmd.LightTime,
         device_class=SensorDeviceClass.DURATION,

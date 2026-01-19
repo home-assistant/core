@@ -52,9 +52,6 @@
           "on": "mdi:power",
           "warming": "mdi:heat-wave"
         }
-      },
-      "source": {
-        "default": "mdi:relative-scale"
       }
     }
   }

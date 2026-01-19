@@ -172,9 +172,6 @@
           "standby": "[%key:common::state::standby%]",
           "warming": "Warming"
         }
-      },
-      "source": {
-        "name": "Source"
       }
     }
   }
