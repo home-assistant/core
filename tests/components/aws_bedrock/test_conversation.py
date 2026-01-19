@@ -260,7 +260,8 @@ async def test_async_handle_message_success(
     assert user_input.conversation_id is not None
     chat_log = conversation.ChatLog(hass, user_input.conversation_id)
     chat_log.async_add_user_content(conversation.UserContent(content=user_input.text))
-    chat_log.async_provide_llm_data = AsyncMock()
+    mock_provide_llm_data = AsyncMock()
+    object.__setattr__(chat_log, "async_provide_llm_data", mock_provide_llm_data)
 
     async def fake_handle_chat_log(log):
         """Inject assistant output."""
@@ -278,7 +279,7 @@ async def test_async_handle_message_success(
         result = await entity._async_handle_message(user_input, chat_log)
 
     # Verify async_provide_llm_data was called correctly
-    chat_log.async_provide_llm_data.assert_awaited_once_with(
+    mock_provide_llm_data.assert_awaited_once_with(
         user_input.as_llm_context(DOMAIN),
         [llm.LLM_API_ASSIST],
         "You are a helpful assistant.",
@@ -327,7 +328,9 @@ async def test_async_handle_message_converse_error(
     converse_error = conversation.ConverseError(
         "Test error", user_input.conversation_id or "", error_response
     )
-    chat_log.async_provide_llm_data = AsyncMock(side_effect=converse_error)
+    object.__setattr__(
+        chat_log, "async_provide_llm_data", AsyncMock(side_effect=converse_error)
+    )
 
     with patch.object(
         entity, "_async_handle_chat_log", AsyncMock()

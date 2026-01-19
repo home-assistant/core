@@ -661,6 +661,7 @@ async def test_ai_task_subentry_no_prompt_field(
         )
 
     # AI task should not have CONF_PROMPT in schema
+    assert result["data_schema"] is not None
     schema_keys = result["data_schema"].schema.keys()
     assert CONF_NAME in [str(key) for key in schema_keys]
     assert CONF_PROMPT not in [str(key) for key in schema_keys]
