@@ -100,13 +100,6 @@ SENSOR_TYPES: tuple[OpenEVSESensorDescription, ...] = (
         value_fn=lambda ev: ev.manual_override,
     ),
     OpenEVSESensorDescription(
-        key="ota_update",
-        translation_key="ota_update",
-        value_fn=lambda ev: ev.ota_update,
-        entity_category=EntityCategory.DIAGNOSTIC,
-        entity_registry_enabled_default=False,
-    ),
-    OpenEVSESensorDescription(
         key="service_level",
         translation_key="service_level",
         value_fn=lambda ev: ev.service_level,
@@ -196,32 +189,6 @@ SENSOR_TYPES: tuple[OpenEVSESensorDescription, ...] = (
         entity_registry_enabled_default=False,
         value_fn=lambda ev: ev.max_amps,
     ),
-    # Divert/solar mode sensors
-    OpenEVSESensorDescription(
-        key="available_current",
-        translation_key="available_current",
-        native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
-        device_class=SensorDeviceClass.CURRENT,
-        state_class=SensorStateClass.MEASUREMENT,
-        value_fn=lambda ev: ev.available_current,
-    ),
-    OpenEVSESensorDescription(
-        key="smoothed_available_current",
-        translation_key="smoothed_available_current",
-        native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
-        device_class=SensorDeviceClass.CURRENT,
-        state_class=SensorStateClass.MEASUREMENT,
-        entity_registry_enabled_default=False,
-        value_fn=lambda ev: ev.smoothed_available_current,
-    ),
-    OpenEVSESensorDescription(
-        key="charge_rate",
-        translation_key="charge_rate",
-        native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
-        device_class=SensorDeviceClass.CURRENT,
-        state_class=SensorStateClass.MEASUREMENT,
-        value_fn=lambda ev: ev.charge_rate,
-    ),
     # Temperature sensors
     OpenEVSESensorDescription(
         key="ambient_temp",
@@ -285,6 +252,7 @@ SENSOR_TYPES: tuple[OpenEVSESensorDescription, ...] = (
         suggested_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
+        entity_registry_enabled_default=False,
         value_fn=lambda ev: ev.total_day,
     ),
     OpenEVSESensorDescription(
@@ -294,6 +262,7 @@ SENSOR_TYPES: tuple[OpenEVSESensorDescription, ...] = (
         suggested_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
+        entity_registry_enabled_default=False,
         value_fn=lambda ev: ev.total_week,
     ),
     OpenEVSESensorDescription(
@@ -303,6 +272,7 @@ SENSOR_TYPES: tuple[OpenEVSESensorDescription, ...] = (
         suggested_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
+        entity_registry_enabled_default=False,
         value_fn=lambda ev: ev.total_month,
     ),
     OpenEVSESensorDescription(
@@ -312,6 +282,7 @@ SENSOR_TYPES: tuple[OpenEVSESensorDescription, ...] = (
         suggested_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
+        entity_registry_enabled_default=False,
         value_fn=lambda ev: ev.total_year,
     ),
     # Vehicle sensors
