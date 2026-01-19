@@ -67,11 +67,7 @@ class WebSearchTool(llm.Tool):
         if action == "search":
             if not query:
                 return {"error": "No search query provided"}
-
-            if self.google_api_key and self.google_cse_id:
-                return await self._async_google_search(query)
-
-            return {"error": "Google Search API not configured"}
+            return await self._async_google_search(query)
 
         if action == "fetch":
             if not url:

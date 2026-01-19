@@ -6,6 +6,7 @@
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "google_credentials_required": "Google API Key and Custom Search Engine ID are required when web search is enabled",
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
       "invalid_model": "Invalid model selection",
       "unknown": "[%key:common::config_flow::error::unknown%]"
@@ -53,17 +54,17 @@
           "data": {
             "chat_model": "[%key:common::generic::model%]",
             "enable_web_search": "Enable web search",
-            "google_api_key": "Google API Key (optional)",
-            "google_cse_id": "Google Custom Search Engine ID (optional)",
+            "google_api_key": "Google API Key (required if web search enabled)",
+            "google_cse_id": "Google Custom Search Engine ID (required if web search enabled)",
             "max_tokens": "Maximum tokens to return in response",
             "name": "[%key:common::config_flow::data::name%]",
             "temperature": "Temperature"
           },
           "data_description": {
             "chat_model": "Select from available AWS Bedrock foundation models (includes Anthropic, Amazon, Meta, and other providers)",
-            "enable_web_search": "Enable web search to allow the AI to search websites and fetch web content for current information. When enabled, the AI can search the web, fetch URLs, and access up-to-date information beyond its training data.",
-            "google_api_key": "Optional: Google API key for Custom Search API (get from Google Cloud Console at console.cloud.google.com). Provides Google Search functionality. If not provided, web search can still fetch content from specific URLs you provide to the AI.",
-            "google_cse_id": "Optional: Custom Search Engine ID from programmablesearchengine.google.com (e.g., 017576662512468239146:omuauf_lfve). Required only if you provide a Google API key above. Create a new search engine and copy the 'Search engine ID' from the Overview page."
+            "enable_web_search": "Enable web search to allow the AI to search websites and fetch web content for current information. When enabled, the AI can search the web, fetch URLs, and access up-to-date information beyond its training data. Requires Google API credentials.",
+            "google_api_key": "Google API key for Custom Search API (get from Google Cloud Console at console.cloud.google.com). Required when web search is enabled.",
+            "google_cse_id": "Custom Search Engine ID from programmablesearchengine.google.com (e.g., 017576662512468239146:omuauf_lfve). Required when web search is enabled. Create a new search engine and copy the 'Search engine ID' from the Overview page."
           },
           "title": "Configure AI task"
         }

@@ -330,15 +330,29 @@ class ConversationSubentryFlowHandler(ConfigSubentryFlow):
             if selected_model.startswith("separator_"):
                 errors[CONF_CHAT_MODEL] = "invalid_model"
 
-            # Auto-manage llm_hass_api for conversation agents based on enable_web_search
-            if self._subentry_type == "conversation":
+            # Validate web search configuration
+            if user_input.get(CONF_ENABLE_WEB_SEARCH, False):
+                google_api_key = user_input.get(CONF_GOOGLE_API_KEY, "").strip()
+                google_cse_id = user_input.get(CONF_GOOGLE_CSE_ID, "").strip()
+
+                if not google_api_key:
+                    errors[CONF_GOOGLE_API_KEY] = "google_credentials_required"
+                if not google_cse_id:
+                    errors[CONF_GOOGLE_CSE_ID] = "google_credentials_required"
+
+            # Auto-manage llm_hass_api for conversation agents
+            if not errors and self._subentry_type == "conversation":
                 # Start with Assist API (always included for conversation agents)
                 llm_apis = [llm.LLM_API_ASSIST]
 
-                # Add web search API if enabled
+                # Add web search API only if enabled AND credentials are valid
                 if user_input.get(CONF_ENABLE_WEB_SEARCH, False):
-                    llm_apis.append(LLM_API_WEB_SEARCH)
+                    google_api_key = user_input.get(CONF_GOOGLE_API_KEY, "").strip()
+                    google_cse_id = user_input.get(CONF_GOOGLE_CSE_ID, "").strip()
+                    if google_api_key and google_cse_id:
+                        llm_apis.append(LLM_API_WEB_SEARCH)
 
+                # Always set llm_hass_api - this ensures it's cleaned if web search is disabled
                 user_input[CONF_LLM_HASS_API] = llm_apis
 
             if not errors:
