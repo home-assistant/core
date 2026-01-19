@@ -462,7 +462,7 @@ async def async_setup_entry(
         ]
 
         # Create thermostat temperature sensor if room has therm_measured_temperature
-        if hasattr(netatmo_device.room, "therm_measured_temperature"):
+        if netatmo_device.room.therm_measured_temperature is not None:
             entities.append(
                 NetatmoRoomSensor(netatmo_device, ROOM_THERM_TEMPERATURE_DESCRIPTION)
             )
