@@ -55,7 +55,7 @@ from .const import (
     START,
     SUMMARY,
 )
-from .coordinator import TodoistCoordinator, _flatten_async_pages
+from .coordinator import TodoistCoordinator, flatten_async_pages
 from .types import CalData, CustomProject, ProjectData, TodoistEvent
 from .util import parse_due_date
 
@@ -147,11 +147,11 @@ async def async_setup_platform(
     # Setup devices:
     # Grab all projects.
     projects_result = await api.get_projects()
-    all_projects: list[Project] = await _flatten_async_pages(projects_result)
+    all_projects: list[Project] = await flatten_async_pages(projects_result)
 
     # Grab all labels
     labels_result = await api.get_labels()
-    all_labels: list[Label] = await _flatten_async_pages(labels_result)
+    all_labels: list[Label] = await flatten_async_pages(labels_result)
 
     # Add all Todoist-defined projects.
     project_devices = []
@@ -261,7 +261,7 @@ def async_register_services(
 
         if ASSIGNEE in call.data:
             collaborators_result = await coordinator.api.get_collaborators(project_id)
-            all_collaborators = await _flatten_async_pages(collaborators_result)
+            all_collaborators = await flatten_async_pages(collaborators_result)
             collaborator_id_lookup = {
                 collab.name.lower(): collab.id for collab in all_collaborators
             }
@@ -521,19 +521,19 @@ class TodoistProjectData:
             elif isinstance(due_date, date):
                 task[END] = dt_util.start_of_local_day(due_date)
 
-            if task[END] is not None:
+            if (end_dt := task[END]) is not None:
                 if self._due_date_days is not None:
                     # For comparison with now, use datetime
-                    end_dt = task[END]
+
                     if end_dt > dt_util.now() + self._due_date_days:
                         # This task is out of range of our due date;
                         # it shouldn't be counted.
                         return None
 
-                task[DUE_TODAY] = task[END].date() == dt_util.now().date()
+                task[DUE_TODAY] = end_dt.date() == dt_util.now().date()
 
                 # Special case: Task is overdue.
-                if task[END] <= task[START]:
+                if end_dt <= task[START]:
                     task[OVERDUE] = True
                     # Set end time to the current time plus 1 hour.
                     # We're pretty much guaranteed to update within that 1 hour,
@@ -646,9 +646,15 @@ class TodoistProjectData:
                 start=start,
                 end=start + timedelta(days=1),
             )
-            if event.start_datetime_local >= end_date:
+            if (
+                event.start_datetime_local is not None
+                and event.start_datetime_local >= end_date
+            ):
                 continue
-            if event.end_datetime_local < start_date:
+            if (
+                event.end_datetime_local is not None
+                and event.end_datetime_local < start_date
+            ):
                 continue
             events.append(event)
         return events

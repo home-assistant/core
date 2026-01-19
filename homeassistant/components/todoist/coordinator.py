@@ -15,7 +15,7 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 T = TypeVar("T")
 
 
-async def _flatten_async_pages(
+async def flatten_async_pages(
     pages: AsyncGenerator[list[T]],
 ) -> list[T]:
     """Flatten paginated results from an async generator."""
@@ -56,23 +56,23 @@ class TodoistCoordinator(DataUpdateCoordinator[list[Task]]):
             tasks_async = await self.api.get_tasks()
         except Exception as err:
             raise UpdateFailed(f"Error communicating with API: {err}") from err
-        return await _flatten_async_pages(tasks_async)
+        return await flatten_async_pages(tasks_async)
 
     async def async_get_projects(self) -> list[Project]:
         """Return todoist projects fetched at most once."""
         if self._projects is None:
             projects_async = await self.api.get_projects()
-            self._projects = await _flatten_async_pages(projects_async)
+            self._projects = await flatten_async_pages(projects_async)
         return self._projects
 
     async def async_get_sections(self, project_id: str) -> list[Section]:
         """Return todoist sections for a given project ID."""
         sections_async = await self.api.get_sections(project_id=project_id)
-        return await _flatten_async_pages(sections_async)
+        return await flatten_async_pages(sections_async)
 
     async def async_get_labels(self) -> list[Label]:
         """Return todoist labels fetched at most once."""
         if self._labels is None:
             labels_async = await self.api.get_labels()
-            self._labels = await _flatten_async_pages(labels_async)
+            self._labels = await flatten_async_pages(labels_async)
         return self._labels
