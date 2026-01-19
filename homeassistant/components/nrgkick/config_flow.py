@@ -159,6 +159,8 @@ class NRGkickConfigFlow(ConfigFlow, domain=DOMAIN):
                 except NRGkickApiClientAuthenticationError:
                     self._pending_host = host
                     return await self.async_step_user_auth()
+                except NRGkickApiClientInvalidResponseError:
+                    errors["base"] = "invalid_response"
                 except NRGkickApiClientCommunicationError:
                     errors["base"] = "cannot_connect"
                 except NRGkickApiClientError:
@@ -206,6 +208,8 @@ class NRGkickConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "json_api_disabled"
             except NRGkickApiClientAuthenticationError:
                 errors["base"] = "invalid_auth"
+            except NRGkickApiClientInvalidResponseError:
+                errors["base"] = "invalid_response"
             except NRGkickApiClientCommunicationError:
                 errors["base"] = "cannot_connect"
             except NRGkickApiClientError:
@@ -285,6 +289,8 @@ class NRGkickConfigFlow(ConfigFlow, domain=DOMAIN):
             except NRGkickApiClientAuthenticationError:
                 self._pending_host = host
                 return await self.async_step_user_auth()
+            except NRGkickApiClientInvalidResponseError:
+                errors["base"] = "invalid_response"
             except NRGkickApiClientCommunicationError:
                 errors["base"] = "cannot_connect"
             except NRGkickApiClientError:
@@ -321,6 +327,8 @@ class NRGkickConfigFlow(ConfigFlow, domain=DOMAIN):
             except NRGkickApiClientAuthenticationError:
                 self._pending_host = host
                 return await self.async_step_user_auth()
+            except NRGkickApiClientInvalidResponseError:
+                errors["base"] = "invalid_response"
             except NRGkickApiClientCommunicationError:
                 errors["base"] = "cannot_connect"
             except NRGkickApiClientError:
