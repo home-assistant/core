@@ -7,7 +7,7 @@ from homeassistant.helpers import entity_registry as er
 
 from tests.common import MockConfigEntry
 
-POWER_ID = "sensor.jvc_projector_power_status"
+POWER_ID = "sensor.jvc_projector_status"
 
 
 async def test_entity_state(
