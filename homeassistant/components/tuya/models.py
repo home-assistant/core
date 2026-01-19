@@ -221,25 +221,14 @@ class DPCodeDeltaIntegerWrapper(DPCodeIntegerWrapper):
     to provide a running total.
     """
 
-    def __init__(self, dpcode: str, type_information: IntegerTypeInformation) -> None:
-        """Init DPCodeDeltaIntegerWrapper."""
-        super().__init__(dpcode, type_information)
-        self._accumulated_value: float | None = None
-        self._last_dp_timestamp: int | None = None
-
-    @property
-    def is_delta_report(self) -> bool:
-        """Return True if this sensor uses delta reporting."""
-        return self.type_information.report_type == "sum"
+    _accumulated_value: float | None = None
+    _last_dp_timestamp: int | None = None
 
     def initialize_accumulated_value(self, device: CustomerDevice) -> None:
         """Initialize accumulated value from current device state.
 
         Called when the entity is added to Home Assistant.
         """
-        if not self.is_delta_report:
-            return
-
         raw_value = super().read_device_status(device)
         if raw_value is not None:
             self._accumulated_value = float(raw_value)
@@ -256,9 +245,6 @@ class DPCodeDeltaIntegerWrapper(DPCodeIntegerWrapper):
 
         Called during state updates to accumulate incremental values.
         """
-        if not self.is_delta_report:
-            return
-
         current_timestamp = dp_timestamps.get(self.dpcode) if dp_timestamps else None
 
         # Skip duplicate updates with same timestamp
@@ -299,9 +285,7 @@ class DPCodeDeltaIntegerWrapper(DPCodeIntegerWrapper):
 
     def read_device_status(self, device: CustomerDevice) -> float | None:
         """Read device status, returning accumulated value for delta reports."""
-        if self.is_delta_report:
-            return self._accumulated_value
-        return super().read_device_status(device)
+        return self._accumulated_value
 
 
 class DPCodeRawWrapper(DPCodeTypeInformationWrapper[RawTypeInformation]):

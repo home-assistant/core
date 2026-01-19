@@ -42,13 +42,14 @@ from .models import (
     DeviceWrapper,
     DPCodeDeltaIntegerWrapper,
     DPCodeEnumWrapper,
+    DPCodeIntegerWrapper,
     DPCodeJsonWrapper,
     DPCodeRawWrapper,
     DPCodeTypeInformationWrapper,
     DPCodeWrapper,
 )
 from .raw_data_models import ElectricityData
-from .type_information import EnumTypeInformation
+from .type_information import EnumTypeInformation, IntegerTypeInformation
 
 # Mapping from Tuya API report_type to Home Assistant SensorStateClass.
 # - "sum": Delta/incremental reports, accumulated locally to form a total
@@ -1748,13 +1749,13 @@ def _get_dpcode_wrapper(
                 return wrapper
         return None
 
-    # Use DPCodeDeltaIntegerWrapper to handle delta report types
-    # It will detect if the sensor is a delta report based on report_type
-    for cls in (DPCodeDeltaIntegerWrapper, DPCodeEnumWrapper):
-        if wrapper := cls.find_dpcode(device, dpcode):
-            return wrapper
+    # Check for integer type first, using delta wrapper only for sum report_type
+    if type_information := IntegerTypeInformation.find_dpcode(device, dpcode):
+        if type_information.report_type == "sum":
+            return DPCodeDeltaIntegerWrapper(type_information.dpcode, type_information)
+        return DPCodeIntegerWrapper(type_information.dpcode, type_information)
 
-    return None
+    return DPCodeEnumWrapper.find_dpcode(device, dpcode)
 
 
 async def async_setup_entry(
