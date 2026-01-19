@@ -467,6 +467,12 @@ async def _async_migrate_default_config(
 
     _LOGGER.info("Successfully migrated default lovelace config to dashboard entry")
 
+    # Set default panel to lovelace if not already configured
+    system_store = await frontend.async_system_store(hass)
+    if system_store.data.get("default_panel") is None:
+        await system_store.async_set_item("default_panel", DOMAIN)
+        _LOGGER.info("Set default panel to 'lovelace' during migration")
+
 
 # Deprecated - Remove in 2026.6
 @callback
