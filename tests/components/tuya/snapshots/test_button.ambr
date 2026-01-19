@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_platform_setup_and_discovery[button.kattenbak_factory_reset-entry]
+# name: test_platform_setup_and_discovery[button.kattenbak-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -12,7 +12,7 @@
     'disabled_by': None,
     'domain': 'button',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'button.kattenbak_factory_reset',
+    'entity_id': 'button.kattenbak',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -20,12 +20,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Factory reset',
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Factory reset',
+    'original_name': None,
     'platform': 'tuya',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -35,20 +35,20 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_platform_setup_and_discovery[button.kattenbak_factory_reset-state]
+# name: test_platform_setup_and_discovery[button.kattenbak-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Kattenbak Factory reset',
+      'friendly_name': 'Kattenbak None',
     }),
     'context': <ANY>,
-    'entity_id': 'button.kattenbak_factory_reset',
+    'entity_id': 'button.kattenbak',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
 # ---
-# name: test_platform_setup_and_discovery[button.kattenbak_manual_clean-entry]
+# name: test_platform_setup_and_discovery[button.kattenbak_2-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -61,7 +61,7 @@
     'disabled_by': None,
     'domain': 'button',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'button.kattenbak_manual_clean',
+    'entity_id': 'button.kattenbak_2',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -69,12 +69,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Manual clean',
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Manual clean',
+    'original_name': None,
     'platform': 'tuya',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -84,20 +84,20 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_platform_setup_and_discovery[button.kattenbak_manual_clean-state]
+# name: test_platform_setup_and_discovery[button.kattenbak_2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Kattenbak Manual clean',
+      'friendly_name': 'Kattenbak None',
     }),
     'context': <ANY>,
-    'entity_id': 'button.kattenbak_manual_clean',
+    'entity_id': 'button.kattenbak_2',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
 # ---
-# name: test_platform_setup_and_discovery[button.poopy_nano_2_factory_reset-entry]
+# name: test_platform_setup_and_discovery[button.poopy_nano_2-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -110,7 +110,7 @@
     'disabled_by': None,
     'domain': 'button',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'button.poopy_nano_2_factory_reset',
+    'entity_id': 'button.poopy_nano_2',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -118,12 +118,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Factory reset',
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Factory reset',
+    'original_name': None,
     'platform': 'tuya',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -133,20 +133,20 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_platform_setup_and_discovery[button.poopy_nano_2_factory_reset-state]
+# name: test_platform_setup_and_discovery[button.poopy_nano_2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Poopy Nano 2 Factory reset',
+      'friendly_name': 'Poopy Nano 2 None',
     }),
     'context': <ANY>,
-    'entity_id': 'button.poopy_nano_2_factory_reset',
+    'entity_id': 'button.poopy_nano_2',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
 # ---
-# name: test_platform_setup_and_discovery[button.poopy_nano_2_manual_clean-entry]
+# name: test_platform_setup_and_discovery[button.poopy_nano_2_2-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -159,7 +159,7 @@
     'disabled_by': None,
     'domain': 'button',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'button.poopy_nano_2_manual_clean',
+    'entity_id': 'button.poopy_nano_2_2',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -167,12 +167,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Manual clean',
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Manual clean',
+    'original_name': None,
     'platform': 'tuya',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -182,20 +182,20 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_platform_setup_and_discovery[button.poopy_nano_2_manual_clean-state]
+# name: test_platform_setup_and_discovery[button.poopy_nano_2_2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Poopy Nano 2 Manual clean',
+      'friendly_name': 'Poopy Nano 2 None',
     }),
     'context': <ANY>,
-    'entity_id': 'button.poopy_nano_2_manual_clean',
+    'entity_id': 'button.poopy_nano_2_2',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
 # ---
-# name: test_platform_setup_and_discovery[button.v20_reset_duster_cloth-entry]
+# name: test_platform_setup_and_discovery[button.v20-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -208,7 +208,7 @@
     'disabled_by': None,
     'domain': 'button',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'button.v20_reset_duster_cloth',
+    'entity_id': 'button.v20',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -216,12 +216,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Reset duster cloth',
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Reset duster cloth',
+    'original_name': None,
     'platform': 'tuya',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -231,20 +231,20 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_platform_setup_and_discovery[button.v20_reset_duster_cloth-state]
+# name: test_platform_setup_and_discovery[button.v20-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'V20 Reset duster cloth',
+      'friendly_name': 'V20 None',
     }),
     'context': <ANY>,
-    'entity_id': 'button.v20_reset_duster_cloth',
+    'entity_id': 'button.v20',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
 # ---
-# name: test_platform_setup_and_discovery[button.v20_reset_edge_brush-entry]
+# name: test_platform_setup_and_discovery[button.v20_2-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -257,7 +257,7 @@
     'disabled_by': None,
     'domain': 'button',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'button.v20_reset_edge_brush',
+    'entity_id': 'button.v20_2',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -265,12 +265,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Reset edge brush',
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Reset edge brush',
+    'original_name': None,
     'platform': 'tuya',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -280,20 +280,20 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_platform_setup_and_discovery[button.v20_reset_edge_brush-state]
+# name: test_platform_setup_and_discovery[button.v20_2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'V20 Reset edge brush',
+      'friendly_name': 'V20 None',
     }),
     'context': <ANY>,
-    'entity_id': 'button.v20_reset_edge_brush',
+    'entity_id': 'button.v20_2',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
 # ---
-# name: test_platform_setup_and_discovery[button.v20_reset_filter-entry]
+# name: test_platform_setup_and_discovery[button.v20_3-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -306,7 +306,7 @@
     'disabled_by': None,
     'domain': 'button',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'button.v20_reset_filter',
+    'entity_id': 'button.v20_3',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -314,12 +314,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Reset filter',
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Reset filter',
+    'original_name': None,
     'platform': 'tuya',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -329,20 +329,20 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_platform_setup_and_discovery[button.v20_reset_filter-state]
+# name: test_platform_setup_and_discovery[button.v20_3-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'V20 Reset filter',
+      'friendly_name': 'V20 None',
     }),
     'context': <ANY>,
-    'entity_id': 'button.v20_reset_filter',
+    'entity_id': 'button.v20_3',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
 # ---
-# name: test_platform_setup_and_discovery[button.v20_reset_map-entry]
+# name: test_platform_setup_and_discovery[button.v20_4-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -355,7 +355,7 @@
     'disabled_by': None,
     'domain': 'button',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'button.v20_reset_map',
+    'entity_id': 'button.v20_4',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -363,12 +363,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Reset map',
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Reset map',
+    'original_name': None,
     'platform': 'tuya',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -378,20 +378,20 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_platform_setup_and_discovery[button.v20_reset_map-state]
+# name: test_platform_setup_and_discovery[button.v20_4-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'V20 Reset map',
+      'friendly_name': 'V20 None',
     }),
     'context': <ANY>,
-    'entity_id': 'button.v20_reset_map',
+    'entity_id': 'button.v20_4',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
 # ---
-# name: test_platform_setup_and_discovery[button.v20_reset_roll_brush-entry]
+# name: test_platform_setup_and_discovery[button.v20_5-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -404,7 +404,7 @@
     'disabled_by': None,
     'domain': 'button',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'button.v20_reset_roll_brush',
+    'entity_id': 'button.v20_5',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -412,12 +412,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Reset roll brush',
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Reset roll brush',
+    'original_name': None,
     'platform': 'tuya',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -427,13 +427,13 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_platform_setup_and_discovery[button.v20_reset_roll_brush-state]
+# name: test_platform_setup_and_discovery[button.v20_5-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'V20 Reset roll brush',
+      'friendly_name': 'V20 None',
     }),
     'context': <ANY>,
-    'entity_id': 'button.v20_reset_roll_brush',
+    'entity_id': 'button.v20_5',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
