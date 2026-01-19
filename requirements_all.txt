@@ -70,7 +70,7 @@ PyMicroBot==0.0.23
 
 # homeassistant.components.mobile_app
 # homeassistant.components.owntracks
-PyNaCl==1.6.0
+PyNaCl==1.6.2
 
 # homeassistant.auth.mfa_modules.totp
 # homeassistant.components.homekit
@@ -80,7 +80,7 @@ PyQRCode==1.2.1
 PyRMVtransport==0.3.3
 
 # homeassistant.components.sunricher_dali
-PySrDaliGateway==0.18.0
+PySrDaliGateway==0.19.3
 
 # homeassistant.components.switchbot
 PySwitchbot==0.76.0
@@ -319,7 +319,7 @@ aiolookin==1.0.0
 aiolyric==2.0.2
 
 # homeassistant.components.mealie
-aiomealie==1.1.1
+aiomealie==1.2.0
 
 # homeassistant.components.modern_forms
 aiomodernforms==0.1.8
@@ -739,7 +739,7 @@ colorlog==6.10.1
 colorthief==0.2.1
 
 # homeassistant.components.compit
-compit-inext-api==0.3.4
+compit-inext-api==0.4.2
 
 # homeassistant.components.concord232
 concord232==0.15.1
@@ -1092,7 +1092,7 @@ google-cloud-speech==2.31.1
 google-cloud-texttospeech==2.25.1
 
 # homeassistant.components.google_generative_ai_conversation
-google-genai==1.56.0
+google-genai==1.59.0
 
 # homeassistant.components.google_travel_time
 google-maps-routing==0.6.15
@@ -1215,7 +1215,7 @@ hole==0.9.0
 holidays==0.84
 
 # homeassistant.components.frontend
-home-assistant-frontend==20260107.1
+home-assistant-frontend==20260107.2
 
 # homeassistant.components.conversation
 home-assistant-intents==2026.1.6
@@ -1351,7 +1351,7 @@ kiwiki-client==0.1.1
 knocki==0.4.2
 
 # homeassistant.components.knx
-knx-frontend==2025.12.30.151231
+knx-frontend==2026.1.15.112308
 
 # homeassistant.components.konnected
 konnected==1.2.0
@@ -1454,7 +1454,7 @@ mbddns==0.1.2
 mcp==1.14.1
 
 # homeassistant.components.minecraft_server
-mcstatus==12.0.6
+mcstatus==12.1.0
 
 # homeassistant.components.meater
 meater-python==0.0.8
@@ -1646,7 +1646,7 @@ omnilogic==0.4.5
 ondilo==0.5.0
 
 # homeassistant.components.onedrive
-onedrive-personal-sdk==0.0.17
+onedrive-personal-sdk==0.1.0
 
 # homeassistant.components.onvif
 onvif-zeep-async==4.0.4
@@ -1683,7 +1683,7 @@ openwrt-luci-rpc==1.1.17
 openwrt-ubus-rpc==0.0.2
 
 # homeassistant.components.opower
-opower==0.16.2
+opower==0.16.4
 
 # homeassistant.components.oralb
 oralb-ble==1.0.2
@@ -1866,7 +1866,7 @@ pyRFXtrx==0.31.1
 pySDCP==1
 
 # homeassistant.components.tibber
-pyTibber==0.34.4
+pyTibber==0.35.0
 
 # homeassistant.components.dlink
 pyW215==0.8.0
@@ -2021,7 +2021,7 @@ pyegps==0.2.5
 pyemoncms==0.1.3
 
 # homeassistant.components.enphase_envoy
-pyenphase==2.4.2
+pyenphase==2.4.3
 
 # homeassistant.components.envisalink
 pyenvisalink==4.7
@@ -2096,7 +2096,7 @@ pyhomeworks==1.1.2
 pyialarm==2.2.0
 
 # homeassistant.components.icloud
-pyicloud==2.2.0
+pyicloud==2.3.0
 
 # homeassistant.components.insteon
 pyinsteon==1.6.4
@@ -2132,7 +2132,7 @@ pyitachip2ir==0.0.7
 pyituran==0.1.5
 
 # homeassistant.components.jvc_projector
-pyjvcprojector==1.1.3
+pyjvcprojector==2.0.0
 
 # homeassistant.components.kaleidescape
 pykaleidescape==1.0.2
@@ -2234,7 +2234,7 @@ pynetgear==0.10.10
 pynetio==0.1.9.1
 
 # homeassistant.components.nina
-pynina==0.3.6
+pynina==1.0.2
 
 # homeassistant.components.nintendo_parental_controls
 pynintendoauth==1.0.2
@@ -2320,7 +2320,7 @@ pyplaato==0.0.19
 pypoint==3.0.0
 
 # homeassistant.components.portainer
-pyportainer==1.0.22
+pyportainer==1.0.23
 
 # homeassistant.components.probe_plus
 pyprobeplus==1.1.2
@@ -3215,7 +3215,7 @@ wsdot==0.0.1
 wyoming==1.7.2
 
 # homeassistant.components.xiaomi_ble
-xiaomi-ble==1.4.1
+xiaomi-ble==1.5.0
 
 # homeassistant.components.knx
 xknx==3.14.0
@@ -3291,7 +3291,7 @@ ziggo-mediabox-xl==1.1.0
 zm-py==0.5.4
 
 # homeassistant.components.zwave_js
-zwave-js-server-python==0.67.1
+zwave-js-server-python==0.68.0
 
 # homeassistant.components.zwave_me
 zwave-me-ws==0.4.3
