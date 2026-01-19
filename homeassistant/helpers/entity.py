@@ -1514,7 +1514,7 @@ class Entity(
             self._async_subscribe_device_updates()
 
         if self.group is not None:
-            self.group.async_added_to_hass(self)
+            self.group.async_added_to_hass()
 
     async def async_internal_will_remove_from_hass(self) -> None:
         """Run when entity will be removed from hass.
@@ -1527,7 +1527,7 @@ class Entity(
             del entity_sources(self.hass)[self.entity_id]
 
         if self.group is not None:
-            self.group.async_will_remove_from_hass(self)
+            self.group.async_will_remove_from_hass()
 
     @callback
     def _async_registry_updated(

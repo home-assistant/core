@@ -23,27 +23,36 @@ ENTITY_PREFIX = "group."
 class Group:
     """A group base class."""
 
+    _entity: Entity
+
+    def __init__(self, entity: Entity) -> None:
+        """Initialize the group."""
+        self._entity = entity
+
     @property
     def included_entity_ids(self) -> list[str]:
         """Return the list of entity IDs."""
         raise NotImplementedError
 
     @callback
-    def async_added_to_hass(self, entity: Entity) -> None:
+    def async_added_to_hass(self) -> None:
         """Handle when the entity is added to hass."""
+        entity = self._entity
         get_group_entities(entity.hass)[entity.entity_id] = entity
 
     @callback
-    def async_will_remove_from_hass(self, entity: Entity) -> None:
+    def async_will_remove_from_hass(self) -> None:
         """Handle when the entity will be removed from hass."""
+        entity = self._entity
         del get_group_entities(entity.hass)[entity.entity_id]
 
 
 class GenericGroup(Group):
     """A generic group."""
 
-    def __init__(self, included_entity_ids: list[str]) -> None:
+    def __init__(self, entity: Entity, included_entity_ids: list[str]) -> None:
         """Initialize the group."""
+        super().__init__(entity)
         self._included_entity_ids = included_entity_ids
 
     @cached_property
@@ -55,16 +64,15 @@ class GenericGroup(Group):
 class IntegrationSpecificGroup(Group):
     """An integration-specific group."""
 
-    included_unique_ids: list[str]
-
-    _entity: Entity
     _included_entity_ids: list[str] | None = None
+    _included_unique_ids: list[str]
 
-    def __init__(self, included_unique_ids: list[str]) -> None:
+    def __init__(self, entity: Entity, included_unique_ids: list[str]) -> None:
         """Initialize the group."""
-        self.included_unique_ids = included_unique_ids
+        super().__init__(entity)
+        self._included_unique_ids = included_unique_ids
 
-    @property
+    @cached_property
     def included_entity_ids(self) -> list[str]:
         """Return the list of entity IDs."""
         entity_registry = er.async_get(self._entity.hass)
@@ -82,12 +90,25 @@ class IntegrationSpecificGroup(Group):
         ]
         return self._included_entity_ids
 
-    @callback
-    def async_added_to_hass(self, entity: Entity) -> None:
-        """Handle when the entity is added to hass."""
-        self._entity = entity
-        super().async_added_to_hass(entity)
+    @property
+    def included_unique_ids(self) -> list[str]:
+        """Return the list of unique IDs."""
+        return self._included_unique_ids
 
+    @included_unique_ids.setter
+    def included_unique_ids(self, value: list[str]) -> None:
+        """Set the list of unique IDs."""
+        self._included_unique_ids = value
+        if self._included_entity_ids is not None:
+            self._included_entity_ids = None
+            del self.included_entity_ids
+
+    @callback
+    def async_added_to_hass(self) -> None:
+        """Handle when the entity is added to hass."""
+        super().async_added_to_hass()
+
+        entity = self._entity
         entity_registry = er.async_get(entity.hass)
 
         async def _handle_entity_registry_updated(event: Event[Any]) -> None:
@@ -101,6 +122,9 @@ class IntegrationSpecificGroup(Group):
                 and self._included_entity_ids is not None
                 and event.data["entity_id"] in self._included_entity_ids
             ):
+                if self._included_entity_ids is not None:
+                    self._included_entity_ids = None
+                    del self.included_entity_ids
                 entity.async_write_ha_state()
 
         entity.async_on_remove(

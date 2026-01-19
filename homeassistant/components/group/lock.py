@@ -115,7 +115,7 @@ class LockGroup(GroupEntity, LockEntity):
     ) -> None:
         """Initialize a lock group."""
         self._entity_ids = entity_ids
-        self.group = GenericGroup(entity_ids)
+        self.group = GenericGroup(self, entity_ids)
         self._attr_supported_features = LockEntityFeature.OPEN
 
         self._attr_name = name
