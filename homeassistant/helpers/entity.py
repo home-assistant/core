@@ -61,7 +61,7 @@ from .event import (
     async_track_device_registry_updated_event,
     async_track_entity_registry_updated_event,
 )
-from .frame import report_non_thread_safe_operation
+from .frame import report_non_thread_safe_operation, report_usage
 from .group import Group
 from .singleton import singleton
 from .typing import UNDEFINED, StateType, UndefinedType
@@ -461,7 +461,8 @@ class Entity(
     internal_integration_suggested_object_id: str | None
 
     # A group information in case the entity represents a group
-    group: Group | None = None
+    group: Group | None
+    _group: Group | None = None
 
     # If we reported if this entity was slow
     _slow_reported = False
@@ -1070,9 +1071,11 @@ class Entity(
         entry = self.registry_entry
 
         capability_attr = self.capability_attributes
-        if self.group is not None:
+        if self._group is not None:
             capability_attr = capability_attr.copy() if capability_attr else {}
-            capability_attr[ATTR_GROUP_ENTITIES] = self.group.included_entity_ids.copy()
+            capability_attr[ATTR_GROUP_ENTITIES] = (
+                self._group.included_entity_ids.copy()
+            )
 
         attr = capability_attr.copy() if capability_attr else {}
 
@@ -1513,8 +1516,16 @@ class Entity(
             )
             self._async_subscribe_device_updates()
 
-        if self.group is not None:
-            self.group.async_added_to_hass()
+        if hasattr(self, "group") and self.group is not None:
+            if not isinstance(self.group, Group):
+                report_usage(  # type: ignore[unreachable]
+                    f"sets a `group` attribute on entity {self.entity_id} which is "
+                    "not a `Group` instance",
+                    breaks_in_ha_version="2027.2",
+                )
+            else:
+                self._group = self.group
+                self._group.async_added_to_hass()
 
     async def async_internal_will_remove_from_hass(self) -> None:
         """Run when entity will be removed from hass.
@@ -1526,8 +1537,8 @@ class Entity(
         if self.platform:
             del entity_sources(self.hass)[self.entity_id]
 
-        if self.group is not None:
-            self.group.async_will_remove_from_hass()
+        if self._group is not None:
+            self._group.async_will_remove_from_hass()
 
     @callback
     def _async_registry_updated(
