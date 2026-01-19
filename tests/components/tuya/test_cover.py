@@ -432,7 +432,7 @@ async def test_cover_position_reversed_config_flow_option(
     )
     state = hass.states.get(entity_id)
     assert state is not None, f"{entity_id} does not exist"
-    # assert state.state == STATE_CLOSED
+    assert state.state == STATE_CLOSED
     assert state.attributes[ATTR_CURRENT_POSITION] == 0
 
     mock_manager.send_commands.reset_mock()
