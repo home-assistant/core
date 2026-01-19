@@ -504,7 +504,4 @@ class OpenEVSESensor(CoordinatorEntity[OpenEVSEDataUpdateCoordinator], SensorEnt
     @property
     def native_value(self) -> StateType | datetime:
         """Return the state of the sensor."""
-        try:
-            return self.entity_description.value_fn(self.coordinator.charger)
-        except (AttributeError, KeyError):
-            return None
+        return self.entity_description.value_fn(self.coordinator.charger)
