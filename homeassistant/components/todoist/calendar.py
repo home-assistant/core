@@ -5,6 +5,7 @@ from __future__ import annotations
 from datetime import date, datetime, timedelta
 import logging
 from typing import Any
+import uuid
 
 from todoist_api_python.api_async import TodoistAPIAsync
 from todoist_api_python.models import Label, Project, Task
@@ -20,6 +21,7 @@ from homeassistant.const import CONF_ID, CONF_NAME, CONF_TOKEN, EVENT_HOMEASSIST
 from homeassistant.core import Event, HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.entity_platform import (
     AddConfigEntryEntitiesCallback,
     AddEntitiesCallback,
@@ -50,6 +52,9 @@ from .const import (
     OVERDUE,
     PRIORITY,
     PROJECT_NAME,
+    REMINDER_DATE,
+    REMINDER_DATE_LANG,
+    REMINDER_DATE_STRING,
     SECTION_NAME,
     SERVICE_NEW_TASK,
     START,
@@ -73,6 +78,11 @@ NEW_TASK_SERVICE_SCHEMA = vol.Schema(
         vol.Exclusive(DUE_DATE_STRING, "due_date"): cv.string,
         vol.Optional(DUE_DATE_LANG): vol.All(cv.string, vol.In(DUE_DATE_VALID_LANGS)),
         vol.Exclusive(DUE_DATE, "due_date"): cv.string,
+        vol.Exclusive(REMINDER_DATE_STRING, "reminder_date"): cv.string,
+        vol.Optional(REMINDER_DATE_LANG): vol.All(
+            cv.string, vol.In(DUE_DATE_VALID_LANGS)
+        ),
+        vol.Exclusive(REMINDER_DATE, "reminder_date"): cv.string,
     }
 )
 
@@ -201,13 +211,15 @@ async def async_setup_platform(
     async_register_services(hass, coordinator)
 
 
-def async_register_services(
+def async_register_services(  # noqa: C901
     hass: HomeAssistant, coordinator: TodoistCoordinator
 ) -> None:
     """Register services."""
 
     if hass.services.has_service(DOMAIN, SERVICE_NEW_TASK):
         return
+
+    session = async_get_clientsession(hass)
 
     async def handle_new_task(call: ServiceCall) -> None:
         """Call when a user creates a new Todoist Task from Home Assistant."""
@@ -289,19 +301,56 @@ def async_register_services(
                 if due is None:
                     raise ValueError(f"Invalid due_date: {call.data[DUE_DATE]}")
                 due_date = datetime(due.year, due.month, due.day)
-            # Format it in the manner Todoist expects
-            due_date = dt_util.as_utc(due_date)
-            date_format = "%Y-%m-%dT%H:%M:%S"
-            data["due_datetime"] = datetime.strftime(due_date, date_format)
+            # Pass the datetime object directly - the library handles formatting
+            data["due_datetime"] = dt_util.as_utc(due_date)
 
-        await coordinator.api.add_task(content, **data)
+        api_task = await coordinator.api.add_task(content, **data)
 
-        # NOTE: Reminder support was removed in the todoist-api-python v3.x upgrade.
-        # The previous implementation used the Sync API which is no longer available
-        # in the library. Future options to restore reminder functionality:
-        # 1. Use add_task(..., auto_reminder=True) for Todoist's default reminder
-        # 2. Use api.add_quick_task(text) with natural language (e.g., "task remind me")
-        # 3. Direct HTTP to Sync API: https://developer.todoist.com/sync/v9/#reminders
+        # The REST API doesn't support reminders, so we use the Sync API directly
+        # to maintain functional parity with the component.
+        # https://developer.todoist.com/api/v1/#tag/Sync/Reminders/Add-a-reminder
+        _reminder_due: dict = {}
+        if REMINDER_DATE_STRING in call.data:
+            _reminder_due["string"] = call.data[REMINDER_DATE_STRING]
+
+        if REMINDER_DATE_LANG in call.data:
+            _reminder_due["lang"] = call.data[REMINDER_DATE_LANG]
+
+        if REMINDER_DATE in call.data:
+            reminder_date = dt_util.parse_datetime(call.data[REMINDER_DATE])
+            if reminder_date is None:
+                reminder = dt_util.parse_date(call.data[REMINDER_DATE])
+                if reminder is None:
+                    raise ValueError(
+                        f"Invalid reminder_date: {call.data[REMINDER_DATE]}"
+                    )
+                reminder_date = datetime(reminder.year, reminder.month, reminder.day)
+            # Format it in the manner Todoist expects (UTC with Z suffix)
+            reminder_date = dt_util.as_utc(reminder_date)
+            date_format = "%Y-%m-%dT%H:%M:%S.000000Z"
+            _reminder_due["date"] = datetime.strftime(reminder_date, date_format)
+
+        if _reminder_due:
+            sync_url = "https://api.todoist.com/api/v1/sync"
+            reminder_data = {
+                "commands": [
+                    {
+                        "type": "reminder_add",
+                        "temp_id": str(uuid.uuid1()),
+                        "uuid": str(uuid.uuid1()),
+                        "args": {
+                            "item_id": api_task.id,
+                            "type": "absolute",
+                            "due": _reminder_due,
+                        },
+                    }
+                ]
+            }
+            headers = {
+                "Authorization": f"Bearer {coordinator.token}",
+                "Content-Type": "application/json",
+            }
+            await session.post(sync_url, headers=headers, json=reminder_data)
 
         _LOGGER.debug("Created Todoist task: %s", call.data[CONTENT])
 

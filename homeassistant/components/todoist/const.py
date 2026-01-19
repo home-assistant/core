@@ -27,6 +27,10 @@ DUE: Final = "due"
 DUE_DATE_STRING: Final = "due_date_string"
 # Service Call: The language of DUE_DATE_STRING
 DUE_DATE_LANG: Final = "due_date_lang"
+# Service Call: When should user be reminded of this task (in natural language)?
+REMINDER_DATE_STRING: Final = "reminder_date_string"
+# Service Call: The language of REMINDER_DATE_STRING
+REMINDER_DATE_LANG: Final = "reminder_date_lang"
 # Service Call: The available options of DUE_DATE_LANG
 DUE_DATE_VALID_LANGS: Final = [
     "en",
@@ -47,6 +51,8 @@ DUE_DATE_VALID_LANGS: Final = [
 # Attribute: When is this task due?
 # Service Call: When is this task due?
 DUE_DATE: Final = "due_date"
+# Service Call: When should user be reminded of this task?
+REMINDER_DATE: Final = "reminder_date"
 # Attribute: Is this task due today?
 DUE_TODAY: Final = "due_today"
 # Calendar Platform: When a calendar event ends
