@@ -25,7 +25,7 @@
           "access_token": "[%key:common::config_flow::data::access_token%]"
         },
         "data_description": {
-          "access_token": "Visit developer settings and select Generate Access Token."
+          "access_token": "Your Tessie API access token"
         },
         "description": "Enter your access token from {url}."
       }
