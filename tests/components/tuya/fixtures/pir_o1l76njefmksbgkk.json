@@ -18,10 +18,7 @@
     "pir": {
       "type": "Enum",
       "value": {
-        "range": [
-          "pir",
-          "none"
-        ]
+        "range": ["pir", "none"]
       }
     },
     "battery_percentage": {
@@ -50,10 +47,7 @@
           "pir": "$"
         },
         "valueDesc": {
-          "range": [
-            "pir",
-            "none"
-          ]
+          "range": ["pir", "none"]
         },
         "valueType": "Enum",
         "enumMappingMap": {},

@@ -17,12 +17,7 @@
     "alarm_volume": {
       "type": "Enum",
       "value": {
-        "range": [
-          "low",
-          "middle",
-          "high",
-          "mute"
-        ]
+        "range": ["low", "middle", "high", "mute"]
       }
     }
   },
@@ -30,11 +25,7 @@
     "air_quality_index": {
       "type": "Enum",
       "value": {
-        "range": [
-          "level_1",
-          "level_2",
-          "level_3"
-        ]
+        "range": ["level_1", "level_2", "level_3"]
       }
     },
     "temp_current": {
@@ -124,12 +115,7 @@
     "alarm_volume": {
       "type": "Enum",
       "value": {
-        "range": [
-          "low",
-          "middle",
-          "high",
-          "mute"
-        ]
+        "range": ["low", "middle", "high", "mute"]
       }
     }
   },
@@ -157,11 +143,7 @@
           "air_quality_index": "$"
         },
         "valueDesc": {
-          "range": [
-            "level_1",
-            "level_2",
-            "level_3"
-          ]
+          "range": ["level_1", "level_2", "level_3"]
         },
         "valueType": "Enum",
         "enumMappingMap": {},
@@ -341,12 +323,7 @@
           "alarm_volume": "$"
         },
         "valueDesc": {
-          "range": [
-            "low",
-            "middle",
-            "high",
-            "mute"
-          ]
+          "range": ["low", "middle", "high", "mute"]
         },
         "valueType": "Enum",
         "enumMappingMap": {},

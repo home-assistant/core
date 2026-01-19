@@ -31,11 +31,7 @@
     "relay_status": {
       "type": "Enum",
       "value": {
-        "range": [
-          "0",
-          "1",
-          "2"
-        ]
+        "range": ["0", "1", "2"]
       }
     },
     "random_time": {
@@ -59,11 +55,7 @@
     "switch_type": {
       "type": "Enum",
       "value": {
-        "range": [
-          "flip",
-          "sync",
-          "button"
-        ]
+        "range": ["flip", "sync", "button"]
       }
     }
   },
@@ -94,24 +86,13 @@
     "fault": {
       "type": "Bitmap",
       "value": {
-        "label": [
-          "ov_cr",
-          "ov_vol",
-          "ov_pwr",
-          "ls_cr",
-          "ls_vol",
-          "ls_pow"
-        ]
+        "label": ["ov_cr", "ov_vol", "ov_pwr", "ls_cr", "ls_vol", "ls_pow"]
       }
     },
     "relay_status": {
       "type": "Enum",
       "value": {
-        "range": [
-          "0",
-          "1",
-          "2"
-        ]
+        "range": ["0", "1", "2"]
       }
     },
     "random_time": {
@@ -135,11 +116,7 @@
     "switch_type": {
       "type": "Enum",
       "value": {
-        "range": [
-          "flip",
-          "sync",
-          "button"
-        ]
+        "range": ["flip", "sync", "button"]
       }
     }
   },
@@ -215,14 +192,7 @@
           "fault": "$"
         },
         "valueDesc": {
-          "label": [
-            "ov_cr",
-            "ov_vol",
-            "ov_pwr",
-            "ls_cr",
-            "ls_vol",
-            "ls_pow"
-          ]
+          "label": ["ov_cr", "ov_vol", "ov_pwr", "ls_cr", "ls_vol", "ls_pow"]
         },
         "valueType": "Bitmap",
         "enumMappingMap": {},
@@ -237,11 +207,7 @@
           "relay_status": "$"
         },
         "valueDesc": {
-          "range": [
-            "0",
-            "1",
-            "2"
-          ]
+          "range": ["0", "1", "2"]
         },
         "valueType": "Enum",
         "enumMappingMap": {
@@ -326,11 +292,7 @@
           "switch_type": "$"
         },
         "valueDesc": {
-          "range": [
-            "flip",
-            "sync",
-            "button"
-          ]
+          "range": ["flip", "sync", "button"]
         },
         "valueType": "Enum",
         "enumMappingMap": {},

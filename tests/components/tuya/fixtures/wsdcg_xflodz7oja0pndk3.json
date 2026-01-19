@@ -17,10 +17,7 @@
     "temp_unit_convert": {
       "type": "Enum",
       "value": {
-        "range": [
-          "c",
-          "f"
-        ]
+        "range": ["c", "f"]
       }
     },
     "maxtemp_set": {
@@ -118,10 +115,7 @@
     "temp_unit_convert": {
       "type": "Enum",
       "value": {
-        "range": [
-          "c",
-          "f"
-        ]
+        "range": ["c", "f"]
       }
     },
     "maxtemp_set": {
@@ -167,21 +161,13 @@
     "temp_alarm": {
       "type": "Enum",
       "value": {
-        "range": [
-          "loweralarm",
-          "upperalarm",
-          "cancel"
-        ]
+        "range": ["loweralarm", "upperalarm", "cancel"]
       }
     },
     "hum_alarm": {
       "type": "Enum",
       "value": {
-        "range": [
-          "loweralarm",
-          "upperalarm",
-          "cancel"
-        ]
+        "range": ["loweralarm", "upperalarm", "cancel"]
       }
     },
     "temp_sensitivity": {
@@ -287,10 +273,7 @@
           "temp_unit_convert": "$"
         },
         "valueDesc": {
-          "range": [
-            "c",
-            "f"
-          ]
+          "range": ["c", "f"]
         },
         "valueType": "Enum",
         "enumMappingMap": {},
@@ -381,11 +364,7 @@
           "temp_alarm": "$"
         },
         "valueDesc": {
-          "range": [
-            "loweralarm",
-            "upperalarm",
-            "cancel"
-          ]
+          "range": ["loweralarm", "upperalarm", "cancel"]
         },
         "valueType": "Enum",
         "enumMappingMap": {},
@@ -400,11 +379,7 @@
           "hum_alarm": "$"
         },
         "valueDesc": {
-          "range": [
-            "loweralarm",
-            "upperalarm",
-            "cancel"
-          ]
+          "range": ["loweralarm", "upperalarm", "cancel"]
         },
         "valueType": "Enum",
         "enumMappingMap": {},

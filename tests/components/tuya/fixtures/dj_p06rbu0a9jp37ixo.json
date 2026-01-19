@@ -21,12 +21,7 @@
     "work_mode": {
       "type": "Enum",
       "value": {
-        "range": [
-          "white",
-          "colour",
-          "scene",
-          "music"
-        ]
+        "range": ["white", "colour", "scene", "music"]
       }
     },
     "bright_value_v2": {
@@ -84,11 +79,7 @@
         },
         "scene_units": {
           "unit_change_mode": {
-            "range": [
-              "static",
-              "jump",
-              "gradient"
-            ]
+            "range": ["static", "jump", "gradient"]
           },
           "unit_switch_duration": {
             "min": 0,
@@ -152,10 +143,7 @@
       "type": "Json",
       "value": {
         "change_mode": {
-          "range": [
-            "direct",
-            "gradient"
-          ]
+          "range": ["direct", "gradient"]
         },
         "bright": {
           "min": 0,
@@ -198,10 +186,7 @@
       "type": "Json",
       "value": {
         "change_mode": {
-          "range": [
-            "direct",
-            "gradient"
-          ]
+          "range": ["direct", "gradient"]
         },
         "bright": {
           "min": 0,
@@ -279,12 +264,7 @@
     "work_mode": {
       "type": "Enum",
       "value": {
-        "range": [
-          "white",
-          "colour",
-          "scene",
-          "music"
-        ]
+        "range": ["white", "colour", "scene", "music"]
       }
     },
     "bright_value_v2": {
@@ -342,11 +322,7 @@
         },
         "scene_units": {
           "unit_change_mode": {
-            "range": [
-              "static",
-              "jump",
-              "gradient"
-            ]
+            "range": ["static", "jump", "gradient"]
           },
           "unit_switch_duration": {
             "min": 0,
@@ -410,10 +386,7 @@
       "type": "Json",
       "value": {
         "change_mode": {
-          "range": [
-            "direct",
-            "gradient"
-          ]
+          "range": ["direct", "gradient"]
         },
         "bright": {
           "min": 0,
@@ -456,10 +429,7 @@
       "type": "Json",
       "value": {
         "change_mode": {
-          "range": [
-            "direct",
-            "gradient"
-          ]
+          "range": ["direct", "gradient"]
         },
         "bright": {
           "min": 0,
@@ -570,12 +540,7 @@
           "work_mode": "$"
         },
         "valueDesc": {
-          "range": [
-            "white",
-            "colour",
-            "scene",
-            "music"
-          ]
+          "range": ["white", "colour", "scene", "music"]
         },
         "valueType": "Enum",
         "enumMappingMap": {},
@@ -669,11 +634,7 @@
           },
           "scene_units": {
             "unit_change_mode": {
-              "range": [
-                "static",
-                "jump",
-                "gradient"
-              ]
+              "range": ["static", "jump", "gradient"]
             },
             "unit_switch_duration": {
               "min": 0,
@@ -755,10 +716,7 @@
         },
         "valueDesc": {
           "change_mode": {
-            "range": [
-              "direct",
-              "gradient"
-            ]
+            "range": ["direct", "gradient"]
           },
           "bright": {
             "min": 0,
@@ -810,10 +768,7 @@
         },
         "valueDesc": {
           "change_mode": {
-            "range": [
-              "direct",
-              "gradient"
-            ]
+            "range": ["direct", "gradient"]
           },
           "bright": {
             "min": 0,

@@ -31,11 +31,7 @@
     "relay_status": {
       "type": "Enum",
       "value": {
-        "range": [
-          "0",
-          "1",
-          "2"
-        ]
+        "range": ["0", "1", "2"]
       }
     },
     "random_time": {
@@ -59,11 +55,7 @@
     "switch_type": {
       "type": "Enum",
       "value": {
-        "range": [
-          "flip",
-          "sync",
-          "button"
-        ]
+        "range": ["flip", "sync", "button"]
       }
     }
   },
@@ -85,11 +77,7 @@
     "relay_status": {
       "type": "Enum",
       "value": {
-        "range": [
-          "0",
-          "1",
-          "2"
-        ]
+        "range": ["0", "1", "2"]
       }
     },
     "random_time": {
@@ -113,11 +101,7 @@
     "switch_type": {
       "type": "Enum",
       "value": {
-        "range": [
-          "flip",
-          "sync",
-          "button"
-        ]
+        "range": ["flip", "sync", "button"]
       }
     }
   },
@@ -173,11 +157,7 @@
           "relay_status": "$"
         },
         "valueDesc": {
-          "range": [
-            "0",
-            "1",
-            "2"
-          ]
+          "range": ["0", "1", "2"]
         },
         "valueType": "Enum",
         "enumMappingMap": {
@@ -262,11 +242,7 @@
           "switch_type": "$"
         },
         "valueDesc": {
-          "range": [
-            "flip",
-            "sync",
-            "button"
-          ]
+          "range": ["flip", "sync", "button"]
         },
         "valueType": "Enum",
         "enumMappingMap": {},
