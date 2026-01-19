@@ -76,9 +76,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: AWSBedrockConfigEntry) -
 
     entry.runtime_data = client
 
-    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-
-    # Register web search API if any subentry has it enabled
+    # Register web search API BEFORE setting up platforms if any subentry has it enabled
     web_search_registered = False
     for subentry in entry.subentries.values():
         if subentry.data.get(CONF_ENABLE_WEB_SEARCH, DEFAULT[CONF_ENABLE_WEB_SEARCH]):
@@ -91,6 +89,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: AWSBedrockConfigEntry) -
                 web_search_registered = True
                 LOGGER.debug("Registered AWS Bedrock Web Search API")
                 break
+
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     entry.async_on_unload(entry.add_update_listener(async_update_options))
 
