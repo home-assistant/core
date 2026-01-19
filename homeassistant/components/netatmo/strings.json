@@ -72,9 +72,6 @@
       }
     },
     "sensor": {
-      "therm_measured_temperature": {
-        "name": "Temperature"
-      },
       "gust_angle": {
         "name": "Gust angle"
       },
@@ -124,6 +121,9 @@
       },
       "temp_trend": {
         "name": "Temperature trend"
+      },
+      "therm_measured_temperature": {
+        "name": "Temperature"
       },
       "wifi_strength": {
         "name": "Wi-Fi strength"
