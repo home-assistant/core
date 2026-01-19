@@ -53,6 +53,12 @@
         "title": "[%key:common::config_flow::title::reauth%]"
       },
       "registration_complete": {
+        "data": {
+          "qr_code": "QR code"
+        },
+        "data_description": {
+          "qr_code": "Scan this QR code with your phone to set up the virtual key."
+        },
         "description": "To enable command signing, you must open the Tesla app, select your vehicle, and then visit the following URL to set up a virtual key. You must repeat this process for each vehicle.\n\n{virtual_key_url}",
         "title": "Command signing"
       }
@@ -625,6 +631,12 @@
     },
     "update_failed": {
       "message": "{endpoint} data request failed: {message}"
+    },
+    "wake_up_failed": {
+      "message": "Failed to wake up vehicle: {message}"
+    },
+    "wake_up_timeout": {
+      "message": "Could not wake up vehicle"
     }
   }
 }
