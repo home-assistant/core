@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import hashlib
 import logging
 
 from airtouch5py.airtouch5_simple_client import Airtouch5SimpleClient
@@ -29,13 +28,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: Airtouch5ConfigEntry) ->
     # Create API instance
     host = entry.data[CONF_HOST]
 
-    short_hash = hashlib.sha1(host.encode("utf-8")).hexdigest()[:8]
-    # bootstrapping device from the stored config entry data, if there is none it means the device cannot be discovered. We proceed anyway and generate a hash from the host.
+    # So for any device that is created using the old flow (AC_0) is the ID. So we just assume that.
     device = AirtouchDevice(
         host,
         entry.data.get("console_id", ""),
         entry.data.get("model", "AirTouch5"),
-        entry.data.get("system_id", short_hash),
+        entry.data.get("system_id", 0),
         entry.data.get("name", "Unknown Device"),
     )
     client = Airtouch5SimpleClient(host)
@@ -86,7 +84,6 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
             new_unique_device_id = str(airtouch_device.system_id)
 
             # Migrate entity unique IDs
-
             ent_reg = er.async_get(hass)
             for entity_id, entity in list(ent_reg.entities.items()):
                 if entity.config_entry_id != config_entry.entry_id:
@@ -100,8 +97,6 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
                     ent_reg.async_update_entity(
                         entity_id,
                         new_unique_id=new_unique_id,
-                        device_id=entity.device_id,
-                        name=f"AC {airtouch_device.name}",
                     )
 
                 elif old_unique_id.startswith("zone_"):
@@ -118,7 +113,6 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
                     ent_reg.async_update_entity(
                         entity_id,
                         new_unique_id=new_unique_id,
-                        device_id=entity.device_id,
                     )
                 else:
                     _LOGGER.warning(
