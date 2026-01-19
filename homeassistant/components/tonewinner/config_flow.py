@@ -72,7 +72,7 @@ class TonewinnerConfigFlow(ConfigEntryFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
-    def async_get_options_flow(config_entry: ConfigEntry):
+    def async_get_options_flow(config_entry: ConfigEntry) -> OptionsFlow:
         """Get the options flow for this handler."""
         return TonewinnerOptionsFlow(config_entry)
 
@@ -90,6 +90,18 @@ class TonewinnerOptionsFlow(OptionsFlow):
         """Manage the options."""
         if user_input is not None:
             _LOGGER.debug("Saving options: %s", user_input)
+
+            # Update serial port settings in entry data
+            new_data = dict(self._config_entry.data)
+            if CONF_SERIAL_PORT in user_input:
+                new_data[CONF_SERIAL_PORT] = user_input[CONF_SERIAL_PORT]
+            if CONF_BAUD_RATE in user_input:
+                new_data[CONF_BAUD_RATE] = user_input[CONF_BAUD_RATE]
+
+            # Update the config entry with new data
+            self.hass.config_entries.async_update_entry(
+                self._config_entry, data=new_data
+            )
 
             # Transform form data into source_mappings structure
             source_mappings = {}
@@ -114,6 +126,32 @@ class TonewinnerOptionsFlow(OptionsFlow):
 
         # Build options schema as list to avoid mypy type issues
         schema_items: list[tuple[Any, Any]] = []
+
+        # Add serial port configuration at the top
+        schema_items.append(
+            (
+                vol.Optional(
+                    CONF_SERIAL_PORT,
+                    default=self._config_entry.data.get(
+                        CONF_SERIAL_PORT, "/dev/ttyUSB0"
+                    ),
+                ),
+                cv.string,
+            )
+        )
+        schema_items.append(
+            (
+                vol.Optional(
+                    CONF_BAUD_RATE,
+                    default=self._config_entry.data.get(
+                        CONF_BAUD_RATE, DEFAULT_BAUD_RATE
+                    ),
+                ),
+                cv.positive_int,
+            )
+        )
+
+        # Add source mappings
         for source_name, source_code in INPUT_SOURCES.items():
             # Default to enabled (True) and use source name as default custom name
             current_mapping = current_mappings.get(source_code, {})

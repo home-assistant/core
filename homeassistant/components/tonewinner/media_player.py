@@ -271,6 +271,18 @@ class TonewinnerMediaPlayer(MediaPlayerEntity):
             with contextlib.suppress(asyncio.CancelledError):
                 await self._command_timeout_task
 
+        # Close serial connection
+        await self.disconnect()
+
+    async def disconnect(self) -> None:
+        """Disconnect from serial port."""
+        _LOGGER.debug("Disconnecting from serial port")
+        if self._transport:
+            self._transport.close()
+            self._transport = None
+            self._protocol = None
+            _LOGGER.info("Serial connection closed")
+
     async def _query_input_source(self) -> None:
         """Query device for current input source."""
         if self._attr_state != MediaPlayerState.ON:

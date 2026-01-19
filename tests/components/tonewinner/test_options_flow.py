@@ -13,9 +13,7 @@ from homeassistant.data_entry_flow import FlowResultType
 from tests.common import MockConfigEntry
 
 
-async def test_options_flow_init(
-    hass: HomeAssistant, mock_config_entry
-) -> None:
+async def test_options_flow_init(hass: HomeAssistant, mock_config_entry) -> None:
     """Test options flow initialization."""
     mock_config_entry.add_to_hass(hass)
 
@@ -25,9 +23,17 @@ async def test_options_flow_init(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "init"
 
-    # Verify schema contains fields for all input sources
+    # Verify schema contains fields for serial port configuration
     data_schema = result["data_schema"]
     assert data_schema is not None
+    schema = data_schema.schema
+    assert CONF_SERIAL_PORT in schema
+    assert CONF_BAUD_RATE in schema
+
+    # Verify schema contains fields for all input sources
+    for source_code in INPUT_SOURCES.values():
+        assert f"{source_code}_enabled" in schema
+        assert f"{source_code}_name" in schema
 
 
 async def test_options_flow_with_defaults(
@@ -278,7 +284,108 @@ async def test_options_flow_partial_configuration(
     assert "HD1" in source_mappings
     assert "HD2" in source_mappings
     assert source_mappings["HD1"]["name"] == "HDMI 1"
+    assert source_mappings["HD2"]["enabled"] is True
     assert source_mappings["HD2"]["name"] == "HDMI 2"
+
+
+async def test_options_flow_change_serial_and_sources(
+    hass: HomeAssistant,
+) -> None:
+    """Test changing both serial port and source mappings together."""
+    # Start with existing mappings
+    existing_mappings = {
+        "HD1": {"enabled": True, "name": "Living Room TV"},
+        "HD2": {"enabled": False, "name": "Bedroom TV"},
+    }
+
+    mock_config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_SERIAL_PORT: "/dev/ttyUSB0",
+            CONF_BAUD_RATE: 9600,
+        },
+        options={CONF_SOURCE_MAPPINGS: existing_mappings},
+        entry_id="test_entry_id",
+        title="Tonewinner AT-500",
+    )
+    mock_config_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.options.async_init(mock_config_entry.entry_id)
+
+    # Update both serial port and source mappings
+    user_input = {
+        CONF_SERIAL_PORT: "/dev/ttyAMA0",
+        CONF_BAUD_RATE: 19200,
+        "HD1_enabled": False,  # Disable it
+        "HD1_name": "New Living Room TV",
+        "HD2_enabled": True,  # Enable it
+        "HD2_name": "New Bedroom TV",
+        "BT_enabled": True,
+        "BT_name": "Bluetooth Audio",
+    }
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input=user_input,
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
+    # Verify entry data was updated with new serial port settings
+    assert mock_config_entry.data[CONF_SERIAL_PORT] == "/dev/ttyAMA0"
+    assert mock_config_entry.data[CONF_BAUD_RATE] == 19200
+
+    # Verify source mappings were updated correctly
+    source_mappings = result["data"][CONF_SOURCE_MAPPINGS]
+    assert source_mappings["HD1"]["enabled"] is False
+    assert source_mappings["HD1"]["name"] == "New Living Room TV"
+    assert source_mappings["HD2"]["enabled"] is True
+    assert source_mappings["HD2"]["name"] == "New Bedroom TV"
+    assert source_mappings["BT"]["enabled"] is True
+    assert source_mappings["BT"]["name"] == "Bluetooth Audio"
+
+
+async def test_options_flow_change_serial_port(
+    hass: HomeAssistant,
+) -> None:
+    """Test changing serial port configuration in options flow."""
+    mock_config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_SERIAL_PORT: "/dev/ttyUSB0",
+            CONF_BAUD_RATE: 9600,
+        },
+        options={},
+        entry_id="test_entry_id",
+        title="Tonewinner AT-500",
+    )
+    mock_config_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.options.async_init(mock_config_entry.entry_id)
+
+    # Change serial port settings
+    user_input = {
+        CONF_SERIAL_PORT: "/dev/ttyUSB1",
+        CONF_BAUD_RATE: 115200,
+        "HD1_enabled": True,
+        "HD1_name": "HDMI 1",
+    }
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input=user_input,
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == ""
+
+    # Verify entry data was updated with new serial port settings
+    assert mock_config_entry.data[CONF_SERIAL_PORT] == "/dev/ttyUSB1"
+    assert mock_config_entry.data[CONF_BAUD_RATE] == 115200
+
+    # Verify source mappings are still saved
+    source_mappings = result["data"][CONF_SOURCE_MAPPINGS]
+    assert "HD1" in source_mappings
 
 
 async def test_options_flow_update_existing(
