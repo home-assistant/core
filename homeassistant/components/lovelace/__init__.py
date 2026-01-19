@@ -455,7 +455,7 @@ async def _async_migrate_default_config(
                 CONF_URL_PATH: DOMAIN,
             }
         )
-    except Exception:
+    except (HomeAssistantError, vol.Invalid):
         _LOGGER.exception("Failed to create dashboard entry during migration")
         return
 
