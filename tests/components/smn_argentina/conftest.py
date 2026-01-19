@@ -164,16 +164,10 @@ def mock_smn_api_client(
     mock_shortterm_alerts,
 ) -> Generator[AsyncMock]:
     """Mock SMN API client."""
-    with (
-        patch(
-            "homeassistant.components.smn_argentina.coordinator.SMNApiClient",
-            autospec=True,
-        ) as mock_client,
-        patch(
-            "homeassistant.components.smn_argentina.api.SMNApiClient",
-            new=mock_client,
-        ),
-    ):
+    with patch(
+        "homeassistant.components.smn_argentina.coordinator.SMNApiClient",
+        autospec=True,
+    ) as mock_client:
         client = mock_client.return_value
         client.async_get_location = AsyncMock(return_value=mock_location_data)
         client.async_get_current_weather = AsyncMock(return_value=mock_current_weather)

@@ -1,8 +1,0 @@
-# Services for the SMN Weather integration
-get_alerts_for_location:
-  fields:
-    location_id:
-      required: true
-      example: "4864"
-      selector:
-        text:

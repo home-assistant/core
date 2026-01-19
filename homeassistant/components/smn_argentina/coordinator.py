@@ -7,6 +7,8 @@ from datetime import timedelta
 import logging
 from typing import Any
 
+from smn_argentina_api import SMNApiClient, SMNTokenManager
+
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE
 from homeassistant.core import HomeAssistant
@@ -15,7 +17,6 @@ from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import dt as dt_util
 
-from .api import SMNApiClient, SMNTokenManager
 from .const import DEFAULT_SCAN_INTERVAL, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
