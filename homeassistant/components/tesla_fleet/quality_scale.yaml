@@ -55,8 +55,7 @@ rules:
     status: todo
     comment: Coordinator raises UpdateFailed but does not implement the full log-once pattern (log when becoming unavailable, log when recovering).
   parallel-updates:
-    status: todo
-    comment: device_tracker.py
+    status: done
   reauthentication-flow:
     status: done
   test-coverage:
