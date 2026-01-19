@@ -15,7 +15,7 @@ from bleak_retry_connector import close_stale_connections_by_address
 
 from homeassistant.components import bluetooth
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
@@ -100,10 +100,11 @@ class AirthingsBLEDataUpdateCoordinator(DataUpdateCoordinator[AirthingsDevice]):
         except Exception as err:
             raise UpdateFailed(f"Unable to fetch data: {err}") from err
 
-        await self._check_connectivity_mode_issue(data)
+        self._check_connectivity_mode_issue(data)
         return data
 
-    async def _check_connectivity_mode_issue(self, data: AirthingsDevice) -> None:
+    @callback
+    def _check_connectivity_mode_issue(self, data: AirthingsDevice) -> None:
         """Create or remove connectivity mode issue based on device data."""
         connectivity_mode = data.sensors.get("connectivity_mode")
         if connectivity_mode is None:
