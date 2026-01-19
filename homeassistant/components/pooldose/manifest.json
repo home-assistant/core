@@ -9,7 +9,8 @@
     }
   ],
   "documentation": "https://www.home-assistant.io/integrations/pooldose",
+  "integration_type": "device",
   "iot_class": "local_polling",
-  "quality_scale": "bronze",
-  "requirements": ["python-pooldose==0.8.0"]
+  "quality_scale": "platinum",
+  "requirements": ["python-pooldose==0.8.2"]
 }

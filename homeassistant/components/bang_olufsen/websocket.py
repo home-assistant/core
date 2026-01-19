@@ -6,6 +6,7 @@ import logging
 from typing import TYPE_CHECKING
 
 from mozart_api.models import (
+    BatteryState,
     BeoRemoteButton,
     ButtonEvent,
     ListeningModeProps,
@@ -27,20 +28,20 @@ from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.util.enum import try_parse_enum
 
 from .const import (
-    BANG_OLUFSEN_WEBSOCKET_EVENT,
+    BEO_WEBSOCKET_EVENT,
     CONNECTION_STATUS,
     DOMAIN,
     EVENT_TRANSLATION_MAP,
-    BangOlufsenModel,
+    BeoModel,
     WebsocketNotification,
 )
-from .entity import BangOlufsenBase
+from .entity import BeoBase
 from .util import get_device, get_remotes
 
 _LOGGER = logging.getLogger(__name__)
 
 
-class BangOlufsenWebsocket(BangOlufsenBase):
+class BeoWebsocket(BeoBase):
     """The WebSocket listeners."""
 
     def __init__(
@@ -48,7 +49,7 @@ class BangOlufsenWebsocket(BangOlufsenBase):
     ) -> None:
         """Initialize the WebSocket listeners."""
 
-        BangOlufsenBase.__init__(self, entry, client)
+        BeoBase.__init__(self, entry, client)
 
         self.hass = hass
         self._device = get_device(hass, self._unique_id)
@@ -60,6 +61,7 @@ class BangOlufsenWebsocket(BangOlufsenBase):
         self._client.get_active_listening_mode_notifications(
             self.on_active_listening_mode
         )
+        self._client.get_battery_notifications(self.on_battery_notification)
         self._client.get_beo_remote_button_notifications(
             self.on_beo_remote_button_notification
         )
@@ -112,6 +114,14 @@ class BangOlufsenWebsocket(BangOlufsenBase):
         async_dispatcher_send(
             self.hass,
             f"{DOMAIN}_{self._unique_id}_{WebsocketNotification.ACTIVE_LISTENING_MODE}",
+            notification,
+        )
+
+    def on_battery_notification(self, notification: BatteryState) -> None:
+        """Send battery dispatch."""
+        async_dispatcher_send(
+            self.hass,
+            f"{DOMAIN}_{self._unique_id}_{WebsocketNotification.BATTERY}",
             notification,
         )
 
@@ -178,7 +188,7 @@ class BangOlufsenWebsocket(BangOlufsenBase):
                     self.entry.entry_id
                 )
                 if device.serial_number is not None
-                and device.model == BangOlufsenModel.BEOREMOTE_ONE
+                and device.model == BeoModel.BEOREMOTE_ONE
             ]
             # Get paired remotes from device
             remote_serial_numbers = [
@@ -274,4 +284,4 @@ class BangOlufsenWebsocket(BangOlufsenBase):
         }
 
         _LOGGER.debug("%s", debug_notification)
-        self.hass.bus.async_fire(BANG_OLUFSEN_WEBSOCKET_EVENT, debug_notification)
+        self.hass.bus.async_fire(BEO_WEBSOCKET_EVENT, debug_notification)

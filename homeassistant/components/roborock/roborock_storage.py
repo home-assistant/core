@@ -1,6 +1,5 @@
 """Roborock storage."""
 
-import dataclasses
 import logging
 from pathlib import Path
 import shutil
@@ -17,7 +16,7 @@ _LOGGER = logging.getLogger(__name__)
 
 STORAGE_PATH = f".storage/{DOMAIN}"
 MAPS_PATH = "maps"
-CACHE_VERSION = 1
+CACHE_VERSION = 2
 
 
 def _storage_path_prefix(hass: HomeAssistant, entry_id: str) -> Path:
@@ -44,6 +43,31 @@ async def async_cleanup_map_storage(hass: HomeAssistant, entry_id: str) -> None:
     await hass.async_add_executor_job(remove, path_prefix)
 
 
+class StoreImpl(Store[dict[str, Any]]):
+    """Store implementation for Roborock cache."""
+
+    def __init__(self, hass: HomeAssistant, entry_id: str) -> None:
+        """Initialize StoreImpl."""
+        super().__init__(
+            hass,
+            version=CACHE_VERSION,
+            key=f"{DOMAIN}/{entry_id}",
+            private=True,
+        )
+
+    async def _async_migrate_func(
+        self,
+        old_major_version: int,
+        old_minor_version: int,
+        old_data: dict[str, Any],
+    ) -> dict[str, Any]:
+        """Wipe out old caches with the old format."""
+        if old_major_version == 1:
+            # No need for migration as version 1 was never in any stable releases
+            return {}
+        return old_data
+
+
 class CacheStore(Cache):
     """Store and retrieve cache for a Roborock device.
 
@@ -55,19 +79,14 @@ class CacheStore(Cache):
 
     def __init__(self, hass: HomeAssistant, entry_id: str) -> None:
         """Initialize CacheStore."""
-        self._cache_store = Store[dict[str, Any]](
-            hass,
-            version=CACHE_VERSION,
-            key=f"{DOMAIN}/{entry_id}",
-            private=True,
-        )
+        self._cache_store = StoreImpl(hass, entry_id)
         self._cache_data: CacheData | None = None
 
     async def get(self) -> CacheData:
         """Retrieve cached metadata."""
         if self._cache_data is None:
             if data := await self._cache_store.async_load():
-                self._cache_data = CacheData(**data)
+                self._cache_data = CacheData.from_dict(data)
             else:
                 self._cache_data = CacheData()
 
@@ -80,7 +99,7 @@ class CacheStore(Cache):
     async def flush(self) -> None:
         """Flush cached metadata to disk."""
         if self._cache_data is not None:
-            await self._cache_store.async_save(dataclasses.asdict(self._cache_data))
+            await self._cache_store.async_save(self._cache_data.as_dict())
 
     async def async_remove(self) -> None:
         """Remove cached metadata from disk."""

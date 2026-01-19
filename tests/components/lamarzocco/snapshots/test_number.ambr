@@ -1,4 +1,124 @@
 # serializer version: 1
+# name: test_brew_by_weight_dose[Linea Mini][entry-dose-1]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'max': 100,
+      'min': 5,
+      'mode': <NumberMode.AUTO: 'auto'>,
+      'step': 0.1,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'number',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'number.lm012345_brew_by_weight_dose_1',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Brew by weight dose 1',
+    'options': dict({
+    }),
+    'original_device_class': <NumberDeviceClass.WEIGHT: 'weight'>,
+    'original_icon': None,
+    'original_name': 'Brew by weight dose 1',
+    'platform': 'lamarzocco',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'bbw_dose',
+    'unique_id': 'LM012345_bbw_dose_1',
+    'unit_of_measurement': <UnitOfMass.GRAMS: 'g'>,
+  })
+# ---
+# name: test_brew_by_weight_dose[Linea Mini][entry-dose-2]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'max': 100,
+      'min': 5,
+      'mode': <NumberMode.AUTO: 'auto'>,
+      'step': 0.1,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'number',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'number.lm012345_brew_by_weight_dose_2',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Brew by weight dose 2',
+    'options': dict({
+    }),
+    'original_device_class': <NumberDeviceClass.WEIGHT: 'weight'>,
+    'original_icon': None,
+    'original_name': 'Brew by weight dose 2',
+    'platform': 'lamarzocco',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'bbw_dose',
+    'unique_id': 'LM012345_bbw_dose_2',
+    'unit_of_measurement': <UnitOfMass.GRAMS: 'g'>,
+  })
+# ---
+# name: test_brew_by_weight_dose[Linea Mini][state-dose-1]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'weight',
+      'friendly_name': 'LM012345 Brew by weight dose 1',
+      'max': 100,
+      'min': 5,
+      'mode': <NumberMode.AUTO: 'auto'>,
+      'step': 0.1,
+      'unit_of_measurement': <UnitOfMass.GRAMS: 'g'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.lm012345_brew_by_weight_dose_1',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '34.5',
+  })
+# ---
+# name: test_brew_by_weight_dose[Linea Mini][state-dose-2]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'weight',
+      'friendly_name': 'LM012345 Brew by weight dose 2',
+      'max': 100,
+      'min': 5,
+      'mode': <NumberMode.AUTO: 'auto'>,
+      'step': 0.1,
+      'unit_of_measurement': <UnitOfMass.GRAMS: 'g'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.lm012345_brew_by_weight_dose_2',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '17.5',
+  })
+# ---
 # name: test_general_numbers[coffee_target_temperature-94-set_coffee_target_temperature-kwargs0]
   StateSnapshot({
     'attributes': ReadOnlyDict({
@@ -44,6 +164,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Coffee target temperature',
     'options': dict({
     }),
     'original_device_class': <NumberDeviceClass.TEMPERATURE: 'temperature'>,
@@ -103,6 +224,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Smart standby time',
     'options': dict({
     }),
     'original_device_class': <NumberDeviceClass.DURATION: 'duration'>,
@@ -162,6 +284,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Prebrew off time',
     'options': dict({
     }),
     'original_device_class': <NumberDeviceClass.DURATION: 'duration'>,
@@ -221,6 +344,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Prebrew on time',
     'options': dict({
     }),
     'original_device_class': <NumberDeviceClass.DURATION: 'duration'>,
@@ -280,6 +404,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Preinfusion time',
     'options': dict({
     }),
     'original_device_class': <NumberDeviceClass.DURATION: 'duration'>,
@@ -339,6 +464,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Steam target temperature',
     'options': dict({
     }),
     'original_device_class': <NumberDeviceClass.TEMPERATURE: 'temperature'>,
