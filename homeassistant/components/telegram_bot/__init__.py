@@ -460,15 +460,14 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                 context=service.context, **kwargs
             )
         elif msgtype == SERVICE_SEND_MEDIA_GROUP:
-            message_ids = await notify_service.send_media_group(
+            send_media_group_response = await notify_service.send_media_group(
                 context=service.context, **kwargs
             )
 
-            chat_id: int = kwargs[ATTR_CHAT_ID]
             return {
                 "chats": [
-                    {"chat_id": chat_id, "message_id": message_id}
-                    for message_id in message_ids
+                    {"chat_id": send_media_group_response[0], "message_id": message_id}
+                    for message_id in send_media_group_response[1]
                 ]
             }
         elif msgtype == SERVICE_SEND_CHAT_ACTION:
