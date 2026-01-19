@@ -18,3 +18,4 @@ docked: *trigger_common
 errored: *trigger_common
 paused_cleaning: *trigger_common
 started_cleaning: *trigger_common
+started_returning: *trigger_common
