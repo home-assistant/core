@@ -263,6 +263,39 @@ async def test_connectivity_issue_no_trigger(
     assert issue is None
 
 
+async def test_connectivity_issue_removed_on_entry_remove(
+    hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test that connectivity mode issue is removed when entry is removed."""
+    device = deepcopy(CORENTIUM_HOME_2_DEVICE_INFO)
+    device.sensors["connectivity_mode"] = "SmartLink"
+
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=CORENTIUM_HOME_2_SERVICE_INFO.address,
+        data={DEVICE_MODEL: device.model.value},
+    )
+    entry.add_to_hass(hass)
+
+    inject_bluetooth_service_info(hass, CORENTIUM_HOME_2_SERVICE_INFO)
+
+    with (
+        patch_async_ble_device_from_address(CORENTIUM_HOME_2_SERVICE_INFO.device),
+        patch_airthings_ble(device),
+    ):
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    issue_id = f"smartlink_detected_{device.address}"
+    assert issue_registry.async_get_issue(DOMAIN, issue_id) is not None
+
+    await hass.config_entries.async_remove(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert issue_registry.async_get_issue(DOMAIN, issue_id) is None
+
+
 async def test_setup_ble_device_not_found(
     hass: HomeAssistant,
 ) -> None:
