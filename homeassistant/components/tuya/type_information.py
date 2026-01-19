@@ -109,7 +109,7 @@ class BitmapTypeInformation(TypeInformation[int]):
 
     @classmethod
     def _from_json(
-        cls, dpcode: str, type_data: str, *, report_type: str | None = None
+        cls, dpcode: str, type_data: str, *, report_type: str | None
     ) -> Self | None:
         """Load JSON string and return a BitmapTypeInformation object."""
         if not (parsed := cast(dict[str, Any] | None, json_loads_object(type_data))):
