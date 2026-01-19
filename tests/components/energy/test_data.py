@@ -1,6 +1,14 @@
 """Test energy data storage and migration."""
 
-from homeassistant.components.energy.data import EnergyManager
+import pytest
+import voluptuous as vol
+
+from homeassistant.components.energy.data import (
+    ENERGY_SOURCE_SCHEMA,
+    FLOW_FROM_GRID_SOURCE_SCHEMA,
+    POWER_CONFIG_SCHEMA,
+    EnergyManager,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import storage
 
@@ -255,3 +263,78 @@ async def test_power_config_takes_precedence_over_stat_rate(
     source = manager.data["energy_sources"][0]
     # stat_rate should be overwritten to point to the generated inverted sensor
     assert source["stat_rate"] == "sensor.battery_power_inverted"
+
+
+async def test_power_config_validation_empty() -> None:
+    """Test that empty power_config raises validation error."""
+    with pytest.raises(vol.Invalid, match="power_config must have at least one option"):
+        POWER_CONFIG_SCHEMA({})
+
+
+async def test_power_config_validation_multiple_methods() -> None:
+    """Test that power_config with multiple methods raises validation error."""
+    # Both stat_rate and stat_rate_inverted (should fail due to Exclusive)
+    with pytest.raises(vol.Invalid):
+        POWER_CONFIG_SCHEMA(
+            {
+                "stat_rate": "sensor.power",
+                "stat_rate_inverted": "sensor.power",
+            }
+        )
+
+    # Both stat_rate and stat_rate_from/to (should fail due to Exclusive)
+    with pytest.raises(vol.Invalid):
+        POWER_CONFIG_SCHEMA(
+            {
+                "stat_rate": "sensor.power",
+                "stat_rate_from": "sensor.discharge",
+                "stat_rate_to": "sensor.charge",
+            }
+        )
+
+    # Both stat_rate_inverted and stat_rate_from/to (should fail due to Exclusive)
+    with pytest.raises(vol.Invalid):
+        POWER_CONFIG_SCHEMA(
+            {
+                "stat_rate_inverted": "sensor.power",
+                "stat_rate_from": "sensor.discharge",
+                "stat_rate_to": "sensor.charge",
+            }
+        )
+
+
+async def test_flow_from_validation_multiple_prices() -> None:
+    """Test that flow_from validation rejects both entity and number price."""
+    # Both entity_energy_price and number_energy_price should fail
+    with pytest.raises(
+        vol.Invalid, match="Define either an entity or a fixed number for the price"
+    ):
+        FLOW_FROM_GRID_SOURCE_SCHEMA(
+            {
+                "stat_energy_from": "sensor.energy",
+                "entity_energy_price": "sensor.price",
+                "number_energy_price": 0.15,
+            }
+        )
+
+
+async def test_energy_sources_validation_multiple_grids() -> None:
+    """Test that multiple grid sources are rejected."""
+    # Multiple grid sources should fail validation
+    with pytest.raises(vol.Invalid, match="You cannot have more than 1 grid source"):
+        ENERGY_SOURCE_SCHEMA(
+            [
+                {
+                    "type": "grid",
+                    "flow_from": [],
+                    "flow_to": [],
+                    "cost_adjustment_day": 0,
+                },
+                {
+                    "type": "grid",
+                    "flow_from": [],
+                    "flow_to": [],
+                    "cost_adjustment_day": 0,
+                },
+            ]
+        )
