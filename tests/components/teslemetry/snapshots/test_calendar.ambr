@@ -20,6 +20,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Buy tariff',
     'options': dict({
     }),
     'original_device_class': None,
@@ -78,6 +79,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Sell tariff',
     'options': dict({
     }),
     'original_device_class': None,
