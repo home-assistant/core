@@ -26,7 +26,9 @@ class NRGkickEntity(CoordinatorEntity[NRGkickDataUpdateCoordinator]):
         self._key = key
 
         data = self.coordinator.data
-        info_data: dict[str, Any] = data.info if data else {}
+        assert data is not None
+
+        info_data: dict[str, Any] = data.info
         device_info: dict[str, Any] = info_data.get("general", {})
         network_info: dict[str, Any] = info_data.get("network", {})
 
