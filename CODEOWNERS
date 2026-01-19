@@ -1017,8 +1017,8 @@ build.json @home-assistant/supervisor
 /tests/components/mill/ @danielhiversen
 /homeassistant/components/min_max/ @gjohansson-ST
 /tests/components/min_max/ @gjohansson-ST
-/homeassistant/components/minecraft_server/ @elmurato
-/tests/components/minecraft_server/ @elmurato
+/homeassistant/components/minecraft_server/ @elmurato @zachdeibert
+/tests/components/minecraft_server/ @elmurato @zachdeibert
 /homeassistant/components/minio/ @tkislan
 /tests/components/minio/ @tkislan
 /homeassistant/components/moat/ @bdraco
@@ -1068,6 +1068,8 @@ build.json @home-assistant/supervisor
 /tests/components/myuplink/ @pajzo @astrandb
 /homeassistant/components/nam/ @bieniu
 /tests/components/nam/ @bieniu
+/homeassistant/components/namecheapdns/ @tr4nt0r
+/tests/components/namecheapdns/ @tr4nt0r
 /homeassistant/components/nanoleaf/ @milanmeu @joostlek
 /tests/components/nanoleaf/ @milanmeu @joostlek
 /homeassistant/components/nasweb/ @nasWebio
@@ -1273,7 +1275,8 @@ build.json @home-assistant/supervisor
 /tests/components/prosegur/ @dgomes
 /homeassistant/components/proximity/ @mib1185
 /tests/components/proximity/ @mib1185
-/homeassistant/components/proxmoxve/ @jhollowe @Corbeno
+/homeassistant/components/proxmoxve/ @jhollowe @Corbeno @erwindouna
+/tests/components/proxmoxve/ @jhollowe @Corbeno @erwindouna
 /homeassistant/components/ps4/ @ktnrg45
 /tests/components/ps4/ @ktnrg45
 /homeassistant/components/pterodactyl/ @elmurato
