@@ -41,7 +41,7 @@
   "title": "Lawn mower",
   "triggers": {
     "docked": {
-      "description": "Triggers after one or more lawn mowers return to dock.",
+      "description": "Triggers after one or more lawn mowers have returned to dock.",
       "fields": {
         "behavior": {
           "description": "[%key:component::lawn_mower::common::trigger_behavior_description%]",
