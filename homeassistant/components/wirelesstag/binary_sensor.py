@@ -16,7 +16,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from .const import DOMAIN, SIGNAL_BINARY_EVENT_UPDATE
+from .const import SIGNAL_BINARY_EVENT_UPDATE, WIRELESSTAG_DATA
 from .entity import WirelessTagBaseSensor
 from .util import async_migrate_unique_id
 
@@ -82,7 +82,7 @@ async def async_setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the platform for a WirelessTags."""
-    platform = hass.data[DOMAIN]
+    platform = hass.data[WIRELESSTAG_DATA]
 
     sensors = []
     tags = platform.tags
