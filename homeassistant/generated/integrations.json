@@ -2706,12 +2706,6 @@
       "integration_type": "virtual",
       "supported_by": "gree"
     },
-    "helios": {
-      "name": "Helios",
-      "integration_type": "hub",
-      "config_flow": true,
-      "iot_class": "local_polling"
-    },
     "heltun": {
       "name": "HELTUN",
       "iot_standards": [

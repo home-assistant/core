@@ -41,7 +41,14 @@ CONFIG_SCHEMA = vol.Schema(
     extra=vol.ALLOW_EXTRA,
 )
 
-PLATFORMS: list[str] = [Platform.FAN]
+PLATFORMS: list[str] = [
+    Platform.BINARY_SENSOR,
+    Platform.DATE,
+    Platform.FAN,
+    Platform.NUMBER,
+    Platform.SENSOR,
+    Platform.SWITCH,
+]
 
 ATTR_PROFILE_FAN_SPEED = "fan_speed"
 
@@ -124,8 +131,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     }
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-
-    entry.runtime_data = coordinator
 
     return True
 
