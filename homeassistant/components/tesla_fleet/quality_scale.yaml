@@ -98,7 +98,8 @@ rules:
   entity-translations:
     status: done
   exception-translations:
-    status: done
+    status: todo
+    comment: PR already raised to fix these
   icon-translations:
     status: done
   reconfiguration-flow:
