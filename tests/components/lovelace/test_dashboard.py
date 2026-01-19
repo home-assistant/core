@@ -367,7 +367,7 @@ async def test_lovelace_from_yaml_creates_repair_issue(
     assert issue is not None
     assert issue.severity == ir.IssueSeverity.WARNING
     assert issue.is_fixable is False
-    assert issue.breaks_in_ha_version == "2026.6.0"
+    assert issue.breaks_in_ha_version == "2026.8.0"
 
 
 @pytest.mark.parametrize("url_path", ["test-panel", "test-panel-no-sidebar"])
