@@ -25,10 +25,8 @@ def parse_due_date(task_due: Due | None) -> date | datetime | None:
         datetime due dates, or None if no due date is set.
 
     """
-    if task_due is None or not task_due.date:
+    if task_due is None or not (due_date := task_due.date):
         return None
-
-    due_date = task_due.date
 
     if isinstance(due_date, datetime):
         return dt_util.as_local(due_date)
