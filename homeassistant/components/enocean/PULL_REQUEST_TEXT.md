@@ -43,10 +43,9 @@ Here is what still needs to be done. I've added boxes to the items and - once do
 - [ ] Clean up sensor code
 - [ ] Shift cover code to the [homeassistant-enocean](https://pypi.org/project/homeassistant-enocean/) library 
 - [ ] Ensure sufficient test coverage
-- [ ] Screen the open PRs related to EnOcean and check if they require changes to this PR
 - [ ] Ensure all the items from this pull request's checklist (see below) are ticked
 - [ ] Ensure all the bronze items from the integration quality scale checklist (see below) are ticked
-- [ ] Add missing EEPs to support all the devices that used to be supported by the existing integration (nice-to-have)
+- [ ] Add missing EEPs to support all the devices that used to be supported by the existing integration
 
 
 ### Quality scale checklist
@@ -119,7 +118,7 @@ The trigger for this effort was my [previous attempt (PR #75356)](https://github
 1. the EnOcean protocol specific code present in the code had to be moved to an external lib, and
 2. that it was no longer allowed for integrations to add or change a platform YAML configuration (see the respective [ADR 0007](ttps://github.com/home-assistant/architecture/blob/master/adr/0007-integration-config-yaml-structure.md#decision)). 
 
-When digging into this, I stumbled also across [ADR 0010](https://github.com/home-assistant/architecture/blob/master/adr/0010-integration-configuration.md), requiring *"Integrations that communicate with devices and/or services are only configured via the UI. In rare cases, we can make an exception".* 
+When digging into this, I stumbled also across [ADR 0010](https://github.com/home-assistant/architecture/blob/master/adr/0010-integration-configuration.md), requiring *"Integrations that communicate with devices and/or services are only configured via the UI. In rare cases, we can make an exception".* This PR now marks my attempt to take all of that into account and resolve the reasons for declining the initial PR.
 
 
 ## Type of change
@@ -148,7 +147,7 @@ When digging into this, I stumbled also across [ADR 0010](https://github.com/hom
 - This PR is related to issue: 
 - Link to documentation pull request: 
 - Link to developer documentation pull request: 
-- Link to frontend pull request: 
+- Link to frontend pull request: n/a
 
 ## Checklist
 <!--
@@ -164,7 +163,7 @@ When digging into this, I stumbled also across [ADR 0010](https://github.com/hom
 - [x] I understand the code I am submitting and can explain how it works.
 - [x] The code change is tested and works locally.
 - [ ] Local tests pass. **Your PR cannot be merged unless tests pass**
-- [ ] There is no commented out code in this PR.
+- [x] There is no commented out code in this PR.
 - [ ] I have followed the [development checklist][dev-checklist]
 - [ ] I have followed the [perfect PR recommendations][perfect-pr]
 - [x] The code has been formatted using Ruff (`ruff format homeassistant tests`)
