@@ -7,11 +7,10 @@ from aiopyarr import RadarrMovie, RadarrQueue
 
 def format_queue_item(item: Any, base_url: str | None = None) -> dict[str, Any]:
     """Format a single queue item."""
-    # Calculate progress
+
     remaining = 1 if item.size == 0 else item.sizeleft / item.size
     remaining_pct = 100 * (1 - remaining)
 
-    # Note: item.movie is a dict in queue items, not an object
     movie = item.movie
 
     result: dict[str, Any] = {
@@ -35,17 +34,26 @@ def format_queue_item(item: Any, base_url: str | None = None) -> dict[str, Any]:
         "time_left": str(getattr(item, "timeleft", None)),
     }
 
-    # Add quality information if available
     if quality := getattr(item, "quality", None):
         result["quality"] = quality.quality.name
 
-    # Add language information if available
     if languages := getattr(item, "languages", None):
         result["languages"] = [lang.name for lang in languages]
 
-    # Add custom format score if available
     if custom_format_score := getattr(item, "customFormatScore", None):
         result["custom_format_score"] = custom_format_score
+
+    # Add movie images if available
+    # Note: item.movie is a dict (not object), so images are also dicts
+    if images := movie.get("images"):
+        result["images"] = {}
+        for image in images:
+            cover_type = image.get("coverType")
+            # Prefer remoteUrl (public TMDB URL) over local path
+            if remote_url := image.get("remoteUrl"):
+                result["images"][cover_type] = remote_url
+            elif base_url and (url := image.get("url")):
+                result["images"][cover_type] = f"{base_url.rstrip('/')}{url}"
 
     return result
 

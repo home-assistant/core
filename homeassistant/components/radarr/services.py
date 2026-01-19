@@ -55,16 +55,11 @@ async def _async_get_movies(service: ServiceCall) -> dict[str, Any]:
     """Get all Radarr movies."""
     entry = _get_config_entry_from_service_data(service)
 
-    # Get the API client from runtime_data
     api_client = entry.runtime_data.status.api_client
-
-    # Fetch movies from the API
     movies_list = await api_client.async_get_movies()
 
     # Get base URL from config entry for image URLs
     base_url = entry.data[CONF_URL]
-
-    # Format the data for return
     movies = format_movies(cast(list, movies_list), base_url)
 
     return {
@@ -76,10 +71,7 @@ async def _async_get_queue(service: ServiceCall) -> dict[str, Any]:
     """Get Radarr queue."""
     entry = _get_config_entry_from_service_data(service)
 
-    # Get the API client from runtime_data
     api_client = entry.runtime_data.status.api_client
-
-    # Fetch queue data from the API
     queue = await api_client.async_get_queue(
         page_size=DEFAULT_MAX_RECORDS, include_movie=True
     )
@@ -87,7 +79,6 @@ async def _async_get_queue(service: ServiceCall) -> dict[str, Any]:
     # Get base URL from config entry for image URLs
     base_url = entry.data[CONF_URL]
 
-    # Format the data for return
     movies = format_queue(queue, base_url)
 
     return {
