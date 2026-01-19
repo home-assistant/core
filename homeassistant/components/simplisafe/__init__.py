@@ -635,7 +635,7 @@ class SimpliSafe:
 
         try:
             # Gather all system updates; exceptions will propagate
-            await asyncio.gather(*tasks, return_exceptions=False)
+            await asyncio.gather(*tasks)
         except InvalidCredentialsError as err:
             # Stop websocket immediately on auth failure
             if self._websocket_reconnect_task:
