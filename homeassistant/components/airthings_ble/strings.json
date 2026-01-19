@@ -49,7 +49,7 @@
   },
   "issues": {
     "smartlink_detected": {
-      "description": "The {device_name} is using SmartLink (hub) connectivity, which is not supported by Airthings BLE.\n\nIf you want to keep SmartLink (hub):\n1) Set up the Airthings integration (cloud) and sign in to your Airthings account.\n2) Disable the Airthings BLE entities for this device.\n\nIf you want to use Bluetooth:\n1) Open the Airthings app.\n2) Go to Settings > Devices.\n3) Select your {device_name}.\n4) Tap 'Reset connectivity' to switch to Bluetooth.\n\nAfter you switch to Bluetooth, this issue is resolved after the next scheduled refresh (within about 5 minutes for most devices, up to 30 minutes for Corentium Home 2).",
+      "description": "The {device_name} {serial_number} is using SmartLink (hub) connectivity, which is not supported by Airthings BLE.\n\nIf you want to keep SmartLink (hub):\n1) Set up the Airthings integration (cloud) and sign in to your Airthings account.\n2) Disable the Airthings BLE entities for this device.\n\nIf you want to use Bluetooth:\n1) Open the Airthings app.\n2) Go to Settings > Devices.\n3) Select your {device_name}.\n4) Tap 'Reset connectivity' to switch to Bluetooth.\n\nAfter you switch to Bluetooth, this issue is resolved after the next scheduled refresh (within about 5 minutes for most devices, up to 30 minutes for Corentium Home 2).",
       "title": "Unsupported connectivity mode"
     }
   }

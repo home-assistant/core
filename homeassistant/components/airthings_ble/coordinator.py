@@ -126,7 +126,10 @@ class AirthingsBLEDataUpdateCoordinator(DataUpdateCoordinator[AirthingsDevice]):
                 is_fixable=False,
                 severity=ir.IssueSeverity.WARNING,
                 translation_key="smartlink_detected",
-                translation_placeholders={"device_name": data.friendly_name()},
+                translation_placeholders={
+                    "device_name": data.friendly_name(),
+                    "serial_number": data.identifier or "unknown",
+                },
             )
         elif connectivity_mode == AirthingsConnectivityMode.BLE.value:
             ir.async_delete_issue(
