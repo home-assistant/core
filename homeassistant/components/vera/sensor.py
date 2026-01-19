@@ -126,7 +126,6 @@ class VeraPowerSensor(VeraEntity[veraApi.VeraSwitch], SensorEntity):
     _attr_has_entity_name = True
     _attr_state_class = SensorStateClass.MEASUREMENT
     _attr_native_unit_of_measurement = UnitOfPower.WATT
-    _attr_translation_key = "power"
 
     def __init__(
         self, vera_device: veraApi.VeraSwitch, controller_data: ControllerData
@@ -148,7 +147,6 @@ class VeraEnergySensor(VeraEntity[veraApi.VeraSwitch], SensorEntity):
     _attr_has_entity_name = True
     _attr_state_class = SensorStateClass.TOTAL_INCREASING
     _attr_native_unit_of_measurement = UnitOfEnergy.KILO_WATT_HOUR
-    _attr_translation_key = "energy"
 
     def __init__(
         self, vera_device: veraApi.VeraSwitch, controller_data: ControllerData

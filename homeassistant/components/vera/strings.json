@@ -17,16 +17,6 @@
       }
     }
   },
-  "entity": {
-    "sensor": {
-      "energy": {
-        "name": "Energy"
-      },
-      "power": {
-        "name": "Power"
-      }
-    }
-  },
   "options": {
     "step": {
       "init": {

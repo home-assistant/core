@@ -205,7 +205,9 @@ async def test_scene_controller_sensor(
 
 
 async def test_switch_power_and_energy_sensors_created(
-    hass: HomeAssistant, vera_component_factory: ComponentFactory
+    hass: HomeAssistant,
+    vera_component_factory: ComponentFactory,
+    entity_registry: er.EntityRegistry,
 ) -> None:
     """Test that switches with metering expose power and energy sensors."""
     vera_switch: pv.VeraSwitch = MagicMock(spec=pv.VeraSwitch)
@@ -233,10 +235,10 @@ async def test_switch_power_and_energy_sensors_created(
     )
     await hass.async_block_till_done()
 
-    ent_reg = er.async_get(hass)
-
-    power_entity_id = ent_reg.async_get_entity_id("sensor", "vera", "vera_1111_1_power")
-    energy_entity_id = ent_reg.async_get_entity_id(
+    power_entity_id = entity_registry.async_get_entity_id(
+        "sensor", "vera", "vera_1111_1_power"
+    )
+    energy_entity_id = entity_registry.async_get_entity_id(
         "sensor", "vera", "vera_1111_1_energy"
     )
 
@@ -255,7 +257,9 @@ async def test_switch_power_and_energy_sensors_created(
 
 
 async def test_switch_without_metering_does_not_create_power_energy_sensors(
-    hass: HomeAssistant, vera_component_factory: ComponentFactory
+    hass: HomeAssistant,
+    vera_component_factory: ComponentFactory,
+    entity_registry: er.EntityRegistry,
 ) -> None:
     """Test that non-metered switches do not create power/energy sensors."""
     vera_switch: pv.VeraSwitch = MagicMock(spec=pv.VeraSwitch)
@@ -283,10 +287,10 @@ async def test_switch_without_metering_does_not_create_power_energy_sensors(
     )
     await hass.async_block_till_done()
 
-    ent_reg = er.async_get(hass)
-
-    power_entity_id = ent_reg.async_get_entity_id("sensor", "vera", "vera_1111_1_power")
-    energy_entity_id = ent_reg.async_get_entity_id(
+    power_entity_id = entity_registry.async_get_entity_id(
+        "sensor", "vera", "vera_1111_1_power"
+    )
+    energy_entity_id = entity_registry.async_get_entity_id(
         "sensor", "vera", "vera_1111_1_energy"
     )
 
