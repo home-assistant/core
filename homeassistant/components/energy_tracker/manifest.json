@@ -1,0 +1,17 @@
+{
+  "domain": "energy_tracker",
+  "name": "Energy Tracker",
+  "documentation": "https://www.home-assistant.io/integrations/energy_tracker/",
+  "issue_tracker": "https://github.com/energy-tracker/home-assistant-energy-tracker/issues",
+  "requirements": [
+    "energy-tracker-api==1.0.0"
+  ],
+  "dependencies": [],
+  "codeowners": [
+    "@energy-tracker"
+  ],
+  "config_flow": true,
+  "integration_type": "service",
+  "iot_class": "cloud_push",
+  "quality_scale": "bronze"
+}
