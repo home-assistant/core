@@ -207,7 +207,7 @@ class IntegerTypeInformation(TypeInformation[float]):
     scale: int
     step: int
     unit: str | None = None
-    report_type: str | None = None
+    report_type: str | None
 
     def scale_value(self, value: int) -> float:
         """Scale a value."""
