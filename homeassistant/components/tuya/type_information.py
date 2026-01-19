@@ -55,7 +55,7 @@ class TypeInformation[T]:
 
     @classmethod
     def _from_json(
-        cls, dpcode: str, type_data: str, *, report_type: str | None = None
+        cls, dpcode: str, type_data: str, *, report_type: str | None
     ) -> Self | None:
         """Load JSON string and return a TypeInformation object."""
         return cls(dpcode=dpcode, type_data=type_data)
