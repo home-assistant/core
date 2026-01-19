@@ -217,7 +217,7 @@ SERVICE_SCHEMA_SEND_MEDIA_GROUP = vol.Schema(
                     }
                 )
             ],
-            vol.Length(min=1),
+            vol.Length(min=1, max=10),
         ),
         vol.Optional(ATTR_PARSER): cv.string,
         vol.Optional(ATTR_DISABLE_NOTIF): cv.boolean,
