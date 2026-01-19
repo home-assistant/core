@@ -117,7 +117,7 @@ class WirelessTagBinarySensor(WirelessTagBaseSensor, BinarySensorEntity):
         return self.principal_value
 
     @callback
-    def _on_binary_event_callback(self, new_tag: SensorTag) -> None:
+    def _on_binary_event_callback(self, new_tag):
         """Update state from arrived push notification."""
         self._tag = new_tag
         self._state = self.updated_state_value()
