@@ -283,7 +283,7 @@ class SensorDeviceClass(StrEnum):
     NITROGEN_DIOXIDE = "nitrogen_dioxide"
     """Amount of NO2.
 
-    Unit of measurement: `ppb` (parts per billion),`μg/m³`
+    Unit of measurement: `ppb` (parts per billion), `μg/m³`
     """
 
     NITROGEN_MONOXIDE = "nitrogen_monoxide"
