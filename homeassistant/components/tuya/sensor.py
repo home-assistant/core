@@ -51,15 +51,6 @@ from .models import (
 from .raw_data_models import ElectricityData
 from .type_information import EnumTypeInformation, IntegerTypeInformation
 
-# Mapping from Tuya API report_type to Home Assistant SensorStateClass.
-# - "sum": Delta/incremental reports, accumulated locally to form a total
-# - "minux": Cumulative total that only increases
-# - "un_known": Unknown type, preserves the original state_class
-REPORT_TYPE_TO_STATE_CLASS: dict[str, SensorStateClass] = {
-    "sum": SensorStateClass.TOTAL_INCREASING,
-    "minux": SensorStateClass.TOTAL_INCREASING,
-}
-
 
 class _WindDirectionWrapper(DPCodeTypeInformationWrapper[EnumTypeInformation]):
     """Custom DPCode Wrapper for converting enum to wind direction."""
@@ -1817,10 +1808,7 @@ class TuyaSensorEntity(TuyaEntity, SensorEntity):
     async def async_added_to_hass(self) -> None:
         """Handle entity added to Home Assistant."""
         await super().async_added_to_hass()
-
-        # Initialize delta wrapper if applicable
-        if isinstance(self._dpcode_wrapper, DPCodeDeltaIntegerWrapper):
-            self._dpcode_wrapper.initialize_accumulated_value(self.device)
+        self._dpcode_wrapper.initialize(self.device)
 
     async def _handle_state_update(
         self,
@@ -1828,40 +1816,27 @@ class TuyaSensorEntity(TuyaEntity, SensorEntity):
         dp_timestamps: dict | None = None,
     ) -> None:
         """Handle state update from device."""
-        if self._dpcode_wrapper.skip_update(self.device, updated_status_properties):
+        if self._dpcode_wrapper.skip_update(
+            self.device, updated_status_properties, dp_timestamps
+        ):
             return
-
-        # Process delta update if applicable
-        if isinstance(self._dpcode_wrapper, DPCodeDeltaIntegerWrapper):
-            self._dpcode_wrapper.process_delta_update(self.device, dp_timestamps)
 
         self.async_write_ha_state()
 
     def _apply_report_type_state_class(
         self, dpcode_wrapper: DeviceWrapper, description: TuyaSensorEntityDescription
     ) -> None:
-        """Apply state class based on wrapper's report_type.
+        """Apply state class based on wrapper's state_class.
 
         This will override the state_class from entity description
-        if the wrapper indicates a delta or cumulative report type.
+        if the wrapper provides a state_class (e.g., based on report_type).
         """
-        # Check if this is a delta integer wrapper with report_type info
-        if not isinstance(dpcode_wrapper, DPCodeDeltaIntegerWrapper):
-            return
-
-        report_type = dpcode_wrapper.type_information.report_type
-
-        # Keep original state_class if report_type is not set or unknown
-        if not report_type or report_type == "un_known":
-            return
-
-        if state_class := REPORT_TYPE_TO_STATE_CLASS.get(report_type):
+        if state_class := dpcode_wrapper.state_class:
             if description.state_class and description.state_class != state_class:
                 LOGGER.debug(
-                    "Overriding state_class from %s to %s based on report_type '%s' for %s",
+                    "Overriding state_class from %s to %s for %s",
                     description.state_class,
                     state_class,
-                    report_type,
                     self.unique_id,
                 )
 

@@ -7,6 +7,8 @@ from typing import Any, Self
 
 from tuya_sharing import CustomerDevice
 
+from homeassistant.components.sensor import SensorStateClass
+
 from .type_information import (
     BitmapTypeInformation,
     BooleanTypeInformation,
@@ -26,12 +28,20 @@ class DeviceWrapper[T]:
 
     native_unit: str | None = None
     suggested_unit: str | None = None
+    state_class: SensorStateClass | None = None
 
     max_value: float
     min_value: float
     value_step: float
 
     options: list[str]
+
+    def initialize(self, device: CustomerDevice) -> None:
+        """Initialize the wrapper with device data.
+
+        Called when the entity is added to Home Assistant.
+        Override in subclasses to perform initialization logic.
+        """
 
     def skip_update(
         self,
@@ -224,10 +234,27 @@ class DPCodeDeltaIntegerWrapper(DPCodeIntegerWrapper):
     _accumulated_value: float | None = None
     _last_dp_timestamp: int | None = None
 
-    def initialize_accumulated_value(self, device: CustomerDevice) -> None:
-        """Initialize accumulated value from current device state.
+    # Mapping from Tuya API report_type to Home Assistant SensorStateClass.
+    # - "sum": Delta/incremental reports, accumulated locally to form a total
+    # - "minux": Cumulative total that only increases
+    _REPORT_TYPE_TO_STATE_CLASS: dict[str, SensorStateClass] = {
+        "sum": SensorStateClass.TOTAL_INCREASING,
+        "minux": SensorStateClass.TOTAL_INCREASING,
+    }
+
+    def __init__(self, dpcode: str, type_information: IntegerTypeInformation) -> None:
+        """Init DPCodeDeltaIntegerWrapper."""
+        super().__init__(dpcode, type_information)
+
+        # Set state_class based on report_type
+        if report_type := type_information.report_type:
+            self.state_class = self._REPORT_TYPE_TO_STATE_CLASS.get(report_type)
+
+    def initialize(self, device: CustomerDevice) -> None:
+        """Initialize wrapper with device data.
 
         Called when the entity is added to Home Assistant.
+        Initializes the accumulated value from the current device state.
         """
         raw_value = super().read_device_status(device)
         if raw_value is not None:
@@ -282,6 +309,22 @@ class DPCodeDeltaIntegerWrapper(DPCodeIntegerWrapper):
             )
 
         self._last_dp_timestamp = current_timestamp
+
+    def skip_update(
+        self,
+        device: CustomerDevice,
+        updated_status_properties: list[str] | None,
+        dp_timestamps: dict | None = None,
+    ) -> bool:
+        """Override skip_update to process delta updates.
+
+        Processes delta accumulation before determining if update should be skipped.
+        """
+        if super().skip_update(device, updated_status_properties, dp_timestamps):
+            return True
+        # Process delta update when not skipping
+        self.process_delta_update(device, dp_timestamps)
+        return False
 
     def read_device_status(self, device: CustomerDevice) -> float | None:
         """Read device status, returning accumulated value for delta reports."""
