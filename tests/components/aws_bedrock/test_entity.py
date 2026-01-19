@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from pathlib import Path
 from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
 from botocore.exceptions import ClientError
@@ -16,6 +17,7 @@ from homeassistant.components.aws_bedrock.entity import (
     _clean_schema,
     _convert_messages,
     _sanitize_bedrock_tool_name,
+    async_prepare_files_for_prompt,
 )
 from homeassistant.config_entries import ConfigEntry, ConfigSubentry
 from homeassistant.core import HomeAssistant
@@ -860,3 +862,254 @@ async def test_handle_chat_log_empty_response(hass: HomeAssistant) -> None:
     # Verify empty response was handled gracefully
     # Should not crash, may add empty content or skip
     assert True  # If we reach here, no exception was raised
+
+
+def test_clean_schema_non_dict_returns_as_is() -> None:
+    """Test _clean_schema returns non-dict values as-is."""
+    # Non-dict input should be returned unchanged
+    assert _clean_schema("string value") == "string value"
+    assert _clean_schema(123) == 123
+    assert _clean_schema(None) is None
+    assert _clean_schema([1, 2, 3]) == [1, 2, 3]
+
+
+def test_clean_schema_with_empty_items() -> None:
+    """Test _clean_schema handles array items that become empty after cleaning."""
+    schema = {
+        "type": "array",
+        "items": {
+            "$schema": "unsupported",  # Will be removed
+            "title": "unsupported",  # Will be removed
+        },
+    }
+    cleaned = _clean_schema(schema)
+
+    # items should be empty or not included since all fields were unsupported
+    assert "items" not in cleaned or cleaned.get("items") == {}
+
+
+def test_clean_schema_filters_required_to_existing_properties() -> None:
+    """Test that required array only contains properties that exist."""
+    schema = {
+        "type": "object",
+        "properties": {
+            "name": {"type": "string"},
+        },
+        "required": ["name", "nonexistent_field"],  # nonexistent should be removed
+    }
+    cleaned = _clean_schema(schema)
+
+    assert "required" in cleaned
+    assert "name" in cleaned["required"]
+    assert "nonexistent_field" not in cleaned["required"]
+
+
+def test_clean_schema_with_nested_object_properties() -> None:
+    """Test _clean_schema handles deeply nested object properties."""
+    schema = {
+        "type": "object",
+        "properties": {
+            "outer": {
+                "type": "object",
+                "properties": {
+                    "inner": {
+                        "type": "string",
+                        "description": "An inner property",
+                        "title": "Should be removed",
+                    }
+                },
+                "required": ["inner"],
+            }
+        },
+        "required": ["outer"],
+    }
+    cleaned = _clean_schema(schema)
+
+    # Verify nested structure is preserved
+    assert "outer" in cleaned["properties"]
+    outer = cleaned["properties"]["outer"]
+    assert "inner" in outer["properties"]
+    inner = outer["properties"]["inner"]
+
+    # Inner property should have allowed fields
+    assert inner["type"] == "string"
+    assert inner.get("description") == "An inner property"
+    # Title should be removed
+    assert "title" not in inner
+
+
+@pytest.mark.asyncio
+async def test_async_prepare_files_for_prompt_image(
+    hass: HomeAssistant, tmp_path: Path
+) -> None:
+    """Test preparing image files for prompt."""
+    # Create a test image file
+    image_path = tmp_path / "test_image.jpg"
+    image_path.write_bytes(b"\xff\xd8\xff\xe0test image content")
+
+    files = [(image_path, "image/jpeg")]
+    result = await async_prepare_files_for_prompt(hass, files)
+
+    assert len(result) == 1
+    assert "image" in result[0]
+    assert result[0]["image"]["format"] == "jpeg"
+    assert "bytes" in result[0]["image"]["source"]
+
+
+@pytest.mark.asyncio
+async def test_async_prepare_files_for_prompt_pdf(
+    hass: HomeAssistant, tmp_path: Path
+) -> None:
+    """Test preparing PDF files for prompt."""
+    # Create a test PDF file
+    pdf_path = tmp_path / "test_document.pdf"
+    pdf_path.write_bytes(b"%PDF-1.4 test pdf content")
+
+    files = [(pdf_path, "application/pdf")]
+    result = await async_prepare_files_for_prompt(hass, files)
+
+    assert len(result) == 1
+    assert "document" in result[0]
+    assert result[0]["document"]["format"] == "pdf"
+    assert result[0]["document"]["name"] == "test_document.pdf"
+
+
+@pytest.mark.asyncio
+async def test_async_prepare_files_for_prompt_no_mime_type(
+    hass: HomeAssistant, tmp_path: Path
+) -> None:
+    """Test preparing files when mime_type is None defaults to image/jpeg."""
+    # Create a test file
+    image_path = tmp_path / "test_image"
+    image_path.write_bytes(b"test content")
+
+    files = [(image_path, None)]  # No mime type provided
+    result = await async_prepare_files_for_prompt(hass, files)
+
+    assert len(result) == 1
+    assert "image" in result[0]
+    assert result[0]["image"]["format"] == "jpeg"  # Defaults to jpeg
+
+
+@pytest.mark.asyncio
+async def test_async_prepare_files_for_prompt_unsupported_type(
+    hass: HomeAssistant, tmp_path: Path
+) -> None:
+    """Test preparing files with unsupported mime type raises error."""
+    # Create a test file
+    text_path = tmp_path / "test.txt"
+    text_path.write_bytes(b"text content")
+
+    files = [(text_path, "text/plain")]  # Unsupported type
+
+    with pytest.raises(HomeAssistantError, match="Only images and PDF are supported"):
+        await async_prepare_files_for_prompt(hass, files)
+
+
+@pytest.mark.asyncio
+async def test_async_prepare_files_for_prompt_file_not_exists(
+    hass: HomeAssistant, tmp_path: Path
+) -> None:
+    """Test preparing files that don't exist raises error."""
+    # Non-existent file
+    nonexistent_path = tmp_path / "nonexistent.jpg"
+
+    files = [(nonexistent_path, "image/jpeg")]
+
+    with pytest.raises(HomeAssistantError, match="does not exist"):
+        await async_prepare_files_for_prompt(hass, files)
+
+
+def test_build_tool_name_maps_handles_collision() -> None:
+    """Test _build_tool_name_maps adds suffix for collisions."""
+
+    class _Tool1(llm.Tool):
+        name = "test.tool"
+        description = "Tool 1"
+        parameters = vol.Schema({})
+
+        async def async_call(
+            self,
+            hass: HomeAssistant,
+            tool_input: llm.ToolInput,
+            llm_context: llm.LLMContext,
+        ) -> JsonObjectType:
+            raise NotImplementedError
+
+    class _Tool2(llm.Tool):
+        name = "test_tool"  # Would sanitize to same as above
+        description = "Tool 2"
+        parameters = vol.Schema({})
+
+        async def async_call(
+            self,
+            hass: HomeAssistant,
+            tool_input: llm.ToolInput,
+            llm_context: llm.LLMContext,
+        ) -> JsonObjectType:
+            raise NotImplementedError
+
+    tools = [_Tool1(), _Tool2()]
+    ha_to_bedrock, _bedrock_to_ha = _build_tool_name_maps(tools)
+
+    # Both tools should have unique Bedrock names
+    bedrock_names = list(ha_to_bedrock.values())
+    assert len(set(bedrock_names)) == 2  # All unique
+
+    # One should have a suffix
+    assert "test_tool" in bedrock_names
+    assert "test_tool_2" in bedrock_names
+
+
+@pytest.mark.asyncio
+async def test_handle_chat_log_with_structured_output_nova_model(
+    hass: HomeAssistant,
+) -> None:
+    """Test structured output with Nova model applies schema cleaning."""
+    mock_entry = MockConfigEntry(domain=DOMAIN, data={})
+    mock_entry.add_to_hass(hass)
+
+    mock_client = MagicMock()
+    mock_entry.runtime_data = mock_client
+    mock_client.converse.return_value = create_response_with_structured_output(
+        {"name": "test", "value": 42}
+    )
+
+    subentry = create_mock_subentry(model="amazon.nova-pro-v1:0")
+    entity = setup_entity_with_hass(hass, mock_entry, subentry)
+
+    content = create_simple_user_message("Generate data")
+    chat_log = create_mock_chat_log(content)
+
+    structure = {
+        "$schema": "http://json-schema.org/draft-07/schema#",  # Should be removed
+        "title": "TestStructure",  # Should be removed
+        "type": "object",
+        "properties": {
+            "name": {"type": "string"},
+            "value": {"type": "integer"},
+        },
+    }
+
+    async def mock_executor_job(func):
+        return func()
+
+    with patch.object(hass, "async_add_executor_job", side_effect=mock_executor_job):
+        await entity._async_handle_chat_log(
+            chat_log, structure_name="test_structure", structure=structure
+        )
+
+    # Verify the API was called with tools containing cleaned schema
+    call_kwargs = mock_client.converse.call_args[1]
+    assert "toolConfig" in call_kwargs
+    tools = call_kwargs["toolConfig"]["tools"]
+
+    # Find the structure tool
+    structure_tool = next(t for t in tools if t["toolSpec"]["name"] == "test_structure")
+    schema = structure_tool["toolSpec"]["inputSchema"]["json"]
+
+    # Verify unsupported fields were removed
+    assert "$schema" not in schema
+    assert "title" not in schema
+    assert "type" in schema
+    assert "properties" in schema
