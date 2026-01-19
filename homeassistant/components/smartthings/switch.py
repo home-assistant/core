@@ -70,6 +70,21 @@ class SmartThingsDishwasherWashingOptionSwitchEntityDescription(
     off_key: str | bool = False
 
 
+@dataclass(frozen=True, kw_only=True)
+class SmartThingsExecuteSwitchEntityDescription(SwitchEntityDescription):
+    """Describe a SmartThings switch entity that uses the execute command.
+
+    For devices that don't expose a standard capability but can still be
+    controlled via the execute command with specific arguments.
+    """
+
+    required_capability: (
+        Capability  # Gate to prevent creating switches on incompatible devices
+    )
+    on_argument: list[Any]
+    off_argument: list[Any]
+
+
 SWITCH = SmartThingsSwitchEntityDescription(
     key=Capability.SWITCH,
     status_attribute=Attribute.SWITCH,
@@ -291,6 +306,22 @@ DISHWASHER_WASHING_OPTIONS_TO_SWITCHES: dict[
     ),
 }
 
+# Workaround switches for devices that lack the standard capability
+# but can still be controlled via execute commands
+EXECUTE_WORKAROUND_SWITCHES: dict[
+    Capability | str, SmartThingsExecuteSwitchEntityDescription
+] = {
+    # Note: API arguments are reversed - "Light_Off" option turns the light ON
+    Capability.SAMSUNG_CE_AIR_CONDITIONER_LIGHTING: SmartThingsExecuteSwitchEntityDescription(
+        key=Capability.SAMSUNG_CE_AIR_CONDITIONER_LIGHTING,
+        translation_key="display_lighting",
+        required_capability=Capability.AIR_CONDITIONER_MODE,
+        on_argument=["/mode/vs/0", {"x.com.samsung.da.options": ["Light_Off"]}],
+        off_argument=["/mode/vs/0", {"x.com.samsung.da.options": ["Light_On"]}],
+        entity_category=EntityCategory.CONFIG,
+    ),
+}
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -347,6 +378,18 @@ async def async_setup_entry(
             ].value,
         )
         if attribute in DISHWASHER_WASHING_OPTIONS_TO_SWITCHES
+    )
+    entities.extend(
+        SmartThingsExecuteSwitch(
+            entry_data.client,
+            device,
+            description,
+        )
+        for device in entry_data.devices.values()
+        for missing_capability, description in EXECUTE_WORKAROUND_SWITCHES.items()
+        if Capability.EXECUTE in device.status[MAIN]
+        and description.required_capability in device.status[MAIN]
+        and missing_capability not in device.status[MAIN]
     )
     entity_registry = er.async_get(hass)
     for device in entry_data.devices.values():
@@ -556,3 +599,38 @@ class SmartThingsDishwasherWashingOptionSwitch(SmartThingsCommandSwitch):
 
     def _current_state(self) -> Any:
         return super()._current_state()["value"]
+
+
+class SmartThingsExecuteSwitch(SmartThingsEntity, SwitchEntity):
+    """Define a SmartThings switch that uses the execute command."""
+
+    entity_description: SmartThingsExecuteSwitchEntityDescription
+
+    def __init__(
+        self,
+        client: SmartThings,
+        device: FullDevice,
+        entity_description: SmartThingsExecuteSwitchEntityDescription,
+    ) -> None:
+        """Initialize the switch."""
+        super().__init__(client, device, {Capability.EXECUTE})
+        self.entity_description = entity_description
+        self._attr_unique_id = (
+            f"{device.device.device_id}_{MAIN}_{entity_description.key}"
+        )
+
+    async def async_turn_off(self, **kwargs: Any) -> None:
+        """Turn the switch off."""
+        await self.execute_device_command(
+            Capability.EXECUTE,
+            Command.EXECUTE,
+            self.entity_description.off_argument,
+        )
+
+    async def async_turn_on(self, **kwargs: Any) -> None:
+        """Turn the switch on."""
+        await self.execute_device_command(
+            Capability.EXECUTE,
+            Command.EXECUTE,
+            self.entity_description.on_argument,
+        )
