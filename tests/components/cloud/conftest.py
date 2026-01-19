@@ -245,6 +245,7 @@ async def cloud_prefs(hass: HomeAssistant) -> CloudPreferences:
 async def mock_cloud_setup(hass: HomeAssistant) -> None:
     """Set up the cloud."""
     await mock_cloud(hass)
+    await hass.async_block_till_done()
 
 
 @pytest.fixture

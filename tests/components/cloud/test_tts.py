@@ -345,10 +345,10 @@ async def test_get_tts_audio_logged_out(
 
 
 @pytest.mark.parametrize(
-    ("mock_process_tts_side_effect"),
+    "mock_process_tts_side_effect",
     [
-        (None,),
-        (VoiceError("Boom!"),),
+        None,
+        VoiceError("Boom!"),
     ],
 )
 async def test_tts_entity(
