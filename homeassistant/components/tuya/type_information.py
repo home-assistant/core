@@ -82,6 +82,9 @@ class TypeInformation[T]:
         )
 
         for dpcode in dpcodes:
+            report_type = (
+                sr.report_type if (sr := device.status_range.get(dpcode)) else None
+            )
             for device_specs in lookup_tuple:
                 if (
                     (current_definition := device_specs.get(dpcode))
@@ -90,7 +93,7 @@ class TypeInformation[T]:
                         type_information := cls._from_json(
                             dpcode=dpcode,
                             type_data=current_definition.values,
-                            report_type=current_definition.report_type,
+                            report_type=report_type,
                         )
                     )
                 ):
