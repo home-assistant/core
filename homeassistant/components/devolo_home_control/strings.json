@@ -58,7 +58,7 @@
   },
   "exceptions": {
     "connection_failed": {
-      "message": "Failed to connect to devolo Home Control central unit {gateway_id}."
+      "message": "Failed to connect to any devolo Home Control central unit."
     },
     "invalid_auth": {
       "message": "Authentication failed. Please re-authenticate with your mydevolo account."
