@@ -167,7 +167,6 @@ async def test_no_repositories(
     assert result["type"] is FlowResultType.FORM
     assert not result["errors"]
 
-    # Verify the form schema contains only the user's own channel
     schema = result["data_schema"]
     repositories = schema.schema[CONF_REPOSITORIES].options
     assert len(repositories) == 2
@@ -206,7 +205,6 @@ async def test_exception_during_repository_fetch(
     assert result["type"] is FlowResultType.FORM
     assert not result["errors"]
 
-    # Verify the form schema contains only the user's own channel
     schema = result["data_schema"]
     repositories = schema.schema[CONF_REPOSITORIES].options
     assert len(repositories) == 2
