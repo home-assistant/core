@@ -54,6 +54,26 @@
     }
   },
   "entity": {
+    "binary_sensor": {
+      "door": {
+        "name": "Door"
+      },
+      "furniture": {
+        "name": "Furniture"
+      },
+      "garage_gate": {
+        "name": "Garage Gate"
+      },
+      "gate": {
+        "name": "Gate"
+      },
+      "opening_sensor": {
+        "name": "Opening"
+      },
+      "window": {
+        "name": "Window"
+      }
+    },
     "button": {
       "preferred_position": {
         "name": "Preferred position"
