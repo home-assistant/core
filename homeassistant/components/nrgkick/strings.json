@@ -340,6 +340,9 @@
     "invalid_response": {
       "message": "The device returned an invalid response."
     },
+    "json_api_disabled": {
+      "message": "JSON API is disabled on the device"
+    },
     "unknown_error": {
       "message": "An unknown error occurred."
     }

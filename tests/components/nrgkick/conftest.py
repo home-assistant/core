@@ -25,45 +25,41 @@ def mock_setup_entry() -> Generator[AsyncMock]:
 @pytest.fixture
 def mock_nrgkick_api():
     """Mock NRGkickAPI."""
-    with patch(
-        "homeassistant.components.nrgkick.api.NRGkickAPI", autospec=True
-    ) as mock_api:
-        api = mock_api.return_value
-        api.test_connection = AsyncMock(return_value=True)
-        api.get_info = AsyncMock(
-            return_value={
-                "general": {
-                    "device_name": "NRGkick Test",
-                    "serial_number": "TEST123456",
-                    "rated_current": 32.0,
-                }
+    api = AsyncMock()
+    api.test_connection = AsyncMock(return_value=True)
+    api.get_info = AsyncMock(
+        return_value={
+            "general": {
+                "device_name": "NRGkick Test",
+                "serial_number": "TEST123456",
+                "rated_current": 32.0,
             }
-        )
-        api.get_control = AsyncMock(
-            return_value={
-                "current_set": 16.0,
-                "charge_pause": 0,
-                "energy_limit": 0,
-                "phase_count": 3,
-            }
-        )
-        api.get_values = AsyncMock(
-            return_value={
-                "powerflow": {
-                    "power": {"total": 11000},
-                    "current": {"total": 16.0},
-                    "voltage": {"total": 230.0},
-                },
-                "energy": {"charged_energy": 5000},
-                "status": {"charging_status": 3},
-            }
-        )
-        # Mock set methods to return actual API responses (with the new value)
-        api.set_current = AsyncMock(return_value={"current_set": 16.0})
-        api.set_charge_pause = AsyncMock(return_value={"charge_pause": 0})
-        api.set_energy_limit = AsyncMock(return_value={"energy_limit": 0})
-        api.set_phase_count = AsyncMock(return_value={"phase_count": 3})
-        yield api
+        }
+    )
+    api.get_control = AsyncMock(
+        return_value={
+            "current_set": 16.0,
+            "charge_pause": 0,
+            "energy_limit": 0,
+            "phase_count": 3,
+        }
+    )
+    api.get_values = AsyncMock(
+        return_value={
+            "powerflow": {
+                "power": {"total": 11000},
+                "current": {"total": 16.0},
+                "voltage": {"total": 230.0},
+            },
+            "energy": {"charged_energy": 5000},
+            "status": {"charging_status": 3},
+        }
+    )
+    api.set_current = AsyncMock(return_value={"current_set": 16.0})
+    api.set_charge_pause = AsyncMock(return_value={"charge_pause": 0})
+    api.set_energy_limit = AsyncMock(return_value={"energy_limit": 0})
+    api.set_phase_count = AsyncMock(return_value={"phase_count": 3})
+    return api
 
 
 @pytest.fixture
