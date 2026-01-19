@@ -17,7 +17,6 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-from homeassistant.helpers.typing import StateType
 
 from .const import (
     CONF_URL_SECURITY,
@@ -45,7 +44,7 @@ _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_OPENING_SENSOR_KEY = "opening_sensor"
 
-OPENING_STATUS_TRANSLATIONS: Final[dict[StateType, StateType | None]] = {
+OPENING_STATUS_TRANSLATIONS: Final[dict[str, bool | None]] = {
     DOORTAG_STATUS_NO_NEWS: None,
     DOORTAG_STATUS_CALIBRATING: None,
     DOORTAG_STATUS_UNDEFINED: None,
@@ -57,7 +56,7 @@ OPENING_STATUS_TRANSLATIONS: Final[dict[StateType, StateType | None]] = {
 }
 
 
-def process_opening_status_string(status: StateType) -> StateType | None:
+def process_opening_status_string(status: str) -> bool | None:
     """Process opening status and return bool."""
 
     return OPENING_STATUS_TRANSLATIONS.get(status, None)
@@ -158,7 +157,7 @@ class NetatmoBinarySensorEntityDescription(BinarySensorEntityDescription):
     device_key_fn: Callable[[NetatmoDevice], str] | None = (
         None  # This is a value_fn variant to calculate key
     )
-    value_fn: Callable[[StateType], StateType] = lambda x: x
+    value_fn: Callable[[str], str | bool | None] = lambda x: x
 
 
 NETATMO_WEATHER_BINARY_SENSOR_DESCRIPTIONS: Final[
@@ -332,9 +331,6 @@ class NetatmoBinarySensor(NetatmoModuleEntity, BinarySensorEntity):
     @callback
     def async_update_callback(self) -> None:
         """Update the entity's state."""
-
-        raw_value: StateType | None = None
-        value: StateType | None = None
 
         # First we need to know whether we set reachable or another attribute
         if self.entity_description.key == "reachable":
